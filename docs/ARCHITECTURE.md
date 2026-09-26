@@ -53,9 +53,7 @@ anything that prints, `core/PerfSetup.lua` before every module that takes `NS.Pe
 `settings/OptionsSetup.lua` before every page file (the composers run at file load), and
 `settings/GeneralSpells.lua` then `settings/GeneralDispel.lua` (which reads its bullet constants), both
 before `settings/General.lua`, which registers their rows after its own.
-The Settings tree's order is the TOC's own registration order (`N-2`): General, then Containers,
-then its five sub-pages — Filters, Layout, Bars, Icons and Text, each marked with
-`NS.SubPageLabel`'s indent (`D6`, `settings/OptionsSetup.lua`) — then Profiles.
+The Settings tree's order is the TOC's own registration order: General, then Containers, then Profiles. Filters, Layout, Bars, Icons and Text are sections of the Containers page (#6) with no tree entry; they load after `settings/OptionsSetup.lua` in any order, and the rail's order is `SECTION_ORDER` there.
 
 The engine-facing core is four modules: `modules/FilterCompiler.lua` (settings → groups, pure; the
 profile's spell-category edits reach it through `FC.ProfileContext`), `modules/Container.lua` (one

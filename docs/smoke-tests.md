@@ -73,9 +73,7 @@ suite covers what only the client can show.
 ## D. Settings panel — every page and tab
 
 19. `/am config` out of combat → Settings opens at **Ka0s Aura Master**: logo, the Notes line, the
-    Slash Commands list matching `/am help`, and no tab strip. The tree reads **General ·
-    Containers · - Filters · - Layout · - Bars · - Icons · Profiles** — the four container pages
-    indented under Containers with a `-` mark, General, Containers and Profiles flush with it (N-2).
+    Slash Commands list matching `/am help`, and no tab strip. The tree reads **General · Containers · Profiles**. Filters, Layout, Bars, Icons and Text are sections of Containers, on its rail, with no tree entry of their own (#6).
 20. **General** → the strip **[ Master controls ][ Display ][ Spell Categories ][ Dispel Colors ]**, and no Container picker
     above it. Master controls reads, two per line:
     Enable Aura Master | General visibility / Master scale | Master alpha / Lock frame | Debug console,
@@ -133,7 +131,7 @@ suite covers what only the client can show.
     Pandemic ]** — Icon is second-last, right before Pandemic (2026-09-20). On an icon container
     every tab carries the small gray "Not in use: this container is drawn as icons. Set its Style to Bars on the Containers page to use these settings." note —
     quiet text, not a full-width orange banner, and not larger than the labels under it — a gap below it, and every control dimmed and unclickable; the tabs
-    and the Container dropdown still work. **General** opens on its Size subsection (**Width**,
+    and the Container dropdown still work. *(Retired by #6: a container's rail offers only its own style's section, so this notice and the dimmed style page no longer exist; see "Settings redesign (#6)" below.)* **General** opens on its Size subsection (**Width**,
     **Height**) before Fill and Spark. On **Icon** tick **Show border**, set the thickness to 3 →
     a border frames each bar's icon and the art shrinks inside it rather than under it. On **General**
     untick **Show the spark on auras without a duration** → a permanent buff's full bar shows no
@@ -701,7 +699,7 @@ nothing).
      the X too, and it removes the spell. Check the X row's height and vertical alignment against the
      spell name — the library's Icon widget is 26 px tall.
 114. **The "Not in use" notice** heads every tab of Bars, Icons and Text in muted red, not gray, on a
-     container drawn in another style.
+     container drawn in another style. *(Retired by #6: a container's rail offers only its own style's section, so this notice and the dimmed style page no longer exist; see "Settings redesign (#6)" below.)*
 115. **A 59-minute buff's time on a bar.** A 59-minute Power Word: Fortitude on a default bar reads
      `59 m` in full, not `59...`, and still does with the time text's X offset at -15.
 116. **Changing Style resets Fill, keeps grow directions.** On the Containers page switch a
@@ -842,7 +840,7 @@ debuff container on the target, in a party or with a target dummy.
      and **Rules** (bracket hiding, the two escapes, how they combine, text outside `[ ]` always
      showing, a separator inside the brackets of the field it leads), each rule's example on its own indented line in the token gold. On a bars or icons
      container, the "Not in use" notice at the top of every tab (Bars, Icons and Text alike) reads in a
-     muted red, not the earlier muted gold. A Center template's Preview shows its stacked rows joined
+     muted red, not the earlier muted gold. *(Retired by #6: a container's rail offers only its own style's section, so this notice and the dimmed style page no longer exist; see "Settings redesign (#6)" below.)* A Center template's Preview shows its stacked rows joined
      by " / " (Centered: name over time reads "Ignore Pain / 11s"), never a raw line break, while the
      live container itself still shows them stacked, each on its own row (final review).
 140. **No gap between template pieces (smoke batch 2, item 8).** A target-debuff Text container,
@@ -965,8 +963,8 @@ detail, the step points at it rather than repeating it.
      rows alone. Hover each row: no tooltip says "running out" or "refresh window". Values set before
      the rename are kept (a threshold of 8 still reads 8), and `/am list` still names the same paths.
 157. **The container pickers sort by name (B2-2).** Name three containers "zeta", "Alpha" and "beta"
-     (Containers → Name). The Container dropdown in the band of Containers, Filters, Layout, Bars,
-     Icons and Text lists Alpha, beta, zeta — capitals do not sort first — each still followed by its
+     (Containers → Name). The Container dropdown in the Containers page's band (on every rail
+     section) lists Alpha, beta, zeta — capitals do not sort first — each still followed by its
      gray "(unit, aura type, style)"; Containers → Copy settings from's source and Layout → Anchor →
      Another container (None first) list in the same order. `/am containers` keeps the creation order.
 158. **The owner's repro: an icon border and the pandemic settings (B2-3).** `/console scriptErrors 1`,
@@ -1015,7 +1013,7 @@ detail, the step points at it rather than repeating it.
      and **Rules** headings, every bullet and every gold example are all gray, the same gray as the
      Placement note under Justify — nothing in the block is brighter than the dimmed controls around
      it. Switch the container's Style to **Text** on the Containers page and come back → the Preview is
-     in the container's own font color again, the tokens and examples in gold, the headings bright.
+     in the container's own font color again, the tokens and examples in gold, the headings bright. *(Retired by #6: a container's rail offers only its own style's section, so this notice and the dimmed style page no longer exist; see "Settings redesign (#6)" below.)*
 166. **Spell category lists read alphabetically, and three categories are renamed (2026-09-20).**
      General → **Spell Categories** → the **Category** dropdown now offers **Defensive cooldowns**,
      **Hard CC (loss of control)** and **Soft CC (roots & snares)** — the parentheses and the `&`
@@ -1711,3 +1709,58 @@ Five changes the owner asked for after section AC (2026-09-26). None has been ru
      name and marks, running past the icon, as before. `/am lock` → no strips. No Lua error.
 
 **Owner run, 2026-09-26.** Every AD check passed (246 to 250).
+
+## Settings redesign (#6)
+
+Owner to run, on `feat/2026-09-26-settings-redesign` with LibKa0s v1.61.0 vendored. Open a character
+with the starter containers (#1 Player buffs as bars, #2 Player debuffs as icons, #4 Player
+cooldowns as text) and open the panel with `/am`.
+
+251. **S1.** Look at the Settings tree under Ka0s Aura Master. → General · Containers · Profiles.
+     There are no Filters, Layout, Bars, Icons or Text entries, indented or not. (spec §8.1) Result:
+252. **S2.** Open Containers with #1 selected. → The band is on top (Container picker and New
+     container). The rail is on the left with General · Filters · Layout · Bars. The rail's top edge
+     is level with the top of the tabs: the tab art, not the empty space above it. (spec §8.2, D5)
+     Result:
+253. **S3.** Rail -> Bars -> General, then scroll to the bottom. → Only the controls move. The band,
+     the rail and the tab strip stay put. (spec §8.3) Result:
+254. **S4.** On Bars, pick #2 (icons) in the band. Then on Bars again with #1, change General ->
+     Style to Icons. → The style entry renames to Icons, its tabs follow, and the page is on Icons,
+     not General. (spec §8.4, D6) Result:
+255. **S5.** Filters -> Categories, then Layout, then back to Filters. → Filters opens on
+     Categories. (spec §8.5, D8) Result:
+256. **S6.** Change a Layout setting and a Bars setting on #1. Then, with Layout selected, click
+     Defaults. → Only the Layout rows go back to defaults, on #1 only. The Bars change stays, and
+     other containers are untouched. (spec §8.6, D9) Result:
+257. **S7.** Layout -> Anchor -> Pick a frame..., then click a frame. Repeat and cancel with Esc. →
+     Both times the settings window reopens on Containers -> Layout. (spec §8.7, Review Focus 5)
+     Result:
+258. **S8.** Open Containers, then enter combat (attack a training dummy). → The whole page is under
+     the combat cover, the rail included, with "Settings are locked during combat." Nothing under it
+     can be clicked. (spec §8.8, options-ui-§2) Result:
+259. **S9.** `/reload`, then open Containers as the first page of the session. → The tabs sit in one
+     row to the right of the rail from the first frame. They are not stacked one per row, and none
+     is drawn under the rail. (Review Focus 1 (SR-LK-01)) Result:
+260. **S10.** Look at the rail, and hover each entry. → It has the tree-pane look (a dark fill and a
+     thin gray tooltip border). Entries are gold, the selected one is white on a blue bar, and
+     hovering highlights. Each entry shows a tooltip that says what the section holds. It is visibly
+     different from the gold tabs. (spec §2, A13) Result:
+261. **S11.** Close the panel. Right-click a container's drag handle or its `?`. → The panel opens
+     on Containers with that container in the band, on the section you last left. It does not jump
+     to General. (A9 (SR-AM-04)) Result:
+262. **S12.** Filters -> Categories -> "See spells" on a spell-list category. → It lands on the
+     General page's Spell Categories tab, with that category selected. (A10 (unchanged behavior))
+     Result:
+263. **S13.** Delete every container (Containers -> General -> Delete, each). Then click New
+     container. → With none, the rail lists General alone, with "No containers yet. Click New
+     container, or type /am new." After New container, Filters, Layout and Bars appear. (A12)
+     Result:
+264. **S14.** Rename #1, change its Unit, then click Defaults on General. → Enabled, Unit, Aura type
+     and Style go back to defaults. The name you typed is kept. (spec §3, D9) Result:
+265. **S15.** In combat, try clicking a rail entry. Leave combat. → During combat nothing changes
+     and one gray "locked" line prints. After combat the page draws normally. (A1 (SR-LK-01))
+     Result:
+266. **S16.** Open the settings of another Ka0s addon, such as KickCD or MultiMeters. → Their tab
+     strips, content panels and scroll bars are exactly where they were. The library minor
+     AuraMaster ships is the one loaded for every Ka0s addon, and a page with no rail must not move.
+     (Global Constraints (rail width 0 is byte-identical)) Result:
