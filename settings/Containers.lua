@@ -116,6 +116,8 @@ end
 local function doNew()
     local id, err, refused = CM.Create({})
     if not id then return sayError(err, refused) end
+    -- A new container is set up on General/General, whichever section and tab were on screen.
+    H.LandOnGeneral()
     H.SelectContainer(id)
 end
 

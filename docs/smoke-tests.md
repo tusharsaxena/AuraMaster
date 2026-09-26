@@ -1766,3 +1766,16 @@ cooldowns as text) and open the panel with `/am`.
      strips, content panels and scroll bars are exactly where they were. The library minor
      AuraMaster ships is the one loaded for every Ka0s addon, and a page with no rail must not move.
      (Global Constraints (rail width 0 is byte-identical)) Result: **PASS** (owner, 2026-09-26: another Ka0s addon's settings unchanged)
+
+## New container lands on General (2026-09-26, owner to run)
+
+Owner to run, on `fix/2026-09-26-new-container-general`. Open the panel with `/am`, Containers, with
+#1 (Player buffs as bars) selected.
+
+267. **NC1.** Rail -> Bars -> Time text, then click **New container** in the band. → A new container
+     is made and selected in the band, and the page shows General on the rail and the General tab,
+     with the new container's Name. Then Rail -> Bars: it reopens on Time text. Result:
+268. **NC2.** Go back to Bars -> Time text, keep the panel open, and type `/am new` in chat. → The
+     page moves to General/General on the new container, the same as the button. Then go to
+     Filters, close the panel and type `/am new`: the panel does not open. Open it with `/am`: it
+     is on General/General with that container. Result:

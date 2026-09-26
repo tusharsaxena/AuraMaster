@@ -84,7 +84,13 @@ band holds **the picker itself** (options-ui-§14):
   settings from) are the rail's General section, whose one tab options-ui-§14 names **General**. The band is
   drawn on every render, so a Delete's two refreshes cannot lose it; the library releases the band's
   widgets of the render before once the new band exists, and refuses New container in combat as it
-  refuses the picker's selection.
+  refuses the picker's selection. **New container lands on General** (owner, 2026-09-26): once the
+  container is made and selected, the page shows the rail's General section on its General tab,
+  whatever section and tab were on screen, so the new container is named and set up first. The
+  section left keeps its tab (back to Bars reopens Time text). `/am new` does the same to the page
+  (drawn at once if it is on screen, on its next show if not) and never opens the settings window.
+  One seam, `Helpers.LandOnGeneral` (`settings/OptionsSetup.lua`), moves the page for both.
+  Duplicate lives on the General tab, so it is already there and is unchanged.
 - **Every container picker lists by name** (smoke batch 2, B2-2): the Container banner and header,
   **Copy settings from**'s source and Layout's *Another container* all read
   `Database.GetContainersByName` — sorted case-insensitively, the id breaking a tie (names are unique
@@ -374,7 +380,7 @@ write re-applies every container.
 
 A top-level page (`N-1`, batch 7 — formerly General's third tab), one tab, **General**. The band above
 the strip holds the Container picker and **New container** (a player-buff bar container, then
-selected) on one row. With no container, the band and one sentence are all the page draws.
+selected, with the page moved to General/General) on one row. With no container, the band and one sentence are all the page draws.
 
 | Row | Path | Type | Behavior |
 |---|---|---|---|

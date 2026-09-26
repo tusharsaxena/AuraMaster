@@ -280,6 +280,9 @@ function runNew(rest)
         return print(err or L["Could not create a container"])
     end
     NS.State.SetActiveContainer(id)
+    -- As the panel's New container does: the Containers page shows General/General on the new
+    -- container, on screen now or on its next show. Nothing opens it.
+    if NS.Helpers and NS.Helpers.LandOnGeneral then NS.Helpers.LandOnGeneral() end
     afterRegistryChange()
     printf(L["Created %s"], describe(NS.Database.FindContainer(id)))
 end

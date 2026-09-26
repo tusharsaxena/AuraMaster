@@ -1671,7 +1671,7 @@ badge and any count quoted in the docs must agree with it.
 - tabs: the Containers page's band holds the picker and New container, out of the tab body
 - tabs: re-rendering Filters and Containers ten times each leaves the live Dropdown and Button counts flat
 
-### test_pages_rail.lua (16)
+### test_pages_rail.lua (20)
 
 - sections: Filters, Layout, Bars, Icons and Text register as sections under their page keys
 - sections: each style section's gate is derived from its style, on both builds (Diagnostics' inert split)
@@ -1689,6 +1689,10 @@ badge and any count quoted in the docs must agree with it.
 - rail: selecting a section is refused in combat and moves nothing
 - rail: Defaults restores only the active section's rows for the selected container (smoke 6)
 - rail: the Defaults tooltip names the section on screen and the kept name
+- new container: from Bars -> Time text, New container lands on General/General on the new container
+- new container: the section left keeps its tab: back to Bars reopens Time text
+- new container: with no containers, New container lands on General/General on the one it made
+- new container: /am new with the page on screen lands on General/General too, and opens nothing
 
 ### test_pages_about.lua (3)
 
@@ -1929,7 +1933,7 @@ badge and any count quoted in the docs must agree with it.
 | test_pages_icons.lua | 5 |
 | test_pages_text.lua | 28 |
 | test_pages_tabs.lua | 6 |
-| test_pages_rail.lua | 16 |
+| test_pages_rail.lua | 20 |
 | test_pages_about.lua | 3 |
 | test_pages_profiles.lua | 3 |
 | test_envsetup.lua | 4 |
@@ -1946,4 +1950,4 @@ badge and any count quoted in the docs must agree with it.
 | test_eol.lua | 2 |
 | test_layout_cap.lua | 13 |
 | test_diagnostics_contract.lua | 7 |
-| **Total** | **1640** |
+| **Total** | **1644** |
