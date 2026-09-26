@@ -21,7 +21,7 @@ can sit anywhere on screen, or attach to another container or to any in-game fra
 
 **_AuraMaster live in combat_**
 
-![AuraMaster live in combat](https://media.forgecdn.net/attachments/1979/410/auramaster-screenshot-01-jpg.jpg)
+![AuraMaster live in combat](https://media.forgecdn.net/attachments/1979/767/auramaster-screenshot-01-jpg.jpg)
 _[Watch on YouTube](https://www.youtube.com/watch?v=lJoZiVA_SBE)_
 
 **_Unlocked Mode_**
