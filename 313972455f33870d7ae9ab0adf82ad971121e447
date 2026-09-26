@@ -1,0 +1,1 @@
+clean: SR-AM-04 matches the plan (SelectSection, SelectTab route, OpenOptionsPage section mapping, click-time Defaults, tooltip); 9 new/rewritten cases red on 600d43a code and 4 branch mutations each caught; gate 1653/0, luacheck 0/0, lizard clean, cap and CRLF ok
