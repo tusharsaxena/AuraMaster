@@ -488,3 +488,17 @@ test("schema: -0 over 0 is still no change under SameValue", function()
     -- red under: numbers compared by their tostring, where "-0" ~= "0"
     assertEqual(table.concat(lines, " | "), "reset positions: 0 rows")
 end)
+
+test("schema: a path with no segment past its root reads nil, the library's Read and the host's (#21)", function()
+    for _, build in ipairs({ "live", "degraded" }) do
+        local NS2 = inBuild(build)
+        assertTrue(NS2.Database.FindContainer(1) ~= nil, build .. ": a starter container exists")
+        -- red under: the host readFrom answering the root itself when no segment is left to walk
+        assertNil(NS2.GetSetting("container", 1), build .. ": `container` alone is no setting")
+        assertNil(NS2.GetSetting(""), build .. ": the empty path is not the profile")
+        assertNil(NS2.GetSetting("..."), build .. ": nor is a path of dots")
+        assertNil(NS2.GetSetting("hideBlizzardBuffs.x"), build .. ": a walk through a scalar stops")
+        assertEqual(NS2.GetSetting("hideBlizzardBuffs"), NS2.db.profile.hideBlizzardBuffs, build)
+        assertEqual(NS2.GetSetting("container.bars.width", 1), NS2.Database.FindContainer(1).bars.width, build)
+    end
+end)

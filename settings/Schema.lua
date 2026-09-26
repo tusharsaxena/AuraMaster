@@ -134,6 +134,8 @@ end
 
 -- The host bodies below are the library-absent arm; with LibKa0s the three locals after them are
 -- the library's SplitPath, Read and Write (Write takes the value before `first`, hence the shim).
+-- The host Read and Write answer the library's edge cases too: nil, or a no-op, for a root that is
+-- not a table and for a path with no segment at or past `first` (#21).
 --
 -- Memoized: the set of paths is closed (the schema's own plus whatever the CLI is handed), while a
 -- slider drag re-resolves one path many times a second.
@@ -151,8 +153,10 @@ local function hostSplitPath(path)
 end
 
 local function hostReadFrom(root, parts, first)
-    local node = root
+    if type(root) ~= "table" then return nil end
     local last = #parts
+    if last < first then return nil end   -- no setting is stored AT a root (LibKa0s-Schema's Read)
+    local node = root
     for i = first, last do
         if type(node) ~= "table" then return nil end
         node = node[parts[i]]
@@ -161,14 +165,16 @@ local function hostReadFrom(root, parts, first)
 end
 
 local function hostWriteInto(root, parts, first, value)
+    if type(root) ~= "table" then return end
+    local last = #parts
+    if last < first then return end       -- a no-op, as LibKa0s-Schema's Write
     local node = root
-    local last = #parts - 1
-    for i = first, last do
+    for i = first, last - 1 do
         local key = parts[i]
         if type(node[key]) ~= "table" then node[key] = {} end
         node = node[key]
     end
-    node[parts[#parts]] = value
+    node[parts[last]] = value
 end
 
 local splitPath = SchemaLib and SchemaLib.SplitPath or hostSplitPath
