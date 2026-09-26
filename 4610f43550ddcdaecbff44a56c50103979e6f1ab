@@ -1,0 +1,1 @@
+clean: I21-06 matches the plan verbatim; cited shas (cf91fe1, b94dd6a, 75f2f19), D4 and v1.56.0 paths verified; fireSectionChanges/Signature claim matches Schema.lua:707; comment-only header edit keeps 1035 lines; CRLF kept; no tests added; gate 1647/0/0, luacheck 0/0, lizard clean
