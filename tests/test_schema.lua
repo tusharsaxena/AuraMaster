@@ -523,3 +523,43 @@ test("schema: a duplicate path answers the first row registered, and an appended
         assertNil(NS2.FindSchemaRow("container.bars.width.i21"), build)
     end
 end)
+
+test("schema: the bracket nests, survives a raise and ignores a stray End, the library's and the host's (#21)", function()
+    for _, build in ipairs({ "live", "degraded" }) do
+        local NS2 = inBuild(build)
+        local PATH = "hideBlizzardBuffs"
+        NS2.SetByPath(PATH, false)
+        local lines = captureSet(NS2)
+        NS2.Bulk.End("reset", "stray")                     -- no bracket open
+        assertEqual(#lines, 0, build .. ": a stray End logs nothing")
+        NS2.Bulk.Run("reset", "outer", function()
+            NS2.Bulk.Run("reset", "inner", function() NS2.SetByPath(PATH, true) end)
+            NS2.SetByPath(PATH, false)
+        end)
+        -- red under: a level logging at its own close rather than when the depth returns to 0
+        assertEqual(table.concat(lines, " | "), "reset outer: 2 rows", build)
+        local ok, err = pcall(NS2.Bulk.Run, "copy", "raise", function()
+            NS2.SetByPath(PATH, true)
+            error("boom", 0)
+        end)
+        assertFalse(ok, build)
+        assertEqual(err, "boom", build .. ": the raised value comes back unchanged")
+        -- red under: the bracket closing unmarked, or silently, on an error
+        assertEqual(lines[2], "copy raise: 1 rows (stopped by an error)", build)
+        -- A number row: captureSet formats without tostring, and Lua 5.1's %s refuses a boolean.
+        NS2.SetByPath("container.bars.width", 251, 1)
+        -- red under: the mute stuck open after the raise
+        assertEqual(lines[3], "container.bars.width = 251", build .. ": the seam logs again")
+        -- JC-9: the act that reset the profile says so on `info`; a `return true` is no signal.
+        NS2.Bulk.Run("reset", "whole", function(info)
+            NS2.SetByPath(PATH, true)
+            info.profileReset = true
+        end)
+        assertEqual(#lines, 3, build .. ": a profile reset act logs no bulk line")
+        NS2.Bulk.Run("reset", "returned", function()
+            NS2.SetByPath(PATH, false)
+            return true
+        end)
+        assertEqual(lines[4], "reset returned: 1 rows", build)
+    end
+end)
