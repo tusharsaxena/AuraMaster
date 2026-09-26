@@ -31,8 +31,21 @@ texts, the addon shows up there as *Ka0s Aura Master*.
 
 ## Screenshots
 
-There are no screenshots yet. They have to be taken in the game, and that work is tracked in
-[issue #3](https://github.com/tusharsaxena/AuraMaster/issues/3).
+**_Live in combat, with each container labeled_**
+
+![Live in combat, with each container labeled](https://raw.githubusercontent.com/tusharsaxena/AuraMaster/master/media/screenshots/auramaster.screenshot.01.png)
+
+**_Unlocked: every container shows its drag handle_**
+
+![Unlocked: every container shows its drag handle](https://raw.githubusercontent.com/tusharsaxena/AuraMaster/master/media/screenshots/auramaster.screenshot.02.png)
+
+**_Unlocked with test mode on, so every container fills with sample spells_**
+
+![Unlocked with test mode on, so every container fills with sample spells](https://raw.githubusercontent.com/tusharsaxena/AuraMaster/master/media/screenshots/auramaster.screenshot.03.png)
+
+**_The Spell Categories tab, where each category's spell list lives_**
+
+![The Spell Categories tab, where each category's spell list lives](https://raw.githubusercontent.com/tusharsaxena/AuraMaster/master/media/screenshots/auramaster.screenshot.04.png)
 
 ## Usage
 
