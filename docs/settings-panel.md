@@ -13,18 +13,21 @@ is a defect in this doc (documentation-§3).
 |---|---|---|
 | Ka0s Aura Master (landing) | — untabbed (options-ui-§13) | Logo, the TOC's one-line Notes, and the slash command list generated from `NS.COMMANDS`. `/am` and `/am config` open the panel here |
 | General | Master controls · Display · Spell Categories · Dispel Colors | Turn the addon off, when containers show at all, master scale and alpha, lock (unlocked shows the drag handles), debug console, test mode (placeholder auras), the two resets; hiding Blizzard's buff and debuff frames; which spells each spell category matches, and one color per dispel type, both shared by every container |
-| Containers | General | A top-level page (`N-1`, batch 7): create, select, rename, enable, unit, aura type and style of a container, and duplicate, delete, copy settings between containers |
-| - Filters (sub-page of Containers, `N-2`) | General · Categories · Overrides · Sorting | Who cast it, timed or permanent, max duration, and the five-rank priority block at the foot of the tab; the Show/Hide category grids (weapon enchants among them); the whitelist and blacklist spell lists, each entry's verdict in its "?" mark; sort order and cap (per group). Tabs vary with the aura type |
-| - Layout (sub-page of Containers, `N-2`) | Frame · Anchor · Growth · Mouse · Label | Scale, opacity, strata and frame level; where the container sits (the screen, another container or a named frame, with only what the mode reads drawn) and the frame picker; growth direction and spacing, the flow inherited from the parent while attached to a container; tooltips, cancel, click-through; the optional name label |
-| - Bars (sub-page of Containers, `N-2`) | General · Background & border · Name text · Time text · Stack text · Icon · Pandemic | The look of a container drawn as bars |
-| - Icons (sub-page of Containers, `N-2`) | Size · Border · Cooldown · Time text · Stack text · Pandemic | The look of a container drawn as icons |
-| - Text (sub-page of Containers, `N-2`) | General · Font · Icon · Pandemic · Animation | The look of a container drawn as text: what each line says, its font and its optional icon, its pandemic-window color and blink, its loop, and its opt-in dispel type colors |
+| Containers | a nav rail (options-ui-§13): General · Filters · Layout · the container's own style | One page per container (#6): the band's picker chooses the container, the rail chooses which part of it the tabs below show, and only the scroll moves |
+| Containers → General (rail) | General | A top-level page (`N-1`, batch 7): create, select, rename, enable, unit, aura type and style of a container, and duplicate, delete, copy settings between containers |
+| Containers → Filters (rail) | General · Categories · Overrides · Sorting | Who cast it, timed or permanent, max duration, and the five-rank priority block at the foot of the tab; the Show/Hide category grids (weapon enchants among them); the whitelist and blacklist spell lists, each entry's verdict in its "?" mark; sort order and cap (per group). Tabs vary with the aura type |
+| Containers → Layout (rail) | Frame · Anchor · Growth · Mouse · Label | Scale, opacity, strata and frame level; where the container sits (the screen, another container or a named frame, with only what the mode reads drawn) and the frame picker; growth direction and spacing, the flow inherited from the parent while attached to a container; tooltips, cancel, click-through; the optional name label |
+| Containers → Bars (rail, a container drawn as bars) | General · Background & border · Name text · Time text · Stack text · Icon · Pandemic | The look of a container drawn as bars |
+| Containers → Icons (rail, a container drawn as icons) | Size · Border · Cooldown · Time text · Stack text · Pandemic | The look of a container drawn as icons |
+| Containers → Text (rail, a container drawn as text) | General · Font · Icon · Pandemic · Animation | The look of a container drawn as text: what each line says, its font and its optional icon, its pandemic-window color and blink, its loop, and its opt-in dispel type colors |
 | Profiles | — untabbed, drawn by AceConfigDialog (options-ui-§3) | Choose, create, copy, reset and delete profiles |
 
-The `- ` prefix is the Settings tree's own nesting mark (`D6`): Filters, Layout, Bars and Icons are
-registered under the Containers picker and their tree label carries `NS.SubPageLabel`'s two-space,
-hyphen indent (`settings/OptionsSetup.lua`); their page KEY and their own page heading stay plain —
-only the tree entry is marked.
+Filters, Layout, Bars, Icons and Text are **sections of the Containers page** (#6), not pages: they
+have no Settings tree entry of their own, and the tree reads General · Containers · Profiles. A
+section key is the former page key (`filters`, `layout`, `bars`, `icons`, `text`, and `containers` for
+General), so every row's `page`, every `/am set`, `/am get` and `/am list` path and every default is
+unchanged. The rail lists General, Filters, Layout and the one style section the selected container
+is drawn in, in `SECTION_ORDER`'s order (`settings/OptionsSetup.lua`).
 
 ## How the panel is built
 
@@ -36,20 +39,23 @@ only the tree entry is marked.
   `OnShow` (options-ui-§5).
 - **Every page renders through the tab strip**, one tab per schema `group` in declaration order
   (options-ui-§13). The landing page and Profiles are the two untabbed pages.
-- **Four pages edit one container.** Filters, Layout, Bars and Icons are registered with
-  `NS.RegisterContainerPage` and render through `Helpers.RenderContainerPage`, which is the container
-  banner plus `Helpers.RenderPage` (`settings/OptionsSetup.lua`). `RenderPage` maps the page's spec
-  onto the library's `O.RenderTabbedSchema` (LibKa0s v1.56.0, `opts`: `tabs`, `cfg`, `disabledFor`,
-  `disabledNotice`, `chrome`), which draws the tabbed page: the page's schema groups become tabs, the
-  page's own tabs that the container's aura type admits follow (one keyed by a group takes that
-  group's place and is handed its rows; one may name the tab it is drawn ahead of, as Filters'
-  Overrides does), a stale active tab heals to the first, a page disabled for its container draws
-  the muted-red notice above rows drawn disabled, and every row resolves against the selected
-  container. The host keeps no tab renderer of its own (anti-pattern #47, `AuraMaster-R-04`). These
-  four are also sub-pages of Containers in the tree (`N-2`, `D6`) — their Blizzard subcategory
-  registers under a marked label, but their page key, heading and everything above is unaffected.
-  General and Containers are both addon-wide and render through `Helpers.RenderPage`; General draws
-  no banner, and Containers' one tab edits the selected container's identity.
+- **One page edits one container, through a nav rail** (#6, options-ui-§13). The Containers page
+  draws, in the library's order, the band (`Helpers.ContainerBanner`, the page's only picker), the
+  rail (`O.NavRail`, 120px, in AceGUI's tree-pane look) and the selected section's tabs, over the
+  page's one scroll: `Helpers.RenderContainerPage` (`settings/OptionsSetup.lua`). Each page file
+  registers its rows and its section with `NS.RegisterContainerSection(key, label, spec)`, and the
+  section renders through `Helpers.RenderPage` with its own key and spec, which maps the spec onto the
+  library's `O.RenderTabbedSchema` (`opts`: `tabs`, `cfg`, `chrome`): the section's schema groups
+  become tabs, the section's own tabs that the container's aura type admits follow (one keyed by a
+  group takes that group's place and is handed its rows; one may name the tab it is drawn ahead of,
+  as Filters' Overrides does), a stale active tab heals to the first, and every row resolves against
+  the selected container. The host keeps no tab renderer of its own (anti-pattern #47,
+  `AuraMaster-R-04`). A style section is listed only for a container drawn in that style, so no
+  section is ever drawn disabled, and a Style change moves an open style section to the new style's
+  (Bars becomes Icons) while every other section stays. The section (`ctx.activeSection`) and each
+  section's tab (`ctx.sectionTabs`) are session state and never persisted: returning to a section
+  returns to the tab you left. General, the addon page, is addon-wide, renders through
+  `Helpers.RenderPage` and draws no banner.
 - **Rows that do not apply to the selected container are not drawn.** A row may carry `auraTypes`
   (`settings/Schema.lua:370`): the buff categories and Hide enchants without a duration are not
   offered on a debuff container.
@@ -67,17 +73,15 @@ only the tree entry is marked.
 
 ## The container banner and the one-row band
 
-A page that edits one of many containers says which one, in the band above its tab strip, and that
+The Containers page says which container it edits, in the band above its rail and tab strip, and that
 band holds **the picker itself** (options-ui-§14):
 
-- **Filters, Layout, Bars, Icons** draw `Helpers.ContainerBanner` — a Container dropdown built through
-  the library's `PageBanner`, labeled with each container's unit, aura type and style. It is the
-  page's only picker.
+- **Every section of Containers** sits under one band, drawn by `Helpers.ContainerBanner` — a Container dropdown built through the library's `PageBanner`, labeled with each container's unit, aura type and style — above both the rail and the strip. It is the page's only picker; the rail beside it chooses which part of the container is shown, never which container (options-ui-§14).
 - **Containers** carries the page's identity controls in the band, as options-ui-§14 asks: its Container
   picker and **New container** on one row: `Helpers.ContainerBanner` with the page's own tooltip and
   New container as the library's `PageBanner` `action` (feedback #2, 2026-09-19; the picker+create
   band, LibKa0s v1.56.0). The acts on the selected container (Name, Enabled, Duplicate, Delete, Copy
-  settings from) stay on the page's one tab, which options-ui-§14 then names **General**. The band is
+  settings from) are the rail's General section, whose one tab options-ui-§14 names **General**. The band is
   drawn on every render, so a Delete's two refreshes cannot lose it; the library releases the band's
   widgets of the render before once the new band exists, and refuses New container in combat as it
   refuses the picker's selection.
@@ -390,7 +394,7 @@ Then **Duplicate** and **Delete** (asks first), and — with more than one conta
 from**: a source dropdown (every other container, by name), a "what to copy" dropdown (everything, or one of Filters, Layout, Mouse,
 Label, Bar style, Icon style, Text style) and **Copy onto this container**. Name and position are never copied.
 
-### Filters (46 rows, `settings/Filters.lua`) — sub-page of Containers (`N-2`, `D6`)
+### Filters (46 rows, `settings/Filters.lua`) — a section of Containers (#6)
 
 Every tab opens with the container's warnings in orange — what the engine will silently not honor
 here (`Helpers.RenderWarnings`, from `FilterCompiler.Compile`'s `warnings`).
@@ -516,7 +520,7 @@ A container that shows only weapon enchants is a buff container (schema v5): on 
 every category is Hide but **Weapon enchants**, and **Show all** / **Hide all** (feedback #10) reach
 it like any other.
 
-### Layout (38 rows, `settings/Layout.lua`) — sub-page of Containers (`N-2`, `D6`)
+### Layout (38 rows, `settings/Layout.lua`) — a section of Containers (#6)
 
 **Frame** — Scale `container.layout.scale` (0.5–3), Opacity `container.layout.alpha` (0–1, percent),
 Strata `container.layout.strata`, Frame level `container.layout.level` (1–100).
@@ -638,15 +642,9 @@ the label's height plus the strip gap (D6, `Anchors.PlaceLabel`), so the order i
 block. A follower's seam makes room for both (F2). The rows carry no `effect`: a write re-applies
 the selected container.
 
-### Bars (72 rows, `settings/Bars.lua`) — sub-page of Containers (`N-2`, `D6`)
+### Bars (72 rows, `settings/Bars.lua`) — a section of Containers (#6)
 
-When the selected container is drawn as icons, a small muted-red note heads every tab — "Not in use: this
-container is drawn as icons. Set its Style to Bars on the Containers page to use these settings." —
-and every control below it is drawn disabled (the spec's `disabledFor`,
-`settings/OptionsSetup.lua`'s `mutedNotice`, drawn by the library's `O.RenderTabbedSchema` above
-the rows). It was a large orange banner until batch 8, which
-shouted for what is an aside; orange is left to the engine warnings, which can head the same page.
-The tabs and the container picker stay live.
+This section is on the rail only for a container drawn as bars (#6). A container drawn in another style shows its own style's section instead, so nothing here is ever drawn disabled.
 
 | Tab | Rows (all under `container.bars.`) |
 |---|---|
@@ -688,7 +686,7 @@ any other texture, and a new thickness for one, reaches the aura buttons already
 laid-out button because its size reads secret (`Style.ApplyBorder`, B2-3, docs/midnight-quirks.md).
 Its color still changes at once.
 
-### Icons (42 rows, `settings/Icons.lua`) — sub-page of Containers (`N-2`, `D6`)
+### Icons (42 rows, `settings/Icons.lua`) — a section of Containers (#6)
 
 Bars folded its two-slider `Size` tab into a renamed `General` tab (`S-1`) because a whole tab for
 two sliders did not earn its place. Icons keeps its own `Size` tab as-is: this page has no
@@ -696,9 +694,7 @@ two sliders did not earn its place. Icons keeps its own `Size` tab as-is: this p
 group that would land arbitrarily inside `Border` or `Cooldown` if folded there — the two pages are
 deliberately not made to match shape-for-shape (`settings/Icons.lua`).
 
-When the selected container is drawn as bars, the same small muted-red note heads every tab — "Not in
-use: this container is drawn as bars. Set its Style to Icons on the Containers page to use these
-settings." — and every control is drawn disabled, as on the Bars page.
+This section is on the rail only for a container drawn as icons (#6); another style shows its own section instead.
 
 | Tab | Rows (all under `container.icons.`) |
 |---|---|
@@ -716,7 +712,7 @@ None or 0, whatever the border style. They sit above your border and replace it 
 icon shows your border. In test mode the placeholders are tinted the same way
 (`Compat.SetAuraBorderColor`). `blizzardNumbers` shows the cooldown frame's own countdown beside the time text.
 
-### Text (37 rows, `settings/Text.lua`) — sub-page of Containers (`N-2`, `D6`)
+### Text (37 rows, `settings/Text.lua`) — a section of Containers (#6)
 
 Four tabs. **General** is drawn bespoke, not by the ordinary schema-group renderer, so it can put the
 built-in picker, the preview and two read-only blocks between its rows (feedback #5). Under **Text
@@ -778,10 +774,7 @@ a type it has no color for (Enrage) gets no visible tint at all, the same as a t
 round 1). The opacity and the thickness are dimmed while their toggle is off. The preview draws all
 three from the placeholder's own type.
 
-When the selected container is drawn as bars or icons, the same small muted-red note heads every tab
-— naming whichever of the two it actually is ("Not in use: this container is drawn as icons/bars. Set
-its Style to Text on the Containers page to use these settings.") — and every control is drawn
-disabled, as on the Bars and Icons pages.
+This section is on the rail only for a container drawn as text (#6); another style shows its own section instead.
 
 | Tab | Rows (all under `container.text.`) |
 |---|---|

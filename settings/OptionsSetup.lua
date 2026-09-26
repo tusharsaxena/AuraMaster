@@ -3,11 +3,11 @@ local _, NS = ...
 -- settings/OptionsSetup.lua — wires the addon into LibKa0s-Options-1.0 (options-ui-§1).
 --
 -- The canvas shell, the schema-row → AceGUI makers, the two-column flow engine, the chrome band and
--- the tabbed page itself -- the strip, the stale-tab heal, the tab switch, the disabled notice and
--- the page banner with its create button -- are the library's (O.RenderTabbedSchema, O.PageBanner).
+-- the tabbed page itself -- the strip, the stale-tab heal, the tab switch, the nav rail and the page
+-- banner with its create button -- are the library's (O.RenderTabbedSchema, O.NavRail, O.PageBanner).
 -- This file is the part that is ours: where a value lives, which rows belong to which page, what a
--- color looks like on disk -- and the CONTAINER BANNER every per-container page shares, with
--- Helpers.RenderPage, which maps this addon's page spec onto the library's tabbed page.
+-- color looks like on disk -- and the Containers page — its band, its nav rail and its sections (#6),
+-- with Helpers.RenderPage, which maps this addon's page spec onto the library's tabbed page.
 --
 -- Loads after settings/Slash.lua and BEFORE every settings/<page>.lua, because those files call
 -- the composers (NS.Helpers.FontGroup, …) at FILE LOAD.
@@ -49,51 +49,6 @@ local function vetoedFromResetAll(row)
     if vetoedFromPanelReset(row) then return true end
     if row.page == "profiles" then return true end
     return not row.sessionOnly
-end
-
--- ---------------------------------------------------------------------
--- The nesting mark
--- ---------------------------------------------------------------------
---
--- Blizzard's Settings tree draws every canvas subcategory of one addon at the SAME depth, and this
--- addon's pages are not one flat set: Filters, Layout, Bars and Icons all edit the container that
--- Containers has selected, while General, Containers and Profiles edit the addon (or, for
--- Containers, the registry of containers itself) and never retarget when the picker moves.
--- Four pages presented as peers of the three that never retarget is the tree lying about what a
--- click will change (N-2).
---
--- There is no API for a third level, so the mark is TYPOGRAPHY, copied from the established pattern
--- in MultiMeters (D6, `MultiMeters/settings/OptionsSetup.lua:91`) rather than invented fresh here:
--- two spaces, a hyphen and a space, prefixed to the tree label ONLY. It is deliberately not part of
--- the page's own title -- the canvas heading and the breadcrumb keep the plain name, because a page
--- heading that starts indented reads as a layout bug.
---
--- THE INDENT DOES THE NESTING; THE HYPHEN MARKS THE ITEM. MultiMeters recorded two earlier spellings
--- that got one of those and not the other, and both failed in their own way (a hollow box where the
--- font had no glyph for a rightward arrow, and a bare "|- " that read as a bulleted list rather than
--- as nesting) -- reasons enough to keep copying the working spelling rather than choosing a new one.
---
--- Whitespace was confirmed in MultiMeters's own client to survive -- leading whitespace is the kind
--- of thing a UI toolkit trims, and this one does not -- which is what makes the hyphen safe to add:
--- it is decoration on an indent that is already doing the work, rather than the only thing standing
--- in for it.
---
--- Not a locale string. It is furniture rather than text, and a translator handed two spaces and a
--- hyphen has nothing to translate and one more chance to drop a space.
-local SUBPAGE_MARK = "  - "
-
---- The tree label for a page nested under Containers.
----
---- Used by the four container pages (Filters, Layout, Bars, Icons) at the
---- RegisterCanvasLayoutSubcategory call and nowhere else. General, Containers and Profiles do NOT
---- call it: none of them is about one container, and marking them would make the mark mean nothing.
---- A helper rather than the literal at each call site so every caller stays exactly one string away
---- from the decision, and a future page that becomes (or stops being) a sub-page changes one call.
----
---- @param name string  the page's own display name
---- @return string
-function NS.SubPageLabel(name)
-    return SUBPAGE_MARK .. tostring(name)
 end
 
 local lib = LibStub and LibStub("LibKa0s-Options-1.0", true)
@@ -215,13 +170,43 @@ local descriptor = {
 -- through a row (route (a)); `/am set` on any composed path answers the library-absent line.
 -- tests/test_surface_parity.lua pins the member set against the live instance;
 -- tests/test_optionssetup.lua pins the full count, the library-absent count and the named delta.
--- Each per-container page's style gate (`spec.disabledFor`), by page key, recorded on both arms so
--- a library-less build still knows it: modules/Diagnostics.lua reads it to tell a stored value the
--- container's style leaves unused from one in use (B9 DX-2). One source: the page's own predicate.
+
+-- ---------------------------------------------------------------------------
+-- The Containers page's sections (#6)
+-- ---------------------------------------------------------------------------
+--
+-- One config page per container (docs/superpowers/specs/2026-09-26-settings-redesign-design.md): the
+-- Containers page draws a nav rail whose entries are these sections, and a section renders its own
+-- page key's rows through Helpers.RenderPage exactly as the sub-page it replaced did. A section IS a
+-- former page key, so every row path, /am set and Defaults are unchanged. Each settings/<section>.lua
+-- registers at FILE LOAD, and the registry lives on BOTH arms: a library-absent build still needs the
+-- style gates below.
+local sections = {}
+
+-- The rail's order: General first (options-ui-§14: the page opens on it), then Filters, Layout and
+-- the one style section the container is drawn in. Not the TOC's order: the page files load in any.
+local GENERAL_SECTION = "containers"
+local SECTION_ORDER = { GENERAL_SECTION, "filters", "layout", "bars", "icons", "text" }
+
+-- Each style section's gate, by page key: modules/Diagnostics.lua reads it to tell a stored value the
+-- container's style leaves unused from one in use (B9 DX-2). Derived from the section's `style` --
+-- the same fact that decides whether the rail lists it -- so the two cannot disagree.
 NS.ContainerPageDisabledFor = NS.ContainerPageDisabledFor or {}
-local function recordContainerPage(pageKey, spec)
-    NS.ContainerPageDisabledFor[pageKey] = type(spec) == "table" and spec.disabledFor or nil
+
+--- Register one section of the Containers page.
+--- @param key string    the section's page key: the `page` its schema rows carry
+--- @param label string  the rail entry's label
+--- @param spec table    Helpers.RenderPage's page spec, plus `style` (listed on the rail only for a
+---                      container drawn in that style) and `tooltip` (the rail entry's)
+function NS.RegisterContainerSection(key, label, spec)
+    spec = spec or {}
+    local style = spec.style
+    sections[key] = { key = key, label = label, spec = spec, style = style, tooltip = spec.tooltip }
+    NS.ContainerPageDisabledFor[key] = style and function(c) return c.style ~= style end or nil
 end
+
+--- The registered section `key`, or nil. Read-only: for the suite and the Containers page.
+function NS.ContainerSection(key) return sections[key] end
 
 if not lib then
     local function sayMissing() NS.Printf(L["%s, so the settings panel is unavailable."], NS.LIBKA0S_MISSING) end
@@ -272,7 +257,7 @@ if not lib then
         "RenderRows", "RenderGrid", "RenderField", "RenderSchema", "RenderTabbedSchema", "Section",
         "AddSpacer", "TextRow", "TabStrip", "SubTabStrip", "PageHeader", "PageBanner",
         "InlineButtonPair", "SessionCheckbox", "AttachTooltip", "ChoiceGrid", "ResolveId", "IdInput",
-        "IdList", "UnnamedCandidates", "SelectTab",
+        "IdList", "UnnamedCandidates", "SelectTab", "NavRail", "SelectSection",
         -- this addon's decorations on the live instance (defined below the `return`)
         "SelectContainer", "ContainerBanner", "RenderWarnings", "RenderPage", "RenderContainerPage",
     }) do
@@ -289,7 +274,6 @@ if not lib then
     NS.CreateOptionsPanel  = function() sayMissing() end
     NS.OpenOptionsPanel    = function() sayMissing() end
     NS.OpenOptionsPage     = function() sayMissing() end
-    NS.RegisterContainerPage = function(pageKey, _, _, spec) recordContainerPage(pageKey, spec) end
     return
 end
 
@@ -330,6 +314,13 @@ function NS.OpenOptionsPage(pageKey)
     if InCombatLockdown() then
         NS.Printf("|cff808080%s|r", L["cannot open settings during combat — Blizzard's category-switch is protected"])
         return
+    end
+    -- A former sub-page key is a section of Containers now (#6): select it, then open Containers.
+    -- "containers" itself keeps the section the player left (an anchor's right-click means "this
+    -- container", not "General"), and a style key the container is not drawn in selects nothing.
+    if sections[pageKey] then
+        if pageKey ~= GENERAL_SECTION then Helpers.SelectSection(pageKey) end
+        pageKey = GENERAL_SECTION
     end
     local cat = categories[pageKey]
     if cat and cat.GetID and Settings and Settings.OpenToCategory then
@@ -426,25 +417,6 @@ end
 -- The tabbed page: this addon's page spec, mapped onto the library's
 -- ---------------------------------------------------------------------------
 
---- The notice over a page drawn disabled, in the addon's muted red (C.NOTICE_COLOR). The library
---- draws it, in the small font with the ordinary row gap under it, and adds no color of its own.
----
---- It was large orange (GameFontNormalLarge, |cffffa040) across the whole pane until batch 8, which
---- shouted a full-width warning for what is an informational aside — nothing is wrong, the page is
---- simply inert until the player changes one dropdown elsewhere. Gray at the default Label size is
---- the same voice the addon already uses for a line that reports rather than warns (the combat
---- refusals in settings/Containers.lua print in this exact gray), and it leaves orange meaning what
---- it means everywhere else in the panel: RenderWarnings' "the game will not honor this", which can
---- sit on the very same page and must still be the loudest thing on it. The owner then asked for it
---- in a muted gold (2026-09-19, B3): the gray read as disabled text rather than as a note, and a gold
---- quieter than the title's is still no warning. Later the same day the owner asked for muted red
---- instead (Task 20), on bars, icons and text pages alike; the combat refusals keep their gray.
-local function mutedNotice(notice, cfg)
-    if type(notice) == "function" then notice = notice(cfg) end
-    if type(notice) ~= "string" then return nil end
-    return "|c" .. C.NOTICE_COLOR .. notice .. "|r"
-end
-
 -- The page key an empty registry's render hands the library: no row carries it, so the strip it
 -- draws is the one placeholder tab below and nothing else (options-ui-§13: every page draws a strip).
 local EMPTY_PAGE = "__empty"
@@ -474,10 +446,8 @@ end
 
 --- The library's `opts` for one render of a page with a container (or an addon-wide page).
 local function pageOpts(spec, cfg)
-    local disabledFor, notice, intro = spec.disabledFor, spec.disabledNotice, spec.intro
+    local intro = spec.intro
     local opts = { tabs = hostTabs(spec, cfg), cfg = cfg }
-    if disabledFor then opts.disabledFor = function(c) return c ~= nil and disabledFor(c) end end
-    if notice then opts.disabledNotice = function(c) return mutedNotice(notice, c) end end
     if intro and cfg then opts.chrome = function(c) intro(c, cfg) end end
     return opts
 end
@@ -485,10 +455,10 @@ end
 --- Render one tabbed page through the library's O.RenderTabbedSchema: the optional `banner(ctx)`
 --- first (the strip reserves its band under it), then the strip over the page's schema groups and
 --- its own tabs, then the active tab's content. The library owns the partition, the stale-tab heal,
---- the tab-switch re-render, the disabled notice and the release of the banner's widgets; this
---- wrapper owns only what the page spec means for this addon. General and Containers call it
---- directly; every per-container page through RenderContainerPage, which passes the container
---- banner. A per-container page with no container draws the empty registry's one tab and line.
+--- the tab-switch re-render and the release of the banner's widgets; this wrapper owns only what the
+--- page spec means for this addon. General calls it directly, and the Containers page, for each of
+--- its sections, through RenderContainerPage. A per-container page with no container draws the
+--- empty registry's one tab and line.
 ---
 --- `spec` fields, all optional:
 ---   addonWide            the page's tabs do not depend on a container existing (General)
@@ -497,9 +467,6 @@ end
 ---                        has none); one keyed by a schema group replaces that group's rows, one
 ---                        with `before` is drawn ahead of the tab it names
 ---   intro(ctx, cfg)      drawn above every tab's content, when a container is selected
----   disabledFor(cfg)     true draws every control of every tab disabled (a page tab's widgets
----                        through `ctx.__renderDisabled`), under `disabledNotice` (a string, or a
----                        function of cfg answering one), drawn as a small muted-red note
 ---   afterGroup           the flow engine's { [group] = fn(ctx) } hooks
 ---   pairWith             the flow engine's { [path] = maker(ctx, rowGroup) } right-half partners
 function Helpers.RenderPage(ctx, pageKey, spec, banner)
@@ -516,39 +483,120 @@ function Helpers.RenderPage(ctx, pageKey, spec, banner)
     if scroll and scroll.DoLayout then scroll:DoLayout() end
 end
 
---- Render one per-container page: the container banner (options-ui-§14), then the tabbed page.
-function Helpers.RenderContainerPage(ctx, pageKey, spec)
-    Helpers.RenderPage(ctx, pageKey, spec, Helpers.ContainerBanner)
+-- ---------------------------------------------------------------------------
+-- The Containers page: the band, the nav rail, and the selected section's tabs (#6)
+-- ---------------------------------------------------------------------------
+--
+-- The rail lists General, Filters, Layout and the ONE style section the selected container is drawn
+-- in; each section renders through Helpers.RenderPage with its own page key and spec, so every row,
+-- default and slash path is the sub-page's it replaced. The section, and each section's tab, are
+-- session state on the ctx and never persisted (options-ui-§13).
+
+-- The Containers page's ctx, recorded when its builder binds it: the one page SelectSection moves.
+local containersCtx
+
+--- The sections the rail lists for container `cfg`, in rail order. General always (it is where a
+--- container is made); the rest only with a container, and a style section only for its own style.
+local function railSections(cfg)
+    local out = {}
+    for _, key in ipairs(SECTION_ORDER) do
+        local s = sections[key]
+        if s and (key == GENERAL_SECTION or (cfg and (s.style == nil or s.style == cfg.style))) then
+            out[#out + 1] = s
+        end
+    end
+    return out
+end
+
+--- The section to draw: the one the page holds while the rail still lists it; else, when it held a
+--- style section, the container's own style section (a Style change renames the entry, spec §3);
+--- else the first.
+local function settleSection(ctx, list)
+    local held = sections[ctx.activeSection]
+    local fallback = list[1]
+    for _, s in ipairs(list) do
+        if s.key == ctx.activeSection then return s end
+        if held and held.style and s.style then fallback = s end
+    end
+    return fallback
+end
+
+--- Keep the tab the page is on for the section it last drew. Called before ANYTHING moves the
+--- section: a strip click is the library's alone (O.RenderTabbedSchema re-renders the strip and the
+--- body without calling back here), so just before leaving is the one moment the host sees the tab.
+local function stashTab(ctx)
+    local drawn = ctx.__renderedSection
+    if drawn then ctx.sectionTabs[drawn] = ctx.activeTab end
+    ctx.__renderedSection = nil
+end
+
+--- Bind the Containers page's ctx (settings/Containers.lua's builder). The page opens on General.
+--- Every section key names the same ctx in the test seam: a section is the page, drawn on it.
+function Helpers.__bindContainersPage(ctx)
+    containersCtx = ctx
+    ctx.sectionTabs = {}
+    ctx.activeSection = GENERAL_SECTION
+    for key in pairs(sections) do Helpers.__pageCtx[key] = ctx end
+    Helpers.__pageCtx[GENERAL_SECTION] = ctx
+end
+
+--- Render the Containers page: the container band (`band` = ContainerBanner's { tooltip, action }),
+--- then the nav rail, then the selected section's strip and tab -- the library's draw order,
+--- PageBanner, NavRail, TabStrip (options-ui-§13, §14).
+function Helpers.RenderContainerPage(ctx, band)
+    ctx.sectionTabs = ctx.sectionTabs or {}
+    stashTab(ctx)
+    local list = railSections(NS.ActiveContainer())
+    local section = settleSection(ctx, list)
+    ctx.activeSection = section.key
+    ctx.activeTab = ctx.sectionTabs[section.key]
+    local entries = {}
+    for i, s in ipairs(list) do entries[i] = { key = s.key, label = s.label, tooltip = s.tooltip } end
+    Helpers.RenderPage(ctx, section.key, section.spec, function(c)
+        Helpers.ContainerBanner(c, band)
+        Helpers.NavRail(c, {
+            entries  = entries,
+            value    = section.key,
+            onSelect = function(key)
+                stashTab(c)
+                c.activeSection = key
+                Helpers.RefreshPanel(c, true)
+            end,
+        })
+    end)
+    ctx.__renderedSection = section.key
+end
+
+--- Select section `key` on the Containers page, and optionally its tab: the one seam a link, a deep
+--- link or a suite moves the section through. A hidden page is marked owed a render and draws the
+--- section on its next show. Refused in combat, as a tab switch is (options-ui-§2). A style section
+--- the selected container is not drawn in is not on the rail, and selecting it moves nothing.
+--- @return boolean  whether the section was selected
+function Helpers.SelectSection(key, tabKey)
+    if Helpers.__combatRefused() then return false end
+    local ctx = containersCtx
+    if not ctx then return false end
+    local listed = false
+    for _, s in ipairs(railSections(NS.ActiveContainer())) do
+        if s.key == key then listed = true end
+    end
+    if not listed then return false end
+    stashTab(ctx)
+    ctx.activeSection = key
+    if tabKey ~= nil then ctx.sectionTabs[key] = tabKey end
+    Helpers.RefreshPanel(ctx, true)
+    return true
+end
+
+-- The library's SelectTab moves one PAGE's tab. A section key is no page any more (#6): it routes to
+-- SelectSection, so a link written against the old page keys still lands. Any other key -- General,
+-- the addon page, settings/Filters.lua's "See spells" -- is the library's.
+local selectTab = Helpers.SelectTab
+function Helpers.SelectTab(pageKey, tabKey)
+    if sections[pageKey] then return Helpers.SelectSection(pageKey, tabKey) end
+    return selectTab(pageKey, tabKey)
 end
 
 -- Test seam: the ctx each tabbed page built, by page key. The library keeps its registry private,
 -- and a page whose ctx is unreachable is a page whose render is untested.
 Helpers.__pageCtx = {}
-
---- Register a per-container settings page: the Blizzard subcategory, the lazily-drawn body, and a
---- page-wide Defaults button that restores the SELECTED container's rows on this page.
----
---- Every caller of this helper (Filters, Layout, Bars, Icons, Text) is a sub-page of Containers (N-2), so
---- the tree label it registers under always carries NS.SubPageLabel's mark. `title` itself stays
---- plain: it is what CreatePanel draws as the canvas heading and the breadcrumb, and D6 marks the
---- tree entry only, never the page's own name.
-function NS.RegisterContainerPage(pageKey, title, frameName, spec)
-    recordContainerPage(pageKey, spec)
-    NS.RegisterOptionsPage(pageKey, title, function(mainCategory)
-        if not (Settings and Settings.RegisterCanvasLayoutSubcategory) then return nil end
-        local ctx = Helpers.CreatePanel(frameName, title, {
-            pageKey         = pageKey,
-            defaultsButton  = true,
-            defaultsTooltip = L["Restore every setting on this page, for the selected container, to its default."],
-        })
-        ctx.panel.defaultsOnClick = function() Helpers.RestoreDefaults(pageKey, ctx) end
-        Helpers.SetRenderer(ctx, function(c) Helpers.RenderContainerPage(c, pageKey, spec) end)
-        Helpers.__pageCtx[pageKey] = ctx
-        -- categories[pageKey] is recorded by the NS.RegisterOptionsPage wrapper above, from
-        -- whatever this builder returns (N-3) — no need to set it here too.
-        -- NS.SubPageLabel is applied unconditionally here, so EVERY container page nests under
-        -- Containers (true for all five callers today); a future container page that should NOT
-        -- nest would need its own registration path, not a call through this helper.
-        return Settings.RegisterCanvasLayoutSubcategory(mainCategory, ctx.panel, NS.SubPageLabel(title))
-    end)
-end

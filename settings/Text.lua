@@ -29,11 +29,10 @@ local _, NS = ...
 -- the refusal's reason reaches the player through the write seam's third return (settings/Schema.lua)
 -- -- printed under "Invalid value for container.text.template" by the panel and by `/am set` alike.
 --
--- A container drawn as bars or icons sees every row here disabled, under a note naming where its
--- style is changed (settings/OptionsSetup.lua's mutedNotice). The read-only TEXT between the
--- rows dims with them: the Placement notes are gray at all times, and the Text Template block's
--- Preview line and cheat sheet are grayed for that render (`dim`/`token`), so nothing on an inert
--- tab reads brighter than the controls it describes. The font and icon-border blocks
+-- A section of the Containers page (#6): its nav rail lists Text only for a container drawn as text,
+-- so the section is no longer drawn disabled. The dim path for its read-only TEXT (`pageDim`,
+-- `dim`/`token`) is still here, unreachable, until a dead-code sweep removes it; the Placement notes
+-- are gray at all times. The font and icon-border blocks
 -- are composed (options-ui-§16) with class-color companions (options-ui-§17) resolved to the tracked unit's
 -- class, as on the Bars page; the pandemic-window time swatch is a palette color and carries none.
 
@@ -140,8 +139,9 @@ NS.RegisterSchemaRows({
 
 --- Whether this render is the page drawn disabled — the container is not drawn as text. The library
 --- holds `ctx.__renderDisabled` for the whole of a page tab's render (O.RenderTabbedSchema's
---- `disabledFor`, through settings/OptionsSetup.lua's RenderPage), which is how every ROW here dims
---- itself; free-standing text has to be told.
+--- `disabledFor`), which is how every ROW dims itself; free-standing text has to be told. Since #6
+--- nothing passes `disabledFor` for this section (the rail lists Text only for a text container),
+--- so this answers false; it stays until a dead-code sweep removes it.
 local function pageDim(ctx)
     return ctx.__renderDisabled and true or false
 end
@@ -500,14 +500,9 @@ local function pandemicNote(ctx)
     H.TextRow(ctx, GRAY:format(L["The pandemic window needs a duration token, such as $remainingduration$, in the template."]), SMALL)
 end
 
-NS.RegisterContainerPage(PAGE, L["Text"], "AuraMasterTextPanel", {
-    tabs = { { key = G_GENERAL, label = G_GENERAL, render = renderGeneral } },
+NS.RegisterContainerSection(PAGE, L["Text"], {
+    tabs       = { { key = G_GENERAL, label = G_GENERAL, render = renderGeneral } },
     afterGroup = { [G_ICON] = iconNote, [G_PANDEMIC] = pandemicNote },
-    disabledFor = function(cfg) return cfg.style ~= "text" end,
-    disabledNotice = function(cfg)
-        if cfg.style == "icons" then
-            return L["Not in use: this container is drawn as icons. Set its Style to Text on the Containers page to use these settings."]
-        end
-        return L["Not in use: this container is drawn as bars. Set its Style to Text on the Containers page to use these settings."]
-    end,
+    style      = "text",
+    tooltip    = L["How this container's lines of text look."],
 })

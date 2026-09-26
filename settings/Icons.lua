@@ -117,16 +117,7 @@ NS.RegisterSchemaRows({
       label = L["Pandemic-window highlight color"], desc = L["The highlight's color."] },
 })
 
--- A container drawn as bars sees every row here disabled, under a note naming where its style is
--- changed (B-2; settings/OptionsSetup.lua's mutedNotice, which the library draws small, in muted red).
--- The wording states the condition first ("nothing here is in use") and then the one thing to do
--- about it, and names the page the style lives on rather than parenthesizing it.
-NS.RegisterContainerPage(PAGE, L["Icons"], "AuraMasterIconsPanel", {
-    disabledFor = function(cfg) return cfg.style ~= "icons" end,
-    disabledNotice = function(cfg)
-        if cfg.style == "text" then
-            return L["Not in use: this container is drawn as text. Set its Style to Icons on the Containers page to use these settings."]
-        end
-        return L["Not in use: this container is drawn as bars. Set its Style to Icons on the Containers page to use these settings."]
-    end,
+NS.RegisterContainerSection(PAGE, L["Icons"], {
+    style   = "icons",
+    tooltip = L["How this container's icons look."],
 })

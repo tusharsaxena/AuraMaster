@@ -628,7 +628,8 @@ local function anchorNotes(ctx)
     growsBackNote(ctx)
 end
 
-NS.RegisterContainerPage(PAGE, L["Layout"], "AuraMasterLayoutPanel", {
+NS.RegisterContainerSection(PAGE, L["Layout"], {
+    tooltip = L["Where this container sits, what it attaches to, which way it grows, and how it answers the mouse."],
     intro = growthIntro,
     afterGroup = { [G_ANCHOR] = anchorNotes },
     pairWith = {

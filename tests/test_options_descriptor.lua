@@ -55,8 +55,7 @@ end
 test("options descriptor: a rendered widget reads the selected container and writes it through the seam", function()
     local NS2, m = fresh()
     NS2.State.SetActiveContainer(1)
-    NS2.Helpers.__pageCtx.bars.activeTab = NS2.L["Icon"]
-    NS2.Helpers.__pageCtx.bars.panel:__fire("OnShow")
+    assertTrue(NS2.Helpers.SelectSection("bars", NS2.L["Icon"])); NS2.Helpers.__pageCtx.containers.panel:__fire("OnShow")
     local dd = widget(m, "Dropdown", NS2.FindSchemaRow("container.bars.icon").label)
     assertTrue(dd ~= nil, "the Icon tab drew the icon-position dropdown")
     assertEqual(dd.value, NS2.Database.FindContainer(1).bars.icon, "get read the selected container")
@@ -74,7 +73,7 @@ test("options descriptor: a color swatch shows the stored color and stores the p
     local NS2, m = fresh()
     local P = pages(NS2, m)
     NS2.State.SetActiveContainer(1)
-    NS2.Helpers.__pageCtx.bars.panel:__fire("OnShow")
+    assertTrue(NS2.Helpers.SelectSection("bars"), "bars is on the rail"); NS2.Helpers.__pageCtx.containers.panel:__fire("OnShow")
     local row = NS2.FindSchemaRow("container.bars.barColor")
     clickTab(P, NS2.Helpers.__pageCtx.bars, row.group)
     local cp = widget(m, "ColorPicker", row.label)
@@ -191,7 +190,7 @@ test("options descriptor: the banner lists every container by name and ignores a
     local NS2, m2 = fresh()
     local P = pages(NS2, m2)
     NS2.State.SetActiveContainer(2)
-    NS2.Helpers.__pageCtx.bars.panel:__fire("OnShow")
+    assertTrue(NS2.Helpers.SelectSection("icons"), "icons is on the rail"); NS2.Helpers.__pageCtx.containers.panel:__fire("OnShow")
     local dd = P.banner(NS2.Helpers.__pageCtx.bars)
     -- Player buffs, Player cooldowns, Player debuffs, Target debuffs (mine): by name (B2-2)
     assertEqual(table.concat(dd.order, ","), "1,4,2,3")
@@ -233,7 +232,8 @@ test("options descriptor: every page's Container picker sorts by name, case-inse
     local cs = NS2.db.profile.containers
     cs[1].name, cs[2].name, cs[3].name, cs[4].name = "zeta", "Alpha", "beta", "ALPHA"
     NS2.State.SetActiveContainer(1)
-    for _, page in ipairs({ "containers", "filters", "layout", "bars", "icons", "text" }) do
+    for _, page in ipairs({ "containers", "filters", "layout", "bars" }) do
+        assertTrue(NS2.Helpers.SelectSection(page), page .. " is on the rail")
         local ctx = NS2.Helpers.__pageCtx[page]
         ctx.panel:__fire("OnShow")
         local dd = P.banner(ctx)
@@ -247,7 +247,7 @@ end)
 test("options descriptor: a container page draws its intro, then the bespoke tabs its container's type admits", function()
     local NS2, m2 = fresh()
     local P = pages(NS2, m2)
-    NS2.Helpers.__pageCtx.bars.panel:__fire("OnShow")
+    assertTrue(NS2.Helpers.SelectSection("bars"), "bars is on the rail"); NS2.Helpers.__pageCtx.containers.panel:__fire("OnShow")
     local ctx = NS2.Helpers.__pageCtx.bars
     NS2.State.SetActiveContainer(2)                   -- a debuff container
     local intro, drawn = {}, {}
@@ -262,7 +262,7 @@ test("options descriptor: a container page draws its intro, then the bespoke tab
             { key = "buffsOnly", label = "Buffs only", auraTypes = { HELPFUL = true }, render = function() end },
         },
     }
-    NS2.Helpers.RenderContainerPage(ctx, "bars", spec)
+    NS2.Helpers.RenderPage(ctx, "bars", spec, NS2.Helpers.ContainerBanner)
     local keys = {}
     for _, t in ipairs(P.drawnTabs(ctx)) do keys[t.key] = true end
     assertTrue(keys.extra)
@@ -280,7 +280,7 @@ test("options descriptor: a container page draws its intro, then the bespoke tab
         onSelect = s.onSelect
         return strip(c, s, ...)
     end
-    NS2.Helpers.RenderContainerPage(ctx, "bars", spec)
+    NS2.Helpers.RenderPage(ctx, "bars", spec, NS2.Helpers.ContainerBanner)
     local renders = table.concat(intro, ",")
     onSelect("extra")
     -- red under: the strip's onSelect without its `key == ctx.activeTab` guard (it re-renders)
@@ -293,7 +293,7 @@ end)
 test("options descriptor: with no containers a page draws the one empty-registry line and no intro", function()
     local NS2, m2 = fresh()
     local P = pages(NS2, m2)
-    NS2.Helpers.__pageCtx.bars.panel:__fire("OnShow")
+    assertTrue(NS2.Helpers.SelectSection("bars"), "bars is on the rail"); NS2.Helpers.__pageCtx.containers.panel:__fire("OnShow")
     local ctx = NS2.Helpers.__pageCtx.bars
     deleteAll(NS2)
     local rows, introduced = {}, { 0 }
@@ -302,47 +302,26 @@ test("options descriptor: with no containers a page draws the one empty-registry
         rows[#rows + 1] = text
         return textRow(c, text, ...)
     end
-    NS2.Helpers.RenderContainerPage(ctx, "bars", { intro = function() introduced[1] = introduced[1] + 1 end })
+    NS2.Helpers.RenderPage(ctx, "bars", { intro = function() introduced[1] = introduced[1] + 1 end }, NS2.Helpers.ContainerBanner)
     -- red under: RenderPage handing the library an intro chrome with a nil cfg
     assertEqual(introduced[1], 0)
     assertEqual(table.concat(rows, "|"), "No containers yet. Create one on Containers, or type /am new.")
     assertEqual(P.drawnTabs(ctx)[1].label, "Container", "the placeholder tab")
 end)
 
-test("options descriptor: a page disabled for its container hands the disable to a bespoke tab, and lets go after", function()
-    local NS2 = fresh()
-    NS2.Helpers.__pageCtx.bars.panel:__fire("OnShow")
-    local ctx = NS2.Helpers.__pageCtx.bars
-    local seen = {}
-    local spec = { disabledFor = function() return true end,
-        tabs = { { key = "extra", label = "Extra", render = function(c)
-            seen[#seen + 1] = c.__renderDisabled
-        end } } }
-    ctx.activeTab = "extra"
-    NS2.Helpers.RenderContainerPage(ctx, "bars", spec)
-    -- red under: RenderPage dropping disabledFor (a page tab rendered outside the page's disable)
-    assertTrue(seen[1] == true)
-    -- red under: the flag left on the ctx (every later render of the page drawn disabled)
-    assertNil(ctx.__renderDisabled)
-    spec.tabs[1].render = function() error("boom") end
-    assertFalse(pcall(NS2.Helpers.RenderContainerPage, ctx, "bars", spec), "the raise still surfaces")
-    -- red under: the flag restored only on the way out of a render that returned
-    assertNil(ctx.__renderDisabled, "even when the tab raises")
-end)
-
-test("options descriptor: RenderPage draws no banner; RenderContainerPage is the banner plus it", function()
+test("options descriptor: RenderPage draws no banner; a banner hook draws the container band first", function()
     local NS2, m2 = fresh()
     local P = pages(NS2, m2)
-    NS2.Helpers.__pageCtx.bars.panel:__fire("OnShow")
-    assertTrue(P.banner(NS2.Helpers.__pageCtx.bars) ~= nil, "a container page draws the banner")
+    NS2.Helpers.__pageCtx.containers.panel:__fire("OnShow")
+    assertTrue(P.banner(NS2.Helpers.__pageCtx.containers) ~= nil, "the Containers page draws the band")
     local ctx = NS2.Helpers.__pageCtx.general
     local strips = counter(NS2.Helpers, "TabStrip")
     NS2.Helpers.RenderPage(ctx, "general", { addonWide = true })
     -- red under: RenderPage drawing the container banner (General would grow one, against D1)
     assertNil(P.banner(ctx))
     assertEqual(strips[1], 1, "the strip is still drawn")
-    NS2.Helpers.RenderContainerPage(ctx, "general", { addonWide = true })
-    assertTrue(P.banner(ctx) ~= nil, "and the container page draws it")
+    NS2.Helpers.RenderPage(ctx, "general", { addonWide = true }, NS2.Helpers.ContainerBanner)
+    assertTrue(P.banner(ctx) ~= nil, "and a banner hook draws it")
 end)
 
 test("options descriptor: an addon-wide tabbed page draws every tab with no container, and a bespoke tab keyed by a group takes its place", function()
@@ -373,7 +352,7 @@ end)
 test("options descriptor: a bespoke tab with `before` is drawn ahead of the tab it names, else last", function()
     local NS2, m2 = fresh()
     local P = pages(NS2, m2)
-    NS2.Helpers.__pageCtx.bars.panel:__fire("OnShow")
+    assertTrue(NS2.Helpers.SelectSection("bars"), "bars is on the rail"); NS2.Helpers.__pageCtx.containers.panel:__fire("OnShow")
     local ctx = NS2.Helpers.__pageCtx.bars
     local function strip(before)
         NS2.Helpers.RenderPage(ctx, "general", {
@@ -393,7 +372,7 @@ end)
 
 test("options descriptor: RenderWarnings draws one orange line per thing the engine will not do", function()
     local NS2 = fresh()
-    NS2.Helpers.__pageCtx.bars.panel:__fire("OnShow")
+    assertTrue(NS2.Helpers.SelectSection("bars"), "bars is on the rail"); NS2.Helpers.__pageCtx.containers.panel:__fire("OnShow")
     local ctx = NS2.Helpers.__pageCtx.bars
     local rows = {}
     NS2.Helpers.TextRow = function(_, text)
@@ -428,7 +407,7 @@ test("options descriptor: panel refreshes asked for in one frame are one refresh
     assertTrue(refreshes[1] >= 3, "and the latch was released")
 end)
 
-test("options descriptor: OpenOptionsPage opens a registered page's category and falls back to the panel otherwise", function()
+test("options descriptor: OpenOptionsPage opens a registered page's category, a section's through Containers, and falls back to the panel otherwise", function()
     local opened = {}
     local NS2 = fresh({ before = function(mk)
         local register = mk.Settings.RegisterCanvasLayoutSubcategory
@@ -444,10 +423,10 @@ test("options descriptor: OpenOptionsPage opens a registered page's category and
     local panels = { 0 }
     NS2.Helpers.OpenOptionsPanel = function() panels[1] = panels[1] + 1 end
     NS2.OpenOptionsPage("layout")
-    -- red under: NS.RegisterContainerPage not recording its category. The category is registered
-    -- under Layout's MARKED tree label (D6, N-2: Layout is a sub-page of Containers) — the key the
-    -- frame picker and OpenOptionsPage use is unaffected, only the label Blizzard's tree shows.
-    assertEqual(table.concat(opened, ","), "cat:" .. NS2.SubPageLabel("Layout"))
+    -- red under: a section key looked up in the category table alone (#6: Layout is a section of
+    -- Containers, and the key opens Containers on it)
+    assertEqual(table.concat(opened, ","), "cat:" .. NS2.L["Containers"])
+    assertEqual(NS2.Helpers.__pageCtx.containers.activeSection, "layout")
     NS2.OpenOptionsPage("no such page")
     assertEqual(panels[1], 1, "an unknown page opens the panel")
     assertEqual(#opened, 1)

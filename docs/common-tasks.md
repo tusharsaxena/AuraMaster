@@ -266,11 +266,15 @@ the entry point with `local t0 = Perf.on and debugprofilestop()` … `if t0 then
 debugprofilestop() - t0[, "parent"]) end` (performance-§2), using a load-time `local Perf = NS.Perf`;
 add a case proving a real bracket reaches it; add the row to `docs/performance.md`.
 
-## Add a settings page
+## Add a section to the Containers page
 
-1. Add the page key to `VALID_PAGES` in `settings/Schema.lua`.
-2. Create `settings/<Page>.lua` registering its rows and calling `NS.RegisterContainerPage(key,
-   L["Title"], "AuraMaster<Page>Panel", spec)` (or `NS.RegisterOptionsPage` for an addon-wide page).
-3. Add it to `AuraMaster.toc` after `settings/OptionsSetup.lua`, in the order the subcategory should
-   appear.
-4. Every row needs a `group` (options-ui-§13). Add the page to the table in `docs/settings-panel.md`.
+1. Add the section key to `VALID_PAGES` in `settings/Schema.lua`: a section key is a page key, and
+   every row's `page` names it.
+2. Create `settings/<Section>.lua` registering its rows and calling
+   `NS.RegisterContainerSection(key, L["Title"], spec)`, with `spec.tooltip` (the rail entry's
+   tooltip) and, for a section that applies to one style only, `spec.style`. An addon-wide page is
+   still `NS.RegisterOptionsPage`.
+3. Add the key to `SECTION_ORDER` in `settings/OptionsSetup.lua`: that, not the TOC, is the rail's
+   order. Load the file after `settings/OptionsSetup.lua` in `AuraMaster.toc`.
+4. Every row needs a `group` (options-ui-§13). Add the section to the table in
+   `docs/settings-panel.md`.

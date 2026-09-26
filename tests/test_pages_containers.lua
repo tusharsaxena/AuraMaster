@@ -96,8 +96,8 @@ end)
 test("containers: NS.OpenOptionsPage('containers') opens its own category, not the main one (N-3)", function()
     -- Subcategory ids start at 101: the kit's main category answers GetID() == 1. Registering its
     -- own category (the test above) used to not be enough for OpenOptionsPage to find it: that seam
-    -- only recorded a category for pages built through NS.RegisterContainerPage
-    -- (settings/OptionsSetup.lua), while Containers, like General, builds through the plain
+    -- only recorded a category for the per-container sub-pages' own registration helper (retired
+    -- with the sub-pages, #6), while Containers, like General, builds through the plain
     -- NS.RegisterOptionsPage. N-3 closed that gap: NS.RegisterOptionsPage's own wrapper now records
     -- whatever category its builder returns, so every registered page (not only container pages)
     -- is reachable by key.
@@ -120,9 +120,9 @@ test("containers: NS.OpenOptionsPage('containers') opens its own category, not t
         end
     end })
     NS.OpenOptionsPage("layout")
-    -- Layout is a sub-page of Containers (N-2): its tree label carries the mark (D6), though the
-    -- key that opened it is still the plain "layout".
-    assertEqual(opened[1], NS.SubPageLabel("Layout"))
+    -- Layout is a section of Containers (#6): the key opens Containers on that section.
+    assertEqual(opened[1], NS.L["Containers"])
+    assertEqual(NS.Helpers.__pageCtx.containers.activeSection, "layout")
     local sawContainers = false
     for _, name in ipairs(names) do
         if name == NS.L["Containers"] then sawContainers = true end
@@ -555,9 +555,9 @@ test("containers: Defaults restores Enabled, Unit, Aura type and Style, and neve
     assertEqual(NS.Database.FindContainer(3).unit, "target", "only the selected container")
 end)
 
-test("containers: the page's Defaults tooltip says it takes the selected container's identity and keeps its name", function()
+test("containers: the page's Defaults tooltip names the section on screen and the kept name", function()
     local NS, m = containers()
     -- red under: the tooltip still describing a page of profile rows, or naming General
     assertEqual(m.__subcategories.Containers.defaultsTooltip,
-        NS.L["Restore the selected container's Enabled, Unit, Aura type and Style to its addon default. Its name is kept."])
+        NS.L["Restore the selected container's settings in the section on screen to their addon defaults. On General: Enabled, Unit, Aura type and Style; its name is kept."])
 end)

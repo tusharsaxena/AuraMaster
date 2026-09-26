@@ -533,8 +533,8 @@ end
 
 --- Whether a row's stored value does anything for container `c` (B9 DX-2): its switched subsection
 --- is the one drawn (a screen position on an attached container is not), and its page is not one
---- the container's style disables (the Text page on a bars container). The page gate is each page's
---- own `disabledFor`, recorded by NS.RegisterContainerPage.
+--- the container's style disables (the Text page on a bars container). The page gate is each style
+--- section's own style, recorded by NS.RegisterContainerSection (settings/OptionsSetup.lua).
 local function inUse(row, c)
     if not selectorHolds(row.shownWhen, c) then return false end
     local gates = NS.ContainerPageDisabledFor or {}

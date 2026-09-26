@@ -10,28 +10,30 @@ local fresh = dofile("tests/fresh_env.lua")
 local pages = dofile("tests/page_helpers.lua")
 local loadDegraded = dofile("tests/degraded_env.lua")
 
--- Pages, by key and tree label. Filters, Layout, Bars, Icons and Text are sub-pages of Containers
--- (N-2): their KEY stays plain (D6 — the mark is a label prefix, never a second hierarchy), but the
--- tree label Blizzard registers them under carries NS.SubPageLabel's mark.
+-- The Settings tree (#6): General, Containers, Profiles. Filters, Layout, Bars, Icons and Text are
+-- sections of Containers, reached through its nav rail, and have no tree entry of their own.
 local PAGES = {
     { key = "general",    label = "General" },
     { key = "containers", label = "Containers" },
-    { key = "filters",    label = NS.SubPageLabel("Filters") },
-    { key = "layout",     label = NS.SubPageLabel("Layout") },
-    { key = "bars",       label = NS.SubPageLabel("Bars") },
-    { key = "icons",      label = NS.SubPageLabel("Icons") },
-    { key = "text",       label = NS.SubPageLabel("Text") },
 }
+-- The Containers page's sections the rail lists for container 1, drawn as bars.
+local SECTIONS = { "filters", "layout", "bars" }
 
 test("options: NS.Helpers IS the library instance", function()
     assertEqual(type(NS.Helpers.RenderTabbedSchema), "function")
     assertEqual(type(NS.Helpers.PageBanner), "function")
 end)
 
-test("options: every page registers, in TOC order, and Profiles opts out without AceDBOptions", function()
+test("options: General and Containers register, in TOC order; the former sub-pages do not, and Profiles opts out without AceDBOptions", function()
     for _, p in ipairs(PAGES) do
         assertTrue(mocks.__subcategories[p.label] ~= nil, "page " .. p.label)
     end
+    for _, gone in ipairs({ "Filters", "Layout", "Bars", "Icons", "Text" }) do
+        -- red under: a page file still registering a Blizzard subcategory (smoke 1)
+        assertNil(mocks.__subcategories[gone], gone .. " has no tree entry")
+        assertNil(mocks.__subcategories["  - " .. gone], gone .. " has no D6-marked tree entry")
+    end
+    assertNil(NS.SubPageLabel, "the D6 nesting mark has no caller left")
     assertNil(mocks.__subcategories.Profiles, "the harness has no AceDBOptions; the page returns nil")
 end)
 
@@ -71,6 +73,13 @@ test("options: every page renders without a reported error", function()
         NS2.Helpers.__pageCtx[p.key].panel:__fire("OnShow")
         assertTrue(#aceGUI.__created > before, p.key .. " drew widgets")
     end
+    NS2.State.SetActiveContainer(1)
+    for _, key in ipairs(SECTIONS) do
+        local before = #aceGUI.__created
+        assertTrue(NS2.Helpers.SelectSection(key), key .. " is on the rail")
+        NS2.Helpers.__pageCtx.containers.panel:__fire("OnShow")
+        assertTrue(#aceGUI.__created > before, key .. " drew widgets")
+    end
     for _, l in ipairs(lines) do
         assertFalse(l:lower():find("error") or l:lower():find("failed"), "reported: " .. l)
     end
@@ -103,14 +112,14 @@ test("options: the Filters page offers the Overrides tab only for a buff or debu
         return keys
     end
     NS2.State.SetActiveContainer(1)
-    NS2.Helpers.__pageCtx.filters.panel:__fire("OnShow")
+    assertTrue(NS2.Helpers.SelectSection("filters"), "filters is on the rail"); NS2.Helpers.__pageCtx.containers.panel:__fire("OnShow")
     assertTrue(tabs().overrides)
     -- A stored aura type this build does not know (a hand-edited file; the retired ENCHANT, before
     -- schema v5 runs): no write can store one, so it is planted.
     NS2.Database.FindContainer(1).auraType = "BOGUS"
     -- Redrawn through the page's own registered spec, whose Overrides tab names its aura types.
     NS2.Helpers.RefreshAllPanels()
-    NS2.Helpers.__pageCtx.filters.panel:__fire("OnShow")
+    assertTrue(NS2.Helpers.SelectSection("filters"), "filters is on the rail"); NS2.Helpers.__pageCtx.containers.panel:__fire("OnShow")
     -- red under: the page's tabs handed to the library without their auraTypes filter
     assertNil(tabs().overrides)
 end)
@@ -123,7 +132,7 @@ test("options: a container page's tabs are its schema groups, with a bespoke tab
     local P = pages(NS2, m2)
     local ctx = NS2.Helpers.__pageCtx.filters
     NS2.State.SetActiveContainer(1)
-    NS2.Helpers.__pageCtx.filters.panel:__fire("OnShow")
+    assertTrue(NS2.Helpers.SelectSection("filters"), "filters is on the rail"); NS2.Helpers.__pageCtx.containers.panel:__fire("OnShow")
     -- Batch 8: the Filters page's `overrides` tab carries `before = Sorting`, so it is INSERTED
     -- ahead of that group rather than appended after every group (the library places it). A bespoke tab with no
     -- `before` still lands last; this page no longer has one to prove it with, so the expectation
@@ -143,26 +152,14 @@ test("options: a container page's tabs are its schema groups, with a bespoke tab
     assertEqual(table.concat(got, ","), table.concat(want, ","), "schema groups, the bespoke tab where it asked")
     ctx.activeTab = "no such tab"
     NS2.Helpers.RefreshAllPanels()   -- a hidden panel is marked dirty, and re-renders on its next show
-    NS2.Helpers.__pageCtx.filters.panel:__fire("OnShow")
+    assertTrue(NS2.Helpers.SelectSection("filters"), "filters is on the rail"); NS2.Helpers.__pageCtx.containers.panel:__fire("OnShow")
     assertEqual(ctx.activeTab, want[1], "a tab the page does not draw falls back to the first")
-end)
-
-test("options: with no containers a container page draws one placeholder tab", function()
-    local NS2, m2 = fresh()
-    local P = pages(NS2, m2)
-    for _, c in ipairs(NS2.Database.GetContainers()) do NS2.ContainerManager.Delete(c.id) end
-    NS2.Helpers.__pageCtx.filters.panel:__fire("OnShow")
-    local ctx = NS2.Helpers.__pageCtx.filters
-    local tabs = P.drawnTabs(ctx)
-    assertEqual(#tabs, 1, "one tab")
-    assertEqual(tabs[1].key, "__empty")
-    assertEqual(ctx.activeTab, "__empty")
 end)
 
 test("options: the banner is the picker — choosing a container retargets every page", function()
     local NS2, m2 = fresh()
     local P = pages(NS2, m2)
-    NS2.Helpers.__pageCtx.bars.panel:__fire("OnShow")
+    assertTrue(NS2.Helpers.SelectSection("bars"), "bars is on the rail"); NS2.Helpers.__pageCtx.containers.panel:__fire("OnShow")
     local banner = P.banner(NS2.Helpers.__pageCtx.bars)
     assertTrue(banner ~= nil, "the page drew its banner")
     banner:__fire("OnValueChanged", 3)
@@ -188,7 +185,7 @@ end)
 
 test("options: a page's Defaults button restores only the selected container", function()
     local NS2 = fresh()
-    NS2.Helpers.__pageCtx.bars.panel:__fire("OnShow")
+    assertTrue(NS2.Helpers.SelectSection("bars"), "bars is on the rail"); NS2.Helpers.__pageCtx.containers.panel:__fire("OnShow")
     local ctx = NS2.Helpers.__pageCtx.bars
     NS2.SetByPath("container.bars.width", 300, 1)
     NS2.SetByPath("container.bars.width", 300, 2)
@@ -339,7 +336,7 @@ test("options: a wrapped tab strip reserves the same band and places every tab a
     local function clear() for _, b in ipairs(buttons) do b.__stripRel, b.__stripY = nil, nil end end
 
     clear()
-    NS2.Helpers.__pageCtx.bars.panel:__fire("OnShow")
+    assertTrue(NS2.Helpers.SelectSection("bars"), "bars is on the rail"); NS2.Helpers.__pageCtx.containers.panel:__fire("OnShow")
     local keys = {}
     for i, t in ipairs(P.drawnTabs(ctx)) do keys[i] = t.key end
     assertTrue(#keys >= 2, "the page draws several tabs")
@@ -433,20 +430,4 @@ test("options: the library-absent schema is the full one minus exactly the compo
         assertEqual(not have[row.path], composed[row.path] ~= nil, "row " .. tostring(row.path))
     end
     assertEqual(NS2.ValidateSchema(), 0, "the smaller schema still validates")
-end)
-
-test("options: a page drawn for another style heads its tabs with the notice in muted red (Task 20)", function()
-    local NS2, m2 = fresh()
-    local P = dofile("tests/page_helpers.lua")(NS2, m2)
-    NS2.State.SetActiveContainer(2)   -- the starter icon row
-    local ws = P.show("Bars")
-    local want = "|c" .. NS2.Constants.NOTICE_COLOR
-    -- red under: the notice still pinned to the muted gold Task 20 replaced
-    assertEqual(NS2.Constants.NOTICE_COLOR, "ffcc6666")
-    local hit
-    for _, t in ipairs(P.texts(ws)) do
-        if t:find("Not in use:", 1, true) then hit = t end
-    end
-    -- red under: mutedNotice keeping the old gray |cff808080
-    assertTrue(hit ~= nil and hit:sub(1, #want) == want, tostring(hit))
 end)

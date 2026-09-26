@@ -23,6 +23,21 @@ return function(NS, m)
         return strip(ctx, spec, ...)
     end
 
+    -- The rail each page's last render drew, recorded off the library's NavRail as it is called,
+    -- the way `drawn` records the strip. Weak-keyed, like it.
+    local rails = setmetatable({}, { __mode = "k" })
+    local navRail = NS.Helpers.NavRail
+    NS.Helpers.NavRail = function(ctx, spec, ...)
+        if type(ctx) == "table" and type(spec) == "table" then rails[ctx] = spec end
+        return navRail(ctx, spec, ...)
+    end
+
+    --- The rail `ctx`'s last render drew: `{ entries = { { key, label, tooltip } }, value }`.
+    function P.drawnRail(ctx)
+        local spec = rails[ctx] or {}
+        return { entries = spec.entries or {}, value = spec.value }
+    end
+
     --- The tabs `ctx`'s last render drew, as `{ key, label }` in strip order (empty when none).
     function P.drawnTabs(ctx)
         local out = {}
@@ -43,17 +58,23 @@ return function(NS, m)
         return out
     end
 
-    --- Fire a page's OnShow and answer the widgets that render drew.
-    ---
-    --- `page` is the page's plain display name. A sub-page of Containers (Filters, Layout, Bars,
-    --- Icons — N-2) registers its Blizzard subcategory under a MARKED tree label (D6,
-    --- NS.SubPageLabel), so the plain name is tried first and the marked one second: callers keep
-    --- writing `P.show("Filters")` whether or not the page they are showing happens to be nested.
+    -- The Containers page's sections by their old page names (#6): `P.show("Filters")` selects the
+    -- section and shows Containers, so a suite written against the sub-pages reads the same.
+    local SECTIONS = { Filters = "filters", Layout = "layout", Bars = "bars", Icons = "icons", Text = "text" }
+
+    --- Fire a page's OnShow and answer the widgets that render drew. `page` is the page's plain display
+    --- name, or a Containers section's (above), which is selected first. A section the selected
+    --- container's rail does not list is an error, never a silent draw of another section.
     function P.show(page)
         local mark = #ace.__created
-        local sub = m.__subcategories[page]
-        if not sub and NS.SubPageLabel then sub = m.__subcategories[NS.SubPageLabel(page)] end
-        sub:__fire("OnShow")
+        local key = SECTIONS[page]
+        if key then
+            if not NS.Helpers.SelectSection(key) then
+                error("section " .. key .. " is not on the rail for the selected container", 2)
+            end
+            page = "Containers"
+        end
+        m.__subcategories[page]:__fire("OnShow")
         return since(mark)
     end
 
@@ -171,6 +192,22 @@ return function(NS, m)
         local out = {}
         for i, t in ipairs(P.drawnTabs(NS.Helpers.__pageCtx[pageKey])) do out[i] = t.key end
         return out
+    end
+
+    --- Click the rail entry `key` on the Containers page and answer what the render it asks for drew.
+    --- A kit panel is hidden, so the click marks the page owed a render and the show draws it. The
+    --- button is the library's rail ledger (`ctx.__railKids`, in rail order).
+    function P.rail(key)
+        local ctx = NS.Helpers.__pageCtx.containers
+        for i, e in ipairs(P.drawnRail(ctx).entries) do
+            if e.key == key then
+                return P.during(function()
+                    ctx.__railKids[i]:__fire("OnClick")
+                    ctx.panel:__fire("OnShow")
+                end)
+            end
+        end
+        error("the rail drew no entry " .. tostring(key), 2)
     end
 
     --- The live AceGUI widget of `wtype` whose frame the library's chrome ledger

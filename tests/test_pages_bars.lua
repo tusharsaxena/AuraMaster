@@ -1,6 +1,5 @@
--- tests/test_pages_bars.lua — settings/Bars.lua, driven through its widgets: the page's tabs, the
--- notice on a container that is not drawn as bars, what its sliders and swatches write, and its
--- Defaults. How the stored look is painted is tests/test_style.lua's.
+-- tests/test_pages_bars.lua — settings/Bars.lua, driven through its widgets: the section's tabs,
+-- what its sliders and swatches write, and its Defaults. How the stored look is painted is tests/test_style.lua's.
 
 local T = _G.AM_TEST
 local test, assertEqual, assertTrue, assertFalse, assertNear =
@@ -13,78 +12,6 @@ local function bars(opts)
     local P = pages(NS, m)
     return NS, m, P, P.show("Bars")
 end
-
--- BATCH 8 (owner, from a screenshot): the wrong-style note was a full-width GameFontNormalLarge
--- line in warning orange, which shouted for what is a quiet aside — nothing is wrong, the page is
--- simply inert until the style changes. It is now the small default font in the addon's
--- muted notice color, reworded to lead with the condition and name the page that fixes it, and
--- followed by the ordinary row gap rather than a 12px one. Orange is left to RenderWarnings, which
--- can draw on this very page and must stay the loudest thing on it. The color was gold (B3), then
--- muted red the same day (Task 20).
-local MSG = "Not in use: this container is drawn as icons. Set its Style to Bars on the Containers page to use these settings."
-local NOTICE = "|c" .. T.NS.Constants.NOTICE_COLOR
-
-test("bars: every tab of an icons container carries the muted-red note; a bars container's carry none", function()
-    local NS, _, P, ws = bars()
-    local notice = NOTICE .. NS.L[MSG] .. "|r"
-    assertFalse(P.hasText(ws, notice), "container 1 is drawn as bars")
-    NS.Helpers.SelectContainer(2)
-    ws = P.show("Bars")
-    -- red under: the intro testing the style the wrong way round, or not at all
-    assertTrue(P.hasText(ws, notice), "the first tab")
-    local keys = P.tabKeys("bars")
-    local count = #keys
-    for i = 2, count do
-        assertTrue(P.hasText(P.tab("bars", keys[i]), notice), keys[i])
-    end
-end)
-
-test("bars: on an icons container every row of every tab is drawn disabled; on a bars container none is (B-2)", function()
-    local NS, _, P = bars()
-    NS.Helpers.SelectContainer(2)
-    P.eachTab("Bars", "bars", function(key, ws)
-        local rows = P.rowWidgets(ws, "bars", key)
-        assertTrue(rows[1] ~= nil, key .. " drew its rows")
-        for _, w in ipairs(rows) do
-            -- red under: RenderPage dropping spec.disabledFor (opts.disabled never reaches RenderRows)
-            assertTrue(w.disabled, key .. ": " .. w.labelText)
-        end
-    end)
-    NS.Helpers.SelectContainer(1)
-    P.eachTab("Bars", "bars", function(key, ws)
-        for _, w in ipairs(P.rowWidgets(ws, "bars", key)) do
-            -- red under: disabledFor testing the style the wrong way round
-            assertFalse(w.disabled, key .. ": " .. w.labelText)
-        end
-    end)
-end)
-
-test("bars: the wrong-style note is drawn small and gray, then a spacer before the first control (B-2)", function()
-    local NS, _, P = bars()
-    local H = NS.Helpers
-    local seen = {}
-    local textRow = H.TextRow
-    H.TextRow = function(ctx, text, opts)
-        seen[text] = opts or false
-        return textRow(ctx, text, opts)
-    end
-    H.SelectContainer(2)
-    P.show("Bars")
-    H.TextRow = textRow
-    local notice = NOTICE .. NS.L[MSG] .. "|r"
-    assertTrue(seen[notice] ~= nil, "the note is a TextRow, in the color the addon reports notices in")
-    -- red under: the note back in large orange, shouting over a page that is merely inert
-    assertEqual(seen[notice] and seen[notice].fontObject, "GameFontHighlightSmall")
-    local kids = H.EnsureScroll(H.__pageCtx.bars).children
-    local at
-    for i, w in ipairs(kids) do
-        if w.type == "Label" and w.text == notice then at = i end
-    end
-    local spacer = kids[at + 1]
-    -- red under: the note followed straight by the first control
-    assertEqual(spacer.type, "SimpleGroup")
-    assertEqual(spacer.height, H.ROW_VSPACER)
-end)
 
 test("bars: the Icon tab holds the icon's four rows, then the composed icon-border block (B-1)", function()
     local NS, _, P = bars()
@@ -165,9 +92,11 @@ test("bars: Width writes the selected container, and the page re-reads after the
     -- red under: the row resolving against anything but the selection
     assertEqual(NS.Database.FindContainer(1).bars.width, 300)
     assertEqual(NS.Database.FindContainer(2).bars.width, NS.CONTAINER_TEMPLATE.bars.width)
-    P.banner(NS.Helpers.__pageCtx.bars):__fire("OnValueChanged", 2)
+    -- #6: container 2 is drawn as icons, so its rail offers no Bars. Move the band to a bars container.
+    NS.SetByPath("container.style", "bars", 3)
+    P.banner(NS.Helpers.__pageCtx.bars):__fire("OnValueChanged", 3)
     ws = P.show("Bars")
-    assertEqual(P.row(ws, "container.bars.width").value, NS.CONTAINER_TEMPLATE.bars.width, "container 2's width")
+    assertEqual(P.row(ws, "container.bars.width").value, NS.CONTAINER_TEMPLATE.bars.width, "container 3's width")
 end)
 
 test("bars: a confirmed fill color is stored on the selected container, as a table of its own", function()

@@ -5,8 +5,8 @@ local _, NS = ...
 --     band   [Container ▾]
 --     [ General ][ Background & border ][ Name text ][ Time text ][ Stack text ][ Icon ][ Pandemic ]
 --
--- A container drawn as icons sees every row here disabled, under a note naming where its style is
--- changed (B-2; settings/OptionsSetup.lua's mutedNotice, which the library draws small, in muted red).
+-- A section of the Containers page (#6): its nav rail lists Bars only for a container drawn as bars,
+-- so these rows are never drawn for a container whose style leaves them unused.
 --
 -- The font, border, bar and background blocks are COMPOSED (options-ui-§16) — contiguous, in canonical order,
 -- with anything extra appended after the block — and every color row has its class-color companion
@@ -203,12 +203,7 @@ NS.RegisterSchemaRows({
       label = L["Pandemic-window highlight color"], desc = L["The highlight's color."] },
 })
 
-NS.RegisterContainerPage(PAGE, L["Bars"], "AuraMasterBarsPanel", {
-    disabledFor = function(cfg) return cfg.style ~= "bars" end,
-    disabledNotice = function(cfg)
-        if cfg.style == "text" then
-            return L["Not in use: this container is drawn as text. Set its Style to Bars on the Containers page to use these settings."]
-        end
-        return L["Not in use: this container is drawn as icons. Set its Style to Bars on the Containers page to use these settings."]
-    end,
+NS.RegisterContainerSection(PAGE, L["Bars"], {
+    style   = "bars",
+    tooltip = L["How this container's bars look."],
 })

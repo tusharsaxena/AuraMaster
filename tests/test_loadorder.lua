@@ -53,15 +53,13 @@ test("loadorder: the load-bearing pairs are in order, and the TOC says why", fun
         { "settings/Schema.lua", "settings/OptionsSetup.lua" },
         { "settings/OptionsSetup.lua", "settings/General.lua" },
         { "settings/GeneralSpells.lua", "settings/General.lua" },
-        -- The Settings tree order is the TOC's own order (N-2): General, then Containers, then its
-        -- four sub-pages (D6), then Profiles.
+        -- The Settings tree order is the TOC's own registration order: General, then Containers
+        -- (N-1), then Profiles. The Containers page's sections (#6) load after the registry in
+        -- settings/OptionsSetup.lua, in any order: the rail's is SECTION_ORDER.
         { "settings/General.lua", "settings/Containers.lua" },
-        { "settings/Containers.lua", "settings/Filters.lua" },
-        { "settings/Filters.lua", "settings/Layout.lua" },
-        { "settings/Layout.lua", "settings/Bars.lua" },
-        { "settings/Bars.lua", "settings/Icons.lua" },
-        { "settings/Icons.lua", "settings/Text.lua" },
-        { "settings/Text.lua", "settings/Profiles.lua" },
+        { "settings/Containers.lua", "settings/Profiles.lua" },
+        { "settings/OptionsSetup.lua", "settings/Filters.lua" },
+        { "settings/OptionsSetup.lua", "settings/Text.lua" },
     }
     for _, pr in ipairs(pairs_) do
         assertTrue(index[pr[1]] and index[pr[2]] and index[pr[1]] < index[pr[2]],

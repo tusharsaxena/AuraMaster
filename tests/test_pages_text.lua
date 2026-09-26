@@ -1,7 +1,6 @@
 -- tests/test_pages_text.lua — settings/Text.lua, driven through its widgets: the four tabs, the
--- notice and disabled rows on a container not drawn as text, the Template box and its refusals
--- (panel and /am set), the token cheat sheet, the centering note and the rows the loop effect and
--- the template dim. How the stored look is drawn is tests/test_style_text.lua's.
+-- Template box and its refusals (panel and /am set), the token cheat sheet, the centering note and
+-- the rows the loop effect and the template dim. How the stored look is drawn is tests/test_style_text.lua's.
 -- Every case builds a fresh environment, because every case writes something.
 
 local T = _G.AM_TEST
@@ -11,7 +10,6 @@ local fresh = dofile("tests/fresh_env.lua")
 local pages = dofile("tests/page_helpers.lua")
 
 local P_ = "container.text."
-local NOTICE = "|c" .. T.NS.Constants.NOTICE_COLOR
 
 --- The Template dropdown (feedback #5): the built-ins and Custom. Not a schema row, found by label.
 local function picker(NS, P, ws) return P.find(ws, "Dropdown", NS.L["Template"]) end
@@ -73,35 +71,6 @@ test("text page: the five tabs are drawn in order, Pandemic before Animation (B2
     -- red under: a row registered in a group of its own (a stray sixth tab), or the tabs reordered
     assertEqual(table.concat(P.tabKeys("text"), ","),
         table.concat({ L["General"], L["Font"], L["Icon"], L["Pandemic"], L["Animation"] }, ","))
-end)
-
-test("text page: a bars or icons container sees every row disabled under the note naming its style", function()
-    local NS, _, P = textPage()
-    local L = NS.L
-    NS.Helpers.SelectContainer(2)
-    local notice = NOTICE .. L["Not in use: this container is drawn as icons. Set its Style to Text on the Containers page to use these settings."]
-    P.eachTab("Text", "text", function(key, tabWs)
-        -- red under: the Text spec's disabledNotice answering the bars wording for an icons container
-        assertTrue(P.hasText(tabWs, notice), key .. " carries the note")
-        local rows = P.rowWidgets(tabWs, "text", key)
-        assertTrue(rows[1] ~= nil, key .. " drew its rows")
-        for _, w in ipairs(rows) do
-            -- red under: the Text spec without disabledFor, or the bespoke General tab dropping the
-            -- page's disable (the library's ctx.__renderDisabled around a page tab's render)
-            assertTrue(w.disabled, key .. ": " .. w.labelText)
-        end
-    end)
-    NS.SetByPath("container.style", "bars", 2)
-    local ws = P.rerender("Text")
-    assertTrue(P.hasText(ws, NOTICE .. L["Not in use: this container is drawn as bars. Set its Style to Text on the Containers page to use these settings."]))
-end)
-
-test("text page: the Bars and Icons pages name the text style on a text container", function()
-    local NS, _, P = textPage()
-    local L = NS.L
-    -- red under: the Bars notice still claiming every other container is drawn as icons
-    assertTrue(P.hasText(P.show("Bars"), NOTICE .. L["Not in use: this container is drawn as text. Set its Style to Bars on the Containers page to use these settings."]))
-    assertTrue(P.hasText(P.show("Icons"), NOTICE .. L["Not in use: this container is drawn as text. Set its Style to Icons on the Containers page to use these settings."]))
 end)
 
 test("text page: General holds Size, the Template dropdown and box, the cheat sheet, then Placement", function()
@@ -199,37 +168,6 @@ test("text page: the cheat sheet has a Tokens heading, a Rules heading and one b
     assertTrue(P.hasText(ws, NS.L["Rules"]))
     -- red under: the Rules list without the separator advice (smoke batch 2, item 8)
     assertTrue(P.hasText(ws, NS.L["Put a separator inside the brackets of the field it leads, so an empty field takes it along:"]))
-end)
-
--- Owner, 2026-09-20: on a container drawn as bars every ROW dimmed and the Placement note was gray
--- (it always is), but the Text Template block -- the Preview line and the Tokens/Rules cheat sheet --
--- stayed at full brightness, so the inert part of the tab was its loudest part. They are free-standing
--- TextRows that nothing dims, so settings/Text.lua grays them for that render instead (`dim`/`token`).
-test("text page: the Text Template block grays with the page on a bars container (2026-09-20)", function()
-    local NS, _, P, ws = textPage()
-    local GRAY = "|cff808080"
-    local GOLD = "|cffffd100"
-    -- while the page IS in use: the cheat sheet is bright, its examples gold
-    assertFalse(P.hasText(ws, GRAY .. "- "), "no grayed bullet while the container is drawn as text")
-    assertTrue(P.hasText(ws, GOLD), "the token examples are gold")
-    local live = preview(NS, P, ws).text
-    assertFalse(live:sub(1, #GRAY) == GRAY, "the Preview reads in the container's own font color")
-
-    NS.SetByPath("container.style", "bars", 1)
-    ws = P.rerender("Text")
-    local texts = P.texts(ws)
-    -- red under: the cheat sheet's headings, bullets and examples left bright on a dimmed page
-    for _, t in ipairs(texts) do
-        if t:find("Tokens", 1, true) or t:find("- ", 1, true) or t:find("$spellname$", 1, true) then
-            -- an example line is indented under its bullet, so the color code follows the spaces
-            local body = (t:gsub("^%s+", ""))
-            assertTrue(body:sub(1, #GRAY) == GRAY, "grayed: " .. t)
-        end
-    end
-    -- red under: a gold run left inside the gray wrap, which a WoW |r would restore TO gray, not out
-    assertFalse(P.hasText(ws, GOLD), "nothing in the block is still gold")
-    -- red under: the Preview still wearing the container's font color, the one bright line left
-    assertTrue(preview(NS, P, ws).text:sub(1, #GRAY) == GRAY, "the Preview line is gray too")
 end)
 
 test("text page: a valid template is stored; a refused one is not, and the panel prints why", function()

@@ -4,7 +4,7 @@
 ![CurseForge Version](https://img.shields.io/curseforge/v/1698345)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-1637%2F1637_passing-green)
+![Tests](https://img.shields.io/badge/Tests-1640%2F1640_passing-green)
 
 Ka0s Aura Master lets you build your own buff and debuff displays. Each one is a container. You pick
 whose auras it shows (yours, your target's, your focus's or your pet's), whether it shows buffs,
@@ -55,23 +55,23 @@ first. Real auras stay hidden while it's on, and each container's samples get an
 own, so you can tell where one container ends and the next begins. It ends by itself when combat
 starts, and it can't be started during combat.
 
-Containers is where you create, rename, duplicate and delete containers, change a
-container's unit, aura type or style, or copy another container's settings onto it. Its own Container
-dropdown picks which one you're editing. The Filters, Layout, Bars, Icons and Text pages also edit one
-container at a time, each with a Container dropdown at the top, and the choice follows you from page
-to page. Filters decides what gets shown: who cast it, timed or permanent auras, a maximum duration,
-and categories like defensives, crowd control or boss debuffs, each set to Show or Hide in a grid —
-Show wins over Hide, so an aura in even one Show category is drawn, and only one hidden in every
-category it belongs to is dropped. Its Overrides tab holds a whitelist and a blacklist you add spells
-to by name, by id or by shift-clicking a link; the whitelist always wins. When a filter can't work
-where you've put it, an orange line at the top of the page tells you why. General → Spell Categories edits which spells each spell category
-holds, for every container at once, and it's also where you make your own: give it a name, say
-whether it holds buffs or debuffs, and add spells. It then sits on every container's Filters →
-Categories grid like the built-in ones, marked (yours). Aura Master's own categories can't be renamed
-or deleted; their spell lists are still yours to change. General → Dispel Colors picks the color for
-each dispel type.
-Bars, Icons and Text hold the look for each style. On the page for a style a container doesn't use, a
-notice says so and the controls are dimmed.
+Containers is where you create, rename, duplicate and delete containers, change a container's unit,
+aura type or style, or copy another container's settings onto it. It's one page per container. The
+Container dropdown at the top picks which one you're editing, and the list down the left side
+switches between General, Filters, Layout and the container's own style (Bars, Icons or Text), each
+with its own tabs. It remembers which tab you were on in each of them until you reload. Filters
+decides what gets shown: who cast it, timed or permanent auras, a maximum duration, and categories
+like defensives, crowd control or boss debuffs, each set to Show or Hide in a grid — Show wins over
+Hide, so an aura in even one Show category is drawn, and only one hidden in every category it
+belongs to is dropped. Its Overrides tab holds a whitelist and a blacklist you add spells to by
+name, by id or by shift-clicking a link; the whitelist always wins. When a filter can't work where
+you've put it, an orange line at the top of the page tells you why. General → Spell Categories edits
+which spells each spell category holds, for every container at once, and it's also where you make
+your own: give it a name, say whether it holds buffs or debuffs, and add spells. It then sits on
+every container's Filters → Categories grid like the built-in ones, marked (yours). Aura Master's
+own categories can't be renamed or deleted; their spell lists are still yours to change. General →
+Dispel Colors picks the color for each dispel type. Bars, Icons and Text hold the look for each
+style, and the list only shows the one the container is drawn in.
 
 Layout decides where a container lives. It can sit on the screen, follow another container as that
 one grows (carrying on in the same direction), or attach to any named frame, like your unit frame or an action bar; **Pick a frame…**

@@ -419,8 +419,8 @@ local ID_TOOLTIP = (L["Type a spell id or a name and pick from the list, or shif
 --
 -- THE WORDS ARE NOT OURS TO CHOOSE. `C.AURA_TYPE_LABELS` is what the panel already calls these two
 -- things everywhere a player meets them: the container's own Aura type dropdown
--- (settings/Containers.lua:79), the gray summary behind every container in the picker
--- (settings/OptionsSetup.lua:373) and the `/am list` line (settings/Slash.lua:180) -- those three
+-- (settings/Containers.lua:82), the gray summary behind every container in the picker
+-- (settings/OptionsSetup.lua:362) and the `/am list` line (settings/Slash.lua:180) -- those three
 -- are its readers, and the Filters page is not among them; its category rows are labeled from the
 -- category, not from the aura type. So the marker reads the table rather than defining a second
 -- vocabulary here. Read, not copied: a translation that moves those two labels moves the markers
