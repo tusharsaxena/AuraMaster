@@ -105,7 +105,6 @@ cell is this file saying something crossed and nobody has ruled on it yet.
 |---|---|---|---|
 | 1000–1500 (on notice) | `core/Database.lua` | 1327 | Accepted — newly crossed (948 → 1327 since `20260924-185738`); size, not tangle: 87 functions, max CCN 14 (`Database.MigrateV5`, a linear migration step). The growth is migration steps; if it grows further, the migrations are the seam to peel |
 | 1000–1500 (on notice) | `defaults/Categories.lua` | 1282 | Accepted — newly crossed (676 → 1282); data, not logic: 7 functions, max CCN 4. The bulk is hand-curated spell-ID tables (authored, so the cap binds; not the generated carve-out) |
-| 1000–1500 (on notice) | `modules/Anchors.lua` | 1243 | **Peel next** — newly crossed, and grew 526 → 1243 in one run interval; 81 functions, max CCN 15 (`steadyRelative`, at the threshold, guarding rather than tangle). The attachment half (`attachSpec`, `pairFor`, `steadyRelative`) is the seam |
 | 1000–1500 (on notice) | `modules/Style.lua` | 1018 | Accepted — newly crossed (943 → 1018), just inside the band; 65 functions, max CCN 13 (`Style.CurveColor`), size rather than tangle |
 | 1000–1500 (on notice) | `settings/Schema.lua` | 1035 | Accepted — newly crossed (976 → 1035); 62 functions, max CCN 13 (`normalizeCategoryEdits`), size rather than tangle |
 | 1000–1500 (on notice) | `tests/test_containermanager.lua` | 1053 | Accepted — case count, not tangle: 53 independent `test(` cases, no function in it above CCN 4 |

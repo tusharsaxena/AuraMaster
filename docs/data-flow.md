@@ -395,7 +395,7 @@ player's forget is announced like a setting change.
 
 ## Where a container sits
 
-`Anchors.Place` (`modules/Anchors.lua:628`) sizes the anchor to one element and attaches it: to
+`Anchors.Place` (`modules/Anchors.lua:272`) sizes the anchor to one element and attaches it: to
 another container's engine frame (or its anchor, before the engine exists; or, while that container
 previews, its preview extent, because the disabled engine keeps a stale rect; or, while it is unlocked,
 not previewing and predicted empty, its one-element anchor, because an engine holding no aura is a
@@ -414,7 +414,7 @@ write seam against that container's id. The client never saves an anchor's posit
 
 Attached to another container, the child joins it by two absolute points, `attach.childPoint` (its
 own) and `attach.relPoint` (the parent's), each Automatic while unset (`Anchors.AttachPoints`, batch
-11 G2). Automatic takes the matching half of the default pair (`Anchors.DefaultEdge`, G3): the parent's
+11 G2, in `modules/Anchors_Attach.lua` with the rest of the join). Automatic takes the matching half of the default pair (`Anchors.DefaultEdge`, G3): the parent's
 vertical growth side, lined up with a Text child's justify, centered for an icons or bars child under
 a Text parent justified Center, else on the side the parent's lines start from. The pair in effect is
 classified against batch 9's nine sides under the chain's growth (`Anchors.AttachEdge`, G5); a free

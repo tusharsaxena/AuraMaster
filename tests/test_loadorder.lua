@@ -50,6 +50,8 @@ test("loadorder: the load-bearing pairs are in order, and the TOC says why", fun
         { "modules/Style.lua", "modules/Style_Bars.lua" },
         { "modules/Style.lua", "modules/Style_Text.lua" },
         { "modules/TextTemplate.lua", "modules/Style_Text.lua" },
+        -- Anchors binds NS.AnchorsAttach at file load (AM-ATS-04).
+        { "modules/Anchors_Attach.lua", "modules/Anchors.lua" },
         { "settings/Schema.lua", "settings/OptionsSetup.lua" },
         { "settings/OptionsSetup.lua", "settings/General.lua" },
         { "settings/GeneralSpells.lua", "settings/General.lua" },
