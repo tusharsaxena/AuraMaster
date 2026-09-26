@@ -192,3 +192,113 @@ test("rail: with no containers the rail lists General alone, which says how to m
     assertEqual(railKeys(P, ctx), "containers")
     assertTrue(P.hasText(ws, NS.L["No containers yet. Click New container, or type /am new."]))
 end)
+
+-- ── deep links, SelectTab, Defaults ─────────────────────────────────────────────────────────
+
+--- A fresh environment whose subcategories answer GetID, as the client's do, and which records the
+--- category every OpenToCategory lands on, by its tree label.
+local function recordingOpens()
+    local byId, opened = {}, {}
+    local NS, m = fresh({ before = function(mk)
+        local register = mk.Settings.RegisterCanvasLayoutSubcategory
+        local count = 0
+        mk.Settings.RegisterCanvasLayoutSubcategory = function(parent, panel, name)
+            local cat = register(parent, panel, name)
+            count = count + 1
+            local id = 100 + count
+            byId[id] = name
+            cat.GetID = function() return id end
+            return cat
+        end
+        mk.Settings.OpenToCategory = function(id)
+            local name = byId[id] or "main"
+            opened[#opened + 1] = name
+        end
+    end })
+    return NS, m, pages(NS, m), opened
+end
+
+test("rail: a former sub-page key opens Containers on that section, drawn on the next show (smoke 7)", function()
+    local NS, _, P, opened = recordingOpens()
+    local ctx = NS.Helpers.__pageCtx.containers
+    NS.Helpers.SelectContainer(1)
+    P.show("Containers")
+    P.rail("filters")
+    -- The frame picker closes the settings window and reopens "layout" when the pick lands
+    -- (settings/Layout.lua's pickFrame): the page is hidden, so the section is owed, then drawn.
+    NS.OpenOptionsPage("layout")
+    -- red under: OpenOptionsPage looking the key up in the category table alone
+    assertEqual(opened[#opened], NS.L["Containers"])
+    assertEqual(ctx.activeSection, "layout", "selected before the show")
+    P.show("Containers")
+    assertEqual(P.drawnRail(ctx).value, "layout", "and drawn on it")
+end)
+
+test("rail: a style key the container is not drawn in opens Containers and moves nothing; Containers keeps the section", function()
+    local NS, _, P, opened = recordingOpens()
+    local ctx = NS.Helpers.__pageCtx.containers
+    NS.Helpers.SelectContainer(1)                   -- bars
+    P.show("Containers")
+    P.rail("filters")
+    NS.OpenOptionsPage("icons")
+    assertEqual(opened[#opened], NS.L["Containers"])
+    -- red under: a section selected that the rail does not list (an empty page under the strip)
+    assertEqual(ctx.activeSection, "filters")
+    NS.OpenOptionsPage("containers")
+    -- red under: the anchor's right-click (modules/Anchors.lua) dropping the player back on General
+    assertEqual(ctx.activeSection, "filters")
+end)
+
+test("rail: SelectTab on a section key selects the section and its tab; on the General page it is the library's", function()
+    local NS, _, P = env()
+    local ctx = NS.Helpers.__pageCtx.containers
+    local L = NS.L
+    NS.Helpers.SelectContainer(1)
+    P.show("Containers")
+    -- red under: the call reaching the library's SelectTab, which finds no "filters" page to hold it
+    assertTrue(NS.Helpers.SelectTab("filters", L["Sorting"]))
+    P.show("Containers")
+    assertEqual(ctx.activeSection, "filters")
+    assertEqual(ctx.activeTab, L["Sorting"])
+    P.show("General")
+    assertTrue(NS.Helpers.SelectTab("general", L["Spell Categories"]), "the addon page is the library's")
+    assertEqual(NS.Helpers.__pageCtx.general.activeTab, L["Spell Categories"])
+end)
+
+test("rail: selecting a section is refused in combat and moves nothing", function()
+    local NS, m, P = env()
+    local ctx = NS.Helpers.__pageCtx.containers
+    P.show("Containers")
+    m.__lockdown = true
+    -- red under: SelectSection without the library's refusal (a structural re-render in combat)
+    assertFalse(NS.Helpers.SelectSection("layout"))
+    m.__lockdown = false
+    assertEqual(ctx.activeSection, "containers")
+end)
+
+test("rail: Defaults restores only the active section's rows for the selected container (smoke 6)", function()
+    local NS, m, P = env()
+    local T0 = NS.CONTAINER_TEMPLATE
+    NS.Helpers.SelectContainer(1)
+    P.show("Containers")
+    P.rail("layout")
+    NS.SetByPath("container.layout.spacing", 9, 1)
+    NS.SetByPath("container.bars.width", 300, 1)
+    NS.SetByPath("container.enabled", false, 1)
+    NS.SetByPath("container.layout.spacing", 9, 2)
+    m.__subcategories.Containers.defaultsOnClick()
+    -- red under: a click closure that captured the section at build time (General's rows reset)
+    assertEqual(NS.Database.FindContainer(1).layout.spacing, T0.layout.spacing, "a Layout row")
+    assertEqual(NS.Database.FindContainer(1).bars.width, 300, "a Bars row is not a Layout row")
+    assertEqual(NS.Database.FindContainer(1).enabled, false, "a General row is not a Layout row")
+    assertEqual(NS.Database.FindContainer(2).layout.spacing, 9, "only the selected container")
+    P.rail("containers")
+    m.__subcategories.Containers.defaultsOnClick()
+    assertEqual(NS.Database.FindContainer(1).enabled, T0.enabled, "on General, General's rows")
+end)
+
+test("rail: the Defaults tooltip names the section on screen and the kept name", function()
+    local NS, m = env()
+    assertEqual(m.__subcategories.Containers.defaultsTooltip,
+        NS.L["Restore the selected container's settings in the section on screen to their addon defaults. On General: Enabled, Unit, Aura type and Style; its name is kept."])
+end)

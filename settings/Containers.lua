@@ -263,9 +263,11 @@ local function build(mainCategory)
     local ctx = H.CreatePanel("AuraMasterContainersPanel", L["Containers"], {
         pageKey         = PAGE,
         defaultsButton  = true,
-        defaultsTooltip = L["Restore the selected container's Enabled, Unit, Aura type and Style to its addon default. Its name is kept."],
+        defaultsTooltip = L["Restore the selected container's settings in the section on screen to their addon defaults. On General: Enabled, Unit, Aura type and Style; its name is kept."],
     })
-    ctx.panel.defaultsOnClick = function() H.RestoreDefaults(PAGE, ctx) end
+    -- The ACTIVE section's rows, read at click time: the button is built once, on the first show
+    -- (O.EnsureDefaultsButton), so a section captured here would be General's for good (#6, spec §3).
+    ctx.panel.defaultsOnClick = function() H.RestoreDefaults(ctx.activeSection or PAGE, ctx) end
     H.__bindContainersPage(ctx)
     -- Through SetRenderer, which owns WHEN the page draws and refuses under combat (options-ui-§11).
     H.SetRenderer(ctx, function(c) H.RenderContainerPage(c, BAND) end)

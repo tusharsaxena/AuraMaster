@@ -302,7 +302,7 @@ if not lib then
         "RenderRows", "RenderGrid", "RenderField", "RenderSchema", "RenderTabbedSchema", "Section",
         "AddSpacer", "TextRow", "TabStrip", "SubTabStrip", "PageHeader", "PageBanner",
         "InlineButtonPair", "SessionCheckbox", "AttachTooltip", "ChoiceGrid", "ResolveId", "IdInput",
-        "IdList", "UnnamedCandidates", "SelectTab", "NavRail",
+        "IdList", "UnnamedCandidates", "SelectTab", "NavRail", "SelectSection",
         -- this addon's decorations on the live instance (defined below the `return`)
         "SelectContainer", "ContainerBanner", "RenderWarnings", "RenderPage", "RenderContainerPage",
     }) do
@@ -360,6 +360,13 @@ function NS.OpenOptionsPage(pageKey)
     if InCombatLockdown() then
         NS.Printf("|cff808080%s|r", L["cannot open settings during combat — Blizzard's category-switch is protected"])
         return
+    end
+    -- A former sub-page key is a section of Containers now (#6): select it, then open Containers.
+    -- "containers" itself keeps the section the player left (an anchor's right-click means "this
+    -- container", not "General"), and a style key the container is not drawn in selects nothing.
+    if sections[pageKey] then
+        if pageKey ~= GENERAL_SECTION then Helpers.SelectSection(pageKey) end
+        pageKey = GENERAL_SECTION
     end
     local cat = categories[pageKey]
     if cat and cat.GetID and Settings and Settings.OpenToCategory then
@@ -555,6 +562,9 @@ end
 -- default and slash path is the sub-page's it replaced. The section, and each section's tab, are
 -- session state on the ctx and never persisted (options-ui-§13).
 
+-- The Containers page's ctx, recorded when its builder binds it: the one page SelectSection moves.
+local containersCtx
+
 --- The sections the rail lists for container `cfg`, in rail order. General always (it is where a
 --- container is made); the rest only with a container, and a style section only for its own style.
 local function railSections(cfg)
@@ -592,6 +602,7 @@ end
 
 --- Bind the Containers page's ctx (settings/Containers.lua's builder). The page opens on General.
 function Helpers.__bindContainersPage(ctx)
+    containersCtx = ctx
     ctx.sectionTabs = {}
     ctx.activeSection = GENERAL_SECTION
     Helpers.__pageCtx[GENERAL_SECTION] = ctx
@@ -622,6 +633,36 @@ function Helpers.RenderContainerPage(ctx, band)
         })
     end)
     ctx.__renderedSection = section.key
+end
+
+--- Select section `key` on the Containers page, and optionally its tab: the one seam a link, a deep
+--- link or a suite moves the section through. A hidden page is marked owed a render and draws the
+--- section on its next show. Refused in combat, as a tab switch is (options-ui-§2). A style section
+--- the selected container is not drawn in is not on the rail, and selecting it moves nothing.
+--- @return boolean  whether the section was selected
+function Helpers.SelectSection(key, tabKey)
+    if Helpers.__combatRefused() then return false end
+    local ctx = containersCtx
+    if not ctx then return false end
+    local listed = false
+    for _, s in ipairs(railSections(NS.ActiveContainer())) do
+        if s.key == key then listed = true end
+    end
+    if not listed then return false end
+    stashTab(ctx)
+    ctx.activeSection = key
+    if tabKey ~= nil then ctx.sectionTabs[key] = tabKey end
+    Helpers.RefreshPanel(ctx, true)
+    return true
+end
+
+-- The library's SelectTab moves one PAGE's tab. A section key is no page any more (#6): it routes to
+-- SelectSection, so a link written against the old page keys still lands. Any other key -- General,
+-- the addon page, settings/Filters.lua's "See spells" -- is the library's.
+local selectTab = Helpers.SelectTab
+function Helpers.SelectTab(pageKey, tabKey)
+    if sections[pageKey] then return Helpers.SelectSection(pageKey, tabKey) end
+    return selectTab(pageKey, tabKey)
 end
 
 -- Test seam: the ctx each tabbed page built, by page key. The library keeps its registry private,

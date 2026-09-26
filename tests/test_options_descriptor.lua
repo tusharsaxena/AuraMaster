@@ -428,7 +428,7 @@ test("options descriptor: panel refreshes asked for in one frame are one refresh
     assertTrue(refreshes[1] >= 3, "and the latch was released")
 end)
 
-test("options descriptor: OpenOptionsPage opens a registered page's category and falls back to the panel otherwise", function()
+test("options descriptor: OpenOptionsPage opens a registered page's category, a section's through Containers, and falls back to the panel otherwise", function()
     local opened = {}
     local NS2 = fresh({ before = function(mk)
         local register = mk.Settings.RegisterCanvasLayoutSubcategory
@@ -444,10 +444,10 @@ test("options descriptor: OpenOptionsPage opens a registered page's category and
     local panels = { 0 }
     NS2.Helpers.OpenOptionsPanel = function() panels[1] = panels[1] + 1 end
     NS2.OpenOptionsPage("layout")
-    -- red under: NS.RegisterContainerPage not recording its category. The category is registered
-    -- under Layout's MARKED tree label (D6, N-2: Layout is a sub-page of Containers) — the key the
-    -- frame picker and OpenOptionsPage use is unaffected, only the label Blizzard's tree shows.
-    assertEqual(table.concat(opened, ","), "cat:" .. NS2.SubPageLabel("Layout"))
+    -- red under: a section key looked up in the category table alone (#6: Layout is a section of
+    -- Containers, and the key opens Containers on it)
+    assertEqual(table.concat(opened, ","), "cat:" .. NS2.L["Containers"])
+    assertEqual(NS2.Helpers.__pageCtx.containers.activeSection, "layout")
     NS2.OpenOptionsPage("no such page")
     assertEqual(panels[1], 1, "an unknown page opens the panel")
     assertEqual(#opened, 1)

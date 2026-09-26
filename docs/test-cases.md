@@ -1400,7 +1400,7 @@ badge and any count quoted in the docs must agree with it.
 - options descriptor: a bespoke tab with `before` is drawn ahead of the tab it names, else last
 - options descriptor: RenderWarnings draws one orange line per thing the engine will not do
 - options descriptor: panel refreshes asked for in one frame are one refresh, on the next frame
-- options descriptor: OpenOptionsPage opens a registered page's category and falls back to the panel otherwise
+- options descriptor: OpenOptionsPage opens a registered page's category, a section's through Containers, and falls back to the panel otherwise
 - options descriptor: every stub composer answers an empty row list
 
 ### test_pages_general.lua (35)
@@ -1508,7 +1508,7 @@ badge and any count quoted in the docs must agree with it.
 - containers: copying Everything takes what the source is, never its name or position
 - containers: with one container the page offers Duplicate and Delete but no copy block
 - containers: Defaults restores Enabled, Unit, Aura type and Style, and never the name
-- containers: the page's Defaults tooltip says it takes the selected container's identity and keeps its name
+- containers: the page's Defaults tooltip names the section on screen and the kept name
 
 ### test_pages_filters.lua (49)
 
@@ -1684,7 +1684,7 @@ badge and any count quoted in the docs must agree with it.
 - tabs: the Containers page's band holds the picker and New container, out of the tab body
 - tabs: re-rendering Filters and Containers ten times each leaves the live Dropdown and Button counts flat
 
-### test_pages_rail.lua (10)
+### test_pages_rail.lua (16)
 
 - sections: Filters, Layout, Bars, Icons and Text register as sections under their page keys
 - sections: each style section's gate is derived from its style, on both builds (Diagnostics' inert split)
@@ -1696,6 +1696,12 @@ badge and any count quoted in the docs must agree with it.
 - rail: a Style change heals an active style section to the new style's entry; other sections stay (smoke 4)
 - rail: choosing a container of another style in the band moves Bars to Icons
 - rail: with no containers the rail lists General alone, which says how to make one
+- rail: a former sub-page key opens Containers on that section, drawn on the next show (smoke 7)
+- rail: a style key the container is not drawn in opens Containers and moves nothing; Containers keeps the section
+- rail: SelectTab on a section key selects the section and its tab; on the General page it is the library's
+- rail: selecting a section is refused in combat and moves nothing
+- rail: Defaults restores only the active section's rows for the selected container (smoke 6)
+- rail: the Defaults tooltip names the section on screen and the kept name
 
 ### test_pages_about.lua (3)
 
@@ -1936,7 +1942,7 @@ badge and any count quoted in the docs must agree with it.
 | test_pages_icons.lua | 8 |
 | test_pages_text.lua | 31 |
 | test_pages_tabs.lua | 7 |
-| test_pages_rail.lua | 10 |
+| test_pages_rail.lua | 16 |
 | test_pages_about.lua | 3 |
 | test_pages_profiles.lua | 3 |
 | test_envsetup.lua | 4 |
@@ -1953,4 +1959,4 @@ badge and any count quoted in the docs must agree with it.
 | test_eol.lua | 2 |
 | test_layout_cap.lua | 13 |
 | test_diagnostics_contract.lua | 7 |
-| **Total** | **1647** |
+| **Total** | **1653** |
