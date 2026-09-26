@@ -44,14 +44,15 @@ what each LibKa0s setup file publishes: `docs/module-map.md` → *Libraries*.
 ## Module Map
 
 Five source folders in the TOC's load order — `locales/` → `core/` → `defaults/` → `modules/` →
-`settings/` (layout-§1) — 51 authored Lua files under them: one locale, 16 core, 4 defaults, 16
-modules and 14 settings. The load-bearing positions are annotated at their TOC lines:
+`settings/` (layout-§1) — 52 authored Lua files under them: one locale, 16 core, 4 defaults, 16
+modules and 15 settings. The load-bearing positions are annotated at their TOC lines:
 `core/MediaSetup.lua` before `core/Constants.lua` (the monospace face), `core/CoreSetup.lua` before
 anything that prints, `core/PerfSetup.lua` before every module that takes `NS.Perf` as an upvalue,
 `defaults/Categories.lua` before `defaults/Profile.lua` (the template's category states) and
 `defaults/UserCategories.lua` directly after it (the `NS.Categories` upvalue),
 `settings/OptionsSetup.lua` before every page file (the composers run at file load), and
-`settings/GeneralSpells.lua` then `settings/GeneralDispel.lua` (which reads its bullet constants), both
+`settings/GeneralUserCategories.lua` (read by `settings/GeneralSpells.lua` at file load), then
+`settings/GeneralSpells.lua`, then `settings/GeneralDispel.lua` (which reads its bullet constants), all
 before `settings/General.lua`, which registers their rows after its own.
 The Settings tree's order is the TOC's own registration order: General, then Containers, then Profiles. Filters, Layout, Bars, Icons and Text are sections of the Containers page (#6) with no tree entry; they load after `settings/OptionsSetup.lua` in any order, and the rail's order is `SECTION_ORDER` there.
 

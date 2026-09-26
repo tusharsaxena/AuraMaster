@@ -379,7 +379,7 @@ end
 --- dropdown, so no Delete reaches it, and `forgetUserKey` skips any profile that still holds a
 --- record under the key, so its own debris could never be swept either. A record like that was
 --- permanently stuck. This is what the panel reads to offer a way out
---- (settings/GeneralSpells.lua's 'Your categories' block).
+--- (settings/GeneralUserCategories.lua's 'Your categories' block).
 ---
 --- A record under a non-string key is debris of the same kind and is reported too, keyed by what
 --- `tostring` makes of it, so the count the player is shown is the whole of what will go.
@@ -765,7 +765,7 @@ end
 --- delete: the record is gone, the definition is gone, and what survives is inert. But it used to
 --- reach `NS.Debug` and nothing else, so the player was told "deleted" and never told that one
 --- profile kept its debris. The count of refusing profiles is now RETURNED, third, so a caller can
---- say so; settings/GeneralSpells.lua's confirmation does.
+--- say so; settings/GeneralUserCategories.lua's confirmation does.
 --- @param key string
 --- @param profile table|nil  the profile that OWNS the category; defaults to NS.db.profile
 --- @param db table|nil  the store to sweep; defaults to NS.db
@@ -810,7 +810,7 @@ end
 --- Nothing here can be repaired automatically, and nothing tries: a record with no usable aura type
 --- or no usable name holds a spell list that cannot be attributed to either grid, and guessing is
 --- the thing `usableName` exists to refuse. This is the player's decision, taken behind the panel's
---- own confirmation (settings/GeneralSpells.lua).
+--- own confirmation (settings/GeneralUserCategories.lua).
 --- @param profile table|nil
 --- @param db table|nil
 --- @return number  the records forgotten

@@ -118,9 +118,11 @@ settings\Slash.lua
 settings\OptionsSetup.lua
 # Conventional: the page files, each registering its rows and page at load.
 settings\About.lua
-# LOAD-BEARING: GeneralSpells, then GeneralDispel (which reads GeneralSpells' bullet constants),
-# both before General, which registers their rows after its own (so the Spell Categories and
-# Dispel Colors tabs follow Display).
+# LOAD-BEARING: GeneralUserCategories (the Spell Categories tab's own-category block, read by
+# GeneralSpells at file load), then GeneralSpells, then GeneralDispel (which reads GeneralSpells'
+# bullet constants), all before General, which registers their rows after its own (so the Spell
+# Categories and Dispel Colors tabs follow Display).
+settings\GeneralUserCategories.lua
 settings\GeneralSpells.lua
 settings\GeneralDispel.lua
 settings\General.lua

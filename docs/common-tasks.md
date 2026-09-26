@@ -56,7 +56,7 @@ Example: a bar option.
    (`includeCategory`) is used only when the aura's category set needs its own group (rank 3, when
    something else is Hidden). A `spells` or `enchant` category of EITHER aura type also joins General → Spell
    Categories' dropdown (and gets a `See spells` link on the Categories grid) — the tab tests the
-   kind, never the aura type (`editableHere`, `settings/GeneralSpells.lua:216`) — and its profile-wide
+   kind, never the aura type (`editableHere`, `settings/GeneralSpells.lua:128`) — and its profile-wide
    edits reach the compiler through `FC.ProfileContext`. A new `kind` needs a branch in both
    `excludeCategory` and `includeCategory`, and a grid in `GRID_BY_KIND` (`settings/Filters.lua`),
    plus an entry in `GRIDS` when the grid is new.

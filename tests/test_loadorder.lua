@@ -53,6 +53,8 @@ test("loadorder: the load-bearing pairs are in order, and the TOC says why", fun
         { "settings/Schema.lua", "settings/OptionsSetup.lua" },
         { "settings/OptionsSetup.lua", "settings/General.lua" },
         { "settings/GeneralSpells.lua", "settings/General.lua" },
+        -- GeneralSpells reads NS.GeneralUserCategories as an upvalue at file load (AM-ATS-03).
+        { "settings/GeneralUserCategories.lua", "settings/GeneralSpells.lua" },
         -- The Settings tree order is the TOC's own registration order: General, then Containers
         -- (N-1), then Profiles. The Containers page's sections (#6) load after the registry in
         -- settings/OptionsSetup.lua, in any order: the rail's is SECTION_ORDER.
