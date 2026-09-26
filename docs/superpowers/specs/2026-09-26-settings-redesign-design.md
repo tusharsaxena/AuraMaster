@@ -167,3 +167,5 @@ follow-up addons get it too:
 
 The same pattern for MultiMeters, KickCD and PanelMaster is parked; one GitHub issue each, citing
 this spec. They depend on the §4 library minor and the §5 standard change landing first.
+Filed 2026-09-26: MultiMeters#55, KickCD#33, PanelMaster#55 (`enhancement`, `state:triaged`,
+`severity:low`).
