@@ -119,7 +119,7 @@ end
 -- starts exactly at the anchor's start and its far edge is start + content, while an empty engine
 -- spans [start - 1, start] and its far edge IS the start. No prediction of emptiness, so it holds in
 -- every hang state and in combat, as the engine resizes. A follower's relative point on the start
--- side (or the middle) takes the unit back (modules/Anchors.lua, engineLead).
+-- side (or the middle) takes the unit back (modules/Anchors_Attach.lua, engineLead).
 NS.Container.ENGINE_LEAD = 1
 
 --- The engine's offset from its anchor's start corner: ENGINE_LEAD against the growth on each axis.

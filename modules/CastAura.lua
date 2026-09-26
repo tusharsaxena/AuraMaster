@@ -123,7 +123,7 @@ end
 -- working one -- and YELLOW for the overlap guardrail's "also in" line, which is worth noticing
 -- and is not a fault. Anything else a list has to say keeps the library's own gold
 -- (ID_HELP_TINT), and an entry with nothing to say keeps its dimmed, hoverless mark
--- (ID_HELP_DIM, libs/LibKa0s/OptionsWidgets.lua:1991-1993).
+-- (ID_HELP_DIM, libs/LibKa0s/OptionsIdList.lua:177-179).
 --
 -- THE VALUES LIVE HERE, IN ONE PLACE, because the LIBRARY is what reads them: a host writes one
 -- on `entry.helpSeverity` and the list resolves it to a tint. Both pages that set one take it
@@ -178,7 +178,7 @@ function CA.Help(id, extra, extraSeverity)
     end
     if not lines[1] then return nil end
     -- THE LEVEL RIDES ON THE LINES, because that is where the library reads it:
-    -- `entryHelpLevel` takes `entry.help.level` (libs/LibKa0s/OptionsWidgets.lua:2979-2985), not a
+    -- `entryHelpLevel` takes `entry.help.level` (libs/LibKa0s/OptionsIdList.lua:488-494), not a
     -- sibling field on the entry. One table is one thing to hand back and one thing to set.
     lines.level = note and CA.HELP_ALERT or extraSeverity
     return lines, lines.level

@@ -1,5 +1,5 @@
--- tests/test_pages_general_categories.lua — settings/GeneralSpells.lua's category editing, driven
--- through its widgets: the 'Your categories' block (create, rename, delete and the shipped lock),
+-- tests/test_pages_general_categories.lua — settings/GeneralSpells.lua's category editing (its
+-- own-category block is settings/GeneralUserCategories.lua since AM-ATS-03), driven through its widgets: the 'Your categories' block (create, rename, delete and the shipped lock),
 -- review round four's asks, the overlap guardrail, review round five's headings, answer line and
 -- counts, and the add line's suggestions while typing. Peeled out of tests/test_pages_general.lua
 -- along its 'Your categories' seam (issue #19). Every case builds a fresh environment, because every

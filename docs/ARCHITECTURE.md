@@ -44,14 +44,16 @@ what each LibKa0s setup file publishes: `docs/module-map.md` → *Libraries*.
 ## Module Map
 
 Five source folders in the TOC's load order — `locales/` → `core/` → `defaults/` → `modules/` →
-`settings/` (layout-§1) — 51 authored Lua files under them: one locale, 16 core, 4 defaults, 16
-modules and 14 settings. The load-bearing positions are annotated at their TOC lines:
+`settings/` (layout-§1) — 53 authored Lua files under them: one locale, 16 core, 4 defaults, 17
+modules and 15 settings. The load-bearing positions are annotated at their TOC lines:
 `core/MediaSetup.lua` before `core/Constants.lua` (the monospace face), `core/CoreSetup.lua` before
 anything that prints, `core/PerfSetup.lua` before every module that takes `NS.Perf` as an upvalue,
 `defaults/Categories.lua` before `defaults/Profile.lua` (the template's category states) and
 `defaults/UserCategories.lua` directly after it (the `NS.Categories` upvalue),
+`modules/Anchors_Attach.lua` before `modules/Anchors.lua` (which binds `NS.AnchorsAttach` at file load),
 `settings/OptionsSetup.lua` before every page file (the composers run at file load), and
-`settings/GeneralSpells.lua` then `settings/GeneralDispel.lua` (which reads its bullet constants), both
+`settings/GeneralUserCategories.lua` (read by `settings/GeneralSpells.lua` at file load), then
+`settings/GeneralSpells.lua`, then `settings/GeneralDispel.lua` (which reads its bullet constants), all
 before `settings/General.lua`, which registers their rows after its own.
 The Settings tree's order is the TOC's own registration order: General, then Containers, then Profiles. Filters, Layout, Bars, Icons and Text are sections of the Containers page (#6) with no tree entry; they load after `settings/OptionsSetup.lua` in any order, and the rail's order is `SECTION_ORDER` there.
 
@@ -61,7 +63,8 @@ engine), `modules/ContainerManager.lua` (the registry and the deferred apply, ea
 guarded so one error cannot drop the rest of the pass) and `modules/Style.lua` with its three style
 files (`Style_Bars.lua`, `Style_Icons.lua` and `Style_Text.lua`, chosen per container by
 `Style.Styler`), plus the pure template parser the Text style draws from
-(`modules/TextTemplate.lua`). Placement is `modules/Anchors.lua`. A container attached to another
+(`modules/TextTemplate.lua`). Placement is `modules/Anchors.lua`, with how a follower joins its parent in
+`modules/Anchors_Attach.lua`. A container attached to another
 continues its chain root's flow (`Anchors.EffectiveLayout`) and joins it by two absolute points,
 `attach.childPoint` and `attach.relPoint`, each Automatic while unset (`Anchors.AttachPoints`,
 batch 11 G2, G3); a pair that is one of batch 9's nine sides keeps that side's seam and spread

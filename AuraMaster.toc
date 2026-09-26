@@ -98,8 +98,11 @@ modules\Style.lua
 modules\Style_Bars.lua
 modules\Style_Icons.lua
 modules\Style_Text.lua
-# Conventional: the rest of the modules; peers resolved at call time.
+# LOAD-BEARING: Anchors_Attach before Anchors, which binds its join spec, edge parts and scale from
+# NS.AnchorsAttach at file load.
+modules\Anchors_Attach.lua
 modules\Anchors.lua
+# Conventional: the rest of the modules; peers resolved at call time.
 modules\Preview.lua
 modules\EmptyWatch.lua
 modules\FramePicker.lua
@@ -118,9 +121,11 @@ settings\Slash.lua
 settings\OptionsSetup.lua
 # Conventional: the page files, each registering its rows and page at load.
 settings\About.lua
-# LOAD-BEARING: GeneralSpells, then GeneralDispel (which reads GeneralSpells' bullet constants),
-# both before General, which registers their rows after its own (so the Spell Categories and
-# Dispel Colors tabs follow Display).
+# LOAD-BEARING: GeneralUserCategories (the Spell Categories tab's own-category block, read by
+# GeneralSpells at file load), then GeneralSpells, then GeneralDispel (which reads GeneralSpells'
+# bullet constants), all before General, which registers their rows after its own (so the Spell
+# Categories and Dispel Colors tabs follow Display).
+settings\GeneralUserCategories.lua
 settings\GeneralSpells.lua
 settings\GeneralDispel.lua
 settings\General.lua

@@ -176,6 +176,15 @@ charged to the addon. Figures from bundles recorded before this change are not c
 | `unitAuraFiltered` | TimedSpells' unit frame, dispatched as the client does from its `RegisterUnitEvent` unit list: a `nameplate1` `UNIT_AURA` must never reach the handler, which must be registered for exactly `player,pet`; the measured loop is a player `UNIT_AURA` with its scan already queued, which must allocate 0 B/iter and arm no further timer |
 | `emptyWatchAura` | EmptyWatch's player frame: nothing registered while locked; unlocked, a player `UNIT_AURA` with the pass already queued must allocate 0 B/iter and arm no further timer |
 
+**The `compile` figure tracks the size of the spell lists wherever the categorized union is built.**
+`categorizedUnion` copies every `spells`-kind category's ids, so each list the curation adds costs
+bytes on every compile that builds it. SID-16 (`d0c01f1`, the schema v7 category restructure) took
+`compile` from 22200 to 42744 B/iter and `applyPass` from 118147 to 163616, because its lists grew while the
+union was built on every compile, whether or not anything read it. AM-ATS-01 builds it only where the `hasUnion` gate can read it (a container
+with a Hide, on a unit whose ids are certain), and that brought the figures to 3576 and 104403. The
+change left every plan identical. If `compile` climbs again, look first for a per-compile copy of a
+spell list.
+
 **What the offline runner cannot see.** The mock engine is a recorder: it logs the calls this addon
 makes and does none of Blizzard's work. So the runner measures this addon's Lua and the calls it
 makes, and nothing about gathering, sorting, drawing or animating auras. That half is only visible in

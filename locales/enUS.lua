@@ -273,7 +273,7 @@ L["Create category"] = "Create category"
 L["Makes a category of your own, empty. Fill it from the list below, then set it to Show or Hide on each container's Filters -> Categories tab like any other category."] = "Makes a category of your own, empty. Fill it from the list below, then set it to Show or Hide on each container's Filters -> Categories tab like any other category."
 L["Created '%s', empty. Add spells to it below, then set it to Show or Hide on each container's Filters -> Categories tab."] = "Created '%s', empty. Add spells to it below, then set it to Show or Hide on each container's Filters -> Categories tab."
 L["Make a new category"] = "Make a new category"
--- The way out of a stored record the sync cannot read (settings/GeneralSpells.lua's renderBroken).
+-- The way out of a stored record the sync cannot read (settings/GeneralUserCategories.lua's renderBroken).
 L["Aura Master cannot read 1 of this profile's saved categories, so it is in no list and nothing is using it. It cannot be repaired from here, but you can be rid of it."] = "Aura Master cannot read 1 of this profile's saved categories, so it is in no list and nothing is using it. It cannot be repaired from here, but you can be rid of it."
 L["Aura Master cannot read %d of this profile's saved categories, so they are in no list and nothing is using them. They cannot be repaired from here, but you can be rid of them."] = "Aura Master cannot read %d of this profile's saved categories, so they are in no list and nothing is using them. They cannot be repaired from here, but you can be rid of them."
 L["Forget unreadable categories"] = "Forget unreadable categories"

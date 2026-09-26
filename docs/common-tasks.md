@@ -56,7 +56,7 @@ Example: a bar option.
    (`includeCategory`) is used only when the aura's category set needs its own group (rank 3, when
    something else is Hidden). A `spells` or `enchant` category of EITHER aura type also joins General → Spell
    Categories' dropdown (and gets a `See spells` link on the Categories grid) — the tab tests the
-   kind, never the aura type (`editableHere`, `settings/GeneralSpells.lua:216`) — and its profile-wide
+   kind, never the aura type (`editableHere`, `settings/GeneralSpells.lua:128`) — and its profile-wide
    edits reach the compiler through `FC.ProfileContext`. A new `kind` needs a branch in both
    `excludeCategory` and `includeCategory`, and a grid in `GRID_BY_KIND` (`settings/Filters.lua`),
    plus an entry in `GRIDS` when the grid is new.
@@ -86,7 +86,7 @@ path it walks, for when something about it has to be changed or debugged.
    `Cat.CreateUserCategory` then runs `Database.PrepareProfile`, so every stored container carries the
    key before the Filters grid is next drawn — without it the grid would light neither Show nor Hide.
 4. **Where to hook a change:** the acts and the sync are `defaults/UserCategories.lua`; the block that
-   draws them is `settings/GeneralSpells.lua`; the row shape is `settings/Filters.lua`'s
+   draws them is `settings/GeneralUserCategories.lua`; the row shape is `settings/Filters.lua`'s
    `NS.CategoryRow`. Never add a second labeling rule — every site that shows a category's name asks
    `Cat.LabelOf`, and the panel's `(yours)` marker (`NS.GeneralSpells.MarkedName`) wraps that answer.
 5. **Never route a player-supplied name through `NS.L`.** That is the locale guard's one exemption and

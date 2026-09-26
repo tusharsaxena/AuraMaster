@@ -122,7 +122,7 @@ directly (`NS.Print`), not silently. Full detail: *Step 4 in detail*, below.
 
 ## Step 4 in detail: the filter plan
 
-`FilterCompiler.Compile` (`modules/FilterCompiler.lua:778`) turns one container into
+`FilterCompiler.Compile` (`modules/FilterCompiler.lua:790`) turns one container into
 `{ groups, enchants, warnings }`, under the five-rank priority *Filter
 priority*, above, states (`FC.ExplainSpell` answers the same question for one spell, for the panel):
 
@@ -178,7 +178,7 @@ priority*, above, states (`FC.ExplainSpell` answers the same question for one sp
 only when the direction moved), cap and layout can change on a live engine; hide-permanent enchants
 cannot, because a slot takes it only when added, so toggling it is a new shape. A plan of the same
 shape calls only the setters whose values moved. Candidate filters are serialized with
-`FilterCompiler.Signature` (`modules/FilterCompiler.lua:950`) and re-sent only when the two
+`FilterCompiler.Signature` (`modules/FilterCompiler.lua:961`) and re-sent only when the two
 signatures differ (`modules/Container.lua:325-333`), because the engine clears and re-gathers a
 group whenever they are set (`docs/midnight-quirks.md`). **Rebuilding.** Groups are add-only and a
 frame is never freed, so a new shape disables and hides the old engine, keeps it aside, and builds a
@@ -395,7 +395,7 @@ player's forget is announced like a setting change.
 
 ## Where a container sits
 
-`Anchors.Place` (`modules/Anchors.lua:628`) sizes the anchor to one element and attaches it: to
+`Anchors.Place` (`modules/Anchors.lua:272`) sizes the anchor to one element and attaches it: to
 another container's engine frame (or its anchor, before the engine exists; or, while that container
 previews, its preview extent, because the disabled engine keeps a stale rect; or, while it is unlocked,
 not previewing and predicted empty, its one-element anchor, because an engine holding no aura is a
@@ -414,7 +414,7 @@ write seam against that container's id. The client never saves an anchor's posit
 
 Attached to another container, the child joins it by two absolute points, `attach.childPoint` (its
 own) and `attach.relPoint` (the parent's), each Automatic while unset (`Anchors.AttachPoints`, batch
-11 G2). Automatic takes the matching half of the default pair (`Anchors.DefaultEdge`, G3): the parent's
+11 G2, in `modules/Anchors_Attach.lua` with the rest of the join). Automatic takes the matching half of the default pair (`Anchors.DefaultEdge`, G3): the parent's
 vertical growth side, lined up with a Text child's justify, centered for an icons or bars child under
 a Text parent justified Center, else on the side the parent's lines start from. The pair in effect is
 classified against batch 9's nine sides under the chain's growth (`Anchors.AttachEdge`, G5); a free

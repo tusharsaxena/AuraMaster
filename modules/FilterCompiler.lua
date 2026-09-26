@@ -58,7 +58,7 @@ local _, NS = ...
 -- (kind `spells`) categories" — token/flag/dispel categories do not count toward being categorized.
 -- `hasUnion` is what the asymmetry turns on, and it asks TWO questions, not one:
 --
---     local hasUnion = FC.IdsAlwaysHonored(unit, auraType) and not isEmpty(cats.union or {})
+--     local hasUnion = FC.IdsAlwaysHonored(unit, auraType) and not isEmpty(union)
 --
 -- because this row's Show has no positive constraint to offer. Its group's ONLY constraint is an
 -- `excludeSpellIDs` of that union, so the group is worth emitting only where such a filter both
@@ -152,8 +152,8 @@ local _, NS = ...
 --     exactly as they would have, so the failure is "this one group matched more than the player
 --     meant" and not "the container stopped filtering".
 --
--- The union is still COMPUTED either way, and a Hide's `excludeSpellIDs` still ships even where the
--- engine ignores it: an ignored exclude costs nothing, suppressing it would change no outcome, and
+-- A Hide's `excludeSpellIDs` still ships even where the engine ignores it (only the union itself is
+-- skipped there, since the gate is its one reader): an ignored exclude costs nothing, suppressing it would change no outcome, and
 -- the profile's other containers may point the same categories at a unit where it bites. What the
 -- gate governs is narrower and exact — whether an `uncategorized` row may contribute a group of its
 -- own and thereby supersede the catch-all.
@@ -623,7 +623,7 @@ end
 --- `addCategoryGroups`.
 --- @return boolean usesSpellIds
 local function addShownGroups(plan, base, cats, look, hasUnion)
-    local edits, union = cats.spellEdits, cats.union or {}
+    local edits, union = cats.spellEdits, cats.union
     local usesSpellIds = false
     for i, def in ipairs(cats.shown) do
         if not (def.kind == "uncategorized" and not hasUnion) then
@@ -671,7 +671,8 @@ local function addCatchAllGroup(plan, base, cats, look)
     return usesSpellIds
 end
 
---- The category groups (R-3, R-4, R-5). `cats` = { shown, hidden, whitelist, spellEdits, union }.
+--- The category groups (R-3, R-4, R-5). `cats` = { shown, hidden, whitelist, spellEdits, categories };
+--- `cats.union` is filled in below, only where the `hasUnion` gate can use it.
 --- Every group excludes the whitelist (it has its own group and must not be drawn twice); the
 --- whitelist itself is never touched by the blacklist (R-7 — it lives on `base`).
 ---
@@ -707,9 +708,20 @@ local function addCategoryGroups(plan, base, cats, look, unit, auraType)
     -- CAN-ever `IdsHonored` the warning prints from: on a `target` the answer changes under the
     -- compiler's feet, and a group that is safe one second and unconstrained the next cannot ship.
     -- This gate governs ONLY whether an `uncategorized` row may contribute its own group and
-    -- supersede the catch-all: the union is computed regardless and a Hide's exclusions still ship,
+    -- supersede the catch-all: a Hide's exclusions still ship wherever the gate lands,
     -- because an exclude the engine ignores costs nothing and suppressing it would change no outcome.
-    local hasUnion = FC.IdsAlwaysHonored(unit, auraType) and not isEmpty(cats.union or {})
+    --
+    -- The union itself is built HERE, and only where the gate's first half has already passed: it is
+    -- the one reader of `hasUnion` in this compile, and `includeCategory` reads the union only for an
+    -- `uncategorized` Show, which `addShownGroups` reaches only when `hasUnion` is true. Built up front
+    -- it was pure garbage on every compile that never got this far -- a container with no Hide (the
+    -- R-3 early return above) or on a unit whose ids are not certain -- and it is every `spells`-kind
+    -- category's ids copied twice over, so it grew with each list (AM-ATS-01).
+    local hasUnion = false
+    if FC.IdsAlwaysHonored(unit, auraType) then
+        cats.union = categorizedUnion(cats.categories, auraType, cats.spellEdits)
+        hasUnion = not isEmpty(cats.union)
+    end
     local usesSpellIds = addShownGroups(plan, base, cats, look, hasUnion)
 
     local supersedesCatchAll = anyKind(cats.hidden, "uncategorized")
@@ -793,10 +805,9 @@ function FC.Compile(cfg, ctx)
     -- ── Categories: the whitelist group, then one per shown category, then the catch-all ────
     local shown, hidden = splitCategories(Categories, auraType, filter.categories or {})
     local whitelisted = addWhitelistGroup(plan, auraType, whitelist, look)
-    local union = categorizedUnion(Categories, auraType, ctx.categorySpells)
     local categoryIds = addCategoryGroups(plan, base,
         { shown = shown, hidden = hidden, whitelist = whitelist, spellEdits = ctx.categorySpells,
-          union = union }, look, cfg.unit, auraType)
+          categories = Categories }, look, cfg.unit, auraType)
 
     -- ── Weapon enchants appended to a player buff container ─────────────────────────────────
     appendEnchants(plan, cfg, filter, ctx, auraType, Categories)

@@ -69,7 +69,7 @@ end
 --- two entries to a Flow row (`columns = 2`), so the right-hand entry was never at `children[2]`
 --- at all; and since LibKa0s v1.51.0 an entry that has something to say draws a "?" mark BETWEEN
 --- its X and its name, so the Icon immediately before a label may be the mark rather than the X.
---- The mark is the Icon that records `__helpTint` (libs/LibKa0s/OptionsWidgets.lua:3021),
+--- The mark is the Icon that records `__helpTint` (libs/LibKa0s/OptionsIdList.lua:530),
 --- which is exactly how tests/general_page_helpers.lua tells the two Icons apart.
 local function entry(ws, id)
     for _, w in ipairs(ws) do
@@ -91,7 +91,7 @@ end
 --- The lines entry `id`'s "?" help mark carries, joined; "" for a mark with nothing behind it, and
 --- nil when the entry drew no mark at all — which on this page means the LIST it sits in had
 --- nothing to say about anything, since `listHasHelp` is asked once per list
---- (libs/LibKa0s/OptionsWidgets.lua:2928-2934) and a list with no help draws no marks.
+--- (libs/LibKa0s/OptionsIdList.lua:437-443) and a list with no help draws no marks.
 ---
 --- `nth` picks between the two lists: the Whitelist draws first, so an id sitting on both is the
 --- first match on the whitelist and the second on the blacklist.
@@ -877,7 +877,7 @@ end)
 
 -- THE WHOLE REASON THE SENTENCES MOVED INTO THE MARK. A `note` is a full-width second line, so the
 -- library gives a noted entry a row of ITS OWN whatever the column count (`entryNoted`,
--- libs/LibKa0s/OptionsWidgets.lua:3334-3342) -- which on a list that asked for two columns meant
+-- libs/LibKa0s/OptionsIdList.lua:849-851) -- which on a list that asked for two columns meant
 -- every entry with a verdict punched a hole through the grid, the exact complaint the help mark
 -- was introduced to answer (owner, 2026-09-22).
 --

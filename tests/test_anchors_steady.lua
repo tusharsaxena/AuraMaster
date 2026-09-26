@@ -130,6 +130,24 @@ test("steady: a parent one row across (icons filling a row) is steady on y for a
     assertEqual(H_OF[p[3]], "RIGHT", "the join's own axis is not rewritten: the chain still closes up along it")
 end)
 
+test("steady: a side join holds steady on y under every growth direction, the engine lead included", function()
+    -- Pins steadyRelative and engineLead for each growth pair before their start side and sign are
+    -- read from one module-level table (AM-ATS-05): a parent one row across (a column of one per line).
+    for _, gh in ipairs({ "right", "left" }) do
+        for _, gv in ipairs({ "down", "up" }) do
+            local NS = chain(gh, gv, "LEFT", "RIGHT")
+            for id = 1, 3 do NS.Database.FindContainer(id).layout.perLine = 1 end
+            local w, h = NS.Style.ElementSize(NS.Database.FindContainer(2))
+            local p = placed(NS, 3)
+            local what = gh .. "/" .. gv
+            near(landY(p, 0, gv), landY(p, h, gv), what .. ": empty vs populated on y")
+            near(landY(p, h, gv), (gv == "up" and h or -h) / 2, what .. ": the parent's middle on y")
+            assertEqual(H_OF[p[3]], "RIGHT", what .. ": the join's own axis is not rewritten")
+            assertTrue(w > 0, what .. ": a real element")
+        end
+    end
+end)
+
 test("steady: a parent more than one element across is not rewritten on that axis", function()
     local NS = chain("right", "up", "BOTTOM", "TOP")
     for id = 1, 3 do

@@ -562,7 +562,7 @@ local function sortedIds(set)
 end
 
 -- F-6/task B6: each Overrides entry's verdict note, drawn by the library under its name
--- (libs/LibKa0s/OptionsWidgets.lua's `entry.note`). Built from FC.ExplainSpell, sparingly — a spell
+-- (libs/LibKa0s/OptionsIdList.lua's `entry.note`). Built from FC.ExplainSpell, sparingly — a spell
 -- that no category claims, or whose categories only confirm what this very list already decided,
 -- gets none; the note fires only when a category genuinely disagrees, or the id sits on BOTH lists.
 --
@@ -708,7 +708,7 @@ local function overrideList(ctx, cfg, key, heading, blurb)
                 -- list moved them there (LibKa0s v1.51.0; modules/CastAura.lua's CA.Help): a note
                 -- is a full-width second line, so the library gives a noted entry a row of ITS
                 -- OWN whatever the column count (`entryNoted`,
-                -- libs/LibKa0s/OptionsWidgets.lua:3340-3342) -- and this list asks for two
+                -- libs/LibKa0s/OptionsIdList.lua:849-851) -- and this list asks for two
                 -- columns, so every entry with a verdict punched a hole through the grid the
                 -- `columns` note above bought. The mark costs a fixed 18px and leaves every row
                 -- the same shape. The SENTENCES are unchanged: each was already a whole statement
