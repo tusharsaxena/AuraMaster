@@ -231,7 +231,7 @@ one per slot, for a container showing only Weapon enchants (batch 9 SEP-4); debu
 type for a debuff container; buffs otherwise; the client's own names and icons by spell id, invented
 times and stacks), and positions it with `Preview.Offset`'s copy of the flow rules. In test mode the
 container's outline encloses the whole placeholder block (`ContainerClass:ApplyOutline` on the preview
-extent, SEP-1), locked or unlocked, so each block of a chain reads as its own. Bars in preview size their fill directly. The placeholders
+extent, SEP-1), unlocked only (owner, 2026-09-27), so each block of a chain reads as its own. Bars in preview size their fill directly. The placeholders
 are dressed again only after an apply of the container's settings (which marks the preview dirty) or
 after they were hidden; a visibility pass alone leaves them as they are.
 

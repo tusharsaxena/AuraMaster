@@ -1442,9 +1442,9 @@ batch 10 on the same branch.
      bars or icons container → Bottom left. Pick a side while the mode is Another container but no
      target is chosen, then choose the target → your pick is kept. Retarget an attached container →
      its side is kept. An already-attached container migrated from v8 is not moved (check 212).
-221. **The test-mode block outline (SEP-1, E4).** `/am test` locked → every container's placeholders
-     are enclosed by one outline of its own, the whole block, so a follower's block and its parent's
-     read as two; `/am unlock` → still one outline per block. `/am test off` while locked → no
+221. **The test-mode block outline (SEP-1, E4).** `/am test` locked → no outline (owner, 2026-09-27:
+     the box is an unlocked guide); `/am unlock` → every container's placeholders are enclosed by one
+     outline of its own, the whole block, so a follower's block and its parent's read as two. `/am test off` while locked → no
      outline at all; unlocked → only an empty container's one-element outline (check 193).
 222. **The join's tooltip, and no join dot (SEP-2 as batch 11 G6 leaves it).** `/am unlock` with the
      chains of 216 and 212 → no dot or diamond sits on any join, unlocked, locked or in test mode;
