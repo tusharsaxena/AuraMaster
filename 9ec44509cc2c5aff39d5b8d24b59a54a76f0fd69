@@ -1,0 +1,1 @@
+clean: I21-03 test pins the host and library bracket in both builds; 7 host-Bulk mutations (stray End, per-level log, failed mark, profileReset ignored, return-true-as-reset, mute stuck, raised value altered) each turn it red in a scratch copy; callers verified; gate 1645/0/0, luacheck 0/0, lizard clean
