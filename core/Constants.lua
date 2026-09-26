@@ -111,7 +111,7 @@ C.ATTACH_MODE_LABELS = { screen = "Screen", container = "Another container", fra
 
 -- The nine sides of batch 9's edge model (E2), relative to the chain's flow, in order. Since batch
 -- 11 a container joins its parent by two absolute points, and a pair that is one of these under the
--- parent's growth keeps that side's seam and spread (modules/Anchors.lua's AttachEdge, G5); schema
+-- parent's growth keeps that side's seam and spread (modules/Anchors_Attach.lua's AttachEdge, G5); schema
 -- v11 converted the stored side to points (core/Database.lua).
 C.ATTACH_EDGES = {
     "after-start", "after-center", "after-end",

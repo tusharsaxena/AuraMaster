@@ -171,7 +171,7 @@ NS.CONTAINER_TEMPLATE = {
     -- container by v9. `point`/`relativePoint` are a named frame's. Attached to another container it
     -- joins it by `childPoint` (its own) and `relPoint` (the parent's), absolute WoW points, each
     -- absent for Automatic, so neither is declared here: a backfill never stamps a pick (batch 11
-    -- G2, modules/Anchors.lua's AttachPoints). Schema v11 turned the old `edge` side into them.
+    -- G2, modules/Anchors_Attach.lua's AttachPoints). Schema v11 turned the old `edge` side into them.
     attach = {
         mode = "screen", container = 0, frame = "",
         point = "TOPLEFT", relativePoint = "BOTTOMLEFT", x = 0, y = 0,

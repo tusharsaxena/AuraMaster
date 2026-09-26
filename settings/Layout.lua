@@ -223,7 +223,7 @@ end
 -- The two anchor points (batch 11 G1, G2, G7)
 -- ---------------------------------------------------------------------------
 -- A follower joins its parent by two absolute points, each stored on its own and nil for Automatic
--- (modules/Anchors.lua's AttachPoints: the matching half of the default pair, G3). Each dropdown
+-- (modules/Anchors_Attach.lua's AttachPoints: the matching half of the default pair, G3). Each dropdown
 -- offers "Automatic (<the point in effect>)" first, then the nine points; any pair is stored and
 -- nothing is refused: "if it looks weird, it's on the user". The rows are `nilAs = "auto"`
 -- (settings/Schema.lua): the panel and `/am get` read a stored nil as auto, and auto, in any case,

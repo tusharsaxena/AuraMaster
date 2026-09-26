@@ -305,7 +305,7 @@ end
 -- ---------------------------------------------------------------------------
 
 --- A follower's join (batch 11 G7): the two points in effect, each "(auto)" or "(picked)", and the
---- pair's classification, one of the nine sides (modules/Anchors.lua's AttachEdge) or "free".
+--- pair's classification, one of the nine sides (modules/Anchors_Attach.lua's AttachEdge) or "free".
 local function joinOf(c)
     local A = NS.Anchors
     local point, rel, pointAuto, relAuto = A.AttachPoints(c)
