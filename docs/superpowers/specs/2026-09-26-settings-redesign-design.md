@@ -168,7 +168,11 @@ follow-up addons get it too:
 The pattern is parked for two more addons, one GitHub issue each, citing this spec. Both depend on
 the §4 library minor and the §5 standard change landing first.
 
-- **MultiMeters#55**: scope to be set when it is picked up.
+- **MultiMeters#55** (owner, 2026-09-26): the **Windows** page becomes the one page per window.
+  Its rail entries are Frame · Header · Bars · Tooltip · Visibility · Columns (today's six sub-pages),
+  under one pinned **Active window** band. The Windows page's own actions (new, rename, delete,
+  duplicate, copy settings from) lead the rail as **General**, as Containers → General does here.
+  That leading entry is proposed and still to be confirmed. The D6 nesting mark leaves the collection with it.
 - **KickCD#33** (owner, 2026-09-26): a new **Grid** page replaces the Icons, Cast bar and Text
   Label pages. Its rail entries are Icons · Cast bar · Text Label, under one pinned **Unit** band
   (today's `PageBanner`) shared by all three. General, Spells and Profiles are unchanged.
