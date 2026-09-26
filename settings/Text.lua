@@ -139,8 +139,9 @@ NS.RegisterSchemaRows({
 
 --- Whether this render is the page drawn disabled — the container is not drawn as text. The library
 --- holds `ctx.__renderDisabled` for the whole of a page tab's render (O.RenderTabbedSchema's
---- `disabledFor`, through settings/OptionsSetup.lua's RenderPage), which is how every ROW here dims
---- itself; free-standing text has to be told.
+--- `disabledFor`), which is how every ROW dims itself; free-standing text has to be told. Since #6
+--- nothing passes `disabledFor` for this section (the rail lists Text only for a text container),
+--- so this answers false; it stays until a dead-code sweep removes it.
 local function pageDim(ctx)
     return ctx.__renderDisabled and true or false
 end
