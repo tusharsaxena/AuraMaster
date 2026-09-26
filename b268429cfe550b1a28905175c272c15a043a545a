@@ -1,0 +1,1 @@
+clean: host Read/Write now byte-for-byte match lib.Read/lib.Write guards; new test red on pre-fix degraded build (got <table>) and green after; gate 1643/0/0, luacheck 0/0, lizard clean, CRLF kept, citations remapped correctly
