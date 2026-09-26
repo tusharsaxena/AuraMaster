@@ -153,6 +153,7 @@ L["Forget every edit to this category: its removed starter spells come back and 
 L["Restore every General setting on this profile to its addon default. The Minimap button is left alone — whether the button is shown is a per-installation preference, like where you dragged it. The spell categories' lists are not rows; each category has its own restore."] = "Restore every General setting on this profile to its addon default. The Minimap button is left alone — whether the button is shown is a per-installation preference, like where you dragged it. The spell categories' lists are not rows; each category has its own restore."
 L["Restore the selected container's settings in the section on screen to their addon defaults. On General: Enabled, Unit, Aura type and Style; its name is kept."] = "Restore the selected container's settings in the section on screen to their addon defaults. On General: Enabled, Unit, Aura type and Style; its name is kept."
 L["Bars"] = "Bars"
+L["Bar"] = "Bar"
 L["How this container's bars look."] = "How this container's bars look."
 L["General"] = "General"
 L["Name"] = "Name"

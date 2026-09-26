@@ -117,7 +117,7 @@ NS.RegisterSchemaRows({
       label = L["Pandemic-window highlight color"], desc = L["The highlight's color."] },
 })
 
-NS.RegisterContainerSection(PAGE, L["Icons"], {
+NS.RegisterContainerSection(PAGE, L["Icon"], {
     style   = "icons",
     tooltip = L["How this container's icons look."],
 })
