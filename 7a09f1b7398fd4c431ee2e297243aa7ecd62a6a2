@@ -1,0 +1,1 @@
+clean: I23-02 matches the plan and #23; the new test is red without the change (RenderTabbedSchema called once) and green with it; EMPTY_PAGE unreachable (railSections lists only addon-wide General with no container); gate 1641/0/0, luacheck 0/0, lizard clean, CRLF kept
