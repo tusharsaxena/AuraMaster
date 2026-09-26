@@ -1,0 +1,1 @@
+fixed: SR-AM-06 docs match the plan except module-map.md, whose rail-row insert erased the test_pages_tabs.lua row and left literal \1/\n; repaired in d28d32d, gate green (1640/0, luacheck 0/0, lizard clean)
