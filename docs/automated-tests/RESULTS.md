@@ -109,7 +109,6 @@ cell is this file saying something crossed and nobody has ruled on it yet.
 | 1000–1500 (on notice) | `modules/Style.lua` | 1018 | Accepted — newly crossed (943 → 1018), just inside the band; 65 functions, max CCN 13 (`Style.CurveColor`), size rather than tangle |
 | 1000–1500 (on notice) | `settings/GeneralSpells.lua` | 1480 | **Peel next** — source, 20 lines under the cap after AM-23 peeled Dispel Colors out; 73 functions, max CCN 10, so size rather than tangle. The *Make a new category* block is the next seam; any change that grows this file peels first |
 | 1000–1500 (on notice) | `settings/Schema.lua` | 1035 | Accepted — newly crossed (976 → 1035); 62 functions, max CCN 13 (`normalizeCategoryEdits`), size rather than tangle |
-| 1000–1500 (on notice) | `tests/test_anchors.lua` | 1481 | Accepted — case count, not tangle: 66 independent `test(` cases, no function in it above CCN 4 |
 | 1000–1500 (on notice) | `tests/test_containermanager.lua` | 1053 | Accepted — case count, not tangle: 53 independent `test(` cases, no function in it above CCN 4 |
 | 1000–1500 (on notice) | `tests/test_database.lua` | 1194 | Accepted — case count, not tangle: 73 independent `test(` cases, no function in it above CCN 4 |
 | 1000–1500 (on notice) | `tests/test_filtercompiler.lua` | 1271 | Accepted — case count, not tangle: 85 independent `test(` cases, no function in it above CCN 5 |

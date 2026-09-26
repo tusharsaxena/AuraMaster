@@ -565,7 +565,7 @@ badge and any count quoted in the docs must agree with it.
 - lifecycle: a rejection while logging is on is traced at the moment it happens
 - lifecycle: the degraded Core stub's SafeRegisterEvent records a bad name and keeps the rest
 
-### test_anchors.lua (77)
+### test_anchors.lua (50)
 
 - anchors: a chain that would loop is detected
 - anchors: a container attaches to another one, and a loop falls back to the screen
@@ -576,19 +576,6 @@ badge and any count quoted in the docs must agree with it.
 - anchors: a forbidden frame falls back to the screen without waiting, so an add-on load never re-places it
 - anchors: a drag saves the dragged container's position, rounded, whatever is selected
 - anchors: a drag saves the position in one write
-- handle: a dark strip with a 1px gold edge, a gold label and the catalog help mark
-- handle: under a secret anchor size it builds, resizes and draws its edge without arithmetic
-- handle: above the anchor when auras grow down, below when up, edge-aligned where they start
-- handle: at least as wide as its container's element, and as its label with room for the help mark
-- handle: while shown the anchor's clamp rect takes it in; hidden, or in combat, the rect is left alone
-- handle: under lockdown a changed layout does not re-place the handle; the next pass after it does
-- handle: a handle first shown under lockdown is placed once; the anchor's clamp still waits
-- handle: a visibility pass that changes nothing re-sets no clamp insets
-- handle: the help mark carries the tooltip and right-click opens the settings on this container
-- handle: the tooltip follows the cursor, owned by UIParent, never anchored to the strip or the mark
-- handle: a left-drag that starts on the help mark moves the container as one on the strip does
-- handle: with no media catalog the help mark falls back to Blizzard's information icon
-- handle: with LibKa0s absent a container has no handle at all, and every pass over it is a no-op
 - picker: a frame resolves to its nearest named ancestor, skipping the screen and ourselves
 - picker: a forbidden frame under the cursor ends the walk without calling its methods
 - picker: it arms on release, then a left-click on a named frame picks it
@@ -608,11 +595,6 @@ badge and any count quoted in the docs must agree with it.
 - anchors: a real, unforbidden frame resolves, even one without IsForbidden; a name that is not a string never does
 - anchors: a drag with no relative point stores the point for both, and each offset to one decimal
 - anchors: an anchor that reads back no point writes nothing
-- handle: the strip names its container, and a container whose settings are gone hides it
-- handle: an attached container's tooltip says where its offsets are set; a screen one does not
-- handle: an attached container, or one in combat, does not move on a drag, and a stray drag stop stores nothing
-- handle: the strip sits fifty levels above its anchor, over the container's elements
-- handle: a left click on the strip opens nothing; a right click opens this container's settings
 - anchors: derived points continue a vertical/right/down parent
 - anchors: derived points continue a vertical/left/down parent
 - anchors: derived points continue a vertical/right/up parent
@@ -635,6 +617,27 @@ badge and any count quoted in the docs must agree with it.
 - anchors: ending test mode re-anchors an attached container off the extent, and starting it back to the extent (L-4)
 - anchors: under lockdown ending test mode leaves an attached container where it is; the pass after combat moves it (L-4)
 - handle: an attached container's strip sits above every placeholder of the container it is attached to (L-4)
+
+### test_anchors_handle.lua (27)
+
+- handle: a dark strip with a 1px gold edge, a gold label and the catalog help mark
+- handle: under a secret anchor size it builds, resizes and draws its edge without arithmetic
+- handle: above the anchor when auras grow down, below when up, edge-aligned where they start
+- handle: at least as wide as its container's element, and as its label with room for the help mark
+- handle: while shown the anchor's clamp rect takes it in; hidden, or in combat, the rect is left alone
+- handle: under lockdown a changed layout does not re-place the handle; the next pass after it does
+- handle: a handle first shown under lockdown is placed once; the anchor's clamp still waits
+- handle: a visibility pass that changes nothing re-sets no clamp insets
+- handle: the help mark carries the tooltip and right-click opens the settings on this container
+- handle: the tooltip follows the cursor, owned by UIParent, never anchored to the strip or the mark
+- handle: a left-drag that starts on the help mark moves the container as one on the strip does
+- handle: with no media catalog the help mark falls back to Blizzard's information icon
+- handle: with LibKa0s absent a container has no handle at all, and every pass over it is a no-op
+- handle: the strip names its container, and a container whose settings are gone hides it
+- handle: an attached container's tooltip says where its offsets are set; a screen one does not
+- handle: an attached container, or one in combat, does not move on a drag, and a stray drag stop stores nothing
+- handle: the strip sits fifty levels above its anchor, over the container's elements
+- handle: a left click on the strip opens nothing; a right click opens this container's settings
 - handle: the width comes from a detached measuring string, never the label, which may sit on secret geometry (E)
 - handle: a measured width that reads secret falls back to the element's width, never raising (E)
 - handle: an anchor whose frame level reads secret places the strip from the stored level (E)
@@ -1912,7 +1915,8 @@ badge and any count quoted in the docs must agree with it.
 | test_bus.lua | 8 |
 | test_state.lua | 2 |
 | test_lifecycle.lua | 15 |
-| test_anchors.lua | 77 |
+| test_anchors.lua | 50 |
+| test_anchors_handle.lua | 27 |
 | test_anchors_seam.lua | 10 |
 | test_anchors_edges.lua | 15 |
 | test_anchors_hang.lua | 11 |

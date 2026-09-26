@@ -129,6 +129,7 @@ category collapse and the `weaponEnchants` category row — both over every stor
 | `tests/region_builder.lua` | Not a suite: a recorder that builds recorders, so each piece of a chain records its own calls |
 | `tests/prose_waivers.lua` | Not a suite: the per-file, per-word waivers the kit's US-English prose gate (`tests/_kit/test_prose.lua`) reads; today it skips the frozen `docs/spell-research/` bundles |
 | `tests/border_strips.lua` | Not a suite: reads an element border as `Style.ApplyBorder` draws it, its four Solid strips and its backdrop frame (B2-3); gives a kit frame recorder textures (`recorderTextures`) so the outline's and the handle's strips read apart |
+| `tests/handle_recorder.lua` | Not a suite: rebuilds a container's drag handle under a `CreateFrame` that records every setter per frame (`recordedHandle`, `last`), for `test_anchors` and `test_anchors_handle` |
 | `tests/test_*.lua` | One suite per subject, in the order `tests/run.lua` declares them; the cases are enumerated in the generated `docs/test-cases.md` |
 
 The suites, in the order `tests/run.lua` runs them (it is the authority on the list):
@@ -152,7 +153,8 @@ The suites, in the order `tests/run.lua` runs them (it is the authority on the l
 | `test_bus.lua` | `core/Bus.lua`: the message catalog (strict live, plain degraded), a target per receiver, one sender per message |
 | `test_state.lua` | `core/State.lua`: session state never reaches SavedVariables; test mode is session-only and unlocking keeps real auras drawing |
 | `test_lifecycle.lua` | `core/AuraMaster.lua`: the lifecycle events and the three AceDB profile handlers, fired through AceEvent |
-| `test_anchors.lua` | `modules/Anchors.lua` and `modules/FramePicker.lua`: attachment, cycles, the derived points and inherited flow, the preview extent, pending and forbidden frames, the drag handle |
+| `test_anchors.lua` | `modules/Anchors.lua` and `modules/FramePicker.lua`: attachment, cycles, the derived points and inherited flow, the preview extent, pending and forbidden frames, the drag's saved position |
+| `test_anchors_handle.lua` | `modules/Anchors.lua`: the drag handle (peeled from `test_anchors.lua`, AM-ATS-02): its strip, gold edge, label and help mark, where it sits and how wide, the anchor's clamp rect, lockdown, the tooltip, drag and click, the secret-geometry guards (feedback E), the TEST tag (#8), the right-click to the Containers page (#9), the attached container's gray name |
 | `test_anchors_seam.lua` | `modules/Anchors.lua`: the seam to an attached container (SS-1..SS-3): the child's own spacing or line spacing in the direction the chain stacks, the X/Y nudge on top, a chain growing up, frame and screen containers untouched, the preview seam, and the child's strip before its own block |
 | `test_anchors_edges.lua` | `modules/Anchors.lua` and `settings/Layout.lua`: batch 9's nine sides (AP-1..AP-4) and what an attachment changes about its flow (`FlowChangeOnAttach`, GC-1): the nine tokens and their points for every growth, `after-start` pinned to the old derived points, none refused, the seam on a side, an Automatic pair mirroring and a picked one staying, the Text default, an attachment writing no points, and the parents re-applied |
 | `test_anchors_hang.lua` | `modules/Anchors.lua`: what a follower hangs from, test mode, unlocked (an empty parent) or locked, re-placed on lock, unlock and after combat, and the room a chain leaves so no two strips overlap (EO-2) |
