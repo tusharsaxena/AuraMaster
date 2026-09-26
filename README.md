@@ -160,3 +160,8 @@ Please file reports there rather than in comments, so nothing gets lost.
 The trick that lets a permanent buff draw as a full bar, and the idea of learning which buffs carry
 a timer so the rest can be shown on their own, both come from [TinyBuffBars](https://github.com/mixMugz/WoW-TinyBuffBars) by mixMugz, released
 under the MIT license.
+
+The debug console uses [JetBrains Mono](https://www.jetbrains.com/lp/mono/), licensed under the SIL
+Open Font License 1.1, and the **?** and **X** on each container's handle are drawn from
+[Open Iconic](https://github.com/iconic/open-iconic) (MIT). Both ship inside the bundled LibKa0s
+payload, with their license text beside them.
