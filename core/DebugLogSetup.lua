@@ -2,7 +2,7 @@ local addonName, NS = ...
 
 -- core/DebugLogSetup.lua — the LibKa0s-DebugLog-1.0 seam: the on-screen debug console.
 --
--- The console window, the copy window, both formatters, the 1500-line buffer, the scrollbar and the
+-- The console window, the copy window, both formatters, the 3000-line buffer, the scrollbar and the
 -- enable seam are the library's and are NOT in this addon's source (debug-logging). This file supplies
 -- only what is ours: the frame-name prefix, the title, the monospace face, where the flag lives, and
 -- what the [Init] session summary says.

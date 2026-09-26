@@ -1330,7 +1330,7 @@ on the same branch.
      `/am disable`, then `/am diagnostics` and `/am debug diagnostics` → each still runs and the
      state line reads enabled=false.
 208. **Caps and the old verbs (DG-4).** With about eight containers and a long whitelist → the report
-     stays under the cap or ends with a `truncated` line, and the console never holds more than 1500
+     stays under the cap or ends with a `truncated` line, and the console never holds more than 3000
      lines. Bare `/am debug` still toggles the window, `/am debug on` and `off` still switch logging,
      and `/am help` shows `diagnostics` right after `debug`, with a `debug` row that no longer
      mentions diag.

@@ -16,7 +16,7 @@ the text into a bug report.
   while the addon is disabled: `diagnostics` is named in `liveVerbs()` next to `debug`.
 - It writes through the **ungated** append, as debug-logging-§12 requires for an explicit
   diagnostic run. The logging flag is printed in the header and is not changed.
-- It **appends**. The console keeps the newest 1500 lines, so a long report can push older trace
+- It **appends**. The console keeps the newest 3000 lines, so a long report can push older trace
   lines out. Because it appends after the trace, one Copy carries both: turn logging on with
   `/am debug on`, reproduce the bug, run `/am diagnostics`, then Copy the whole console (the
   README's *Reporting a bug*).
@@ -154,11 +154,14 @@ and the predictions, so one failure prints `section ... failed` and the report g
 
 ## Caps
 
-The report stops short of the console's 1500-line buffer, so Copy always starts at the begin
-marker:
+The report stops short of the console's 3000-line buffer, so Copy always starts at the begin
+marker. The report always arrives whole; the trace above it keeps whatever the buffer still has
+room for.
 
-- at most 1200 lines in all;
+- at most 1200 lines in all, markers included. The cap is the library's (`DIAG_MAX_LINES`), and it
+  always sits at least 100 lines below the buffer;
 - at most 100 auras per unit and filter;
 - at most 40 ids per list, whitelist, blacklist, shown buttons and predictions each.
 
-When a cap cuts something, the report ends with `[Diag] truncated: N line(s) omitted`.
+When a cap cuts something, the line just before the end marker reads
+`[Diag] truncated: N line(s) omitted, per-list caps hit=yes|no`.
