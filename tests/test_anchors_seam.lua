@@ -3,7 +3,7 @@
 -- consecutive elements in the direction it stacks, the stored X/Y offsets nudge on top of it, and
 -- the child's drag strip sits before its own block, in its own column (batch 10 F1; the room it
 -- takes along the chain is tests/test_anchors_column.lua's).
--- Its own suite because tests/test_anchors.lua sits near layout-§1's 1500-line cap.
+-- Its own suite because tests/test_anchors.lua sat near layout-§1's 1500-line cap when it was split out.
 -- Across the chain, a child hung from its parent's engine also takes back the engine's one-unit lead
 -- (the engine lead, tests/test_anchors_collapse.lua): x is 1 toward the growth where the seam alone gave 0.
 
