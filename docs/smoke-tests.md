@@ -1766,3 +1766,40 @@ cooldowns as text) and open the panel with `/am`.
      strips, content panels and scroll bars are exactly where they were. The library minor
      AuraMaster ships is the one loaded for every Ka0s addon, and a page with no rail must not move.
      (Global Constraints (rail width 0 is byte-identical)) Result: **PASS** (owner, 2026-09-26: another Ka0s addon's settings unchanged)
+
+## Issues #21 and #23 (owner to run)
+
+Owner to run, on `feat/2026-09-26-issues-21-23` with LibKa0s v1.61.0 vendored, after `/reload`. Use
+the starter containers (#1 Player buffs as bars, #2 Player debuffs as icons, #4 Player cooldowns as
+text) and open the panel with `/am`. Neither issue changes what a player sees except two reworded
+lines, so each check confirms nothing else moved.
+
+267. **I23-1.** Containers, select #4 (text), open the Text section's General tab. → The Preview box
+     reads in the container's own font color, and the cheat sheet under it has bright headings,
+     gold tokens and gold examples. Only the Placement notes are gray. No Lua error. (#23: the dead
+     dim path removed) Result:
+268. **I23-2.** Containers → General, hover **Aura type**. → The tooltip reads "Buffs or debuffs. The
+     Filters section offers the categories of whichever you choose; ...". No tooltip or line in the
+     panel names a Filters, Layout, Bars, Icons or Text *page*. (#23: the reworded desc) Result:
+269. **I23-3.** Attach a container to a frame (Layout → Anchor, **Attach to** a frame such as the
+     player frame), then `/am test on` and hover that container's drag handle. → The gold line reads
+     "Attached — set its offsets in the Layout section." (#23: the reworded tooltip line) Result:
+270. **I23-4.** With the Filters section open, delete every container, close the panel and type
+     `/am config`, then open Containers. → The rail lists General alone and "No containers yet. Click New
+     container, or type /am new." There is no placeholder "Container" tab and no "Create one on
+     Containers" line. Create one again afterwards (or reset the profile). (#23: EMPTY_PAGE removed)
+     Result:
+271. **I21-1.** `/am debug on`, then on #1's Bars section change Width and click **Defaults**. → One
+     `[Set] reset bars: N rows` line with N at least 1, and no per-row `[Set]` lines. Click Defaults
+     again → `[Set] reset bars: 0 rows`. (#21: the bracket and the SameValue tally) Result:
+272. **I21-2.** With debug still on, `/am resetposition` twice. → The first prints `[Set] reset
+     positions: N rows` (N counts the position rows that changed). The second, run straight after, prints
+     `[Set] reset positions: 0 rows`: the first container's staggered `-0` offset over a stored `0`
+     is no change. (#21: SameValue, the -0 case) Result:
+273. **I21-3.** Containers → General on #2, **Copy settings from** #1 with the Filters section. → One
+     `[Set] copy container 1->2 (<section>): N rows` line. Then General → **Reset all settings** and
+     confirm → only `[Set] reset profile 'Default' to defaults`, no row count. (#21: the bracket and
+     JC-9's `info.profileReset`) Result:
+274. **I21-4.** `/am get container` and `/am set container 1`. → Both answer "Setting not found:
+     container", and nothing is written: `/am list` reads as before. (#21: the Read and Write edge
+     cases) Result:

@@ -500,7 +500,8 @@ check behind `NS.ValidateSchema` (`Validate`, its shape errors plus its unresolv
 library's registry keeps the FIRST row registered on a duplicate path, and its `Validate` reports the
 duplicate. The instance is published as `NS.SchemaRuntime` for the tests. The host bodies of all of
 it stay in `settings/Schema.lua` as the library-absent arm, which `tests/degraded_env.lua` exercises,
-and they answer as the library does: Read and Write treat an empty path as nothing, the index keeps
+and they answer as the library does: Read and Write treat a path with no segment past its root as
+nothing, the index keeps
 the first row on a duplicate path, the change test is a port of `SameValue`, and the validator
 reports a duplicate. `tests/test_schema.lua` runs each of those cases in both builds.
 
