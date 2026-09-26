@@ -1,0 +1,1 @@
+fixed: SR-AM-05 meets the task, R1-R7, Global Constraints and Review Focus; the new tree test fails on the pre-change code (the D6-marked Filters entry); gate re-run green (1640/0/0, luacheck 0/0, lizard clean, CRLF). Fixed in 342af9f: two GeneralSpells.lua line citations this change moved, and Text.lua's pageDim comment citing the retired RenderPage disabledFor path.
