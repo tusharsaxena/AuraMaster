@@ -165,7 +165,12 @@ follow-up addons get it too:
 
 ## 9. Follow-ups filed
 
-The same pattern for MultiMeters, KickCD and PanelMaster is parked; one GitHub issue each, citing
-this spec. They depend on the §4 library minor and the §5 standard change landing first.
-Filed 2026-09-26: MultiMeters#55, KickCD#33, PanelMaster#55 (`enhancement`, `state:triaged`,
-`severity:low`).
+The pattern is parked for two more addons, one GitHub issue each, citing this spec. Both depend on
+the §4 library minor and the §5 standard change landing first.
+
+- **MultiMeters#55**: scope to be set when it is picked up.
+- **KickCD#33** (owner, 2026-09-26): a new **Grid** page replaces the Icons, Cast bar and Text
+  Label pages. Its rail entries are Icons · Cast bar · Text Label, under one pinned **Unit** band
+  (today's `PageBanner`) shared by all three. General, Spells and Profiles are unchanged.
+- **PanelMaster#55**: filed, then closed as `state:will-not-do`. The owner ruled it not needed
+  (2026-09-26).
