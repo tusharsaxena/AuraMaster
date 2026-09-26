@@ -1,0 +1,1 @@
+clean: comment-only (39/39, CRLF kept, no code line changed), plan grep empty, hand edits match Step 2; gate 1642/0/0, luacheck 0/0 in 139 files, lizard clean, max file 1480 lines
