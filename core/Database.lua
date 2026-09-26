@@ -957,7 +957,7 @@ end
 --- v9 (batch 9, owner 2026-09-25, MG-1). Unreleased, so later batch 9 tasks extend this same step.
 ---
 --- 1. Size to fit is Text-only (E6). The style-blind v8 stamp that shipped on this branch wrote
----    `text.autoSize = false` on bars and icons containers too, where the Text page is disabled and
+---    `text.autoSize = false` on bars and icons containers too, where the Text page was disabled and
 ---    nothing reads it, so it is removed from every container whose style is not Text (no stored
 ---    style is the template's bars). The backfill after the ladder then hands it the template's
 ---    value, the same as a container that climbed from before v8. A Text container's value is the

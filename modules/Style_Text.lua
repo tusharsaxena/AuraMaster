@@ -613,7 +613,7 @@ local function durationText(piece, aura, s)
 end
 
 -- What each kind of piece reads for a placeholder aura, as the engine would write it. Shared by the
--- placeholders (Text.FillPreview) and the Text page's Preview box (Text.PreviewLine).
+-- placeholders (Text.FillPreview) and the Text section's Preview box (Text.PreviewLine).
 local PIECE_TEXT = {
     literal = function(piece) return piece.text end,
     name = function(_, aura) return aura.name end,
@@ -672,7 +672,7 @@ function Text.FillPreview(frame, aura, cfg)
     previewTints(am, aura, s)
 end
 
---- The line text block `s` draws for a sample `aura`, as one plain string: the Text page's Preview
+--- The line text block `s` draws for a sample `aura`, as one plain string: the Text section's Preview
 --- box (feedback #5). The same compile and the same fill as the placeholders, so the two cannot
 --- disagree.
 --- A stacked line (feedback #1) previews as its field rows, one per line, its literals left out.
@@ -694,7 +694,7 @@ end
 --- can leave a string unable to render past it -- PrettyChat's convention (`../PrettyChat/settings/Panel.lua`)
 --- is to double it. The only LIVE codes in `Text.PreviewLine`'s own output are dispel's
 --- `|cffRRGGBB...|r` wraps (`dispelWord`), so those are pulled out and restored around the doubling,
---- rather than doubled themselves. The Text page's Preview box and Size to fit's measure both use it.
+--- rather than doubled themselves. The Text section's Preview box and Size to fit's measure both use it.
 function Text.EscapeStrayPipes(text)
     local saved, n = {}, 0
     local guarded = text:gsub("|cff%x%x%x%x%x%x.-|r", function(run)
@@ -713,7 +713,7 @@ end
 -- and auto-sized, so its width is never readable, and the engine lays a group out at ONE element size
 -- anyway. The size comes from the settings at dress time instead: the height from the font, the icon,
 -- a stacked Center's rows and the bounce; the width from the widest line the placeholders draw (the
--- preview set of the aura type, the Text page's sample, and a worst case of the longest name, 99
+-- preview set of the aura type, the Text section's sample, and a worst case of the longest name, 99
 -- stacks and each of Style.TIME_SAMPLES), measured on our own hidden string (Style.WidestLine), which
 -- is never secret. A live name longer than those draws past the box's edge, unclipped (applyClip).
 
@@ -776,7 +776,7 @@ end
 
 --- The auras a line is measured on for `auraType`: the placeholders (under the fixed name and the
 --- client's own; a buff container's include the weapon enchants, which one showing only Weapon
---- enchants previews, batch 9 SEP-4), the Text page's sample, and the worst cases.
+--- enchants previews, batch 9 SEP-4), the Text section's sample, and the worst cases.
 local function fitAuras(auraType)
     local out = {}
     local P = C.PREVIEW_AURAS

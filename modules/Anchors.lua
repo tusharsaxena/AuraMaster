@@ -842,7 +842,7 @@ local function closeTooltipSpec(container)
 end
 
 --- Asked by the widget at every OnDragStart. Only a screen-attached container moves by dragging; an
---- attached one follows its target, and its offsets are set on the Layout page. Never mid-combat:
+--- attached one follows its target, and its offsets are set in the Layout section. Never mid-combat:
 --- the anchor parents an aura engine.
 local function canDrag(container)
     local cfg = container:Cfg()

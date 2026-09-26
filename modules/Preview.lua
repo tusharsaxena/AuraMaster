@@ -7,7 +7,7 @@ local _, NS = ...
 -- to hand it a fake one. So preview elements are Buttons of our own, dressed by the SAME Style code the
 -- engine's buttons are (modules/Style*.lua, with `engine` false) and laid out by the same flow rules
 -- the engine uses, with invented values filled in. Everything a player changes on the Bars, Icons or
--- Text page therefore shows up here exactly as it will on a real aura. A container showing debuffs
+-- Text section therefore shows up here exactly as it will on a real aura. A container showing debuffs
 -- previews debuffs of every dispel type, one showing buffs previews buffs (C.PREVIEW_AURAS, TD-1).
 --
 -- Preview is on while TEST MODE is (NS.State.testMode, switched only by Preview.SetTestMode below);

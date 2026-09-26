@@ -355,7 +355,7 @@ end
 ---
 --- This is the WARNING predicate, and deliberately only that. `identityWarning` (below) is its one
 --- caller inside this file, and "can this ever do anything?" is exactly the right question for a
---- sentence on the Filters page: a `target` buff list is worth keeping and worth a caveat, not worth
+--- sentence on the Filters section: a `target` buff list is worth keeping and worth a caveat, not worth
 --- calling dead. It is the WRONG question for the compile gate, because a plan is compiled today for
 --- a unit nobody has looked at yet, and a CAN-ever that is only sometimes true is a group the engine
 --- may silently strip. `FC.IdsAlwaysHonored` is that second, stricter question. The two were ONE
@@ -381,7 +381,7 @@ end
 ---
 --- This is the GATE predicate. Two call sites read it and MUST stay in lockstep — `addCategoryGroups`
 --- (what the plan actually contains) and the `FC.ExplainSpell` path into `explainUncategorized` (what
---- the Filters page says the plan contains). WHY IT IS THE STRICTER QUESTION: an `uncategorized` Show
+--- the Filters section says the plan contains). WHY IT IS THE STRICTER QUESTION: an `uncategorized` Show
 --- group carries an `excludeSpellIDs` of the categorized union as its ONLY constraint beyond the base
 --- aura-type token (`includeCategory`, U-3) — there is no id list of "every other spell" to include.
 --- Wherever the engine MAY discard that exclude, the group degenerates into "every aura of this type"

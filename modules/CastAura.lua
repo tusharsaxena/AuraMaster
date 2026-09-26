@@ -78,7 +78,7 @@ end
 
 --- The id to actually store for `typed`, plus the chat line owed to the player.
 ---
---- ONE SEAM FOR EVERY ADD BOX. Both the Spell Categories tab and the Filters page's Overrides
+--- ONE SEAM FOR EVERY ADD BOX. Both the Spell Categories tab and the Filters section's Overrides
 --- lists take an id the same way and have the same problem, so they take the same answer here
 --- rather than each growing its own copy of the reasoning.
 ---
@@ -145,7 +145,7 @@ CA.HELP_WARN  = "info"
 --- leaves every row the same shape.
 ---
 --- `extra` is whatever the CALLER has to add for this list -- the overlap guardrail's "also in"
---- line on the Spell Categories tab, the override verdict on the Filters page. It goes AFTER the
+--- line on the Spell Categories tab, the override verdict on the Filters section. It goes AFTER the
 --- never-matches line, because an id no aura carries has no verdict worth explaining.
 ---
 --- THE SEVERITY COMES BACK BESIDE THE LINES, as a second return, because the caller has to put it
@@ -153,7 +153,7 @@ CA.HELP_WARN  = "info"
 --- whatever else was added, and `extraSeverity` colors the mark only when that line is absent.
 --- It is the same ordering the lines themselves are in, stated once instead of copied into each
 --- page. A caller with nothing to claim about its own line passes none, and the mark keeps the
---- library's gold -- which is what the Filters page's override verdict does.
+--- library's gold -- which is what the Filters section's override verdict does.
 function CA.Help(id, extra, extraSeverity)
     local lines = {}
     --- Append `s` when it is a non-empty string. Written out rather than inlined because

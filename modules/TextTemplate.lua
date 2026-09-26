@@ -431,7 +431,7 @@ function TT.Compile(template)
     return result
 end
 
---- Whether `template` compiles: the Text page's `validate` (settings/Text.lua). A refusal answers
+--- Whether `template` compiles: the Text section's `validate` (settings/Text.lua). A refusal answers
 --- false and the localized reason, which the write seam hands on to the panel and to `/am set`.
 function TT.Validate(template)
     local r = TT.Compile(template)
@@ -461,7 +461,7 @@ function TT.Builtins(auraType)
     return C.TEXT_BUILTIN_SETS[auraType] or C.TEXT_BUILTIN_SETS.HELPFUL
 end
 
---- The built-in a stored template and justify are, or nil (the Text page reads nil as Custom). A
+--- The built-in a stored template and justify are, or nil (the Text section reads nil as Custom). A
 --- built-in matches when its template is identical and its justify rule holds: the centered one wants
 --- Center, every other one anything but Center. First match in `auraType`'s order.
 --- @return string|nil  a key of C.TEXT_BUILTINS

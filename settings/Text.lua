@@ -423,7 +423,7 @@ NS.RegisterSchemaRows(iconBorder)
 
 -- ── Pandemic ──────────────────────────────────────────────────────────────────────────────────
 -- Smoke batch 2, B2-1 (the owner's call): once "Running out" on the Animation tab, named for the
--- pandemic window as on the Bars and Icons pages, and registered ahead of Animation so its tab
+-- pandemic window as in the Bars and Icons sections, and registered ahead of Animation so its tab
 -- sits before it. Labels only: the paths and stored values are unchanged.
 
 NS.RegisterSchemaRows({

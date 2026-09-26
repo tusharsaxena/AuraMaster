@@ -21,7 +21,7 @@ local _, NS = ...
 --
 -- MASTER CONTROLS LEADS AND IS COMPOSED (options-ui-§15): H.MasterControls emits the canonical
 -- rows from one declaration. Every row applies — containers are movable frames — so nothing is
--- omitted. Master scale and alpha MULTIPLY each container's own scale and alpha on the Layout page;
+-- omitted. Master scale and alpha MULTIPLY each container's own scale and alpha in the Layout section;
 -- the two are different settings and neither replaces the other.
 --
 -- THE TEST MODE ROW (preview-mode, options-ui-§15, anti-pattern #80). Unlocking makes containers

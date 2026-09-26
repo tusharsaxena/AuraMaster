@@ -333,7 +333,7 @@ end
 --- profile switch replaces one set of user categories with another, and a row left behind from the
 --- old set is not merely untidy. NS.ValidateSchema fails it (the container template no longer
 --- carries the key, so NS.DefaultFor answers nil), `/am list` and `/am get` answer for a category
---- this profile does not have, and the Filters page draws a live Show/Hide row whose click WRITES
+--- this profile does not have, and the Filters section draws a live Show/Hide row whose click WRITES
 --- "show" or "hide" into a real stored container under a key nothing will ever compile -- permanent
 --- garbage in the player's saved variables, one key per switch.
 ---

@@ -65,7 +65,7 @@ local _, NS = ...
 --                  category's Hide, and neuters them all — the owner's original complaint reborn.
 --
 -- THE SPELL LISTS ARE A STARTER SET, WRITTEN FOR THIS ADDON. They were assembled from public spell
--- data for Retail 12.x and are meant to be edited: the Filters page lets a player add or remove any
+-- data for Retail 12.x and are meant to be edited: General -> Spell Categories lets a player add or remove any
 -- id per category, and those edits live in the profile (profile.categorySpells, shared by every
 -- container since schema v2), never here.
 -- ONE ID PER LINE, and the comment on that line gives the spell's name in the 12.1 client data
@@ -706,7 +706,7 @@ Cat.HELPFUL = {
 -- debuffs on HOSTILE units only, and discards them on the player, the pet and any friendly unit. The
 -- two rows are still worth shipping — the question they answer ("is my sheep on the target", "is it
 -- rooted") is asked of a hostile target or focus, which is exactly where the ids do bite — and every
--- surface that can mislead says so: their own descs below, the Filters page's Categories tab, the
+-- surface that can mislead says so: their own descs below, the Filters section's Categories tab, the
 -- General -> Spell Categories blurb, and the per-container orange warning
 -- (`FC.WARN.IDS_HOSTILE_ONLY` / `IDS_OWN_DEBUFFS`, modules/FilterCompiler.lua).
 

@@ -204,7 +204,7 @@ C.TEXT_JUSTIFY_H = { "LEFT", "CENTER", "RIGHT" }
 C.TEXT_ROW_GAP = 2
 -- Size to fit (batch 8, AS-2, modules/Style_Text.lua's Text.AutoSize): the space above and below a
 -- line's font, so a 12pt line is 16 tall, the old default height; and the width range a line is
--- clamped to, which the Text page's Width row offers too (settings/Text.lua).
+-- clamped to, which the Text section's Width row offers too (settings/Text.lua).
 C.TEXT_AUTOSIZE_PAD = 2
 C.TEXT_WIDTH_MIN = 40
 C.TEXT_WIDTH_MAX = 600
@@ -253,7 +253,7 @@ C.TEXT_DISPEL_LABELS = { Magic = "Magic", Curse = "Curse", Disease = "Disease", 
 -- The longest template the parser accepts (modules/TextTemplate.lua, rule 8).
 C.TEXT_TEMPLATE_MAX = 200
 
--- The built-in templates the Text page's Template dropdown offers (feedback #5): each a template
+-- The built-in templates the Text section's Template dropdown offers (feedback #5): each a template
 -- string and, for the centered one, the justify it needs. TEXT_BUILTIN_SETS lists them per aura type
 -- in dropdown order; a stored template matching none reads as Custom (modules/TextTemplate.lua's
 -- MatchBuiltin). Every duration run is bracketed, so no built-in leaves text behind on a timeless aura.
@@ -277,7 +277,7 @@ C.TEXT_BUILTIN_SETS = {
     HARMFUL = { "name", "nameTime", "nameStacksTime", "timeOfMax", "nameType", "nameTypeTime", "centered" },
 }
 
--- The sample aura the Text page's Preview box renders a template against, per aura type: readable,
+-- The sample aura the Text section's Preview box renders a template against, per aura type: readable,
 -- invented values (preview-mode). The buff has stacks and no dispel type; the debuff a type and none.
 C.TEXT_SAMPLE_AURAS = {
     HELPFUL = { name = "Ignore Pain", icon = 1377132, remaining = 11, duration = 12, stacks = 3 },

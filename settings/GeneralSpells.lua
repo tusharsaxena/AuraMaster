@@ -35,14 +35,14 @@ local _, NS = ...
 -- stored `false` (nil would let the shipped list bring it back) and drops out of the list until
 -- Restore (or typing it back in) returns it; a spell the player adds is stored `true`, and
 -- the carve-out's normalizer stores no category left with no edits. The lists are not schema rows, so
--- the page's Defaults leaves them alone, as the Filters page's leaves its Overrides lists; each
+-- the page's Defaults leaves them alone, as the Filters section's leaves its Overrides lists; each
 -- category has its own restore.
 --
 -- The dropdown also offers Weapon enchants (kind "enchant"): the odd category with no spell list at
 -- all. Choosing it draws ENCHANT_ROWS instead — three real schema rows at `enchantSlots.<slot>`
 -- (schema v3, B3), so `/am get|set|list`, Defaults and the resets all see them — plus a line saying
 -- the per-container on/off switch lives on Filters → Categories (settings/Filters.lua, B5). The rows
--- carry `skipRender = true`, exactly like the Filters page's category rows: this tab draws them
+-- carry `skipRender = true`, exactly like the Filters section's category rows: this tab draws them
 -- itself rather than the flow engine drawing them a second time.
 --
 -- NS.GeneralSpells.Select(key) is the seam a per-row link on another page (Filters → Categories, B5)
@@ -113,7 +113,7 @@ local spellCategory   -- session: which category the tab edits (the first when u
 -- THE 'THIS CATEGORY' BLOCK ANSWERS IN THE PANEL, NOT ONLY IN THE CHAT FRAME. Pressing Create with
 -- an empty box used to re-render with nothing visibly changed and a line in chat: from the panel's
 -- side, a button that does nothing. So every act of that block sets this line, and the block draws
--- it directly under its heading -- one `H.TextRow`, which is the same grammar the Filters page
+-- it directly under its heading -- one `H.TextRow`, which is the same grammar the Filters section
 -- states its own conditions in and the same one this tab's shipped-category sentence already uses.
 -- No new widget kind, and nothing to dismiss.
 --
@@ -211,14 +211,14 @@ end
 --- row, whose entry shows its slots rather than a list. Buffs are no longer the whole story — issue
 --- #11 gave `Cat.HARMFUL` its first `spells`-kind categories (`hardCC`, `softCC`) and the engine
 --- honors debuff spell ids on a hostile target or focus — so the test is the KIND, never the aura
---- type. Missing that is how a shipped list becomes uneditable: the Filters page's `See spells` link
+--- type. Missing that is how a shipped list becomes uneditable: the Filters section's `See spells` link
 --- offers itself for every `spells`-kind row it draws, including a debuff container's.
 local function editableHere(def)
     return def ~= nil and (def.kind == "spells" or def.kind == "enchant")
 end
 
 --- The categories this tab can edit, buff lists first and in each aura type's own declaration order,
---- so the dropdown reads the way the Filters page's grids do.
+--- so the dropdown reads the way the Filters section's grids do.
 local function spellCategories()
     local out = {}
     for _, auraType in ipairs({ "HELPFUL", "HARMFUL" }) do
@@ -421,7 +421,7 @@ local ID_TOOLTIP = (L["Type a spell id or a name and pick from the list, or shif
 -- things everywhere a player meets them: the container's own Aura type dropdown
 -- (settings/Containers.lua:82), the gray summary behind every container in the picker
 -- (settings/OptionsSetup.lua:362) and the `/am list` line (settings/Slash.lua:180) -- those three
--- are its readers, and the Filters page is not among them; its category rows are labeled from the
+-- are its readers, and the Filters section is not among them; its category rows are labeled from the
 -- category, not from the aura type. So the marker reads the table rather than defining a second
 -- vocabulary here. Read, not copied: a translation that moves those two labels moves the markers
 -- with them, and a future third aura type would be marked without touching this file.
@@ -721,7 +721,7 @@ end
 --
 -- THE LAYOUT, JUSTIFIED. The owner asked for simple and obvious, so this adds FOUR controls and no
 -- new shape: every one of them is a plain AceGUI widget in an `H.RenderGrid` pair, which is the
--- grammar the picker line above it and the Filters page's own act rows already use. There is no new
+-- grammar the picker line above it and the Filters section's own act rows already use. There is no new
 -- widget kind, no inline list of categories with per-row buttons, and no separate management tab.
 --
 --   * IT SITS DIRECTLY UNDER THE PICKER, ABOVE the spell list, because it is about WHICH category
@@ -1255,7 +1255,7 @@ local ENCHANT_SLOTS = {
 }
 
 -- Real schema rows (so /am get|set|list, Defaults and the resets see them), one per slot at
--- `enchantSlots.<slot>`. `skipRender = true`, exactly as the Filters page's category rows: this
+-- `enchantSlots.<slot>`. `skipRender = true`, exactly as the Filters section's category rows: this
 -- tab's own renderEnchant draws them, not the flow engine.
 local ENCHANT_ROWS = {}
 for _, slot in ipairs(ENCHANT_SLOTS) do
@@ -1387,7 +1387,7 @@ local function renderSpells(ctx)
         -- documented truncation order, and acceptable, because the tooltip still carries
         -- every name. A panel wider than the floor buys it back at about 8 characters per 100px.
         --
-        -- The Filters page's Overrides lists ask for two as well, since 2026-09-21. They are
+        -- The Filters section's Overrides lists ask for two as well, since 2026-09-21. They are
         -- SHORT lists -- a handful of ids per container against this one's sixty -- so that is a
         -- consistency call rather than a scroll-length one, and settings/Filters.lua says so at
         -- its own call.
@@ -1453,7 +1453,7 @@ local TABS = {
     { key = SPELLS, label = SPELLS, render = renderSpells, before = DISPEL },
 }
 
--- `candidates`, `ID_STRINGS` and `ID_TOOLTIP` are shared with the Filters page's Overrides lists,
+-- `candidates`, `ID_STRINGS` and `ID_TOOLTIP` are shared with the Filters section's Overrides lists,
 -- which suggest and resolve a typed name the same way.
 -- `MarkedName` is the ONE definition of the 'yours' marker, read by settings/Filters.lua's Categories
 -- grid; `RestoreStarters` is the restore ACT, published so that it is testable and so that any
@@ -1466,7 +1466,7 @@ NS.GeneralSpells = {
     MarkedName = markedName, RestoreStarters = restoreStarters,
 }
 
---- Point this tab at one category. For the Filters page's per-row link (settings/Filters.lua, B5).
+--- Point this tab at one category. For the Filters section's per-row link (settings/Filters.lua, B5).
 --- A key this tab cannot draw is ignored rather than stored: a stale link must never leave the tab
 --- on a category with no editor. Moves the General page's active tab to Spell Categories too, so the
 --- link actually lands the player where the category is shown.
