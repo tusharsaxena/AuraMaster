@@ -146,22 +146,27 @@ end)
 
 -- ── the test-mode block outline (SEP-1) ───────────────────────────────────────────────────────
 
-test("strip: in test mode the outline encloses the whole placeholder block, locked or not; locked outside it, none", function()
+test("strip: in test mode the outline encloses the whole placeholder block only while unlocked; locked, none", function()
     local NS, mocks = fresh()
     local inst = NS.ContainerManager.instances[1]
     NS.Preview.SetTestMode(true)
     mocks.__fireTimers()
-    local o = inst.outline
-    -- red under: ApplyOutline gated off while previewing
-    assertTrue(o ~= nil and o:IsShown(), "locked in test mode: the block is outlined")
-    local all = {}
-    rawset(o, "SetAllPoints", function(_, f) table.insert(all, f) end)
+    -- red under: the SEP-1 block drawn locked too (owner, 2026-09-27: the box is an unlocked guide only)
+    assertTrue(inst.outline == nil or not inst.outline:IsShown(), "locked in test mode: no box")
     NS.SetByPath("locked", false)
     mocks.__fireTimers()
-    assertTrue(o:IsShown(), "unlocked in test mode")
-    assertTrue(all[#all] == inst.previewExtent, "around the preview extent")
+    local o = inst.outline
+    assertTrue(o ~= nil and o:IsShown(), "unlocked in test mode: the block is outlined")
+    local all = {}
+    rawset(o, "SetAllPoints", function(_, f) table.insert(all, f) end)
     NS.Preview.SetTestMode(false)
+    NS.Preview.SetTestMode(true)
+    mocks.__fireTimers()
+    assertTrue(all[#all] == inst.previewExtent, "around the preview extent")
     NS.SetByPath("locked", true)
+    mocks.__fireTimers()
+    assertFalse(o:IsShown(), "locked again: none")
+    NS.Preview.SetTestMode(false)
     mocks.__fireTimers()
     assertFalse(o:IsShown(), "locked outside test mode: none")
 end)

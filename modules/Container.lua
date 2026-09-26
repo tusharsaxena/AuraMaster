@@ -497,8 +497,9 @@ end
 ---     from, so an EMPTY container can still be seen while unlocked and its followers hang from it.
 ---     Shown only while unlocked, predicted empty (modules/EmptyWatch.lua) and hung as `slot`;
 ---   the test-mode BLOCK (batch 9 SEP-1, E4): around its whole placeholder block, the preview extent
----     (`block`), locked or not, so each container of a chain reads as its own even at a seam of 0.
---- Hidden otherwise: when it holds auras or that is not knowable, and locked outside test mode. The
+---     (`block`), so each container of a chain reads as its own even at a seam of 0. Unlocked only
+---     (owner, 2026-09-27): a guide for placing containers, so a locked test mode draws no box.
+--- Hidden otherwise: when it holds auras or that is not knowable, and whenever locked. The
 --- outline is not an attach target, so showing it moves nothing. It takes no mouse: the drag handle does the grabbing. A PLAIN frame
 --- with its edge drawn as strips (Style.DrawEdge), never a BackdropTemplate: under an anchor attached
 --- to another frame or container its size can read secret, and the Backdrop does arithmetic on the
@@ -586,7 +587,7 @@ function ContainerClass:PredictEmpty()
 end
 
 --- Record what this container's followers hang from and show its outline to match: around its
---- placeholder block while it previews (SEP-1), its one-element placeholder while hung as `slot`. The
+--- placeholder block while it previews unlocked (SEP-1), its one-element placeholder while hung as `slot`. The
 --- prediction is read only while it can matter: shown, unlocked and not previewing (`watchEmpty`,
 --- which EmptyWatch's re-evaluation pass reads).
 function ContainerClass:ApplyHang(cfg, show, previewing, unlocked)
@@ -595,7 +596,8 @@ function ContainerClass:ApplyHang(cfg, show, previewing, unlocked)
     if watch then empty = self:PredictEmpty() end
     self.watchEmpty, self.predictedEmpty = watch, empty
     self.hangMode = hangModeFor(show and cfg and previewing, unlocked and cfg, empty)
-    local block = (show and cfg and previewing) and self.previewExtent or nil
+    -- `unlocked` is only ever true while shown (ApplyVisibility), so it stands for `show` here.
+    local block = (unlocked and cfg and previewing) and self.previewExtent or nil
     self:ApplyOutline(cfg, block ~= nil or (watch and self.hangMode == "slot"), block)
 end
 

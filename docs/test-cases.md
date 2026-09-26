@@ -763,7 +763,7 @@ badge and any count quoted in the docs must agree with it.
 - strip: an icons label mirrors only for a behind follower, whose strip lines up with the edge facing its parent
 - strip: no join dot is built for a container joined to another, unlocked or in test mode
 - strip: the tooltip of a container joined to another names the parent's point and the parent
-- strip: in test mode the outline encloses the whole placeholder block, locked or not; locked outside it, none
+- strip: in test mode the outline encloses the whole placeholder block only while unlocked; locked, none
 - strip: the test-mode outline moves no follower: the seam is the same locked and in test mode (SS-3)
 
 ### test_anchors_column.lua (19)
