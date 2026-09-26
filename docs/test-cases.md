@@ -1631,7 +1631,7 @@ badge and any count quoted in the docs must agree with it.
 - icons: the Pandemic tab holds the time color and the highlight, in pandemic-window words, paths unchanged (B2-1)
 - icons: Defaults restores the selected container's icon look and leaves its bar look alone
 
-### test_pages_text.lua (28)
+### test_pages_text.lua (29)
 
 - text page: the five tabs are drawn in order, Pandemic before Animation (B2-1)
 - text page: General holds Size, the Template dropdown and box, the cheat sheet, then Placement
@@ -1655,6 +1655,7 @@ badge and any count quoted in the docs must agree with it.
 - text page: Custom reveals the box with the current template; an unmatched template reads as Custom (feedback #5)
 - text page: the Preview box renders the sample aura, brackets filled and empty ones hidden (feedback #5)
 - text page: the centered built-in's Preview joins its two rows with a visible separator (final review)
+- text page: the Preview and the cheat sheet read the same when the page is drawn disabled; the dim path is gone (#23)
 - text page: a literal | in a custom template is doubled in the Preview box, not left to break it (final review)
 - text page: an already-doubled || in a custom template still doubles each pipe (final review)
 - text page: a colored dispel word's |cff...|r run survives escapeStrayPipes intact (final review)
@@ -1927,7 +1928,7 @@ badge and any count quoted in the docs must agree with it.
 | test_pages_layout.lua | 47 |
 | test_pages_bars.lua | 11 |
 | test_pages_icons.lua | 5 |
-| test_pages_text.lua | 28 |
+| test_pages_text.lua | 29 |
 | test_pages_tabs.lua | 6 |
 | test_pages_rail.lua | 16 |
 | test_pages_about.lua | 3 |
@@ -1946,4 +1947,4 @@ badge and any count quoted in the docs must agree with it.
 | test_eol.lua | 2 |
 | test_layout_cap.lua | 13 |
 | test_diagnostics_contract.lua | 7 |
-| **Total** | **1640** |
+| **Total** | **1641** |

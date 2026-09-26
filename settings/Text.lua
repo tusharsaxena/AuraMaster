@@ -30,11 +30,12 @@ local _, NS = ...
 -- -- printed under "Invalid value for container.text.template" by the panel and by `/am set` alike.
 --
 -- A section of the Containers page (#6): its nav rail lists Text only for a container drawn as text,
--- so the section is no longer drawn disabled. The dim path for its read-only TEXT (`pageDim`,
--- `dim`/`token`) is still here, unreachable, until a dead-code sweep removes it; the Placement notes
--- are gray at all times. The font and icon-border blocks
--- are composed (options-ui-§16) with class-color companions (options-ui-§17) resolved to the tracked unit's
--- class, as on the Bars page; the pandemic-window time swatch is a palette color and carries none.
+-- so the section is never drawn disabled, and its read-only text (the cheat sheet, the Preview) has
+-- no dimmed form (#23 removed it); the Placement notes are gray at all times. The Template dropdown
+-- still honors `ctx.__renderDisabled`, the library's idiom for a bespoke cell. The font and
+-- icon-border blocks are composed (options-ui-§16) with class-color companions (options-ui-§17)
+-- resolved to the tracked unit's class, as in the Bars section; the pandemic-window time swatch is a
+-- palette color and carries none.
 
 local L = NS.L
 local H = NS.Helpers
@@ -137,29 +138,9 @@ NS.RegisterSchemaRows({
       min = -100, max = 100, step = 1, label = L["Y offset"], desc = L["Vertical nudge, in pixels."] },
 })
 
---- Whether this render is the page drawn disabled — the container is not drawn as text. The library
---- holds `ctx.__renderDisabled` for the whole of a page tab's render (O.RenderTabbedSchema's
---- `disabledFor`), which is how every ROW dims itself; free-standing text has to be told. Since #6
---- nothing passes `disabledFor` for this section (the rail lists Text only for a text container),
---- so this answers false; it stays until a dead-code sweep removes it.
-local function pageDim(ctx)
-    return ctx.__renderDisabled and true or false
-end
-
---- Read-only prose, in the gray the Placement notes already read in (they are written GRAY at all
---- times, which is why they were the one block that looked right on a disabled page). Owner,
---- 2026-09-20: the Text Template subsection's Preview and cheat sheet stayed at full brightness
---- while every control around them dimmed, so the inert part of the tab was its loudest part.
-local function dim(ctx, text)
-    if not pageDim(ctx) then return text end
-    return GRAY:format(text)
-end
-
---- A run of template syntax: the token gold, or the same gray as the prose once the page is not in
---- use — gold nested inside a gray wrap would survive it, since a WoW `|r` restores the color it is
---- nested in rather than the default.
-local function token(ctx, text)
-    return (pageDim(ctx) and GRAY or GOLD):format(text)
+--- A run of template syntax, in the token gold.
+local function token(text)
+    return GOLD:format(text)
 end
 
 --- A small gap, then a heading line, in the same voice a subgroup heading reads in (owner,
@@ -167,18 +148,18 @@ end
 local function heading(ctx, text)
     local scroll = H.EnsureScroll(ctx)
     if scroll then H.AddSpacer(scroll, H.ROW_VSPACER) end
-    H.TextRow(ctx, dim(ctx, text), HEADING)
+    H.TextRow(ctx, text, HEADING)
 end
 
 --- One bullet, drawn small.
 local function bullet(ctx, text)
-    H.TextRow(ctx, dim(ctx, BULLET .. text), SMALL)
+    H.TextRow(ctx, BULLET .. text, SMALL)
 end
 
 --- A bullet's continuation line: an example, indented under it and in the token gold so it reads as
 --- template syntax rather than prose.
 local function example(ctx, text)
-    H.TextRow(ctx, "    " .. token(ctx, text), SMALL)
+    H.TextRow(ctx, "    " .. token(text), SMALL)
 end
 
 --- The token cheat sheet, under the Template box: a **Tokens** list (one gold `$token$` bullet each,
@@ -191,7 +172,7 @@ end
 local function cheatSheet(ctx)
     heading(ctx, L["Tokens"])
     for _, def in ipairs(C.TEXT_TOKENS) do
-        bullet(ctx, ("%s  %s"):format(token(ctx, "$" .. def.key .. "$"), L[C.TEXT_TOKEN_LABELS[def.key]]))
+        bullet(ctx, ("%s  %s"):format(token("$" .. def.key .. "$"), L[C.TEXT_TOKEN_LABELS[def.key]]))
     end
     heading(ctx, L["Rules"])
     bullet(ctx, L["[ ] hides its text along with the token inside it:"])
@@ -293,12 +274,9 @@ end
 --- LABEL (it wraps), but a single-line WoW EditBox does not lay a `\n` out as a break.
 --- Controller ruling: join stacked rows with a visible `" / "` instead, inside
 --- the same font-color wrap, so "Centered: name over time" reads "Ignore Pain / 11s".
---- `gray` (the page drawn disabled) takes the font color off the line and reads it in the notes'
---- gray instead: the container's own bright font color on an inert tab was the loudest thing on it.
-local function previewText(cfg, sample, gray)
+local function previewText(cfg, sample)
     local raw = (NS.Style.Text.PreviewLine(cfg.text, sample):gsub("\n", " / "))
     raw = NS.Style.Text.EscapeStrayPipes(raw)
-    if gray then return GRAY:format(raw) end
     local font = (cfg.text and cfg.text.font) or D.font
     local r, g, b = NS.Style.Color(font.fontColor, font.useClassColorFont)
     -- Rounded, not truncated, and clamped (Style_Text.lua's own `hex`): a stored 196/255 can float
@@ -312,13 +290,13 @@ end
 --- (`../PrettyChat/settings/Panel.lua`). A bespoke cell, not a schema row: it has no stored value of
 --- its own, and is rebuilt on every render, so it is never stale.
 local function previewBox(cfg)
-    return { wide = true, make = function(ctx, parent)
+    return { wide = true, make = function(_, parent)
         local sample = C.TEXT_SAMPLE_AURAS[cfg.auraType] or C.TEXT_SAMPLE_AURAS.HELPFUL
         local box = NS.AceGUI:Create("EditBox")
         box:SetLabel(L["Preview"])
         box:SetFullWidth(true)
         box:SetDisabled(true)
-        box:SetText(previewText(cfg, sample, pageDim(ctx)))
+        box:SetText(previewText(cfg, sample))
         H.AttachTooltip(box, L["Preview"], L["The line this template draws on a sample aura. Read-only."])
         parent:AddChild(box)
         return box
