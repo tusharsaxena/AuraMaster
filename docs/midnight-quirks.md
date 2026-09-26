@@ -110,6 +110,24 @@ the engine's question per compiled group, and `GetWeaponEnchantInfo` for enchant
 secret, raising or outside what it can check answers nil, which counts as not empty. Only a parent
 predicted empty hangs its followers from its one-element placeholder while unlocked.
 
+## An empty engine is one unit, not nothing (measured 2026-09-26)
+
+**The restriction.** An engine that holds no aura is not zero-sized. The flow layout sizes it
+`math.max(size, 1)` on each axis (`AnchorUtil.ApplyFlowLayout`), so it is a 1x1 rect, and that is
+also true of an engine that held auras and then emptied: the owner's second measurement saw it return
+to 1 unit, not 0. The engine's height and top are **secret** in client even out of combat
+(`issecretvalue` answers true), so neither can be read to place anything. The owner measured a locked,
+empty chain: #22 on a named frame at y=2, #21 on #22, #20 on #21 (after-center), #19 on #20
+(Automatic, after-start). The container bottoms (`anchor:GetBottom()`, readable because the anchor
+itself holds nothing secret) read 281.99996948242 for #22, 283 for #21, 283.99996948242 for #20 and 285
+for #19. So each empty link added one unit, and #19 sat 3 units above #10, which is on the same frame
+at y=2 (281.99996948242).
+
+**What this addon does.** It pins the engine one unit behind its anchor's start corner and pads the
+engine's start sides by that unit, so an empty engine ends exactly at the start and a populated one
+still starts its first element there. A follower hung from the engine takes the unit back on its
+relative point. Nothing reads the engine's geometry (`docs/data-flow.md`, the engine lead).
+
 ## Anchoring an aura container
 
 **The restriction.** Once an engine has an aura group, it forbids untrusted layout scripts, and an

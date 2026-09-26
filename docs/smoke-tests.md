@@ -1710,6 +1710,35 @@ Five changes the owner asked for after section AC (2026-09-26). None has been ru
 
 **Owner run, 2026-09-26.** Every AD check passed (246 to 250).
 
+## AE. An empty link adds nothing along a chain (the engine lead, owner to run)
+
+The owner's chain residue, measured in client on 2026-09-26 (`docs/midnight-quirks.md`, "An empty
+engine is one unit, not nothing"), and the fix on `fix/2026-09-26-chain-residue`. None of it has been
+run here. The chain is the owner's: #22 on a named frame at y=2, #21 on #22, #20 on #21 (This
+container Bottom to Parent container Top), #19 on #20 (Automatic), and #10 on the same frame at y=2.
+The check line prints each container's bottom:
+
+    /run local N=LibStub("AceAddon-3.0"):GetAddon("AuraMaster")for _,i in ipairs{10,22,21,20,19}do local c=N.ContainerManager.instances[i]if c then print(i,c.anchor:GetBottom())end end
+
+267. **Locked and live, with #22, #21 and #20 empty.** `/am lock`, out of combat, on a target where
+     none of #22, #21 or #20 shows an aura. → #19's bottom bar is level with #10's, with no 3px step
+     (it was 3px higher). The check line prints the same bottom for 10, 22, 21, 20 and 19 (it printed
+     281.99996948242, 283, 283.99996948242 and 285 for 22, 21, 20 and 19). No Lua error.
+268. **After an aura on #20 expires.** Let #20 show one aura. → #19 sits one bar (plus its seam)
+     above where it was. Let the aura expire. → #19 drops back level with #10, and the check line
+     again prints one bottom for 10, 22, 21, 20 and 19. An engine that held an aura and emptied adds
+     nothing either.
+269. **In combat.** Stay locked and pull a target dummy with #22, #21 and #20 empty. → #19's bottom
+     bar stays level with #10's through the fight, and it moves only when an aura appears or ends on
+     a link, by exactly that link's bars. Judge by eye: in combat the check line can read secret.
+270. **Populated links and the first aura are where they were.** Give #22 two auras. → #19 sits
+     exactly two of #22's bars (plus the seams) above #10's level. #22's first bar starts exactly
+     where the empty #22 sat, with no 1px gap or overlap against the named frame. On any container
+     on the screen, the first aura is where it was before the fix. A centered join (#20 on #21) is
+     still centered across the column, with no sideways shift of half a pixel or more. `/am unlock`
+     and `/am test` → the placeholders and the unlocked chain look as they did before the fix. No
+     Lua error.
+
 ## Settings redesign (#6)
 
 **Owner run, 2026-09-26:** S2, S3, S4, S5, S7, S8, S11 and S16 passed, from the owner's report and screenshots. S1, S6, S9, S10 and S12-S15 were not reported individually and stay open.
