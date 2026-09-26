@@ -1316,7 +1316,7 @@ badge and any count quoted in the docs must agree with it.
 - slash verbs: the disabled gate is ONE decision over the whole verb table, not a per-verb guard
 - slash verbs: /am new enchants makes a player buff container showing only Weapon enchants (feedback #6)
 
-### test_diagnostics.lua (38)
+### test_diagnostics.lua (42)
 
 - diag: /am diagnostics writes the report to the console ungated, opens it, and says so once
 - diag: /am diagnostics answers while the addon is disabled, and the state line says so
@@ -1356,6 +1356,10 @@ badge and any count quoted in the docs must agree with it.
 - diag: a disabled login says so in the header, and each [Plan] not built line says why
 - diag: a stood-down addon names its holds; built containers read hidden, not unbuilt
 - diag: a container with no instance while running is not built for want of one
+- diag: a bars button's [Shown] line carries its name, time and bar widths
+- diag: an unreadable width reads '?' and costs no line
+- diag: a button with no bar regions carries no widths
+- diag: the header lists the cached time-text measurements
 
 ### test_bulklog.lua (20)
 
@@ -1945,7 +1949,7 @@ badge and any count quoted in the docs must agree with it.
 | test_disabled.lua | 18 |
 | test_slash.lua | 28 |
 | test_slash_verbs.lua | 50 |
-| test_diagnostics.lua | 38 |
+| test_diagnostics.lua | 42 |
 | test_bulklog.lua | 20 |
 | test_optionssetup.lua | 17 |
 | test_options_descriptor.lua | 18 |
@@ -1975,4 +1979,4 @@ badge and any count quoted in the docs must agree with it.
 | test_eol.lua | 2 |
 | test_layout_cap.lua | 13 |
 | test_diagnostics_contract.lua | 7 |
-| **Total** | **1661** |
+| **Total** | **1665** |

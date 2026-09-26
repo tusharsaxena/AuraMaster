@@ -39,14 +39,14 @@ Every line is `HH:MM:SS | [Tag] message`. The tags:
 
 | Tag | What it holds |
 |---|---|
-| `Diag` | Begin and end markers, the identity header (version, schema, profile and container count, then the client, locale, debug flag, combat reads and the running LibKa0s minors), the state flags and lifecycle holds, a plain line when the addon is disabled or stood down (below), the apply queue, counts, and any `truncated` or `section ... failed` line |
+| `Diag` | Begin and end markers, the identity header (version, schema, profile and container count, then the client, locale, debug flag, combat reads and the running LibKa0s minors), the state flags and lifecycle holds, a plain line when the addon is disabled or stood down (below), the apply queue, counts, the session's cached time-text widths, and any `truncated` or `section ... failed` line |
 | `Cfg` | Non-default settings: the profile's own rows, then each container's (`#id non-default:`), filter rows left out because `Filt` prints them in full. A non-default value that does nothing for that container goes on its own `#id inert:` line instead (see below) |
 | `Unit` | One header per unit and filter with the aura count, or `none` / `unreadable` / `read failed` |
 | `Aura` | One aura: `player+` is a buff, `player-` a debuff; `inst`, `id`, name, `dispel`, `src`, `mine`, `dur`, `left`, `stacks`, `boss`, `steal` |
 | `Cont` | One container: id, name, unit, aura type, style, enabled, attach, then its live flags (engine, shows, parked, staleData, classStale, retired engines, enchant frames, dormant, retiring) |
 | `Filt` | The container's filters in full: cast by, duration, sort, max, the hidden categories, and the whitelist and blacklist by id and name |
 | `Plan` | The plan verdict, then one line per applied engine group (filter, candidate filters, sort, max, `frames=` and `shown=`), then the plan's warnings |
-| `Shown` | The shown buttons one by one, then a `predicted:` line per readable aura on the container's unit |
+| `Shown` | The shown buttons one by one (a bars button adds the widths its name, time and bar were laid out at: `nameW=` `timeW=` `barW=`), then a `predicted:` line per readable aura on the container's unit |
 
 Example (shortened):
 
@@ -60,6 +60,7 @@ Example (shortened):
 [Diag] LibKa0s running: Core 8, Env 1, Compat 1, Lifecycle 2, ...
 [Diag] state: enabled=true stoodDown=false disabledHold=false holds=- locked=true testMode=false ...
 [Diag] apply queue: all=false ids=[] scheduled=false notice=- mustDefer=false
+[Diag] time-text widths cached: Fonts\FRIZQT__.TTF|12||short=31
 [Unit] player HELPFUL: 7 aura(s)
 [Aura] player+ #1 inst=1234 id=1459 "Arcane Intellect" dispel=nil src=player mine=true dur=3600 left=3412.5 stacks=0 boss=false steal=false
 [Unit] focus: none
@@ -68,7 +69,7 @@ Example (shortened):
 [Filt] #1 whitelist(1)=[1459 Arcane Intellect]
 [Plan] #1 plan in sync
 [Plan] #1 g1 "Always shown" filter=HELPFUL cand={includeSpellIDs:1} sort=expirationOnly/normal max=inf frames=3 shown=2
-[Shown] #1 g1 btn1 name="Arcane Intellect"
+[Shown] #1 g1 btn1 name="Arcane Intellect" nameW=148.0 timeW=31.0 barW=184.0
 [Shown] #1 predicted: 1459 Arcane Intellect -> shown (rank 1 whitelist)
 [Diag] ==== Ka0s Aura Master diagnostics end: 143 line(s) ====
 ```
@@ -77,6 +78,15 @@ A container attached to another container prints its join after the target (batc
 points in effect, this container's (`point`) and its parent's (`relPoint`), each `(auto)` while
 Automatic or `(picked)`, and `join=`, the batch 9 side the pair is under the parent's growth
 (`after-start` and the like, `Anchors.AttachEdge`) or `free` for any other pair.
+
+### Bar names that do not show
+
+A bar's name stops 4 pixels short of its time's box, and that box is as wide as the measured width of
+the widest string the time format writes, cached per font until `/reload` (`Style.TimeTextWidth`).
+Each bars `Shown` line gives the laid-out widths, so a report taken while names are missing tells the
+cause apart (owner report 2026-09-26): `nameW` near 0 with `timeW` about `barW` is a name squeezed out
+by an oversized time box, and the `time-text widths cached` line shows the width it came from. A
+`nameW` that looks normal points somewhere else. A width the client withholds reads `?`.
 
 ### The plan verdict
 

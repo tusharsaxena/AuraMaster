@@ -683,3 +683,66 @@ test("diag: a container with no instance while running is not built for want of 
     assertTrue(has(lines, "[Plan] #3 not built (no instance)") ~= nil, dump(lines))
     assertTrue(has(lines, "addon disabled") == nil, dump(lines))
 end)
+
+-- Missing bar names (owner report 2026-09-26): a bar whose name text is set but not drawn. Each
+-- [Shown] line of a bars button carries the widths the name, the time and the bar area were laid out
+-- at, and the header lists the session's cached time-text measurements, so one report tells a name
+-- squeezed to nothing by an oversized time box from one that is hidden for another reason.
+
+--- A region answering GetWidth with `w`; a function `w` stands for a read that raises.
+local function sized(w)
+    return { GetWidth = function() if type(w) == "function" then return w() end return w end }
+end
+
+test("diag: a bars button's [Shown] line carries its name, time and bar widths", function()
+    local NS, mocks = fresh()
+    local inst = NS.ContainerManager.instances[1]
+    local key = inst.plan.groups[1].key
+    local f = mocks.__stubFrame()
+    rawset(f, "__am", { style = "bars", name = sized(0), time = sized(180.34), bar = sized(184) })
+    inst.engine.__frames[key] = { f }
+    local line = has(build(NS), "[Shown] #1 " .. key .. " btn1")
+    -- red under: the line without the geometry (the widths were never read)
+    assertTrue(line ~= nil and line:find("nameW=0.0 timeW=180.3 barW=184.0", 1, true) ~= nil, tostring(line))
+end)
+
+test("diag: an unreadable width reads '?' and costs no line", function()
+    local NS, mocks = fresh()
+    local secret = secretBoolean(mocks)
+    local inst = NS.ContainerManager.instances[1]
+    local key = inst.plan.groups[1].key
+    local f = mocks.__stubFrame()
+    rawset(f, "__am", { style = "bars", name = sized(function() error("forbidden") end),
+        time = sized(secret), bar = sized(184) })
+    inst.engine.__frames[key] = { f }
+    local lines = build(NS)
+    assertTrue(has(lines, "failed") == nil, dump(lines))
+    local line = has(lines, "[Shown] #1 " .. key .. " btn1")
+    assertTrue(line ~= nil and line:find("nameW=? timeW=? barW=184.0", 1, true) ~= nil, tostring(line))
+end)
+
+test("diag: a button with no bar regions carries no widths", function()
+    local NS, mocks = fresh()
+    local inst = NS.ContainerManager.instances[1]
+    local key = inst.plan.groups[1].key
+    inst.engine.__frames[key] = { mocks.__stubFrame() }
+    local line = has(build(NS), "[Shown] #1 " .. key .. " btn1")
+    assertTrue(line ~= nil and line:find("nameW=", 1, true) == nil, tostring(line))
+end)
+
+test("diag: the header lists the cached time-text measurements", function()
+    local NS = fresh()
+    local lines = build(NS)
+    -- red under: no such line (the cache was invisible to the report)
+    assertTrue(has(lines, "[Diag] time-text widths cached: none") ~= nil, dump(lines))
+    local real = NS.Style.__measurer
+    NS.Style.__measurer = function()
+        return { SetFont = function() return true end, SetText = function() end,
+            GetStringWidth = function() return 40 end }
+    end
+    local w = NS.Style.TimeTextWidth({ font = "Ka0s Prototype", fontSize = 10 }, { fontSize = 12 }, "short")
+    NS.Style.__measurer = real
+    assertEqual(w, 42, "measured width plus the outline allowance")
+    local line = has(build(NS), "[Diag] time-text widths cached:")
+    assertTrue(line ~= nil and line:find("|10||short=42", 1, true) ~= nil, tostring(line))
+end)

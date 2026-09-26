@@ -14,7 +14,7 @@ local pages = dofile("tests/page_helpers.lua")
 
 test("sections: Filters, Layout, Bars, Icons and Text register as sections under their page keys", function()
     local NS = T.NS
-    local LABELS = { filters = "Filters", layout = "Layout", bars = "Bars", icons = "Icons", text = "Text" }
+    local LABELS = { filters = "Filters", layout = "Layout", bars = "Bar", icons = "Icon", text = "Text" }
     for key, label in pairs(LABELS) do
         local s = NS.ContainerSection(key)
         -- red under: a page file registering a Blizzard sub-page and no section
@@ -72,7 +72,7 @@ test("rail: Containers draws General, Filters, Layout and the selected container
     assertEqual(railKeys(P, ctx), "containers,filters,layout,bars")
     local labels = {}
     for i, e in ipairs(P.drawnRail(ctx).entries) do labels[i] = e.label end
-    assertEqual(table.concat(labels, ","), table.concat({ L["General"], L["Filters"], L["Layout"], L["Bars"] }, ","))
+    assertEqual(table.concat(labels, ","), table.concat({ L["General"], L["Filters"], L["Layout"], L["Bar"] }, ","))
     NS.Helpers.SelectContainer(2)                   -- icons
     P.show("Containers")
     assertEqual(railKeys(P, ctx), "containers,filters,layout,icons")

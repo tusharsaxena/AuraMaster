@@ -17,8 +17,8 @@ is a defect in this doc (documentation-§3).
 | Containers → General (rail) | General | A top-level page (`N-1`, batch 7): create, select, rename, enable, unit, aura type and style of a container, and duplicate, delete, copy settings between containers |
 | Containers → Filters (rail) | General · Categories · Overrides · Sorting | Who cast it, timed or permanent, max duration, and the five-rank priority block at the foot of the tab; the Show/Hide category grids (weapon enchants among them); the whitelist and blacklist spell lists, each entry's verdict in its "?" mark; sort order and cap (per group). Tabs vary with the aura type |
 | Containers → Layout (rail) | Frame · Anchor · Growth · Mouse · Label | Scale, opacity, strata and frame level; where the container sits (the screen, another container or a named frame, with only what the mode reads drawn) and the frame picker; growth direction and spacing, the flow inherited from the parent while attached to a container; tooltips, cancel, click-through; the optional name label |
-| Containers → Bars (rail, a container drawn as bars) | General · Background & border · Name text · Time text · Stack text · Icon · Pandemic | The look of a container drawn as bars |
-| Containers → Icons (rail, a container drawn as icons) | Size · Border · Cooldown · Time text · Stack text · Pandemic | The look of a container drawn as icons |
+| Containers → Bar (rail, a container drawn as bars) | General · Background & border · Name text · Time text · Stack text · Icon · Pandemic | The look of a container drawn as bars |
+| Containers → Icon (rail, a container drawn as icons) | Size · Border · Cooldown · Time text · Stack text · Pandemic | The look of a container drawn as icons |
 | Containers → Text (rail, a container drawn as text) | General · Font · Icon · Pandemic · Animation | The look of a container drawn as text: what each line says, its font and its optional icon, its pandemic-window color and blink, its loop, and its opt-in dispel type colors |
 | Profiles | — untabbed, drawn by AceConfigDialog (options-ui-§3) | Choose, create, copy, reset and delete profiles |
 
