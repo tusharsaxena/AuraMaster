@@ -499,7 +499,10 @@ row index behind `NS.FindSchemaRow` (`FindRow`, re-indexed by `AddRows` and `Rei
 check behind `NS.ValidateSchema` (`Validate`, its shape errors plus its unresolved paths). The
 library's registry keeps the FIRST row registered on a duplicate path, and its `Validate` reports the
 duplicate. The instance is published as `NS.SchemaRuntime` for the tests. The host bodies of all of
-it stay in `settings/Schema.lua` as the library-absent arm, which `tests/degraded_env.lua` exercises.
+it stay in `settings/Schema.lua` as the library-absent arm, which `tests/degraded_env.lua` exercises,
+and they answer as the library does: Read and Write treat an empty path as nothing, the index keeps
+the first row on a duplicate path, the change test is a port of `SameValue`, and the validator
+reports a duplicate. `tests/test_schema.lua` runs each of those cases in both builds.
 
 ### Write seam: why AuraMaster keeps SetByPath
 
@@ -523,6 +526,28 @@ and row validation) and stores and announces nothing, so it is not a second writ
 `ContainerManager.CopyFrom` uses it to stay all or nothing: it checks every section it copies (and,
 for a whole copy, the unit, aura type and style) before writing any of them, so one corrupt source
 section refuses the whole copy and leaves the target untouched, with no `CONFIG_CHANGED` sent.
+
+### Issue #21: the record
+
+The LibKa0s v1.55.0 re-vendor decided "not now" for this adoption (decision D4 in
+`docs/revendor/2026-09-23-v1.55.0/03_DECISIONS.md`, a frozen record left as written). The v1.56.0
+re-vendor adopted nothing and handed the item on (`docs/revendor/2026-09-23-v1.56.0/05_SUMMARY.md`).
+The reversal came from the collection-wide review and standards-audit remediation
+(`Ka0sAddonsCommonTasks/docs/2026-09-23-REVIEW_AND_STANDARDS_AUDIT_REMEDIATION/`, item `AM-15`), and
+the adoption landed as `AM-15` (cf91fe1, with its review fix b94dd6a: primitives, registry, bracket,
+`SameValue` and `Validate`) and `AM-16` (75f2f19, `writeThrough`). The JC-9 move landed with it: a
+`NS.Bulk.Run` act that reset the profile sets `info.profileReset = true`, and what the act returns is
+ignored. On 2026-09-26
+the owner asked for #21 to be finished, and the `I21-` commits made the library-absent arm match the
+library case for case.
+
+One compare is deliberately not the library's. `fireSectionChanges`, which decides which rows'
+`onChange` a whole-section write fires, still compares leaves by `FilterCompiler.Signature`. Issue #21
+names only the tally's change test. Switching this one would stop a position row's `onChange` firing
+for `-0` written over `0`, which is a behavior change and not a refactor.
+
+**Re-check trigger:** the write seam's own trigger above, since adopting `S.Set` would retire this
+compare with the rest of the seam.
 
 ## Migration path
 

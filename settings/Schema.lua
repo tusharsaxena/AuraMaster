@@ -51,9 +51,9 @@ local _, NS = ...
 -- The WRITE SEAM stays this file's: NS.SetByPath, not the library's Set, because its front branches
 -- (the minimap inversion, the spell-set carve-outs, the all-or-nothing whole-section writes, and
 -- NS.CheckWrite's dry run that mirrors them) have no row-shaped equivalent there, and a library-less
--- build keeps this seam anyway (docs/schema.md, "Write seam: why AuraMaster keeps SetByPath"). The
--- host bodies of everything the library now supplies stay below as the library-absent arm, which
--- tests/degraded_env.lua exercises.
+-- build keeps this seam anyway (docs/schema.md, "Write seam: why AuraMaster keeps SetByPath").
+-- The host bodies of everything the library now supplies stay below as the library-absent arm,
+-- which tests/degraded_env.lua exercises, and they answer as the library does, case for case.
 
 NS.Schema = NS.Schema or {}
 
