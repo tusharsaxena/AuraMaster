@@ -796,7 +796,7 @@ local function tooltipSpec(container)
     local function attached()
         local cfg = container:Cfg()
         if not (cfg and cfg.attach and cfg.attach.mode ~= "screen") then return nil end
-        return Anchors.JoinText(container, cfg) or NS.L["Attached — set its offsets on the Layout page."]
+        return Anchors.JoinText(container, cfg) or NS.L["Attached — set its offsets in the Layout section."]
     end
     return {
         title = function()

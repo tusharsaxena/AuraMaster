@@ -1773,7 +1773,7 @@ badge and any count quoted in the docs must agree with it.
 - debuglog: without the library the diagnostics members answer with one honest line and write nothing
 - debuglog: without the library the console row is honest — never checked, and its tooltip says why
 
-### test_locale.lua (7)
+### test_locale.lua (8)
 
 - locale: every L[...] subscript in the source is defined in enUS.lua
 - locale: every key enUS.lua defines is used somewhere in the source
@@ -1782,6 +1782,7 @@ badge and any count quoted in the docs must agree with it.
 - locale: every string routed by value has its key — Constants labels, categories, filter warnings
 - locale: every value is ASCII, the em dash excepted (T-1)
 - locale: no library-missing line joins a routed fragment
+- locale: no string a player reads names a retired sub-page; they are sections now (#23)
 
 ### test_docs.lua (6)
 
@@ -1938,7 +1939,7 @@ badge and any count quoted in the docs must agree with it.
 | test_defaults.lua | 30 |
 | test_perf.lua | 8 |
 | test_debuglogsetup.lua | 9 |
-| test_locale.lua | 7 |
+| test_locale.lua | 8 |
 | test_docs.lua | 6 |
 | test_prose.lua | 18 |
 | test_surface_parity.lua | 7 |
@@ -1947,4 +1948,4 @@ badge and any count quoted in the docs must agree with it.
 | test_eol.lua | 2 |
 | test_layout_cap.lua | 13 |
 | test_diagnostics_contract.lua | 7 |
-| **Total** | **1641** |
+| **Total** | **1642** |

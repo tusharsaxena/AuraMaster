@@ -192,3 +192,19 @@ test("locale: no library-missing line joins a routed fragment", function()
     p:close()
     assertEqual(#bad, 0, "library-missing line concatenated at: " .. table.concat(bad, ", "))
 end)
+
+-- #6 folded the Filters, Layout, Bars, Icons and Text sub-pages into sections of the Containers page
+-- (#23). General, Containers and Profiles are still pages.
+test("locale: no string a player reads names a retired sub-page; they are sections now (#23)", function()
+    local stale = {}
+    for key in pairs((defined())) do
+        for _, name in ipairs({ "Filters", "Layout", "Bars", "Icons", "Text" }) do
+            if key:find(name .. " page", 1, true) then
+                stale[#stale + 1] = key
+            end
+        end
+    end
+    table.sort(stale)
+    -- red under: the Aura type desc's "The Filters page" and the attached handle's "the Layout page"
+    assertEqual(#stale, 0, "names a retired page: " .. table.concat(stale, "; "))
+end)

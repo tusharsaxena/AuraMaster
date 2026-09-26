@@ -871,7 +871,7 @@ test("handle: an attached container's tooltip says where its offsets are set; a 
     -- red under: "Drag to move" on a container a drag cannot move (owner, 2026-09-26)
     assertEqual(lines[1], NS.L["Anchored to '%s', so it cannot be dragged. Right-click for settings."]:format("PlayerFrame"))
     -- red under: showTooltip without its attached line (the player drags and nothing moves)
-    assertEqual(lines[2], NS.L["Attached — set its offsets on the Layout page."])
+    assertEqual(lines[2], NS.L["Attached — set its offsets in the Layout section."])
 end)
 
 test("handle: an attached container, or one in combat, does not move on a drag, and a stray drag stop stores nothing", function()
