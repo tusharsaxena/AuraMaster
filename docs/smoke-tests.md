@@ -1712,6 +1712,8 @@ Five changes the owner asked for after section AC (2026-09-26). None has been ru
 
 ## Settings redesign (#6)
 
+**Owner run, 2026-09-26:** S2, S3, S4, S5, S7, S8, S11 and S16 passed, from the owner's report and screenshots. S1, S6, S9, S10 and S12-S15 were not reported individually and stay open.
+
 Owner to run, on `feat/2026-09-26-settings-redesign` with LibKa0s v1.61.0 vendored. Open a character
 with the starter containers (#1 Player buffs as bars, #2 Player debuffs as icons, #4 Player
 cooldowns as text) and open the panel with `/am`.
@@ -1721,23 +1723,23 @@ cooldowns as text) and open the panel with `/am`.
 252. **S2.** Open Containers with #1 selected. → The band is on top (Container picker and New
      container). The rail is on the left with General · Filters · Layout · Bars. The rail's top edge
      is level with the top of the tabs: the tab art, not the empty space above it. (spec §8.2, D5)
-     Result:
+     Result: **PASS** (owner, 2026-09-26: rail top level with the tab art)
 253. **S3.** Rail -> Bars -> General, then scroll to the bottom. → Only the controls move. The band,
-     the rail and the tab strip stay put. (spec §8.3) Result:
+     the rail and the tab strip stay put. (spec §8.3) Result: **PASS** (owner, 2026-09-26: only the controls scroll)
 254. **S4.** On Bars, pick #2 (icons) in the band. Then on Bars again with #1, change General ->
      Style to Icons. → The style entry renames to Icons, its tabs follow, and the page is on Icons,
-     not General. (spec §8.4, D6) Result:
+     not General. (spec §8.4, D6) Result: **PASS** (owner, 2026-09-26: the style entry follows the container)
 255. **S5.** Filters -> Categories, then Layout, then back to Filters. → Filters opens on
-     Categories. (spec §8.5, D8) Result:
+     Categories. (spec §8.5, D8) Result: **PASS** (owner, 2026-09-26: each section keeps its tab)
 256. **S6.** Change a Layout setting and a Bars setting on #1. Then, with Layout selected, click
      Defaults. → Only the Layout rows go back to defaults, on #1 only. The Bars change stays, and
      other containers are untouched. (spec §8.6, D9) Result:
 257. **S7.** Layout -> Anchor -> Pick a frame..., then click a frame. Repeat and cancel with Esc. →
      Both times the settings window reopens on Containers -> Layout. (spec §8.7, Review Focus 5)
-     Result:
+     Result: **PASS** (owner, 2026-09-26: "old links land on the right section")
 258. **S8.** Open Containers, then enter combat (attack a training dummy). → The whole page is under
      the combat cover, the rail included, with "Settings are locked during combat." Nothing under it
-     can be clicked. (spec §8.8, options-ui-§2) Result:
+     can be clicked. (spec §8.8, options-ui-§2) Result: **PASS** (owner, 2026-09-26: the whole page is locked in combat)
 259. **S9.** `/reload`, then open Containers as the first page of the session. → The tabs sit in one
      row to the right of the rail from the first frame. They are not stacked one per row, and none
      is drawn under the rail. (Review Focus 1 (SR-LK-01)) Result:
@@ -1747,7 +1749,7 @@ cooldowns as text) and open the panel with `/am`.
      different from the gold tabs. (spec §2, A13) Result:
 261. **S11.** Close the panel. Right-click a container's drag handle or its `?`. → The panel opens
      on Containers with that container in the band, on the section you last left. It does not jump
-     to General. (A9 (SR-AM-04)) Result:
+     to General. (A9 (SR-AM-04)) Result: **PASS** (owner, 2026-09-26: "old links land on the right section")
 262. **S12.** Filters -> Categories -> "See spells" on a spell-list category. → It lands on the
      General page's Spell Categories tab, with that category selected. (A10 (unchanged behavior))
      Result:
@@ -1763,4 +1765,4 @@ cooldowns as text) and open the panel with `/am`.
 266. **S16.** Open the settings of another Ka0s addon, such as KickCD or MultiMeters. → Their tab
      strips, content panels and scroll bars are exactly where they were. The library minor
      AuraMaster ships is the one loaded for every Ka0s addon, and a page with no rail must not move.
-     (Global Constraints (rail width 0 is byte-identical)) Result:
+     (Global Constraints (rail width 0 is byte-identical)) Result: **PASS** (owner, 2026-09-26: another Ka0s addon's settings unchanged)
