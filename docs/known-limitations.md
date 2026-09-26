@@ -259,6 +259,18 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   across (a row of icons under a centered follower), its center really does move as auras come and
   go, and while its engine is empty that center is the engine's 1x1 start corner, so the follower
   sits over the parent's start. Pick the start-side point on that parent to keep the follower still.
+- **A container joined to the side of another closes in when that parent is empty** (ruled by the
+  owner, 2026-09-26). A side join (ahead or behind: say the parent's Bottom right against the
+  follower's Bottom left) is not held steady along the axis it runs on, even on a parent one element
+  across (batch 11 T9 keeps it that way on purpose, pinned by `tests/test_anchors_steady.lua`). While
+  the parent hangs from its engine and holds no aura, that engine is a 1x1 rect at its start corner,
+  so the follower, and every container chained to it, moves in by the parent's width and can sit
+  over the parent's own column and whatever hangs from it. It shows whenever the parent is empty and
+  either locked or in combat (combat ends test mode, and nothing is re-placed under lockdown); test
+  mode hides it, because a previewing parent is hung by its full placeholder block. A target's
+  own-buffs container is empty on almost every hostile target, so a column joined to its side
+  collapses onto it for the whole fight. Attach such a column to the screen (or a named frame)
+  where it should sit, rather than to the side of a parent that is often empty.
 - **While unlocked (and not in test mode), an empty chain is laid out from a prediction, and still
   collapses where that cannot be made.** The engine cannot say whether it is empty (its frame count
   is a pool that never shrinks, its size is secret), so the addon predicts it from `C_UnitAuras` and
