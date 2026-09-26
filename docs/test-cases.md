@@ -1391,7 +1391,7 @@ badge and any count quoted in the docs must agree with it.
 - options descriptor: Containers' picker sits in the chrome block above the strip and selects (feedback #2)
 - options descriptor: every page's Container picker sorts by name, case-insensitively, the id breaking a tie (B2-2)
 - options descriptor: a container page draws its intro, then the bespoke tabs its container's type admits
-- options descriptor: with no containers a page draws the one empty-registry line and no intro
+- options descriptor: with no containers a per-container page draws nothing past its banner, and no intro (#23)
 - options descriptor: RenderPage draws no banner; a banner hook draws the container band first
 - options descriptor: an addon-wide tabbed page draws every tab with no container, and a bespoke tab keyed by a group takes its place
 - options descriptor: a bespoke tab with `before` is drawn ahead of the tab it names, else last

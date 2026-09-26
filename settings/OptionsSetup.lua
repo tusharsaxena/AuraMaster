@@ -417,15 +417,6 @@ end
 -- The tabbed page: this addon's page spec, mapped onto the library's
 -- ---------------------------------------------------------------------------
 
--- The page key an empty registry's render hands the library: no row carries it, so the strip it
--- draws is the one placeholder tab below and nothing else (options-ui-§13: every page draws a strip).
-local EMPTY_PAGE = "__empty"
-local EMPTY_TABS = { {
-    key    = "__empty",
-    label  = L["Container"],
-    render = function(ctx) Helpers.TextRow(ctx, L["No containers yet. Create one on Containers, or type /am new."]) end,
-} }
-
 --- The page's own tabs as the library takes them: those the container's aura type admits, each
 --- handed the container as well as its rows. One keyed by a schema group takes that group's place
 --- and is handed its rows; one with `before` is drawn ahead of the tab it names (LibKa0s Options
@@ -457,8 +448,10 @@ end
 --- its own tabs, then the active tab's content. The library owns the partition, the stale-tab heal,
 --- the tab-switch re-render and the release of the banner's widgets; this wrapper owns only what the
 --- page spec means for this addon. General calls it directly, and the Containers page, for each of
---- its sections, through RenderContainerPage. A per-container page with no container draws the
---- empty registry's one tab and line.
+--- its sections, through RenderContainerPage. A per-container spec with no container draws nothing
+--- past the banner. No caller asks for one: while there are no containers the rail lists only the
+--- addon-wide General section (railSections below), so the placeholder strip this used to draw was
+--- unreachable and #23 removed it.
 ---
 --- `spec` fields, all optional:
 ---   addonWide            the page's tabs do not depend on a container existing (General)
@@ -477,8 +470,6 @@ function Helpers.RenderPage(ctx, pageKey, spec, banner)
     local cfg = NS.ActiveContainer()
     if cfg or spec.addonWide then
         Helpers.RenderTabbedSchema(ctx, pageKey, spec.afterGroup, spec.pairWith, pageOpts(spec, cfg))
-    else
-        Helpers.RenderTabbedSchema(ctx, EMPTY_PAGE, nil, nil, { tabs = EMPTY_TABS })
     end
     if scroll and scroll.DoLayout then scroll:DoLayout() end
 end
