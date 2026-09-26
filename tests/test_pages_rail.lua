@@ -302,3 +302,76 @@ test("rail: the Defaults tooltip names the section on screen and the kept name",
     assertEqual(m.__subcategories.Containers.defaultsTooltip,
         NS.L["Restore the selected container's settings in the section on screen to their addon defaults. On General: Enabled, Unit, Aura type and Style; its name is kept."])
 end)
+
+-- ── New container lands on General (owner, 2026-09-26) ──────────────────────────────────────
+
+--- Container 1 (drawn as bars), its Bars section, the Time text tab: where the owner stood.
+local function onBarsTimeText(NS, P)
+    NS.Helpers.SelectContainer(1)
+    P.show("Bars")
+    P.tab("containers", NS.L["Time text"])
+    assertEqual(NS.Helpers.__pageCtx.containers.activeTab, NS.L["Time text"])
+end
+
+--- The page shows General and its General tab, on the container just made (the `before + 1`th).
+local function assertOnNewGeneral(NS, P, ws, before, what)
+    local ctx = NS.Helpers.__pageCtx.containers
+    assertEqual(#NS.Database.GetContainers(), before + 1, what .. ": one container made")
+    local cfg, id = NS.ActiveContainer()
+    assertEqual(id, NS.db.profile.containerOrder[before + 1], what .. ": the new container is selected")
+    assertEqual(ctx.activeSection, "containers", what .. ": on General")
+    assertEqual(P.drawnRail(ctx).value, "containers", what .. ": the rail shows General")
+    assertEqual(ctx.activeTab, NS.L["General"], what .. ": on General's General tab")
+    assertEqual(P.row(ws, "container.name").text, cfg.name, what .. ": the new container's rows")
+end
+
+test("new container: from Bars -> Time text, New container lands on General/General on the new container", function()
+    local NS, _, P = env()
+    local ctx = NS.Helpers.__pageCtx.containers
+    onBarsTimeText(NS, P)
+    local before = #NS.Database.GetContainers()
+    P.bannerAction(ctx):__fire("OnClick")
+    local ws = P.show("Containers")
+    -- red under: doNew selecting the new container alone (the page stays on Bars -> Time text)
+    assertOnNewGeneral(NS, P, ws, before, "New container")
+end)
+
+test("new container: the section left keeps its tab: back to Bars reopens Time text", function()
+    local NS, _, P = env()
+    local ctx = NS.Helpers.__pageCtx.containers
+    onBarsTimeText(NS, P)
+    P.bannerAction(ctx):__fire("OnClick")
+    P.show("Containers")
+    assertEqual(ctx.activeSection, "containers")
+    assertEqual(NS.ActiveContainer().style, "bars", "a new container is drawn as bars, so Bars is on the rail")
+    P.rail("bars")
+    -- red under: landing on General by clearing the tab memory, or by dropping Bars' tab unstashed
+    assertEqual(ctx.activeTab, NS.L["Time text"])
+end)
+
+-- Characterization: with no container the rail lists General alone, so the page is already there;
+-- this pins that New keeps it there once the rail grows back to four entries.
+test("new container: with no containers, New container lands on General/General on the one it made", function()
+    local NS, _, P = env()
+    local ctx = NS.Helpers.__pageCtx.containers
+    onBarsTimeText(NS, P)
+    for _, c in ipairs(NS.Database.GetContainers()) do NS.ContainerManager.Delete(c.id) end
+    P.rerender("Containers")
+    assertEqual(railKeys(P, ctx), "containers")
+    P.bannerAction(ctx):__fire("OnClick")
+    local ws = P.show("Containers")
+    assertOnNewGeneral(NS, P, ws, 0, "New with none")
+    assertEqual(railKeys(P, ctx), "containers,filters,layout,bars")
+end)
+
+test("new container: /am new with the page on screen lands on General/General too, and opens nothing", function()
+    local NS, _, P, opened = recordingOpens()
+    local ctx = NS.Helpers.__pageCtx.containers
+    onBarsTimeText(NS, P)
+    ctx.panel:Show()                                -- on screen: the refresh re-renders it at once
+    local before = #NS.Database.GetContainers()
+    local ws = P.during(function() NS.Slash:OnSlash("new") end)
+    -- red under: runNew selecting the new container and refreshing, leaving the section alone
+    assertOnNewGeneral(NS, P, ws, before, "/am new")
+    assertEqual(#opened, 0, "the slash never opens the settings window")
+end)

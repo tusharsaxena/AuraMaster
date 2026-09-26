@@ -4,6 +4,8 @@
 -- the child's drag strip sits before its own block, in its own column (batch 10 F1; the room it
 -- takes along the chain is tests/test_anchors_column.lua's).
 -- Its own suite because tests/test_anchors.lua sits near layout-§1's 1500-line cap.
+-- Across the chain, a child hung from its parent's engine also takes back the engine's one-unit lead
+-- (the engine lead, tests/test_anchors_collapse.lua): x is 1 toward the growth where the seam alone gave 0.
 
 local T = _G.AM_TEST
 local test, assertEqual, assertTrue =
@@ -76,11 +78,11 @@ test("seam: a child attached below a column leaves its own spacing, and its X/Y 
     c2.layout.spacing, c2.layout.lineSpacing = 3, 9
     local x, y = placedOffsets(NS)
     -- red under: Place handing SetPoint the stored offsets alone (0,0: the blocks touch)
-    assertEqual(x, 0); assertEqual(y, -3, "one of 2's spacings below 1's last bar")
+    assertEqual(x, 1); assertEqual(y, -3, "one of 2's spacings below 1's last bar")
     c2.attach.x, c2.attach.y = 4, -1
     x, y = placedOffsets(NS)
     -- red under: the derived gap replacing the stored offsets instead of adding to them (SS-2)
-    assertEqual(x, 4); assertEqual(y, -4, "the nudge adds on top")
+    assertEqual(x, 4 + 1); assertEqual(y, -4, "the nudge adds on top")
 end)
 
 test("seam: a chain growing up leaves the gap upward, so the child never overlaps its parent", function()
@@ -91,7 +93,7 @@ test("seam: a chain growing up leaves the gap upward, so the child never overlap
     local x, y, p = placedOffsets(NS)
     assertEqual(p[1], "BOTTOMRIGHT"); assertEqual(p[3], "TOPRIGHT")
     -- red under: a fixed downward gap (the old 0/-4 pushed the child into the parent)
-    assertEqual(x, 0); assertEqual(y, 2)
+    assertEqual(x, -1); assertEqual(y, 2)
 end)
 
 test("seam: a child attached below an icon row leaves its own line spacing", function()
@@ -101,7 +103,7 @@ test("seam: a child attached below an icon row leaves its own line spacing", fun
     c2.layout.spacing, c2.layout.lineSpacing = 1, 6
     local x, y = placedOffsets(NS)
     -- red under: the row child's element spacing (1) used across a vertical seam
-    assertEqual(x, 0); assertEqual(y, -6)
+    assertEqual(x, 1); assertEqual(y, -6)
 end)
 
 test("seam: the gap is the child's spacing, never the parent's", function()

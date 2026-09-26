@@ -15,7 +15,7 @@ engine does the reading, filtering, sorting, layout and timer animation in its o
 
 ```
  1  a control, /am set, a Defaults button or a drag handle
-        │  NS.SetByPath(path, value[, containerId])            settings/Schema.lua:846
+        │  NS.SetByPath(path, value[, containerId])            settings/Schema.lua:865
         │    write → row.onChange → [Set] debug line → CONFIG_CHANGED { section, containerId, path }
         │    (a session row stops after the debug line: it sends nothing)
         │    (inside a bulk copy or reset the [Set] line is muted and tallied: one line per act)
@@ -30,7 +30,7 @@ engine does the reading, filtering, sorting, layout and timer animation in its o
         │     yes → keep the request, print the notice naming the cause (once), return
         │     no  → for each dirty container: Container:Apply(); re-place container-attached ones
         ▼
- 4  Container:Apply                                            modules/Container.lua:350
+ 4  Container:Apply                                            modules/Container.lua:384
         │  plan = FilterCompiler.Compile(cfg, { timedSpells })  (pure)
         │  anchor scale / strata / level; Anchors.Place (screen, container or frame)
         │  structure = #groups : enchant slots (hide-permanent) : style : growth corner
@@ -179,16 +179,16 @@ only when the direction moved), cap and layout can change on a live engine; hide
 cannot, because a slot takes it only when added, so toggling it is a new shape. A plan of the same
 shape calls only the setters whose values moved. Candidate filters are serialized with
 `FilterCompiler.Signature` (`modules/FilterCompiler.lua:950`) and re-sent only when the two
-signatures differ (`modules/Container.lua:291-299`), because the engine clears and re-gathers a
+signatures differ (`modules/Container.lua:325-333`), because the engine clears and re-gathers a
 group whenever they are set (`docs/midnight-quirks.md`). **Rebuilding.** Groups are add-only and a
 frame is never freed, so a new shape disables and hides the old engine, keeps it aside, and builds a
 new one: flow layout first, then the anchor, then every `AddAuraGroup`, then the enchant slots, then
-`SetUnit` last (`modules/Container.lua:264`).
+`SetUnit` last (`modules/Container.lua:298`).
 
 ## Visibility, separate from applying
 
 Whether a container shows is a cheaper question, and one that is legal in combat:
-`Container:ShouldShow` (`modules/Container.lua:428`) answers, in order — perf suspend, profile and
+`Container:ShouldShow` (`modules/Container.lua:462`) answers, in order — perf suspend, profile and
 container `enabled`, then General visibility against `UnitAffectingCombat("player")`, which an
 unlocked container skips so one that shows only in combat can still be found and moved; it also
 answers whether the container previews, which is the session-only test mode (`NS.State.testMode`),
@@ -395,7 +395,7 @@ player's forget is announced like a setting change.
 
 ## Where a container sits
 
-`Anchors.Place` (`modules/Anchors.lua:598`) sizes the anchor to one element and attaches it: to
+`Anchors.Place` (`modules/Anchors.lua:628`) sizes the anchor to one element and attaches it: to
 another container's engine frame (or its anchor, before the engine exists; or, while that container
 previews, its preview extent, because the disabled engine keeps a stale rect; or, while it is unlocked,
 not previewing and predicted empty, its one-element anchor, because an engine holding no aura is a
@@ -425,7 +425,8 @@ SS-1); on a side it is the child's gap across (AP-2); the stored `attach.x` / `.
 nudge (SS-2). The seam is the same locked, unlocked and in test mode.
 
 A join on the parent's center or end holds still while the parent's engine is empty (batch 11 T9).
-An empty engine is a 1x1 rect at its start corner, so a relative point on the parent's center or far
+An empty engine is a 1x1 rect at its start corner (since 2026-09-26 the unit just behind it: see the
+next paragraph), so a relative point on the parent's center or far
 side landed on that corner, and a centered chain shifted sideways by half an element whenever a middle
 link had no aura. On each axis where the parent is exactly one element across (it fills columns with
 no per-line limit, so one element wide; or rows, so one element tall; or lines of one) and the join
@@ -435,7 +436,27 @@ from the end, toward the growth, converted from the parent's scale to the child'
 parent's own config (`Style.ElementSize`, its Scale), never the engine's geometry. The slot and the
 preview block are one element across there too, so every hang mode lands in the same place. The
 classification, the seam, the spread and the push read the points in effect, not the moved one. On
-the axis the join runs along, an empty parent still closes the chain up, as before.
+the axis the join runs along, an empty parent still closes the chain up, exactly to its start.
+
+An empty link adds nothing along the chain (the engine lead, the owner's chain residue, 2026-09-26).
+An engine that holds no aura is the flow layout's 1x1 minimum rect (`AnchorUtil.ApplyFlowLayout` sizes
+it `math.max(size, 1)`, even after it held auras and emptied). When the engine was pinned at its
+anchor's start corner, that rect's far edge sat one unit past the start. So each empty after-link
+pushed the rest of the chain on by one unit: in client, the owner's #19, behind three empty links, sat
+3 units above #22. Now `ContainerClass:Build` pins the engine `Container.ENGINE_LEAD` (1) units behind
+its anchor's start corner on both growth axes (`Container.EngineOffset`), before the first
+`AddAuraGroup`. `applyFlow` pads the engine's two start sides by the same unit
+(`Container.EnginePadding`, a live `SetFlowLayoutPadding`, so the flow layout applies it by growth).
+A populated engine's first element still starts exactly at the anchor's start, and its far edge is the
+start plus its content. An empty engine spans the unit just behind the start, so its far edge is the
+start. When a follower hangs from the engine, `attachSpec` takes the lead back on the relative point
+(`engineLead`): a whole unit on a start-side part and half a unit on a middle part, toward the parent's
+growth, in the child's scale. An end-side part needs nothing. So every populated landing is where it
+was, including T9's across the chain. A follower hung from the slot or the preview (both sit at the
+start) takes nothing. Nothing predicts emptiness and nothing reads the engine's geometry, which is
+secret. So this holds locked, unlocked and in combat, and it holds live as the engine fills and
+empties, with no re-place. The mouse blocker covers the engine, so it also covers that one-unit strip
+on the start sides.
 
 One element's size is `Style.ElementSize`. On a Text container with Size to fit on
 (`container.text.autoSize`), it comes from the content instead of the stored width and height:

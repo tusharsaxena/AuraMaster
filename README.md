@@ -4,7 +4,7 @@
 ![CurseForge Version](https://img.shields.io/curseforge/v/1698345)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-1640%2F1640_passing-green)
+![Tests](https://img.shields.io/badge/Tests-1660%2F1660_passing-green)
 
 Ka0s Aura Master lets you build your own buff and debuff displays. Each one is a container. You pick
 whose auras it shows (yours, your target's, your focus's or your pet's), whether it shows buffs,
@@ -96,7 +96,7 @@ nothing; reading and changing settings keeps working. If you change something el
 waits until combat ends (or, inside a key, encounter or match, until that's over), and chat tells you
 which.
 
-A **Text** container draws each aura as one line, from a template you write on its Text page, such
+A **Text** container draws each aura as one line, from a template you write in its Text section, such
 as `$spellname$[ x$stacks$][ - $remainingduration$]`. The tokens are `$spellname$`, `$stacks$`,
 `$dispeltype$`, `$remainingduration$`, `$maxduration$`, `$elapsedduration$`, `$remainingpercent$` and
 `$elapsedpercent$` (a percent is a bare number: type the `%` yourself); text inside `[ ]` hides along
@@ -104,8 +104,8 @@ with the token it holds (so ` x3` shows only at two or more stacks, and ` - 12s`
 duration). The page lists them all, and a line
 can carry the aura's icon, pulse, blink or bounce, and blink its time in the last seconds. Its
 Font tab can also show the dispel type in color: the `$dispeltype$` word in its type's color, a
-tinted backdrop behind the line or a tinted edge around it, each off until you turn it on. **Size to fit**, on
-the Text page, sizes each line to its content instead of a fixed width and height, so a long aura
+tinted backdrop behind the line or a tinted edge around it, each off until you turn it on. **Size to fit**, in
+the Text section, sizes each line to its content instead of a fixed width and height, so a long aura
 name is never cut off; it is on for new Text containers, and containers you made before it existed
 keep the size you gave them. A new
 profile starts with one Text container: **Player cooldowns**, which shows only your offensive and defensive
@@ -134,7 +134,7 @@ Two limits come out of this. The game has no rule for "auras without a duration"
 Aura Master learns which of your and your pet's buffs carry a timer while you're out of combat, and
 leaves those out. A new timed buff can slip through once before it's learned. The game also only
 accepts spell-by-spell lists for buffs on friendly units and debuffs on hostile ones, so a spell list
-on your own debuffs does nothing, and the Filters page warns you when that's the case.
+on your own debuffs does nothing, and the Filters section warns you when that's the case.
 
 ## FAQ
 
@@ -158,7 +158,7 @@ on your own debuffs does nothing, and the Filters page warns you when that's the
 |---------|-----|
 | Nothing shows at all | On General → Master controls, check that **Enable Aura Master** is ticked (`/am enable` ticks it) and that **General visibility** isn't set to *Never*, or to a combat state you're not in. Then check the container's own **Enabled** box on Containers. |
 | I only see the sample auras | Test mode is on. Type `/am test off`, or untick **Test mode** under General → Master controls. |
-| A container stays empty and the Filters page says "These filters can never match anything." | Two of your choices rule each other out, such as a spell category set to Show with every spell unticked. Loosen one of them, for example by setting the category to Hide. |
+| A container stays empty and its Filters section says "These filters can never match anything." | Two of your choices rule each other out, such as a spell category set to Show with every spell unticked. Loosen one of them, for example by setting the category to Hide. |
 | An orange line says my spell lists only apply to friendly or hostile units | That's the game's rule, not a fault. The spell lists on that container will only work while the unit is the kind the line names. |
 | I can't drag a container | Only containers attached to the screen can be dragged, and not during combat. An attached container follows its target; move it with the offsets on Layout → Anchor, or set **Attach to** back to *Screen*. |
 | A container attached to a frame is sitting somewhere else | The frame wasn't found, so the container fell back to its screen position. Check the name in **Frame name** (`/fstack` shows frame names), or pick the frame again. |

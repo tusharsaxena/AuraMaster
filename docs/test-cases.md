@@ -199,7 +199,7 @@ badge and any count quoted in the docs must agree with it.
 - migrations: v9, v8 and v1 accounts reach v11 with no attach side left and every chain Automatic
 - migrations: on load a stored point that is not one of the nine is read as Automatic, and a known one kept
 
-### test_schema.lua (33)
+### test_schema.lua (38)
 
 - schema: every row validates against defaults/Profile.lua
 - schema: the validator is falsifiable — an unresolvable path and a missing group each fail
@@ -234,6 +234,11 @@ badge and any count quoted in the docs must agree with it.
 - schema: the registry follows an insert and a removal, the library's and the host's
 - schema: without LibKa0s the host arm still answers
 - schema: -0 over 0 is still no change under SameValue
+- schema: a path with no segment past its root reads nil, the library's Read and the host's (#21)
+- schema: a duplicate path answers the first row registered, and an appended row answers at once, the library's and the host's (#21)
+- schema: the bracket nests, survives a raise and ignores a stray End, the library's and the host's (#21)
+- schema: a color with a -0 channel over 0 is no change, the library's SameValue and the host's (#21)
+- schema: a duplicate path fails validation, the library's and the host's (#21)
 
 ### test_schema_paths.lua (36)
 
@@ -808,6 +813,18 @@ badge and any count quoted in the docs must agree with it.
 - steady: a parent more than one element across is not rewritten on that axis
 - steady: parent and child at different scales convert the offset to the child's scale
 - steady: start-aligned pairs are placed as before, along the chain and across it
+
+### test_anchors_collapse.lua (9)
+
+- collapse: the owner's chain growing up, three empty links, #19 lands level with #22's start
+- collapse: #22 holding n auras puts #19 at #22's start + n bars, exactly
+- collapse: every link populated lands where it always has, one block past its parent
+- collapse: growing down mirrors it, and growing left too
+- collapse: an engine that held auras and emptied adds nothing either, with no re-place
+- collapse: the across-axis landing (batch 11 T9) is unchanged, empty or populated
+- collapse: a join hung from the slot or the preview is not given the engine's unit
+- collapse: Build pins the engine one unit behind its anchor's start corner and pads the start sides
+- collapse: a live update re-sends the same start padding (no rebuild)
 
 ### test_anchors_width.lua (6)
 
@@ -1391,7 +1408,7 @@ badge and any count quoted in the docs must agree with it.
 - options descriptor: Containers' picker sits in the chrome block above the strip and selects (feedback #2)
 - options descriptor: every page's Container picker sorts by name, case-insensitively, the id breaking a tie (B2-2)
 - options descriptor: a container page draws its intro, then the bespoke tabs its container's type admits
-- options descriptor: with no containers a page draws the one empty-registry line and no intro
+- options descriptor: with no containers a per-container page draws nothing past its banner, and no intro (#23)
 - options descriptor: RenderPage draws no banner; a banner hook draws the container band first
 - options descriptor: an addon-wide tabbed page draws every tab with no container, and a bespoke tab keyed by a group takes its place
 - options descriptor: a bespoke tab with `before` is drawn ahead of the tab it names, else last
@@ -1631,7 +1648,7 @@ badge and any count quoted in the docs must agree with it.
 - icons: the Pandemic tab holds the time color and the highlight, in pandemic-window words, paths unchanged (B2-1)
 - icons: Defaults restores the selected container's icon look and leaves its bar look alone
 
-### test_pages_text.lua (28)
+### test_pages_text.lua (29)
 
 - text page: the five tabs are drawn in order, Pandemic before Animation (B2-1)
 - text page: General holds Size, the Template dropdown and box, the cheat sheet, then Placement
@@ -1655,6 +1672,7 @@ badge and any count quoted in the docs must agree with it.
 - text page: Custom reveals the box with the current template; an unmatched template reads as Custom (feedback #5)
 - text page: the Preview box renders the sample aura, brackets filled and empty ones hidden (feedback #5)
 - text page: the centered built-in's Preview joins its two rows with a visible separator (final review)
+- text page: the Preview and the cheat sheet read the same when the page is drawn disabled; the dim path is gone (#23)
 - text page: a literal | in a custom template is doubled in the Preview box, not left to break it (final review)
 - text page: an already-doubled || in a custom template still doubles each pipe (final review)
 - text page: a colored dispel word's |cff...|r run survives escapeStrayPipes intact (final review)
@@ -1671,7 +1689,7 @@ badge and any count quoted in the docs must agree with it.
 - tabs: the Containers page's band holds the picker and New container, out of the tab body
 - tabs: re-rendering Filters and Containers ten times each leaves the live Dropdown and Button counts flat
 
-### test_pages_rail.lua (16)
+### test_pages_rail.lua (20)
 
 - sections: Filters, Layout, Bars, Icons and Text register as sections under their page keys
 - sections: each style section's gate is derived from its style, on both builds (Diagnostics' inert split)
@@ -1689,6 +1707,10 @@ badge and any count quoted in the docs must agree with it.
 - rail: selecting a section is refused in combat and moves nothing
 - rail: Defaults restores only the active section's rows for the selected container (smoke 6)
 - rail: the Defaults tooltip names the section on screen and the kept name
+- new container: from Bars -> Time text, New container lands on General/General on the new container
+- new container: the section left keeps its tab: back to Bars reopens Time text
+- new container: with no containers, New container lands on General/General on the one it made
+- new container: /am new with the page on screen lands on General/General too, and opens nothing
 
 ### test_pages_about.lua (3)
 
@@ -1772,7 +1794,7 @@ badge and any count quoted in the docs must agree with it.
 - debuglog: without the library the diagnostics members answer with one honest line and write nothing
 - debuglog: without the library the console row is honest — never checked, and its tooltip says why
 
-### test_locale.lua (7)
+### test_locale.lua (8)
 
 - locale: every L[...] subscript in the source is defined in enUS.lua
 - locale: every key enUS.lua defines is used somewhere in the source
@@ -1781,6 +1803,7 @@ badge and any count quoted in the docs must agree with it.
 - locale: every string routed by value has its key — Constants labels, categories, filter warnings
 - locale: every value is ASCII, the em dash excepted (T-1)
 - locale: no library-missing line joins a routed fragment
+- locale: no string a player reads names a retired sub-page; they are sections now (#23)
 
 ### test_docs.lua (6)
 
@@ -1795,7 +1818,7 @@ badge and any count quoted in the docs must agree with it.
 
 - prose: no authored file carries a British spelling from localization-§5's published list
 - prose: the gate carries localization-§5's two lists whole, and nothing of its own
-- prose: the exclusions this repository declared suppressed 11 of 176 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (11): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, docs/spell-research/2026-09-24-logs/CORRECTIONS.md, docs/spell-research/2026-09-24-logs/CURRENT_CATEGORIES.md, docs/spell-research/2026-09-24-logs/DECISIONS.md, docs/spell-research/2026-09-24-logs/FLAGS.md, docs/spell-research/2026-09-24-logs/PROPOSED_ADDITIONS.md, docs/spell-research/2026-09-24-logs/REVIEW.md, docs/spell-research/2026-09-24-logs/SOURCES.md, docs/spell-research/2026-09-24-logs/dictionary/AURAS.md
+- prose: the exclusions this repository declared suppressed 11 of 181 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (11): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, docs/spell-research/2026-09-24-logs/CORRECTIONS.md, docs/spell-research/2026-09-24-logs/CURRENT_CATEGORIES.md, docs/spell-research/2026-09-24-logs/DECISIONS.md, docs/spell-research/2026-09-24-logs/FLAGS.md, docs/spell-research/2026-09-24-logs/PROPOSED_ADDITIONS.md, docs/spell-research/2026-09-24-logs/REVIEW.md, docs/spell-research/2026-09-24-logs/SOURCES.md, docs/spell-research/2026-09-24-logs/dictionary/AURAS.md
 - prose: no path this repository narrows the gate by is loaded by a TOC
 - prose: every path this repository narrows the gate by is one .pkgmeta keeps out of the zip
 - prose self-test: the carve-out suppresses the named generated folder, and only it
@@ -1878,7 +1901,7 @@ badge and any count quoted in the docs must agree with it.
 | test_database.lua | 73 |
 | test_database_categories.lua | 22 |
 | test_migrations.lua | 28 |
-| test_schema.lua | 33 |
+| test_schema.lua | 38 |
 | test_schema_paths.lua | 36 |
 | test_filtercompiler.lua | 85 |
 | test_filtercompiler_categories.lua | 9 |
@@ -1900,6 +1923,7 @@ badge and any count quoted in the docs must agree with it.
 | test_anchors_column.lua | 19 |
 | test_anchors_points.lua | 16 |
 | test_anchors_steady.lua | 7 |
+| test_anchors_collapse.lua | 9 |
 | test_anchors_width.lua | 6 |
 | test_texttemplate.lua | 26 |
 | test_style.lua | 60 |
@@ -1927,9 +1951,9 @@ badge and any count quoted in the docs must agree with it.
 | test_pages_layout.lua | 47 |
 | test_pages_bars.lua | 11 |
 | test_pages_icons.lua | 5 |
-| test_pages_text.lua | 28 |
+| test_pages_text.lua | 29 |
 | test_pages_tabs.lua | 6 |
-| test_pages_rail.lua | 16 |
+| test_pages_rail.lua | 20 |
 | test_pages_about.lua | 3 |
 | test_pages_profiles.lua | 3 |
 | test_envsetup.lua | 4 |
@@ -1937,7 +1961,7 @@ badge and any count quoted in the docs must agree with it.
 | test_defaults.lua | 30 |
 | test_perf.lua | 8 |
 | test_debuglogsetup.lua | 9 |
-| test_locale.lua | 7 |
+| test_locale.lua | 8 |
 | test_docs.lua | 6 |
 | test_prose.lua | 18 |
 | test_surface_parity.lua | 7 |
@@ -1946,4 +1970,4 @@ badge and any count quoted in the docs must agree with it.
 | test_eol.lua | 2 |
 | test_layout_cap.lua | 13 |
 | test_diagnostics_contract.lua | 7 |
-| **Total** | **1640** |
+| **Total** | **1660** |

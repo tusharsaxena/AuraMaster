@@ -234,7 +234,7 @@ player's own; **the schema is a live table, not a frozen one**, and each user ca
 it in schema order, `NS.UnregisterSchemaRows(pred)` takes it down again on a profile switch, and
 `NS.Schema` is rebuilt in place so the live reference the options descriptor and the CLI hold stays
 the same table — the rest of this file). It drives the panel,
-`/am list|get|set|reset` and the resets; one write seam, `NS.SetByPath` (`settings/Schema.lua:846`),
+`/am list|get|set|reset` and the resets; one write seam, `NS.SetByPath` (`settings/Schema.lua:865`),
 is where the panel, the CLI, the Defaults buttons and a drag handle all land. It resolves the
 container, validates against it, runs the row's optional `normalize` hook, writes, reacts and
 announces, in that order.
@@ -332,7 +332,7 @@ The surfaces this added, all read by name rather than duplicated:
 | `NS.CategoryRow(def)` | One category's Show/Hide row, exported by `settings/Filters.lua` so the runtime rows are built by the same function as the shipped ones |
 | `NS.RegisterSchemaRows(rows, beforePath)` / `NS.UnregisterSchemaRows(pred)` | Insert rows in schema order, and remove them again |
 | `FC.ClaimingCategories(Cat, auraType, filter, edits, id)` | Which categories hold a spell id — `ExplainSpell`'s own answer, published so the overlap guardrail cannot drift from it |
-| `NS.GeneralSpells.MarkedName` / `.RestoreStarters` / `.Select` | The one `(yours)` marker, muted gold included, that both surfaces read, the restore ACT behind the button's absence, and the Filters page's per-row link |
+| `NS.GeneralSpells.MarkedName` / `.RestoreStarters` / `.Select` | The one `(yours)` marker, muted gold included, that both surfaces read, the restore ACT behind the button's absence, and the Filters section's per-row link |
 
 The addon holds three pieces of named non-setting state (architecture-§5). The first is learned
 data that no control sets and no row addresses.
@@ -380,7 +380,7 @@ A schema row's `path` is absolute into `profile` (`enabled`, `hideBlizzardBuffs`
 `global` — which **one** row is, `global.minimap.shown` — or
 **container-relative**: `container.bars.width` means `profile.containers[activeId].bars.width`,
 where `activeId` is `NS.State.activeContainerId` or, when nothing is selected, the first container in
-`containerOrder` (`NS.ActiveContainer`, `settings/Schema.lua:192`). `NS.DefaultFor(path)` reads the
+`containerOrder` (`NS.ActiveContainer`, `settings/Schema.lua:198`). `NS.DefaultFor(path)` reads the
 same path out of the template (for `container.` paths) or `NS.defaults.profile` (the rest), and
 `NS.ValidateSchema` fails any row whose path resolves against neither. The panel tree and the row
 list per page are in `docs/settings-panel.md`.
@@ -476,8 +476,8 @@ is open, the seam's two log sites, the per-write `[Set]` line and the section li
 write instead tallies the rows it changed at the moment it stores them, before any `onChange` runs,
 so the count is what was stored even when an `onChange` raises. The change test is
 LibKa0s-Schema-1.0's `SameValue`: `==` first, so a `-0` over a `0` is no change, then tables by
-content. A library-less build compares numbers by `==` and anything else by
-`FilterCompiler.Signature`. A section write
+content. A library-less build runs a host port of the same `SameValue`, so both builds count the
+same N on the same act (#21). A section write
 counts each row and carve-out under it that changed. The act then logs one
 `[Set] <act> <scope>: N rows` line, such as `[Set] reset bars: 2 rows`,
 `[Set] copy container 2→1 (all): 14 rows` or `[Set] reset positions: 3 rows`. N is the rows actually
@@ -499,7 +499,11 @@ row index behind `NS.FindSchemaRow` (`FindRow`, re-indexed by `AddRows` and `Rei
 check behind `NS.ValidateSchema` (`Validate`, its shape errors plus its unresolved paths). The
 library's registry keeps the FIRST row registered on a duplicate path, and its `Validate` reports the
 duplicate. The instance is published as `NS.SchemaRuntime` for the tests. The host bodies of all of
-it stay in `settings/Schema.lua` as the library-absent arm, which `tests/degraded_env.lua` exercises.
+it stay in `settings/Schema.lua` as the library-absent arm, which `tests/degraded_env.lua` exercises,
+and they answer as the library does: Read and Write treat a path with no segment past its root as
+nothing, the index keeps
+the first row on a duplicate path, the change test is a port of `SameValue`, and the validator
+reports a duplicate. `tests/test_schema.lua` runs each of those cases in both builds.
 
 ### Write seam: why AuraMaster keeps SetByPath
 
@@ -523,6 +527,28 @@ and row validation) and stores and announces nothing, so it is not a second writ
 `ContainerManager.CopyFrom` uses it to stay all or nothing: it checks every section it copies (and,
 for a whole copy, the unit, aura type and style) before writing any of them, so one corrupt source
 section refuses the whole copy and leaves the target untouched, with no `CONFIG_CHANGED` sent.
+
+### Issue #21: the record
+
+The LibKa0s v1.55.0 re-vendor decided "not now" for this adoption (decision D4 in
+`docs/revendor/2026-09-23-v1.55.0/03_DECISIONS.md`, a frozen record left as written). The v1.56.0
+re-vendor adopted nothing and handed the item on (`docs/revendor/2026-09-23-v1.56.0/05_SUMMARY.md`).
+The reversal came from the collection-wide review and standards-audit remediation
+(`Ka0sAddonsCommonTasks/docs/2026-09-23-REVIEW_AND_STANDARDS_AUDIT_REMEDIATION/`, item `AM-15`), and
+the adoption landed as `AM-15` (cf91fe1, with its review fix b94dd6a: primitives, registry, bracket,
+`SameValue` and `Validate`) and `AM-16` (75f2f19, `writeThrough`). The JC-9 move landed with it: a
+`NS.Bulk.Run` act that reset the profile sets `info.profileReset = true`, and what the act returns is
+ignored. On 2026-09-26
+the owner asked for #21 to be finished, and the `I21-` commits made the library-absent arm match the
+library case for case.
+
+One compare is deliberately not the library's. `fireSectionChanges`, which decides which rows'
+`onChange` a whole-section write fires, still compares leaves by `FilterCompiler.Signature`. Issue #21
+names only the tally's change test. Switching this one would stop a position row's `onChange` firing
+for `-0` written over `0`, which is a behavior change and not a refactor.
+
+**Re-check trigger:** the write seam's own trigger above, since adopting `S.Set` would retire this
+compare with the rest of the seam.
 
 ## Migration path
 

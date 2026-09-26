@@ -35,12 +35,12 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   engine rewrites a piece in combat. A multi-piece template set to Center is therefore STACKED: one
   centered row per field, its plain literal pieces not drawn, the rows fixed in place (an empty field
   keeps its row) and the box grown to fit them (`Style.Text.Stacked`, `Style.Text.StackHeight`;
-  feedback #1). The Text page says so under Placement.
+  feedback #1). The Text section says so under Placement.
 - **A Text line cannot be colored by its aura's dispel type.** No engine binding colors a font string by
   dispel type (`SetDispelTypeText`, `SetSpellName`, `SetApplicationCount` take no color;
   `SetDurationText`'s color curve runs over time), the dispel-keyed color map exists only on
   `AddDispelTypeTexture`, which takes a Texture, and addon code can neither read the type nor touch a
-  button in combat. The Text page offers three opt-in stand-ins instead (Font → Dispel type,
+  button in combat. The Text section offers three opt-in stand-ins instead (Font → Dispel type,
   feedback #7): the `$dispeltype$` word colored by a `|c` escape in the engine's own text map, and a
   backdrop and an edge the engine tints (`modules/Style_Text.lua`).
 - **A border style other than Solid redraws a live button only when the button is rebuilt.** Its
@@ -58,14 +58,14 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
 - **Spell-id filters are honored only for buffs on friendly units and debuffs on hostile units** (the
   engine's identity gate). `FilterCompiler` emits a warning per container where that bites
   (`identityWarning`, `modules/FilterCompiler.lua:417`, choosing its sentence from `FC.IdsHonored`),
-  rendered in orange on the Filters page.
+  rendered in orange in the Filters section.
 - **On a target or focus BUFF container, Uncategorized set to Show no longer rescues an unlisted
   aura.** That row's group carries an `excludeSpellIDs` of the categorized union as its only
   constraint whenever another category is Hidden, and a target's hostility is dynamic while the plan
   is compiled once — on a hostile target the engine discards the ids and the group degenerates into
   "every buff", superseding the catch-all and defeating every Hide on the tab. The compiler
   therefore emits the group only where the ids are CERTAIN (`FC.IdsAlwaysHonored`: buffs on the
-  player and pet), and the same gate runs in `FC.ExplainSpell` so the Filters page never claims a
+  player and pet), and the same gate runs in `FC.ExplainSpell` so the Filters section never claims a
   rescue the plan does not contain. Accepted deliberately by the owner (issue #11, 2026-09-20):
   losing a niche rescue on one unit beats defeating every Hide by default. The debuff side answers
   false on every unit for the same reason, which is what keeps issue #11's `hardCC`/`softCC` from
@@ -240,7 +240,7 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   and the drag strip still use the fitted box. For the same reason a Bounce at Justify vertical Top,
   which gets no headroom, rises above the box instead of being cut there. A hand-set Width (Size to
   fit off) cuts at the box as before. A font that has not loaded yet measures nothing, so the first apply after login can
-  use the stored Width and Height and the next one sizes to fit. Defaults on the Text page turns Size
+  use the stored Width and Height and the next one sizes to fit. Defaults in the Text section turns Size
   to fit on (the template's value); Text containers stored before schema v8 keep it off (D7). Size to
   fit is Text-only (batch 9 E6): a bars or icons container stores no value of its own (schema v9
   removes the one an early v8 build stamped), so one switched to Text later starts with it on.
@@ -257,8 +257,8 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   count.** A join on the parent's center or end side is held steady while the parent is empty only on
   an axis where the parent is exactly one element across (batch 11 T9). Where the parent is several
   across (a row of icons under a centered follower), its center really does move as auras come and
-  go, and while its engine is empty that center is the engine's 1x1 start corner, so the follower
-  sits over the parent's start. Pick the start-side point on that parent to keep the follower still.
+  go, and while its engine is empty that center is the middle of the engine's 1x1 rect, half a unit
+  behind the parent's start once the lead is taken back, so the follower sits over the parent's start. Pick the start-side point on that parent to keep the follower still.
 - **A container joined to the side of another closes in when that parent is empty** (ruled by the
   owner, 2026-09-26). A side join (ahead or behind: say the parent's Bottom right against the
   follower's Bottom left) is not held steady along the axis it runs on, even on a parent one element
@@ -279,7 +279,10 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   them from its engine, past its last aura, as locked. Where the prediction is not knowable (in
   combat, while auras are secret, a secret or raising read, a flag the aura data does not carry, such
   as role or priority auras) the parent counts as not empty, so an empty chain collapses onto itself
-  there (the #9 look, each link about 5px under the last): lay such chains out in test mode. The
+  there (the #9 look: each empty link takes no room, so what hangs from it sits on it): lay such
+  chains out in test mode. An empty link adds exactly nothing along the chain, locked, unlocked or in
+  combat. The one-unit step each empty engine used to add (the owner's #19 sat 3 units above #22
+  behind three empty links) is gone since 2026-09-26 (`docs/data-flow.md`, the engine lead). The
   prediction is re-read 0.2 s after an aura change (at once on a target or focus switch, so a
   switch never makes a follower jump to the emptied engine and back), so for that moment a follower can sit on the
   placeholder over a new first aura, or past an aura that just ended. It relies on `C_UnitAuras`

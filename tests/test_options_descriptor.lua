@@ -290,23 +290,29 @@ test("options descriptor: a container page draws its intro, then the bespoke tab
     assertEqual(ctx.activeTab, first, "another tab still switches")
 end)
 
-test("options descriptor: with no containers a page draws the one empty-registry line and no intro", function()
+test("options descriptor: with no containers a per-container page draws nothing past its banner, and no intro (#23)", function()
     local NS2, m2 = fresh()
-    local P = pages(NS2, m2)
+    pages(NS2, m2)
     assertTrue(NS2.Helpers.SelectSection("bars"), "bars is on the rail"); NS2.Helpers.__pageCtx.containers.panel:__fire("OnShow")
     local ctx = NS2.Helpers.__pageCtx.bars
     deleteAll(NS2)
-    local rows, introduced = {}, { 0 }
+    local rows, introduced, schemaRenders = {}, { 0 }, { 0 }
     local textRow = NS2.Helpers.TextRow
     NS2.Helpers.TextRow = function(c, text, ...)
         rows[#rows + 1] = text
         return textRow(c, text, ...)
     end
-    NS2.Helpers.RenderPage(ctx, "bars", { intro = function() introduced[1] = introduced[1] + 1 end }, NS2.Helpers.ContainerBanner)
+    local renderTabbed = NS2.Helpers.RenderTabbedSchema
+    NS2.Helpers.RenderTabbedSchema = function(...)
+        schemaRenders[1] = schemaRenders[1] + 1
+        return renderTabbed(...)
+    end
+    NS2.Helpers.RenderPage(ctx, "bars", { intro = function() introduced[1] = introduced[1] + 1 end })
     -- red under: RenderPage handing the library an intro chrome with a nil cfg
     assertEqual(introduced[1], 0)
-    assertEqual(table.concat(rows, "|"), "No containers yet. Create one on Containers, or type /am new.")
-    assertEqual(P.drawnTabs(ctx)[1].label, "Container", "the placeholder tab")
+    -- red under: the retired EMPTY_PAGE placeholder strip and its "No containers yet" line
+    assertEqual(schemaRenders[1], 0, "no strip and no rows: there is no container to draw")
+    assertEqual(#rows, 0, table.concat(rows, "|"))
 end)
 
 test("options descriptor: RenderPage draws no banner; a banner hook draws the container band first", function()

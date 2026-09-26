@@ -510,6 +510,35 @@ test("text page: the centered built-in's Preview joins its two rows with a visib
     assertFalse(preview(NS, P, ws).text:find("\n", 1, true) ~= nil, "no raw newline reaches the EditBox")
 end)
 
+--- The cheat sheet's lines: every drawn Label that holds template syntax.
+local function sheet(P, ws)
+    local out = {}
+    for _, t in ipairs(P.texts(ws)) do
+        if t:find("$", 1, true) then
+            out[#out + 1] = t
+        end
+    end
+    return table.concat(out, "\n")
+end
+
+test("text page: the Preview and the cheat sheet read the same when the page is drawn disabled; the dim path is gone (#23)", function()
+    local NS, _, P, ws = textPage()
+    local box, lines = preview(NS, P, ws).text, sheet(P, ws)
+    assertTrue(lines:find("|cffffd100$", 1, true) ~= nil, "the tokens are drawn gold: " .. lines)
+    -- Force the page disable the library would hold for a `disabledFor` page: nothing passes one for
+    -- this section since #6, which is why the dim path was dead.
+    local render = NS.Helpers.RenderPage
+    NS.Helpers.RenderPage = function(ctx, ...)
+        ctx.__renderDisabled = true
+        return render(ctx, ...)
+    end
+    ws = P.rerender("Text")
+    -- red under: previewText still handed pageDim(ctx), which reads the line in the notes' gray
+    assertEqual(preview(NS, P, ws).text, box)
+    -- red under: dim()/token() still graying the headings, bullets and gold tokens
+    assertEqual(sheet(P, ws), lines)
+end)
+
 -- ── escapeStrayPipes (final review: no direct test existed) ──────────────────────────────────────
 
 test("text page: a literal | in a custom template is doubled in the Preview box, not left to break it (final review)", function()

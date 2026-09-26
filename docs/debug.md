@@ -131,7 +131,7 @@ line of its own, which is left out when there is none:
 
 - a setting in a Layout > Anchor subsection that is not the one in use: the screen position of a
   container attached to another, or the attach target and offsets of a container on the screen;
-- a setting on a style page that is not the container's style: the Text page's Size to fit on a bars
+- a setting in a style section that is not the container's style: the Text section's Size to fit on a bars
   or icons container.
 
 Inert values are listed rather than dropped because some come back into use: a stale attach offset

@@ -1710,6 +1710,34 @@ Five changes the owner asked for after section AC (2026-09-26). None has been ru
 
 **Owner run, 2026-09-26.** Every AD check passed (246 to 250).
 
+## AE. An empty link adds nothing along a chain (the engine lead, owner to run)
+
+The owner's chain residue, measured in client on 2026-09-26 (`docs/midnight-quirks.md`, "An empty
+engine is one unit, not nothing"), and the fix (merged to master 2026-09-26). **Owner run, 2026-09-26:** checks 275-278 passed. The chain is the owner's: #22 on a named frame at y=2, #21 on #22, #20 on #21 (This
+container Bottom to Parent container Top), #19 on #20 (Automatic), and #10 on the same frame at y=2.
+The check line prints each container's bottom:
+
+    /run local N=LibStub("AceAddon-3.0"):GetAddon("AuraMaster")for _,i in ipairs{10,22,21,20,19}do local c=N.ContainerManager.instances[i]if c then print(i,c.anchor:GetBottom())end end
+
+275. **Locked and live, with #22, #21 and #20 empty.** `/am lock`, out of combat, on a target where
+     none of #22, #21 or #20 shows an aura. → #19's bottom bar is level with #10's, with no 3px step
+     (it was 3px higher). The check line prints the same bottom for 10, 22, 21, 20 and 19 (it printed
+     281.99996948242, 283, 283.99996948242 and 285 for 22, 21, 20 and 19). No Lua error. Result: **PASS** (owner, 2026-09-26)
+276. **After an aura on #20 expires.** Let #20 show one aura. → #19 sits one bar (plus its seam)
+     above where it was. Let the aura expire. → #19 drops back level with #10, and the check line
+     again prints one bottom for 10, 22, 21, 20 and 19. An engine that held an aura and emptied adds
+     nothing either. Result: **PASS** (owner, 2026-09-26)
+277. **In combat.** Stay locked and pull a target dummy with #22, #21 and #20 empty. → #19's bottom
+     bar stays level with #10's through the fight, and it moves only when an aura appears or ends on
+     a link, by exactly that link's bars. Judge by eye: in combat the check line can read secret. Result: **PASS** (owner, 2026-09-26)
+278. **Populated links and the first aura are where they were.** Give #22 two auras. → #19 sits
+     exactly two of #22's bars (plus the seams) above #10's level. #22's first bar starts exactly
+     where the empty #22 sat, with no 1px gap or overlap against the named frame. On any container
+     on the screen, the first aura is where it was before the fix. A centered join (#20 on #21) is
+     still centered across the column, with no sideways shift of half a pixel or more. `/am unlock`
+     and `/am test` → the placeholders and the unlocked chain look as they did before the fix. No
+     Lua error. Result: **PASS** (owner, 2026-09-26)
+
 ## Settings redesign (#6)
 
 **Owner run, 2026-09-26:** S2, S3, S4, S5, S7, S8, S11 and S16 passed, from the owner's report and screenshots. S1, S6, S9, S10 and S12-S15 were not reported individually and stay open.
@@ -1766,3 +1794,53 @@ cooldowns as text) and open the panel with `/am`.
      strips, content panels and scroll bars are exactly where they were. The library minor
      AuraMaster ships is the one loaded for every Ka0s addon, and a page with no rail must not move.
      (Global Constraints (rail width 0 is byte-identical)) Result: **PASS** (owner, 2026-09-26: another Ka0s addon's settings unchanged)
+
+## Issues #21 and #23 (owner to run)
+
+**Owner run, 2026-09-26:** checks 267-274 passed (issues #21 and #23, merged to master). Run with LibKa0s v1.61.0 vendored, after `/reload`. Use
+the starter containers (#1 Player buffs as bars, #2 Player debuffs as icons, #4 Player cooldowns as
+text) and open the panel with `/am`. Neither issue changes what a player sees except two reworded
+lines, so each check confirms nothing else moved.
+
+267. **I23-1.** Containers, select #4 (text), open the Text section's General tab. → The Preview box
+     reads in the container's own font color, and the cheat sheet under it has bright headings,
+     gold tokens and gold examples. Only the Placement notes are gray. No Lua error. (#23: the dead
+     dim path removed) Result: **PASS** (owner, 2026-09-26)
+268. **I23-2.** Containers → General, hover **Aura type**. → The tooltip reads "Buffs or debuffs. The
+     Filters section offers the categories of whichever you choose; ...". No tooltip or line in the
+     panel names a Filters, Layout, Bars, Icons or Text *page*. (#23: the reworded desc) Result: **PASS** (owner, 2026-09-26)
+269. **I23-3.** Attach a container to a frame (Layout → Anchor, **Attach to** a frame such as the
+     player frame), then `/am test on` and hover that container's drag handle. → The gold line reads
+     "Attached — set its offsets in the Layout section." (#23: the reworded tooltip line) Result: **PASS** (owner, 2026-09-26)
+270. **I23-4.** With the Filters section open, delete every container, close the panel and type
+     `/am config`, then open Containers. → The rail lists General alone and "No containers yet. Click New
+     container, or type /am new." There is no placeholder "Container" tab and no "Create one on
+     Containers" line. Create one again afterwards (or reset the profile). (#23: EMPTY_PAGE removed)
+     Result: **PASS** (owner, 2026-09-26)
+271. **I21-1.** `/am debug on`, then on #1's Bars section change Width and click **Defaults**. → One
+     `[Set] reset bars: N rows` line with N at least 1, and no per-row `[Set]` lines. Click Defaults
+     again → `[Set] reset bars: 0 rows`. (#21: the bracket and the SameValue tally) Result: **PASS** (owner, 2026-09-26)
+272. **I21-2.** With debug still on, `/am resetposition` twice. → The first prints `[Set] reset
+     positions: N rows` (N counts the position rows that changed). The second, run straight after, prints
+     `[Set] reset positions: 0 rows`: the first container's staggered `-0` offset over a stored `0`
+     is no change. (#21: SameValue, the -0 case) Result: **PASS** (owner, 2026-09-26)
+273. **I21-3.** Containers → General on #2, **Copy settings from** #1 with the Filters section. → One
+     `[Set] copy container 1->2 (<section>): N rows` line. Then General → **Reset all settings** and
+     confirm → only `[Set] reset profile 'Default' to defaults`, no row count. (#21: the bracket and
+     JC-9's `info.profileReset`) Result: **PASS** (owner, 2026-09-26)
+274. **I21-4.** `/am get container` and `/am set container 1`. → Both answer "Setting not found:
+     container", and nothing is written: `/am list` reads as before. (#21: the Read and Write edge
+     cases) Result: **PASS** (owner, 2026-09-26)
+
+## New container lands on General (2026-09-26, owner to run)
+
+**Owner run, 2026-09-26:** checks 279-280 passed (merged to master). Open the panel with `/am`, Containers, with
+#1 (Player buffs as bars) selected.
+
+279. **NC1.** Rail -> Bars -> Time text, then click **New container** in the band. → A new container
+     is made and selected in the band, and the page shows General on the rail and the General tab,
+     with the new container's Name. Then Rail -> Bars: it reopens on Time text. Result: **PASS** (owner, 2026-09-26)
+280. **NC2.** Go back to Bars -> Time text, keep the panel open, and type `/am new` in chat. → The
+     page moves to General/General on the new container, the same as the button. Then go to
+     Filters, close the panel and type `/am new`: the panel does not open. Open it with `/am`: it
+     is on General/General with that container. Result: **PASS** (owner, 2026-09-26)

@@ -5,6 +5,8 @@
 -- is classified: one of the nine batch 9 tokens behaves exactly as batch 10 (seam, spread, push);
 -- any other pair is free, placed at X/Y alone. Nothing is refused (G1, G5).
 -- Its own suite because tests/test_anchors.lua sits near layout-§1's 1500-line cap.
+-- A child hung from its parent's engine takes back the engine's one-unit lead on each start-side
+-- part of the relative point, half a unit on a middle part (the engine lead, tests/test_anchors_collapse.lua).
 
 local T = _G.AM_TEST
 local test, assertEqual, assertTrue, assertFalse, assertNil =
@@ -186,12 +188,12 @@ test("points: a classified explicit pair is placed exactly as batch 10 places it
     local p = placed(NS)
     -- red under: an explicit pair treated as free (no gap across)
     assertEqual(p[1], "TOPLEFT"); assertEqual(p[3], "TOPRIGHT")
-    assertEqual(p[4], 5, "ahead: the child's line spacing across"); assertEqual(p[5], 0)
+    assertEqual(p[4], 5, "ahead: the child's line spacing across"); assertEqual(p[5], -1, "TOP: the lead")
     c2.attach.childPoint, c2.attach.relPoint = "TOP", "BOTTOM"
     p = placed(NS)
     -- T9: a one-column parent's BOTTOM is held steady as its start side plus half its width
     local w = NS.Style.ElementSize(NS.Database.FindContainer(1))
-    assertEqual(p[1], "TOP"); assertEqual(p[3], "BOTTOMLEFT"); assertEqual(p[4], w / 2)
+    assertEqual(p[1], "TOP"); assertEqual(p[3], "BOTTOMLEFT"); assertEqual(p[4], w / 2 + 1)
     assertEqual(p[5], -3, "after: SS-1")
 end)
 
@@ -205,7 +207,7 @@ test("points: behind is no longer refused: a child several auras wide sits on it
     assertTrue(A.EdgeAllowed(c2, "behind-center"), "allowed")
     assertEqual(A.AttachEdge(c2), "behind-center")
     local p = placed(NS)
-    assertEqual(p[1], "RIGHT"); assertEqual(p[3], "LEFT"); assertEqual(p[4], -5)
+    assertEqual(p[1], "RIGHT"); assertEqual(p[3], "LEFT"); assertEqual(p[4], -5 + 1)
 end)
 
 test("points: a free pair is placed at X/Y alone: no seam, no spread, no push", function()

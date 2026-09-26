@@ -51,9 +51,9 @@ local _, NS = ...
 -- The WRITE SEAM stays this file's: NS.SetByPath, not the library's Set, because its front branches
 -- (the minimap inversion, the spell-set carve-outs, the all-or-nothing whole-section writes, and
 -- NS.CheckWrite's dry run that mirrors them) have no row-shaped equivalent there, and a library-less
--- build keeps this seam anyway (docs/schema.md, "Write seam: why AuraMaster keeps SetByPath"). The
--- host bodies of everything the library now supplies stay below as the library-absent arm, which
--- tests/degraded_env.lua exercises.
+-- build keeps this seam anyway (docs/schema.md, "Write seam: why AuraMaster keeps SetByPath").
+-- The host bodies of everything the library now supplies stay below as the library-absent arm,
+-- which tests/degraded_env.lua exercises, and they answer as the library does, case for case.
 
 NS.Schema = NS.Schema or {}
 
@@ -134,6 +134,8 @@ end
 
 -- The host bodies below are the library-absent arm; with LibKa0s the three locals after them are
 -- the library's SplitPath, Read and Write (Write takes the value before `first`, hence the shim).
+-- The host Read and Write answer the library's edge cases too: nil, or a no-op, for a root that is
+-- not a table and for a path with no segment at or past `first` (#21).
 --
 -- Memoized: the set of paths is closed (the schema's own plus whatever the CLI is handed), while a
 -- slider drag re-resolves one path many times a second.
@@ -151,8 +153,10 @@ local function hostSplitPath(path)
 end
 
 local function hostReadFrom(root, parts, first)
-    local node = root
+    if type(root) ~= "table" then return nil end
     local last = #parts
+    if last < first then return nil end   -- no setting is stored AT a root (LibKa0s-Schema's Read)
+    local node = root
     for i = first, last do
         if type(node) ~= "table" then return nil end
         node = node[parts[i]]
@@ -161,14 +165,16 @@ local function hostReadFrom(root, parts, first)
 end
 
 local function hostWriteInto(root, parts, first, value)
+    if type(root) ~= "table" then return end
+    local last = #parts
+    if last < first then return end       -- a no-op, as LibKa0s-Schema's Write
     local node = root
-    local last = #parts - 1
-    for i = first, last do
+    for i = first, last - 1 do
         local key = parts[i]
         if type(node[key]) ~= "table" then node[key] = {} end
         node = node[key]
     end
-    node[parts[#parts]] = value
+    node[parts[last]] = value
 end
 
 local splitPath = SchemaLib and SchemaLib.SplitPath or hostSplitPath
@@ -258,11 +264,15 @@ end
 -- ---------------------------------------------------------------------------
 
 -- The host index is the library-absent arm; with LibKa0s the instance's FindRow and Reindex answer.
+-- Like the library's, it keeps the FIRST row on a duplicate path, which NS.ValidateSchema reports.
 local index = {}
 
 local function hostReindex()
     for k in pairs(index) do index[k] = nil end
-    for _, row in ipairs(NS.Schema) do index[row.path] = row end
+    for _, row in ipairs(NS.Schema) do
+        local path = row.path
+        if type(path) == "string" and path ~= "" and index[path] == nil then index[path] = row end
+    end
 end
 
 local function hostFindRow(path)
@@ -333,7 +343,7 @@ end
 --- profile switch replaces one set of user categories with another, and a row left behind from the
 --- old set is not merely untidy. NS.ValidateSchema fails it (the container template no longer
 --- carries the key, so NS.DefaultFor answers nil), `/am list` and `/am get` answer for a category
---- this profile does not have, and the Filters page draws a live Show/Hide row whose click WRITES
+--- this profile does not have, and the Filters section draws a live Show/Hide row whose click WRITES
 --- "show" or "hide" into a real stored container under a key nothing will ever compile -- permanent
 --- garbage in the player's saved variables, one key per switch.
 ---
@@ -532,20 +542,29 @@ NS.Bulk = S and { Begin = S.BulkBegin, End = S.BulkEnd, Run = S.BulkRun } or Bul
 --- Whether a bulk bracket is open: the seam's mute test and its cue to tally.
 local inBulk = S and S.InBulk or function() return bulk.depth > 0 end
 
--- The library's stored-value equality, when present: `==` first, so -0 over 0 is no change, then
--- tables by content. The spell-id sets compare correctly by content because normalizeIdSet has
--- integer-keyed them before any write compares them.
-local SameValue = SchemaLib and SchemaLib.SameValue
+-- Stored-value equality: `==` first, so -0 over 0 is no change, then tables by content, both
+-- directions, recursively. With LibKa0s it is the library's SameValue; the host port below is the
+-- library-absent arm and the same algorithm, so the two builds count the same N on the same act
+-- (#21). The spell-id sets compare correctly by content because normalizeIdSet has integer-keyed
+-- them before any write compares them.
+local function hostSameValue(a, b)
+    if a == b then return true end
+    if type(a) ~= "table" or type(b) ~= "table" then return false end
+    for k, v in pairs(a) do
+        if not hostSameValue(v, b[k]) then return false end
+    end
+    for k in pairs(b) do
+        if a[k] == nil then return false end
+    end
+    return true
+end
+local SameValue = SchemaLib and SchemaLib.SameValue or hostSameValue
 
 --- Whether storing `new` over `old` changes the stored value. This is the bracket's tally test.
---- Numbers compare by `==`, so -0 over 0 is no change; Signature's tostring would call them
---- different, and CM.ResetPositions' stagger writes -0 for the first container. With LibKa0s it is
---- SameValue's answer; the Signature compare below is the library-absent arm.
+--- CM.ResetPositions' stagger writes -0 for the first container, and SameValue's `==` calls that
+--- no change, where FilterCompiler.Signature's tostring would not.
 local function changes(old, new)
-    if SameValue then return not SameValue(old, new) end
-    if type(old) == "number" and type(new) == "number" then return old ~= new end
-    local Sig = NS.FilterCompiler.Signature
-    return Sig(old) ~= Sig(new)
+    return not SameValue(old, new)
 end
 
 --- Whether storing `value` in `row` changes it. A session row reads through its own get().
@@ -976,10 +995,11 @@ end
 --- shape errors plus its unresolved paths, a duplicate path included); the loop below is the
 --- library-absent arm.
 ---
---- Three checks per row: a known `page` and `type`, a `group` (a row without one belongs to no tab,
+--- Four checks per row: a known `page` and `type`, a `group` (a row without one belongs to no tab,
 --- options-ui-§13), and — unless session-only — a `path` that resolves against the container
 --- template or the profile defaults. A path that does not resolve is a setting whose writes land
 --- on a key nothing reads, and nothing anywhere would say so.
+--- And a path no earlier row holds: NS.FindSchemaRow answers the first of two, so the second is dead.
 --- @return number
 function NS.ValidateSchema()
     if S then
@@ -994,10 +1014,19 @@ function NS.ValidateSchema()
         failed = failed + 1
         if out then out(("schema error: %s: %s"):format(tostring(row.path), why)) end
     end
-    for _, row in ipairs(NS.Schema) do
+    local seen = {}
+    for i, row in ipairs(NS.Schema) do
         if not VALID_PAGES[row.page] then fail(row, "unknown page " .. tostring(row.page)) end
         if not VALID_TYPES[row.type] then fail(row, "unknown type " .. tostring(row.type)) end
         if type(row.group) ~= "string" or row.group == "" then fail(row, "no group") end
+        local path = row.path
+        if type(path) == "string" and path ~= "" then
+            if seen[path] then
+                fail(row, ("duplicate path (first used by row #%d)"):format(seen[path]))
+            else
+                seen[path] = i
+            end
+        end
         if not row.sessionOnly and NS.DefaultFor(row.path) == nil then
             fail(row, "path does not resolve against defaults/Profile.lua")
         end

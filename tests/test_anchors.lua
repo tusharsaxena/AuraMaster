@@ -663,8 +663,8 @@ test("anchors: a container attaches to its target's engine frame at the derived 
     -- red under: Place handing SetPoint the stored attach.point in container mode
     assertEqual(p[1], "TOPLEFT"); assertEqual(p[3], "BOTTOMLEFT")
     -- red under: the derived points dropping the stored offsets (they nudge on top of one of 2's
-    -- spacings below 1's block: SS-1, SS-2)
-    assertEqual(p[4], -3); assertEqual(p[5], 4 - c2.layout.spacing)
+    -- spacings below 1's block: SS-1, SS-2), plus the engine's one-unit lead taken back across (the engine lead)
+    assertEqual(p[4], -3 + 1); assertEqual(p[5], 4 - c2.layout.spacing)
     local engine = CM.instances[1].engine
     CM.instances[1].engine = nil
     rec = recordAnchor(CM.instances[2])
@@ -871,7 +871,7 @@ test("handle: an attached container's tooltip says where its offsets are set; a 
     -- red under: "Drag to move" on a container a drag cannot move (owner, 2026-09-26)
     assertEqual(lines[1], NS.L["Anchored to '%s', so it cannot be dragged. Right-click for settings."]:format("PlayerFrame"))
     -- red under: showTooltip without its attached line (the player drags and nothing moves)
-    assertEqual(lines[2], NS.L["Attached — set its offsets on the Layout page."])
+    assertEqual(lines[2], NS.L["Attached — set its offsets in the Layout section."])
 end)
 
 test("handle: an attached container, or one in combat, does not move on a drag, and a stray drag stop stores nothing", function()
@@ -975,8 +975,9 @@ test("anchors: a container attached to an icon row stacks below it, on the side 
     local p = rec.points[1]
     -- red under: rows placing the child beside the parent (TOPLEFT to TOPRIGHT)
     assertEqual(p[1], "TOPLEFT"); assertTrue(p[2] == CM.instances[3].engine, "3's engine")
-    -- The chain stacks vertically, so the seam is one of 2's line spacings, the stored -4 on top.
-    assertEqual(p[3], "BOTTOMLEFT"); assertEqual(p[4], 0); assertEqual(p[5], -4 - c2.layout.lineSpacing)
+    -- The chain stacks vertically, so the seam is one of 2's line spacings, the stored -4 on top;
+    -- across, the engine's one-unit lead is taken back (the engine lead).
+    assertEqual(p[3], "BOTTOMLEFT"); assertEqual(p[4], 1); assertEqual(p[5], -4 - c2.layout.lineSpacing)
     L3.growH = "left"
     rec = recordAnchor(CM.instances[2])
     NS.Anchors.Place(CM.instances[2])
@@ -1050,8 +1051,9 @@ test("anchors: a container attached to another takes derived points from the par
     local p = rec.points[1]
     -- red under: Place reading the stored attach points in container mode
     assertEqual(p[1], "BOTTOMRIGHT"); assertEqual(p[3], "TOPRIGHT")
-    -- Growing up, the seam gap (2's spacing) is upward and the stored -2 nudges on top of it.
-    assertEqual(p[4], 6); assertEqual(p[5], -2 + c2.layout.spacing)
+    -- Growing up, the seam gap (2's spacing) is upward and the stored -2 nudges on top of it; growing
+    -- left, the engine's one-unit lead is taken back leftward (the engine lead).
+    assertEqual(p[4], 6 - 1); assertEqual(p[5], -2 + c2.layout.spacing)
 end)
 
 test("anchors: a frame-attached container keeps its stored points", function()

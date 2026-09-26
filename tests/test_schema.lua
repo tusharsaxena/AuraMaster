@@ -488,3 +488,116 @@ test("schema: -0 over 0 is still no change under SameValue", function()
     -- red under: numbers compared by their tostring, where "-0" ~= "0"
     assertEqual(table.concat(lines, " | "), "reset positions: 0 rows")
 end)
+
+test("schema: a path with no segment past its root reads nil, the library's Read and the host's (#21)", function()
+    for _, build in ipairs({ "live", "degraded" }) do
+        local NS2 = inBuild(build)
+        assertTrue(NS2.Database.FindContainer(1) ~= nil, build .. ": a starter container exists")
+        -- red under: the host readFrom answering the root itself when no segment is left to walk
+        assertNil(NS2.GetSetting("container", 1), build .. ": `container` alone is no setting")
+        assertNil(NS2.GetSetting(""), build .. ": the empty path is not the profile")
+        assertNil(NS2.GetSetting("..."), build .. ": nor is a path of dots")
+        assertNil(NS2.GetSetting("hideBlizzardBuffs.x"), build .. ": a walk through a scalar stops")
+        assertEqual(NS2.GetSetting("hideBlizzardBuffs"), NS2.db.profile.hideBlizzardBuffs, build)
+        assertEqual(NS2.GetSetting("container.bars.width", 1), NS2.Database.FindContainer(1).bars.width, build)
+    end
+end)
+
+test("schema: a duplicate path answers the first row registered, and an appended row answers at once, the library's and the host's (#21)", function()
+    for _, build in ipairs({ "live", "degraded" }) do
+        local NS2 = inBuild(build)
+        local PATH = "hideBlizzardBuffs"
+        local original = NS2.FindSchemaRow(PATH)
+        assertTrue(original ~= nil, build .. ": the shipped row")
+        local dup = { path = PATH, page = "general", group = "Display", type = "bool" }
+        NS2.RegisterSchemaRows({ dup })
+        -- red under: the host index keeping the LAST row on a path (LibKa0s-Schema keeps the first)
+        assertTrue(NS2.FindSchemaRow(PATH) == original, build .. ": the first row still answers")
+        local late = { path = "container.bars.width.i21", page = "bars", group = "Size", type = "number" }
+        NS2.RegisterSchemaRows({ late })
+        assertTrue(NS2.Schema[#NS2.Schema] == late, build .. ": appended at the end")
+        -- red under: an append that skips the re-index
+        assertTrue(NS2.FindSchemaRow("container.bars.width.i21") == late, build .. ": found at once")
+        assertEqual(NS2.UnregisterSchemaRows(function(row) return row == dup or row == late end), 2, build)
+        assertTrue(NS2.FindSchemaRow(PATH) == original, build .. ": the shipped row after the removal")
+        assertNil(NS2.FindSchemaRow("container.bars.width.i21"), build)
+    end
+end)
+
+test("schema: the bracket nests, survives a raise and ignores a stray End, the library's and the host's (#21)", function()
+    for _, build in ipairs({ "live", "degraded" }) do
+        local NS2 = inBuild(build)
+        local PATH = "hideBlizzardBuffs"
+        NS2.SetByPath(PATH, false)
+        local lines = captureSet(NS2)
+        NS2.Bulk.End("reset", "stray")                     -- no bracket open
+        assertEqual(#lines, 0, build .. ": a stray End logs nothing")
+        NS2.Bulk.Run("reset", "outer", function()
+            NS2.Bulk.Run("reset", "inner", function() NS2.SetByPath(PATH, true) end)
+            NS2.SetByPath(PATH, false)
+        end)
+        -- red under: a level logging at its own close rather than when the depth returns to 0
+        assertEqual(table.concat(lines, " | "), "reset outer: 2 rows", build)
+        local ok, err = pcall(NS2.Bulk.Run, "copy", "raise", function()
+            NS2.SetByPath(PATH, true)
+            error("boom", 0)
+        end)
+        assertFalse(ok, build)
+        assertEqual(err, "boom", build .. ": the raised value comes back unchanged")
+        -- red under: the bracket closing unmarked, or silently, on an error
+        assertEqual(lines[2], "copy raise: 1 rows (stopped by an error)", build)
+        -- A number row: captureSet formats without tostring, and Lua 5.1's %s refuses a boolean.
+        NS2.SetByPath("container.bars.width", 251, 1)
+        -- red under: the mute stuck open after the raise
+        assertEqual(lines[3], "container.bars.width = 251", build .. ": the seam logs again")
+        -- JC-9: the act that reset the profile says so on `info`; a `return true` is no signal.
+        NS2.Bulk.Run("reset", "whole", function(info)
+            NS2.SetByPath(PATH, true)
+            info.profileReset = true
+        end)
+        assertEqual(#lines, 3, build .. ": a profile reset act logs no bulk line")
+        NS2.Bulk.Run("reset", "returned", function()
+            NS2.SetByPath(PATH, false)
+            return true
+        end)
+        assertEqual(lines[4], "reset returned: 1 rows", build)
+    end
+end)
+
+test("schema: a color with a -0 channel over 0 is no change, the library's SameValue and the host's (#21)", function()
+    local zero = 0
+    local negZero = -zero                                -- computed, so the parser cannot fold it
+    assertEqual(tostring(negZero), "-0", "this Lua keeps a negative zero")
+    for _, build in ipairs({ "live", "degraded" }) do
+        local NS2 = inBuild(build)
+        local PATH = "container.bars.expiringColor"
+        assertTrue(NS2.FindSchemaRow(PATH) ~= nil, build .. ": the row exists")
+        assertTrue(NS2.SetByPath(PATH, { r = 1, g = 0, b = 0, a = 1 }, 1), build)
+        local lines = captureSet(NS2)
+        NS2.Bulk.Run("copy", "color", function()
+            NS2.SetByPath(PATH, { r = 1, g = negZero, b = 0, a = 1 }, 1)   -- the same color
+        end)
+        -- red under: the host arm comparing tables by FilterCompiler.Signature, where "-0" ~= "0"
+        assertEqual(table.concat(lines, " | "), "copy color: 0 rows", build)
+        NS2.Bulk.Run("copy", "color", function()
+            NS2.SetByPath(PATH, { r = 1, g = 0, b = 0, a = 0.5 }, 1)
+        end)
+        assertEqual(lines[2], "copy color: 1 rows", build .. ": a real change still counts")
+    end
+end)
+
+test("schema: a duplicate path fails validation, the library's and the host's (#21)", function()
+    for _, build in ipairs({ "live", "degraded" }) do
+        local NS2 = inBuild(build)
+        local printed = {}
+        NS2.Print = function(line) table.insert(printed, line) end
+        assertEqual(NS2.ValidateSchema(), 0, build .. ": clean before the duplicate")
+        local dup = { path = "hideBlizzardBuffs", page = "general", group = "Display", type = "bool" }
+        NS2.RegisterSchemaRows({ dup })
+        -- red under: the host loop never comparing paths (LibKa0s-Schema's Validate reports it)
+        assertEqual(NS2.ValidateSchema(), 1, build .. ": " .. table.concat(printed, " | "))
+        assertTrue(table.concat(printed, "\n"):find("duplicate", 1, true) ~= nil, build .. ": the reason is printed")
+        NS2.UnregisterSchemaRows(function(row) return row == dup end)
+        assertEqual(NS2.ValidateSchema(), 0, build .. ": clean again")
+    end
+end)

@@ -495,7 +495,8 @@ end
 -- A steady join on an empty parent (batch 11 T9)
 -- ---------------------------------------------------------------------------
 -- A follower hangs from its parent's ENGINE whenever the parent is locked, in combat or not
--- predicted empty (HangMode), and an empty engine holds a 1x1 provisional rect at its START corner.
+-- predicted empty (HangMode), and an empty engine holds a 1x1 rect at its START corner (since the
+-- engine lead, the unit just behind it: engineLead, below).
 -- A relative point on the parent's center or end side then lands on that corner: the owner's chain of
 -- bars growing up, joined by centered points, shifted sideways by half a bar whenever the middle
 -- container had no aura. So on each axis where the parent is exactly ONE element across, the relative
@@ -504,8 +505,9 @@ end
 -- geometry, which is secret. There the slot and the preview block are one element across as well, so
 -- the result is the same in every hang mode, and steady when the engine empties.
 -- The axis a classified join runs along (after: vertical; ahead, behind: horizontal) is left alone,
--- so an empty parent still closes the chain up along it as before. An axis on which the parent is
--- more than one element across is left alone too: its center moves with its aura count.
+-- so an empty parent still closes the chain up along it, since the engine lead exactly to its start.
+-- An axis on which the parent is more than one element across is left alone too: its center moves
+-- with its aura count.
 
 -- POINT_V[point], POINT_H[point]: a point's vertical and horizontal parts ("" for the middle), and
 -- JOIN_POINT[v][h] the point back, built once so a Place builds no string.
@@ -566,15 +568,39 @@ local function steadyRelative(rel, joinAxis, pcfg, cfg, growH, growV)
     return JOIN_POINT[v][h], dx, dy
 end
 
+-- How far a relative point on a parent's ENGINE sits from where the parent's block starts, on one
+-- axis (modules/Container.lua's ENGINE_LEAD): the engine is pinned one unit behind its
+-- anchor's start corner and pads its start sides by that unit, so a start part is a whole unit short
+-- and a middle part half of one; an end part is exact (the engine's far edge is start + content, and
+-- exactly the start while it is empty, which is the point: an empty link adds nothing along a chain).
+
+--- The fraction of the lead part `part` takes back: all on the start side `start`, half in the middle.
+local function leadFraction(part, start)
+    if part == start then return 1 end
+    return (part == "") and 0.5 or 0
+end
+
+--- The offset that takes the parent's engine lead back for relative point `rel`, toward the growth
+--- of the parent `pcfg` (its engine's), in the child's scale. Allocates nothing.
+--- @return number dx, number dy
+local function engineLead(rel, pcfg, cfg)
+    local growH, growV = flowGrowth(pcfg)
+    local lead = NS.Container.ENGINE_LEAD * ownScale(pcfg) / ownScale(cfg)
+    local fx = leadFraction(POINT_H[rel], (growH == "left") and "RIGHT" or "LEFT")
+    local fy = leadFraction(POINT_V[rel], (growV == "up") and "BOTTOM" or "TOP")
+    return fx * lead * ((growH == "left") and -1 or 1), fy * lead * ((growV == "up") and 1 or -1)
+end
+
 --- The points and offsets container `cfg` attaches with. Attached to a container: the points in
 --- effect (AttachPoints, G2, G3), the relative one held steady on an empty parent (steadyRelative,
---- T9). A pair that is one of the nine sides (AttachEdge) takes one of its own gaps across the seam
+--- T9), and, hung from the parent's engine (`onEngine`), the engine's lead taken back
+--- (engineLead). A pair that is one of the nine sides (AttachEdge) takes one of its own gaps across the seam
 --- with the stored X/Y on top as a nudge (SS-1, SS-2, AP-2), moved on along the chain by the
 --- furniture in the way (seamRoom, batch 10 F2, F4); a free pair is placed at X/Y alone (G5). The
 --- classification reads the points in effect, never the steadied one. Attached to a named frame: the
 --- stored points and offsets as they are.
 --- @return string point, string relativePoint, number x, number y
-local function attachSpec(container, cfg, at, mode, target)
+local function attachSpec(container, cfg, at, mode, target, onEngine)
     local x, y = tonumber(at.x) or 0, tonumber(at.y) or 0
     if mode == "container" then
         local point, rel, _, _, growH, growV = Anchors.AttachPoints(cfg)
@@ -583,6 +609,10 @@ local function attachSpec(container, cfg, at, mode, target)
         local pcfg = target and target:Cfg()
         local sx, sy = 0, 0
         if pcfg then rel, sx, sy = steadyRelative(rel, JOIN_AXIS[side], pcfg, cfg, growH, growV) end
+        if pcfg and onEngine then
+            local lx, ly = engineLead(rel, pcfg, cfg)
+            sx, sy = sx + lx, sy + ly
+        end
         if not edge then return point, rel, x + sx, y + sy end
         local L = Anchors.EffectiveLayout(cfg) or {}
         local gx, gy = Anchors.SeamOffset(L, side)
@@ -609,7 +639,8 @@ function Anchors.Place(container)
     local at = cfg.attach or {}
     local target, mode, owner = targetFor(container, at)
     if target then
-        local point, relativePoint, x, y = attachSpec(container, cfg, at, mode, owner)
+        local onEngine = owner ~= nil and target == owner.engine
+        local point, relativePoint, x, y = attachSpec(container, cfg, at, mode, owner, onEngine)
         local ok = pcall(anchor.SetPoint, anchor, point, target, relativePoint, x, y)
         if ok then return mode end
         anchor:ClearAllPoints()
@@ -796,7 +827,7 @@ local function tooltipSpec(container)
     local function attached()
         local cfg = container:Cfg()
         if not (cfg and cfg.attach and cfg.attach.mode ~= "screen") then return nil end
-        return Anchors.JoinText(container, cfg) or NS.L["Attached — set its offsets on the Layout page."]
+        return Anchors.JoinText(container, cfg) or NS.L["Attached — set its offsets in the Layout section."]
     end
     return {
         title = function()
@@ -842,7 +873,7 @@ local function closeTooltipSpec(container)
 end
 
 --- Asked by the widget at every OnDragStart. Only a screen-attached container moves by dragging; an
---- attached one follows its target, and its offsets are set on the Layout page. Never mid-combat:
+--- attached one follows its target, and its offsets are set in the Layout section. Never mid-combat:
 --- the anchor parents an aura engine.
 local function canDrag(container)
     local cfg = container:Cfg()
