@@ -814,6 +814,18 @@ badge and any count quoted in the docs must agree with it.
 - steady: parent and child at different scales convert the offset to the child's scale
 - steady: start-aligned pairs are placed as before, along the chain and across it
 
+### test_anchors_collapse.lua (9)
+
+- collapse: the owner's chain growing up, three empty links, #19 lands level with #22's start
+- collapse: #22 holding n auras puts #19 at #22's start + n bars, exactly
+- collapse: every link populated lands where it always has, one block past its parent
+- collapse: growing down mirrors it, and growing left too
+- collapse: an engine that held auras and emptied adds nothing either, with no re-place
+- collapse: the across-axis landing (batch 11 T9) is unchanged, empty or populated
+- collapse: a join hung from the slot or the preview is not given the engine's unit
+- collapse: Build pins the engine one unit behind its anchor's start corner and pads the start sides
+- collapse: a live update re-sends the same start padding (no rebuild)
+
 ### test_anchors_width.lua (6)
 
 - width: a long name on a wide Bars container gives a strip exactly as wide as its bar, the name shortened with ...
@@ -1806,7 +1818,7 @@ badge and any count quoted in the docs must agree with it.
 
 - prose: no authored file carries a British spelling from localization-§5's published list
 - prose: the gate carries localization-§5's two lists whole, and nothing of its own
-- prose: the exclusions this repository declared suppressed 11 of 186 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (11): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, docs/spell-research/2026-09-24-logs/CORRECTIONS.md, docs/spell-research/2026-09-24-logs/CURRENT_CATEGORIES.md, docs/spell-research/2026-09-24-logs/DECISIONS.md, docs/spell-research/2026-09-24-logs/FLAGS.md, docs/spell-research/2026-09-24-logs/PROPOSED_ADDITIONS.md, docs/spell-research/2026-09-24-logs/REVIEW.md, docs/spell-research/2026-09-24-logs/SOURCES.md, docs/spell-research/2026-09-24-logs/dictionary/AURAS.md
+- prose: the exclusions this repository declared suppressed 11 of 181 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (11): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, docs/spell-research/2026-09-24-logs/CORRECTIONS.md, docs/spell-research/2026-09-24-logs/CURRENT_CATEGORIES.md, docs/spell-research/2026-09-24-logs/DECISIONS.md, docs/spell-research/2026-09-24-logs/FLAGS.md, docs/spell-research/2026-09-24-logs/PROPOSED_ADDITIONS.md, docs/spell-research/2026-09-24-logs/REVIEW.md, docs/spell-research/2026-09-24-logs/SOURCES.md, docs/spell-research/2026-09-24-logs/dictionary/AURAS.md
 - prose: no path this repository narrows the gate by is loaded by a TOC
 - prose: every path this repository narrows the gate by is one .pkgmeta keeps out of the zip
 - prose self-test: the carve-out suppresses the named generated folder, and only it
@@ -1911,6 +1923,7 @@ badge and any count quoted in the docs must agree with it.
 | test_anchors_column.lua | 19 |
 | test_anchors_points.lua | 16 |
 | test_anchors_steady.lua | 7 |
+| test_anchors_collapse.lua | 9 |
 | test_anchors_width.lua | 6 |
 | test_texttemplate.lua | 26 |
 | test_style.lua | 60 |
@@ -1957,4 +1970,4 @@ badge and any count quoted in the docs must agree with it.
 | test_eol.lua | 2 |
 | test_layout_cap.lua | 13 |
 | test_diagnostics_contract.lua | 7 |
-| **Total** | **1651** |
+| **Total** | **1660** |

@@ -257,8 +257,8 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   count.** A join on the parent's center or end side is held steady while the parent is empty only on
   an axis where the parent is exactly one element across (batch 11 T9). Where the parent is several
   across (a row of icons under a centered follower), its center really does move as auras come and
-  go, and while its engine is empty that center is the engine's 1x1 start corner, so the follower
-  sits over the parent's start. Pick the start-side point on that parent to keep the follower still.
+  go, and while its engine is empty that center is the middle of the engine's 1x1 rect, half a unit
+  behind the parent's start once the lead is taken back, so the follower sits over the parent's start. Pick the start-side point on that parent to keep the follower still.
 - **A container joined to the side of another closes in when that parent is empty** (ruled by the
   owner, 2026-09-26). A side join (ahead or behind: say the parent's Bottom right against the
   follower's Bottom left) is not held steady along the axis it runs on, even on a parent one element
@@ -279,7 +279,10 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   them from its engine, past its last aura, as locked. Where the prediction is not knowable (in
   combat, while auras are secret, a secret or raising read, a flag the aura data does not carry, such
   as role or priority auras) the parent counts as not empty, so an empty chain collapses onto itself
-  there (the #9 look, each link about 5px under the last): lay such chains out in test mode. The
+  there (the #9 look: each empty link takes no room, so what hangs from it sits on it): lay such
+  chains out in test mode. An empty link adds exactly nothing along the chain, locked, unlocked or in
+  combat. The one-unit step each empty engine used to add (the owner's #19 sat 3 units above #22
+  behind three empty links) is gone since 2026-09-26 (`docs/data-flow.md`, the engine lead). The
   prediction is re-read 0.2 s after an aura change (at once on a target or focus switch, so a
   switch never makes a follower jump to the emptied engine and back), so for that moment a follower can sit on the
   placeholder over a new first aura, or past an aura that just ended. It relies on `C_UnitAuras`

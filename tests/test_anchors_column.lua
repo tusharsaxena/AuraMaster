@@ -66,6 +66,11 @@ end
 
 local function spacingOf(NS, id) return cfgOf(NS, id).layout.spacing end
 
+--- The engine's one-unit lead (the engine lead, tests/test_anchors_collapse.lua) a follower of container `id`
+--- takes back on a start-side part of its relative point: 1 while `id` hangs followers from its
+--- engine, 0 from its anchor (slot) or its preview.
+local function lead(NS, id) return (NS.Anchors.HangMode(inst(NS, id)) == "engine") and 1 or 0 end
+
 local function pointOf(NS, id)
     local point, rel, x, y = NS.Anchors.StripPoints(cfgOf(NS, id))
     return table.concat({ point, rel, tostring(x), tostring(y) }, " ")
@@ -171,10 +176,10 @@ test("column: an after follower sits past its parent by its own strip's room whi
     local s = spacingOf(NS, 2)
     local x, y = placed(NS, 2)
     -- red under: batch 9's clearStrip (the seam alone: the strip sat beside the column)
-    assertEqual(x, 0); assertEqual(y, -(s + ROW), "unlocked: the seam and one strip row")
+    assertEqual(x, lead(NS, 1)); assertEqual(y, -(s + ROW), "unlocked: the seam and one strip row")
     settle(NS, mocks, true)
     x, y = placed(NS, 2)
-    assertEqual(x, 0); assertEqual(y, -s, "locked, no label: exactly the seam, as before")
+    assertEqual(x, lead(NS, 1)); assertEqual(y, -s, "locked, no label: exactly the seam, as before")
 end)
 
 test("column: the label's row counts locked and unlocked, the strip's only while it shows", function()
@@ -342,16 +347,16 @@ test("column: an ahead follower is pushed along the growth past its parent's str
     local x, y = placed(NS, 2)
     assertEqual(x, gx)
     -- red under: batch 9's parentRows (the child's strip pushed up, its block left level)
-    assertEqual(y, -2 * ROW, "the parent's strip and label rows")
+    assertEqual(y, -2 * ROW - lead(NS, 1), "the parent's strip and label rows")
     assertEqual(pointOf(NS, 2), "BOTTOMLEFT TOPLEFT 0 2", "the child's own furniture before it")
     settle(NS, mocks, true)
     x, y = placed(NS, 2)
     -- red under: the label's row counted only while the parent's strip shows
-    assertEqual(x, gx); assertEqual(y, -ROW, "locked: no strip, but the parent's label row stays")
+    assertEqual(x, gx); assertEqual(y, -ROW - lead(NS, 1), "locked: no strip, but the parent's label row stays")
     cfgOf(NS, 1).label.show = false
     settle(NS, mocks, true)
     x, y = placed(NS, 2)
-    assertEqual(x, gx); assertEqual(y, 0, "locked with no label: level with its parent")
+    assertEqual(x, gx); assertEqual(y, -lead(NS, 1), "locked with no label: level with its parent")
 end)
 
 test("column: an ahead follower clears its parent's label row, locked or not, since a long name runs on over its column", function()
@@ -366,10 +371,10 @@ test("column: an ahead follower clears its parent's label row, locked or not, si
     settle(NS, mocks, true)
     local _, y = placed(NS, 2)
     -- red under: sideRoom reading 0 while locked, so #2's label sat on #1's overrunning one
-    assertEqual(y, -ROW, "locked: past the parent's label row")
+    assertEqual(y, -ROW - lead(NS, 1), "locked: past the parent's label row")
     settle(NS, mocks, false)
     _, y = placed(NS, 2)
-    assertEqual(y, -ROW, "unlocked, the strip fitting its element: the label row alone, no jump on unlock")
+    assertEqual(y, -ROW - lead(NS, 1), "unlocked, the strip fitting its element: the label row alone, no jump on unlock")
     rootFlow(NS, "right", "up")
     settle(NS, mocks, true)
     _, y = placed(NS, 2)
