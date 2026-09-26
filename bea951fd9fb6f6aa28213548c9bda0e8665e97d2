@@ -1,0 +1,1 @@
+fixed: SR-AM-02 matches the task and interfaces; new case fails without the change (ContainerSection nil), gate-flip and stub-arm mutations caught; 7f0bdae SR-AM-02R moves the stale settings/GeneralSpells.lua:423 citation (OptionsSetup :373->:398) and regenerates docs/test-cases.md (175->176 tracked files); gate green 1639/0, luacheck 0/0, lizard clean
