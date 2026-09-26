@@ -1,5 +1,5 @@
--- tests/test_pages_icons.lua — settings/Icons.lua, driven through its widgets: the page's tabs, the
--- notice on a container that is not drawn as icons, what its rows write, and its Defaults.
+-- tests/test_pages_icons.lua — settings/Icons.lua, driven through its widgets: the section's tabs,
+-- what its rows write, and its Defaults.
 
 local T = _G.AM_TEST
 local test, assertEqual, assertTrue, assertFalse, assertNear =
@@ -14,73 +14,6 @@ local function icons(opts)
     NS.State.SetActiveContainer(2)
     return NS, m, P, P.show("Icons")
 end
-
--- BATCH 8 (owner, from a screenshot): the wrong-style note was a full-width GameFontNormalLarge
--- line in warning orange, which shouted for what is a quiet aside — nothing is wrong, the page is
--- simply inert until the style changes. It is now the small default font in the addon's
--- muted notice color, reworded to lead with the condition and name the page that fixes it, and
--- followed by the ordinary row gap rather than a 12px one. Orange is left to RenderWarnings, which
--- can draw on this very page and must stay the loudest thing on it. The color was gold (B3), then
--- muted red the same day (Task 20).
-local MSG = "Not in use: this container is drawn as bars. Set its Style to Icons on the Containers page to use these settings."
-local NOTICE = "|c" .. T.NS.Constants.NOTICE_COLOR
-
-test("icons: a bars container's tabs carry the muted-red note; an icons container's carry none", function()
-    local NS, _, P, ws = icons()
-    local notice = NOTICE .. NS.L[MSG] .. "|r"
-    assertFalse(P.hasText(ws, notice), "container 2 is drawn as icons")
-    NS.Helpers.SelectContainer(1)
-    ws = P.show("Icons")
-    -- red under: the intro testing the style the wrong way round, or not at all
-    assertTrue(P.hasText(ws, notice))
-    assertTrue(P.hasText(P.tab("icons", NS.L["Pandemic"]), notice), "and on the last tab")
-end)
-
-test("icons: on a bars container every row of every tab is drawn disabled; on an icons container none is (B-2)", function()
-    local NS, _, P = icons()
-    NS.Helpers.SelectContainer(1)
-    P.eachTab("Icons", "icons", function(key, ws)
-        local rows = P.rowWidgets(ws, "icons", key)
-        assertTrue(rows[1] ~= nil, key .. " drew its rows")
-        for _, w in ipairs(rows) do
-            -- red under: the Icons spec without disabledFor
-            assertTrue(w.disabled, key .. ": " .. w.labelText)
-        end
-    end)
-    NS.Helpers.SelectContainer(2)
-    P.eachTab("Icons", "icons", function(key, ws)
-        for _, w in ipairs(P.rowWidgets(ws, "icons", key)) do
-            -- red under: disabledFor testing the style the wrong way round
-            assertFalse(w.disabled, key .. ": " .. w.labelText)
-        end
-    end)
-end)
-
-test("icons: the wrong-style note is drawn small and gray, then a spacer before the first control (B-2)", function()
-    local NS, _, P = icons()
-    local H = NS.Helpers
-    local seen = {}
-    local textRow = H.TextRow
-    H.TextRow = function(ctx, text, opts)
-        seen[text] = opts or false
-        return textRow(ctx, text, opts)
-    end
-    H.SelectContainer(1)
-    P.show("Icons")
-    H.TextRow = textRow
-    local notice = NOTICE .. NS.L[MSG] .. "|r"
-    assertTrue(seen[notice] ~= nil, "the note is a TextRow, in the color the addon reports notices in")
-    -- red under: the note back in large orange, shouting over a page that is merely inert
-    assertEqual(seen[notice] and seen[notice].fontObject, "GameFontHighlightSmall")
-    local kids = H.EnsureScroll(H.__pageCtx.icons).children
-    local at
-    for i, w in ipairs(kids) do
-        if w.type == "Label" and w.text == notice then at = i end
-    end
-    -- red under: the note followed straight by the first control
-    assertEqual(kids[at + 1].type, "SimpleGroup")
-    assertEqual(kids[at + 1].height, NS.Helpers.ROW_VSPACER)
-end)
 
 test("icons: the six tabs are drawn in order", function()
     local NS, _, P = icons()

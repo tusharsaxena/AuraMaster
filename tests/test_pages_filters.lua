@@ -551,8 +551,10 @@ test("filters: the four tabs read General, Categories, Overrides, Sorting (batch
     -- red under: tabs keyed globally rather than per page, which would fuse this General with the
     -- Text and Bars pages' own General tabs (the library's O.RenderTabbedSchema builds a strip
     -- out of NS.SchemaForPage(pageKey) alone, so the name is the PAGE's)
+    NS.Helpers.SelectContainer(4)                   -- the starter drawn as text
     P.show("Text")
     assertEqual(P.tabKeys("text")[1], L["General"], "the Text page keeps its own General tab")
+    NS.Helpers.SelectContainer(1)                   -- back to the bars starter
     P.show("Bars")
     assertEqual(P.tabKeys("bars")[1], L["General"], "so does the Bars page")
 end)

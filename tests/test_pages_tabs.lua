@@ -1,9 +1,8 @@
--- tests/test_pages_tabs.lua — what every settings page's tabbed render draws, across the seven tabbed
--- pages (General, Containers, Filters, Layout, Bars, Icons, Text), pinned from the outside: the
--- strip's tab keys and labels in order, the active tab healing when a container switch takes it
--- away, the muted-red notice over disabled rows on a page the container's style does not use, the
--- Filters page's engine warnings above its rows, the empty registry's one placeholder tab and line,
--- and the Containers page's picker+create band.
+-- tests/test_pages_tabs.lua — what every settings page's tabbed render draws, across the two tabbed
+-- pages and the Containers page's sections (General, Containers, Filters, Layout, Bars, Icons, Text),
+-- pinned from the outside: the strip's tab keys and labels in order, the active tab healing when a
+-- container switch takes it away, the Filters section's engine warnings above its rows, the empty
+-- registry's General section alone, and the Containers page's picker+create band.
 --
 -- Characterization (testing-§13), written against the host's own tab renderer before AM-17 moved
 -- every page onto LibKa0s' O.RenderTabbedSchema and O.PageBanner (AuraMaster-R-04). Each case reads
@@ -55,17 +54,33 @@ local STRIPS = {
     { "Text",       "text",       "General=General | Font=Font | Icon=Icon | Pandemic=Pandemic | Animation=Animation" },
 }
 
-test("tabs: each of the seven pages draws its tab keys and labels in order", function()
+-- The style each starter container is drawn in: the rail lists only that style's section (#6).
+local STYLE_OF = { [1] = "bars", [2] = "icons" }
+local STYLE_PAGE = { Bars = "bars", Icons = "icons", Text = "text" }
+
+test("tabs: every page and section draws its tab keys and labels in order", function()
     local NS, _, P = env()
     for _, id in ipairs({ 1, 2 }) do
         NS.Helpers.SelectContainer(id)
         for _, page in ipairs(STRIPS) do
-            P.rerender(page[1])
-            -- red under: a group tab dropped or reordered, a host tab not taking its group's place,
-            -- or Overrides not placed ahead of Sorting
-            assertEqual(strip(P, NS.Helpers.__pageCtx[page[2]]), page[3], page[2] .. " on container " .. id)
+            local style = STYLE_PAGE[page[1]]
+            if style == nil or style == STYLE_OF[id] then
+                -- "Containers" is the General section. The page keeps the last section shown, so
+                -- without this the id=2 pass would draw Bars (healed to Icons), not General.
+                if page[2] == "containers" then
+                    assertTrue(NS.Helpers.SelectSection("containers"), "General is on the rail")
+                end
+                P.rerender(page[1])
+                -- red under: a group tab dropped or reordered, a host tab not taking its group's place,
+                -- or Overrides not placed ahead of Sorting
+                assertEqual(strip(P, NS.Helpers.__pageCtx[page[2]]), page[3], page[2] .. " on container " .. id)
+            end
         end
     end
+    NS.SetByPath("container.style", "text", 1)
+    NS.Helpers.SelectContainer(1)
+    P.rerender("Text")
+    assertEqual(strip(P, NS.Helpers.__pageCtx.text), STRIPS[7][3], "text on a text container")
 end)
 
 test("tabs: a container switch that takes the active tab away heals the strip to its first tab", function()
@@ -85,33 +100,6 @@ test("tabs: a container switch that takes the active tab away heals the strip to
     assertEqual(ctx.activeTab, "Sorting", "healed to the first tab drawn")
 end)
 
--- The notice each page draws on a container its style does not use, in the addon's muted red.
-local NOTICES = {
-    { "Bars",  "bars",  2, "Not in use: this container is drawn as icons. Set its Style to Bars on the Containers page to use these settings." },
-    { "Icons", "icons", 1, "Not in use: this container is drawn as bars. Set its Style to Icons on the Containers page to use these settings." },
-    { "Text",  "text",  2, "Not in use: this container is drawn as icons. Set its Style to Text on the Containers page to use these settings." },
-}
-
-test("tabs: Bars, Icons and Text on a mismatched style draw the muted-red notice above every row, drawn disabled", function()
-    local NS, _, P = env()
-    local color = "|c" .. NS.Constants.NOTICE_COLOR
-    for _, n in ipairs(NOTICES) do
-        NS.Helpers.SelectContainer(n[3])
-        P.eachTab(n[1], n[2], function(key, ws)
-            local note = label(ws, color .. NS.L[n[4]] .. "|r")
-            -- red under: the page dropping disabledNotice, or drawing it without the muted red
-            assertTrue(note ~= nil, n[2] .. "/" .. key .. " drew the notice")
-            local rows = P.rowWidgets(ws, n[2], key)
-            for _, w in ipairs(rows) do
-                -- red under: the notice replacing the rows, or drawn under them
-                assertTrue(indexOf(ws, note) < indexOf(ws, w), n[2] .. "/" .. key .. ": the notice first")
-                -- red under: disabledFor not reaching the rows
-                assertTrue(w.disabled, n[2] .. "/" .. key .. ": " .. tostring(w.labelText))
-            end
-        end)
-    end
-end)
-
 test("tabs: the Filters page draws the engine's warnings above the tab's rows", function()
     local NS, _, P = env()
     local warning = "|cffffa040" .. NS.L[NS.FilterCompiler.WARN.TIMELESS_BUFFS_ONLY] .. "|r"
@@ -127,24 +115,17 @@ test("tabs: the Filters page draws the engine's warnings above the tab's rows", 
     assertTrue(indexOf(ws, line) < indexOf(ws, rows[1]), "the warning above the first row")
 end)
 
-test("tabs: with no containers every per-container page draws one placeholder tab and the empty-registry line", function()
+test("tabs: with no containers General keeps its tabs and Containers offers its General section alone", function()
     local NS, _, P = env()
     for _, c in ipairs(NS.Database.GetContainers()) do NS.ContainerManager.Delete(c.id) end
-    for _, page in ipairs(STRIPS) do
-        local ws = P.rerender(page[1])
-        local drawn = strip(P, NS.Helpers.__pageCtx[page[2]])
-        if page[2] == "general" then
-            -- red under: an addon-wide page losing its tabs with the registry
-            assertEqual(drawn, page[3], "General keeps its tabs")
-        elseif page[2] == "containers" then
-            assertEqual(drawn, page[3], "Containers keeps its one tab")
-            assertTrue(P.hasText(ws, NS.L["No containers yet. Click New container, or type /am new."]), "and says how to make one")
-        else
-            -- red under: a per-container page drawing no strip (options-ui-§13), or its groups' tabs
-            assertEqual(drawn, "__empty=" .. NS.L["Container"], page[2])
-            assertTrue(P.hasText(ws, NS.L["No containers yet. Create one on Containers, or type /am new."]), page[2] .. "'s line")
-        end
-    end
+    P.rerender("General")
+    -- red under: an addon-wide page losing its tabs with the registry
+    assertEqual(strip(P, NS.Helpers.__pageCtx.general), STRIPS[1][3], "General keeps its tabs")
+    local ws = P.rerender("Containers")
+    assertEqual(strip(P, NS.Helpers.__pageCtx.containers), STRIPS[2][3], "Containers keeps its one tab")
+    assertTrue(P.hasText(ws, NS.L["No containers yet. Click New container, or type /am new."]), "and says how to make one")
+    -- red under: a section that needs a container reachable with none (an empty page under a strip)
+    assertFalse(NS.Helpers.SelectSection("filters"))
 end)
 
 test("tabs: the Containers page's band holds the picker and New container, out of the tab body", function()
@@ -190,10 +171,11 @@ local function releasingChildren(m)
 end
 
 test("tabs: re-rendering Filters and Containers ten times each leaves the live Dropdown and Button counts flat", function()
-    local _, m, P = env()
+    local NS, m, P = env()
     releasingChildren(m)
     for _, page in ipairs({ "Filters", "Containers" }) do
         -- Two renders first, so the widgets the environment drew before the patch are all given back.
+        if page == "Containers" then assertTrue(NS.Helpers.SelectSection("containers")) end
         P.rerender(page)
         P.rerender(page)
         local dropdowns, buttons = m.__aceguiLive("Dropdown"), m.__aceguiLive("Button")

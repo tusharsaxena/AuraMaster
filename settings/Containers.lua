@@ -2,29 +2,31 @@ local _, NS = ...
 
 -- settings/Containers.lua — the Containers page: which containers exist, and what each is.
 --
---     band        [Container v picker ][ New container ]            <- above the strip (options-ui-§14)
---     [ General ]
---     General     [Name] [Enabled]
---                 -- What it shows, and how --                     <- subsection (options-ui-§7)
---                 [Unit] [Aura type] / [Style]
---                 [Duplicate] [Delete]                             <- acts on the selected container
---                 -- Copy settings from --  [Source v] [What v] [Copy]
+--     band      [Container v picker ][ New container ]         <- above the rail AND the strip (options-ui-§14)
+--     rail      | General |  [ General ]                        <- the rail's first entry, and its one tab
+--               | Filters |  [Name] [Enabled]
+--               | Layout  |  -- What it shows, and how --       <- subsection (options-ui-§7)
+--               | <style> |  [Unit] [Aura type] / [Style]
+--                            [Duplicate] [Delete]               <- acts on the selected container
+--                            -- Copy settings from --  [Source v] [What v] [Copy]
 --
--- A TOP-LEVEL PAGE (N-1, batch 7) whose single tab is Containers. It used to be General's third
--- tab (docs/superpowers/specs/2026-09-15-feedback-batch7-design.md, N-1); the owner moved it out to
--- its own page, mirroring MultiMeters' Windows, and Filters, Layout, Bars and Icons became its
--- sub-pages (N-2, marked by NS.SubPageLabel — settings/OptionsSetup.lua's D6 section).
+-- A TOP-LEVEL PAGE (N-1, batch 7), and since #6 the one page per container: the band on top, a
+-- nav rail (General, Filters, Layout and the container's own style) and the selected section's
+-- tabs. This file's rows are the General section; settings/OptionsSetup.lua draws the page.
 --
--- THE PICKER AND NEW CONTAINER SIT IN THE BAND ABOVE THE STRIP (feedback #2, 2026-09-19), in the
--- library's page banner with its create action (O.PageBanner's `action`, through
--- Helpers.ContainerBanner in settings/OptionsSetup.lua): the identity controls options-ui-§14 puts
--- there, on one row. The acts on the selected container — Name, Enabled,
--- Duplicate, Delete, Copy settings from — stay on the page's one tab, which options-ui-§14 then names General.
--- This retired the page's options-ui-§14 deviation (docs/ARCHITECTURE.md). The band is drawn anew
--- on every render, so a Delete's two refreshes cannot lose it; the library gives the widgets of the
--- band before back to AceGUI once the new band exists, never during a render.
+-- THE PICKER AND NEW CONTAINER SIT IN THE BAND ABOVE THE RAIL AND THE STRIP (feedback #2,
+-- 2026-09-19; #6), in the library's page banner with its create action (O.PageBanner's `action`,
+-- through Helpers.ContainerBanner in settings/OptionsSetup.lua): the identity controls
+-- options-ui-§14 puts there, on one row, and the page's ONLY picker. The rail beside it chooses
+-- which part of the container is shown, never which container. The acts on the selected container
+-- — Name, Enabled, Duplicate, Delete, Copy settings from — are the rail's General section, whose one
+-- tab options-ui-§14 names General. This retired the page's options-ui-§14 deviation
+-- (docs/ARCHITECTURE.md). The band is drawn anew on every render, so a Delete's two refreshes cannot
+-- lose it; the library gives the widgets of the band before back to AceGUI once the new band
+-- exists, never during a render.
 --
--- This file registers its own rows and its own page, at the bottom, like every other page file.
+-- This file registers its own rows and the page's General section, and builds the page (`build`, at
+-- the bottom); Helpers.RenderContainerPage in settings/OptionsSetup.lua draws it.
 
 local L = NS.L
 local H = NS.Helpers
@@ -85,7 +87,7 @@ local ROWS = {
     {
         path = "container.style", page = PAGE, group = GROUP, subgroup = S_SHOWS, type = "string",
         values = NS.Choices(C.STYLES, C.STYLE_LABELS), label = L["Style"],
-        desc = L["Draw each aura as a bar, an icon or a line of text. Bars, Icons and Text each have their own settings page."],
+        desc = L["Draw each aura as a bar, an icon or a line of text. Bars, Icons and Text each have their own section on this page."],
         -- B5: a new style resets Fill (Layout -> Growth) to the one it suits, through the one write
         -- seam and for the same container, then the panel rebuilds once. Only on a real change: the
         -- seam hands onChange the value it replaced. A duplicate, a copy-from's own layout, a profile
@@ -250,7 +252,7 @@ NS.RegisterContainerSection(PAGE, L["General"], {
 -- re-renders the page from inside the button's own OnClick; the library holds the old Button aside
 -- until the new band exists, so it is never handed back under its own callback.
 local BAND = {
-    tooltip = L["Which container this page, and the Filters, Layout, Bars, Icons and Text pages, edit. The choice is shared by every page."],
+    tooltip = L["Which container every section of this page edits."],
     action  = {
         text    = L["New container"],
         tooltip = L["Create a container showing the player's buffs as bars. Change what it shows below."],

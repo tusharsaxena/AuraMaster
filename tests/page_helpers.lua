@@ -58,17 +58,23 @@ return function(NS, m)
         return out
     end
 
-    --- Fire a page's OnShow and answer the widgets that render drew.
-    ---
-    --- `page` is the page's plain display name. A sub-page of Containers (Filters, Layout, Bars,
-    --- Icons — N-2) registers its Blizzard subcategory under a MARKED tree label (D6,
-    --- NS.SubPageLabel), so the plain name is tried first and the marked one second: callers keep
-    --- writing `P.show("Filters")` whether or not the page they are showing happens to be nested.
+    -- The Containers page's sections by their old page names (#6): `P.show("Filters")` selects the
+    -- section and shows Containers, so a suite written against the sub-pages reads the same.
+    local SECTIONS = { Filters = "filters", Layout = "layout", Bars = "bars", Icons = "icons", Text = "text" }
+
+    --- Fire a page's OnShow and answer the widgets that render drew. `page` is the page's plain display
+    --- name, or a Containers section's (above), which is selected first. A section the selected
+    --- container's rail does not list is an error, never a silent draw of another section.
     function P.show(page)
         local mark = #ace.__created
-        local sub = m.__subcategories[page]
-        if not sub and NS.SubPageLabel then sub = m.__subcategories[NS.SubPageLabel(page)] end
-        sub:__fire("OnShow")
+        local key = SECTIONS[page]
+        if key then
+            if not NS.Helpers.SelectSection(key) then
+                error("section " .. key .. " is not on the rail for the selected container", 2)
+            end
+            page = "Containers"
+        end
+        m.__subcategories[page]:__fire("OnShow")
         return since(mark)
     end
 

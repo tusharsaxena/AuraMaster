@@ -3,11 +3,11 @@ local _, NS = ...
 -- settings/OptionsSetup.lua — wires the addon into LibKa0s-Options-1.0 (options-ui-§1).
 --
 -- The canvas shell, the schema-row → AceGUI makers, the two-column flow engine, the chrome band and
--- the tabbed page itself -- the strip, the stale-tab heal, the tab switch, the disabled notice and
--- the page banner with its create button -- are the library's (O.RenderTabbedSchema, O.PageBanner).
+-- the tabbed page itself -- the strip, the stale-tab heal, the tab switch, the nav rail and the page
+-- banner with its create button -- are the library's (O.RenderTabbedSchema, O.NavRail, O.PageBanner).
 -- This file is the part that is ours: where a value lives, which rows belong to which page, what a
--- color looks like on disk -- and the CONTAINER BANNER every per-container page shares, with
--- Helpers.RenderPage, which maps this addon's page spec onto the library's tabbed page.
+-- color looks like on disk -- and the Containers page — its band, its nav rail and its sections (#6),
+-- with Helpers.RenderPage, which maps this addon's page spec onto the library's tabbed page.
 --
 -- Loads after settings/Slash.lua and BEFORE every settings/<page>.lua, because those files call
 -- the composers (NS.Helpers.FontGroup, …) at FILE LOAD.
@@ -49,51 +49,6 @@ local function vetoedFromResetAll(row)
     if vetoedFromPanelReset(row) then return true end
     if row.page == "profiles" then return true end
     return not row.sessionOnly
-end
-
--- ---------------------------------------------------------------------
--- The nesting mark
--- ---------------------------------------------------------------------
---
--- Blizzard's Settings tree draws every canvas subcategory of one addon at the SAME depth, and this
--- addon's pages are not one flat set: Filters, Layout, Bars and Icons all edit the container that
--- Containers has selected, while General, Containers and Profiles edit the addon (or, for
--- Containers, the registry of containers itself) and never retarget when the picker moves.
--- Four pages presented as peers of the three that never retarget is the tree lying about what a
--- click will change (N-2).
---
--- There is no API for a third level, so the mark is TYPOGRAPHY, copied from the established pattern
--- in MultiMeters (D6, `MultiMeters/settings/OptionsSetup.lua:91`) rather than invented fresh here:
--- two spaces, a hyphen and a space, prefixed to the tree label ONLY. It is deliberately not part of
--- the page's own title -- the canvas heading and the breadcrumb keep the plain name, because a page
--- heading that starts indented reads as a layout bug.
---
--- THE INDENT DOES THE NESTING; THE HYPHEN MARKS THE ITEM. MultiMeters recorded two earlier spellings
--- that got one of those and not the other, and both failed in their own way (a hollow box where the
--- font had no glyph for a rightward arrow, and a bare "|- " that read as a bulleted list rather than
--- as nesting) -- reasons enough to keep copying the working spelling rather than choosing a new one.
---
--- Whitespace was confirmed in MultiMeters's own client to survive -- leading whitespace is the kind
--- of thing a UI toolkit trims, and this one does not -- which is what makes the hyphen safe to add:
--- it is decoration on an indent that is already doing the work, rather than the only thing standing
--- in for it.
---
--- Not a locale string. It is furniture rather than text, and a translator handed two spaces and a
--- hyphen has nothing to translate and one more chance to drop a space.
-local SUBPAGE_MARK = "  - "
-
---- The tree label for a page nested under Containers.
----
---- Used by the four container pages (Filters, Layout, Bars, Icons) at the
---- RegisterCanvasLayoutSubcategory call and nowhere else. General, Containers and Profiles do NOT
---- call it: none of them is about one container, and marking them would make the mark mean nothing.
---- A helper rather than the literal at each call site so every caller stays exactly one string away
---- from the decision, and a future page that becomes (or stops being) a sub-page changes one call.
----
---- @param name string  the page's own display name
---- @return string
-function NS.SubPageLabel(name)
-    return SUBPAGE_MARK .. tostring(name)
 end
 
 local lib = LibStub and LibStub("LibKa0s-Options-1.0", true)
@@ -319,7 +274,6 @@ if not lib then
     NS.CreateOptionsPanel  = function() sayMissing() end
     NS.OpenOptionsPanel    = function() sayMissing() end
     NS.OpenOptionsPage     = function() sayMissing() end
-    NS.RegisterContainerPage = function(pageKey, title, _, spec) NS.RegisterContainerSection(pageKey, title, spec) end
     return
 end
 
@@ -463,25 +417,6 @@ end
 -- The tabbed page: this addon's page spec, mapped onto the library's
 -- ---------------------------------------------------------------------------
 
---- The notice over a page drawn disabled, in the addon's muted red (C.NOTICE_COLOR). The library
---- draws it, in the small font with the ordinary row gap under it, and adds no color of its own.
----
---- It was large orange (GameFontNormalLarge, |cffffa040) across the whole pane until batch 8, which
---- shouted a full-width warning for what is an informational aside — nothing is wrong, the page is
---- simply inert until the player changes one dropdown elsewhere. Gray at the default Label size is
---- the same voice the addon already uses for a line that reports rather than warns (the combat
---- refusals in settings/Containers.lua print in this exact gray), and it leaves orange meaning what
---- it means everywhere else in the panel: RenderWarnings' "the game will not honor this", which can
---- sit on the very same page and must still be the loudest thing on it. The owner then asked for it
---- in a muted gold (2026-09-19, B3): the gray read as disabled text rather than as a note, and a gold
---- quieter than the title's is still no warning. Later the same day the owner asked for muted red
---- instead (Task 20), on bars, icons and text pages alike; the combat refusals keep their gray.
-local function mutedNotice(notice, cfg)
-    if type(notice) == "function" then notice = notice(cfg) end
-    if type(notice) ~= "string" then return nil end
-    return "|c" .. C.NOTICE_COLOR .. notice .. "|r"
-end
-
 -- The page key an empty registry's render hands the library: no row carries it, so the strip it
 -- draws is the one placeholder tab below and nothing else (options-ui-§13: every page draws a strip).
 local EMPTY_PAGE = "__empty"
@@ -511,10 +446,8 @@ end
 
 --- The library's `opts` for one render of a page with a container (or an addon-wide page).
 local function pageOpts(spec, cfg)
-    local disabledFor, notice, intro = spec.disabledFor, spec.disabledNotice, spec.intro
+    local intro = spec.intro
     local opts = { tabs = hostTabs(spec, cfg), cfg = cfg }
-    if disabledFor then opts.disabledFor = function(c) return c ~= nil and disabledFor(c) end end
-    if notice then opts.disabledNotice = function(c) return mutedNotice(notice, c) end end
     if intro and cfg then opts.chrome = function(c) intro(c, cfg) end end
     return opts
 end
@@ -522,10 +455,10 @@ end
 --- Render one tabbed page through the library's O.RenderTabbedSchema: the optional `banner(ctx)`
 --- first (the strip reserves its band under it), then the strip over the page's schema groups and
 --- its own tabs, then the active tab's content. The library owns the partition, the stale-tab heal,
---- the tab-switch re-render, the disabled notice and the release of the banner's widgets; this
---- wrapper owns only what the page spec means for this addon. General calls it directly; the
---- sub-pages with Helpers.ContainerBanner as `banner`, and the Containers page through
---- RenderContainerPage. A per-container page with no container draws the empty registry's one tab and line.
+--- the tab-switch re-render and the release of the banner's widgets; this wrapper owns only what the
+--- page spec means for this addon. General calls it directly, and the Containers page, for each of
+--- its sections, through RenderContainerPage. A per-container page with no container draws the
+--- empty registry's one tab and line.
 ---
 --- `spec` fields, all optional:
 ---   addonWide            the page's tabs do not depend on a container existing (General)
@@ -534,9 +467,6 @@ end
 ---                        has none); one keyed by a schema group replaces that group's rows, one
 ---                        with `before` is drawn ahead of the tab it names
 ---   intro(ctx, cfg)      drawn above every tab's content, when a container is selected
----   disabledFor(cfg)     true draws every control of every tab disabled (a page tab's widgets
----                        through `ctx.__renderDisabled`), under `disabledNotice` (a string, or a
----                        function of cfg answering one), drawn as a small muted-red note
 ---   afterGroup           the flow engine's { [group] = fn(ctx) } hooks
 ---   pairWith             the flow engine's { [path] = maker(ctx, rowGroup) } right-half partners
 function Helpers.RenderPage(ctx, pageKey, spec, banner)
@@ -601,10 +531,12 @@ local function stashTab(ctx)
 end
 
 --- Bind the Containers page's ctx (settings/Containers.lua's builder). The page opens on General.
+--- Every section key names the same ctx in the test seam: a section is the page, drawn on it.
 function Helpers.__bindContainersPage(ctx)
     containersCtx = ctx
     ctx.sectionTabs = {}
     ctx.activeSection = GENERAL_SECTION
+    for key in pairs(sections) do Helpers.__pageCtx[key] = ctx end
     Helpers.__pageCtx[GENERAL_SECTION] = ctx
 end
 
@@ -668,31 +600,3 @@ end
 -- Test seam: the ctx each tabbed page built, by page key. The library keeps its registry private,
 -- and a page whose ctx is unreachable is a page whose render is untested.
 Helpers.__pageCtx = {}
-
---- Register a per-container settings page: the Blizzard subcategory, the lazily-drawn body, and a
---- page-wide Defaults button that restores the SELECTED container's rows on this page.
----
---- Every caller of this helper (Filters, Layout, Bars, Icons, Text) is a sub-page of Containers (N-2), so
---- the tree label it registers under always carries NS.SubPageLabel's mark. `title` itself stays
---- plain: it is what CreatePanel draws as the canvas heading and the breadcrumb, and D6 marks the
---- tree entry only, never the page's own name.
-function NS.RegisterContainerPage(pageKey, title, frameName, spec)
-    NS.RegisterContainerSection(pageKey, title, spec)
-    NS.RegisterOptionsPage(pageKey, title, function(mainCategory)
-        if not (Settings and Settings.RegisterCanvasLayoutSubcategory) then return nil end
-        local ctx = Helpers.CreatePanel(frameName, title, {
-            pageKey         = pageKey,
-            defaultsButton  = true,
-            defaultsTooltip = L["Restore every setting on this page, for the selected container, to its default."],
-        })
-        ctx.panel.defaultsOnClick = function() Helpers.RestoreDefaults(pageKey, ctx) end
-        Helpers.SetRenderer(ctx, function(c) Helpers.RenderPage(c, pageKey, spec, Helpers.ContainerBanner) end)
-        Helpers.__pageCtx[pageKey] = ctx
-        -- categories[pageKey] is recorded by the NS.RegisterOptionsPage wrapper above, from
-        -- whatever this builder returns (N-3) — no need to set it here too.
-        -- NS.SubPageLabel is applied unconditionally here, so EVERY container page nests under
-        -- Containers (true for all five callers today); a future container page that should NOT
-        -- nest would need its own registration path, not a call through this helper.
-        return Settings.RegisterCanvasLayoutSubcategory(mainCategory, ctx.panel, NS.SubPageLabel(title))
-    end)
-end

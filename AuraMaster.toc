@@ -125,12 +125,11 @@ settings\GeneralSpells.lua
 settings\GeneralDispel.lua
 settings\General.lua
 # LOAD-BEARING: Containers is a top-level page (N-1); its tree position, right after General
-# and before its sub-pages, is fixed by this load position (N-2).
+# and before Profiles, is fixed by this load position.
 settings\Containers.lua
-# Conventional: the page files, each registering its rows and page at load. Filters, Layout,
-# Bars, Icons and Text are sub-pages of Containers (N-2, D6): their tree label carries
-# NS.SubPageLabel's mark, and this load position -- after Containers, before Profiles -- is
-# what fixes their place in the tree.
+# Conventional: the Containers page's sections (#6) -- Filters, Layout, Bars, Icons and Text --
+# each registering its rows and its section at load. The rail's order is settings/OptionsSetup.lua's
+# SECTION_ORDER, not this one.
 settings\Filters.lua
 settings\Layout.lua
 settings\Bars.lua

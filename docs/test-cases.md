@@ -1359,16 +1359,15 @@ badge and any count quoted in the docs must agree with it.
 - bulklog: Bulk.Run stays silent only when its act sets info.profileReset, the profile reset's signal
 - bulklog: a library Defaults a row's onChange stops counts the write it stored
 
-### test_optionssetup.lua (19)
+### test_optionssetup.lua (17)
 
 - options: NS.Helpers IS the library instance
-- options: every page registers, in TOC order, and Profiles opts out without AceDBOptions
+- options: General and Containers register, in TOC order; the former sub-pages do not, and Profiles opts out without AceDBOptions
 - options: the Profiles page SHOWS the container AceConfigDialog fills, even a pooled (hidden) one
 - options: every page renders without a reported error
 - options: the General page leads with Master controls, in canonical order
 - options: the Filters page offers the Overrides tab only for a buff or debuff container, never an unknown type
 - options: a container page's tabs are its schema groups, with a bespoke tab placed where it asks; a stale tab falls back
-- options: with no containers a container page draws one placeholder tab
 - options: the banner is the picker — choosing a container retargets every page
 - options: the Containers page's New button creates and selects a container
 - options: a page's Defaults button restores only the selected container
@@ -1379,9 +1378,8 @@ badge and any count quoted in the docs must agree with it.
 - options: a wrapped tab strip reserves the same band and places every tab at the same y for every selection
 - options: the degraded stub completes the load — every page's rows still register
 - options: the library-absent schema is the full one minus exactly the composed rows (options-ui-§1)
-- options: a page drawn for another style heads its tabs with the notice in muted red (Task 20)
 
-### test_options_descriptor.lua (19)
+### test_options_descriptor.lua (18)
 
 - options descriptor: a rendered widget reads the selected container and writes it through the seam
 - options descriptor: a color swatch shows the stored color and stores the picker's in the {r, g, b, a} shape
@@ -1394,7 +1392,6 @@ badge and any count quoted in the docs must agree with it.
 - options descriptor: every page's Container picker sorts by name, case-insensitively, the id breaking a tie (B2-2)
 - options descriptor: a container page draws its intro, then the bespoke tabs its container's type admits
 - options descriptor: with no containers a page draws the one empty-registry line and no intro
-- options descriptor: a page disabled for its container hands the disable to a bespoke tab, and lets go after
 - options descriptor: RenderPage draws no banner; a banner hook draws the container band first
 - options descriptor: an addon-wide tabbed page draws every tab with no container, and a bespoke tab keyed by a group takes its place
 - options descriptor: a bespoke tab with `before` is drawn ahead of the tab it names, else last
@@ -1612,11 +1609,8 @@ badge and any count quoted in the docs must agree with it.
 - layout: a chain root's Growth tab says how many containers follow its fill and growth
 - layout: Named frame reads Named frame anchor point on the left and This container anchor point on the right (owner, 2026-09-26)
 
-### test_pages_bars.lua (14)
+### test_pages_bars.lua (11)
 
-- bars: every tab of an icons container carries the muted-red note; a bars container's carry none
-- bars: on an icons container every row of every tab is drawn disabled; on a bars container none is (B-2)
-- bars: the wrong-style note is drawn small and gray, then a spacer before the first control (B-2)
 - bars: the Icon tab holds the icon's four rows, then the composed icon-border block (B-1)
 - bars: the General tab's Spark subsection turns the spark off on auras without a duration (B-3)
 - bars: the seven tabs are drawn in order, whatever the container shows (S-1: Size folded into General)
@@ -1629,28 +1623,22 @@ badge and any count quoted in the docs must agree with it.
 - pages: every Border style row says Solid redraws at once and another texture after a /reload (B2-3)
 - bars: Defaults restores the selected container's bar look and leaves its icon look alone
 
-### test_pages_icons.lua (8)
+### test_pages_icons.lua (5)
 
-- icons: a bars container's tabs carry the muted-red note; an icons container's carry none
-- icons: on a bars container every row of every tab is drawn disabled; on an icons container none is (B-2)
-- icons: the wrong-style note is drawn small and gray, then a spacer before the first control (B-2)
 - icons: the six tabs are drawn in order
 - icons: Width on the Icons page writes the icon width, never the bar width
 - icons: the Cooldown rows write the selected container's swipe
 - icons: the Pandemic tab holds the time color and the highlight, in pandemic-window words, paths unchanged (B2-1)
 - icons: Defaults restores the selected container's icon look and leaves its bar look alone
 
-### test_pages_text.lua (31)
+### test_pages_text.lua (28)
 
 - text page: the five tabs are drawn in order, Pandemic before Animation (B2-1)
-- text page: a bars or icons container sees every row disabled under the note naming its style
-- text page: the Bars and Icons pages name the text style on a text container
 - text page: General holds Size, the Template dropdown and box, the cheat sheet, then Placement
 - text page: the section is named Text Template (Task 20, owner: rename this section)
 - text page: the Preview is a disabled EditBox labeled Preview, PrettyChat's own shape (Task 20)
 - text page: the Preview box refreshes after a template change (Task 20)
 - text page: the cheat sheet has a Tokens heading, a Rules heading and one bullet per token (Task 20)
-- text page: the Text Template block grays with the page on a bars container (2026-09-20)
 - text page: a valid template is stored; a refused one is not, and the panel prints why
 - text page: /am set refuses a bad template with the parser's reason, indented under the refusal
 - text page: a gray note under Justify says what Center does and why, whatever the justify (item 3)
@@ -1674,13 +1662,12 @@ badge and any count quoted in the docs must agree with it.
 - text page: Size to fit leads Size; while it is on Width and Height dim under a note, and say why
 - text page: /am set container.text.autoSize reaches the same seam
 
-### test_pages_tabs.lua (7)
+### test_pages_tabs.lua (6)
 
-- tabs: each of the seven pages draws its tab keys and labels in order
+- tabs: every page and section draws its tab keys and labels in order
 - tabs: a container switch that takes the active tab away heals the strip to its first tab
-- tabs: Bars, Icons and Text on a mismatched style draw the muted-red notice above every row, drawn disabled
 - tabs: the Filters page draws the engine's warnings above the tab's rows
-- tabs: with no containers every per-container page draws one placeholder tab and the empty-registry line
+- tabs: with no containers General keeps its tabs and Containers offers its General section alone
 - tabs: the Containers page's band holds the picker and New container, out of the tab body
 - tabs: re-rendering Filters and Containers ten times each leaves the live Dropdown and Button counts flat
 
@@ -1931,17 +1918,17 @@ badge and any count quoted in the docs must agree with it.
 | test_slash_verbs.lua | 50 |
 | test_diagnostics.lua | 38 |
 | test_bulklog.lua | 20 |
-| test_optionssetup.lua | 19 |
-| test_options_descriptor.lua | 19 |
+| test_optionssetup.lua | 17 |
+| test_options_descriptor.lua | 18 |
 | test_pages_general.lua | 35 |
 | test_pages_general_categories.lua | 32 |
 | test_pages_containers.lua | 31 |
 | test_pages_filters.lua | 49 |
 | test_pages_layout.lua | 47 |
-| test_pages_bars.lua | 14 |
-| test_pages_icons.lua | 8 |
-| test_pages_text.lua | 31 |
-| test_pages_tabs.lua | 7 |
+| test_pages_bars.lua | 11 |
+| test_pages_icons.lua | 5 |
+| test_pages_text.lua | 28 |
+| test_pages_tabs.lua | 6 |
 | test_pages_rail.lua | 16 |
 | test_pages_about.lua | 3 |
 | test_pages_profiles.lua | 3 |
@@ -1959,4 +1946,4 @@ badge and any count quoted in the docs must agree with it.
 | test_eol.lua | 2 |
 | test_layout_cap.lua | 13 |
 | test_diagnostics_contract.lua | 7 |
-| **Total** | **1653** |
+| **Total** | **1640** |

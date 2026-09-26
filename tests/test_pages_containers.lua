@@ -96,8 +96,8 @@ end)
 test("containers: NS.OpenOptionsPage('containers') opens its own category, not the main one (N-3)", function()
     -- Subcategory ids start at 101: the kit's main category answers GetID() == 1. Registering its
     -- own category (the test above) used to not be enough for OpenOptionsPage to find it: that seam
-    -- only recorded a category for pages built through NS.RegisterContainerPage
-    -- (settings/OptionsSetup.lua), while Containers, like General, builds through the plain
+    -- only recorded a category for the per-container sub-pages' own registration helper (retired
+    -- with the sub-pages, #6), while Containers, like General, builds through the plain
     -- NS.RegisterOptionsPage. N-3 closed that gap: NS.RegisterOptionsPage's own wrapper now records
     -- whatever category its builder returns, so every registered page (not only container pages)
     -- is reachable by key.

@@ -745,7 +745,7 @@ local function renderOverrides(ctx, cfg)
         L["These spells are never shown in this container, unless the whitelist also names them — the whitelist wins."])
 end
 
-NS.RegisterContainerPage(PAGE, L["Filters"], "AuraMasterFiltersPanel", {
+NS.RegisterContainerSection(PAGE, L["Filters"], {
     tooltip = L["Which auras this container shows, and in what order."],
     intro = function(ctx, cfg) H.RenderWarnings(ctx, cfg) end,
     pairWith = {
