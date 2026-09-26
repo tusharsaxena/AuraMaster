@@ -1,0 +1,1 @@
+AM-ATS-04 review: PASS — the only open issue from the independent review of e0b0e9c/67674a6 (four stale comment citations) is fixed here, comment-only; git grep finds no remaining "Anchors.lua's Attach" citation. The reviewer's full check stands (pure move, TOC/load order, docs, 1243 -> 890). Gate re-run: 1660 passed / 0 failed, luacheck 0/0 in 144 files.
