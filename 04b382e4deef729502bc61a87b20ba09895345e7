@@ -1,0 +1,1 @@
+clean: SR-AM-01 reviewed - libs/LibKa0s and tests/_kit byte-identical to v1.61.0 (c6183bd) archive; NavRail stub is the only runtime change and its parity case fails without it (control-diffed in scratch); gate 1637/0/0, luacheck 0/0, lizard clean; CRLF on all written files
