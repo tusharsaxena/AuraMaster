@@ -52,7 +52,7 @@ Example (shortened):
 
 ```
 [Diag] ==== Ka0s Aura Master diagnostics begin ====
-[Diag] AuraMaster v0.1.0, schema v11, profile 'Default', 4 container(s)
+[Diag] AuraMaster v1.0.0, schema v11, profile 'Default', 4 container(s)
 [Diag] client: version=12.1.0 build=12345 date=Sep 1 2026 interface=120100
 [Diag] locale: enUS
 [Diag] debug logging: on

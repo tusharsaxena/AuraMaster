@@ -64,8 +64,8 @@ end)
 -- ── Env ───────────────────────────────────────────────────────────────────────────────────────
 
 test("env: the version falls back to NS.version where the TOC cannot be read", function()
-    assertEqual(NS.Version(), "0.1.0")
-    assertEqual(NS.version, "0.1.0")
+    assertEqual(NS.Version(), "1.0.0")
+    assertEqual(NS.version, "1.0.0")
 end)
 
 test("env: the metadata reader never calls the deprecated global", function()
@@ -120,7 +120,7 @@ test("degraded: without LibKa0s the addon still loads and every seam answers", f
     assertEqual(NS2.Constants.FONT_MONO, NS2.Constants.FALLBACK_FONT, "a real client font")
     NS2.DebugLog:SetEnabled(true)
     assertTrue(NS2.State.debug, "the flag still works; only the window is gone")
-    assertEqual(NS2.Version(), "0.1.0")
+    assertEqual(NS2.Version(), "1.0.0")
     local r, g, b, a = NS2.ResolveColor({ r = 0.1, g = 0.2, b = 0.3, a = 0.4 }, false)
     assertEqual(r + g + b + a, 1.0)
 end)

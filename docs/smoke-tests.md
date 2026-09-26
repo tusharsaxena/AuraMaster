@@ -27,7 +27,7 @@ suite covers what only the client can show.
    and a white description.
 7. `/am wibble` → the unknown-command line, then the help block.
 8. `/am options` → opens the settings (alias of `config`).
-9. `/am version` → `v0.1.0`.
+9. `/am version` → `v1.0.0`.
 10. `/am containers` → one line per container, the selected one marked `>`.
 11. `/am new target debuffs icons` → `Created …` naming a target/debuffs/icons container, which appears
     on screen and becomes the selected one. `/am new nonsense` → `Unknown word 'nonsense' …`, nothing

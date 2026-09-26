@@ -222,7 +222,7 @@ The suites, in the order `tests/run.lua` runs them (it is the authority on the l
 
 | File | Responsibility |
 |---|---|
-| `AuraMaster.toc` | Metadata (Interface 120100, version 0.1.0, `X-Standard`), SavedVariables `AuraMasterDB` and `AuraMasterPerfDB`, the load order |
+| `AuraMaster.toc` | Metadata (Interface 120100, version 1.0.0, `X-Standard`), SavedVariables `AuraMasterDB` and `AuraMasterPerfDB`, the load order |
 | `.luacheckrc` | Lint config: Lua 5.1, excludes `libs/`, `tests/_kit/` and the frozen `docs/` bundles; the harness global in a `tests/` stanza |
 | `.pkgmeta` | Packager config: no externals; ignores dev files, `docs`, `tests`, `tools` (the committed generators, never loaded in game), `_dev`, and the `.png`/`.jpg` logo sources |
 | `.gitattributes` | The client-bound line-ending policy (line-endings-§5): CRLF working tree, `*.sh` LF, binaries marked |
