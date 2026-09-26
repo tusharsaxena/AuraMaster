@@ -9,145 +9,82 @@
 Ka0s Aura Master lets you build your own buff and debuff displays. Each one is a container. You pick
 whose auras it shows (yours, your target's, your focus's or your pet's), whether it shows buffs,
 debuffs or your weapon enchants, and whether they draw as timer bars, as icons or as lines of text.
-Make as many as you like and trim each one down to the auras you actually care about. A container
-can sit anywhere on screen, or attach to another container or to any in-game frame.
+
+Make as many as you like and trim each one down to the auras you actually care about. Choose from several predefined spell categories (offensive cooldowns, defensive cooldowns, movement abilities, utility spells, etc) to select which auras are shown in which container, create your own custom spell categories or use a blacklist/whitelist to fine-tune further per container.
 
 Aura Master is built on the Aura Container APIs that arrived in 12.1. The game hides aura details
 from addons during combat, so Aura Master never reads your auras at all. It tells the game's own
-aura display what to show and how to style it, and the game does the rest, in combat and out of it.
-
-You set everything up from the addon's page under Settings → AddOns, from the button on your
-minimap, or from chat with `/am`. Left-click the minimap button to open the settings. Right-click it
-for a small menu with three checkboxes, **Enabled**, **Locked** and **Test mode**, which do exactly
-what `/am enable`/`disable`, `/am lock`/`unlock` and `/am test` do. While the addon is turned off,
-Locked and Test mode are grayed out until you enable it again. Hover over the button to see whether
-the addon is enabled, whether the containers are locked and whether test mode is on. That works even
-while the addon is off.
-
-If you'd rather not have the button, the Minimap button checkbox under General → Master controls
-turns it off, and it stays off. Resetting your settings won't put it back, any more than a reset
-drags the button to a different spot on the ring. If you use Titan Panel, Bazooka or ElvUI's data
-texts, the addon shows up there as *Ka0s Aura Master*.
+aura display what to show and how to style it, and the game does the rest, in combat and out of it. A container
+can sit anywhere on screen, or attach to another container or to any in-game frame. 
 
 ## Screenshots
 
-**_Live in combat, with each container labeled_**
+**_AuraMaster live in combat_**
 
-![Live in combat, with each container labeled](https://raw.githubusercontent.com/tusharsaxena/AuraMaster/master/media/screenshots/auramaster.screenshot.01.jpg)
+![AuraMaster live in combat](https://media.forgecdn.net/attachments/1979/410/auramaster-screenshot-01-jpg.jpg)
+_[Watch on YouTube](https://www.youtube.com/watch?v=lJoZiVA_SBE)_
 
-**_Unlocked: every container shows its drag handle_**
+**_Unlocked Mode_**
 
-![Unlocked: every container shows its drag handle](https://raw.githubusercontent.com/tusharsaxena/AuraMaster/master/media/screenshots/auramaster.screenshot.02.jpg)
+![Unlocked Mode](https://media.forgecdn.net/attachments/1979/411/auramaster-screenshot-02-jpg.jpg)
 
-**_Unlocked with test mode on, so every container fills with sample spells_**
+**_Unlocked Mode with Test Spells_**
 
-![Unlocked with test mode on, so every container fills with sample spells](https://raw.githubusercontent.com/tusharsaxena/AuraMaster/master/media/screenshots/auramaster.screenshot.03.jpg)
+![Unlocked Mode with Test Spells](https://media.forgecdn.net/attachments/1979/412/auramaster-screenshot-03-jpg.jpg)
 
-**_The Spell Categories tab, where each category's spell list lives_**
+**_Spell categories_**
 
-![The Spell Categories tab, where each category's spell list lives](https://raw.githubusercontent.com/tusharsaxena/AuraMaster/master/media/screenshots/auramaster.screenshot.04.png)
+![Spell categories](https://media.forgecdn.net/attachments/1979/413/auramaster-screenshot-04-png.png)
 
 ## Usage
 
-Your first login gives you four containers to start from: your buffs as bars near the top right of
-the screen, your debuffs as a row of icons just above them, the debuffs you've put on your target as
-icons a little below the middle of the screen, and your offensive cooldowns and defensives as a line
-of text near the middle of the screen.
+A fresh install gives you four containers to start from: your buffs as bars near the top right, your
+debuffs as a row of icons above them, the debuffs you've put on your target as icons just below the
+middle of the screen, and your offensive and defensive cooldowns as a line of text near the middle.
+They start locked. `/am unlock` puts a handle on each one, and you drag the ones placed on the
+screen to wherever you want them. `/am lock` puts the handles away again. Test mode (`/am test`, or the checkbox on General → Master controls) fills every
+container with sample auras, so you can see what you're building without waiting for a real buff.
+It switches itself off when combat starts.
 
-They start locked. Type `/am unlock` and each one gets a gold-edged handle with its name. The handle
-sits just outside the first bar or icon, so it never covers one. An empty container gets a faint
-outline the size of one bar or icon so you can still find it, and the outline goes away while the
-container has auras to show. Your live auras keep drawing while you're unlocked. Drag the handles
-where you want them, then type `/am lock`.
+Building your own display takes four steps, all on the Containers page. The Container dropdown at
+the top picks which container you're working on, and the list down the left side takes you through
+the rest.
 
-Right-clicking a handle (or its **?**) opens the Containers page with that container already
-selected. The **X** beside the **?** turns that container off; tick its **Enabled** box on
-Containers to bring it back. If you want a container's name on screen all the time, tick **Show name
-label** on Layout → Label. The name sits just outside its own container, on the side the handle
-uses, locked or unlocked. While you're unlocked the handle moves out past the name, so it reads
-handle, name, container. **Justify** on the same tab lines the name up left, center or right. Until
-you pick one, the name is centered on bars and text and lined up with the first icon on icons.
+1. Create a container. Click **New container**, or type `/am new target debuffs icons` in chat. On
+   General, pick whose auras it shows (yours, your target's, your focus's or your pet's), whether it
+   shows buffs or debuffs, and whether it draws them as bars, icons or text. You can rename,
+   duplicate or delete it there too, or copy another container's settings onto it.
+2. Choose what it shows. Filters decides which auras make the cut: who cast them, timed or
+   permanent, a maximum duration, and the spell categories. Each category is set to Show or Hide,
+   and an aura in any category set to Show gets drawn. The Overrides tab holds a whitelist and a
+   blacklist for single spells, and the whitelist always wins. General → Spell Categories is where
+   you change which spells a category holds, or make your own. If a filter can't work where you've
+   put it, an orange line at the top of the page says why.
+3. Place it. Layout decides where the container lives: anywhere on screen, following another
+   container as that one grows, or attached to a frame such as your unit frame or an action bar.
+   **Pick a frame…** closes the settings so you can just click the one you want. Growth direction,
+   spacing, scale and the optional name label are on Layout too.
+4. Make it look right. The last entry in the list is the container's style, Bar, Icon or Text, with
+   its textures, fonts, colors and borders. A Text container draws each aura as one line from a
+   template such as `$spellname$[ x$stacks$][ - $remainingduration$]`, and the page lists every
+   token it understands. General → Dispel Colors picks the color for each dispel type.
 
-Test mode fills every container with sample auras, so you can try textures, fonts and sizes without
-waiting for a real buff to turn up. A debuff container gets one sample debuff of each dispel type,
-which is handy for checking the dispel border and colors. Turn it on with the Test mode checkbox
-under General → Master controls, with `/am test`, or from the minimap button's right-click menu. You
-don't have to unlock first. Real auras stay hidden while it's on, and each container's samples get
-an outline of their own. That way you can tell where one container ends and the next begins. Test
-mode ends by itself when combat starts, and you can't start it during combat.
-
-Containers is where you create, rename, duplicate and delete containers, change a container's unit,
-aura type or style, or copy another container's settings onto it. There's one page per container.
-The Container dropdown at the top picks which one you're editing. The list down the left side
-switches between General, Filters, Layout and the container's own style (Bars, Icons or Text), and
-each of those has its own tabs. The page remembers which tab you were on in each of them until you
-reload.
-
-Filters decides what gets shown: who cast it, timed or permanent auras, a maximum duration, and
-categories like defensives, crowd control or boss debuffs. Each category is set to Show or Hide in a
-grid, and Show wins over Hide. An aura in even one Show category is drawn; an aura is dropped only
-when it's hidden in every category it belongs to. The Overrides tab holds a whitelist and a
-blacklist, and you add spells to them by name, by id or by shift-clicking a link. The whitelist
-always wins. When a filter can't work where you've put it, an orange line at the top of the page
-tells you why.
-
-General → Spell Categories edits which spells each spell category holds, for every container at
-once. It's also where you make your own: give it a name, say whether it holds buffs or debuffs, and
-add spells. Your category then sits on every container's Filters → Categories grid like the built-in
-ones, marked (yours). You can't rename or delete Aura Master's own categories, but their spell lists
-are still yours to change. General → Dispel Colors picks the color for each dispel type. Bars, Icons
-and Text hold the look for each style, and the list only shows the one the container is drawn in.
-
-Layout decides where a container lives. It can sit on the screen, follow another container as that
-one grows (carrying on in the same direction), or attach to any named frame, like your unit frame or
-an action bar. **Pick a frame…** closes the settings so you can just click the frame you want.
-
-A container that follows another sits below it by default, or above it when it grows up. How the two
-line up depends on what they are: a text container lines up by its own justify, icons or bars sit
-centered under centered text, and anything else lines up on the side the other container's lines
-start from. You can change which point of each one joins the other, and any pair is allowed. If the
-container you attach to grows a different way from this one, a dialog asks first. This one then
-grows like the chain it joins, and gets its own growth back if you detach it.
-
-While you're unlocked, every handle sits just outside its own container, so a chain reads handle,
-container, handle, container down one column. The chain spreads out to make room for the handles
-(and for any names you show) and closes up again when you lock. A container beside another stays
-clear of that one's handle and name, and hovering a handle names the spot where it joins the other.
-
-The same page covers growth direction, spacing, scale and tooltips. Right-clicking one of your own
-buffs cancels it unless you switch that off. General → Display can hide Blizzard's own buff and
-debuff frames.
-
-Most of this works from chat too. `/am new target debuffs icons` makes a container, `/am select`
-changes which one you're editing, and `/am set` changes any single setting. `/am disable` hides
-every container at once and `/am enable` brings them back, and neither one waits for combat to end.
-While the addon is off, a command that would draw or change a container tells you so and names
-`/am enable`, rather than quietly doing nothing. Reading and changing settings still works. If you
-change anything else mid-fight, the change waits until combat ends (or, inside a key, encounter or
-match, until that's over), and chat tells you which.
-
-A **Text** container draws each aura as one line, from a template you write in its Text section,
-such as `$spellname$[ x$stacks$][ - $remainingduration$]`. The tokens are `$spellname$`, `$stacks$`,
-`$dispeltype$`, `$remainingduration$`, `$maxduration$`, `$elapsedduration$`, `$remainingpercent$`
-and `$elapsedpercent$`. A percent is a bare number, so type the `%` yourself. Text inside `[ ]`
-hides along with the token it holds, so ` x3` shows only at two or more stacks, and ` - 12s` only on
-an aura with a duration. The page lists them all. A line can also carry the aura's icon, pulse,
-blink or bounce, and blink its time in the last seconds.
-
-The Font tab can show the dispel type in color as well: the `$dispeltype$` word in its type's color,
-a tinted backdrop behind the line, or a tinted edge around it. Each of those is off until you turn
-it on. **Size to fit**, in the Text section, sizes each line to its content instead of a fixed width
-and height, so a long aura name is never cut off. It's on for new Text containers; containers you
-made before it existed keep the size you gave them. A new profile starts with one Text container,
-**Player cooldowns**, which shows only your offensive and defensive cooldowns.
+If you change something mid-fight, it waits until combat ends (or until the encounter, key or match
+is over), and chat tells you which. `/am disable` hides every container at once and `/am enable`
+brings them back.
 
 Everything else is on the addon's page under Settings → AddOns, and `/am` on its own opens it.
 `/am help` (or `/auramaster help`) lists every command.
 
 ## How the containers work
 
-Aura Master never looks at an aura itself. That sounds roundabout, but on 12.1 it's the only way an
-addon can still show your auras in the middle of a boss fight. The steps go like this:
+Midnight stopped letting addons read aura details during combat, which is what every buff and
+debuff addon used to rely on. Patch 12.1 added the Aura Container API in its place: an addon creates
+an aura container, describes the auras it wants as filter rules, and hands over its own bars, icons
+and text, which the game fills in with the details the addon itself is not allowed to see.
+
+So Aura Master never looks at an aura itself. That sounds roundabout, but on 12.1 it's the only way
+an addon can still show your auras in the middle of a boss fight. The steps go like this:
 
 1. You describe a container: whose auras, which kind, what to filter out and how it should look.
 2. Aura Master turns your filters into rules the game understands (one set for each category you set
@@ -221,5 +158,5 @@ Please file reports there rather than in comments, so nothing gets lost.
 ## Credits
 
 The trick that lets a permanent buff draw as a full bar, and the idea of learning which buffs carry
-a timer so the rest can be shown on their own, both come from TinyBuffBars by mixMugz, released
+a timer so the rest can be shown on their own, both come from [TinyBuffBars](https://github.com/mixMugz/WoW-TinyBuffBars) by mixMugz, released
 under the MIT license.
