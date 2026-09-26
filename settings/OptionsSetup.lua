@@ -272,7 +272,7 @@ if not lib then
         "RenderRows", "RenderGrid", "RenderField", "RenderSchema", "RenderTabbedSchema", "Section",
         "AddSpacer", "TextRow", "TabStrip", "SubTabStrip", "PageHeader", "PageBanner",
         "InlineButtonPair", "SessionCheckbox", "AttachTooltip", "ChoiceGrid", "ResolveId", "IdInput",
-        "IdList", "UnnamedCandidates", "SelectTab",
+        "IdList", "UnnamedCandidates", "SelectTab", "NavRail",
         -- this addon's decorations on the live instance (defined below the `return`)
         "SelectContainer", "ContainerBanner", "RenderWarnings", "RenderPage", "RenderContainerPage",
     }) do

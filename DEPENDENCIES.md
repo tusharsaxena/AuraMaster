@@ -82,14 +82,14 @@ Versions are pinned only where a version matters: `lua5.1` is hard, `luacheck` a
 ### Optional: a sibling `../LibKa0s` checkout
 
 `tests/test_vendor_sync.lua` hands the comparison to the vendored `tests/_kit/vendor_sync.lua`, which
-reads the tag named in root `CLAUDE.md` (`v1.60.0`) out of a checkout at `../LibKa0s` and compares
+reads the tag named in root `CLAUDE.md` (`v1.61.0`) out of a checkout at `../LibKa0s` and compares
 `libs/LibKa0s/` and `tests/_kit/` against it. Without that checkout the case records a **skip with
 its reason**, not a pass and not a failure (testing-§11). Clone it if you touch `libs/`, re-vendor,
 or want that case to actually compare:
 
 ```sh
 git clone https://github.com/tusharsaxena/LibKa0s.git ../LibKa0s
-git -C ../LibKa0s rev-parse --short v1.60.0   # verify: prints a commit
+git -C ../LibKa0s rev-parse --short v1.61.0   # verify: prints a commit
 ```
 
 ### Not dependencies of this repo
