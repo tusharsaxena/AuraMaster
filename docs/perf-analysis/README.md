@@ -40,7 +40,7 @@ label, a `context` block (character, class, spec, level, zone, group), a `bucket
 parent — and an `fps` block with the active arm, the suspended arm and their per-frame delta.
 
 This addon's buckets are `unitSwap`, `applyPass`, `applyContainer` (within `applyPass`),
-`visibilityPass`, `styleElement` and `timedScan` (`core/PerfSetup.lua`). Never sum a parent and its children; a
+`visibilityPass`, `styleElement`, `timedScan` and `emptyPass` (`core/PerfSetup.lua`). Never sum a parent and its children; a
 bucket that never fired is absent, not zero.
 
 ## Taking a capture
@@ -63,6 +63,5 @@ from `AuraMasterDB`, so a profile copy, reset or switch never touches it (perfor
 
 | Stamp | Addon version | Label | What it measured | Bundle |
 |---|---|---|---|---|
-
-No capture has been taken yet. The first one is a later, separate run of `/wow-addon:perf-analysis`
-against a real client paste; this store is not seeded from the offline scenarios or from the source.
+| 20260927-012035 | 0.1.0 | `2026-09-27 01:17` | Two ~52 s combat arms in a five-player party in Murder Row; 0.120 ms of addon Lua per second of combat, 92% `styleElement`; frame-time delta +0.38 ms/frame, unresolved | [20260927-012035](20260927-012035/ANALYSIS.md) |
+| 20260927-013510 | 0.1.0 | `2026-09-27 01:32` | A second reading on a Beast Mastery Hunter, same dungeon and party; two ~35 s arms; 0.336 ms of addon Lua per second of combat, 86% `styleElement`; frame-time delta +0.63 ms/frame, not resolved on arms this short | [20260927-013510](20260927-013510/ANALYSIS.md) |
