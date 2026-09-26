@@ -150,7 +150,7 @@ Examples:
 
 The whole-set carve-outs (`container.filter.whitelist`, `.blacklist`, and the profile-wide
 `categorySpells`) are settable
-through the seam but have no row, so `/am list` does not print them; the Filters page is their editor.
+through the seam but have no row, so `/am list` does not print them; the Filters section is their editor.
 
 ## Degraded path
 

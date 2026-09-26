@@ -148,7 +148,7 @@ new shape disables, hides and retires the old engine and builds a new one (`Cont
 **What this addon does.** The filters still compile, because a target or focus can be either, but
 `FilterCompiler` adds a per-container warning wherever a spell-id filter is in play
 (`identityWarning`, `modules/FilterCompiler.lua:417`): ignored outright for debuffs on the player or pet, conditional on
-hostility or friendliness for target and focus. The Filters page prints them in orange. The starter
+hostility or friendliness for target and focus. The Filters section prints them in orange. The starter
 spell lists are all buff categories for the same reason (`defaults/Categories.lua`).
 
 ## There is no "no duration" filter, and `maxDuration` drops permanent auras
@@ -222,7 +222,7 @@ belongs to the font, not the text, so it is measured on the addon's own hidden, 
 each chained piece is anchored that far back over the one before, every piece justified to the
 chain's side. A font it cannot measure chains at 0, as before. An empty field still has a width no
 addon code can read, so its separator cannot be dropped by measuring: a separator written inside the
-field's brackets (`$spellname$[-$stacks$]`) goes with the field, and the Text page's Rules list says so.
+field's brackets (`$spellname$[-$stacks$]`) goes with the field, and the Text section's Rules list says so.
 
 ## Additive bindings stack
 
@@ -444,7 +444,7 @@ the gap is that empty string's own width.
 - **H2: a timeless aura.** The engine disables the duration binding for a zero duration
   (`ApplyDurationText`: `binding:SetEnabled(not auraDuration:IsZero())`), and the binding's zero text is
   `""` (`Compat.CreateDurationBinding`). Nothing to fix: this is text outside `[ ]` showing on a
-  timeless aura, by design. The Text page's cheat sheet now says to write `[ ($remainingpercent$%)]`.
+  timeless aura, by design. The Text section's cheat sheet now says to write `[ ($remainingpercent$%)]`.
 - **The gap itself** would then be the client laying an empty, single-anchored font string out with a
   non-zero width, which no addon code can read (the string is engine-written and secret) or trim.
 
@@ -463,7 +463,7 @@ debuffs usually have none; bleeds carry `Bleed`). The blue is most likely the ba
 close to the Magic swatch, which a typeless aura keeps.
 
 **What this addon does.** Nothing changes in code: a typeless aura keeps the surface's own color and
-draws no type word, backdrop or edge. The Bars page's Color by tooltips and General -> Dispel Colors
+draws no type word, backdrop or edge. The Bars section's Color by tooltips and General -> Dispel Colors
 say that buffs and many debuffs have no type, rather than citing one rare debuff.
 
 **The probe.** Out of combat, with a target carrying the debuffs, paste the three lines one at a time.

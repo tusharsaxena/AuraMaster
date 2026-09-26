@@ -35,12 +35,12 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   engine rewrites a piece in combat. A multi-piece template set to Center is therefore STACKED: one
   centered row per field, its plain literal pieces not drawn, the rows fixed in place (an empty field
   keeps its row) and the box grown to fit them (`Style.Text.Stacked`, `Style.Text.StackHeight`;
-  feedback #1). The Text page says so under Placement.
+  feedback #1). The Text section says so under Placement.
 - **A Text line cannot be colored by its aura's dispel type.** No engine binding colors a font string by
   dispel type (`SetDispelTypeText`, `SetSpellName`, `SetApplicationCount` take no color;
   `SetDurationText`'s color curve runs over time), the dispel-keyed color map exists only on
   `AddDispelTypeTexture`, which takes a Texture, and addon code can neither read the type nor touch a
-  button in combat. The Text page offers three opt-in stand-ins instead (Font → Dispel type,
+  button in combat. The Text section offers three opt-in stand-ins instead (Font → Dispel type,
   feedback #7): the `$dispeltype$` word colored by a `|c` escape in the engine's own text map, and a
   backdrop and an edge the engine tints (`modules/Style_Text.lua`).
 - **A border style other than Solid redraws a live button only when the button is rebuilt.** Its
@@ -58,14 +58,14 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
 - **Spell-id filters are honored only for buffs on friendly units and debuffs on hostile units** (the
   engine's identity gate). `FilterCompiler` emits a warning per container where that bites
   (`identityWarning`, `modules/FilterCompiler.lua:417`, choosing its sentence from `FC.IdsHonored`),
-  rendered in orange on the Filters page.
+  rendered in orange in the Filters section.
 - **On a target or focus BUFF container, Uncategorized set to Show no longer rescues an unlisted
   aura.** That row's group carries an `excludeSpellIDs` of the categorized union as its only
   constraint whenever another category is Hidden, and a target's hostility is dynamic while the plan
   is compiled once — on a hostile target the engine discards the ids and the group degenerates into
   "every buff", superseding the catch-all and defeating every Hide on the tab. The compiler
   therefore emits the group only where the ids are CERTAIN (`FC.IdsAlwaysHonored`: buffs on the
-  player and pet), and the same gate runs in `FC.ExplainSpell` so the Filters page never claims a
+  player and pet), and the same gate runs in `FC.ExplainSpell` so the Filters section never claims a
   rescue the plan does not contain. Accepted deliberately by the owner (issue #11, 2026-09-20):
   losing a niche rescue on one unit beats defeating every Hide by default. The debuff side answers
   false on every unit for the same reason, which is what keeps issue #11's `hardCC`/`softCC` from
@@ -240,7 +240,7 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   and the drag strip still use the fitted box. For the same reason a Bounce at Justify vertical Top,
   which gets no headroom, rises above the box instead of being cut there. A hand-set Width (Size to
   fit off) cuts at the box as before. A font that has not loaded yet measures nothing, so the first apply after login can
-  use the stored Width and Height and the next one sizes to fit. Defaults on the Text page turns Size
+  use the stored Width and Height and the next one sizes to fit. Defaults in the Text section turns Size
   to fit on (the template's value); Text containers stored before schema v8 keep it off (D7). Size to
   fit is Text-only (batch 9 E6): a bars or icons container stores no value of its own (schema v9
   removes the one an early v8 build stamped), so one switched to Text later starts with it on.
