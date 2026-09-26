@@ -288,6 +288,12 @@ end
 -- The axis each classified side's join runs along.
 local JOIN_AXIS = { after = "v", ahead = "h", behind = "h" }
 
+--- Where growth in each direction starts on its axis (the side the first element sits on), and the
+--- sign of an offset that runs with it. Growth is always normalized to one of these four
+--- (NS.Container.Growth), so a lookup never misses.
+local GROW_START = { right = "LEFT", left = "RIGHT", down = "TOP", up = "BOTTOM" }
+local GROW_SIGN = { right = 1, left = -1, down = -1, up = 1 }
+
 --- Whether container `pcfg` is exactly one element across horizontally and vertically: it fills
 --- columns (or rows) with no per-line limit, or rows (or columns) of one. Its axis is its chain's,
 --- its per-line count its own. Allocates nothing.
@@ -325,10 +331,10 @@ local function steadyRelative(rel, joinAxis, pcfg, cfg, growH, growV)
     local k = ownScale(pcfg) / ownScale(cfg)
     local dx, dy = 0, 0
     if acrossH then
-        h, dx = toStart(h, (growH == "left") and "RIGHT" or "LEFT", w * k, (growH == "left") and -1 or 1)
+        h, dx = toStart(h, GROW_START[growH], w * k, GROW_SIGN[growH])
     end
     if acrossV then
-        v, dy = toStart(v, (growV == "up") and "BOTTOM" or "TOP", ht * k, (growV == "up") and 1 or -1)
+        v, dy = toStart(v, GROW_START[growV], ht * k, GROW_SIGN[growV])
     end
     return JOIN_POINT[v][h], dx, dy
 end
@@ -351,9 +357,9 @@ end
 local function engineLead(rel, pcfg, cfg)
     local growH, growV = flowGrowth(pcfg)
     local lead = NS.Container.ENGINE_LEAD * ownScale(pcfg) / ownScale(cfg)
-    local fx = leadFraction(POINT_H[rel], (growH == "left") and "RIGHT" or "LEFT")
-    local fy = leadFraction(POINT_V[rel], (growV == "up") and "BOTTOM" or "TOP")
-    return fx * lead * ((growH == "left") and -1 or 1), fy * lead * ((growV == "up") and 1 or -1)
+    local fx = leadFraction(POINT_H[rel], GROW_START[growH])
+    local fy = leadFraction(POINT_V[rel], GROW_START[growV])
+    return fx * lead * GROW_SIGN[growH], fy * lead * GROW_SIGN[growV]
 end
 
 --- The points and offsets container `cfg` attaches with. Attached to a container: the points in

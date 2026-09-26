@@ -807,12 +807,13 @@ badge and any count quoted in the docs must agree with it.
 - points: a write to either point, a style or a text justify re-applies the followers
 - points: AttachPoints and AttachEdge allocate nothing
 
-### test_anchors_steady.lua (7)
+### test_anchors_steady.lua (8)
 
 - steady: the owner's centered chain growing up lands on the same x with its parent's engine empty as populated
 - steady: an end join (right) holds too, and growth left mirrors both
 - steady: hanging from the parent's one-element anchor (slot) or its preview gives the same place
 - steady: a parent one row across (icons filling a row) is steady on y for a side join centered
+- steady: a side join holds steady on y under every growth direction, the engine lead included
 - steady: a parent more than one element across is not rewritten on that axis
 - steady: parent and child at different scales convert the offset to the child's scale
 - steady: start-aligned pairs are placed as before, along the chain and across it
@@ -1926,7 +1927,7 @@ badge and any count quoted in the docs must agree with it.
 | test_anchors_strip.lua | 7 |
 | test_anchors_column.lua | 19 |
 | test_anchors_points.lua | 16 |
-| test_anchors_steady.lua | 7 |
+| test_anchors_steady.lua | 8 |
 | test_anchors_collapse.lua | 9 |
 | test_anchors_width.lua | 6 |
 | test_texttemplate.lua | 26 |
@@ -1974,4 +1975,4 @@ badge and any count quoted in the docs must agree with it.
 | test_eol.lua | 2 |
 | test_layout_cap.lua | 13 |
 | test_diagnostics_contract.lua | 7 |
-| **Total** | **1660** |
+| **Total** | **1661** |
