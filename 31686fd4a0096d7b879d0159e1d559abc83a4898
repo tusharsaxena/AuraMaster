@@ -1,0 +1,1 @@
+clean: I23-01 matches the plan and #23; new test fails on reverted Text.lua (Preview |cff808080) and on a bullet/token gray mutation; gate 1641/0/0, luacheck 0/0 in 139 files, lizard clean, max lua 1480 lines, CRLF kept, degraded tests pass; settings-only change, no combat/secret surface
