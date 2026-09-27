@@ -757,7 +757,7 @@ end
 test("diag: the fonts primed line reads none primed and the refresh idle on the starter profile", function()
     local NS = primerEnv()
     -- red under: no such line (the primer's state invisible to the report)
-    assertEqual(primerLine(NS), "[Diag] fonts primed: 0 [] refresh=idle")
+    assertEqual(primerLine(NS), "[Diag] fonts primed: 0 [] refresh=idle refused=0")
 end)
 
 test("diag: the fonts primed line lists each primed file, size and flags, and the refresh state", function()
@@ -766,7 +766,7 @@ test("diag: the fonts primed line lists each primed file, size and flags, and th
     NS.FontPrimer.PrimeAll()
     -- red under: the full path printed, or the client's empty flag string printed as nothing
     assertEqual(primerLine(NS), "[Diag] fonts primed: 2 [Ka0s Prototype.ttf 10 -, Ka0s Kait.ttf 17 THICKOUTLINE] "
-        .. "refresh=armed")
+        .. "refresh=armed refused=0")
     -- Fire only the 0.5 s refresh; the 1 s hold timer stays armed and the frame stays shown.
     local fired, holdLive = 0, false
     local queued = #mocks.__timers
@@ -782,11 +782,11 @@ test("diag: the fonts primed line lists each primed file, size and flags, and th
     assertTrue(holdLive, "the hold timer still armed")
     -- red under: the refresh read from the hold timer rather than its own
     assertEqual(primerLine(NS), "[Diag] fonts primed: 2 [Ka0s Prototype.ttf 10 -, Ka0s Kait.ttf 17 THICKOUTLINE] "
-        .. "refresh=idle")
+        .. "refresh=idle refused=0")
     mocks.__fireTimers()
     -- red under: the refresh state cached at priming rather than read at report time
     assertEqual(primerLine(NS), "[Diag] fonts primed: 2 [Ka0s Prototype.ttf 10 -, Ka0s Kait.ttf 17 THICKOUTLINE] "
-        .. "refresh=idle")
+        .. "refresh=idle refused=0")
 end)
 
 test("diag: the fonts primed line reads state only: it primes nothing and arms nothing", function()
@@ -797,7 +797,7 @@ test("diag: the fonts primed line reads state only: it primes nothing and arms n
     -- red under: a report that primes (FontPrimer.PrimeAll draws the new fonts and arms two timers)
     assertEqual(#NS.FontPrimer.DiagState().primed, 0, "nothing primed by the report")
     assertEqual(#mocks.__timers(), timersBefore, "no timer armed by the report")
-    assertEqual(primerLine(NS), "[Diag] fonts primed: 0 [] refresh=idle")
+    assertEqual(primerLine(NS), "[Diag] fonts primed: 0 [] refresh=idle refused=0")
 end)
 
 test("diag: the fonts primed line prints while stood down and while auras are secret", function()
@@ -805,7 +805,7 @@ test("diag: the fonts primed line prints while stood down and while auras are se
     primerFonts(NS)
     NS.FontPrimer.PrimeAll()
     mocks.__fireTimers()
-    local want = "[Diag] fonts primed: 2 [Ka0s Prototype.ttf 10 -, Ka0s Kait.ttf 17 THICKOUTLINE] refresh=idle"
+    local want = "[Diag] fonts primed: 2 [Ka0s Prototype.ttf 10 -, Ka0s Kait.ttf 17 THICKOUTLINE] refresh=idle refused=0"
     mocks.__aurasSecret = true
     local lines = build(NS)
     mocks.__aurasSecret = false
@@ -825,14 +825,14 @@ test("diag: the fonts primed line tells a priming waiting for the world from the
     NS.FontPrimer.PrimeAll()
     local head = "[Diag] fonts primed: 2 [Ka0s Prototype.ttf 10 -, Ka0s Kait.ttf 17 THICKOUTLINE] "
     -- red under: refresh= read from the refresh handle alone (a login priming reads idle until the world)
-    assertEqual(primerLine(NS), head .. "refresh=awaiting-world")
+    assertEqual(primerLine(NS), head .. "refresh=awaiting-world refused=0")
     mocks.__fireEvent("PLAYER_ENTERING_WORLD")
     -- red under: the world refresh armed at PLAYER_ENTERING_WORLD, under the loading screen
-    assertEqual(primerLine(NS), head .. "refresh=awaiting-world")
+    assertEqual(primerLine(NS), head .. "refresh=awaiting-world refused=0")
     mocks.__fireEvent("LOADING_SCREEN_DISABLED")
-    assertEqual(primerLine(NS), head .. "refresh=armed-world")
+    assertEqual(primerLine(NS), head .. "refresh=armed-world refused=0")
     mocks.__fireTimers()
-    assertEqual(primerLine(NS), head .. "refresh=idle")
+    assertEqual(primerLine(NS), head .. "refresh=idle refused=0")
 end)
 
 test("diag: the loading screen line shows when the world was entered and when the loading screen ended", function()
@@ -850,6 +850,35 @@ test("diag: the loading screen line shows when the world was entered and when th
         "[Diag] loading screen: world entered 50.00, ended 57.25 (7.25 s later)")
 end)
 
+--- Make the primer's frame refuse `path` at SetFont (FP-07): the kit's CreateFontString hands back
+--- the frame itself, so the frame's own SetFont answers for every font string on it.
+local function primerRefuses(mocks, path)
+    local real = mocks.CreateFrame
+    mocks.CreateFrame = function(kind, name, parent, template)
+        local f = real(kind, name, parent, template)
+        if parent ~= mocks.UIParent then return f end
+        mocks.CreateFrame = real
+        f.SetFont = function(_, p) return p ~= path end
+        return f
+    end
+end
+
+test("diag: the fonts primed line lists each refused file, size and flags after refused=", function()
+    local NS, mocks = primerEnv()
+    primerRefuses(mocks, PRIMER_PROTO)
+    primerFonts(NS)
+    NS.FontPrimer.PrimeAll()
+    mocks.__fireTimers()
+    -- red under: refused triples invisible to the report (the owner's run read as a clean priming)
+    assertEqual(primerLine(NS), "[Diag] fonts primed: 1 [Ka0s Kait.ttf 17 THICKOUTLINE] refresh=idle "
+        .. "refused=1 [Ka0s Prototype.ttf 10 -]")
+    local timers = #mocks.__timers()
+    build(NS)
+    -- red under: a report that retries the refused font (state only)
+    assertEqual(#mocks.__timers(), timers)
+    assertEqual(#NS.FontPrimer.DiagState().primed, 1)
+end)
+
 test("diag: the fonts primed list stops at MAX_IDS and flags the cap; the count stays whole", function()
     local NS = primerEnv()
     local Diag = NS.Diagnostics
@@ -860,6 +889,6 @@ test("diag: the fonts primed list stops at MAX_IDS and flags the cap; the count 
     local lines = build(NS)
     Diag.MAX_IDS = max
     -- red under: an uncapped list (every triple a long session primed on one line)
-    assertTrue(has(lines, "[Diag] fonts primed: 2 [Ka0s Prototype.ttf 10 -] refresh=armed") ~= nil, dump(lines))
+    assertTrue(has(lines, "[Diag] fonts primed: 2 [Ka0s Prototype.ttf 10 -] refresh=armed refused=0") ~= nil, dump(lines))
     assertTrue(has(lines, "per-list caps hit=yes") ~= nil, dump(lines))
 end)

@@ -62,8 +62,10 @@ local function cfgOf(NS2, id) return NS2.Database.FindContainer(id) end
 --- The primer's frame, built as a recorder: every call on it and on each font string it creates is
 --- logged. Installed around CreateFrame until the primer has built its frame, which starts HIDDEN, as
 --- a real frame parented to nothing shown would not answer IsShown for the primer. With `refuse`, each
---- font string answers SetFont with false (a font the client did not accept). Answers the list of
---- font strings, filled as they are created, and the frame once built.
+--- font string answers SetFont with false (a font the client did not accept); `refuse` may instead be
+--- a function of the path that answers true to refuse it, asked at each SetFont, so a test can refuse
+--- a font and then accept it. Answers the list of font strings, filled as they are created, and the
+--- frame once built.
 local function recordFrame(mocks, refuse)
     local strings, got = {}, {}
     local real = mocks.CreateFrame
@@ -75,7 +77,11 @@ local function recordFrame(mocks, refuse)
         f.__answer.CreateFontString = function(self)
             local fs = R()
             fs.parent = self
-            if refuse then fs.__answer.SetFont = function() return false end end
+            if type(refuse) == "function" then
+                fs.__answer.SetFont = function(_, path) return not refuse(path) end
+            elseif refuse then
+                fs.__answer.SetFont = function() return false end
+            end
             strings[#strings + 1] = fs
             return fs
         end
@@ -179,25 +185,17 @@ test("fontprimer: the primed triple is the one Style.ApplyFont sets, flags and f
     assertEqual(#FP.DiagState().primed, n)
 end)
 
-test("fontprimer: a font the client refuses is not counted, listed, traced or refreshed for", function()
+test("fontprimer: a font the client refuses is not counted, listed as primed, or refreshed for", function()
     local NS2, mocks, FP = env()
     local strings = recordFrame(mocks, true)
-    local lines = {}
-    local debug = NS2.Debug
-    NS2.Debug = function(tag)
-        local n = #lines
-        if tag == "Fonts" then lines[n + 1] = tag end
-    end
     local t = cfgOf(NS2, 1).bars.name
     t.font, t.fontSize = "Ka0s Prototype", 10
     local n = FP.PrimeAll()
-    NS2.Debug = debug
     assertEqual(#strings, 1, "the font was tried")
     -- red under: SetFont's answer ignored (a refused font reported as primed and refreshed for)
     assertEqual(n, 0)
     assertEqual(primed(FP), "")
     assertEqual(armed(mocks, HOLD) + armed(mocks, REFRESH), 0)
-    assertEqual(#lines, 0)
 end)
 
 -- -- how it primes -----------------------------------------------------------------------------------
@@ -640,4 +638,169 @@ test("fontprimer: one Fonts debug line per PrimeAll that primed something, and n
     assertEqual(#lines, 1)
     assertEqual(lines[1], "primed 2 new font(s)")
     assertNil(lines[2])
+end)
+
+-- -- a refused font (FP-07) ----------------------------------------------------------------------
+-- The owner's run of 6994c46 showed only Ka0s Kait primed: every Ka0s Prototype triple was refused
+-- at PLAYER_LOGIN and, marked seen before the SetFont, never tried again
+-- (docs/superpowers/plans/2026-09-27-font-primer-addendum-refused-font.md). A refused triple is kept
+-- apart, retried by every later PrimeAll and at the loading screen's end, on the one font string it
+-- was first tried on.
+
+--- A SetFont stand-in that refuses PROTO until `accept()` is called, and accepts every other path.
+local function refuseProto()
+    local gate = { refusing = true }
+    function gate.accept() gate.refusing = false end
+    function gate.fn(path) return gate.refusing and path == PROTO end
+    return gate
+end
+
+--- The refused triples as "path|size|flags", in the order first refused.
+local function refused(FP)
+    local out = {}
+    for i, e in ipairs(FP.DiagState().refused or {}) do
+        out[i] = ("%s|%s|%s"):format(e.path, tostring(e.size), e.flags)
+    end
+    return table.concat(out, ",")
+end
+
+test("fontprimer: a refused font is not marked primed, and the next PrimeAll primes it on the same font string", function()
+    local NS2, mocks, FP = env()
+    local gate = refuseProto()
+    local strings, got = recordFrame(mocks, gate.fn)
+    local c1 = cfgOf(NS2, 1)
+    c1.bars.name.font, c1.bars.name.fontSize = "Ka0s Prototype", 10
+    c1.bars.time.font, c1.bars.time.fontSize = "Ka0s Kait", 11
+    assertEqual(FP.PrimeAll(), 1, "Kait primed, Prototype refused")
+    assertEqual(primed(FP), KAIT .. "|11|OUTLINE")
+    -- red under: no refused set (a refused triple dropped silently, as in the owner's run)
+    assertEqual(refused(FP), PROTO .. "|10|OUTLINE")
+    fire(mocks, HOLD); fire(mocks, REFRESH)
+    assertFalse(got.frame:IsShown(), "settled")
+    gate.accept()
+    local n = FP.PrimeAll()
+    -- red under: the triple marked seen before its SetFont (never tried again)
+    assertEqual(n, 1)
+    assertEqual(primed(FP), KAIT .. "|11|OUTLINE," .. PROTO .. "|10|OUTLINE")
+    assertEqual(refused(FP), "")
+    -- red under: a new font string per attempt (one more region on the frame at every retry)
+    assertEqual(#strings, 2, "one font string per triple")
+    assertEqual(#strings[1]:__calls("SetFont"), 2, "the refused triple's string was tried again")
+    assertEqual(strings[1]:__last("SetText")[1], FP.SAMPLE)
+    -- A retry that primes takes the normal path: the frame shown, the hide and the refresh armed.
+    assertTrue(got.frame:IsShown())
+    assertEqual(armed(mocks, HOLD), 1)
+    assertEqual(armed(mocks, REFRESH), 1)
+end)
+
+test("fontprimer: a font refused again stays on the refused set once, and every PrimeAll retries it", function()
+    local NS2, mocks, FP = env()
+    local strings = recordFrame(mocks, true)
+    local c1 = cfgOf(NS2, 1)
+    c1.bars.name.font, c1.bars.name.fontSize = "Ka0s Prototype", 10
+    c1.bars.stacks.font, c1.bars.stacks.fontSize = "Ka0s Prototype", 10     -- the same triple
+    FP.PrimeAll(); FP.PrimeAll(); FP.PrimeAll()
+    -- red under: no dedup on the refused set (the triple listed once per block or per PrimeAll)
+    assertEqual(refused(FP), PROTO .. "|10|OUTLINE")
+    assertEqual(#strings, 1)
+    -- red under: the triple tried once per block that uses it, or not retried at all
+    assertEqual(#strings[1]:__calls("SetFont"), 3, "one try per PrimeAll")
+    assertEqual(primed(FP), "")
+    assertEqual(#mocks.__timers(), 0, "a refusal arms nothing")
+end)
+
+test("fontprimer: a font refused under the loading screen is primed at its end, and the world refresh follows", function()
+    local NS2, mocks, FP, CM = env(true)
+    local gate = refuseProto()
+    local strings, got = recordFrame(mocks, gate.fn)
+    local eligible = fakeInst({ ApplyVisibility = function() return false, false, false end })
+    CM.instances[901] = eligible
+    local t = cfgOf(NS2, 1).bars.name
+    t.font, t.fontSize = "Ka0s Prototype", 10
+    FP.PrimeAll()                           -- as CM.Init's, under the loading screen: refused
+    assertEqual(primed(FP), "")
+    assertEqual(#mocks.__timers(), 0)
+    mocks.__fireEvent("PLAYER_ENTERING_WORLD")
+    assertEqual(primed(FP), "", "PLAYER_ENTERING_WORLD retries nothing on a client with the loading screen's end")
+    gate.accept()
+    mocks.__fireEvent("LOADING_SCREEN_DISABLED")
+    -- red under: no retry at the loading screen's end (the font waits for a settings change)
+    assertEqual(primed(FP), PROTO .. "|10|OUTLINE")
+    assertEqual(#strings, 1, "the same font string")
+    assertTrue(got.frame:IsShown())
+    -- red under: the retry's priming left on the short path, or not armed at all
+    assertEqual(armed(mocks, WORLD_HOLD), 1)
+    assertEqual(armed(mocks, WORLD_REFRESH), 1)
+    assertEqual(armed(mocks, HOLD) + armed(mocks, REFRESH), 0)
+    fire(mocks, WORLD_REFRESH)
+    assertEqual(eligible.refreshed, 1)
+    fire(mocks, WORLD_HOLD)
+    assertFalse(got.frame:IsShown())
+    CM.instances[901] = nil
+end)
+
+test("fontprimer: on a client without the loading screen's end, PLAYER_ENTERING_WORLD retries a refused font", function()
+    local NS2, mocks, FP = env(true, function(m) m.__badEvents = { LOADING_SCREEN_DISABLED = true } end)
+    local gate = refuseProto()
+    recordFrame(mocks, gate.fn)
+    local t = cfgOf(NS2, 1).bars.name
+    t.font, t.fontSize = "Ka0s Prototype", 10
+    FP.PrimeAll()
+    gate.accept()
+    mocks.__fireEvent("PLAYER_ENTERING_WORLD")
+    -- red under: the fallback path without the retry
+    assertEqual(primed(FP), PROTO .. "|10|OUTLINE")
+    assertEqual(armed(mocks, WORLD_HOLD), 1)
+    assertEqual(armed(mocks, WORLD_REFRESH), 1)
+end)
+
+test("fontprimer: a loading screen's end with a font still refused arms nothing", function()
+    local NS2, mocks, FP = env(true)
+    local _, got = recordFrame(mocks, true)
+    local t = cfgOf(NS2, 1).bars.name
+    t.font, t.fontSize = "Ka0s Prototype", 10
+    FP.PrimeAll()
+    mocks.__fireEvent("PLAYER_ENTERING_WORLD"); mocks.__fireEvent("LOADING_SCREEN_DISABLED")
+    -- red under: a refusal treated as a priming (the frame shown and a refresh for nothing drawn)
+    assertEqual(#mocks.__timers(), 0)
+    assertFalse(got.frame:IsShown())
+    assertEqual(refused(FP), PROTO .. "|10|OUTLINE")
+end)
+
+test("fontprimer: one Fonts debug line per PrimeAll that met a refusal, counts only", function()
+    local NS2, mocks, FP = env()
+    recordFrame(mocks, true)
+    local lines = {}
+    local debug = NS2.Debug
+    NS2.Debug = function(tag, fmt, ...)
+        if tag ~= "Fonts" then return end
+        local n = #lines
+        lines[n + 1] = string.format(fmt, ...)
+    end
+    local c1 = cfgOf(NS2, 1)
+    c1.bars.name.font, c1.bars.name.fontSize = "Ka0s Prototype", 10
+    c1.bars.time.font, c1.bars.time.fontSize = "Ka0s Kait", 11
+    FP.PrimeAll()
+    NS2.Debug = debug
+    -- red under: a refusal said nothing (the trace cannot show why a font is missing), or a line per triple
+    assertEqual(#lines, 1)
+    assertEqual(lines[1], "2 font(s) refused, retried at the next priming")
+end)
+
+test("fontprimer: DiagState lists the refused triples, copies only, and a primed one leaves the list", function()
+    local NS2, mocks, FP = env()
+    local gate = refuseProto()
+    recordFrame(mocks, gate.fn)
+    local t = cfgOf(NS2, 1).bars.name
+    t.font, t.fontSize = "Ka0s Prototype", 10
+    assertEqual(#FP.DiagState().refused, 0)
+    FP.PrimeAll()
+    local s = FP.DiagState()
+    assertEqual(#s.refused, 1)
+    s.refused[1].path = "changed"
+    -- red under: the live entry handed out (a report could rewrite the primer's state)
+    assertEqual(refused(FP), PROTO .. "|10|OUTLINE")
+    gate.accept()
+    FP.PrimeAll()
+    assertEqual(#FP.DiagState().refused, 0)
 end)

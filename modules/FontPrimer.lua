@@ -12,11 +12,15 @@ local _, NS = ...
 -- WHAT. Every distinct (file, size, flags) triple any container in the active profile uses, enabled
 -- or not, resolved by Style.FontKey, the same resolution Style.ApplyFont sets. A font under `Fonts\`
 -- is built into the client, always loaded, and skipped. Each triple is primed once per session.
+-- A triple whose SetFont the client refuses is not primed: it goes on a refused set, and every later
+-- priming, and the loading screen's end, tries it again on the same font string (FP-07; the owner's
+-- run of 6994c46 had every Ka0s Prototype triple refused at PLAYER_LOGIN and never tried again).
 --
 -- HOW. One 1x1 frame on UIParent, placed above the top edge of the screen and SHOWN: each new triple
 -- gets a font string on it, set to the triple and written with SAMPLE. The frame is hidden again HOLD
 -- seconds later (WORLD_HOLD after the loading screen ends for a login priming, below). The font
--- strings are kept: the fonts stay loaded, and a triple is never primed twice.
+-- strings are kept: the fonts stay loaded, and a triple is never primed twice. A refused triple
+-- keeps its one font string for every retry.
 --
 -- WHEN. From CM.StartListening (login and stand-up, before the first build), from the CONFIG_CHANGED
 -- handler before the apply is requested, and from CM.Announce before a profile switch or a registry
@@ -29,8 +33,9 @@ local _, NS = ...
 -- ends therefore shows the frame and arms nothing. The client fires PLAYER_ENTERING_WORLD while the
 -- loading screen is still up, and LOADING_SCREEN_DISABLED when it ends, seconds later on a slow or
 -- cold-cache login. FontPrimer.OnLoadingScreenEnd (from addon:OnLoadingScreenEnd) is the anchor: it
--- keeps the frame shown and arms the hide at WORLD_HOLD and the refresh at WORLD_REFRESH, when
--- anything was primed since the last loading screen, and clears that mark. FontPrimer.OnEnterWorld
+-- runs a priming pass first (a font refused under the loading screen is retried now), then keeps the
+-- frame shown and arms the hide at WORLD_HOLD and the refresh at WORLD_REFRESH, when anything was
+-- primed since the last loading screen, and clears that mark. FontPrimer.OnEnterWorld
 -- (from addon:OnEnterWorld) only notes the time, for the Fonts debug line and the report's
 -- `loading screen:` line that show the gap, and is the anchor itself only on a client that refused LOADING_SCREEN_DISABLED (NS.RejectedEvents). A
 -- loading screen with nothing newly primed arms nothing. A stood-down addon hears neither event, so
@@ -70,6 +75,8 @@ local BLOCKS = {
 local frame
 local seen = {}       -- [file][size][flags] = true, primed this session (no string built per look-up)
 local primed = {}     -- { path, size, flags } in priming order, for the diagnostics report
+local refusedAt = {}  -- [file][size][flags] = its `refused` entry: refused by SetFont, not primed yet
+local refused = {}    -- { path, size, flags, fs } in the order first refused; every priming retries them
 local holdTimer, refreshTimer
 local refreshAt           -- "play" or "world": which refresh refreshTimer is, for the report
 local inWorld = false     -- the first loading screen has ended (or a stand-down ended the wait)
@@ -91,30 +98,77 @@ local function ensureFrame()
     return frame
 end
 
---- Draw one triple on the frame; true when the client accepted the font.
-local function prime(path, size, flags)
-    local f = ensureFrame()
-    local fs = f:CreateFontString(nil, "OVERLAY")
-    fs:SetPoint("BOTTOMLEFT", f, "BOTTOMLEFT")
-    if not fs:SetFont(path, size, flags) then return false end
-    fs:SetText(FP.SAMPLE)
-    return true
+--- The [flags] table for `path` and `size` under `root`, built on first use: one table per file and
+--- per size, never one per look-up.
+local function flagsOf(root, path, size)
+    local bySize = root[path]
+    if not bySize then
+        bySize = {}
+        root[path] = bySize
+    end
+    local byFlags = bySize[size]
+    if not byFlags then
+        byFlags = {}
+        bySize[size] = byFlags
+    end
+    return byFlags
 end
 
---- Prime one text block's triple if it is new and not built in; answers 1 when it primed, else 0.
-local function primeBlock(t, tdef)
-    if type(t) ~= "table" or type(tdef) ~= "table" then return 0 end
-    local path, size, flags = NS.Style.FontKey(t, tdef)
-    if builtIn(path) then return 0 end
-    local bySize = seen[path] or {}
-    seen[path] = bySize
-    local byFlags = bySize[size] or {}
-    bySize[size] = byFlags
-    if byFlags[flags] then return 0 end
-    byFlags[flags] = true
-    if not prime(path, size, flags) then return 0 end
+--- Draw one triple on the frame, on `fs` when an earlier refused try made one (one font string per
+--- triple, however many tries). Answers whether the client accepted the font, and the font string.
+local function prime(path, size, flags, fs)
+    if not fs then
+        fs = ensureFrame():CreateFontString(nil, "OVERLAY")
+        fs:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT")
+    end
+    if not fs:SetFont(path, size, flags) then return false, fs end
+    fs:SetText(FP.SAMPLE)
+    return true, fs
+end
+
+local function markPrimed(path, size, flags)
+    flagsOf(seen, path, size)[flags] = true
     primed[#primed + 1] = { path = path, size = size, flags = flags }
-    return 1
+end
+
+--- Prime one text block's triple if it is new, not built in and not on the refused set (retryRefused
+--- tries those). Only an accepted font is marked primed (FP-07); a refused one joins the refused set.
+--- Answers how many it primed and how many it refused, each 0 or 1.
+local function primeBlock(t, tdef)
+    if type(t) ~= "table" or type(tdef) ~= "table" then return 0, 0 end
+    local path, size, flags = NS.Style.FontKey(t, tdef)
+    if builtIn(path) or flagsOf(seen, path, size)[flags] then return 0, 0 end
+    local byFlags = flagsOf(refusedAt, path, size)
+    if byFlags[flags] then return 0, 0 end
+    local ok, fs = prime(path, size, flags)
+    if ok then
+        markPrimed(path, size, flags)
+        return 1, 0
+    end
+    local e = { path = path, size = size, flags = flags, fs = fs }
+    byFlags[flags] = e
+    refused[#refused + 1] = e
+    return 0, 1
+end
+
+--- Try every refused triple again, on its own font string; one accepted is primed and leaves the set.
+--- Answers how many it primed and how many stay refused.
+local function retryRefused()
+    local n, kept = 0, 0
+    local count = #refused
+    for i = 1, count do
+        local e = refused[i]
+        refused[i] = nil
+        if prime(e.path, e.size, e.flags, e.fs) then
+            refusedAt[e.path][e.size][e.flags] = nil
+            markPrimed(e.path, e.size, e.flags)
+            n = n + 1
+        else
+            kept = kept + 1
+            refused[kept] = e
+        end
+    end
+    return n, kept
 end
 
 --- Every eligible live instance gets one UpdateAllAuras (the engine's text), and every container one
@@ -158,31 +212,42 @@ local function armAfterPrime()
     end
 end
 
---- Prime every font triple the active profile's containers use that has not been primed yet. A
---- no-op while stood down. Answers how many triples it primed.
-function FP.PrimeAll()
+--- One priming pass: the refused set retried, then every triple the active profile's containers use
+--- that is neither primed nor refused. Arms nothing. A no-op while stood down. One Fonts line for what
+--- it primed and one for what stays refused, counts only. Answers how many triples it primed.
+local function primePass()
     if NS.IsStoodDown() then return 0 end
+    local n, r = retryRefused()
     local D = NS.CONTAINER_TEMPLATE
-    local n = 0
     for _, c in ipairs(NS.Database.GetContainers()) do
         for _, b in ipairs(BLOCKS) do
             local block, def = c[b[1]], D[b[1]]
-            n = n + primeBlock(block and block[b[2]], def and def[b[2]])
+            local p, q = primeBlock(block and block[b[2]], def and def[b[2]])
+            n, r = n + p, r + q
         end
     end
-    if n > 0 then
-        armAfterPrime()
-        if NS.Debug then NS.Debug("Fonts", "primed %d new font(s)", n) end
-    end
+    if NS.Debug and n > 0 then NS.Debug("Fonts", "primed %d new font(s)", n) end
+    if NS.Debug and r > 0 then NS.Debug("Fonts", "%d font(s) refused, retried at the next priming", r) end
     return n
 end
 
---- The loading screen has ended. Anything primed since the last one is drawn only now, so the frame
---- stays shown for WORLD_HOLD and one refresh runs at WORLD_REFRESH; then the mark clears. Nothing
---- newly primed arms nothing.
+--- Prime every font triple the active profile's containers use that has not been primed yet, and
+--- retry every refused one. A no-op while stood down. Answers how many triples it primed.
+function FP.PrimeAll()
+    local n = primePass()
+    if n > 0 then armAfterPrime() end
+    return n
+end
+
+--- The loading screen has ended. First a priming pass: a font the client refused under the loading
+--- screen is tried again now it is gone (FP-07), and one it accepts counts as newly primed. Anything
+--- primed since the last loading screen is drawn only now, so the frame stays shown for WORLD_HOLD and
+--- one refresh runs at WORLD_REFRESH; then the mark clears. Nothing newly primed arms nothing.
 local function worldReady()
     inWorld = true
-    if NS.IsStoodDown() or not primedSinceLoad then return end
+    if NS.IsStoodDown() then return end
+    if primePass() > 0 then primedSinceLoad = true end
+    if not primedSinceLoad then return end
     primedSinceLoad = false
     arm(WORLD_HOLD, WORLD_REFRESH, "world")
 end
@@ -246,16 +311,22 @@ local function refreshState()
     return "idle"
 end
 
---- State for the diagnostics report, read only: the primed triples (copies, in priming order),
+--- Copies of `list`'s triples, in order.
+local function copies(list)
+    local out = {}
+    for i, e in ipairs(list) do out[i] = { path = e.path, size = e.size, flags = e.flags } end
+    return out
+end
+
+--- State for the diagnostics report, read only: the primed triples (copies, in priming order), the
+--- triples the client refused and no retry has primed yet (copies, in the order first refused),
 --- whether the refresh is armed, which state it is in, and the GetTime() of the last
 --- PLAYER_ENTERING_WORLD and of the last loading screen's end after it (nil when not seen).
---- @return table { primed = { { path, size, flags }, ... }, refresh = boolean, state = string,
----   enteredAt = number|nil, screenEndAt = number|nil }
+--- @return table { primed = { { path, size, flags }, ... }, refused = { { path, size, flags }, ... },
+---   refresh = boolean, state = string, enteredAt = number|nil, screenEndAt = number|nil }
 function FP.DiagState()
-    local list = {}
-    for i, e in ipairs(primed) do list[i] = { path = e.path, size = e.size, flags = e.flags } end
-    return { primed = list, refresh = refreshTimer ~= nil, state = refreshState(),
-        enteredAt = lastEnter, screenEndAt = lastEnd }
+    return { primed = copies(primed), refused = copies(refused), refresh = refreshTimer ~= nil,
+        state = refreshState(), enteredAt = lastEnter, screenEndAt = lastEnd }
 end
 
 --- The primer's frame, or nil before anything was primed (a test seam).

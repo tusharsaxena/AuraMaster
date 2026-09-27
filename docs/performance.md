@@ -35,7 +35,10 @@ for 1 s and runs one `UpdateAllAuras` per shown container 0.5 s later, the same 
 makes. A priming under the loading screen pays the same once, counted from the loading screen's end
 (`LOADING_SCREEN_DISABLED`) instead (the refresh at 1.5 s, the hide at 2 s);
 `FontPrimer.OnEnterWorld` reads the clock and scans the short rejected-events list, and
-`FontPrimer.OnLoadingScreenEnd` otherwise reads two flags, so a loading screen with nothing newly primed costs nothing more. The mark it reads is
+`FontPrimer.OnLoadingScreenEnd` otherwise runs one priming pass (the walk above) and reads two flags, so a loading screen with nothing newly primed costs one walk more.
+A font the client refuses at `SetFont` (FP-07) keeps the one font string it was first tried on and
+costs one `SetFont` per later priming until the client accepts it; a triple refused again allocates
+nothing. The mark it reads is
 cleared only by a loading screen, so the first loading screen after a font change in play runs the
 refresh once more. It has no bucket: it runs a handful of times a session and never in response to play, so
 there is nothing a capture's arms could compare.

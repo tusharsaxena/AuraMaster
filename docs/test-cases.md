@@ -721,13 +721,13 @@ badge and any count quoted in the docs must agree with it.
 - empty: a target switch re-predicts at once, so no follower hangs from the emptied engine in between
 - empty: a target switch folds a pass already due into its own, leaving no timer behind
 
-### test_fontprimer.lua (25)
+### test_fontprimer.lua (32)
 
 - fontprimer: the starter profile draws only in the client's own font, so nothing is primed
 - fontprimer: the triples come from every text block of every container, deduplicated
 - fontprimer: a font under Fonts\ is built into the client and skipped
 - fontprimer: the primed triple is the one Style.ApplyFont sets, flags and fallback included
-- fontprimer: a font the client refuses is not counted, listed, traced or refreshed for
+- fontprimer: a font the client refuses is not counted, listed as primed, or refreshed for
 - fontprimer: one shown 1x1 frame on UIParent draws each new triple, and hides after HOLD
 - fontprimer: a second PrimeAll primes nothing new, shows nothing and arms no timer
 - fontprimer: a font change primes only the new triple and arms one refresh
@@ -748,6 +748,13 @@ badge and any count quoted in the docs must agree with it.
 - fontprimer: a settings write primes before its apply is requested
 - fontprimer: a profile switch primes the new profile's fonts before it builds
 - fontprimer: one Fonts debug line per PrimeAll that primed something, and none otherwise
+- fontprimer: a refused font is not marked primed, and the next PrimeAll primes it on the same font string
+- fontprimer: a font refused again stays on the refused set once, and every PrimeAll retries it
+- fontprimer: a font refused under the loading screen is primed at its end, and the world refresh follows
+- fontprimer: on a client without the loading screen's end, PLAYER_ENTERING_WORLD retries a refused font
+- fontprimer: a loading screen's end with a font still refused arms nothing
+- fontprimer: one Fonts debug line per PrimeAll that met a refusal, counts only
+- fontprimer: DiagState lists the refused triples, copies only, and a primed one leaves the list
 
 ### test_anchors_close.lua (6)
 
@@ -1345,7 +1352,7 @@ badge and any count quoted in the docs must agree with it.
 - slash verbs: the disabled gate is ONE decision over the whole verb table, not a per-verb guard
 - slash verbs: /am new enchants makes a player buff container showing only Weapon enchants (feedback #6)
 
-### test_diagnostics.lua (46)
+### test_diagnostics.lua (47)
 
 - diag: /am diagnostics writes the report to the console ungated, opens it, and says so once
 - diag: /am diagnostics answers while the addon is disabled, and the state line says so
@@ -1392,6 +1399,7 @@ badge and any count quoted in the docs must agree with it.
 - diag: the fonts primed line prints while stood down and while auras are secret
 - diag: the fonts primed line tells a priming waiting for the world from the world refresh
 - diag: the loading screen line shows when the world was entered and when the loading screen ended
+- diag: the fonts primed line lists each refused file, size and flags after refused=
 - diag: the fonts primed list stops at MAX_IDS and flags the cap; the count stays whole
 
 ### test_bulklog.lua (20)
@@ -1959,7 +1967,7 @@ badge and any count quoted in the docs must agree with it.
 | test_anchors_edges.lua | 15 |
 | test_anchors_hang.lua | 11 |
 | test_emptywatch.lua | 25 |
-| test_fontprimer.lua | 25 |
+| test_fontprimer.lua | 32 |
 | test_anchors_close.lua | 6 |
 | test_anchors_label.lua | 23 |
 | test_anchors_strip.lua | 7 |
@@ -1983,7 +1991,7 @@ badge and any count quoted in the docs must agree with it.
 | test_disabled.lua | 18 |
 | test_slash.lua | 28 |
 | test_slash_verbs.lua | 50 |
-| test_diagnostics.lua | 46 |
+| test_diagnostics.lua | 47 |
 | test_bulklog.lua | 20 |
 | test_optionssetup.lua | 17 |
 | test_options_descriptor.lua | 18 |
@@ -2013,4 +2021,4 @@ badge and any count quoted in the docs must agree with it.
 | test_eol.lua | 2 |
 | test_layout_cap.lua | 13 |
 | test_diagnostics_contract.lua | 7 |
-| **Total** | **1695** |
+| **Total** | **1703** |

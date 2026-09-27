@@ -236,8 +236,9 @@ switch or a registry change is built. A priming that drew a new font arms two `C
 1 s hide and the 0.5 s follow-up refresh; `CM.StopListening` cancels both through `FontPrimer.Stop`.
 A priming before the first loading screen ends arms neither. The client fires
 `PLAYER_ENTERING_WORLD` while the loading screen is still up and `LOADING_SCREEN_DISABLED` when it
-ends, so `addon:OnLoadingScreenEnd` calls `FontPrimer.OnLoadingScreenEnd`, which arms them at 2 s and
-1.5 s when anything was primed since the last loading screen. `FontPrimer.OnEnterWorld` only notes
+ends, so `addon:OnLoadingScreenEnd` calls `FontPrimer.OnLoadingScreenEnd`, which first runs a
+priming pass (a font the client refused under the loading screen is tried again, FP-07) and then arms
+them at 2 s and 1.5 s when anything was primed since the last loading screen. `FontPrimer.OnEnterWorld` only notes
 the time for the report's gap line, and arms them itself only on a client that refused
 `LOADING_SCREEN_DISABLED`.
 

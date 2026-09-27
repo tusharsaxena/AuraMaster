@@ -314,3 +314,10 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   draws in it unprimed, and that text can come up blank. Any settings write, a profile switch or a
   `/reload` primes it. Accepted in the font primer design
   (`docs/superpowers/specs/2026-09-27-font-primer-design.md`, *Risks*).
+- **A font the client refuses to set can stay unprimed.** The font primer (`modules/FontPrimer.lua`,
+  FP-07) counts a triple as primed only when `SetFont` accepts it. A refused triple is retried by
+  every later priming and at the end of every loading screen, so a font refused only under the
+  login's loading screen is primed once the screen is gone. A font the client never accepts (a file
+  it cannot read) stays on the refused set for the session: the primer cannot load it, and text in it
+  draws however the client draws a font it refused. `/am diagnostics` names it after `refused=`
+  (`docs/debug.md`, *Bar names that do not show*).

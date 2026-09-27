@@ -1908,3 +1908,10 @@ setting**: each of those rewrites every name on its own and would hide a blank.
      failure). Then zone
      (take a portal or enter an instance) → nothing blanks after that loading screen. No Lua error.
      Result:
+291. **FP11.** Log out and quit the client. Delete `World of Warcraft\_retail_\Cache` (the client
+     rebuilds it). Start the client and log in on a character whose containers use **Ka0s Prototype**
+     (and **Ka0s Kait**, if any container does). Do not `/reload` and do not touch any setting. A few
+     seconds after the loading screen ends, run `/am diagnostics`. → The `fonts primed:` line lists
+     every Ka0s font your containers use, with each size and outline (every Ka0s Prototype triple
+     included, not only Ka0s Kait), and ends `refused=0`. No Lua error.
+     Result:

@@ -204,17 +204,10 @@ local function countsLine(out)
         countKeys(p.userCategories), table.concat(slots, ","))
 end
 
---- The font primer (modules/FontPrimer.lua, issue #24): each triple drawn this session as its file's
---- name, size and flags (`-` for none), capped at MAX_IDS, and the follow-up refresh's state: `armed`
---- (in play), `armed-world` (from the loading screen's end), `awaiting-world` (primed under the
---- loading screen) or `idle`. Read from FontPrimer.DiagState, which reads state only, so it prints while
---- stood down and while auras are secret.
-local function primerLine(out)
-    local FP = NS.FontPrimer
-    if not (FP and FP.DiagState) then return end
-    local s = FP.DiagState()
+--- `list`'s triples as "<file> <size> <flags>" (`-` for no flags), joined, capped at MAX_IDS.
+local function namedFonts(out, list)
     local named = {}
-    for i, e in ipairs(s.primed) do
+    for i, e in ipairs(list) do
         if i > Diag.MAX_IDS then
             flagCap(out)
             break
@@ -223,8 +216,24 @@ local function primerLine(out)
         local flags = e.flags ~= "" and str(e.flags) or "-"
         named[i] = (path:match("[^\\/]+$") or path) .. " " .. str(e.size) .. " " .. flags
     end
-    out:add("Diag", "fonts primed: %s [%s] refresh=%s", #s.primed, table.concat(named, ", "),
-        s.state or (s.refresh and "armed" or "idle"))
+    return table.concat(named, ", ")
+end
+
+--- The font primer (modules/FontPrimer.lua, issue #24): each triple drawn this session as its file's
+--- name, size and flags (`-` for none), capped at MAX_IDS, the follow-up refresh's state: `armed`
+--- (in play), `armed-world` (from the loading screen's end), `awaiting-world` (primed under the
+--- loading screen) or `idle`, and the triples the client refused and no retry has primed yet
+--- (`refused=0` for none, FP-07). Read from FontPrimer.DiagState, which reads state only, so it prints
+--- while stood down and while auras are secret.
+local function primerLine(out)
+    local FP = NS.FontPrimer
+    if not (FP and FP.DiagState) then return end
+    local s = FP.DiagState()
+    local refused = s.refused or {}
+    local nRefused = #refused
+    local tail = nRefused > 0 and (" [" .. namedFonts(out, refused) .. "]") or ""
+    out:add("Diag", "fonts primed: %s [%s] refresh=%s refused=%s%s", #s.primed, namedFonts(out, s.primed),
+        s.state or (s.refresh and "armed" or "idle"), nRefused, tail)
 end
 
 local function stamp(t) return type(t) == "number" and string.format("%.2f", t) or "-" end

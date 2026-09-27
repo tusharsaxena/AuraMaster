@@ -61,7 +61,7 @@ Example (shortened):
 [Diag] state: enabled=true stoodDown=false disabledHold=false holds=- locked=true testMode=false ...
 [Diag] apply queue: all=false ids=[] scheduled=false notice=- mustDefer=false
 [Diag] timed spells learned=0, category spell edits in 0 list(s), user categories=0, enchant slots=mainHand
-[Diag] fonts primed: 2 [Ka0s Prototype.ttf 10 OUTLINE, Ka0s Kait.ttf 36 THICKOUTLINE] refresh=idle
+[Diag] fonts primed: 2 [Ka0s Prototype.ttf 10 OUTLINE, Ka0s Kait.ttf 36 THICKOUTLINE] refresh=idle refused=0
 [Diag] loading screen: world entered 12.40, ended 17.85 (5.45 s later)
 [Unit] player HELPFUL: 7 aura(s)
 [Aura] player+ #1 inst=1234 id=1459 "Arcane Intellect" dispel=nil src=player mine=true dur=3600 left=3412.5 stacks=0 boss=false steal=false
@@ -108,7 +108,7 @@ which the client fires after `PLAYER_ENTERING_WORLD`, seconds later on a slow or
 `fonts primed:` line shows its state, and the `loading screen:` line under it the timing:
 
 ```
-[Diag] fonts primed: 2 [Ka0s Prototype.ttf 10 OUTLINE, Ka0s Kait.ttf 36 THICKOUTLINE] refresh=idle
+[Diag] fonts primed: 2 [Ka0s Prototype.ttf 10 OUTLINE, Ka0s Kait.ttf 36 THICKOUTLINE] refresh=idle refused=0
 [Diag] loading screen: world entered 12.40, ended 17.85 (5.45 s later)
 ```
 
@@ -123,11 +123,21 @@ which the client fires after `PLAYER_ENTERING_WORLD`, seconds later on a slow or
   screen is gone means the end was never heard (a client that refused `LOADING_SCREEN_DISABLED` times
   the world from `PLAYER_ENTERING_WORLD` instead, and the `[Init]` line names the refused event). With
   logging on, each loading screen's end also writes a `[Fonts]` line with both timestamps.
+- `refused=` counts the triples whose `SetFont` the client refused and no retry has accepted yet, and
+  lists each the same way (`refused=0` for none). A refused triple is not counted as primed: every
+  later priming tries it again, and so does the end of every loading screen, on the one font string
+  it was first tried on; once the client accepts it, it moves to the primed list and the usual hide
+  and refresh follow. `refused=0` with every container font in the primed list is the healthy
+  reading. A font that stays on `refused=` after the loading screen has ended and a settings change
+  has been made is one the client will not load (`docs/known-limitations.md`). Before FP-07 a refused
+  triple was dropped silently and never tried again: the owner's run of 6994c46 read
+  `fonts primed: 1 [Ka0s Kait.ttf 36 THICKOUTLINE]` with every Ka0s Prototype triple missing.
 - `fonts primed: 0 []` on a profile that uses only built-in fonts is correct: those need no priming.
 - The line reads state only, so it prints while auras are secret and while the addon is stood down.
 
 With the trace on (`/am debug on`), each priming that drew anything writes one
-`[Fonts] primed N new font(s)` line. The trace is off after a login, so the login's own priming
+`[Fonts] primed N new font(s)` line, and each priming that met a refusal one
+`[Fonts] N font(s) refused, retried at the next priming` line (counts only; the report names them). The trace is off after a login, so the login's own priming
 is seen only in the report.
 
 If a blank still shows, run `/am diagnostics` and check that the container's font is in the list. A
