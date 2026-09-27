@@ -449,7 +449,7 @@ write seam against that container's id. The client never saves an anchor's posit
 
 Attached to another container, the child joins it by two absolute points, `attach.childPoint` (its
 own) and `attach.relPoint` (the parent's), each Automatic while unset (`Anchors.AttachPoints`, batch
-11 G2, in `modules/Anchors_Attach.lua` with the rest of the join). Automatic takes the matching half of the default pair (`Anchors.DefaultEdge`, G3): the parent's
+11 G2, in `modules/Anchors_Attach.lua` with the rest of the join). Automatic takes the matching half of the default pair (`Anchors.AutoPoints`, G3): the parent's
 vertical growth side, lined up with a Text child's justify, centered for an icons or bars child under
 a Text parent justified Center, else on the side the parent's lines start from. The pair in effect is
 classified against batch 9's nine sides under the chain's growth (`Anchors.AttachEdge`, G5); a free

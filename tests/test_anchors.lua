@@ -479,7 +479,7 @@ local DERIVED = {
 for _, c in ipairs(DERIVED) do
     test(("anchors: derived points continue a %s/%s/%s parent"):format(c.axis, c.growH, c.growV), function()
         local NS = fresh()
-        local p, rp = NS.Anchors.DerivedPoints({ axis = c.axis, growH = c.growH, growV = c.growV })
+        local p, rp = NS.Anchors.EdgePoints({ axis = c.axis, growH = c.growH, growV = c.growV }, "after-start")
         -- red under: the old axis branch putting a row parent's child beside it
         assertEqual(p, c.p)
         assertEqual(rp, c.rp)
@@ -490,9 +490,9 @@ test("anchors: derived points do not depend on the parent's fill axis", function
     local NS = fresh()
     for _, h in ipairs({ "right", "left" }) do
         for _, v in ipairs({ "down", "up" }) do
-            local cp, crp = NS.Anchors.DerivedPoints({ axis = "vertical", growH = h, growV = v })
-            local rowP, rowRp = NS.Anchors.DerivedPoints({ axis = "horizontal", growH = h, growV = v })
-            local noP, noRp = NS.Anchors.DerivedPoints({ growH = h, growV = v })
+            local cp, crp = NS.Anchors.EdgePoints({ axis = "vertical", growH = h, growV = v }, "after-start")
+            local rowP, rowRp = NS.Anchors.EdgePoints({ axis = "horizontal", growH = h, growV = v }, "after-start")
+            local noP, noRp = NS.Anchors.EdgePoints({ growH = h, growV = v }, "after-start")
             -- red under: the old axis branch (a row parent's child beside it, not below)
             assertEqual(rowP, cp, h .. "/" .. v .. " rows: the column point")
             assertEqual(rowRp, crp, h .. "/" .. v .. " rows: the column relative point")

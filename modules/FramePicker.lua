@@ -159,7 +159,7 @@ function FP.Stop()
     stop()
 end
 
---- Whether a pick is in progress.
+--- Whether a pick is in progress (a test seam).
 function FP.IsActive()
     return overlay ~= nil and overlay:IsShown() and true or false
 end

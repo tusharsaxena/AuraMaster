@@ -568,7 +568,7 @@ follower's two points are the user's to pick, odd pairs included (batch 11 G1), 
 
 **The points of a new attachment (batch 11 G2, G3).** An attachment writes nothing: while no point
 is picked, both are Automatic, and Automatic follows the parent's growth and the two styles
-(`Anchors.DefaultEdge`: a Text child lines up with its text justify, an icons or bars child under a
+(`Anchors.AutoPoints`: a Text child lines up with its text justify, an icons or bars child under a
 Text parent justified Center is centered, every other pair starts on the side the parent's lines start
 from). Picked points survive an attach, a retarget and a detach. A write to either point, Attach to or
 Container also re-applies the parent, old and new.
@@ -601,8 +601,8 @@ vertically `container.layout.growV`, Spacing `container.layout.spacing` (0–40)
 flow. Its fill axis and both growth directions are its chain root's, resolved up the chain by
 `Anchors.EffectiveLayout` (cycle-safe through `Anchors.WouldCycle`). Its anchor points are the two
 in effect (`Anchors.AttachPoints`, batch 11 G2): each picked, or Automatic, the matching half of the
-default pair (G3), which for a bars child under a bars parent is `after-start`, the same as
-`Anchors.DerivedPoints`: the child stacks below its parent (above, when growing up), on the side the
+default pair (G3), which for a bars child under a bars parent is the `after-start` pair
+(`Anchors.EdgePoints(L, "after-start")`): the child stacks below its parent (above, when growing up), on the side the
 parent's lines start from, whether the parent fills rows or columns (IA-1). A pair that is none of
 batch 9's nine sides is free: placed at X/Y alone, with no seam (G5). `container.attach.point` / `.relativePoint` are read only in `frame`
 mode. The gap across the seam is the child's own gap between consecutive elements in the direction

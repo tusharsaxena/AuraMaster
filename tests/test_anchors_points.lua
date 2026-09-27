@@ -62,7 +62,8 @@ test("points: a bars or icons child under a bars or icons parent defaults to aft
             local what = styles[1] .. " under " .. styles[2] .. " " .. g[1] .. "/" .. g[2]
             -- red under: no AttachPoints (G2)
             assertEqual(effective(NS, c2), pairOf(NS, "after-start", g), what)
-            assertEqual(NS.Anchors.DefaultEdge(c2), "after-start", what)
+            local ap, arp = NS.Anchors.AutoPoints(c2)
+            assertEqual(ap .. ">" .. arp, pairOf(NS, "after-start", g), what .. " AutoPoints")
         end
     end
 end)
@@ -203,8 +204,7 @@ test("points: behind is no longer refused: a child several auras wide sits on it
     local c2 = joined(NS)
     c2.layout.perLine = 4
     c2.attach.childPoint, c2.attach.relPoint = "RIGHT", "LEFT"
-    -- red under: EdgeAllowed still refusing behind to a wide child (batch 9 E2)
-    assertTrue(A.EdgeAllowed(c2, "behind-center"), "allowed")
+    -- red under: batch 9's behind restriction (E2) back, keeping a wide child off its behind pair
     assertEqual(A.AttachEdge(c2), "behind-center")
     local p = placed(NS)
     assertEqual(p[1], "RIGHT"); assertEqual(p[3], "LEFT"); assertEqual(p[4], -5 + 1)

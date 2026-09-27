@@ -9,8 +9,8 @@
 -- part of the relative point, half a unit on a middle part (the engine lead, tests/test_anchors_collapse.lua).
 
 local T = _G.AM_TEST
-local test, assertEqual, assertTrue, assertFalse, assertNil =
-    T.test, T.assertEqual, T.assertTrue, T.assertFalse, T.assertNil
+local test, assertEqual, assertTrue, assertNil =
+    T.test, T.assertEqual, T.assertTrue, T.assertNil
 local fresh = dofile("tests/fresh_env.lua")
 
 --- The points before batch 9 (565fc38, B8-P4): the only pair an attachment could have. Kept here
@@ -79,12 +79,6 @@ test("edges: EDGES lists the nine tokens, after then ahead then behind, and no b
     -- red under: no Anchors.EDGES (AP-1)
     assertEqual(table.concat(NS.Anchors.EDGES, ","),
         "after-start,after-center,after-end,ahead-start,ahead-center,ahead-end,behind-start,behind-center,behind-end")
-    local side, align = NS.Anchors.ParseEdge("ahead-end")
-    assertEqual(side, "ahead"); assertEqual(align, "end")
-    for _, junk in ipairs({ "before-start", "center", "", "after", 7 }) do
-        side, align = NS.Anchors.ParseEdge(junk)
-        assertEqual(side .. "-" .. align, "after-start", "unknown " .. tostring(junk))
-    end
 end)
 
 test("edges: EdgePoints gives the design table's pair for every token and growth", function()
@@ -111,25 +105,10 @@ test("edges: EdgePoints(L, 'after-start') is exactly the old DerivedPoints for a
             -- red under: after-start drifting from the points every stored attachment had (MG-1's
             -- stamp would move a chain)
             assertEqual(p, op, what); assertEqual(rp, orp, what)
-            local dp, drp = NS.Anchors.DerivedPoints(L)
-            assertEqual(dp, op, what .. " DerivedPoints"); assertEqual(drp, orp, what .. " DerivedPoints")
             n = n + 1
         end
     end
     assertEqual(n, 8)
-end)
-
-test("edges: every one of the nine is allowed, behind on a wide child too; only a non-token is not (G5)", function()
-    local NS = fresh()
-    local A = NS.Anchors
-    local c2 = sided(NS, "after-start")
-    c2.layout.perLine = 3
-    NS.Database.FindContainer(1).layout.axis = "horizontal"
-    for _, token in ipairs(A.EDGES) do
-        -- red under: batch 9's behind restriction (E2)
-        assertTrue(A.EdgeAllowed(c2, token), token .. " on a wide child")
-    end
-    assertFalse(A.EdgeAllowed(c2, "before-start"), "no before side exists")
 end)
 
 test("edges: SeamOffset leaves the child's own gap across for a side, and after is unchanged (AP-2)", function()
@@ -217,21 +196,25 @@ end)
 test("edges: the default side follows a Text container's justify; a bars child under a bars parent is after-start (E5, G3)", function()
     local NS = fresh()
     local A = NS.Anchors
+    local L1 = NS.Database.FindContainer(1).layout
+    -- The pair Automatic gives container 2, against the pair `token` gives under the parent's growth.
+    local function auto(c) local p, rp = A.AutoPoints(c); return p .. ">" .. rp end
+    local function pairFor(token) local p, rp = A.EdgePoints(L1, token); return p .. ">" .. rp end
     local c2 = sided(NS, "after-start")
     c2.style = "bars"
-    assertEqual(A.DefaultEdge(c2), "after-start")
+    assertEqual(auto(c2), pairFor("after-start"))
     c2.style = "text"
     local cases = { LEFT = "after-start", CENTER = "after-center", RIGHT = "after-end" }
     for j, want in pairs(cases) do
         c2.text.justifyH = j
-        -- red under: no DefaultEdge, or one blind to the justify
-        assertEqual(A.DefaultEdge(c2), want, j)
+        -- red under: an AutoPoints blind to the justify (defaultToken ignoring a Text child's justifyH)
+        assertEqual(auto(c2), pairFor(want), j)
     end
-    NS.Database.FindContainer(1).layout.growH = "left"
+    L1.growH = "left"
     c2.text.justifyH = "RIGHT"
-    assertEqual(A.DefaultEdge(c2), "after-start", "growing left, the lines start from the right")
+    assertEqual(auto(c2), pairFor("after-start"), "growing left, the lines start from the right")
     c2.text.justifyH = "LEFT"
-    assertEqual(A.DefaultEdge(c2), "after-end")
+    assertEqual(auto(c2), pairFor("after-end"))
 end)
 
 --- Container 2 a Text container of `justify`, on the screen, flushed.

@@ -25,7 +25,8 @@ NS.AnchorsAttach = AA
 -- Two ABSOLUTE points, `attach.childPoint` (this container's own, on its one-element anchor) and
 -- `attach.relPoint` (its parent's, on the parent's hang target), each nil for Automatic. Any pair is
 -- allowed and nothing is refused: "if it looks weird, it's on the user". Automatic takes the matching
--- half of the default pair (DefaultEdge, G3), so one explicit point leaves the other automatic.
+-- half of the default pair (defaultToken, G3; AutoPoints names the whole pair), so one explicit
+-- point leaves the other automatic.
 --
 -- The pair in effect is CLASSIFIED against the nine batch 9 tokens, "<side>-<align>", which name a
 -- pair relative to the chain's flow:
@@ -54,18 +55,6 @@ local DEFAULT_EDGE = "after-start"
 -- The nine WoW points, as a set: a stored point that is not one of them reads as Automatic.
 local IS_POINT = {}
 for _, point in ipairs(C.POINTS) do IS_POINT[point] = true end
-
---- The side and align of `token`; anything that is not one of the nine reads as "after", "start".
---- @return string side, string align
-function Anchors.ParseEdge(token)
-    local parts = EDGE_PARTS[token] or EDGE_PARTS[DEFAULT_EDGE]
-    return parts[1], parts[2]
-end
-
---- Whether `token` is one of the nine sides.
-function Anchors.IsEdge(token)
-    return EDGE_PARTS[token] ~= nil
-end
 
 --- The pair `side`/`align` gives under growth `growH`/`growV`. V0/V1 are the start and end vertical
 --- edges (TOP/BOTTOM growing down), H0/H1 the horizontal ones (LEFT/RIGHT growing right). The
@@ -111,22 +100,6 @@ function Anchors.EdgePoints(L, token)
     return pair[1], pair[2]
 end
 
---- The points that attach a child to a parent laid out by `L` on the after-start side: below the
---- parent (above, growing up), on the side its lines start from. Every attachment had exactly these
---- before batch 9.
---- @return string point, string relativePoint
-function Anchors.DerivedPoints(L)
-    return Anchors.EdgePoints(L, DEFAULT_EDGE)
-end
-
---- Whether container `cfg` may sit on `token`: any of the nine, always. Batch 9 refused behind to a
---- child more than one aura wide; batch 11 (G1, G5) refuses nothing, so only a token that is not one
---- of the nine answers false.
---- @return boolean
-function Anchors.EdgeAllowed(_, token)
-    return EDGE_PARTS[token] ~= nil
-end
-
 --- The growth container `cfg` flows by: its chain root's while it follows one, else its own. Read
 --- off the stored layouts, with no copy (EffectiveLayout allocates).
 --- @return string growH, string growV
@@ -157,14 +130,6 @@ end
 --- The container `cfg` is attached to by `at`, or nil.
 local function parentOf(at)
     return at and NS.Database.FindContainer(tonumber(at.container))
-end
-
---- The token of container `cfg`'s default pair (G3): what Automatic resolves to.
---- @return string token
-function Anchors.DefaultEdge(cfg)
-    if not cfg then return DEFAULT_EDGE end
-    local growH = flowGrowth(cfg)
-    return defaultToken(cfg, parentOf(cfg.attach), growH)
 end
 
 --- The pair container `cfg` joins its parent by (G2): each stored point that is one of the nine, the
