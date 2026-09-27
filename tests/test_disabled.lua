@@ -301,7 +301,7 @@ test("disabled: a queued apply and a queued scan are canceled, not left armed", 
     assertEqual(#mocks.__timers(), 3, "the apply, the scan and the repaint are all armed")
 
     disable(NS)
-    -- red under: C_Timer.After -- no handle, so both would stay queued to wake up and find the latch.
+    -- red under: C_Timer.After -- no handle, so all three would stay queued to wake up and find the latch.
     -- The kit's NewTimer:Cancel takes a handle out of the live set (revision 17).
     assertEqual(#mocks.__timers(), 0, "a queued one-shot is still going to wake up")
 
