@@ -1082,7 +1082,7 @@ badge and any count quoted in the docs must agree with it.
 - icons: filling a preview icon that was never dressed does nothing and raises nothing
 - icons: a debuff placeholder tints its dispel strips in Blizzard's color for its type; a buff, an untyped one or the option off shows none (TD-4, DB-1)
 
-### test_style_text.lua (55)
+### test_style_text.lua (56)
 
 - text style: the element takes its size; clip, animation and text-area frames nest inside it
 - text style: Left lays the first piece at the area's left and each next piece against the previous one
@@ -1091,6 +1091,7 @@ badge and any count quoted in the docs must agree with it.
 - text style: each chained piece is pulled back over the previous one by the measured padding (item 8)
 - text style: a padding that cannot be measured chains at 0, and is measured again later (item 8)
 - text style: the padding is measured once per font, size and flags (item 8)
+- text style: every measure resolves its font through Style.FontKey, the one ApplyFont sets (#24)
 - text style: every piece is justified to its side of the chain; a stacked row is centered (item 8)
 - text style: Center centers a one-piece template as one line, exactly as before (feedback #1)
 - text style: Center stacks a multi-piece template, each field a row centered under the last; literals are not drawn (feedback #1)
@@ -1954,7 +1955,7 @@ badge and any count quoted in the docs must agree with it.
 | test_timedspells.lua | 22 |
 | test_style_bars.lua | 63 |
 | test_style_icons.lua | 31 |
-| test_style_text.lua | 55 |
+| test_style_text.lua | 56 |
 | test_style_text_autosize.lua | 18 |
 | test_preview.lua | 28 |
 | test_render_coverage.lua | 3 |
@@ -1993,4 +1994,4 @@ badge and any count quoted in the docs must agree with it.
 | test_eol.lua | 2 |
 | test_layout_cap.lua | 13 |
 | test_diagnostics_contract.lua | 7 |
-| **Total** | **1675** |
+| **Total** | **1676** |

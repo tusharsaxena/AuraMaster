@@ -511,7 +511,7 @@ end
 -- precisely the half that must survive. So it is not inherited: justify LEFT explicitly, and the
 -- closed box clips like the pullout rows do, tail first, marker last.
 --
--- Both calls are capability-guarded (the same shape as modules/Style.lua:899): the headless widget
+-- Both calls are capability-guarded (the same shape as modules/Style.lua:891): the headless widget
 -- kit is a data recorder with neither method, and it is not ours to extend.
 local CATEGORY_PULLOUT_WIDTH = 320
 

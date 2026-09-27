@@ -187,6 +187,24 @@ test("text style: the padding is measured once per font, size and flags (item 8)
     assertTrue(fs:__count("SetText") > measured, "new flags measure again")
 end)
 
+test("text style: every measure resolves its font through Style.FontKey, the one ApplyFont sets (#24)", function()
+    local NS, fs = padded()
+    local tdef = NS.CONTAINER_TEMPLATE.text.font
+    NS.Style.FontKey = function() return "Primed.ttf", 17, "THICKOUTLINE" end
+    local function measuredIn(label, call)
+        local before = fs:__count("SetFont")
+        call()
+        local set = fs:__calls("SetFont")[before + 1]
+        -- red under: TimeTextWidth, WidestLine and PiecePadding each resolving the font with their own copy
+        assertEqual(set and set[1], "Primed.ttf", label .. ": file")
+        assertEqual(set and set[2], 17, label .. ": size")
+        assertEqual(set and set[3], "THICKOUTLINE", label .. ": flags")
+    end
+    measuredIn("time text", function() NS.Style.TimeTextWidth({ fontSize = 12 }, tdef, "blizzard") end)
+    measuredIn("widest line", function() NS.Style.WidestLine({ fontSize = 12 }, tdef, { "a" }) end)
+    measuredIn("padding", function() NS.Style.PiecePadding({ fontSize = 12 }, tdef) end)
+end)
+
 test("text style: every piece is justified to its side of the chain; a stacked row is centered (item 8)", function()
     for side, want in pairs({ LEFT = "LEFT", RIGHT = "RIGHT", CENTER = "CENTER" }) do
         local _, am = dressed(text({ template = "$spellname$-$stacks$", justifyH = side }))
