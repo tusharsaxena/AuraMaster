@@ -156,6 +156,7 @@ function CM.Announce(profileChanged)
     if NS.IsStoodDown() then
         profileMovedWhileDown = profileMovedWhileDown or profileChanged or false
     else
+        if NS.FontPrimer then NS.FontPrimer.PrimeAll() end   -- before the build: issue #24
         CM.Sync(profileChanged)
         CM.RequestApply()
     end
@@ -619,6 +620,7 @@ function CM.StartListening()
             local p = type(payload) == "table" and payload or {}
             local row = p.path and NS.FindSchemaRow(p.path)
             local effect = row and row.effect
+            if NS.FontPrimer then NS.FontPrimer.PrimeAll() end   -- a new font, before its apply (#24)
             if effect == "visibility" then CM.ApplyVisibility()
             elseif effect ~= "none" then
                 CM.RequestApply(p.containerId)
@@ -633,6 +635,8 @@ function CM.StartListening()
             CM.RequestApply(nil, not (type(payload) == "table" and payload.byPlayer))
         end)
     end
+    -- Every font the containers use, drawn once before the first build draws in it (issue #24).
+    if NS.FontPrimer then NS.FontPrimer.PrimeAll() end
 end
 
 --- Drop every subscription this file owns, the queue behind them, and the coalescing timer that would
@@ -651,6 +655,7 @@ function CM.StopListening()
     end
     scheduled = false
     pending, pendingAll, userPending = {}, false, false
+    if NS.FontPrimer then NS.FontPrimer.Stop() end
 end
 
 --- Whether this file is subscribed (a test seam).

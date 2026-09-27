@@ -721,6 +721,22 @@ badge and any count quoted in the docs must agree with it.
 - empty: a target switch re-predicts at once, so no follower hangs from the emptied engine in between
 - empty: a target switch folds a pass already due into its own, leaving no timer behind
 
+### test_fontprimer.lua (13)
+
+- fontprimer: the starter profile draws only in the client's own font, so nothing is primed
+- fontprimer: the triples come from every text block of every container, deduplicated
+- fontprimer: a font under Fonts\ is built into the client and skipped
+- fontprimer: the primed triple is the one Style.ApplyFont sets, flags and fallback included
+- fontprimer: one shown 1x1 frame on UIParent draws each new triple, and hides after HOLD
+- fontprimer: a second PrimeAll primes nothing new, shows nothing and arms no timer
+- fontprimer: a font change primes only the new triple and arms one refresh
+- fontprimer: the refresh reaches only live, shown, non-previewing instances
+- fontprimer: Stop cancels both timers and hides the frame, and the primed set survives
+- fontprimer: disabling the addon stops the primer, and nothing primes while stood down
+- fontprimer: a settings write primes before its apply is requested
+- fontprimer: a profile switch primes the new profile's fonts before it builds
+- fontprimer: one Fonts debug line per PrimeAll that primed something, and none otherwise
+
 ### test_anchors_close.lua (6)
 
 - close: the X sits immediately left of the help mark, the catalog close glyph at the help mark's size
@@ -1823,7 +1839,7 @@ badge and any count quoted in the docs must agree with it.
 
 - prose: no authored file carries a British spelling from localization-§5's published list
 - prose: the gate carries localization-§5's two lists whole, and nothing of its own
-- prose: the exclusions this repository declared suppressed 11 of 181 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (11): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, docs/spell-research/2026-09-24-logs/CORRECTIONS.md, docs/spell-research/2026-09-24-logs/CURRENT_CATEGORIES.md, docs/spell-research/2026-09-24-logs/DECISIONS.md, docs/spell-research/2026-09-24-logs/FLAGS.md, docs/spell-research/2026-09-24-logs/PROPOSED_ADDITIONS.md, docs/spell-research/2026-09-24-logs/REVIEW.md, docs/spell-research/2026-09-24-logs/SOURCES.md, docs/spell-research/2026-09-24-logs/dictionary/AURAS.md
+- prose: the exclusions this repository declared suppressed 11 of 183 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (11): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, docs/spell-research/2026-09-24-logs/CORRECTIONS.md, docs/spell-research/2026-09-24-logs/CURRENT_CATEGORIES.md, docs/spell-research/2026-09-24-logs/DECISIONS.md, docs/spell-research/2026-09-24-logs/FLAGS.md, docs/spell-research/2026-09-24-logs/PROPOSED_ADDITIONS.md, docs/spell-research/2026-09-24-logs/REVIEW.md, docs/spell-research/2026-09-24-logs/SOURCES.md, docs/spell-research/2026-09-24-logs/dictionary/AURAS.md
 - prose: no path this repository narrows the gate by is loaded by a TOC
 - prose: every path this repository narrows the gate by is one .pkgmeta keeps out of the zip
 - prose self-test: the carve-out suppresses the named generated folder, and only it
@@ -1923,6 +1939,7 @@ badge and any count quoted in the docs must agree with it.
 | test_anchors_edges.lua | 15 |
 | test_anchors_hang.lua | 11 |
 | test_emptywatch.lua | 25 |
+| test_fontprimer.lua | 13 |
 | test_anchors_close.lua | 6 |
 | test_anchors_label.lua | 23 |
 | test_anchors_strip.lua | 7 |
@@ -1976,4 +1993,4 @@ badge and any count quoted in the docs must agree with it.
 | test_eol.lua | 2 |
 | test_layout_cap.lua | 13 |
 | test_diagnostics_contract.lua | 7 |
-| **Total** | **1662** |
+| **Total** | **1675** |

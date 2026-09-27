@@ -122,9 +122,7 @@ end
 --- text, which the size falls back to. `classColor`, when given (a snapshot, or false for the
 --- player), names the class outright instead of reading the dress in progress (Style.ColorWith).
 function Style.ApplyFont(fs, t, tdef, classColor)
-    local size = tonumber(t.fontSize) or tdef.fontSize
-    local flags = FLAG_MAP[t.fontFlags or "NONE"] or (t.fontFlags or "")
-    local path = Style.Fetch("font", t.font, C.FALLBACK_FONT)
+    local path, size, flags = Style.FontKey(t, tdef)
     if not fs:SetFont(path, size, flags) then fs:SetFont(C.FALLBACK_FONT, size, flags) end
     if classColor ~= nil then
         fs:SetTextColor(Style.ColorWith(classColor, t.fontColor, t.useClassColorFont))
@@ -1015,4 +1013,14 @@ function Style.PreviewTime(fs, aura, s, sdef)
     if s.expiringColorOn and aura.remaining < (tonumber(s.expiringThreshold) or sdef.expiringThreshold) then
         fs:SetTextColor(Style.Color(s.expiringColor or sdef.expiringColor, false))
     end
+end
+
+--- The font file, size and client flag string font block `t` draws in (`tdef` the template's block,
+--- which the size falls back to): the one resolution Style.ApplyFont sets and modules/FontPrimer.lua
+--- primes, so the primed font is the one the text uses. The file is LibSharedMedia's, or the built-in
+--- fallback when the name no longer resolves.
+function Style.FontKey(t, tdef)
+    local size = tonumber(t.fontSize) or tdef.fontSize
+    local flags = FLAG_MAP[t.fontFlags or "NONE"] or (t.fontFlags or "")
+    return Style.Fetch("font", t.font, C.FALLBACK_FONT), size, flags
 end
