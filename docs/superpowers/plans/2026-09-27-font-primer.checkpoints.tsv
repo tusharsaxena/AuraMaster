@@ -1,1 +1,2 @@
 when	milestone	head_before_log	evidence
+2026-09-27	M3	2fb1abe62fcfaeab28faf24b948d5b301f3164f8	tests 1685/1685 (16 shards) and 1685/1685 -j 1; lint 0 warnings / 0 errors in 146 files; complexity 0 functions above CCN 15 (whole repo); perf.lua ok; largest authored Lua 1327 lines (core/Database.lua) < 1500; docs/test-cases.md byte-identical to --list; README badge 1685/1685; NameRepaint grep empty; FP-04 review note on 2fb1abe (8 confirmed fixed in 2fb1abe, 3 refuted)
