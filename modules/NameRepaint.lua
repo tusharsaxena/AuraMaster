@@ -43,6 +43,11 @@ local held = { { false, false }, { false, false } }
 local timers, stages, dirty = {}, {}, {}
 local firstFire, settleFire = {}, {}   -- the prebuilt timer callbacks, per unit
 
+-- For the diagnostic report's `name repaint:` line (NR.DiagState): how many passes have run this
+-- session, and the unit and GetTime of the last. Two scalars and a unit string, so a pass allocates
+-- nothing to keep them.
+local passes, lastUnit, lastAt = 0, nil, nil
+
 -- ---------------------------------------------------------------------------
 -- The pass
 -- ---------------------------------------------------------------------------
@@ -71,6 +76,7 @@ function NR.Repaint(unit, stage)
             n = n + 1
         end
     end
+    passes, lastUnit, lastAt = passes + 1, unit, GetTime()
     if t0 then Perf.Note("nameRepaint", debugprofilestop() - t0) end
     if NS.Debug then NS.Debug("Names", "repaint %s: %d container(s) (%s)", unit, n, stage or "direct") end
     return n
@@ -250,4 +256,32 @@ function NR.Sync()
     local h1, h2 = held[1], held[2]
     if h1[1] ~= player or h1[2] ~= pet then setFrame(1, player, pet) end
     if h2[1] ~= target or h2[2] ~= focus then setFrame(2, target, focus) end
+end
+
+-- ---------------------------------------------------------------------------
+-- The diagnostic report
+-- ---------------------------------------------------------------------------
+
+--- A snapshot of the repaint's state for the report's `name repaint:` line (modules/Diagnostics.lua,
+--- spec D6): the listened units and the armed ones as "unit:stage", each in PAIRS order, the passes
+--- run this session, and the unit and GetTime of the last (nil before the first). Reads state only:
+--- it registers nothing, arms nothing and holds nothing, so it answers while stood down
+--- (debug-logging-§14). Allocates its lists; the report is the only caller.
+--- @return table
+function NR.DiagState()
+    local listening, armed = {}, {}
+    local nl, na = 0, 0
+    for _, pair in ipairs(PAIRS) do
+        for _, unit in ipairs(pair) do
+            if listened(unit) then
+                nl = nl + 1
+                listening[nl] = unit
+            end
+            if timers[unit] then
+                na = na + 1
+                armed[na] = unit .. ":" .. tostring(stages[unit])
+            end
+        end
+    end
+    return { listening = listening, armed = armed, passes = passes, lastUnit = lastUnit, lastAt = lastAt }
 end

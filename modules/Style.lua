@@ -1017,19 +1017,6 @@ function Style.PreviewTime(fs, aura, s, sdef)
     end
 end
 
---- The session's cached time-text widths as sorted "path|size|flags|format=width" strings, for the
---- diagnostic report (modules/Diagnostics.lua): a cached width is kept until /reload, so one taken
---- wrong would narrow every bar name dressed after it (owner report 2026-09-26). A copy; allocates.
-function Style.MeasuredTimeWidths()
-    local list = {}
-    for key, w in pairs(measuredWidths) do
-        local n = #list
-        list[n + 1] = ("%s=%s"):format(key, w)
-    end
-    table.sort(list)
-    return list
-end
-
 -- An absent text block reads as the template's own, without a table allocated per call.
 local NO_TEXT = {}
 

@@ -684,65 +684,93 @@ test("diag: a container with no instance while running is not built for want of 
     assertTrue(has(lines, "addon disabled") == nil, dump(lines))
 end)
 
--- Missing bar names (owner report 2026-09-26): a bar whose name text is set but not drawn. Each
--- [Shown] line of a bars button carries the widths the name, the time and the bar area were laid out
--- at, and the header lists the session's cached time-text measurements, so one report tells a name
--- squeezed to nothing by an oversized time box from one that is hidden for another reason.
+-- ── the blank bar name repaint (issue #24, spec D6) ─────────────────────────────────────────────
+-- A bar's name is written by the aura engine on assign or update only, and a blank first sighting
+-- stays blank; modules/NameRepaint.lua repaints it. The header's `name repaint:` line reads the
+-- module's own state: the units it listens for, each armed unit and its stage, the passes it has run
+-- and the last one. The width fields that came before it (a refuted hypothesis) are gone.
 
---- A region answering GetWidth with `w`; a function `w` stands for a read that raises.
-local function sized(w)
-    return { GetWidth = function() if type(w) == "function" then return w() end return w end }
+--- The `name repaint:` header line, or nil.
+local function repaintLine(NS)
+    return has(build(NS), "[Diag] name repaint: ")
 end
 
-test("diag: a bars button's [Shown] line carries its name, time and bar widths", function()
+test("diag: the width fields are gone: no widths on a bars [Shown] line, no cached-widths line", function()
     local NS, mocks = fresh()
     local inst = NS.ContainerManager.instances[1]
     local key = inst.plan.groups[1].key
     local f = mocks.__stubFrame()
-    rawset(f, "__am", { style = "bars", name = sized(0), time = sized(180.34), bar = sized(184) })
-    inst.engine.__frames[key] = { f }
-    local line = has(build(NS), "[Shown] #1 " .. key .. " btn1")
-    -- red under: the line without the geometry (the widths were never read)
-    assertTrue(line ~= nil and line:find("nameW=0.0 timeW=180.3 barW=184.0", 1, true) ~= nil, tostring(line))
-end)
-
-test("diag: an unreadable width reads '?' and costs no line", function()
-    local NS, mocks = fresh()
-    local secret = secretBoolean(mocks)
-    local inst = NS.ContainerManager.instances[1]
-    local key = inst.plan.groups[1].key
-    local f = mocks.__stubFrame()
-    rawset(f, "__am", { style = "bars", name = sized(function() error("forbidden") end),
-        time = sized(secret), bar = sized(184) })
+    local sized = { GetWidth = function() return 184 end }
+    rawset(f, "__am", { style = "bars", name = sized, time = sized, bar = sized })
     inst.engine.__frames[key] = { f }
     local lines = build(NS)
-    assertTrue(has(lines, "failed") == nil, dump(lines))
     local line = has(lines, "[Shown] #1 " .. key .. " btn1")
-    assertTrue(line ~= nil and line:find("nameW=? timeW=? barW=184.0", 1, true) ~= nil, tostring(line))
-end)
-
-test("diag: a button with no bar regions carries no widths", function()
-    local NS, mocks = fresh()
-    local inst = NS.ContainerManager.instances[1]
-    local key = inst.plan.groups[1].key
-    inst.engine.__frames[key] = { mocks.__stubFrame() }
-    local line = has(build(NS), "[Shown] #1 " .. key .. " btn1")
+    -- red under: the cee5bb6 barWidths suffix left on the probe
     assertTrue(line ~= nil and line:find("nameW=", 1, true) == nil, tostring(line))
+    -- red under: the cee5bb6 measuresLine left in the header
+    assertTrue(has(lines, "time-text widths cached") == nil, dump(lines))
+    assertEqual(NS.Style.MeasuredTimeWidths, nil, "Style.MeasuredTimeWidths removed")
 end)
 
-test("diag: the header lists the cached time-text measurements", function()
-    local NS = fresh()
+test("diag: the name repaint line names the listened units, and nothing armed or run at rest", function()
+    local NS, mocks = fresh()
+    mocks.__fireTimers(); mocks.__fireTimers()
+    -- red under: no such line (the repaint's state invisible to the report)
+    assertEqual(repaintLine(NS), "[Diag] name repaint: listening=player armed=none passes=0 last=never")
+    NS.SetByPath("container.style", "bars", 3)
+    mocks.__fireTimers(); mocks.__fireTimers()
+    -- red under: listening read from one frame only (the target frame's units left out)
+    assertEqual(repaintLine(NS), "[Diag] name repaint: listening=player,target armed=none passes=0 last=never")
+end)
+
+test("diag: the name repaint line shows each armed stage, the pass count and the last pass", function()
+    local NS, mocks = fresh()
+    mocks.__fireTimers(); mocks.__fireTimers()
+    local NR = NS.NameRepaint
+    local f = NR.unitFrames[1]
+    f.__scripts.OnEvent(f, "UNIT_AURA", "player")
+    -- red under: armed read from the timers without their stage
+    assertEqual(repaintLine(NS), "[Diag] name repaint: listening=player armed=player:quick passes=0 last=never")
+    mocks.__now = 12.34
+    mocks.__fireTimers()
+    -- red under: NR.Repaint without the pass counter, or without the unit and GetTime it ran at
+    assertEqual(repaintLine(NS), "[Diag] name repaint: listening=player armed=player:settle passes=1 "
+        .. "last=player@12.3")
+    mocks.__now = 14.5
+    mocks.__fireTimers()
+    assertEqual(repaintLine(NS), "[Diag] name repaint: listening=player armed=none passes=2 last=player@14.5")
+end)
+
+test("diag: the name repaint line reads state only: it registers nothing and arms nothing", function()
+    local NS, mocks = fresh()
+    mocks.__fireTimers(); mocks.__fireTimers()
+    local NR = NS.NameRepaint
+    local timersBefore = #mocks.__timers()
+    local units = table.concat(NR.unitFrames[1].__unitEvents.UNIT_AURA, ",")
+    build(NS); build(NS)
+    -- red under: a report that syncs or arms the repaint (a timer or a registration of its own)
+    assertEqual(#mocks.__timers(), timersBefore, "no timer armed by the report")
+    assertEqual(table.concat(NR.unitFrames[1].__unitEvents.UNIT_AURA, ","), units, "no registration")
+    local f2 = NR.unitFrames[2]
+    assertTrue(f2 == nil or f2.__unitEvents.UNIT_AURA == nil, "the target frame stays closed")
+end)
+
+test("diag: the name repaint line prints while stood down and while auras are secret", function()
+    local NS, mocks = fresh()
+    mocks.__fireTimers(); mocks.__fireTimers()
+    local f = NS.NameRepaint.unitFrames[1]
+    f.__scripts.OnEvent(f, "UNIT_AURA", "player")
+    mocks.__fireTimers()
+    mocks.__aurasSecret = true
     local lines = build(NS)
-    -- red under: no such line (the cache was invisible to the report)
-    assertTrue(has(lines, "[Diag] time-text widths cached: none") ~= nil, dump(lines))
-    local real = NS.Style.__measurer
-    NS.Style.__measurer = function()
-        return { SetFont = function() return true end, SetText = function() end,
-            GetStringWidth = function() return 40 end }
-    end
-    local w = NS.Style.TimeTextWidth({ font = "Ka0s Prototype", fontSize = 10 }, { fontSize = 12 }, "short")
-    NS.Style.__measurer = real
-    assertEqual(w, 42, "measured width plus the outline allowance")
-    local line = has(build(NS), "[Diag] time-text widths cached:")
-    assertTrue(line ~= nil and line:find("|10||short=42", 1, true) ~= nil, tostring(line))
+    mocks.__aurasSecret = false
+    -- red under: the line gated on readable auras (the repaint runs most in combat)
+    assertTrue(has(lines, "[Diag] name repaint: listening=player armed=player:settle passes=1") ~= nil, dump(lines))
+    assertTrue(has(lines, "failed") == nil, dump(lines))
+    NS.lifecycle:Hold(NS.HOLD_PERF)
+    lines = build(NS)
+    NS.lifecycle:Release(NS.HOLD_PERF)
+    -- red under: the line skipped while stood down (debug-logging-§14: the report runs regardless)
+    assertTrue(has(lines, "[Diag] name repaint: listening=none armed=none passes=1 last=player@0.0") ~= nil,
+        dump(lines))
 end)

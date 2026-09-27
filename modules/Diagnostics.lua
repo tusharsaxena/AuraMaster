@@ -204,11 +204,21 @@ local function countsLine(out)
         countKeys(p.userCategories), table.concat(slots, ","))
 end
 
---- The time-text widths cached this session (Style.MeasuredTimeWidths): a bar's name stops short of
---- its time's box, so a width cached wrong hides every name dressed after it until /reload.
-local function measuresLine(out)
-    local list = NS.Style and NS.Style.MeasuredTimeWidths and NS.Style.MeasuredTimeWidths() or {}
-    out:add("Diag", "time-text widths cached: %s", list[1] and table.concat(list, ", ") or "none")
+--- The blank bar name repaint (modules/NameRepaint.lua, issue #24): the units it listens for, each
+--- armed unit and its stage, the passes run this session and the last one's unit and GetTime. Read
+--- from NameRepaint.DiagState, which reads state only, so it prints while stood down.
+local function repaintLine(out)
+    local NR = NS.NameRepaint
+    if not (NR and NR.DiagState) then return end
+    local s = NR.DiagState()
+    local last = "never"
+    if s.lastUnit then
+        local at = NS.Secrets.IsReadableNumber(s.lastAt) and ("%.1f"):format(s.lastAt) or "?"
+        last = str(s.lastUnit) .. "@" .. at
+    end
+    out:add("Diag", "name repaint: listening=%s armed=%s passes=%s last=%s",
+        s.listening[1] and table.concat(s.listening, ",") or "none",
+        s.armed[1] and table.concat(s.armed, ",") or "none", s.passes, last)
 end
 
 function Diag.Header(out)
@@ -216,7 +226,7 @@ function Diag.Header(out)
     downLine(out)
     queueLine(out)
     countsLine(out)
-    measuresLine(out)
+    repaintLine(out)
 end
 
 -- ---------------------------------------------------------------------------
@@ -604,24 +614,8 @@ local function probeRegions(frame)
     return nil
 end
 
---- One region's width to a tenth, or "?" when the read raises or is not a readable number.
-local function widthOf(region)
-    if type(region) ~= "table" then return "?" end
-    local ok, w = pcall(region.GetWidth, region)
-    if ok and NS.Secrets.IsReadableNumber(w) then return ("%.1f"):format(w) end
-    return "?"
-end
-
---- A bars button's laid-out widths: the name, its time's box and the bar area. A name near 0 beside
---- a time as wide as the bar is a name squeezed out by its time box (owner report 2026-09-26).
-local function barWidths(frame)
-    local am = frame.__am
-    if type(am) ~= "table" or am.style ~= "bars" then return "" end
-    return (" nameW=%s timeW=%s barW=%s"):format(widthOf(am.name), widthOf(am.time), widthOf(am.bar))
-end
-
 local function probe(frame)
-    return (probeInstance(frame) or probeRegions(frame) or "id=?") .. barWidths(frame)
+    return probeInstance(frame) or probeRegions(frame) or "id=?"
 end
 
 --- The button's name for a [Shown] line; a probe that raises (a forbidden object) says so instead.
