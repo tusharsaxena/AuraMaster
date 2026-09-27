@@ -204,29 +204,11 @@ local function countsLine(out)
         countKeys(p.userCategories), table.concat(slots, ","))
 end
 
---- The blank bar name repaint (modules/NameRepaint.lua, issue #24): the units it listens for, each
---- armed unit and its stage, the passes run this session and the last one's unit and GetTime. Read
---- from NameRepaint.DiagState, which reads state only, so it prints while stood down.
-local function repaintLine(out)
-    local NR = NS.NameRepaint
-    if not (NR and NR.DiagState) then return end
-    local s = NR.DiagState()
-    local last = "never"
-    if s.lastUnit then
-        local at = NS.Secrets.IsReadableNumber(s.lastAt) and ("%.1f"):format(s.lastAt) or "?"
-        last = str(s.lastUnit) .. "@" .. at
-    end
-    out:add("Diag", "name repaint: listening=%s armed=%s passes=%s last=%s",
-        s.listening[1] and table.concat(s.listening, ",") or "none",
-        s.armed[1] and table.concat(s.armed, ",") or "none", s.passes, last)
-end
-
 function Diag.Header(out)
     stateLine(out)
     downLine(out)
     queueLine(out)
     countsLine(out)
-    repaintLine(out)
 end
 
 -- ---------------------------------------------------------------------------

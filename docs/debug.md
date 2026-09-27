@@ -39,7 +39,7 @@ Every line is `HH:MM:SS | [Tag] message`. The tags:
 
 | Tag | What it holds |
 |---|---|
-| `Diag` | Begin and end markers, the identity header (version, schema, profile and container count, then the client, locale, debug flag, combat reads and the running LibKa0s minors), the state flags and lifecycle holds, a plain line when the addon is disabled or stood down (below), the apply queue, counts, the blank bar name repaint's state (`name repaint:`, below), and any `truncated` or `section ... failed` line |
+| `Diag` | Begin and end markers, the identity header (version, schema, profile and container count, then the client, locale, debug flag, combat reads and the running LibKa0s minors), the state flags and lifecycle holds, a plain line when the addon is disabled or stood down (below), the apply queue, counts, and any `truncated` or `section ... failed` line |
 | `Cfg` | Non-default settings: the profile's own rows, then each container's (`#id non-default:`), filter rows left out because `Filt` prints them in full. A non-default value that does nothing for that container goes on its own `#id inert:` line instead (see below) |
 | `Unit` | One header per unit and filter with the aura count, or `none` / `unreadable` / `read failed` |
 | `Aura` | One aura: `player+` is a buff, `player-` a debuff; `inst`, `id`, name, `dispel`, `src`, `mine`, `dur`, `left`, `stacks`, `boss`, `steal` |
@@ -60,7 +60,6 @@ Example (shortened):
 [Diag] LibKa0s running: Core 8, Env 1, Compat 1, Lifecycle 2, ...
 [Diag] state: enabled=true stoodDown=false disabledHold=false holds=- locked=true testMode=false ...
 [Diag] apply queue: all=false ids=[] scheduled=false notice=- mustDefer=false
-[Diag] name repaint: listening=player,target armed=target:settle passes=14 last=target@8123.4
 [Unit] player HELPFUL: 7 aura(s)
 [Aura] player+ #1 inst=1234 id=1459 "Arcane Intellect" dispel=nil src=player mine=true dur=3600 left=3412.5 stacks=0 boss=false steal=false
 [Unit] focus: none
@@ -81,60 +80,9 @@ Automatic or `(picked)`, and `join=`, the batch 9 side the pair is under the par
 
 ### Bar names that do not show
 
-A bar with its icon, fill and time but no spell name is not a layout or font fault. Blizzard's aura
-engine writes a bar's spell name from the aura's data when the aura is assigned to a button or
-updated, and at no other time. On a first sighting that name can still be missing, the engine writes
-an empty string, and an aura that never updates keeps the blank for its whole life. A permanent buff
-present at login is the worst case (issue #24, docs/superpowers/research/2026-09-27-blank-bar-names-findings.md,
-and `docs/midnight-quirks.md`).
-
-`modules/NameRepaint.lua` repaints every bars container that shows its name, and every Text container
-whose template has the name token, through the engine's own `UpdateAllAuras`, which rereads every aura
-and rewrites every name. Per unit it runs about 0.5 s after the first `UNIT_AURA` of a quiet unit
-(`quick`), again 2 s later (`settle`, repeated every 2 s only while the unit keeps changing), 3 s
-after a loading screen (`enter`, then `settle` at 5 s), and after a target, focus or pet swap: 0.5 s
-later when nothing is armed for that unit, otherwise at the armed follow-up (within about 2 s, or
-3 s just after a loading screen).
-It runs in combat too. An icons container, or a bars container with its name hidden, is never
-repainted: it shows no name the engine writes.
-
-The header's `name repaint:` line reads the module's state, and reading it changes nothing:
-
-- `listening=` the units with at least one enabled container that shows an engine-written name, or
-  `none`. `none` while the addon is stood down, or when no container shows such a name.
-- `armed=` each unit with a repaint waiting, and its stage: `quick` (first event), `settle` (the
-  follow-up) or `enter` (after a loading screen), or `none`.
-- `passes=` how many repaints have run this session, and `last=` the unit and `GetTime()` of the
-  latest one, or `never`.
-
-Both counters are session-wide, and a pass counts even when it reaches no container (one that is
-parked, stale, hidden or previewing is skipped). So they rule this cause out only when `last=` names
-the blank bar's unit, the pass ran after the name went blank, and that container is shown and not
-previewing. A unit missing from `listening` has no container the repaint thinks shows a name.
-
-**The `Names` trace.** With logging on (`/am debug on`), each pass writes one line. An event writes
-none. A unit that keeps changing adds one line every 2 s; one that changes in bursts can add two
-every 2.5 s (a `settle` pass, then the next burst's `quick` 0.5 s after it), so a busy fight adds at
-most about one line every 1.25 s per unit:
-
-```
-[Names] repaint player: 2 container(s) (quick)
-[Names] repaint player: 2 container(s) (settle)
-```
-
-The count is how many containers the pass reached, and the stage is the timer that asked. A blank bar
-whose unit shows a pass after the name went blank, with a count that includes that container, was
-repainted, and the name was still not there: the next `UNIT_AURA` on that unit starts another cycle
-(`docs/known-limitations.md`). A count of 0 means every container on that unit was skipped. No
-`Names` line at all after an aura appeared means the unit is not in `listening=`, or the addon is
-disabled or stood down.
-
-**Do not toggle to test it.** Locking or unlocking, test mode, a visibility change, or any restyle
-also redraws the names. Locking, unlocking, test mode and a visibility change switch the engine off
-and on, and it rereads every aura through `UpdateAllAuras`. A restyle re-dresses the buttons, and
-each one reruns its apply with the aura data it already holds. Both rewrite the name. A name that
-appears after one of those says nothing
-about the repaint. To check it, turn on the trace, let the aura appear, and change nothing.
+A bar with its icon, fill and time but no spell name is issue #24. The measured cause is in
+`docs/superpowers/research/2026-09-27-blank-bar-names-findings.md` (section *Correction: the real
+cause is the font*). The report carries no line for it yet.
 
 ### The plan verdict
 

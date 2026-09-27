@@ -4,7 +4,7 @@
 ![CurseForge Version](https://img.shields.io/curseforge/v/1698345)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-1705%2F1705_passing-green)
+![Tests](https://img.shields.io/badge/Tests-1662%2F1662_passing-green)
 
 Ka0s Aura Master lets you build your own buff and debuff displays. Each one is a container. You pick
 whose auras it shows (yours, your target's, your focus's or your pet's), whether it shows buffs,
@@ -131,7 +131,6 @@ on your own debuffs does nothing, and the Filters section warns you when that's 
 | A container attached to a frame is sitting somewhere else | The frame wasn't found, so the container fell back to its screen position. Check the name in **Frame name** (`/fstack` shows frame names), or pick the frame again. |
 | Blizzard's buff frame is still showing after I hid it | Blizzard's frames can't be moved during combat. The change goes through as soon as combat ends. |
 | My weapon enchants don't show | Enchants appear in a player buff container whose **Weapon enchants** row on Filters → Categories is set to Show (the default). `/am new enchants` makes a container that shows nothing else. You choose which weapon slots count under General → Spell Categories → Weapon enchants. Enchants that never expire are skipped while **Hide enchants without a duration** is on. |
-| A bar shows its icon and time but no spell name | The game sometimes hands over a spell's name a moment after the aura appears, most often right after you log in or on a spell you haven't seen in a while. Aura Master redraws the bar a few seconds later, in combat too, so give it about five seconds. If a name stays blank longer than that, follow [Reporting a bug](#reporting-a-bug) below. |
 | Chat says the client has no aura container API | Aura Master needs Retail patch 12.1 or later. |
 | A container vanished after I clicked the X on its handle | The X turns the container off. Tick its **Enabled** box on the Containers page to bring it back. Its settings were kept. |
 | Something looks wrong and I want to report it | Follow [Reporting a bug](#reporting-a-bug) below. |

@@ -17,12 +17,6 @@ local function exercise(NS, mocks)
     NS.SetByPath("locked", false)   -- EmptyWatch listens and queues its pass...
     mocks.__fireTimers()            -- ...which emptyPass brackets
     NS.ContainerManager.ApplyVisibility()
-    -- nameRepaint (modules/NameRepaint.lua): a player UNIT_AURA on the repaint's own frame arms QUICK,
-    -- and the timer runs a real pass. Before test mode, which previews every container and so leaves
-    -- none eligible.
-    local repaint = NS.NameRepaint.unitFrames[1]
-    repaint.__scripts.OnEvent(repaint, "UNIT_AURA", "player")
-    mocks.__fireTimers()
     NS.Preview.SetTestMode(true)    -- preview: dresses placeholder elements through Style.Element
     mocks.__fireTimers()
 end
@@ -49,8 +43,7 @@ test("perf: every declared bucket is reached by a real bracket", function()
         assertTrue((seen[key] or 0) > 0, "bucket '" .. key .. "' was never noted")
     end
     local declared = #NS.Perf.BUCKET_ORDER
-    -- Eight since the blank-name repaint's `nameRepaint` bucket joined (modules/NameRepaint.lua).
-    assertTrue(declared == 8, "the eight declared buckets")
+    assertTrue(declared == 7, "the seven declared buckets")
 end)
 
 test("perf: a dormant probe notes nothing", function()
@@ -99,10 +92,9 @@ end)
 
 test("perf: the buckets are declared in report order, and only the per-container apply nests", function()
     local NS = fresh()
-    -- red under: a bucket reordered, renamed or dropped from core/PerfSetup.lua. `nameRepaint` is
-    -- declared last, after the other aura-driven paths (the blank-name repaint, issue #24).
+    -- red under: a bucket reordered, renamed or dropped from core/PerfSetup.lua
     assertEqual(table.concat(NS.Perf.BUCKET_ORDER, ","),
-        "unitSwap,applyPass,applyContainer,visibilityPass,styleElement,timedScan,emptyPass,nameRepaint")
+        "unitSwap,applyPass,applyContainer,visibilityPass,styleElement,timedScan,emptyPass")
     local nested = {}
     for key, parent in pairs(NS.Perf.BUCKET_WITHIN) do
         nested[#nested + 1] = key .. "<" .. parent

@@ -93,9 +93,6 @@ local function standDown()
     if NS.TimedSpells and NS.TimedSpells.StandDown then NS.TimedSpells.StandDown() end
     -- Its unit frames and swap events, closed by hand (modules/EmptyWatch.lua).
     if NS.EmptyWatch and NS.EmptyWatch.Stop then NS.EmptyWatch.Stop() end
-    -- The blank-name repaint's two frames and timers (modules/NameRepaint.lua). Nothing on the way
-    -- up: standUp's visibility pass ends in its Sync, once the latch is back up.
-    if NS.NameRepaint and NS.NameRepaint.Stop then NS.NameRepaint.Stop() end
     if NS.ContainerManager and NS.ContainerManager.StopListening then NS.ContainerManager.StopListening() end
     -- The frame picker's overlay runs an OnUpdate; a stood-down addon runs none.
     if NS.FramePicker and NS.FramePicker.Stop then NS.FramePicker.Stop() end

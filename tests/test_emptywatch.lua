@@ -457,12 +457,6 @@ test("empty: a target switch folds a pass already due into its own, leaving no t
     local f = NS.EmptyWatch.unitFrames[2]
     f.__scripts.OnEvent(f, "UNIT_AURA", "target")
     mocks.__fireEvent("PLAYER_TARGET_CHANGED")
-    -- The switch also arms the blank-name repaint for target (container 1 shows bar names,
-    -- modules/NameRepaint.lua), so only EmptyWatch's own PASS_DELAY timer is counted.
-    local left = 0
-    for _, t in ipairs(mocks.__timers()) do
-        if t.delay == 0.2 then left = left + 1 end
-    end
     -- red under: the switch running its pass beside the pending timer instead of canceling it
-    assertEqual(left, 0, "the due pass was folded into the switch")
+    assertEqual(mocks.__fireTimers(), 0, "the due pass was folded into the switch")
 end)

@@ -103,7 +103,6 @@ Kit.run{
         "test_anchors_edges",
         "test_anchors_hang",
         "test_emptywatch",
-        "test_namerepaint",
         "test_anchors_close",
         "test_anchors_label",
         "test_anchors_strip",

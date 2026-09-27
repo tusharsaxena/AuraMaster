@@ -23,9 +23,6 @@ table key, index it or run `#` on it.
   everything that would touch an aura or an aura button.
 - The one place that does read auras, `modules/TimedSpells.lua`, runs only when that answers false,
   and checks every field through `core/Secrets.lua` before comparing or keying on it.
-- `modules/NameRepaint.lua` does hear `UNIT_AURA` in combat, and reads nothing from it but the unit
-  argument, once `IsSafeKey` proves it readable. It never touches the payload (*A bar's name is
-  written once, on assign or update*, below).
 - Every chat and debug line goes through `NS.SafeToString` (LibKa0s-Core), so a secret can never
   reach `table.concat` or `string.format`.
 
@@ -264,54 +261,7 @@ hides it, and clearing does not show it again.
 `UpdateAllAuras` exists for external refreshes such as target changes.
 
 **What this addon does.** `PLAYER_TARGET_CHANGED`, `PLAYER_FOCUS_CHANGED` and `UNIT_PET` (for the
-player) call `UpdateAllAuras` on every container on that unit (`core/AuraMaster.lua:118-133`).
-That rebuild is also the new unit's first sighting, so a name it writes blank would stay blank: each
-handler then arms the name repaint for the unit (*A bar's name is written once, on assign or update*,
-next).
-
-## A bar's name is written once, on assign or update (measured 2026-09-27)
-
-**The restriction.** An engine button writes its spell name from `auraData.name` when an aura is
-assigned to it or updated, and at no other time. `ApplyAuraInstance` calls `ApplySpellName` from
-`OnAuraInstanceAssigned` and `OnAuraInstanceUpdated`, and `AuraContainerUtil.SetSpellNameForAura`
-writes `""` when the name is nil. It retries an item enchant's name asynchronously, and never a
-spell's. On a first sighting the name can still be nil, so the button writes an empty string, and an
-aura that never updates again keeps the blank for its whole life. A permanent buff present at login
-is the worst case: it stays blank until `/reload`. `UpdateAllAuras` is what rewrites it: it marks a
-full rebuild, which fetches the aura data again and rewrites every button, names included. On a
-disabled engine the same call clears its auras instead. Two more things rewrite a name by accident.
-The engine's `SetEnabled` runs `UpdateAllAuras` whenever its enabled state flips, so a lock toggle,
-test mode or a visibility change repaints every container it flips. Every `Set*` binding reruns the
-button's apply with its stored aura data, so a restyle repaints too. Blizzard's source, with the
-line numbers of the copy read: `docs/superpowers/research/2026-09-27-blank-bar-names-findings.md`.
-
-**Measured in-game, 2026-09-27** (the owner's runs for issue #24):
-- With `_retail_\Cache` renamed away, a fresh login reproduced the blank on almost every aura. Every
-  aura present at login drew a blank bar, and those bars stayed blank through combat. Auras gained
-  later mostly showed their names.
-- Only the name was missing. The time, drawn in the same font at the same size and outline, showed,
-  and the same aura showed its name in one container and none in another at the same moment.
-- Changing one container's bar height, with no `/reload`, brought that container's names back and
-  left an untouched container on the same screen blank.
-- A `SPELL_DATA_LOAD_RESULT` listener printed nothing: the event answers explicit load requests only.
-  Why `auraData.name` is nil on a first sighting is not proven beyond the cache correlation, and the
-  fix does not depend on it.
-
-**What this addon does.** `modules/NameRepaint.lua` asks the engine to read the auras again a few
-seconds later, with `UpdateAllAuras` through `ContainerClass:Refresh`. That is not a protected call
-and it reads no aura, so it runs in combat and while auras are secret. The module listens to
-`UNIT_AURA` on two hidden unit frames of its own (player and pet, target and focus), only for the
-units that have an enabled container showing a name the engine writes (`Style.ShowsEngineName`: a
-bars container unless its name is hidden, a Text container whose template holds the name, never
-icons), and reads nothing but a unit argument `NS.Secrets.IsSafeKey` proves readable. Per unit it
-repaints 0.5 s after the first `UNIT_AURA` of a quiet unit and again 2 s later, then every 2 s only
-while the unit keeps changing; at 3 s and 5 s after a loading screen; and after a target, focus or pet
-swap as after any `UNIT_AURA` (0.5 s later when nothing is armed, else at the armed follow-up, within
-about 2 s, or 3 s just after a loading screen). A pass skips a container that is hidden, previewing, parked or
-stale, so it never sends `UpdateAllAuras` to a disabled engine, and it sends nothing else: no apply,
-no restyle and no button access. A name that arrives later than the follow-up stays blank until the
-next `UNIT_AURA` on that unit (`docs/known-limitations.md`). How to see it working: `docs/debug.md`
-(*Bar names that do not show*).
+player) call `UpdateAllAuras` on every container on that unit (`core/AuraMaster.lua:115-127`).
 
 ## Weapon enchants
 
@@ -349,7 +299,7 @@ so the failure is latent: it would only show up once a patch retires one of them
 `NS.SafeRegisterUnitEvent`. That covers the eight lifecycle events (`LIFECYCLE_EVENTS` in
 `core/AuraMaster.lua`), the timed-spell gate and its unit frame's `UNIT_AURA`
 (`modules/TimedSpells.lua`), the empty-container prediction's two unit frames and their swap events
-(`modules/EmptyWatch.lua`), the blank-name repaint's two unit frames (`modules/NameRepaint.lua`), and the stand-down's pending `PLAYER_REGEN_ENABLED`
+(`modules/EmptyWatch.lua`), and the stand-down's pending `PLAYER_REGEN_ENABLED`
 (`core/LifecycleSetup.lua`). A refused name is recorded once in `NS.RejectedEvents`. The `[Init]`
 line adds `rejected events: …` when that list is not empty, and a name refused while logging is on
 is traced right away, as `[Init] event <NAME> rejected by this client`.
@@ -364,9 +314,6 @@ would have told it and keeps everything else:
   stops learning new spells);
 - a refused `UNIT_AURA` on the empty-container prediction's frames leaves it deaf to aura changes on
   those units, and their swap events are then not registered either;
-- a refused `UNIT_AURA` on the blank-name repaint's frames leaves those units unlistened, and the
-  repaint never runs for a unit no frame listens for, not even at a loading screen: a blank name stays
-  blank until the engine next writes it (an update of that aura, or a swap's or toggle's own refresh);
 - a refused `PLAYER_REGEN_ENABLED` leaves the stand-down's secure half unheld, so it is retried on the
   next stand-down or stand-up rather than when combat ends.
 

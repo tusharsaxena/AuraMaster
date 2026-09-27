@@ -234,9 +234,7 @@ test("disabled: TimedSpells' private unit frame is in the census while enabled a
     assertTrue(frame ~= nil, "no unit frame while a timeless container is enabled")
     assertEqual(dump(regsOn(mocks, frame)), "{unit:UNIT_AURA | unit:UNIT_AURA}")
     local R = regs(mocks)
-    -- Two player rows: this frame's and the blank-name repaint's (modules/NameRepaint.lua), which
-    -- listens for the player because the starter bars show a name. Its pet stays unregistered.
-    assertEqual(R["unit:UNIT_AURA:player"], 2, "player row: " .. dumpRegs(R))
+    assertEqual(R["unit:UNIT_AURA:player"], 1, "player row: " .. dumpRegs(R))
     assertEqual(R["unit:UNIT_AURA:pet"], 1, "pet row: " .. dumpRegs(R))
     disable(NS)
     -- red under: TS.Stop without its hand-written unregistration of the unit frame.
@@ -294,14 +292,13 @@ test("disabled: a queued apply and a queued scan are canceled, not left armed", 
     mocks.__fireTimers(); mocks.__fireTimers()
     assertEqual(#mocks.__timers(), 0, "the baseline settled")
 
-    -- Arm the one-shots: the coalescing apply, the timed-spell scan and, since the player's starter
-    -- bars show a name, the blank-name repaint's QUICK (modules/NameRepaint.lua).
+    -- Arm both one-shots: the coalescing apply and the timed-spell scan.
     NS.SetByPath("container.bars.width", 180, 1)
     mocks.__fire("UNIT_AURA", "player")
-    assertEqual(#mocks.__timers(), 3, "the apply, the scan and the repaint are all armed")
+    assertEqual(#mocks.__timers(), 2, "the apply and the scan are both armed")
 
     disable(NS)
-    -- red under: C_Timer.After -- no handle, so all three would stay queued to wake up and find the latch.
+    -- red under: C_Timer.After -- no handle, so both would stay queued to wake up and find the latch.
     -- The kit's NewTimer:Cancel takes a handle out of the live set (revision 17).
     assertEqual(#mocks.__timers(), 0, "a queued one-shot is still going to wake up")
 

@@ -189,11 +189,6 @@ assert_(swap.apiPerIter == targets,
 -- 7. Probe overhead: the instrumentation must be free when capture is off. "Free" is measured
 --    against the same bodies with no brackets at all (performance-§9): probeAbsent is exactly
 --    CM.ApplyVisibility plus addon:OnUnitSwap("PLAYER_TARGET_CHANGED") minus their brackets.
---    It also leaves out the NameRepaint.Sync that ends every visibility pass and the Arm a swap
---    sends (modules/NameRepaint.lua). The starter's target container is icons, so no frame listens
---    for target here and that Arm returns at its listened check: the bytes assertion below proves
---    that Sync adds 0 B and that Arm's early return adds 0 B, not that arming is free (arming a
---    quiet unit allocates one timer handle; nameRepaintAura measures the armed unit's 0 B).
 local off = measure("probeOverheadOff", 1000, function() CM.ApplyVisibility(); NS.addon:OnUnitSwap("PLAYER_TARGET_CHANGED") end)
 NS.Perf.on = true
 local on = measure("probeOverheadOn", 1000, function() CM.ApplyVisibility(); NS.addon:OnUnitSwap("PLAYER_TARGET_CHANGED") end)
@@ -206,7 +201,7 @@ assert_(off.apiPerIter == on.apiPerIter, "the probe changed how many engine call
 assert_(off.apiPerIter == absent.apiPerIter,
     ("a dormant bracket changed the engine calls: %.1f vs %.1f with no bracket")
         :format(off.apiPerIter, absent.apiPerIter))
--- red under: a table built beside the dormant `t0` in CM.ApplyVisibility, or in NameRepaint.Sync.
+-- red under: a table built beside the dormant `t0` in CM.ApplyVisibility.
 assert_(off.bytesPerIter <= absent.bytesPerIter,
     ("a dormant bracket allocated: %.1f B/iter vs %.1f with no bracket")
         :format(off.bytesPerIter, absent.bytesPerIter))
@@ -276,44 +271,6 @@ if watchUnits then
 end
 NS.SetByPath("locked", true)
 mocks.__fireTimers()
-
--- 10. NameRepaint hears UNIT_AURA on its own two frames, in combat too, for the units that have a
---     container showing an engine-written name (modules/NameRepaint.lua). The first event of a quiet
---     unit arms one QUICK timer; a burst after that only marks the unit dirty, arming nothing and
---     allocating nothing. The pass the timer runs sends one UpdateAllAuras per eligible container.
-local NR = NS.NameRepaint
-local repaintFrame = NR.unitFrames[1]
-local repaintUnits = repaintFrame and repaintFrame.__unitEvents.UNIT_AURA
-assert_(repaintUnits ~= nil, "nameRepaintAura: NameRepaint did not register UNIT_AURA for the player")
-if repaintUnits then
-    local onEvent = repaintFrame.__scripts.OnEvent
-    local timersBeforeRepaint = #mocks.__timers
-    onEvent(repaintFrame, "UNIT_AURA", "player")
-    local armedRepaint = #mocks.__timers - timersBeforeRepaint
-    assert_(armedRepaint == 1,
-        ("nameRepaintAura: the first player UNIT_AURA armed %d timer(s), expected 1"):format(armedRepaint))
-    -- The second marks the unit dirty, and the dirty table makes its slot once: the loop measures
-    -- the latched path after that.
-    onEvent(repaintFrame, "UNIT_AURA", "player")
-    local queuedRepaint = #mocks.__timers
-    local burst = measure("nameRepaintAura", 1000, function() onEvent(repaintFrame, "UNIT_AURA", "player") end)
-    -- red under: an armed unit arming again rather than only marking itself dirty.
-    assert_(#mocks.__timers == queuedRepaint,
-        ("nameRepaintAura: a UNIT_AURA burst armed %d more timer(s)"):format(#mocks.__timers - queuedRepaint))
-    -- red under: a table or closure built in NameRepaint's handler or in Arm.
-    assert_(burst.bytesPerIter == 0,
-        ("nameRepaintAura: a UNIT_AURA allocated %.1f B/iter"):format(burst.bytesPerIter))
-    mocks.__fireTimers(); mocks.__fireTimers()   -- QUICK, then the SETTLE it always arms
-    -- Counted from the settings, not from the module: enabled player containers that show a name.
-    local eligible = 0
-    for _, c in ipairs(NS.Database.GetContainers()) do
-        if c.enabled and c.unit == "player" and NS.Style.ShowsEngineName(c) then eligible = eligible + 1 end
-    end
-    local pass = measure("nameRepaintPass", 1000, function() NR.Repaint("player", "perf") end)
-    assert_(pass.apiPerIter == eligible and callsNamed("UpdateAllAuras") == eligible * 1000,
-        ("nameRepaintPass makes %.1f engine calls, expected %d (one UpdateAllAuras per eligible container)")
-            :format(pass.apiPerIter, eligible))
-end
 
 for _, r in ipairs(results) do
     assert_(r.bytesPerIter >= 0, ("%s reports negative bytes per iteration (%.1f)"):format(r.name, r.bytesPerIter))

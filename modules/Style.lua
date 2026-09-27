@@ -1016,24 +1016,3 @@ function Style.PreviewTime(fs, aura, s, sdef)
         fs:SetTextColor(Style.Color(s.expiringColor or sdef.expiringColor, false))
     end
 end
-
--- An absent text block reads as the template's own, without a table allocated per call.
-local NO_TEXT = {}
-
---- Whether an element of `cfg` shows a spell name the aura engine writes: the two places that bind
---- SetSpellName. The bars style (Style.StyleKey's answer, so a removed style counts) unless its name
---- is hidden (modules/Style_Bars.lua's Bars.Bind); the text style when the template it draws has a
---- name piece (Text.Compiled, so a refused template answers for the default it falls back to);
---- icons never. modules/NameRepaint.lua repaints only these. Allocation-free: the compile is memoized.
-function Style.ShowsEngineName(cfg)
-    local key = Style.StyleKey(cfg)
-    if key == "icons" then return false end
-    if key == "text" then
-        for _, piece in ipairs(Style.Text.Compiled(cfg.text or NO_TEXT).pieces) do
-            if piece.kind == "name" then return true end
-        end
-        return false
-    end
-    local name = cfg.bars and cfg.bars.name
-    return not (name and name.show == false)
-end

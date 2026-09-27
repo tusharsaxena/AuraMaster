@@ -721,48 +721,6 @@ badge and any count quoted in the docs must agree with it.
 - empty: a target switch re-predicts at once, so no follower hangs from the emptied engine in between
 - empty: a target switch folds a pass already due into its own, leaving no timer behind
 
-### test_namerepaint.lua (39)
-
-- names: a bars container shows the engine's name by default
-- names: a bars container with its name hidden shows none
-- names: an unknown style counts as bars, as Style.StyleKey draws it
-- names: an icons container never shows a name
-- names: a text container shows a name only when its template has the name token
-- names: an escaped $$spellname$$ is literal text, not the name token
-- names: the name token is found in any case
-- names: a refused text template draws the default, which has a name
-- repaint: the player frame registers only the units a name-showing container tracks
-- repaint: a name-showing target or focus container opens the second frame, and its loss closes it
-- repaint: Sync is idempotent and registers again only when a frame's pair changes
-- repaint: each frame is created hidden
-- repaint: while stood down Sync closes both frames and arms nothing
-- repaint: while stood down Arm and OnEnterWorld arm nothing, even with the frames still held
-- repaint: a QUICK or SETTLE that fires after a stand-down repaints nothing and rearms nothing
-- repaint: Stop closes both frames and cancels every timer, and the next Sync starts clean
-- repaint: a unit that stops being wanted loses its armed timer
-- repaint: a refused UNIT_AURA registration leaves the unit unheard and unarmed, and the next Sync retries
-- repaint: a UNIT_AURA burst arms one QUICK timer per unit, and nothing runs inside the handler
-- repaint: a unit outside the frame's registered pair arms nothing
-- repaint: an unreadable unit argument schedules the units that frame registered
-- repaint: QUICK repaints and always arms SETTLE; a quiet SETTLE repaints once more and stops
-- repaint: a unit that goes dirty while SETTLE is armed gets another SETTLE
-- repaint: OnEnterWorld arms ENTER for every listened unit, replacing any armed timer
-- repaint: Arm is bounded to the listened units
-- repaint: a pass reaches only shown, live, name-showing containers on its unit
-- repaint: a parked, stale, previewing or engine-less container is never repainted
-- repaint: a parked container is skipped even when ShouldShow would answer yes
-- repaint: the pass still runs in combat lockdown and while auras are secret
-- repaint: one Names debug line per pass and none per event
-- repaint: a settings flush and a visibility pass each end in Sync
-- repaint: disable closes both frames and cancels every timer, even with no visibility pass after
-- repaint: while down a visibility pass, and a pending PLAYER_REGEN_ENABLED, leave both frames closed
-- repaint: after disable no NameRepaint frame is shown
-- repaint: disable then enable brings the registrations back
-- repaint: PLAYER_ENTERING_WORLD arms ENTER for every listened unit
-- repaint: a target swap arms target, and its pass reaches only target containers
-- repaint: a focus swap arms focus alone, and its pass reaches only focus containers
-- repaint: a pet swap arms pet
-
 ### test_anchors_close.lua (6)
 
 - close: the X sits immediately left of the help mark, the catalog close glyph at the help mark's size
@@ -1358,7 +1316,7 @@ badge and any count quoted in the docs must agree with it.
 - slash verbs: the disabled gate is ONE decision over the whole verb table, not a per-verb guard
 - slash verbs: /am new enchants makes a player buff container showing only Weapon enchants (feedback #6)
 
-### test_diagnostics.lua (43)
+### test_diagnostics.lua (39)
 
 - diag: /am diagnostics writes the report to the console ungated, opens it, and says so once
 - diag: /am diagnostics answers while the addon is disabled, and the state line says so
@@ -1399,10 +1357,6 @@ badge and any count quoted in the docs must agree with it.
 - diag: a stood-down addon names its holds; built containers read hidden, not unbuilt
 - diag: a container with no instance while running is not built for want of one
 - diag: the width fields are gone: no widths on a bars [Shown] line, no cached-widths line
-- diag: the name repaint line names the listened units, and nothing armed or run at rest
-- diag: the name repaint line shows each armed stage, the pass count and the last pass
-- diag: the name repaint line reads state only: it registers nothing and arms nothing
-- diag: the name repaint line prints while stood down and while auras are secret
 
 ### test_bulklog.lua (20)
 
@@ -1869,7 +1823,7 @@ badge and any count quoted in the docs must agree with it.
 
 - prose: no authored file carries a British spelling from localization-§5's published list
 - prose: the gate carries localization-§5's two lists whole, and nothing of its own
-- prose: the exclusions this repository declared suppressed 11 of 183 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (11): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, docs/spell-research/2026-09-24-logs/CORRECTIONS.md, docs/spell-research/2026-09-24-logs/CURRENT_CATEGORIES.md, docs/spell-research/2026-09-24-logs/DECISIONS.md, docs/spell-research/2026-09-24-logs/FLAGS.md, docs/spell-research/2026-09-24-logs/PROPOSED_ADDITIONS.md, docs/spell-research/2026-09-24-logs/REVIEW.md, docs/spell-research/2026-09-24-logs/SOURCES.md, docs/spell-research/2026-09-24-logs/dictionary/AURAS.md
+- prose: the exclusions this repository declared suppressed 11 of 181 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (11): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, docs/spell-research/2026-09-24-logs/CORRECTIONS.md, docs/spell-research/2026-09-24-logs/CURRENT_CATEGORIES.md, docs/spell-research/2026-09-24-logs/DECISIONS.md, docs/spell-research/2026-09-24-logs/FLAGS.md, docs/spell-research/2026-09-24-logs/PROPOSED_ADDITIONS.md, docs/spell-research/2026-09-24-logs/REVIEW.md, docs/spell-research/2026-09-24-logs/SOURCES.md, docs/spell-research/2026-09-24-logs/dictionary/AURAS.md
 - prose: no path this repository narrows the gate by is loaded by a TOC
 - prose: every path this repository narrows the gate by is one .pkgmeta keeps out of the zip
 - prose self-test: the carve-out suppresses the named generated folder, and only it
@@ -1969,7 +1923,6 @@ badge and any count quoted in the docs must agree with it.
 | test_anchors_edges.lua | 15 |
 | test_anchors_hang.lua | 11 |
 | test_emptywatch.lua | 25 |
-| test_namerepaint.lua | 39 |
 | test_anchors_close.lua | 6 |
 | test_anchors_label.lua | 23 |
 | test_anchors_strip.lua | 7 |
@@ -1993,7 +1946,7 @@ badge and any count quoted in the docs must agree with it.
 | test_disabled.lua | 18 |
 | test_slash.lua | 28 |
 | test_slash_verbs.lua | 50 |
-| test_diagnostics.lua | 43 |
+| test_diagnostics.lua | 39 |
 | test_bulklog.lua | 20 |
 | test_optionssetup.lua | 17 |
 | test_options_descriptor.lua | 18 |
@@ -2023,4 +1976,4 @@ badge and any count quoted in the docs must agree with it.
 | test_eol.lua | 2 |
 | test_layout_cap.lua | 13 |
 | test_diagnostics_contract.lua | 7 |
-| **Total** | **1705** |
+| **Total** | **1662** |
