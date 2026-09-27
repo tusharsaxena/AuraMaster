@@ -23,7 +23,9 @@ Example: a bar option.
    restyles its buttons once auras are readable. `tests/test_render_coverage.lua` fails a Bars, Icons or
    Text row that reaches no drawn region on a live button and on a placeholder. A row that
    honestly acts on only one of the two declares `coverage = "engine-only"` or `"preview-only"`,
-   with a comment saying why.
+   with a comment saying why. A new font block (a new `H.FontGroup` under a new key) also goes into
+   `BLOCKS` in `modules/FontPrimer.lua`, or the primer never draws it and its text can come up blank
+   (issue #24).
 5. **Structural?** If the row changes which rows other pages offer, give it
    `onChange = function() NS.RequestPanelRefresh() end`. If it changes the engine's shape, add it to
    the structure key (`FilterCompiler.StructureKey`) in `Container:Apply` (`modules/Container.lua:408-409`).

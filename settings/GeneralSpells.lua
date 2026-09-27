@@ -850,7 +850,7 @@ local function renderSpells(ctx)
     --
     -- The 10 is a LITERAL on purpose: the library republishes `ROW_VSPACER` to hosts and deliberately
     -- keeps `SECTION_TOP_SPACER` internal (`libs/LibKa0s/Options.lua:45-83`, and the scalar list at
-    -- `:565-571`), so `H.SECTION_TOP_SPACER` does not exist and reading it would silently be nil.
+    -- `:513-519`), so `H.SECTION_TOP_SPACER` does not exist and reading it would silently be nil.
     -- Matching the number is the honest way to match the look; if the library ever republishes it,
     -- this is the line that takes it.
     local gridScroll = H.EnsureScroll(ctx)

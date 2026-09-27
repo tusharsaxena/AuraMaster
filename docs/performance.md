@@ -31,8 +31,9 @@ text blocks and resolves each font (`Style.FontKey`), which allocates nothing fo
 primed. A triple it has not drawn this session costs one font string on its own frame, one `SetFont`
 and one `SetText`; they are kept, so each triple is paid for once per session, and a profile drawing
 only in the client's own fonts pays nothing at all. A priming that drew something shows the frame
-for 1 s and runs one `UpdateAllAuras` per shown container 0.5 s later, the same call a target swap
-makes. A priming under the loading screen pays the same once, counted from the loading screen's end
+for 1 s and 0.5 s later runs one `UpdateAllAuras` per shown container (the same call a target swap
+makes), then one system apply of every container (`CM.RequestApply(nil, true)`, counted in
+`applyPass`) for the text the addon writes itself. A priming under the loading screen pays the same once, counted from the loading screen's end
 (`LOADING_SCREEN_DISABLED`) instead (the refresh at 1.5 s, the hide at 2 s);
 `FontPrimer.OnEnterWorld` reads the clock and scans the short rejected-events list, and
 `FontPrimer.OnLoadingScreenEnd` otherwise runs one priming pass (the walk above) and reads two flags, so a loading screen with nothing newly primed costs one walk more.
@@ -139,10 +140,12 @@ same way it goes down when a player unticks *Enable Aura Master* (slash-commands
 anti-pattern #85's last clause — two mechanisms that must agree about what inert means and diverge
 on the first module added after the second was written.
 
-So `standDown` (`core/LifecycleSetup.lua:90`) calls `addon:UnregisterLifecycleEvents()` — the eight
+So `standDown` (`core/LifecycleSetup.lua:90`) calls `addon:UnregisterLifecycleEvents()` — the nine
 events `core/AuraMaster.lua` registers — then `NS.TimedSpells.StandDown()`, which drops TimedSpells'
-own `UNIT_AURA`, its three gate events and its two bus subscriptions, `CM.StopListening()`,
-`FramePicker.Stop()` and a visibility pass. `Container:ShouldShow` checks **the latch** as step 0, so
+own `UNIT_AURA`, its three gate events and its two bus subscriptions, `NS.EmptyWatch.Stop()`,
+`CM.StopListening()` (which also stops the font primer, `FontPrimer.Stop`), `FramePicker.Stop()`,
+then the combat-restricted half (Blizzard frames handed back and a visibility pass), held for
+`PLAYER_REGEN_ENABLED` when combat refuses it. `Container:ShouldShow` checks **the latch** as step 0, so
 every engine is disabled and nothing — a combat transition, a target swap, a settings change — can
 enable one behind it, and `CM.RequestApply` arms no timer. `standUp`
 (`core/LifecycleSetup.lua:105`) re-registers the events, subscribes again, builds any container

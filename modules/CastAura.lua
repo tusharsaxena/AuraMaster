@@ -126,10 +126,11 @@ end
 -- (ID_HELP_DIM, libs/LibKa0s/OptionsIdList.lua:177-179).
 --
 -- THE VALUES LIVE HERE, IN ONE PLACE, because the LIBRARY is what reads them: a host writes one
--- on `entry.helpSeverity` and the list resolves it to a tint. Both pages that set one take it
--- from these two names (settings/GeneralSpells.lua, settings/Filters.lua), so if the library's
--- spelling ever moves, these two lines are the whole of the change.
--- The library's own level names (LibKa0s v1.52.0, `entry.helpLevel`), not this addon's. They are
+-- on `entry.help.level` (the `level` key of the lines table CA.Help returns) and the list
+-- resolves it to a tint. Both pages that set one take it from these two names
+-- (settings/GeneralSpells.lua, settings/Filters.lua), so if the library's spelling ever moves,
+-- these two lines are the whole of the change.
+-- The library's own level names (LibKa0s v1.52.0, `entry.help.level`), not this addon's. They are
 -- re-exported under these constants so a caller reads intent rather than a bare string, but the
 -- VALUES are the library's -- an invented vocabulary here would have to be translated at every
 -- call site, which is where a mismatch hides.

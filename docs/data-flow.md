@@ -244,7 +244,7 @@ after they were hidden; a visibility pass alone leaves them as they are.
 | `ADDON_LOADED` (ours) → `OnInitialize` | `NS.InitDB` → AceDB, `RunMigrations`, `PrepareProfile` (seeds the starters on a fresh profile); `/am` registered |
 | `PLAYER_LOGIN` → `OnEnable` | Lifecycle events registered; `ContainerManager.Init` primes every container font (`FontPrimer.PrimeAll`, below), then builds an instance per container and applies them (a disabled login builds none: the stand-up primes and builds them); `BlizzardFrames.Apply`; the options panel category is created. Built here, not at load, so the engine's access restrictions (applied at `PLAYER_ENTERING_WORLD`) come after every button's first `initializeFrame` |
 | `PLAYER_ENTERING_WORLD` | Visibility pass; flush anything pending; `FontPrimer.OnEnterWorld` notes the time (the loading screen is still up), and arms the primer's hide and refresh itself only on a client that refused `LOADING_SCREEN_DISABLED` |
-| `LOADING_SCREEN_DISABLED` | The loading screen has ended: `FontPrimer.OnLoadingScreenEnd` arms the primer's hide and refresh for a font primed under it (below) |
+| `LOADING_SCREEN_DISABLED` | The loading screen has ended: `FontPrimer.OnLoadingScreenEnd` runs a priming pass (a font refused under the loading screen is tried again), then arms the primer's hide and refresh when anything was primed since the last loading screen (below) |
 | `PLAYER_REGEN_DISABLED` / `ENABLED` | Visibility pass; on combat end, flush pending applies, apply the Blizzard-frame settings, and place again any frame-attached container whose frame appeared during combat |
 | `ADDON_RESTRICTION_STATE_CHANGED` | Flush pending applies — secrecy can lift outside a combat transition (a key or encounter ending) |
 | `PLAYER_TARGET_CHANGED`, `PLAYER_FOCUS_CHANGED`, `UNIT_PET` | Every container on that unit calls the engine's `UpdateAllAuras`, because the engine keeps showing the old unit's auras until told |
@@ -337,6 +337,9 @@ once*). `modules/FontPrimer.lua` therefore draws each font before any container 
   stood down.
 - **How.** A font string per new triple on one 1x1 frame on `UIParent`, above the top edge of the
   screen, shown and written with a sample of letters, digits and punctuation, then hidden 1 s later.
+- **Refused.** A triple whose `SetFont` the client refuses is not marked primed: it keeps its font
+  string on a refused set, and every later priming and the end of every loading screen tries it again
+  (FP-07).
 - **The follow-up.** A priming that drew anything arms one refresh 0.5 s later (re-arming restarts
   it), so text drawn in the font before it loaded is written again. Under the loading screen nothing
   is drawn, so a priming before the first loading screen ends arms neither timer and keeps the

@@ -225,7 +225,7 @@ optional. The full table and the reasons:
 | AceDB `OnProfileChanged` / `OnProfileCopied` / `OnProfileReset` | `core/Database.lua:275-279` | `NS.OnProfileChanged` / `NS.OnProfileCopied` / `NS.OnProfileReset` → re-prepare the registry, trace the event once in its own words (a switch `[Profile] changed -> X`; a copy or a reset one `[Set]` line, debug-logging-§10), rebuild, re-render |
 
 Each container's own `UNIT_AURA` belongs to the engine (`SetUnit`, `modules/Container.lua:298`) and
-is not addon code. The eight `core/AuraMaster.lua` registrations are one module-level list,
+is not addon code. The nine `core/AuraMaster.lua` registrations are one module-level list,
 `LIFECYCLE_EVENTS`, which `RegisterLifecycleEvents` and `UnregisterLifecycleEvents` both walk, so the
 stand-down and the stand-up remove and restore the same list.
 
@@ -291,7 +291,8 @@ ruling: `docs/known-limitations.md`.
 Every `.md` under `docs/` appears in exactly one table below (documentation-§3). Frozen and
 generated directories are named once and never enumerated: `docs/audits/`, `docs/reviews/`,
 `docs/automated-tests/<run>/`, `docs/perf-analysis/<run>/`, `docs/revendor/<date>-v<tag>/` (a
-span bundle is `<date>-v<A>-v<B>/`), `docs/superpowers/`.
+span bundle is `<date>-v<A>-v<B>/`, and the one untagged bundle is `docs/revendor/2026-09-12/`),
+`docs/superpowers/`.
 
 ### Required (documentation-§3, Tier 1)
 

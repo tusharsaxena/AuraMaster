@@ -362,7 +362,7 @@ and, where the client source left the answer open, its question in
 `docs/superpowers/research/2026-09-13-aura-engine-notes.md`. Some live in the sections above; they are
 listed here too, so the batch can be signed off in one pass.
 
-58. **Schema v2 migration (spec section 7).** Back up
+58a. **Schema v2 migration (spec section 7).** Back up
     `WTF/Account/ACCOUNT/SavedVariables/AuraMaster.lua` first: a profile loaded once on this build
     cannot go back. On the previous build, in two profiles: untick a starter spell in *Core healing*
     and add a spell to *Lesser healing* on the same container; add a spell to *Defensive cooldowns* on a
@@ -372,7 +372,7 @@ listed here too, so the batch can be signed off in one pass.
     the starter unticked; *Defensive cooldowns* holds the other added spell. Dispel Colors → Magic shows the
     color you set. Layout → Frame → Strata reads High where it was Medium. Switch to the other
     profile → the same.
-59. **Color by → dispel type lets go (B-4, question Q1).** On a bar container showing a debuff with a
+59a. **Color by → dispel type lets go (B-4, question Q1).** On a bar container showing a debuff with a
     dispel type, set Bars → General → **Color by** to dispel type → the fill takes the General → Dispel
     Colors color; set it back to one color → the fill returns to the bar color at once. Enter combat
     with the aura still up → the fill keeps the bar color. The open point is whether a color written

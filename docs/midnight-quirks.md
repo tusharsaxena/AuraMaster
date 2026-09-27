@@ -301,7 +301,10 @@ profile switch or a registry change is built, `FontPrimer.PrimeAll` resolves eve
 triple any container in the active profile uses, enabled or not, through `Style.FontKey`, the same
 resolution `Style.ApplyFont` sets. It skips a `Fonts\` path and draws each new triple once per
 session: a font string on one 1x1 frame on `UIParent`, placed above the top edge of the screen and
-**shown**, written with a sample of letters, digits and punctuation. The frame is hidden 1 s later.
+**shown**, written with a sample of letters, digits and punctuation. A triple whose `SetFont` the
+client refuses is not counted as primed. Every later priming and the end of every loading screen
+retries it on the same font string (FP-07: the owner's run of 6994c46 had every Ka0s Prototype triple
+refused at `PLAYER_LOGIN`). The frame is hidden 1 s later.
 When a priming drew anything new, text may already have been drawn in that font (a font changed in
 settings, or a `/reload` that builds with auras up), so 0.5 s later it runs `ContainerClass:Refresh`
 (the engine's `UpdateAllAuras`) once on each live container that has an engine, is neither parked nor
@@ -315,7 +318,7 @@ out blank and stayed blank until a `/reload`, while every aura cast later drew. 
 the first loading screen ends shows the frame and arms nothing. `PLAYER_ENTERING_WORLD` is not that
 end: the client fires it while the loading screen is still up, and fires `LOADING_SCREEN_DISABLED`
 when it ends, seconds later on a slow or cold-cache login. So `FontPrimer.OnLoadingScreenEnd` (from
-`addon:OnLoadingScreenEnd`) keeps the frame shown 2 s more and runs the refresh 1.5 s after the
+`addon:OnLoadingScreenEnd`) first runs a priming pass, then keeps the frame shown 2 s more and runs the refresh 1.5 s after the
 loading screen ends, when anything was primed since the last loading screen; `PLAYER_ENTERING_WORLD`
 only notes the time, unless the client refused `LOADING_SCREEN_DISABLED`. The working assumption is
 that the loading screen draws nothing at all; the smoke check FP10 tests it, and the report's
