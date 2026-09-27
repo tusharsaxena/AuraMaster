@@ -1,0 +1,20 @@
+FP-07 review (a refused font is retried, not dropped, 70d7f3c)
+Adversarial verification applied.
+
+Confirmed (1), fixed in beb71a7:
+- [tests] The refused= diagnostics test could not see a report that retries
+  the permanently refused font: its timer and primed-count asserts stay the
+  same when the diagnostics line calls FP.PrimeAll first. The reviewer's
+  mutant (primerLine calling FP.PrimeAll) passed the test.
+
+Fix commit: beb71a7 FP-07: address review: the refused-font report test counts
+SetFont calls, so a report that retries goes red
+- primerRefuses returns a counter of the primer frame's SetFont calls; the
+  test asserts the count is unchanged across build(NS). Checked against the
+  mutant: the test now fails on it.
+
+Battery at FP-07: 1703/1703 sharded and -j 1; lint 0 warnings / 0 errors in 146
+files; complexity 0 functions above CCN 15; perf.lua ok; test-cases.md
+byte-identical to --list; README badge 1703/1703.
+In-game: the owner's /am diagnostics re-run (Ka0s Prototype triples primed) is
+the owner's to run.
