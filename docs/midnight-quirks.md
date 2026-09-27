@@ -68,7 +68,7 @@ applies these access restrictions from `PLAYER_ENTERING_WORLD`.
 - **Builds at `PLAYER_LOGIN`** (`core/AuraMaster.lua:42`), before the restrictions apply, so every
   button's first dressing has an unrestricted window.
 - **Defers every structural apply and restyle** while `Compat.AurasAreSecret()` or
-  `InCombatLockdown()` is true (`ContainerManager.MustDefer`, `modules/ContainerManager.lua:213`),
+  `InCombatLockdown()` is true (`ContainerManager.MustDefer`, `modules/ContainerManager.lua:214`),
   prints one notice, and flushes on `PLAYER_REGEN_ENABLED`, `PLAYER_ENTERING_WORLD` and
   **`ADDON_RESTRICTION_STATE_CHANGED`** — secrecy can end without a combat transition (a key or an
   encounter finishing).
@@ -247,7 +247,7 @@ field's brackets (`$spellname$[-$stacks$]`) goes with the field, and the Text se
 **The restriction.** `AddDispelTypeTexture` and `AddPandemicRegion` append to the button.
 
 **What this addon does.** Every live restyle empties both lists FIRST, before any other binding,
-through `Style.ClearAdditiveBindings` (`modules/Style.lua:557`), and then adds again
+through `Style.ClearAdditiveBindings` (`modules/Style.lua:549`), and then adds again
 (`modules/Style_Bars.lua:319-326`, `modules/Style_Icons.lua:175`). The order matters: every `Set*` /
 `Add*` binding re-runs the engine's whole apply pass, which re-tints, shows or hides each dispel
 texture still listed, while `ClearDispelTypeTextures` itself touches no region. A clear made after
@@ -261,7 +261,69 @@ hides it, and clearing does not show it again.
 `UpdateAllAuras` exists for external refreshes such as target changes.
 
 **What this addon does.** `PLAYER_TARGET_CHANGED`, `PLAYER_FOCUS_CHANGED` and `UNIT_PET` (for the
-player) call `UpdateAllAuras` on every container on that unit (`core/AuraMaster.lua:115-127`).
+player) call `UpdateAllAuras` on every container on that unit (`core/AuraMaster.lua:124-136`).
+
+## An addon font loads lazily, and the engine writes a name once (measured 2026-09-27)
+
+**The restriction.** Two client facts meet here. First, WoW loads an addon-supplied font file (one a
+media pack registers with LibSharedMedia) lazily: text first drawn in it before the load completes
+comes out empty, and stays empty until it is written again. A font built into the client, any path
+under `Fonts\`, is always loaded. Drawing text in the font on a **hidden** frame does not load it;
+drawing on a **shown** frame does. Second, an engine button writes its spell name from `auraData.name`
+only when an aura is assigned to it or updated (`ApplyAuraInstance` calls `ApplySpellName` from
+`OnAuraInstanceAssigned` and `OnAuraInstanceUpdated`), and at no other time. Most addons rewrite
+their text all the time and heal a blank on the next write; a bar name the engine wrote into a font
+that had not loaded yet keeps the blank for the aura's whole life. What does rewrite a name:
+`UpdateAllAuras`, which rebuilds every button (on a disabled engine it clears the auras instead), the
+engine's `SetEnabled` when its state flips, which runs `UpdateAllAuras`, and any `Set*` binding, which
+reruns the button's apply. So a lock toggle, test mode, a visibility change or a restyle all hid the
+blank by accident. Blizzard's source, with the line numbers of the copy read:
+`docs/superpowers/research/2026-09-27-blank-bar-names-findings.md`.
+
+**Measured in-game, 2026-09-27** (the owner's runs for issue #24):
+- With `_retail_\Cache` renamed away, a fresh login drew almost every aura present at login as a
+  blank bar, and those bars stayed blank through combat. Auras gained later mostly showed their names.
+- A probe addon logged every aura the player and target gained: **the name was in the aura data at
+  the moment each aura arrived, every time**, including the auras whose bars were blank. The engine
+  was handed the name and drew nothing.
+- An A/B in one profile, three containers on the built-in Friz Quadrata TT and the rest on the addon
+  font Ka0s Prototype, filmed and timed frame by frame: **only Ka0s Prototype text ever blanked**, and
+  a blank row lacked its time text as well as its name. The Friz Quadrata rows drew from their first
+  frame.
+- The time-width measurement already drew in the font, on a hidden frame, and the blanks still
+  came. A probe that drew the alphabet in each addon font on a **shown** frame before AuraMaster built
+  its bars removed every blank, on master with no other change.
+
+**What this addon does.** `modules/FontPrimer.lua` draws every font the containers use before any
+container text is drawn in it. At `CM.StartListening` (login and every stand-up, before the first
+build), in the `CONFIG_CHANGED` handler before the apply is requested, and in `CM.Announce` before a
+profile switch or a registry change is built, `FontPrimer.PrimeAll` resolves every (file, size, flags)
+triple any container in the active profile uses, enabled or not, through `Style.FontKey`, the same
+resolution `Style.ApplyFont` sets. It skips a `Fonts\` path and draws each new triple once per
+session: a font string on one 1x1 frame on `UIParent`, placed above the top edge of the screen and
+**shown**, written with a sample of letters, digits and punctuation. A triple whose `SetFont` the
+client refuses is not counted as primed. Every later priming and the end of every loading screen
+retries it on the same font string (FP-07: the owner's run of 6994c46 had every Ka0s Prototype triple
+refused at `PLAYER_LOGIN`). The frame is hidden 1 s later.
+When a priming drew anything new, text may already have been drawn in that font (a font changed in
+settings, or a `/reload` that builds with auras up), so 0.5 s later it runs `ContainerClass:Refresh`
+(the engine's `UpdateAllAuras`) once on each live container that has an engine, is neither parked nor
+stale, and is shown and not previewing. That is not a protected call and reads no aura, so it may run
+in combat.
+
+**Nothing is drawn under the loading screen** (FP-06, the owner's first in-game run). The priming at
+`PLAYER_LOGIN` runs under the loading screen, and a 1 s hide and a 0.5 s refresh armed there both
+ran before it ended: the auras present at login were then the first text drawn in the font, came
+out blank and stayed blank until a `/reload`, while every aura cast later drew. So a priming before
+the first loading screen ends shows the frame and arms nothing. `PLAYER_ENTERING_WORLD` is not that
+end: the client fires it while the loading screen is still up, and fires `LOADING_SCREEN_DISABLED`
+when it ends, seconds later on a slow or cold-cache login. So `FontPrimer.OnLoadingScreenEnd` (from
+`addon:OnLoadingScreenEnd`) first runs a priming pass, then keeps the frame shown 2 s more and runs the refresh 1.5 s after the
+loading screen ends, when anything was primed since the last loading screen; `PLAYER_ENTERING_WORLD`
+only notes the time, unless the client refused `LOADING_SCREEN_DISABLED`. The working assumption is
+that the loading screen draws nothing at all; the smoke check FP10 tests it, and the report's
+`loading screen:` line shows the gap. Nothing runs while the addon is stood down. The pattern is ChonkyCharacterSheet's
+`CCS:PrimeFontsAndTextures`. How to check it: `docs/debug.md` (*Bar names that do not show*).
 
 ## Weapon enchants
 
@@ -296,9 +358,10 @@ so the failure is latent: it would only show up once a patch retires one of them
 
 **What this addon does.** Every registration goes through `NS.SafeRegisterEvent`, which is
 `LibKa0s-Core-1.0`'s `SafeRegisterEvent` (`core/CoreSetup.lua`), or its unit-event twin
-`NS.SafeRegisterUnitEvent`. That covers the eight lifecycle events (`LIFECYCLE_EVENTS` in
+`NS.SafeRegisterUnitEvent`. That covers the nine lifecycle events (`LIFECYCLE_EVENTS` in
 `core/AuraMaster.lua`), the timed-spell gate and its unit frame's `UNIT_AURA`
-(`modules/TimedSpells.lua`), and the stand-down's pending `PLAYER_REGEN_ENABLED`
+(`modules/TimedSpells.lua`), the empty-container prediction's two unit frames and their swap events
+(`modules/EmptyWatch.lua`), and the stand-down's pending `PLAYER_REGEN_ENABLED`
 (`core/LifecycleSetup.lua`). A refused name is recorded once in `NS.RejectedEvents`. The `[Init]`
 line adds `rejected events: …` when that list is not empty, and a name refused while logging is on
 is traced right away, as `[Init] event <NAME> rejected by this client`.
@@ -311,6 +374,8 @@ would have told it and keeps everything else:
 - a refused lifecycle event loses its own handler's trigger;
 - a refused `UNIT_AURA` leaves the timed-spell scan not listening (the "without a duration" filter
   stops learning new spells);
+- a refused `UNIT_AURA` on the empty-container prediction's frames leaves it deaf to aura changes on
+  those units, and their swap events are then not registered either;
 - a refused `PLAYER_REGEN_ENABLED` leaves the stand-down's secure half unheld, so it is retried on the
   next stand-down or stand-up rather than when combat ends.
 
@@ -411,7 +476,7 @@ The restyle stopped at the border, after `Style.ClearAdditiveBindings` had empti
 and before `Icons.Bind` could add it back: that is the lost highlight.
 
 **What this addon does.** No aura-button border reads a size (`Style.ApplyBorder`,
-`modules/Style.lua:498`):
+`modules/Style.lua:490`):
 - **Solid**, the default, is four strip textures of our own on the border frame, each anchored between
   two corners, its thickness a plain setting (the pattern of a Text line's dispel edge). Nothing is
   read, so a Solid border redraws on every restyle.
@@ -537,10 +602,13 @@ values was secret.
 - **The engine is anchored before its first `AddAuraGroup`**; after that an addon can no longer
   anchor it (`modules/Container.lua:258-261`).
 - **No structural work while auras are secret or under combat lockdown.** `ContainerManager.MustDefer`
-  (`modules/ContainerManager.lua:213`) holds every build, update and restyle; aura buttons refuse addon
+  (`modules/ContainerManager.lua:214`) holds every build, update and restyle; aura buttons refuse addon
   access while auras are secret.
 - **Visibility in combat goes through the engine's `SetEnabled`**, never `Show`/`Hide` on an aura
   button's ancestry (`modules/Container.lua:484`).
+- **The font primer's frame hangs from `UIParent`, not from any anchor**, so nothing it does reaches
+  an aura engine's ancestry. Its one engine call, the follow-up `UpdateAllAuras`, is not protected,
+  reads no aura, and skips a disabled engine, which it would clear (`modules/FontPrimer.lua`).
 - **Blizzard's `BuffFrame` and `DebuffFrame` are reparented, never hidden**, and only out of combat
   (`modules/BlizzardFrames.lua`, events-frames-taint-§3).
 - **Protected opens are refused, not deferred.** The options panel (the library, options-ui-§2),
@@ -612,7 +680,7 @@ values was secret.
   only while `Compat.AurasAreSecret()` is false, and through the `core/Secrets.lua` gates; chat and
   debug lines go through `NS.SafeToString`.
 - **Right-click cancel uses one click phase** (`RightButtonUp`) so a button reassigned between press
-  and release cannot cancel the wrong aura (`modules/Style.lua:903`).
+  and release cannot cancel the wrong aura (`modules/Style.lua:895`).
 - **Animations on engine buttons are set up at dress time only.** `modules/Style_Text.lua` builds its
   three AnimationGroups with the regions and calls `Stop`/`Play` only in a dress (initializeFrame or a
   restyle while auras are readable), each through `Style.Bind`, so a refusal costs one call and is

@@ -204,11 +204,51 @@ local function countsLine(out)
         countKeys(p.userCategories), table.concat(slots, ","))
 end
 
---- The time-text widths cached this session (Style.MeasuredTimeWidths): a bar's name stops short of
---- its time's box, so a width cached wrong hides every name dressed after it until /reload.
-local function measuresLine(out)
-    local list = NS.Style and NS.Style.MeasuredTimeWidths and NS.Style.MeasuredTimeWidths() or {}
-    out:add("Diag", "time-text widths cached: %s", list[1] and table.concat(list, ", ") or "none")
+--- `list`'s triples as "<file> <size> <flags>" (`-` for no flags), joined, capped at MAX_IDS.
+local function namedFonts(out, list)
+    local named = {}
+    for i, e in ipairs(list) do
+        if i > Diag.MAX_IDS then
+            flagCap(out)
+            break
+        end
+        local path = str(e.path)
+        local flags = e.flags ~= "" and str(e.flags) or "-"
+        named[i] = (path:match("[^\\/]+$") or path) .. " " .. str(e.size) .. " " .. flags
+    end
+    return table.concat(named, ", ")
+end
+
+--- The font primer (modules/FontPrimer.lua, issue #24): each triple drawn this session as its file's
+--- name, size and flags (`-` for none), capped at MAX_IDS, the follow-up refresh's state: `armed`
+--- (in play), `armed-world` (from the loading screen's end), `awaiting-world` (primed under the
+--- loading screen) or `idle`, and the triples the client refused and no retry has primed yet
+--- (`refused=0` for none, FP-07). Read from FontPrimer.DiagState, which reads state only, so it prints
+--- while stood down and while auras are secret.
+local function primerLine(out)
+    local FP = NS.FontPrimer
+    if not (FP and FP.DiagState) then return end
+    local s = FP.DiagState()
+    local refused = s.refused or {}
+    local nRefused = #refused
+    local tail = nRefused > 0 and (" [" .. namedFonts(out, refused) .. "]") or ""
+    out:add("Diag", "fonts primed: %s [%s] refresh=%s refused=%s%s", #s.primed, namedFonts(out, s.primed),
+        s.state or (s.refresh and "armed" or "idle"), nRefused, tail)
+end
+
+local function stamp(t) return type(t) == "number" and string.format("%.2f", t) or "-" end
+
+--- When the last PLAYER_ENTERING_WORLD came and when the loading screen after it ended, and the gap:
+--- the client fires the first while the loading screen is still up, and the font primer times its
+--- world hide and refresh from the second (issue #24, FP-06). Session logging is off at login, so
+--- the report is where the smoke check FP10 reads the gap. `-` for one not seen.
+local function screenLine(out)
+    local FP = NS.FontPrimer
+    if not (FP and FP.DiagState) then return end
+    local s = FP.DiagState()
+    local a, b = s.enteredAt, s.screenEndAt
+    local gap = (type(a) == "number" and type(b) == "number") and string.format(" (%.2f s later)", b - a) or ""
+    out:add("Diag", "loading screen: world entered %s, ended %s%s", stamp(a), stamp(b), gap)
 end
 
 function Diag.Header(out)
@@ -216,7 +256,8 @@ function Diag.Header(out)
     downLine(out)
     queueLine(out)
     countsLine(out)
-    measuresLine(out)
+    primerLine(out)
+    screenLine(out)
 end
 
 -- ---------------------------------------------------------------------------
@@ -604,24 +645,8 @@ local function probeRegions(frame)
     return nil
 end
 
---- One region's width to a tenth, or "?" when the read raises or is not a readable number.
-local function widthOf(region)
-    if type(region) ~= "table" then return "?" end
-    local ok, w = pcall(region.GetWidth, region)
-    if ok and NS.Secrets.IsReadableNumber(w) then return ("%.1f"):format(w) end
-    return "?"
-end
-
---- A bars button's laid-out widths: the name, its time's box and the bar area. A name near 0 beside
---- a time as wide as the bar is a name squeezed out by its time box (owner report 2026-09-26).
-local function barWidths(frame)
-    local am = frame.__am
-    if type(am) ~= "table" or am.style ~= "bars" then return "" end
-    return (" nameW=%s timeW=%s barW=%s"):format(widthOf(am.name), widthOf(am.time), widthOf(am.bar))
-end
-
 local function probe(frame)
-    return (probeInstance(frame) or probeRegions(frame) or "id=?") .. barWidths(frame)
+    return probeInstance(frame) or probeRegions(frame) or "id=?"
 end
 
 --- The button's name for a [Shown] line; a probe that raises (a forbidden object) says so instead.

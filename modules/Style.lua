@@ -122,9 +122,7 @@ end
 --- text, which the size falls back to. `classColor`, when given (a snapshot, or false for the
 --- player), names the class outright instead of reading the dress in progress (Style.ColorWith).
 function Style.ApplyFont(fs, t, tdef, classColor)
-    local size = tonumber(t.fontSize) or tdef.fontSize
-    local flags = FLAG_MAP[t.fontFlags or "NONE"] or (t.fontFlags or "")
-    local path = Style.Fetch("font", t.font, C.FALLBACK_FONT)
+    local path, size, flags = Style.FontKey(t, tdef)
     if not fs:SetFont(path, size, flags) then fs:SetFont(C.FALLBACK_FONT, size, flags) end
     if classColor ~= nil then
         fs:SetTextColor(Style.ColorWith(classColor, t.fontColor, t.useClassColorFont))
@@ -253,9 +251,7 @@ end
 --- that raised, found no width or found none above 0 (a string the client has not laid out yet) is
 --- not, so the ems budget stands for this dress and a later one measures again.
 function Style.TimeTextWidth(t, tdef, fmt)
-    local size = tonumber(t.fontSize) or tdef.fontSize
-    local flags = FLAG_MAP[t.fontFlags or "NONE"] or (t.fontFlags or "")
-    local path = Style.Fetch("font", t.font, C.FALLBACK_FONT)
+    local path, size, flags = Style.FontKey(t, tdef)
     local key = ("%s|%s|%s|%s"):format(path, size, flags, tostring(fmt))
     local w = measuredWidths[key]
     if w then return w end
@@ -287,9 +283,7 @@ end
 --- not loaded yet). Nothing is cached here: the caller (a Text line's Size to fit) remembers its
 --- whole answer, and only a good one.
 function Style.WidestLine(t, tdef, lines)
-    local size = tonumber(t.fontSize) or tdef.fontSize
-    local flags = FLAG_MAP[t.fontFlags or "NONE"] or (t.fontFlags or "")
-    local path = Style.Fetch("font", t.font, C.FALLBACK_FONT)
+    local path, size, flags = Style.FontKey(t, tdef)
     local ok, most = pcall(widestLine, path, size, flags, lines)
     if not (ok and most and most > 0) then return nil end
     return most
@@ -327,9 +321,7 @@ end
 --- 0 when it cannot be measured (the pieces keep the client's gap then). Cached per font path, size
 --- and flags; a failed measure is not cached, so a later dress measures again.
 function Style.PiecePadding(t, tdef)
-    local size = tonumber(t.fontSize) or tdef.fontSize
-    local flags = FLAG_MAP[t.fontFlags or "NONE"] or (t.fontFlags or "")
-    local path = Style.Fetch("font", t.font, C.FALLBACK_FONT)
+    local path, size, flags = Style.FontKey(t, tdef)
     local key = ("%s|%s|%s"):format(path, size, flags)
     local pad = paddings[key]
     if pad then return pad end
@@ -1017,15 +1009,13 @@ function Style.PreviewTime(fs, aura, s, sdef)
     end
 end
 
---- The session's cached time-text widths as sorted "path|size|flags|format=width" strings, for the
---- diagnostic report (modules/Diagnostics.lua): a cached width is kept until /reload, so one taken
---- wrong would narrow every bar name dressed after it (owner report 2026-09-26). A copy; allocates.
-function Style.MeasuredTimeWidths()
-    local list = {}
-    for key, w in pairs(measuredWidths) do
-        local n = #list
-        list[n + 1] = ("%s=%s"):format(key, w)
-    end
-    table.sort(list)
-    return list
+--- The font file, size and client flag string font block `t` draws in (`tdef` the template's block,
+--- which the size falls back to): the one resolution Style.ApplyFont sets, the measures (TimeTextWidth,
+--- WidestLine, PiecePadding) measure in and modules/FontPrimer.lua primes, so the primed font is the
+--- one the text uses. The file is LibSharedMedia's, or the built-in fallback when the name no longer
+--- resolves.
+function Style.FontKey(t, tdef)
+    local size = tonumber(t.fontSize) or tdef.fontSize
+    local flags = FLAG_MAP[t.fontFlags or "NONE"] or (t.fontFlags or "")
+    return Style.Fetch("font", t.font, C.FALLBACK_FONT), size, flags
 end

@@ -684,65 +684,218 @@ test("diag: a container with no instance while running is not built for want of 
     assertTrue(has(lines, "addon disabled") == nil, dump(lines))
 end)
 
--- Missing bar names (owner report 2026-09-26): a bar whose name text is set but not drawn. Each
--- [Shown] line of a bars button carries the widths the name, the time and the bar area were laid out
--- at, and the header lists the session's cached time-text measurements, so one report tells a name
--- squeezed to nothing by an oversized time box from one that is hidden for another reason.
+-- Missing bar names (owner report 2026-09-26, issue #24): the width fields cee5bb6 added to a bars
+-- [Shown] line and the header's cached time-text widths tested a refuted hypothesis, and are gone.
 
---- A region answering GetWidth with `w`; a function `w` stands for a read that raises.
-local function sized(w)
-    return { GetWidth = function() if type(w) == "function" then return w() end return w end }
+test("diag: the width fields are gone: no widths on a bars [Shown] line, no cached-widths line", function()
+    local NS, mocks = fresh()
+    local inst = NS.ContainerManager.instances[1]
+    local key = inst.plan.groups[1].key
+    local f = mocks.__stubFrame()
+    local sized = { GetWidth = function() return 184 end }
+    rawset(f, "__am", { style = "bars", name = sized, time = sized, bar = sized })
+    inst.engine.__frames[key] = { f }
+    local lines = build(NS)
+    local line = has(lines, "[Shown] #1 " .. key .. " btn1")
+    -- red under: the cee5bb6 barWidths suffix left on the probe
+    assertTrue(line ~= nil and line:find("nameW=", 1, true) == nil, tostring(line))
+    -- red under: the cee5bb6 measuresLine left in the header
+    assertTrue(has(lines, "time-text widths cached") == nil, dump(lines))
+    assertEqual(NS.Style.MeasuredTimeWidths, nil, "Style.MeasuredTimeWidths removed")
+end)
+
+-- ── the font primer (issue #24, font primer spec P3) ────────────────────────────────────────────
+-- WoW loads an addon's font file lazily, and text first drawn in it before the load stays empty;
+-- modules/FontPrimer.lua draws every container font once on a shown frame first. The header's
+-- `fonts primed:` line reads the primer's own state: each triple it drew this session, by file,
+-- size and flags, and whether its one follow-up refresh is armed.
+
+local PRIMER_PROTO = "Interface\\AddOns\\SharedMedia_MyMedia\\font\\Ka0s Prototype.ttf"
+local PRIMER_KAIT = "Interface\\AddOns\\SharedMedia_MyMedia\\font\\Ka0s Kait.ttf"
+
+--- A fresh environment with a LibSharedMedia stand-in that knows two addon fonts and the client's
+--- Friz Quadrata (the harness loads no media library, so every font would resolve to the fallback).
+--- It enters the world (the fresh environment stops at PLAYER_LOGIN): PLAYER_ENTERING_WORLD, then the
+--- loading screen's end, so a priming takes the short path; with `atLogin` it stays before either.
+local function primerEnv(atLogin)
+    local NS, mocks = fresh({ before = function(m)
+        local media = { ["Ka0s Prototype"] = PRIMER_PROTO, ["Ka0s Kait"] = PRIMER_KAIT,
+            ["Friz Quadrata TT"] = "Fonts\\FRIZQT__.TTF" }
+        local lsm = setmetatable({ MediaType = { FONT = "font", STATUSBAR = "statusbar", BORDER = "border",
+            BACKGROUND = "background", SOUND = "sound" } },
+            { __index = function() return function() return {} end end })
+        function lsm.Register() return true end
+        function lsm.Fetch(_, kind, key)
+            if kind == "font" then return media[key] end
+            return nil
+        end
+        m.__libs["LibSharedMedia-3.0"] = lsm
+    end })
+    mocks.__fireTimers(); mocks.__fireTimers()
+    if not atLogin then
+        mocks.__fireEvent("PLAYER_ENTERING_WORLD")
+        mocks.__fireEvent("LOADING_SCREEN_DISABLED")
+        mocks.__fireTimers()
+    end
+    return NS, mocks
 end
 
-test("diag: a bars button's [Shown] line carries its name, time and bar widths", function()
-    local NS, mocks = fresh()
-    local inst = NS.ContainerManager.instances[1]
-    local key = inst.plan.groups[1].key
-    local f = mocks.__stubFrame()
-    rawset(f, "__am", { style = "bars", name = sized(0), time = sized(180.34), bar = sized(184) })
-    inst.engine.__frames[key] = { f }
-    local line = has(build(NS), "[Shown] #1 " .. key .. " btn1")
-    -- red under: the line without the geometry (the widths were never read)
-    assertTrue(line ~= nil and line:find("nameW=0.0 timeW=180.3 barW=184.0", 1, true) ~= nil, tostring(line))
+--- Two containers on addon fonts: #1's bar name on Prototype 10 with no outline, #4's Text line on
+--- Kait 17 with a thick outline.
+local function primerFonts(NS)
+    local n = NS.Database.FindContainer(1).bars.name
+    n.font, n.fontSize, n.fontFlags = "Ka0s Prototype", 10, "NONE"
+    local t = NS.Database.FindContainer(4).text.font
+    t.font, t.fontSize, t.fontFlags = "Ka0s Kait", 17, "THICKOUTLINE"
+end
+
+--- The `fonts primed:` header line, or nil.
+local function primerLine(NS)
+    return has(build(NS), "[Diag] fonts primed: ")
+end
+
+test("diag: the fonts primed line reads none primed and the refresh idle on the starter profile", function()
+    local NS = primerEnv()
+    -- red under: no such line (the primer's state invisible to the report)
+    assertEqual(primerLine(NS), "[Diag] fonts primed: 0 [] refresh=idle refused=0")
 end)
 
-test("diag: an unreadable width reads '?' and costs no line", function()
-    local NS, mocks = fresh()
-    local secret = secretBoolean(mocks)
-    local inst = NS.ContainerManager.instances[1]
-    local key = inst.plan.groups[1].key
-    local f = mocks.__stubFrame()
-    rawset(f, "__am", { style = "bars", name = sized(function() error("forbidden") end),
-        time = sized(secret), bar = sized(184) })
-    inst.engine.__frames[key] = { f }
-    local lines = build(NS)
-    assertTrue(has(lines, "failed") == nil, dump(lines))
-    local line = has(lines, "[Shown] #1 " .. key .. " btn1")
-    assertTrue(line ~= nil and line:find("nameW=? timeW=? barW=184.0", 1, true) ~= nil, tostring(line))
-end)
-
-test("diag: a button with no bar regions carries no widths", function()
-    local NS, mocks = fresh()
-    local inst = NS.ContainerManager.instances[1]
-    local key = inst.plan.groups[1].key
-    inst.engine.__frames[key] = { mocks.__stubFrame() }
-    local line = has(build(NS), "[Shown] #1 " .. key .. " btn1")
-    assertTrue(line ~= nil and line:find("nameW=", 1, true) == nil, tostring(line))
-end)
-
-test("diag: the header lists the cached time-text measurements", function()
-    local NS = fresh()
-    local lines = build(NS)
-    -- red under: no such line (the cache was invisible to the report)
-    assertTrue(has(lines, "[Diag] time-text widths cached: none") ~= nil, dump(lines))
-    local real = NS.Style.__measurer
-    NS.Style.__measurer = function()
-        return { SetFont = function() return true end, SetText = function() end,
-            GetStringWidth = function() return 40 end }
+test("diag: the fonts primed line lists each primed file, size and flags, and the refresh state", function()
+    local NS, mocks = primerEnv()
+    primerFonts(NS)
+    NS.FontPrimer.PrimeAll()
+    -- red under: the full path printed, or the client's empty flag string printed as nothing
+    assertEqual(primerLine(NS), "[Diag] fonts primed: 2 [Ka0s Prototype.ttf 10 -, Ka0s Kait.ttf 17 THICKOUTLINE] "
+        .. "refresh=armed refused=0")
+    -- Fire only the 0.5 s refresh; the 1 s hold timer stays armed and the frame stays shown.
+    local fired, holdLive = 0, false
+    local queued = #mocks.__timers
+    for i = queued, 1, -1 do                -- taken off the queue, so the fire below skips it
+        local t = mocks.__timers[i]
+        if t.delay == 0.5 then
+            table.remove(mocks.__timers, i); fired = fired + 1; t.fn()
+        elseif t.delay == 1.0 then
+            holdLive = true
+        end
     end
-    local w = NS.Style.TimeTextWidth({ font = "Ka0s Prototype", fontSize = 10 }, { fontSize = 12 }, "short")
-    NS.Style.__measurer = real
-    assertEqual(w, 42, "measured width plus the outline allowance")
-    local line = has(build(NS), "[Diag] time-text widths cached:")
-    assertTrue(line ~= nil and line:find("|10||short=42", 1, true) ~= nil, tostring(line))
+    assertEqual(fired, 1, "one refresh timer fired")
+    assertTrue(holdLive, "the hold timer still armed")
+    -- red under: the refresh read from the hold timer rather than its own
+    assertEqual(primerLine(NS), "[Diag] fonts primed: 2 [Ka0s Prototype.ttf 10 -, Ka0s Kait.ttf 17 THICKOUTLINE] "
+        .. "refresh=idle refused=0")
+    mocks.__fireTimers()
+    -- red under: the refresh state cached at priming rather than read at report time
+    assertEqual(primerLine(NS), "[Diag] fonts primed: 2 [Ka0s Prototype.ttf 10 -, Ka0s Kait.ttf 17 THICKOUTLINE] "
+        .. "refresh=idle refused=0")
+end)
+
+test("diag: the fonts primed line reads state only: it primes nothing and arms nothing", function()
+    local NS, mocks = primerEnv()
+    primerFonts(NS)                    -- changed, but no PrimeAll has run since
+    local timersBefore = #mocks.__timers()
+    build(NS); build(NS)
+    -- red under: a report that primes (FontPrimer.PrimeAll draws the new fonts and arms two timers)
+    assertEqual(#NS.FontPrimer.DiagState().primed, 0, "nothing primed by the report")
+    assertEqual(#mocks.__timers(), timersBefore, "no timer armed by the report")
+    assertEqual(primerLine(NS), "[Diag] fonts primed: 0 [] refresh=idle refused=0")
+end)
+
+test("diag: the fonts primed line prints while stood down and while auras are secret", function()
+    local NS, mocks = primerEnv()
+    primerFonts(NS)
+    NS.FontPrimer.PrimeAll()
+    mocks.__fireTimers()
+    local want = "[Diag] fonts primed: 2 [Ka0s Prototype.ttf 10 -, Ka0s Kait.ttf 17 THICKOUTLINE] refresh=idle refused=0"
+    mocks.__aurasSecret = true
+    local lines = build(NS)
+    mocks.__aurasSecret = false
+    -- red under: the line gated on readable auras (a font change in combat primes all the same)
+    assertTrue(has(lines, want) ~= nil, dump(lines))
+    assertTrue(has(lines, "failed") == nil, dump(lines))
+    NS.lifecycle:Hold(NS.HOLD_PERF)
+    lines = build(NS)
+    NS.lifecycle:Release(NS.HOLD_PERF)
+    -- red under: the line skipped while stood down (debug-logging-§14: the report runs regardless)
+    assertTrue(has(lines, want) ~= nil, dump(lines))
+end)
+
+test("diag: the fonts primed line tells a priming waiting for the world from the world refresh", function()
+    local NS, mocks = primerEnv(true)
+    primerFonts(NS)
+    NS.FontPrimer.PrimeAll()
+    local head = "[Diag] fonts primed: 2 [Ka0s Prototype.ttf 10 -, Ka0s Kait.ttf 17 THICKOUTLINE] "
+    -- red under: refresh= read from the refresh handle alone (a login priming reads idle until the world)
+    assertEqual(primerLine(NS), head .. "refresh=awaiting-world refused=0")
+    mocks.__fireEvent("PLAYER_ENTERING_WORLD")
+    -- red under: the world refresh armed at PLAYER_ENTERING_WORLD, under the loading screen
+    assertEqual(primerLine(NS), head .. "refresh=awaiting-world refused=0")
+    mocks.__fireEvent("LOADING_SCREEN_DISABLED")
+    assertEqual(primerLine(NS), head .. "refresh=armed-world refused=0")
+    mocks.__fireTimers()
+    assertEqual(primerLine(NS), head .. "refresh=idle refused=0")
+end)
+
+test("diag: the loading screen line shows when the world was entered and when the loading screen ended", function()
+    -- Session logging is off at login, so the report is where the smoke check FP10 reads the gap
+    -- between PLAYER_ENTERING_WORLD and LOADING_SCREEN_DISABLED.
+    local NS, mocks = primerEnv(true)
+    -- red under: no such line (the gap visible only in a trace nobody was logging at login)
+    assertEqual(has(build(NS), "[Diag] loading screen: "), "[Diag] loading screen: world entered -, ended -")
+    mocks.__now = 50
+    mocks.__fireEvent("PLAYER_ENTERING_WORLD")
+    assertEqual(has(build(NS), "[Diag] loading screen: "), "[Diag] loading screen: world entered 50.00, ended -")
+    mocks.__now = 57.25
+    mocks.__fireEvent("LOADING_SCREEN_DISABLED")
+    assertEqual(has(build(NS), "[Diag] loading screen: "),
+        "[Diag] loading screen: world entered 50.00, ended 57.25 (7.25 s later)")
+end)
+
+--- Make the primer's frame refuse `path` at SetFont (FP-07): the kit's CreateFontString hands back
+--- the frame itself, so the frame's own SetFont answers for every font string on it. Returns a table
+--- whose `calls` counts every SetFont the primer makes, so a test can tell a retry of the refused font.
+local function primerRefuses(mocks, path)
+    local counter = { calls = 0 }
+    local real = mocks.CreateFrame
+    mocks.CreateFrame = function(kind, name, parent, template)
+        local f = real(kind, name, parent, template)
+        if parent ~= mocks.UIParent then return f end
+        mocks.CreateFrame = real
+        f.SetFont = function(_, p)
+            counter.calls = counter.calls + 1
+            return p ~= path
+        end
+        return f
+    end
+    return counter
+end
+
+test("diag: the fonts primed line lists each refused file, size and flags after refused=", function()
+    local NS, mocks = primerEnv()
+    local setFont = primerRefuses(mocks, PRIMER_PROTO)
+    primerFonts(NS)
+    NS.FontPrimer.PrimeAll()
+    mocks.__fireTimers()
+    -- red under: refused triples invisible to the report (the owner's run read as a clean priming)
+    assertEqual(primerLine(NS), "[Diag] fonts primed: 1 [Ka0s Kait.ttf 17 THICKOUTLINE] refresh=idle "
+        .. "refused=1 [Ka0s Prototype.ttf 10 -]")
+    local timers, calls = #mocks.__timers(), setFont.calls
+    build(NS)
+    -- red under: a report that retries the refused font (the retry calls SetFont, refused or not)
+    assertEqual(setFont.calls, calls, "no SetFont by the report")
+    assertEqual(#mocks.__timers(), timers)
+    assertEqual(#NS.FontPrimer.DiagState().primed, 1)
+end)
+
+test("diag: the fonts primed list stops at MAX_IDS and flags the cap; the count stays whole", function()
+    local NS = primerEnv()
+    local Diag = NS.Diagnostics
+    local max = Diag.MAX_IDS
+    Diag.MAX_IDS = 1
+    primerFonts(NS)
+    NS.FontPrimer.PrimeAll()
+    local lines = build(NS)
+    Diag.MAX_IDS = max
+    -- red under: an uncapped list (every triple a long session primed on one line)
+    assertTrue(has(lines, "[Diag] fonts primed: 2 [Ka0s Prototype.ttf 10 -] refresh=armed refused=0") ~= nil, dump(lines))
+    assertTrue(has(lines, "per-list caps hit=yes") ~= nil, dump(lines))
 end)

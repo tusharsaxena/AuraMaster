@@ -511,7 +511,7 @@ end
 -- precisely the half that must survive. So it is not inherited: justify LEFT explicitly, and the
 -- closed box clips like the pullout rows do, tail first, marker last.
 --
--- Both calls are capability-guarded (the same shape as modules/Style.lua:899): the headless widget
+-- Both calls are capability-guarded (the same shape as modules/Style.lua:891): the headless widget
 -- kit is a data recorder with neither method, and it is not ours to extend.
 local CATEGORY_PULLOUT_WIDTH = 320
 
@@ -850,7 +850,7 @@ local function renderSpells(ctx)
     --
     -- The 10 is a LITERAL on purpose: the library republishes `ROW_VSPACER` to hosts and deliberately
     -- keeps `SECTION_TOP_SPACER` internal (`libs/LibKa0s/Options.lua:45-83`, and the scalar list at
-    -- `:565-571`), so `H.SECTION_TOP_SPACER` does not exist and reading it would silently be nil.
+    -- `:513-519`), so `H.SECTION_TOP_SPACER` does not exist and reading it would silently be nil.
     -- Matching the number is the honest way to match the look; if the library ever republishes it,
     -- this is the line that takes it.
     local gridScroll = H.EnsureScroll(ctx)

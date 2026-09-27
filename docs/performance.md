@@ -15,12 +15,34 @@ are unlocked out of combat: the empty-container prediction, bracketed `emptyPass
 configuration work, and one path that runs on ordinary play (a target, focus or pet change).
 
 Other timers and frames of the addon's own: a next-frame `C_Timer.NewTimer(0)` that coalesces applies
-(`modules/ContainerManager.lua:187`), the half-second timed-spell scan timer, armed by a player or pet
+(`modules/ContainerManager.lua:188`), the half-second timed-spell scan timer, armed by a player or pet
 `UNIT_AURA` only while a container uses "only auras without a duration" and auras are readable, and
 the frame picker's `OnUpdate`, which runs only while a pick is in progress. While containers are
 unlocked out of combat and test mode, `modules/EmptyWatch.lua` adds a 0.2 s pass timer, armed by a
 `UNIT_AURA` on a watched container's units, and one timer at the soonest weapon enchant's expiry.
-Every timer keeps its handle, and a stand-down cancels it rather than leaving it armed.
+The font primer arms two one-shot timers only when it has drawn a new font (below). Every timer keeps
+its handle, and a stand-down cancels it rather than leaving it armed.
+
+### The font primer's cost
+
+`modules/FontPrimer.lua` hears no event and runs no aura-driven path. It runs at login and stand-up,
+on a settings write and on a profile or registry change, and then only walks the containers' seven
+text blocks and resolves each font (`Style.FontKey`), which allocates nothing for a triple already
+primed. A triple it has not drawn this session costs one font string on its own frame, one `SetFont`
+and one `SetText`; they are kept, so each triple is paid for once per session, and a profile drawing
+only in the client's own fonts pays nothing at all. A priming that drew something shows the frame
+for 1 s and 0.5 s later runs one `UpdateAllAuras` per shown container (the same call a target swap
+makes), then one system apply of every container (`CM.RequestApply(nil, true)`, counted in
+`applyPass`) for the text the addon writes itself. A priming under the loading screen pays the same once, counted from the loading screen's end
+(`LOADING_SCREEN_DISABLED`) instead (the refresh at 1.5 s, the hide at 2 s);
+`FontPrimer.OnEnterWorld` reads the clock and scans the short rejected-events list, and
+`FontPrimer.OnLoadingScreenEnd` otherwise runs one priming pass (the walk above) and reads two flags, so a loading screen with nothing newly primed costs one walk more.
+A font the client refuses at `SetFont` (FP-07) keeps the one font string it was first tried on and
+costs one `SetFont` per later priming until the client accepts it; a triple refused again allocates
+nothing. The mark it reads is
+cleared only by a loading screen, so the first loading screen after a font change in play runs the
+refresh once more. It has no bucket: it runs a handful of times a session and never in response to play, so
+there is nothing a capture's arms could compare.
 
 ### The empty-container watcher's cost
 
@@ -66,11 +88,11 @@ Declared in report order in `buckets` (`core/PerfSetup.lua:48`), each bracketed 
 
 | Bucket | Declared parent | Bracket | Why it is bracketed |
 |---|---|---|---|
-| `unitSwap` | — | `core/AuraMaster.lua:116`, `:124` | The one path driven by play: target, focus or pet changed, so every container on that unit calls the engine's `UpdateAllAuras`. The bracket spans that call, so whatever the engine does synchronously inside it lands here |
-| `applyPass` | — | `modules/ContainerManager.lua:324-331` | The coalesced pass applying pending configuration to every dirty container, plus re-placing container-attached ones |
+| `unitSwap` | — | `core/AuraMaster.lua:125`, `:133` | The one path driven by play: target, focus or pet changed, so every container on that unit calls the engine's `UpdateAllAuras`. The bracket spans that call, so whatever the engine does synchronously inside it lands here |
+| `applyPass` | — | `modules/ContainerManager.lua:324-332` | The coalesced pass applying pending configuration to every dirty container, plus re-placing container-attached ones |
 | `applyContainer` | `applyPass` | `modules/Container.lua:384-430` | One container: compile, place, build or update the engine, restyle, visibility. The call site passes `"applyPass"`, so the record carries observed containment |
-| `visibilityPass` | — | `modules/ContainerManager.lua:350` | The show ladder over every container, on combat transitions, world entry and the master rows |
-| `styleElement` | — | `modules/Style.lua:849-859` | Dressing one bar, icon or line of text: called by the engine's `initializeFrame` as it creates buttons, by a restyle, and by the preview |
+| `visibilityPass` | — | `modules/ContainerManager.lua:351` | The show ladder over every container, on combat transitions, world entry and the master rows |
+| `styleElement` | — | `modules/Style.lua:841-851` | Dressing one bar, icon or line of text: called by the engine's `initializeFrame` as it creates buttons, by a restyle, and by the preview |
 | `timedScan` | — | `modules/TimedSpells.lua` `scanTick` | One readable-state scan of the player's and pet's buffs, 0.5 s after their auras changed or the readable gate reopened. The addon's only aura-driven Lua path while locked; absent from a capture with no "without a duration" container |
 | `emptyPass` | — | `modules/EmptyWatch.lua` `runPass` | One re-prediction of every unlocked container, 0.2 s after its units' auras changed, and the visibility pass of any whose answer changed. Only while unlocked, out of test mode and out of combat; absent from a capture taken locked |
 
@@ -118,10 +140,12 @@ same way it goes down when a player unticks *Enable Aura Master* (slash-commands
 anti-pattern #85's last clause — two mechanisms that must agree about what inert means and diverge
 on the first module added after the second was written.
 
-So `standDown` (`core/LifecycleSetup.lua:90`) calls `addon:UnregisterLifecycleEvents()` — the eight
+So `standDown` (`core/LifecycleSetup.lua:90`) calls `addon:UnregisterLifecycleEvents()` — the nine
 events `core/AuraMaster.lua` registers — then `NS.TimedSpells.StandDown()`, which drops TimedSpells'
-own `UNIT_AURA`, its three gate events and its two bus subscriptions, `CM.StopListening()`,
-`FramePicker.Stop()` and a visibility pass. `Container:ShouldShow` checks **the latch** as step 0, so
+own `UNIT_AURA`, its three gate events and its two bus subscriptions, `NS.EmptyWatch.Stop()`,
+`CM.StopListening()` (which also stops the font primer, `FontPrimer.Stop`), `FramePicker.Stop()`,
+then the combat-restricted half (Blizzard frames handed back and a visibility pass), held for
+`PLAYER_REGEN_ENABLED` when combat refuses it. `Container:ShouldShow` checks **the latch** as step 0, so
 every engine is disabled and nothing — a combat transition, a target swap, a settings change — can
 enable one behind it, and `CM.RequestApply` arms no timer. `standUp`
 (`core/LifecycleSetup.lua:105`) re-registers the events, subscribes again, builds any container

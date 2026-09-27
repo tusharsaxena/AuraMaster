@@ -39,14 +39,14 @@ Every line is `HH:MM:SS | [Tag] message`. The tags:
 
 | Tag | What it holds |
 |---|---|
-| `Diag` | Begin and end markers, the identity header (version, schema, profile and container count, then the client, locale, debug flag, combat reads and the running LibKa0s minors), the state flags and lifecycle holds, a plain line when the addon is disabled or stood down (below), the apply queue, counts, the session's cached time-text widths, and any `truncated` or `section ... failed` line |
+| `Diag` | Begin and end markers, the identity header (version, schema, profile and container count, then the client, locale, debug flag, combat reads and the running LibKa0s minors), the state flags and lifecycle holds, a plain line when the addon is disabled or stood down (below), the apply queue, counts, the fonts the font primer has drawn and any it was refused, and the loading-screen timing line (below), and any `truncated` or `section ... failed` line |
 | `Cfg` | Non-default settings: the profile's own rows, then each container's (`#id non-default:`), filter rows left out because `Filt` prints them in full. A non-default value that does nothing for that container goes on its own `#id inert:` line instead (see below) |
 | `Unit` | One header per unit and filter with the aura count, or `none` / `unreadable` / `read failed` |
 | `Aura` | One aura: `player+` is a buff, `player-` a debuff; `inst`, `id`, name, `dispel`, `src`, `mine`, `dur`, `left`, `stacks`, `boss`, `steal` |
 | `Cont` | One container: id, name, unit, aura type, style, enabled, attach, then its live flags (engine, shows, parked, staleData, classStale, retired engines, enchant frames, dormant, retiring) |
 | `Filt` | The container's filters in full: cast by, duration, sort, max, the hidden categories, and the whitelist and blacklist by id and name |
 | `Plan` | The plan verdict, then one line per applied engine group (filter, candidate filters, sort, max, `frames=` and `shown=`), then the plan's warnings |
-| `Shown` | The shown buttons one by one (a bars button adds the widths its name, time and bar were laid out at: `nameW=` `timeW=` `barW=`), then a `predicted:` line per readable aura on the container's unit |
+| `Shown` | The shown buttons one by one, then a `predicted:` line per readable aura on the container's unit |
 
 Example (shortened):
 
@@ -60,7 +60,9 @@ Example (shortened):
 [Diag] LibKa0s running: Core 8, Env 1, Compat 1, Lifecycle 2, ...
 [Diag] state: enabled=true stoodDown=false disabledHold=false holds=- locked=true testMode=false ...
 [Diag] apply queue: all=false ids=[] scheduled=false notice=- mustDefer=false
-[Diag] time-text widths cached: Fonts\FRIZQT__.TTF|12||short=31
+[Diag] timed spells learned=0, category spell edits in 0 list(s), user categories=0, enchant slots=mainHand
+[Diag] fonts primed: 2 [Ka0s Prototype.ttf 10 OUTLINE, Ka0s Kait.ttf 36 THICKOUTLINE] refresh=idle refused=0
+[Diag] loading screen: world entered 12.40, ended 17.85 (5.45 s later)
 [Unit] player HELPFUL: 7 aura(s)
 [Aura] player+ #1 inst=1234 id=1459 "Arcane Intellect" dispel=nil src=player mine=true dur=3600 left=3412.5 stacks=0 boss=false steal=false
 [Unit] focus: none
@@ -69,7 +71,7 @@ Example (shortened):
 [Filt] #1 whitelist(1)=[1459 Arcane Intellect]
 [Plan] #1 plan in sync
 [Plan] #1 g1 "Always shown" filter=HELPFUL cand={includeSpellIDs:1} sort=expirationOnly/normal max=inf frames=3 shown=2
-[Shown] #1 g1 btn1 name="Arcane Intellect" nameW=148.0 timeW=31.0 barW=184.0
+[Shown] #1 g1 btn1 name="Arcane Intellect"
 [Shown] #1 predicted: 1459 Arcane Intellect -> shown (rank 1 whitelist)
 [Diag] ==== Ka0s Aura Master diagnostics end: 143 line(s) ====
 ```
@@ -81,12 +83,67 @@ Automatic or `(picked)`, and `join=`, the batch 9 side the pair is under the par
 
 ### Bar names that do not show
 
-A bar's name stops 4 pixels short of its time's box, and that box is as wide as the measured width of
-the widest string the time format writes, cached per font until `/reload` (`Style.TimeTextWidth`).
-Each bars `Shown` line gives the laid-out widths, so a report taken while names are missing tells the
-cause apart (owner report 2026-09-26): `nameW` near 0 with `timeW` about `barW` is a name squeezed out
-by an oversized time box, and the `time-text widths cached` line shows the width it came from. A
-`nameW` that looks normal points somewhere else. A width the client withholds reads `?`.
+A bar, icon or Text line that draws with no spell name, and often no time or stack count either, is
+issue #24. The cause is the font, not the aura data. WoW loads an addon-supplied font file (one a
+media pack registers with LibSharedMedia, such as Ka0s Prototype) lazily, and text first drawn in it
+before the load completes comes out empty and stays empty until it is written again. The engine writes
+a bar's name once, when the aura is assigned or updated, so a name drawn in a font that has not loaded
+yet stays blank. A font built into the client (any path under `Fonts\`, such as Friz Quadrata) is
+always loaded and never blanks. Drawing the font on a hidden frame does not load it; drawing it on a
+shown one does. The measurements are in `docs/midnight-quirks.md` (*An addon font loads lazily, and
+the engine writes a name once*) and
+`docs/superpowers/research/2026-09-27-blank-bar-names-findings.md` (section *Correction: the real
+cause is the font*).
+
+The font primer (`modules/FontPrimer.lua`) is the fix. At login and at every stand-up, before the
+first build, it draws every (file, size, flags) triple any container in the active profile uses, on
+one shown 1x1 frame above the top edge of the screen, and hides the frame a second later. It does the
+same for a new triple before a settings change or a profile switch is applied. When it drew something
+new, it asks each shown container to read its auras again half a second later, so text already drawn
+in that font before it loaded is written again. The login's priming runs under the loading screen,
+where nothing is drawn, so it arms neither: the frame stays shown through the loading screen, and
+the re-read runs 1.5 s and the hide 2 s after the loading screen ends (`LOADING_SCREEN_DISABLED`,
+which the client fires after `PLAYER_ENTERING_WORLD`, seconds later on a slow or cold-cache login; a
+`/reload` likewise). A later loading screen with nothing newly primed does nothing. The header's
+`fonts primed:` line shows its state, and the `loading screen:` line under it the timing:
+
+```
+[Diag] fonts primed: 2 [Ka0s Prototype.ttf 10 OUTLINE, Ka0s Kait.ttf 36 THICKOUTLINE] refresh=idle refused=0
+[Diag] loading screen: world entered 12.40, ended 17.85 (5.45 s later)
+```
+
+- The count is every triple drawn this session, and the list gives each by its file's name, size and
+  outline flags (`-` for none), in the order drawn, up to 40 (the per-list cap).
+- `refresh=` is the follow-up re-read: `armed` (due, after a change in play), `armed-world` (due,
+  after the loading screen), `awaiting-world` (fonts primed under the loading screen, the re-read not
+  armed until it ends) or `idle` (it ran, or none was needed). `awaiting-world` seen after the loading
+  screen has ended means `LOADING_SCREEN_DISABLED` never reached the primer.
+- `loading screen:` gives the `GetTime()` of the last `PLAYER_ENTERING_WORLD` and of the loading
+  screen's end after it, and the gap between them; `-` for one not seen. `ended -` after the loading
+  screen is gone means the end was never heard (a client that refused `LOADING_SCREEN_DISABLED` times
+  the world from `PLAYER_ENTERING_WORLD` instead, and the `[Init]` line names the refused event). With
+  logging on, each loading screen's end also writes a `[Fonts]` line with both timestamps.
+- `refused=` counts the triples whose `SetFont` the client refused and no retry has accepted yet, and
+  lists each the same way (`refused=0` for none). A refused triple is not counted as primed: every
+  later priming tries it again, and so does the end of every loading screen, on the one font string
+  it was first tried on; once the client accepts it, it moves to the primed list and the usual hide
+  and refresh follow. `refused=0` with every container font in the primed list is the healthy
+  reading. A font that stays on `refused=` after the loading screen has ended and a settings change
+  has been made is one the client will not load (`docs/known-limitations.md`). Before FP-07 a refused
+  triple was dropped silently and never tried again: the owner's run of 6994c46 read
+  `fonts primed: 1 [Ka0s Kait.ttf 36 THICKOUTLINE]` with every Ka0s Prototype triple missing.
+- `fonts primed: 0 []` on a profile that uses only built-in fonts is correct: those need no priming.
+- The line reads state only, so it prints while auras are secret and while the addon is stood down.
+
+With the trace on (`/am debug on`), each priming that drew anything writes one
+`[Fonts] primed N new font(s)` line, and each priming that met a refusal one
+`[Fonts] N font(s) refused, retried at the next priming` line (counts only; the report names them). The trace is off after a login, so the login's own priming
+is seen only in the report.
+
+If a blank still shows, run `/am diagnostics` and check that the container's font is in the list. A
+font missing from it was registered with LibSharedMedia after login (a media addon loaded on demand),
+so it resolved to the fallback when the primer ran (`docs/known-limitations.md`). The next
+settings change of any kind primes it, and so does a `/reload`.
 
 ### The plan verdict
 

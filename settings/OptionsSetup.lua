@@ -205,7 +205,7 @@ function NS.RegisterContainerSection(key, label, spec)
     NS.ContainerPageDisabledFor[key] = style and function(c) return c.style ~= style end or nil
 end
 
---- The registered section `key`, or nil. Read-only: for the suite and the Containers page.
+--- The registered section `key`, or nil. Read-only: a test seam (the suite is its only reader).
 function NS.ContainerSection(key) return sections[key] end
 
 if not lib then

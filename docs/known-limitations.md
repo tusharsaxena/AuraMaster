@@ -305,3 +305,19 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   report 2026-09-14, batch 7 `SP-1`). Normal blending was tried for the clipped spark and painted
   the art's black matte as a box taller than the bar (feedback batch 8 `SP-1`), so the blend is
   never BLEND. Verified in-game only (`docs/smoke-tests.md`, check 85).
+- **A font a media addon registers after login is not primed until the next settings change.** The
+  font primer (`modules/FontPrimer.lua`, issue #24) draws every container font at login, when every
+  addon loaded with the client has registered its LibSharedMedia fonts. A media addon loaded on
+  demand later registers its fonts too late for that: at login such a font resolves to the built-in
+  fallback, which needs no priming and is what the containers draw in. Once it is registered, an
+  apply that no settings write started (a learned timed spell, a class re-apply after a unit swap)
+  draws in it unprimed, and that text can come up blank. Any settings write, a profile switch or a
+  `/reload` primes it. Accepted in the font primer design
+  (`docs/superpowers/specs/2026-09-27-font-primer-design.md`, *Risks*).
+- **A font the client refuses to set can stay unprimed.** The font primer (`modules/FontPrimer.lua`,
+  FP-07) counts a triple as primed only when `SetFont` accepts it. A refused triple is retried by
+  every later priming and at the end of every loading screen, so a font refused only under the
+  login's loading screen is primed once the screen is gone. A font the client never accepts (a file
+  it cannot read) stays on the refused set for the session: the primer cannot load it, and text in it
+  draws however the client draws a font it refused. `/am diagnostics` names it after `refused=`
+  (`docs/debug.md`, *Bar names that do not show*).

@@ -44,7 +44,7 @@ what each LibKa0s setup file publishes: `docs/module-map.md` → *Libraries*.
 ## Module Map
 
 Five source folders in the TOC's load order — `locales/` → `core/` → `defaults/` → `modules/` →
-`settings/` (layout-§1) — 53 authored Lua files under them: one locale, 16 core, 4 defaults, 17
+`settings/` (layout-§1) — 54 authored Lua files under them: one locale, 16 core, 4 defaults, 18
 modules and 15 settings. The load-bearing positions are annotated at their TOC lines:
 `core/MediaSetup.lua` before `core/Constants.lua` (the monospace face), `core/CoreSetup.lua` before
 anything that prints, `core/PerfSetup.lua` before every module that takes `NS.Perf` as an upvalue,
@@ -73,7 +73,10 @@ flow or attachment path re-applies its followers (`Anchors.Followers`) and its p
 the containers attached to it hang from `Preview.Extent`, a frame of ours sized to its placeholder
 block; while it is unlocked, not previewing and predicted empty (`modules/EmptyWatch.lua`, batch 9
 HG-1), from its one-element anchor, which its placeholder outline marks; otherwise from its engine
-(`Anchors.HangMode`, re-placed by `Anchors.PlaceAttached`). Previewing is the session-only **test mode**
+(`Anchors.HangMode`, re-placed by `Anchors.PlaceAttached`). Before any container text is drawn,
+`modules/FontPrimer.lua` draws every font the containers use once on a shown frame of its own, because
+the client loads an addon font file lazily and text first drawn before the load stays blank (issue
+#24, `docs/midnight-quirks.md`). Previewing is the session-only **test mode**
 (`NS.State.testMode`, switched only by `Preview.SetTestMode`): every container shows its placeholder
 auras. Unlocking is separate: it makes containers draggable while their live auras keep drawing,
 each under its drag handle, and one predicted empty under a faint outline one element in size, so an
@@ -130,8 +133,8 @@ pass on.
 | Message | Sender | Payload | Consumers |
 |---|---|---|---|
 | `Ka0s_AuraMaster_ContainersChanged` (`NS.MSG.CONTAINERS_CHANGED`) | `modules/ContainerManager.lua` — create, delete, rename, duplicate, profile change (copy-from and reset positions are settings writes, announced by `CONFIG_CHANGED`) | none | `settings/OptionsSetup.lua:351` — `NS.RequestPanelRefresh`, a coalesced panel re-render (every banner lists containers); `modules/TimedSpells.lua:204` — `TS.Sync`, which starts or stops the timed-spell scan (a container added or removed can change whether any needs it) |
-| `Ka0s_AuraMaster_ConfigChanged` (`NS.MSG.CONFIG_CHANGED`) | `settings/Schema.lua:598` — the write seam, once per write; never for a session row | `{ section, containerId, path }`; `containerId` nil for an addon-wide row, `path` the row written | `modules/ContainerManager.lua:618` — by the row's `effect`: `"visibility"` runs `ApplyVisibility()` at once, `"none"` queues nothing, otherwise `RequestApply(containerId)` (nil re-applies all), a write to a flow or attachment path also re-applies every container following that one (`Anchors.Followers`), and a write to a container's attach points, mode or target also re-applies the container it attaches to (`requestParents`); `modules/TimedSpells.lua:203` — `TS.Sync`, the same re-sync (a filter write can change whether any container needs the scan) |
-| `Ka0s_AuraMaster_VisibilityChanged` (`NS.MSG.VISIBILITY_CHANGED`) | `core/AuraMaster.lua` — entering the world, combat start and end; `modules/Preview.lua` — `Preview.SetTestMode`, when test mode switches on or off | none | `modules/ContainerManager.lua:629` — `ApplyVisibility()` over every container |
+| `Ka0s_AuraMaster_ConfigChanged` (`NS.MSG.CONFIG_CHANGED`) | `settings/Schema.lua:598` — the write seam, once per write; never for a session row | `{ section, containerId, path }`; `containerId` nil for an addon-wide row, `path` the row written | `modules/ContainerManager.lua:619` — first `FontPrimer.PrimeAll` (a new font is drawn before anything is applied in it), then by the row's `effect`: `"visibility"` runs `ApplyVisibility()` at once, `"none"` queues nothing, otherwise `RequestApply(containerId)` (nil re-applies all), a write to a flow or attachment path also re-applies every container following that one (`Anchors.Followers`), and a write to a container's attach points, mode or target also re-applies the container it attaches to (`requestParents`); `modules/TimedSpells.lua:203` — `TS.Sync`, the same re-sync (a filter write can change whether any container needs the scan) |
+| `Ka0s_AuraMaster_VisibilityChanged` (`NS.MSG.VISIBILITY_CHANGED`) | `core/AuraMaster.lua` — entering the world, combat start and end; `modules/Preview.lua` — `Preview.SetTestMode`, when test mode switches on or off | none | `modules/ContainerManager.lua:631` — `ApplyVisibility()` over every container |
 | `Ka0s_AuraMaster_TimedSpellsChanged` (`NS.MSG.TIMED_SPELLS_CHANGED`) | `modules/TimedSpells.lua` — a scan learned timed spells, or `/am forgettimed` emptied the set | none from a scan; `{ byPlayer = true }` from `/am forgettimed` | `modules/ContainerManager.lua` `CM.Init` — `RequestApply(nil, system)` over every container (their excluded ids moved); a scan's request is the addon's own, so a deferral of it prints no notice |
 
 Four messages, well under the more-than-ten trigger for a separate `message-bus.md`.
@@ -206,13 +209,14 @@ optional. The full table and the reasons:
 
 | Event | Registered by | Handler → effect |
 |---|---|---|
-| `PLAYER_ENTERING_WORLD` | `core/AuraMaster.lua:59` (AceEvent, through `NS.SafeRegisterEvent`) | `OnEnterWorld` → `VISIBILITY_CHANGED`, `ContainerManager.FlushPending` |
-| `PLAYER_REGEN_DISABLED` | `core/AuraMaster.lua:60` | `OnCombatChanged` → `VISIBILITY_CHANGED` |
-| `PLAYER_REGEN_ENABLED` | `core/AuraMaster.lua:61` | `OnCombatChanged` → `VISIBILITY_CHANGED`, `FlushPending`, `ReapplyStaleClass`, `BlizzardFrames.Apply`, `Anchors.ResolvePending` (a frame that appeared during combat) |
-| `PLAYER_TARGET_CHANGED`, `PLAYER_FOCUS_CHANGED` | `core/AuraMaster.lua:62-63` | `OnUnitSwap` → `RefreshUnit` → the engine's `UpdateAllAuras` (bucket `unitSwap`); re-applies the class-colored containers of that unit when the new unit's class differs, or marks them stale, silently, while an apply must wait |
-| `UNIT_PET` | `core/AuraMaster.lua:64` | `OnUnitPet` (player only) → `RefreshUnit("pet")` (bucket `unitSwap`); re-applies the class-colored pet containers when the pet's class differs, or marks them stale while an apply must wait |
-| `ADDON_LOADED` | `core/AuraMaster.lua:65` | `OnAddonLoaded` → `Anchors.ResolvePending` (frame-attached containers) |
-| `ADDON_RESTRICTION_STATE_CHANGED` | `core/AuraMaster.lua:67` | `OnRestrictionChanged` → `FlushPending`, `ReapplyStaleClass` (a deferred apply runs when secrecy lifts) |
+| `PLAYER_ENTERING_WORLD` | `core/AuraMaster.lua:59` (AceEvent, through `NS.SafeRegisterEvent`) | `OnEnterWorld` → `VISIBILITY_CHANGED`, `ContainerManager.FlushPending`, `FontPrimer.OnEnterWorld` (notes the time: the loading screen is still up; the primer's anchor only on a client that refused `LOADING_SCREEN_DISABLED`) |
+| `LOADING_SCREEN_DISABLED` | `core/AuraMaster.lua:61` | `OnLoadingScreenEnd` → `FontPrimer.OnLoadingScreenEnd` (the loading screen's real end: arms the primer's world hide and refresh) |
+| `PLAYER_REGEN_DISABLED` | `core/AuraMaster.lua:62` | `OnCombatChanged` → `VISIBILITY_CHANGED` |
+| `PLAYER_REGEN_ENABLED` | `core/AuraMaster.lua:63` | `OnCombatChanged` → `VISIBILITY_CHANGED`, `FlushPending`, `ReapplyStaleClass`, `BlizzardFrames.Apply`, `Anchors.ResolvePending` (a frame that appeared during combat) |
+| `PLAYER_TARGET_CHANGED`, `PLAYER_FOCUS_CHANGED` | `core/AuraMaster.lua:64-65` | `OnUnitSwap` → `RefreshUnit` → the engine's `UpdateAllAuras` (bucket `unitSwap`); re-applies the class-colored containers of that unit when the new unit's class differs, or marks them stale, silently, while an apply must wait |
+| `UNIT_PET` | `core/AuraMaster.lua:66` | `OnUnitPet` (player only) → `RefreshUnit("pet")` (bucket `unitSwap`); re-applies the class-colored pet containers when the pet's class differs, or marks them stale while an apply must wait |
+| `ADDON_LOADED` | `core/AuraMaster.lua:67` | `OnAddonLoaded` → `Anchors.ResolvePending` (frame-attached containers) |
+| `ADDON_RESTRICTION_STATE_CHANGED` | `core/AuraMaster.lua:69` | `OnRestrictionChanged` → `FlushPending`, `ReapplyStaleClass` (a deferred apply runs when secrecy lifts) |
 | `UNIT_AURA` for `player` and `pet` | `modules/TimedSpells.lua` — the module's one private frame, `TS.unitFrame` (events-frames-taint-§1's carve-out: the vendored AceEvent has no `RegisterUnitEvent`), through `NS.SafeRegisterUnitEvent`; built once and reused, registered only while a container uses "without a duration", the addon is not suspended, and auras are readable (no combat lockdown, not secret), and unregistered by hand in `TS.Stop` | the frame's one `OnEvent` → `onUnitAura`: the client delivers only `player` and `pet`; the handler still proves the unit a safe key and compares it (defense in depth), then schedules a scan 0.5 s later (bucket `timedScan`). A scan that comes due after the gate closed is dropped too |
 | `UNIT_AURA` for `player` and `pet`, and for `target` and `focus` | `modules/EmptyWatch.lua` — its two private frames, `EW.unitFrames[1]` (player, pet) and `[2]` (target, focus), the same carve-out, each filtering `UNIT_AURA` and nothing else, through `NS.SafeRegisterUnitEvent`; built once and reused, each registered only while a shown container on its units is unlocked and out of test mode, the addon is not suspended, combat has not started and auras are readable, and unregistered by hand in `EW.Stop` | the frames' one `OnEvent` only marks a pass due: one pass 0.2 s later (bucket `emptyPass`) re-predicts every watched container and re-runs the visibility pass of any whose answer changed |
 | `PLAYER_TARGET_CHANGED`, `PLAYER_FOCUS_CHANGED` | `modules/EmptyWatch.lua` (AceEvent, on its own target) — while its target and focus frame is registered | the pass run at once, not 0.2 s later, folding in one already due: the engine redraws for the new unit in the same frame, so a follower hung from a parent that just emptied would otherwise sit on the engine's 1x1 rect for the delay |
@@ -221,9 +225,22 @@ optional. The full table and the reasons:
 | AceDB `OnProfileChanged` / `OnProfileCopied` / `OnProfileReset` | `core/Database.lua:275-279` | `NS.OnProfileChanged` / `NS.OnProfileCopied` / `NS.OnProfileReset` → re-prepare the registry, trace the event once in its own words (a switch `[Profile] changed -> X`; a copy or a reset one `[Set]` line, debug-logging-§10), rebuild, re-render |
 
 Each container's own `UNIT_AURA` belongs to the engine (`SetUnit`, `modules/Container.lua:298`) and
-is not addon code. The eight `core/AuraMaster.lua` registrations are one module-level list,
+is not addon code. The nine `core/AuraMaster.lua` registrations are one module-level list,
 `LIFECYCLE_EVENTS`, which `RegisterLifecycleEvents` and `UnregisterLifecycleEvents` both walk, so the
 stand-down and the stand-up remove and restore the same list.
+
+The font primer (`modules/FontPrimer.lua`) registers no event of its own. It runs from
+`CM.StartListening` (the login's `CM.Init` and every stand-up, before the first build), from the
+`CONFIG_CHANGED` handler before the apply is requested, and from `CM.Announce` before a profile
+switch or a registry change is built. A priming that drew a new font arms two `C_Timer` handles, the
+1 s hide and the 0.5 s follow-up refresh; `CM.StopListening` cancels both through `FontPrimer.Stop`.
+A priming before the first loading screen ends arms neither. The client fires
+`PLAYER_ENTERING_WORLD` while the loading screen is still up and `LOADING_SCREEN_DISABLED` when it
+ends, so `addon:OnLoadingScreenEnd` calls `FontPrimer.OnLoadingScreenEnd`, which first runs a
+priming pass (a font the client refused under the loading screen is tried again, FP-07) and then arms
+them at 2 s and 1.5 s when anything was primed since the last loading screen. `FontPrimer.OnEnterWorld` only notes
+the time for the report's gap line, and arms them itself only on a client that refused
+`LOADING_SCREEN_DISABLED`.
 
 **Every registration goes through one helper** (events-frames-taint-§1): `NS.SafeRegisterEvent`, which
 is `LibKa0s-Core-1.0`'s `SafeRegisterEvent`, published by `core/CoreSetup.lua`. That covers every row
@@ -255,7 +272,9 @@ container's anchor opts in through `DisableUntrustedLayoutScriptsTemplate`. No s
 while auras are secret or under combat lockdown (`ContainerManager.MustDefer`); visibility in combat
 goes through the engine's `SetEnabled`; protected opens and frame-creating verbs are refused in
 combat, and a teardown under lockdown is parked; every engine binding is `pcall`-guarded; no border
-reads a secret size; and secret values never reach a string operation. Every rule and the code that
+reads a secret size; and secret values never reach a string operation. The font primer's frame hangs
+from `UIParent`, outside every anchor, and its one engine call, a follow-up `UpdateAllAuras`, is not
+protected and skips a disabled engine. Every rule and the code that
 keeps it: `docs/midnight-quirks.md` → *Taint notes*.
 
 ## Known Limitations
@@ -263,7 +282,8 @@ keeps it: `docs/midnight-quirks.md` → *Taint notes*.
 Units stop at player, target, focus and pet. Nothing structural happens while auras are secret or
 under lockdown, so settings changes, teardown and class colors wait for it to lift. The engine bounds
 what a Text line can do, which spell-id filters it honors, and when a non-Solid border redraws. A
-handful of user-category trade-offs were accepted by the owner. Every limitation, its cause and any
+handful of user-category trade-offs were accepted by the owner. A font a media addon registers
+after login is not primed until the next settings change or `/reload`. Every limitation, its cause and any
 ruling: `docs/known-limitations.md`.
 
 ## Documentation map
@@ -271,7 +291,8 @@ ruling: `docs/known-limitations.md`.
 Every `.md` under `docs/` appears in exactly one table below (documentation-§3). Frozen and
 generated directories are named once and never enumerated: `docs/audits/`, `docs/reviews/`,
 `docs/automated-tests/<run>/`, `docs/perf-analysis/<run>/`, `docs/revendor/<date>-v<tag>/` (a
-span bundle is `<date>-v<A>-v<B>/`), `docs/superpowers/`.
+span bundle is `<date>-v<A>-v<B>/`, and the one untagged bundle is `docs/revendor/2026-09-12/`),
+`docs/superpowers/`.
 
 ### Required (documentation-§3, Tier 1)
 

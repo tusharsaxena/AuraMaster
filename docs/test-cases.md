@@ -549,7 +549,7 @@ badge and any count quoted in the docs must agree with it.
 
 ### test_lifecycle.lua (15)
 
-- lifecycle: the eight lifecycle events are registered to their handlers, and nothing else is
+- lifecycle: the nine lifecycle events are registered to their handlers, and nothing else is
 - lifecycle: a focus change refreshes the focus containers, a target change the target ones
 - lifecycle: UNIT_PET refreshes the pet containers only for the player's own pet
 - lifecycle: entering the world runs an apply held while auras were secret
@@ -560,7 +560,7 @@ badge and any count quoted in the docs must agree with it.
 - lifecycle: a reset profile gets its starters back, numbered from 1 again
 - lifecycle: a profile switch applies the new profile's Blizzard-frame settings
 - lifecycle: the degraded latch stands up and down only on an edge
-- lifecycle: one bad event name leaves the other seven registered and is recorded
+- lifecycle: one bad event name leaves the other eight registered and is recorded
 - lifecycle: one bad event name, on a client without C_EventUtils, is caught by the probe rung
 - lifecycle: a rejection while logging is on is traced at the moment it happens
 - lifecycle: the degraded Core stub's SafeRegisterEvent records a bad name and keeps the rest
@@ -720,6 +720,41 @@ badge and any count quoted in the docs must agree with it.
 - empty: the player frame filters UNIT_AURA alone; pet and inventory changes ride AceEvent
 - empty: a target switch re-predicts at once, so no follower hangs from the emptied engine in between
 - empty: a target switch folds a pass already due into its own, leaving no timer behind
+
+### test_fontprimer.lua (32)
+
+- fontprimer: the starter profile draws only in the client's own font, so nothing is primed
+- fontprimer: the triples come from every text block of every container, deduplicated
+- fontprimer: a font under Fonts\ is built into the client and skipped
+- fontprimer: the primed triple is the one Style.ApplyFont sets, flags and fallback included
+- fontprimer: a font the client refuses is not counted, listed as primed, or refreshed for
+- fontprimer: one shown 1x1 frame on UIParent draws each new triple, and hides after HOLD
+- fontprimer: a second PrimeAll primes nothing new, shows nothing and arms no timer
+- fontprimer: a font change primes only the new triple and arms one refresh
+- fontprimer: the refresh reaches only live, shown, non-previewing instances
+- fontprimer: the refresh re-applies, so a name label drawn in the font is written again
+- fontprimer: in test mode the refresh re-applies the previewing container, never its engine
+- fontprimer: a refresh timer that fires on a stood-down addon does nothing
+- fontprimer: Stop cancels both timers and hides the frame, and the primed set survives
+- fontprimer: disabling the addon stops the primer, and nothing primes while stood down
+- fontprimer: a login priming waits for the world, then refreshes at WORLD_REFRESH and hides at WORLD_HOLD
+- fontprimer: a loading screen that outlasts WORLD_HOLD after PLAYER_ENTERING_WORLD still primes before the refresh
+- fontprimer: a client that refuses LOADING_SCREEN_DISABLED times the world from PLAYER_ENTERING_WORLD
+- fontprimer: a later loading screen with nothing newly primed arms nothing
+- fontprimer: a font change during play keeps the short path, never the world timers
+- fontprimer: Stop cancels the world timers, and ends the wait for the world
+- fontprimer: a login stood down takes the short path on a stand-up in play
+- fontprimer: DiagState names which refresh is armed, or that it waits for the world
+- fontprimer: a settings write primes before its apply is requested
+- fontprimer: a profile switch primes the new profile's fonts before it builds
+- fontprimer: one Fonts debug line per PrimeAll that primed something, and none otherwise
+- fontprimer: a refused font is not marked primed, and the next PrimeAll primes it on the same font string
+- fontprimer: a font refused again stays on the refused set once, and every PrimeAll retries it
+- fontprimer: a font refused under the loading screen is primed at its end, and the world refresh follows
+- fontprimer: on a client without the loading screen's end, PLAYER_ENTERING_WORLD retries a refused font
+- fontprimer: a loading screen's end with a font still refused arms nothing
+- fontprimer: one Fonts debug line per PrimeAll that met a refusal, counts only
+- fontprimer: DiagState lists the refused triples, copies only, and a primed one leaves the list
 
 ### test_anchors_close.lua (6)
 
@@ -1066,7 +1101,7 @@ badge and any count quoted in the docs must agree with it.
 - icons: filling a preview icon that was never dressed does nothing and raises nothing
 - icons: a debuff placeholder tints its dispel strips in Blizzard's color for its type; a buff, an untyped one or the option off shows none (TD-4, DB-1)
 
-### test_style_text.lua (55)
+### test_style_text.lua (56)
 
 - text style: the element takes its size; clip, animation and text-area frames nest inside it
 - text style: Left lays the first piece at the area's left and each next piece against the previous one
@@ -1075,6 +1110,7 @@ badge and any count quoted in the docs must agree with it.
 - text style: each chained piece is pulled back over the previous one by the measured padding (item 8)
 - text style: a padding that cannot be measured chains at 0, and is measured again later (item 8)
 - text style: the padding is measured once per font, size and flags (item 8)
+- text style: every measure resolves its font through Style.FontKey, the one ApplyFont sets (#24)
 - text style: every piece is justified to its side of the chain; a stacked row is centered (item 8)
 - text style: Center centers a one-piece template as one line, exactly as before (feedback #1)
 - text style: Center stacks a multi-piece template, each field a row centered under the last; literals are not drawn (feedback #1)
@@ -1316,7 +1352,7 @@ badge and any count quoted in the docs must agree with it.
 - slash verbs: the disabled gate is ONE decision over the whole verb table, not a per-verb guard
 - slash verbs: /am new enchants makes a player buff container showing only Weapon enchants (feedback #6)
 
-### test_diagnostics.lua (42)
+### test_diagnostics.lua (47)
 
 - diag: /am diagnostics writes the report to the console ungated, opens it, and says so once
 - diag: /am diagnostics answers while the addon is disabled, and the state line says so
@@ -1356,10 +1392,15 @@ badge and any count quoted in the docs must agree with it.
 - diag: a disabled login says so in the header, and each [Plan] not built line says why
 - diag: a stood-down addon names its holds; built containers read hidden, not unbuilt
 - diag: a container with no instance while running is not built for want of one
-- diag: a bars button's [Shown] line carries its name, time and bar widths
-- diag: an unreadable width reads '?' and costs no line
-- diag: a button with no bar regions carries no widths
-- diag: the header lists the cached time-text measurements
+- diag: the width fields are gone: no widths on a bars [Shown] line, no cached-widths line
+- diag: the fonts primed line reads none primed and the refresh idle on the starter profile
+- diag: the fonts primed line lists each primed file, size and flags, and the refresh state
+- diag: the fonts primed line reads state only: it primes nothing and arms nothing
+- diag: the fonts primed line prints while stood down and while auras are secret
+- diag: the fonts primed line tells a priming waiting for the world from the world refresh
+- diag: the loading screen line shows when the world was entered and when the loading screen ended
+- diag: the fonts primed line lists each refused file, size and flags after refused=
+- diag: the fonts primed list stops at MAX_IDS and flags the cap; the count stays whole
 
 ### test_bulklog.lua (20)
 
@@ -1826,7 +1867,7 @@ badge and any count quoted in the docs must agree with it.
 
 - prose: no authored file carries a British spelling from localization-§5's published list
 - prose: the gate carries localization-§5's two lists whole, and nothing of its own
-- prose: the exclusions this repository declared suppressed 11 of 181 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (11): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, docs/spell-research/2026-09-24-logs/CORRECTIONS.md, docs/spell-research/2026-09-24-logs/CURRENT_CATEGORIES.md, docs/spell-research/2026-09-24-logs/DECISIONS.md, docs/spell-research/2026-09-24-logs/FLAGS.md, docs/spell-research/2026-09-24-logs/PROPOSED_ADDITIONS.md, docs/spell-research/2026-09-24-logs/REVIEW.md, docs/spell-research/2026-09-24-logs/SOURCES.md, docs/spell-research/2026-09-24-logs/dictionary/AURAS.md
+- prose: the exclusions this repository declared suppressed 11 of 183 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (11): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, docs/spell-research/2026-09-24-logs/CORRECTIONS.md, docs/spell-research/2026-09-24-logs/CURRENT_CATEGORIES.md, docs/spell-research/2026-09-24-logs/DECISIONS.md, docs/spell-research/2026-09-24-logs/FLAGS.md, docs/spell-research/2026-09-24-logs/PROPOSED_ADDITIONS.md, docs/spell-research/2026-09-24-logs/REVIEW.md, docs/spell-research/2026-09-24-logs/SOURCES.md, docs/spell-research/2026-09-24-logs/dictionary/AURAS.md
 - prose: no path this repository narrows the gate by is loaded by a TOC
 - prose: every path this repository narrows the gate by is one .pkgmeta keeps out of the zip
 - prose self-test: the carve-out suppresses the named generated folder, and only it
@@ -1926,6 +1967,7 @@ badge and any count quoted in the docs must agree with it.
 | test_anchors_edges.lua | 15 |
 | test_anchors_hang.lua | 11 |
 | test_emptywatch.lua | 25 |
+| test_fontprimer.lua | 32 |
 | test_anchors_close.lua | 6 |
 | test_anchors_label.lua | 23 |
 | test_anchors_strip.lua | 7 |
@@ -1940,7 +1982,7 @@ badge and any count quoted in the docs must agree with it.
 | test_timedspells.lua | 22 |
 | test_style_bars.lua | 63 |
 | test_style_icons.lua | 31 |
-| test_style_text.lua | 55 |
+| test_style_text.lua | 56 |
 | test_style_text_autosize.lua | 18 |
 | test_preview.lua | 28 |
 | test_render_coverage.lua | 3 |
@@ -1949,7 +1991,7 @@ badge and any count quoted in the docs must agree with it.
 | test_disabled.lua | 18 |
 | test_slash.lua | 28 |
 | test_slash_verbs.lua | 50 |
-| test_diagnostics.lua | 42 |
+| test_diagnostics.lua | 47 |
 | test_bulklog.lua | 20 |
 | test_optionssetup.lua | 17 |
 | test_options_descriptor.lua | 18 |
@@ -1979,4 +2021,4 @@ badge and any count quoted in the docs must agree with it.
 | test_eol.lua | 2 |
 | test_layout_cap.lua | 13 |
 | test_diagnostics_contract.lua | 7 |
-| **Total** | **1665** |
+| **Total** | **1703** |

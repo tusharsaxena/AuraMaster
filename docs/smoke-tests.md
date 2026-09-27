@@ -362,7 +362,7 @@ and, where the client source left the answer open, its question in
 `docs/superpowers/research/2026-09-13-aura-engine-notes.md`. Some live in the sections above; they are
 listed here too, so the batch can be signed off in one pass.
 
-58. **Schema v2 migration (spec section 7).** Back up
+58a. **Schema v2 migration (spec section 7).** Back up
     `WTF/Account/ACCOUNT/SavedVariables/AuraMaster.lua` first: a profile loaded once on this build
     cannot go back. On the previous build, in two profiles: untick a starter spell in *Core healing*
     and add a spell to *Lesser healing* on the same container; add a spell to *Defensive cooldowns* on a
@@ -372,7 +372,7 @@ listed here too, so the batch can be signed off in one pass.
     the starter unticked; *Defensive cooldowns* holds the other added spell. Dispel Colors → Magic shows the
     color you set. Layout → Frame → Strata reads High where it was Medium. Switch to the other
     profile → the same.
-59. **Color by → dispel type lets go (B-4, question Q1).** On a bar container showing a debuff with a
+59a. **Color by → dispel type lets go (B-4, question Q1).** On a bar container showing a debuff with a
     dispel type, set Bars → General → **Color by** to dispel type → the fill takes the General → Dispel
     Colors color; set it back to one color → the fill returns to the bar color at once. Enter combat
     with the aura still up → the fill keeps the bar color. The open point is whether a color written
@@ -1844,3 +1844,74 @@ lines, so each check confirms nothing else moved.
      page moves to General/General on the new container, the same as the button. Then go to
      Filters, close the panel and type `/am new`: the panel does not open. Open it with `/am`: it
      is on General/General with that container. Result: **PASS** (owner, 2026-09-26)
+
+## Font primer (2026-09-27, owner to run)
+
+Issue #24, branch `fix/2026-09-27-blank-bar-names`. The font primer (`modules/FontPrimer.lua`)
+draws every container font once on a shown frame before any container text is drawn in it
+(`docs/debug.md`, *Bar names that do not show*). Before the checks: set **every** container's text
+fonts to **Ka0s Prototype** (Bars name, time and stacks; Icons time and stacks; the Text line's font;
+the name label's font), restoring any container the A/B test had switched to Friz Quadrata TT.
+Uninstall the probe addon (AMNameProbe) so nothing else draws the font first. Turn on Lua errors.
+**Between an aura appearing and the check, do not lock or unlock, toggle test mode or change a
+setting**: each of those rewrites every name on its own and would hide a blank.
+
+281. **FP1.** Log out and quit the client. Rename `World of Warcraft\_retail_\Cache` to `Cache.old`.
+     Start the client and log in on a character with several of its own buffs up (a long class buff,
+     a food or flask buff), and a target dummy nearby. Do not `/reload` and do not touch any setting.
+     → Every bar, icon and Text line present at login shows its text (name, time and stacks) from the
+     moment it appears: no blank row. No Lua error.
+     Result:
+282. **FP2.** Straight after FP1, out of combat, cast spells you have not cast this session that put a
+     buff on you and a debuff on the dummy. → Each new bar, icon and Text line shows its text from
+     the moment it appears. No Lua error.
+     Result:
+283. **FP3.** Still in the same session, attack the dummy and cast the rest of your rotation in
+     combat, including spells not cast yet. → No bar, icon or Text line is ever blank, in combat or
+     after it ends. No Lua error.
+     Result:
+284. **FP4.** Out of combat, with buffs up in a bars container, open the settings and change that
+     container's Bars → Name text font to a font no container has used this session (**Ka0s Kait**,
+     or a new size of Ka0s Prototype). → The names redraw in the new font, and any that go blank come
+     back within about 1 s without touching anything else. No Lua error.
+     Result:
+285. **FP5.** With auras up in every container, `/reload`. → After the loading screen every
+     container's text shows, and any that is blank at first fills in within about 2 s. No Lua error.
+     Result:
+286. **FP6.** Run `/am diagnostics`. → The header has one `[Diag] fonts primed: N [...] refresh=idle`
+     line, with N at least 1, listing `Ka0s Prototype.ttf` with each size and outline your containers use
+     (and `Ka0s Kait.ttf` after FP4), and no Friz Quadrata entry. No Lua error.
+     Result:
+287. **FP7.** `/am debug on`, open the console with `/am debug`, then change a container's font size
+     to a size not used yet. → One `[Fonts] primed 1 new font(s)` line appears. Change another
+     setting that is not a font (a bar height) → no new `[Fonts]` line. No Lua error.
+     Result:
+288. **FP8.** `/am disable`, wait a few seconds, then `/am diagnostics`. → The report still prints the
+     `fonts primed:` line, with the same list and `refresh=idle`. `/am enable` → every container comes
+     back with its text showing, none blank. No Lua error throughout.
+     Result:
+289. **FP9.** Turn on one container's name label (Layout → Label → **Show name label**) and give a Text
+     container a template with literal text between its tokens (for example `$spellname$ - $stacks$`),
+     the label and the Text line both in **Ka0s Prototype**, then `/reload` with auras up. → The
+     label and the Text line's literal text show from the start, or fill in within about 2 s. Then, out of combat, turn on test mode and change the label font and a
+     Bars name font to a size not used yet this session. → The label and the placeholder names and
+     stack counts show in the new font, or fill in within about 1 s without touching anything else.
+     No Lua error.
+     Result:
+290. **FP10.** Log out and quit the client. Delete `World of Warcraft\_retail_\Cache` (the client
+     rebuilds it). Start the client and log in on a character with permanent buffs up (a long class buff, an
+     aura or a flask) in containers on **Ka0s Prototype**. Do not `/reload` and do not touch any
+     setting. → Every name present at login draws within about 2 s after the loading screen ends, and
+     stays drawn; no row stays blank until a `/reload`. `/am diagnostics` straight after the loading
+     screen may read `refresh=armed-world`; a few seconds later it reads `refresh=idle`. Its
+     `loading screen:` line gives both times and the gap (record the gap here; `ended -` is a
+     failure). Then zone
+     (take a portal or enter an instance) → nothing blanks after that loading screen. No Lua error.
+     Result:
+291. **FP11.** Log out and quit the client. Delete `World of Warcraft\_retail_\Cache` (the client
+     rebuilds it). Start the client and log in on a character whose containers use **Ka0s Prototype**
+     (and **Ka0s Kait**, if any container does). Do not `/reload` and do not touch any setting. A few
+     seconds after the loading screen ends, run `/am diagnostics`. → The `fonts primed:` line lists
+     every Ka0s font your containers use, with each size and outline (every Ka0s Prototype triple
+     included, not only Ka0s Kait), and ends `refused=0`. No Lua error.
+     Result:
