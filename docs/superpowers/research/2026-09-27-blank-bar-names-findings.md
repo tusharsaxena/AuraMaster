@@ -72,3 +72,33 @@ Smoke checks must avoid those toggles, or they will hide the bug.
 - A spell-load event the addon could wait for: `SPELL_DATA_LOAD_RESULT` did not fire. Why
   `auraData.name` is nil on a first sighting is not proven beyond the cache-clear correlation. The fix
   does not depend on the reason: it rereads the aura data later.
+
+## Correction: the real cause is the font (later on 2026-09-27)
+
+The mechanism above is wrong about the cause. A measurement addon (AMNameProbe, kept in the session
+record) logged every aura the player and target gained, out of combat, across three runs: **the name
+was present in the aura data at the moment each aura arrived, every time**, including the auras whose
+bars the owner saw blank. The engine was handed the name and still drew nothing.
+
+The owner then ran an A/B in one profile: three containers' name font switched to the built-in
+Friz Quadrata TT, the rest left on the addon font Ka0s Prototype (from SharedMedia_MyMedia). A video
+of the run, cut to 5 frames a second and timed by the probe's on-screen clock, showed:
+
+- **Only Ka0s Prototype text ever blanked.** The Friz Quadrata rows drew from their first frame in
+  every event, in and out of combat.
+- A blank Ka0s Prototype row lacked its time text as well as its name, and it filled in 0.4-0.6 s
+  after the aura arrived: at the branch's first repaint.
+
+Probe v4 then drew the alphabet in Ka0s Prototype 10 OUTLINE and Ka0s Kait 36 THICKOUTLINE, on a
+shown frame, before AuraMaster built its bars. **Every blank was gone**, first on the branch and then
+on master without any repaint code.
+
+So: **WoW loads an addon-supplied font file lazily, and text first drawn before the font has loaded
+comes out empty until it is written again.** Friz Quadrata is built into the client and always
+loaded. Other addons rewrite their text constantly and self-heal, while an engine-bound bar name is
+written once. AuraMaster's time-width measurement draws in the font, but on a hidden frame, which
+does not count. ChonkyCharacterSheet ships the same workaround, `CCS:PrimeFontsAndTextures`
+(`core/utils.lua`: a shown, off-screen frame drawing each font, hidden a second later).
+
+The repaint on this branch only hid the blank after 0.5 s. It is replaced by a font primer:
+`docs/superpowers/specs/2026-09-27-font-primer-design.md`.
