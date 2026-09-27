@@ -1901,6 +1901,8 @@ change any other setting**: each of those redraws every name on its own and woul
      `/am perf measure a` and fight, then `/am perf measure b` and the same fight, `/am perf
      finish`, `/am perf report` (`docs/performance.md`, *Taking a capture*). Record the report and
      the JSON as `docs/perf-analysis/README.md` describes. → The report lists a `nameRepaint`
-     bucket in arm A with `calls` of no more than about one per 2 s per listened unit over the arm,
+     bucket in arm A with `calls` of no more than about one per 1.25 s per listened unit over the
+     arm (two per 2.5 s, which already counts target, focus and pet swaps), plus two per listened
+     unit for each loading screen in the arm,
      and a `maxMs` in line with `unitSwap`'s; arm B has none. No Lua error.
      Result:

@@ -92,7 +92,8 @@ and `docs/midnight-quirks.md`).
 whose template has the name token, through the engine's own `UpdateAllAuras`, which rereads every aura
 and rewrites every name. Per unit it runs about 0.5 s after the first `UNIT_AURA` of a quiet unit
 (`quick`), again 2 s later (`settle`, repeated every 2 s only while the unit keeps changing), 3 s
-after a loading screen (`enter`, then `settle` at 5 s), and 0.5 s after a target, focus or pet swap.
+after a loading screen (`enter`, then `settle` at 5 s), and after a target, focus or pet swap: 0.5 s
+later when nothing is armed for that unit, otherwise at the armed follow-up (within about 2 s).
 It runs in combat too. An icons container, or a bars container with its name hidden, is never
 repainted: it shows no name the engine writes.
 
@@ -111,7 +112,9 @@ the blank bar's unit, the pass ran after the name went blank, and that container
 previewing. A unit missing from `listening` has no container the repaint thinks shows a name.
 
 **The `Names` trace.** With logging on (`/am debug on`), each pass writes one line. An event writes
-none, so a busy fight adds at most one line every 2 s per unit:
+none. A unit that keeps changing adds one line every 2 s; one that changes in bursts can add two
+every 2.5 s (a `settle` pass, then the next burst's `quick` 0.5 s after it), so a busy fight adds at
+most about one line every 1.25 s per unit:
 
 ```
 [Names] repaint player: 2 container(s) (quick)
@@ -126,8 +129,10 @@ repainted, and the name was still not there: the next `UNIT_AURA` on that unit s
 disabled or stood down.
 
 **Do not toggle to test it.** Locking or unlocking, test mode, a visibility change, or any restyle
-also redraws the names, because each one switches the engine off and on or re-dresses its buttons,
-and the engine rereads every aura when it does. A name that appears after one of those says nothing
+also redraws the names. Locking, unlocking, test mode and a visibility change switch the engine off
+and on, and it rereads every aura through `UpdateAllAuras`. A restyle re-dresses the buttons, and
+each one reruns its apply with the aura data it already holds. Both rewrite the name. A name that
+appears after one of those says nothing
 about the repaint. To check it, turn on the trace, let the aura appear, and change nothing.
 
 ### The plan verdict

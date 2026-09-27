@@ -12,8 +12,8 @@ every bar, countdown and swipe in Blizzard's own code. The addon **reads no aura
 secret**, and no ticker or `OnUpdate` drives a display. It has three aura-driven Lua paths of its own.
 **The blank-name repaint, bracketed `nameRepaint` (below), is the one that runs in combat and while
 auras are secret**: it hears `UNIT_AURA` for the units whose containers show a name, reads nothing but
-the unit, and asks the engine to read that unit's auras again, at most once every 2 s per unit under
-constant churn. The readable-state timed-spell scan, bracketed `timedScan`, runs while locked but only
+the unit, and asks the engine to read that unit's auras again: once every 2 s per unit under
+constant churn, and at most two passes per 2.5 s per unit when changes come in bursts. The readable-state timed-spell scan, bracketed `timedScan`, runs while locked but only
 with auras readable. The empty-container prediction, bracketed `emptyPass`, runs only while containers
 are unlocked out of combat. What remains is configuration work, and one more path that runs on
 ordinary play (a target, focus or pet change).
@@ -25,8 +25,9 @@ the frame picker's `OnUpdate`, which runs only while a pick is in progress. Whil
 unlocked out of combat and test mode, `modules/EmptyWatch.lua` adds a 0.2 s pass timer, armed by a
 `UNIT_AURA` on a watched container's units, and one timer at the soonest weapon enchant's expiry.
 `modules/NameRepaint.lua` holds at most one timer per unit it listens for (player, pet, target,
-focus): 0.5 s after the first `UNIT_AURA` of a quiet unit or a unit swap, 2 s for each follow-up, and
-3 s after a loading screen. Every timer keeps its handle, and a stand-down cancels it rather than
+focus): 0.5 s after the first `UNIT_AURA` or unit swap on a unit with nothing armed, 2 s for each
+follow-up (an event or swap while one is armed only marks it for that follow-up), and 3 s after a
+loading screen. Every timer keeps its handle, and a stand-down cancels it rather than
 leaving it armed.
 
 ### The blank-name repaint's cost
@@ -48,8 +49,11 @@ combat. That makes it the addon's first aura-driven path that runs in combat, an
   lands in the bucket. Offline (`nameRepaintPass`): one engine call per eligible container and 0
   B/iter. The mock engine does no rebuild, so the rebuild's real cost shows only in game.
 - **The rate is bounded per unit.** A single new aura gets two passes, 0.5 s and 2.5 s after it
-  appears, and then the unit goes quiet. Constant churn gets one pass every 2 s, so four listened units
-  in a busy fight make at most about two passes a second between them. A loading screen adds two
+  appears, and then the unit goes quiet. Constant churn gets one pass every 2 s. The worst case is
+  churn in bursts: a change just after a `settle` pass starts a new cycle, so a unit can take two
+  passes every 2.5 s (about 0.8 a second), as little as 0.5 s apart. A unit swap takes the same
+  path as a change, so it adds nothing to that bound. Four listened units in a busy fight make at
+  most about three passes a second between them. A loading screen adds two
   passes per listened unit, at 3 s and 5 s. For scale, SetisBuffBars rebuilds both of its containers
   0.05 s after every player `UNIT_AURA`.
 - **Stood down, it costs nothing**: both frames are unregistered and every timer canceled.
@@ -107,7 +111,7 @@ Declared in report order in `buckets` (`core/PerfSetup.lua:49`), each bracketed 
 | `styleElement` | — | `modules/Style.lua:849-859` | Dressing one bar, icon or line of text: called by the engine's `initializeFrame` as it creates buttons, by a restyle, and by the preview |
 | `timedScan` | — | `modules/TimedSpells.lua` `scanTick` | One readable-state scan of the player's and pet's buffs, 0.5 s after their auras changed or the readable gate reopened. The addon's only path that reads aura data while locked; absent from a capture with no "without a duration" container |
 | `emptyPass` | — | `modules/EmptyWatch.lua` `runPass` | One re-prediction of every unlocked container, 0.2 s after its units' auras changed, and the visibility pass of any whose answer changed. Only while unlocked, out of test mode and out of combat; absent from a capture taken locked |
-| `nameRepaint` | — | `modules/NameRepaint.lua` `NR.Repaint` | One repaint of a unit's name-showing containers, one `UpdateAllAuras` each, so a name the engine wrote blank on first sighting appears. The addon's only aura-driven Lua path that runs in combat and while auras are secret, bounded by its timers to one pass every 2 s per unit under churn; the engine's rebuild inside each call lands here. Absent from a capture with no bars container showing its name and no Text container showing the name |
+| `nameRepaint` | — | `modules/NameRepaint.lua` `NR.Repaint` | One repaint of a unit's name-showing containers, one `UpdateAllAuras` each, so a name the engine wrote blank on first sighting appears. The addon's only aura-driven Lua path that runs in combat and while auras are secret, bounded by its timers to at most two passes per 2.5 s per unit (one every 2 s under constant churn); the engine's rebuild inside each call lands here. Absent from a capture with no bars container showing its name and no Text container showing the name |
 
 **Never sum `applyPass` and `applyContainer`**: the parent already contains its children
 (performance-§3). **`styleElement` is declared at the root because its callers differ**, and it

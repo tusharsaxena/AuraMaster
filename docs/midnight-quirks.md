@@ -306,7 +306,7 @@ bars container unless its name is hidden, a Text container whose template holds 
 icons), and reads nothing but a unit argument `NS.Secrets.IsSafeKey` proves readable. Per unit it
 repaints 0.5 s after the first `UNIT_AURA` of a quiet unit and again 2 s later, then every 2 s only
 while the unit keeps changing; at 3 s and 5 s after a loading screen; and after a target, focus or pet
-swap as after a first `UNIT_AURA`. A pass skips a container that is hidden, previewing, parked or
+swap as after any `UNIT_AURA` (0.5 s later when nothing is armed, else at the armed follow-up). A pass skips a container that is hidden, previewing, parked or
 stale, so it never sends `UpdateAllAuras` to a disabled engine, and it sends nothing else: no apply,
 no restyle and no button access. A name that arrives later than the follow-up stays blank until the
 next `UNIT_AURA` on that unit (`docs/known-limitations.md`). How to see it working: `docs/debug.md`
@@ -347,7 +347,8 @@ so the failure is latent: it would only show up once a patch retires one of them
 `LibKa0s-Core-1.0`'s `SafeRegisterEvent` (`core/CoreSetup.lua`), or its unit-event twin
 `NS.SafeRegisterUnitEvent`. That covers the eight lifecycle events (`LIFECYCLE_EVENTS` in
 `core/AuraMaster.lua`), the timed-spell gate and its unit frame's `UNIT_AURA`
-(`modules/TimedSpells.lua`), and the stand-down's pending `PLAYER_REGEN_ENABLED`
+(`modules/TimedSpells.lua`), the empty-container prediction's two unit frames and their swap events
+(`modules/EmptyWatch.lua`), the blank-name repaint's two unit frames (`modules/NameRepaint.lua`), and the stand-down's pending `PLAYER_REGEN_ENABLED`
 (`core/LifecycleSetup.lua`). A refused name is recorded once in `NS.RejectedEvents`. The `[Init]`
 line adds `rejected events: …` when that list is not empty, and a name refused while logging is on
 is traced right away, as `[Init] event <NAME> rejected by this client`.
@@ -360,6 +361,11 @@ would have told it and keeps everything else:
 - a refused lifecycle event loses its own handler's trigger;
 - a refused `UNIT_AURA` leaves the timed-spell scan not listening (the "without a duration" filter
   stops learning new spells);
+- a refused `UNIT_AURA` on the empty-container prediction's frames leaves it deaf to aura changes on
+  those units, and their swap events are then not registered either;
+- a refused `UNIT_AURA` on the blank-name repaint's frames leaves those units unlistened, and the
+  repaint never runs for a unit no frame listens for, not even at a loading screen: a blank name stays
+  blank until the engine next writes it (an update of that aura, or a swap's or toggle's own refresh);
 - a refused `PLAYER_REGEN_ENABLED` leaves the stand-down's secure half unheld, so it is retried on the
   next stand-down or stand-up rather than when combat ends.
 
