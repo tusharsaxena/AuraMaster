@@ -86,6 +86,9 @@ function addon:OnEnterWorld()
     NS.Debug("World", "entering world")
     NS.bus:SendMessage(NS.MSG.VISIBILITY_CHANGED)
     if NS.ContainerManager then NS.ContainerManager.FlushPending() end
+    -- Every listened unit repainted a few seconds in: a name the engine wrote blank at login or on a
+    -- loading screen appears with no /reload (modules/NameRepaint.lua).
+    if NS.NameRepaint then NS.NameRepaint.OnEnterWorld() end
 end
 
 function addon:OnCombatChanged(event)
@@ -116,6 +119,8 @@ function addon:OnUnitSwap(event)
     local t0 = Perf.on and debugprofilestop()
     local unit = (event == "PLAYER_FOCUS_CHANGED") and "focus" or "target"
     if NS.ContainerManager then NS.ContainerManager.RefreshUnit(unit) end
+    -- The rebuild is the new unit's first sighting: a name it writes blank is repainted shortly.
+    if NS.NameRepaint then NS.NameRepaint.Arm(unit) end
     if t0 then Perf.Note("unitSwap", debugprofilestop() - t0) end
 end
 
@@ -123,6 +128,7 @@ function addon:OnUnitPet(_, unit)
     if unit ~= "player" then return end
     local t0 = Perf.on and debugprofilestop()
     if NS.ContainerManager then NS.ContainerManager.RefreshUnit("pet") end
+    if NS.NameRepaint then NS.NameRepaint.Arm("pet") end
     if t0 then Perf.Note("unitSwap", debugprofilestop() - t0) end
 end
 

@@ -28,6 +28,7 @@ local _, NS = ...
 
 NS.NameRepaint = NS.NameRepaint or {}
 local NR = NS.NameRepaint
+local Perf = NS.Perf
 
 local QUICK  = 0.5   -- from the first UNIT_AURA of a quiet unit to its first repaint
 local SETTLE = 2.0   -- from a repaint to the follow-up that catches data which arrived late
@@ -61,6 +62,7 @@ end
 --- auras are secret. `stage` names the timer that asked, for the trace. Returns how many it reached.
 --- @return number
 function NR.Repaint(unit, stage)
+    local t0 = Perf.on and debugprofilestop()
     local CM = NS.ContainerManager
     local n = 0
     for _, inst in pairs(CM and CM.instances or {}) do
@@ -69,6 +71,7 @@ function NR.Repaint(unit, stage)
             n = n + 1
         end
     end
+    if t0 then Perf.Note("nameRepaint", debugprofilestop() - t0) end
     if NS.Debug then NS.Debug("Names", "repaint %s: %d container(s) (%s)", unit, n, stage or "direct") end
     return n
 end

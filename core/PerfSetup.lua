@@ -8,8 +8,8 @@ local addonName, NS = ...
 --
 -- LOAD-BEARING POSITION: the instance is built at FILE LOAD, before any module takes
 -- `local Perf = NS.Perf` as a load-time upvalue (core/AuraMaster.lua, modules/Container.lua,
--- modules/ContainerManager.lua, modules/Style.lua, modules/TimedSpells.lua), so this file precedes
--- all of them in the TOC.
+-- modules/ContainerManager.lua, modules/Style.lua, modules/TimedSpells.lua, modules/NameRepaint.lua),
+-- so this file precedes all of them in the TOC.
 
 local lib = LibStub and LibStub("LibKa0s-Perf-1.0", true)
 if not lib then
@@ -41,13 +41,14 @@ NS.Perf = lib:New({
     -- containment rather than this table's claim.
     -- WHAT IS NOT HERE: the containers' aura events and timer ticks. Blizzard's aura engine owns both
     -- — it handles each container's UNIT_AURA and animates every bar and countdown in its own code.
-    -- The addon has two aura-driven Lua paths of its own, both bracketed: the readable-state
-    -- timed-spell scan (`timedScan`) and, only while unlocked, the empty-container prediction
-    -- (`emptyPass`). The rest of its cost is the configuration work below, plus the
+    -- The addon has three aura-driven Lua paths of its own, all bracketed: the readable-state
+    -- timed-spell scan (`timedScan`), only while unlocked the empty-container prediction
+    -- (`emptyPass`), and the blank-name repaint (`nameRepaint`), the first of them that runs in
+    -- combat. The rest of its cost is the configuration work below, plus the
     -- engine's own, which the capture's frame-time arms measure (performance-§7).
     buckets = {
         -- core/AuraMaster.lua: target / focus / pet changed, so every container on that unit is told
-        -- to refresh. The one path that runs on ordinary combat activity.
+        -- to refresh. Ordinary combat activity drives it, and `nameRepaint` below.
         { key = "unitSwap" },
         -- modules/ContainerManager.lua: the coalesced pass that applies pending configuration to
         -- every dirty container.
@@ -65,6 +66,10 @@ NS.Perf = lib:New({
         -- modules/EmptyWatch.lua: one re-prediction of the unlocked containers, 0.2 s after their
         -- units' auras changed. Only while unlocked, out of test mode and out of combat.
         { key = "emptyPass" },
+        -- modules/NameRepaint.lua: one repaint of a unit's name-showing containers, one UpdateAllAuras
+        -- each, so a name the engine wrote blank on first sighting appears. Runs in combat and while
+        -- auras are secret, bounded by its timers: at most once every 2 s per unit under churn.
+        { key = "nameRepaint" },
     },
 
     -- THE SUSPENDED ARM IS A HOLD ON THE ADDON'S LATCH, not a second teardown path

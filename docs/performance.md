@@ -61,15 +61,15 @@ members and nameplates included, before any Lua runs.
 
 ## Buckets
 
-Declared in report order in `buckets` (`core/PerfSetup.lua:48`), each bracketed with the inline gated form
+Declared in report order in `buckets` (`core/PerfSetup.lua:49`), each bracketed with the inline gated form
 (`local t0 = Perf.on and debugprofilestop()`, performance-§2) at a load-time `local Perf = NS.Perf`.
 
 | Bucket | Declared parent | Bracket | Why it is bracketed |
 |---|---|---|---|
-| `unitSwap` | — | `core/AuraMaster.lua:116`, `:124` | The one path driven by play: target, focus or pet changed, so every container on that unit calls the engine's `UpdateAllAuras`. The bracket spans that call, so whatever the engine does synchronously inside it lands here |
-| `applyPass` | — | `modules/ContainerManager.lua:324-331` | The coalesced pass applying pending configuration to every dirty container, plus re-placing container-attached ones |
+| `unitSwap` | — | `core/AuraMaster.lua:119`, `:129` | The one path driven by play: target, focus or pet changed, so every container on that unit calls the engine's `UpdateAllAuras`. The bracket spans that call, so whatever the engine does synchronously inside it lands here |
+| `applyPass` | — | `modules/ContainerManager.lua:324-333` | The coalesced pass applying pending configuration to every dirty container, plus re-placing container-attached ones |
 | `applyContainer` | `applyPass` | `modules/Container.lua:384-430` | One container: compile, place, build or update the engine, restyle, visibility. The call site passes `"applyPass"`, so the record carries observed containment |
-| `visibilityPass` | — | `modules/ContainerManager.lua:350` | The show ladder over every container, on combat transitions, world entry and the master rows |
+| `visibilityPass` | — | `modules/ContainerManager.lua:355` | The show ladder over every container, on combat transitions, world entry and the master rows |
 | `styleElement` | — | `modules/Style.lua:849-859` | Dressing one bar, icon or line of text: called by the engine's `initializeFrame` as it creates buttons, by a restyle, and by the preview |
 | `timedScan` | — | `modules/TimedSpells.lua` `scanTick` | One readable-state scan of the player's and pet's buffs, 0.5 s after their auras changed or the readable gate reopened. The addon's only aura-driven Lua path while locked; absent from a capture with no "without a duration" container |
 | `emptyPass` | — | `modules/EmptyWatch.lua` `runPass` | One re-prediction of every unlocked container, 0.2 s after its units' auras changed, and the visibility pass of any whose answer changed. Only while unlocked, out of test mode and out of combat; absent from a capture taken locked |
@@ -124,7 +124,7 @@ own `UNIT_AURA`, its three gate events and its two bus subscriptions, `CM.StopLi
 `FramePicker.Stop()` and a visibility pass. `Container:ShouldShow` checks **the latch** as step 0, so
 every engine is disabled and nothing — a combat transition, a target swap, a settings change — can
 enable one behind it, and `CM.RequestApply` arms no timer. `standUp`
-(`core/LifecycleSetup.lua:105`) re-registers the events, subscribes again, builds any container
+(`core/LifecycleSetup.lua:108`) re-registers the events, subscribes again, builds any container
 the addon never built while down, and re-applies every container from the settings **as they are
 then**, never a snapshot. `NS.Perf.suspended` still reads true through the whole of arm B — the
 field is now the latch's answer to `IsHeld("perf")` rather than a boolean beside it — and the hold is session-only.

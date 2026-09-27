@@ -721,7 +721,7 @@ badge and any count quoted in the docs must agree with it.
 - empty: a target switch re-predicts at once, so no follower hangs from the emptied engine in between
 - empty: a target switch folds a pass already due into its own, leaving no timer behind
 
-### test_namerepaint.lua (28)
+### test_namerepaint.lua (36)
 
 - names: a bars container shows the engine's name by default
 - names: a bars container with its name hidden shows none
@@ -751,6 +751,14 @@ badge and any count quoted in the docs must agree with it.
 - repaint: a parked, stale, previewing or engine-less container is never repainted
 - repaint: the pass still runs in combat lockdown and while auras are secret
 - repaint: one Names debug line per pass and none per event
+- repaint: a settings flush and a visibility pass each end in Sync
+- repaint: disable closes both frames and cancels every timer, even with no visibility pass after
+- repaint: while down a visibility pass, and a pending PLAYER_REGEN_ENABLED, leave both frames closed
+- repaint: after disable no NameRepaint frame is shown
+- repaint: disable then enable brings the registrations back
+- repaint: PLAYER_ENTERING_WORLD arms ENTER for every listened unit
+- repaint: a target swap arms target, and its pass reaches only target containers
+- repaint: a pet swap arms pet
 
 ### test_anchors_close.lua (6)
 
@@ -1957,7 +1965,7 @@ badge and any count quoted in the docs must agree with it.
 | test_anchors_edges.lua | 15 |
 | test_anchors_hang.lua | 11 |
 | test_emptywatch.lua | 25 |
-| test_namerepaint.lua | 28 |
+| test_namerepaint.lua | 36 |
 | test_anchors_close.lua | 6 |
 | test_anchors_label.lua | 23 |
 | test_anchors_strip.lua | 7 |
@@ -2011,4 +2019,4 @@ badge and any count quoted in the docs must agree with it.
 | test_eol.lua | 2 |
 | test_layout_cap.lua | 13 |
 | test_diagnostics_contract.lua | 7 |
-| **Total** | **1693** |
+| **Total** | **1701** |

@@ -60,26 +60,24 @@ test("names: a refused text template draws the default, which has a name", funct
 end)
 
 -- -- the repaint: listening, timers and the pass (modules/NameRepaint.lua) -----------------------
--- Not wired into the visibility and apply passes yet, so each case calls NameRepaint.Sync itself,
--- as the end of CM.ApplyVisibility will.
+-- Wired: CM.FlushPending and CM.ApplyVisibility end in NameRepaint.Sync, so a settings write that is
+-- flushed is already synced. A case that calls Sync itself is running it early on purpose.
 
 local fresh = dofile("tests/fresh_env.lua")
 local assertEqual, assertNil = T.assertEqual, T.assertNil
 
 --- A fresh environment on the starter containers (1: player bars, 2: player icons, 3: target icons,
---- 4: player text with the name token), settled and synced. `before` is fresh_env's.
+--- 4: player text with the name token), settled: the startup flush has synced. `before` is fresh_env's.
 local function env(before)
     local NS2, mocks = fresh({ before = before })
     mocks.__fireTimers(); mocks.__fireTimers()
-    NS2.NameRepaint.Sync()
     return NS2, mocks, NS2.NameRepaint, NS2.ContainerManager
 end
 
---- A settings write, flushed, then the Sync the visibility pass will run.
+--- A settings write, flushed: the flush ends in Sync.
 local function write(NS2, mocks, path, value, id)
     NS2.SetByPath(path, value, id)
     mocks.__fireTimers(); mocks.__fireTimers()
-    NS2.NameRepaint.Sync()
 end
 
 local function auraUnits(NR, i)
@@ -245,13 +243,13 @@ end)
 test("repaint: a unit that stops being wanted loses its armed timer", function()
     local NS2, mocks, NR = env()
     write(NS2, mocks, "container.style", "bars", 3)
-    NS2.SetByPath("container.style", "icons", 3)
-    mocks.__fireTimers(); mocks.__fireTimers()
     fireAura(NR, 2, "target")
-    assertEqual(#queued(mocks), 1, "the target timer is armed before Sync")
+    assertEqual(delays(mocks), "0.5", "the target timer is armed")
+    -- The write is stored at once and its flush queued (delay 0); Sync runs here, ahead of that flush.
+    NS2.SetByPath("container.style", "icons", 3)
     NR.Sync()
     -- red under: Sync closing the frame but leaving the unit's timer armed
-    assertEqual(#queued(mocks), 0)
+    assertNil(delays(mocks):find("0.5", 1, true), "only the queued flush is left: " .. delays(mocks))
 end)
 
 -- the handler
@@ -421,4 +419,112 @@ test("repaint: one Names debug line per pass and none per event", function()
     assertEqual(#lines, 2)
     assertTrue(lines[2]:find("settle", 1, true) ~= nil, lines[2])
     NS2.Debug = debug
+end)
+
+-- the wiring (NR-03)
+
+test("repaint: a settings flush and a visibility pass each end in Sync", function()
+    local NS2, mocks, NR, CM = env()
+    NS2.SetByPath("container.style", "bars", 3)
+    mocks.__fireTimers()
+    -- red under: CM.FlushPending without NameRepaint.Sync (a new name-showing unit never heard)
+    assertEqual(auraUnits(NR, 2), "target", "the flush synced")
+    NR.Stop()
+    CM.ApplyVisibility()
+    -- red under: CM.ApplyVisibility without NameRepaint.Sync (standUp would never reopen the frames)
+    assertEqual(auraUnits(NR, 1), "player", "the visibility pass synced")
+    assertEqual(auraUnits(NR, 2), "target")
+end)
+
+test("repaint: disable closes both frames and cancels every timer, even with no visibility pass after", function()
+    local NS2, mocks, NR, CM = env()
+    write(NS2, mocks, "container.style", "bars", 3)
+    fireAura(NR, 1, "player"); fireAura(NR, 2, "target")
+    -- The stand-down's own visibility pass would Stop through Sync's gate; take it away, so only the
+    -- stand-down's direct Stop is left to do it.
+    local visibility = CM.ApplyVisibility
+    CM.ApplyVisibility = function() return true end
+    NS2.SetByPath("enabled", false)
+    CM.ApplyVisibility = visibility
+    -- red under: standDown without NameRepaint.Stop (core/LifecycleSetup.lua)
+    assertNil(auraUnits(NR, 1)); assertNil(auraUnits(NR, 2))
+    assertEqual(#queued(mocks), 0, "no timer left to wake up")
+end)
+
+test("repaint: while down a visibility pass, and a pending PLAYER_REGEN_ENABLED, leave both frames closed", function()
+    local NS2, mocks, NR, CM = env()
+    write(NS2, mocks, "container.style", "bars", 3)
+    mocks.__lockdown = true
+    NS2.SetByPath("enabled", false)
+    assertNil(auraUnits(NR, 1), "closed by the stand-down")
+    CM.ApplyVisibility()
+    -- red under: Sync without its stood-down gate (the pass reopens what the stand-down closed)
+    assertNil(auraUnits(NR, 1)); assertNil(auraUnits(NR, 2))
+    mocks.__lockdown = false
+    mocks.__fireEvent("PLAYER_REGEN_ENABLED")
+    assertTrue(NS2.IsStoodDown())
+    assertNil(auraUnits(NR, 1), "the pending secure half's visibility pass reopened nothing")
+    assertNil(auraUnits(NR, 2))
+    assertEqual(#queued(mocks), 0)
+end)
+
+test("repaint: after disable no NameRepaint frame is shown", function()
+    local NS2, mocks, NR = env()
+    write(NS2, mocks, "container.style", "bars", 3)
+    NS2.SetByPath("enabled", false)
+    -- red under: a frame shown on the way down (the kit counts a shown parentless frame as on screen)
+    assertFalse(NR.unitFrames[1]:IsShown())
+    assertFalse(NR.unitFrames[2]:IsShown())
+end)
+
+test("repaint: disable then enable brings the registrations back", function()
+    local NS2, mocks, NR = env()
+    write(NS2, mocks, "container.style", "bars", 3)
+    NS2.SetByPath("enabled", false)
+    assertNil(auraUnits(NR, 1))
+    NS2.SetByPath("enabled", true)
+    -- red under: standUp's visibility pass not reaching Sync (the repaint deaf until the next write)
+    assertEqual(auraUnits(NR, 1), "player")
+    assertEqual(auraUnits(NR, 2), "target")
+    fireAura(NR, 1, "player")
+    assertTrue(delays(mocks):find("0.5", 1, true) ~= nil, "and it arms again: " .. delays(mocks))
+end)
+
+test("repaint: PLAYER_ENTERING_WORLD arms ENTER for every listened unit", function()
+    local NS2, mocks, NR = env()
+    write(NS2, mocks, "container.style", "bars", 3)
+    assertEqual(#queued(mocks), 0, "settled")
+    mocks.__fireEvent("PLAYER_ENTERING_WORLD")
+    -- red under: addon:OnEnterWorld without NameRepaint.OnEnterWorld (login blanks kept to /reload)
+    assertEqual(delays(mocks), "3,3", "player and target")
+    NS2.SetByPath("enabled", false)
+    NR.OnEnterWorld()
+    assertEqual(#queued(mocks), 0, "nothing arms while stood down")
+end)
+
+test("repaint: a target swap arms target, and its pass reaches only target containers", function()
+    local NS2, mocks, NR, CM = env()
+    write(NS2, mocks, "container.style", "bars", 3)
+    mocks.__fireEvent("PLAYER_TARGET_CHANGED")
+    -- red under: OnUnitSwap without NameRepaint.Arm (an NPC's static buff never repainted)
+    assertEqual(delays(mocks), "0.5")
+    local before = paintCounts(CM)
+    mocks.__fireTimers()
+    assertEqual(repainted(CM, before), "3")
+    assertEqual(NR.Repaint("focus"), 0, "no focus container")
+end)
+
+test("repaint: a pet swap arms pet", function()
+    local NS2, mocks = env()
+    write(NS2, mocks, "container.unit", "pet", 2)
+    write(NS2, mocks, "container.style", "bars", 2)
+    mocks.__fireEvent("UNIT_PET", "target")
+    assertEqual(#queued(mocks), 0, "another unit's pet changed")
+    mocks.__fireEvent("UNIT_PET", "player")
+    -- red under: OnUnitPet without NameRepaint.Arm
+    assertEqual(delays(mocks), "0.5")
+    local CM = NS2.ContainerManager
+    local before = paintCounts(CM)
+    mocks.__fireTimers()
+    assertEqual(repainted(CM, before), "2")
 end)
