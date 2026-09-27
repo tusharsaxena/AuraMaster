@@ -2,7 +2,7 @@ FP-06 review (font primer survives the loading screen, bfc8c96)
 Adversarial verification applied.
 
 Confirmed (1), fixed in 94a4c66:
-- [runtime/high] The world hide (WORLD_HOLD) and refresh (WORLD_REFRESH) were timed
+- [runtime] The world hide (WORLD_HOLD) and refresh (WORLD_REFRESH) were timed
   from PLAYER_ENTERING_WORLD, which the client fires while the loading screen is
   still up; on a slow or cold-cache login both could run under the loading screen
   again and leave the login auras blank.
