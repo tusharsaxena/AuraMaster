@@ -1,0 +1,22 @@
+FP-06 review (font primer survives the loading screen, bfc8c96)
+Adversarial verification applied.
+
+Confirmed (1), fixed in 94a4c66:
+- [runtime/high] The world hide (WORLD_HOLD) and refresh (WORLD_REFRESH) were timed
+  from PLAYER_ENTERING_WORLD, which the client fires while the loading screen is
+  still up; on a slow or cold-cache login both could run under the loading screen
+  again and leave the login auras blank.
+
+Fix commit: 94a4c66 FP-06: address review: time the world hide and refresh from
+LOADING_SCREEN_DISABLED, not PLAYER_ENTERING_WORLD
+- LOADING_SCREEN_DISABLED joins LIFECYCLE_EVENTS; FontPrimer.OnLoadingScreenEnd
+  arms WORLD_HOLD and WORLD_REFRESH; OnEnterWorld notes the time and is the anchor
+  only when the client refused the event (NS.RejectedEvents).
+- [Fonts] trace line and a diagnostics "loading screen:" line (enteredAt /
+  screenEndAt), recorded by smoke check FP10.
+- Tests: events more than WORLD_HOLD apart; PEW fallback; login, later-screen,
+  Stop and DiagState cases fire both events; lifecycle count eight -> nine.
+
+Battery at FP-06: 1695/1695 sharded and -j 1; lint 0 warnings / 0 errors in 146
+files; complexity 0 functions above CCN 15; perf.lua ok.
+In-game: smoke check FP10 is the owner's to run.
