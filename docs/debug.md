@@ -39,7 +39,7 @@ Every line is `HH:MM:SS | [Tag] message`. The tags:
 
 | Tag | What it holds |
 |---|---|
-| `Diag` | Begin and end markers, the identity header (version, schema, profile and container count, then the client, locale, debug flag, combat reads and the running LibKa0s minors), the state flags and lifecycle holds, a plain line when the addon is disabled or stood down (below), the apply queue, counts, and any `truncated` or `section ... failed` line |
+| `Diag` | Begin and end markers, the identity header (version, schema, profile and container count, then the client, locale, debug flag, combat reads and the running LibKa0s minors), the state flags and lifecycle holds, a plain line when the addon is disabled or stood down (below), the apply queue, counts, the fonts the font primer has drawn (below), and any `truncated` or `section ... failed` line |
 | `Cfg` | Non-default settings: the profile's own rows, then each container's (`#id non-default:`), filter rows left out because `Filt` prints them in full. A non-default value that does nothing for that container goes on its own `#id inert:` line instead (see below) |
 | `Unit` | One header per unit and filter with the aura count, or `none` / `unreadable` / `read failed` |
 | `Aura` | One aura: `player+` is a buff, `player-` a debuff; `inst`, `id`, name, `dispel`, `src`, `mine`, `dur`, `left`, `stacks`, `boss`, `steal` |
@@ -60,6 +60,8 @@ Example (shortened):
 [Diag] LibKa0s running: Core 8, Env 1, Compat 1, Lifecycle 2, ...
 [Diag] state: enabled=true stoodDown=false disabledHold=false holds=- locked=true testMode=false ...
 [Diag] apply queue: all=false ids=[] scheduled=false notice=- mustDefer=false
+[Diag] timed spells learned=0, category spell edits in 0 list(s), user categories=0, enchant slots=mainHand
+[Diag] fonts primed: 2 [Prototype.ttf 10 OUTLINE, Kait.ttf 36 THICKOUTLINE] refresh=idle
 [Unit] player HELPFUL: 7 aura(s)
 [Aura] player+ #1 inst=1234 id=1459 "Arcane Intellect" dispel=nil src=player mine=true dur=3600 left=3412.5 stacks=0 boss=false steal=false
 [Unit] focus: none
@@ -80,9 +82,43 @@ Automatic or `(picked)`, and `join=`, the batch 9 side the pair is under the par
 
 ### Bar names that do not show
 
-A bar with its icon, fill and time but no spell name is issue #24. The measured cause is in
+A bar, icon or Text line that draws with no spell name, and often no time or stack count either, is
+issue #24. The cause is the font, not the aura data. WoW loads an addon-supplied font file (one a
+media pack registers with LibSharedMedia, such as Ka0s Prototype) lazily, and text first drawn in it
+before the load completes comes out empty and stays empty until it is written again. The engine writes
+a bar's name once, when the aura is assigned or updated, so a name drawn in a font that has not loaded
+yet stays blank. A font built into the client (any path under `Fonts\`, such as Friz Quadrata) is
+always loaded and never blanks. Drawing the font on a hidden frame does not load it; drawing it on a
+shown one does. The measurements are in `docs/midnight-quirks.md` (*An addon font loads lazily, and
+the engine writes a name once*) and
 `docs/superpowers/research/2026-09-27-blank-bar-names-findings.md` (section *Correction: the real
-cause is the font*). The report carries no line for it yet.
+cause is the font*).
+
+The font primer (`modules/FontPrimer.lua`) is the fix. At login and at every stand-up, before the
+first build, it draws every (file, size, flags) triple any container in the active profile uses, on
+one shown 1x1 frame above the top edge of the screen, and hides the frame a second later. It does the
+same for a new triple before a settings change or a profile switch is applied. When it drew something
+new, it asks each shown container to read its auras again half a second later, so text already drawn
+in that font before it loaded is written again. The header's `fonts primed:` line shows its state:
+
+```
+[Diag] fonts primed: 2 [Prototype.ttf 10 OUTLINE, Kait.ttf 36 THICKOUTLINE] refresh=idle
+```
+
+- The count is every triple drawn this session, and the list gives each by its file's name, size and
+  outline flags (`-` for none), in the order drawn, up to 40 (the per-list cap).
+- `refresh=armed` means the follow-up re-read is still due; `idle` means it ran or none was needed.
+- `fonts primed: 0 []` on a profile that uses only built-in fonts is correct: those need no priming.
+- The line reads state only, so it prints while auras are secret and while the addon is stood down.
+
+With the trace on (`/am debug on`), each priming that drew anything writes one
+`[Fonts] primed N new font(s)` line. The trace is off after a login, so the login's own priming
+is seen only in the report.
+
+If a blank still shows, run `/am diagnostics` and check that the container's font is in the list. A
+font missing from it was registered with LibSharedMedia after login (a media addon loaded on demand),
+so it resolved to the fallback when the primer ran (`docs/known-limitations.md`). The next
+settings change of any kind primes it, and so does a `/reload`.
 
 ### The plan verdict
 

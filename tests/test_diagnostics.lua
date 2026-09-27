@@ -703,3 +703,110 @@ test("diag: the width fields are gone: no widths on a bars [Shown] line, no cach
     assertTrue(has(lines, "time-text widths cached") == nil, dump(lines))
     assertEqual(NS.Style.MeasuredTimeWidths, nil, "Style.MeasuredTimeWidths removed")
 end)
+
+-- ── the font primer (issue #24, font primer spec P3) ────────────────────────────────────────────
+-- WoW loads an addon's font file lazily, and text first drawn in it before the load stays empty;
+-- modules/FontPrimer.lua draws every container font once on a shown frame first. The header's
+-- `fonts primed:` line reads the primer's own state: each triple it drew this session, by file,
+-- size and flags, and whether its one follow-up refresh is armed.
+
+local PRIMER_PROTO = "Interface\\AddOns\\SharedMedia_MyMedia\\font\\Prototype.ttf"
+local PRIMER_KAIT = "Interface\\AddOns\\SharedMedia_MyMedia\\font\\Kait.ttf"
+
+--- A fresh environment with a LibSharedMedia stand-in that knows two addon fonts and the client's
+--- Friz Quadrata (the harness loads no media library, so every font would resolve to the fallback).
+local function primerEnv()
+    local NS, mocks = fresh({ before = function(m)
+        local media = { ["Ka0s Prototype"] = PRIMER_PROTO, ["Ka0s Kait"] = PRIMER_KAIT,
+            ["Friz Quadrata TT"] = "Fonts\\FRIZQT__.TTF" }
+        local lsm = setmetatable({ MediaType = { FONT = "font", STATUSBAR = "statusbar", BORDER = "border",
+            BACKGROUND = "background", SOUND = "sound" } },
+            { __index = function() return function() return {} end end })
+        function lsm.Register() return true end
+        function lsm.Fetch(_, kind, key)
+            if kind == "font" then return media[key] end
+            return nil
+        end
+        m.__libs["LibSharedMedia-3.0"] = lsm
+    end })
+    mocks.__fireTimers(); mocks.__fireTimers()
+    return NS, mocks
+end
+
+--- Two containers on addon fonts: #1's bar name on Prototype 10 with no outline, #4's Text line on
+--- Kait 17 with a thick outline.
+local function primerFonts(NS)
+    local n = NS.Database.FindContainer(1).bars.name
+    n.font, n.fontSize, n.fontFlags = "Ka0s Prototype", 10, "NONE"
+    local t = NS.Database.FindContainer(4).text.font
+    t.font, t.fontSize, t.fontFlags = "Ka0s Kait", 17, "THICKOUTLINE"
+end
+
+--- The `fonts primed:` header line, or nil.
+local function primerLine(NS)
+    return has(build(NS), "[Diag] fonts primed: ")
+end
+
+test("diag: the fonts primed line reads none primed and the refresh idle on the starter profile", function()
+    local NS = primerEnv()
+    -- red under: no such line (the primer's state invisible to the report)
+    assertEqual(primerLine(NS), "[Diag] fonts primed: 0 [] refresh=idle")
+end)
+
+test("diag: the fonts primed line lists each primed file, size and flags, and the refresh state", function()
+    local NS, mocks = primerEnv()
+    primerFonts(NS)
+    NS.FontPrimer.PrimeAll()
+    -- red under: the full path printed, the client's empty flag string printed as nothing, or the
+    -- refresh read from the hold timer rather than its own
+    assertEqual(primerLine(NS), "[Diag] fonts primed: 2 [Prototype.ttf 10 -, Kait.ttf 17 THICKOUTLINE] "
+        .. "refresh=armed")
+    mocks.__fireTimers()
+    -- red under: the refresh state cached at priming rather than read at report time
+    assertEqual(primerLine(NS), "[Diag] fonts primed: 2 [Prototype.ttf 10 -, Kait.ttf 17 THICKOUTLINE] "
+        .. "refresh=idle")
+end)
+
+test("diag: the fonts primed line reads state only: it primes nothing and arms nothing", function()
+    local NS, mocks = primerEnv()
+    primerFonts(NS)                    -- changed, but no PrimeAll has run since
+    local timersBefore = #mocks.__timers()
+    build(NS); build(NS)
+    -- red under: a report that primes (FontPrimer.PrimeAll draws the new fonts and arms two timers)
+    assertEqual(#NS.FontPrimer.DiagState().primed, 0, "nothing primed by the report")
+    assertEqual(#mocks.__timers(), timersBefore, "no timer armed by the report")
+    assertEqual(primerLine(NS), "[Diag] fonts primed: 0 [] refresh=idle")
+end)
+
+test("diag: the fonts primed line prints while stood down and while auras are secret", function()
+    local NS, mocks = primerEnv()
+    primerFonts(NS)
+    NS.FontPrimer.PrimeAll()
+    mocks.__fireTimers()
+    local want = "[Diag] fonts primed: 2 [Prototype.ttf 10 -, Kait.ttf 17 THICKOUTLINE] refresh=idle"
+    mocks.__aurasSecret = true
+    local lines = build(NS)
+    mocks.__aurasSecret = false
+    -- red under: the line gated on readable auras (a font change in combat primes all the same)
+    assertTrue(has(lines, want) ~= nil, dump(lines))
+    assertTrue(has(lines, "failed") == nil, dump(lines))
+    NS.lifecycle:Hold(NS.HOLD_PERF)
+    lines = build(NS)
+    NS.lifecycle:Release(NS.HOLD_PERF)
+    -- red under: the line skipped while stood down (debug-logging-§14: the report runs regardless)
+    assertTrue(has(lines, want) ~= nil, dump(lines))
+end)
+
+test("diag: the fonts primed list stops at MAX_IDS and flags the cap; the count stays whole", function()
+    local NS = primerEnv()
+    local Diag = NS.Diagnostics
+    local max = Diag.MAX_IDS
+    Diag.MAX_IDS = 1
+    primerFonts(NS)
+    NS.FontPrimer.PrimeAll()
+    local lines = build(NS)
+    Diag.MAX_IDS = max
+    -- red under: an uncapped list (every triple a long session primed on one line)
+    assertTrue(has(lines, "[Diag] fonts primed: 2 [Prototype.ttf 10 -] refresh=armed") ~= nil, dump(lines))
+    assertTrue(has(lines, "per-list caps hit=yes") ~= nil, dump(lines))
+end)

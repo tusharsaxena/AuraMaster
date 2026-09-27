@@ -263,6 +263,52 @@ hides it, and clearing does not show it again.
 **What this addon does.** `PLAYER_TARGET_CHANGED`, `PLAYER_FOCUS_CHANGED` and `UNIT_PET` (for the
 player) call `UpdateAllAuras` on every container on that unit (`core/AuraMaster.lua:115-127`).
 
+## An addon font loads lazily, and the engine writes a name once (measured 2026-09-27)
+
+**The restriction.** Two client facts meet here. First, WoW loads an addon-supplied font file (one a
+media pack registers with LibSharedMedia) lazily: text first drawn in it before the load completes
+comes out empty, and stays empty until it is written again. A font built into the client, any path
+under `Fonts\`, is always loaded. Drawing text in the font on a **hidden** frame does not load it;
+drawing on a **shown** frame does. Second, an engine button writes its spell name from `auraData.name`
+only when an aura is assigned to it or updated (`ApplyAuraInstance` calls `ApplySpellName` from
+`OnAuraInstanceAssigned` and `OnAuraInstanceUpdated`), and at no other time. Most addons rewrite
+their text all the time and heal a blank on the next write; a bar name the engine wrote into a font
+that had not loaded yet keeps the blank for the aura's whole life. What does rewrite a name:
+`UpdateAllAuras`, which rebuilds every button (on a disabled engine it clears the auras instead), the
+engine's `SetEnabled` when its state flips, which runs `UpdateAllAuras`, and any `Set*` binding, which
+reruns the button's apply. So a lock toggle, test mode, a visibility change or a restyle all hid the
+blank by accident. Blizzard's source, with the line numbers of the copy read:
+`docs/superpowers/research/2026-09-27-blank-bar-names-findings.md`.
+
+**Measured in-game, 2026-09-27** (the owner's runs for issue #24):
+- With `_retail_\Cache` renamed away, a fresh login drew almost every aura present at login as a
+  blank bar, and those bars stayed blank through combat. Auras gained later mostly showed their names.
+- A probe addon logged every aura the player and target gained: **the name was in the aura data at
+  the moment each aura arrived, every time**, including the auras whose bars were blank. The engine
+  was handed the name and drew nothing.
+- An A/B in one profile, three containers on the built-in Friz Quadrata TT and the rest on the addon
+  font Ka0s Prototype, filmed and timed frame by frame: **only Ka0s Prototype text ever blanked**, and
+  a blank row lacked its time text as well as its name. The Friz Quadrata rows drew from their first
+  frame.
+- The time-width measurement already drew in the font, on a hidden frame, and the blanks still
+  came. A probe that drew the alphabet in each addon font on a **shown** frame before AuraMaster built
+  its bars removed every blank, on master with no other change.
+
+**What this addon does.** `modules/FontPrimer.lua` draws every font the containers use before any
+container text is drawn in it. At `CM.StartListening` (login and every stand-up, before the first
+build), in the `CONFIG_CHANGED` handler before the apply is requested, and in `CM.Announce` before a
+profile switch or a registry change is built, `FontPrimer.PrimeAll` resolves every (file, size, flags)
+triple any container in the active profile uses, enabled or not, through `Style.FontKey`, the same
+resolution `Style.ApplyFont` sets. It skips a `Fonts\` path and draws each new triple once per
+session: a font string on one 1x1 frame on `UIParent`, placed above the top edge of the screen and
+**shown**, written with a sample of letters, digits and punctuation. The frame is hidden 1 s later.
+When a priming drew anything new, text may already have been drawn in that font (a font changed in
+settings, or a `/reload` that builds with auras up), so 0.5 s later it runs `ContainerClass:Refresh`
+(the engine's `UpdateAllAuras`) once on each live container that has an engine, is neither parked nor
+stale, and is shown and not previewing. That is not a protected call and reads no aura, so it may run
+in combat. Nothing runs while the addon is stood down. The pattern is ChonkyCharacterSheet's
+`CCS:PrimeFontsAndTextures`. How to check it: `docs/debug.md` (*Bar names that do not show*).
+
 ## Weapon enchants
 
 **The restriction.** Temporary weapon enchants are not auras; the engine shows them per slot through
@@ -544,6 +590,9 @@ values was secret.
   access while auras are secret.
 - **Visibility in combat goes through the engine's `SetEnabled`**, never `Show`/`Hide` on an aura
   button's ancestry (`modules/Container.lua:484`).
+- **The font primer's frame hangs from `UIParent`, not from any anchor**, so nothing it does reaches
+  an aura engine's ancestry. Its one engine call, the follow-up `UpdateAllAuras`, is not protected,
+  reads no aura, and skips a disabled engine, which it would clear (`modules/FontPrimer.lua`).
 - **Blizzard's `BuffFrame` and `DebuffFrame` are reparented, never hidden**, and only out of combat
   (`modules/BlizzardFrames.lua`, events-frames-taint-§3).
 - **Protected opens are refused, not deferred.** The options panel (the library, options-ui-§2),

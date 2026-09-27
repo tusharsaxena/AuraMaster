@@ -204,11 +204,34 @@ local function countsLine(out)
         countKeys(p.userCategories), table.concat(slots, ","))
 end
 
+--- The font primer (modules/FontPrimer.lua, issue #24): each triple drawn this session as its file's
+--- name, size and flags (`-` for none), capped at MAX_IDS, and whether the one follow-up refresh is
+--- armed. Read from FontPrimer.DiagState, which reads state only, so it prints while stood down and
+--- while auras are secret.
+local function primerLine(out)
+    local FP = NS.FontPrimer
+    if not (FP and FP.DiagState) then return end
+    local s = FP.DiagState()
+    local named = {}
+    for i, e in ipairs(s.primed) do
+        if i > Diag.MAX_IDS then
+            flagCap(out)
+            break
+        end
+        local path = str(e.path)
+        local flags = e.flags ~= "" and str(e.flags) or "-"
+        named[i] = (path:match("[^\\/]+$") or path) .. " " .. str(e.size) .. " " .. flags
+    end
+    out:add("Diag", "fonts primed: %s [%s] refresh=%s", #s.primed, table.concat(named, ", "),
+        s.refresh and "armed" or "idle")
+end
+
 function Diag.Header(out)
     stateLine(out)
     downLine(out)
     queueLine(out)
     countsLine(out)
+    primerLine(out)
 end
 
 -- ---------------------------------------------------------------------------

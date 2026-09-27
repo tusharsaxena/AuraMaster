@@ -1333,7 +1333,7 @@ badge and any count quoted in the docs must agree with it.
 - slash verbs: the disabled gate is ONE decision over the whole verb table, not a per-verb guard
 - slash verbs: /am new enchants makes a player buff container showing only Weapon enchants (feedback #6)
 
-### test_diagnostics.lua (39)
+### test_diagnostics.lua (44)
 
 - diag: /am diagnostics writes the report to the console ungated, opens it, and says so once
 - diag: /am diagnostics answers while the addon is disabled, and the state line says so
@@ -1374,6 +1374,11 @@ badge and any count quoted in the docs must agree with it.
 - diag: a stood-down addon names its holds; built containers read hidden, not unbuilt
 - diag: a container with no instance while running is not built for want of one
 - diag: the width fields are gone: no widths on a bars [Shown] line, no cached-widths line
+- diag: the fonts primed line reads none primed and the refresh idle on the starter profile
+- diag: the fonts primed line lists each primed file, size and flags, and the refresh state
+- diag: the fonts primed line reads state only: it primes nothing and arms nothing
+- diag: the fonts primed line prints while stood down and while auras are secret
+- diag: the fonts primed list stops at MAX_IDS and flags the cap; the count stays whole
 
 ### test_bulklog.lua (20)
 
@@ -1964,7 +1969,7 @@ badge and any count quoted in the docs must agree with it.
 | test_disabled.lua | 18 |
 | test_slash.lua | 28 |
 | test_slash_verbs.lua | 50 |
-| test_diagnostics.lua | 39 |
+| test_diagnostics.lua | 44 |
 | test_bulklog.lua | 20 |
 | test_optionssetup.lua | 17 |
 | test_options_descriptor.lua | 18 |
@@ -1994,4 +1999,4 @@ badge and any count quoted in the docs must agree with it.
 | test_eol.lua | 2 |
 | test_layout_cap.lua | 13 |
 | test_diagnostics_contract.lua | 7 |
-| **Total** | **1676** |
+| **Total** | **1681** |

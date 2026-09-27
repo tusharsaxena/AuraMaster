@@ -44,7 +44,7 @@ what each LibKa0s setup file publishes: `docs/module-map.md` → *Libraries*.
 ## Module Map
 
 Five source folders in the TOC's load order — `locales/` → `core/` → `defaults/` → `modules/` →
-`settings/` (layout-§1) — 53 authored Lua files under them: one locale, 16 core, 4 defaults, 17
+`settings/` (layout-§1) — 54 authored Lua files under them: one locale, 16 core, 4 defaults, 18
 modules and 15 settings. The load-bearing positions are annotated at their TOC lines:
 `core/MediaSetup.lua` before `core/Constants.lua` (the monospace face), `core/CoreSetup.lua` before
 anything that prints, `core/PerfSetup.lua` before every module that takes `NS.Perf` as an upvalue,
@@ -73,7 +73,10 @@ flow or attachment path re-applies its followers (`Anchors.Followers`) and its p
 the containers attached to it hang from `Preview.Extent`, a frame of ours sized to its placeholder
 block; while it is unlocked, not previewing and predicted empty (`modules/EmptyWatch.lua`, batch 9
 HG-1), from its one-element anchor, which its placeholder outline marks; otherwise from its engine
-(`Anchors.HangMode`, re-placed by `Anchors.PlaceAttached`). Previewing is the session-only **test mode**
+(`Anchors.HangMode`, re-placed by `Anchors.PlaceAttached`). Before any container text is drawn,
+`modules/FontPrimer.lua` draws every font the containers use once on a shown frame of its own, because
+the client loads an addon font file lazily and text first drawn before the load stays blank (issue
+#24, `docs/midnight-quirks.md`). Previewing is the session-only **test mode**
 (`NS.State.testMode`, switched only by `Preview.SetTestMode`): every container shows its placeholder
 auras. Unlocking is separate: it makes containers draggable while their live auras keep drawing,
 each under its drag handle, and one predicted empty under a faint outline one element in size, so an
@@ -130,7 +133,7 @@ pass on.
 | Message | Sender | Payload | Consumers |
 |---|---|---|---|
 | `Ka0s_AuraMaster_ContainersChanged` (`NS.MSG.CONTAINERS_CHANGED`) | `modules/ContainerManager.lua` — create, delete, rename, duplicate, profile change (copy-from and reset positions are settings writes, announced by `CONFIG_CHANGED`) | none | `settings/OptionsSetup.lua:351` — `NS.RequestPanelRefresh`, a coalesced panel re-render (every banner lists containers); `modules/TimedSpells.lua:204` — `TS.Sync`, which starts or stops the timed-spell scan (a container added or removed can change whether any needs it) |
-| `Ka0s_AuraMaster_ConfigChanged` (`NS.MSG.CONFIG_CHANGED`) | `settings/Schema.lua:598` — the write seam, once per write; never for a session row | `{ section, containerId, path }`; `containerId` nil for an addon-wide row, `path` the row written | `modules/ContainerManager.lua:619` — by the row's `effect`: `"visibility"` runs `ApplyVisibility()` at once, `"none"` queues nothing, otherwise `RequestApply(containerId)` (nil re-applies all), a write to a flow or attachment path also re-applies every container following that one (`Anchors.Followers`), and a write to a container's attach points, mode or target also re-applies the container it attaches to (`requestParents`); `modules/TimedSpells.lua:203` — `TS.Sync`, the same re-sync (a filter write can change whether any container needs the scan) |
+| `Ka0s_AuraMaster_ConfigChanged` (`NS.MSG.CONFIG_CHANGED`) | `settings/Schema.lua:598` — the write seam, once per write; never for a session row | `{ section, containerId, path }`; `containerId` nil for an addon-wide row, `path` the row written | `modules/ContainerManager.lua:619` — first `FontPrimer.PrimeAll` (a new font is drawn before anything is applied in it), then by the row's `effect`: `"visibility"` runs `ApplyVisibility()` at once, `"none"` queues nothing, otherwise `RequestApply(containerId)` (nil re-applies all), a write to a flow or attachment path also re-applies every container following that one (`Anchors.Followers`), and a write to a container's attach points, mode or target also re-applies the container it attaches to (`requestParents`); `modules/TimedSpells.lua:203` — `TS.Sync`, the same re-sync (a filter write can change whether any container needs the scan) |
 | `Ka0s_AuraMaster_VisibilityChanged` (`NS.MSG.VISIBILITY_CHANGED`) | `core/AuraMaster.lua` — entering the world, combat start and end; `modules/Preview.lua` — `Preview.SetTestMode`, when test mode switches on or off | none | `modules/ContainerManager.lua:631` — `ApplyVisibility()` over every container |
 | `Ka0s_AuraMaster_TimedSpellsChanged` (`NS.MSG.TIMED_SPELLS_CHANGED`) | `modules/TimedSpells.lua` — a scan learned timed spells, or `/am forgettimed` emptied the set | none from a scan; `{ byPlayer = true }` from `/am forgettimed` | `modules/ContainerManager.lua` `CM.Init` — `RequestApply(nil, system)` over every container (their excluded ids moved); a scan's request is the addon's own, so a deferral of it prints no notice |
 
@@ -225,6 +228,12 @@ is not addon code. The eight `core/AuraMaster.lua` registrations are one module-
 `LIFECYCLE_EVENTS`, which `RegisterLifecycleEvents` and `UnregisterLifecycleEvents` both walk, so the
 stand-down and the stand-up remove and restore the same list.
 
+The font primer (`modules/FontPrimer.lua`) registers no event of its own. It runs from
+`CM.StartListening` (the login's `CM.Init` and every stand-up, before the first build), from the
+`CONFIG_CHANGED` handler before the apply is requested, and from `CM.Announce` before a profile
+switch or a registry change is built. A priming that drew a new font arms two `C_Timer` handles, the
+1 s hide and the 0.5 s follow-up refresh; `CM.StopListening` cancels both through `FontPrimer.Stop`.
+
 **Every registration goes through one helper** (events-frames-taint-§1): `NS.SafeRegisterEvent`, which
 is `LibKa0s-Core-1.0`'s `SafeRegisterEvent`, published by `core/CoreSetup.lua`. That covers every row
 above and the stand-down's pending `PLAYER_REGEN_ENABLED`, except the unit frames' `UNIT_AURA` (TimedSpells' one, EmptyWatch's two), which
@@ -255,7 +264,9 @@ container's anchor opts in through `DisableUntrustedLayoutScriptsTemplate`. No s
 while auras are secret or under combat lockdown (`ContainerManager.MustDefer`); visibility in combat
 goes through the engine's `SetEnabled`; protected opens and frame-creating verbs are refused in
 combat, and a teardown under lockdown is parked; every engine binding is `pcall`-guarded; no border
-reads a secret size; and secret values never reach a string operation. Every rule and the code that
+reads a secret size; and secret values never reach a string operation. The font primer's frame hangs
+from `UIParent`, outside every anchor, and its one engine call, a follow-up `UpdateAllAuras`, is not
+protected and skips a disabled engine. Every rule and the code that
 keeps it: `docs/midnight-quirks.md` → *Taint notes*.
 
 ## Known Limitations
@@ -263,7 +274,8 @@ keeps it: `docs/midnight-quirks.md` → *Taint notes*.
 Units stop at player, target, focus and pet. Nothing structural happens while auras are secret or
 under lockdown, so settings changes, teardown and class colors wait for it to lift. The engine bounds
 what a Text line can do, which spell-id filters it honors, and when a non-Solid border redraws. A
-handful of user-category trade-offs were accepted by the owner. Every limitation, its cause and any
+handful of user-category trade-offs were accepted by the owner. A font a media addon registers
+after login is not primed until the next settings change or `/reload`. Every limitation, its cause and any
 ruling: `docs/known-limitations.md`.
 
 ## Documentation map

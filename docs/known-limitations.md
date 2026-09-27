@@ -305,3 +305,12 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   report 2026-09-14, batch 7 `SP-1`). Normal blending was tried for the clipped spark and painted
   the art's black matte as a box taller than the bar (feedback batch 8 `SP-1`), so the blend is
   never BLEND. Verified in-game only (`docs/smoke-tests.md`, check 85).
+- **A font a media addon registers after login is not primed until the next settings change.** The
+  font primer (`modules/FontPrimer.lua`, issue #24) draws every container font at login, when every
+  addon loaded with the client has registered its LibSharedMedia fonts. A media addon loaded on
+  demand later registers its fonts too late for that: at login such a font resolves to the built-in
+  fallback, which needs no priming and is what the containers draw in. Once it is registered, an
+  apply that no settings write started (a learned timed spell, a class re-apply after a unit swap)
+  draws in it unprimed, and that text can come up blank. Any settings write, a profile switch or a
+  `/reload` primes it. Accepted in the font primer design
+  (`docs/superpowers/specs/2026-09-27-font-primer-design.md`, *Risks*).

@@ -1844,3 +1844,49 @@ lines, so each check confirms nothing else moved.
      page moves to General/General on the new container, the same as the button. Then go to
      Filters, close the panel and type `/am new`: the panel does not open. Open it with `/am`: it
      is on General/General with that container. Result: **PASS** (owner, 2026-09-26)
+
+## Font primer (2026-09-27, owner to run)
+
+Issue #24, branch `fix/2026-09-27-blank-bar-names`. The font primer (`modules/FontPrimer.lua`)
+draws every container font once on a shown frame before any container text is drawn in it
+(`docs/debug.md`, *Bar names that do not show*). Before the checks: set **every** container's text
+fonts to **Ka0s Prototype** (Bars name, time and stacks; Icons time and stacks; the Text line's font;
+the name label's font), restoring any container the A/B test had switched to Friz Quadrata TT.
+Uninstall the probe addon (AMNameProbe) so nothing else draws the font first. Turn on Lua errors.
+**Between an aura appearing and the check, do not lock or unlock, toggle test mode or change a
+setting**: each of those rewrites every name on its own and would hide a blank.
+
+281. **FP1.** Log out and quit the client. Rename `World of Warcraft\_retail_\Cache` to `Cache.old`.
+     Start the client and log in on a character with several of its own buffs up (a long class buff,
+     a food or flask buff), and a target dummy nearby. Do not `/reload` and do not touch any setting.
+     → Every bar, icon and Text line present at login shows its text (name, time and stacks) from the
+     moment it appears: no blank row. No Lua error.
+     Result:
+282. **FP2.** Straight after FP1, out of combat, cast spells you have not cast this session that put a
+     buff on you and a debuff on the dummy. → Each new bar, icon and Text line shows its text from
+     the moment it appears. No Lua error.
+     Result:
+283. **FP3.** Still in the same session, attack the dummy and cast the rest of your rotation in
+     combat, including spells not cast yet. → No bar, icon or Text line is ever blank, in combat or
+     after it ends. No Lua error.
+     Result:
+284. **FP4.** Out of combat, with buffs up in a bars container, open the settings and change that
+     container's Bars → Name text font to a font no container has used this session (**Ka0s Kait**,
+     or a new size of Ka0s Prototype). → The names redraw in the new font, and any that go blank come
+     back within about 1 s without touching anything else. No Lua error.
+     Result:
+285. **FP5.** With auras up in every container, `/reload`. → After the loading screen every
+     container's text shows, and any that is blank at first fills in within about 1 s. No Lua error.
+     Result:
+286. **FP6.** Run `/am diagnostics`. → The header has one `[Diag] fonts primed: N [...] refresh=idle`
+     line, with N at least 1, listing `Prototype.ttf` with each size and outline your containers use
+     (and `Kait.ttf` after FP4), and no Friz Quadrata entry. No Lua error.
+     Result:
+287. **FP7.** `/am debug on`, open the console with `/am debug`, then change a container's font size
+     to a size not used yet. → One `[Fonts] primed 1 new font(s)` line appears. Change another
+     setting that is not a font (a bar height) → no new `[Fonts]` line. No Lua error.
+     Result:
+288. **FP8.** `/am disable`, wait a few seconds, then `/am diagnostics`. → The report still prints the
+     `fonts primed:` line, with the same list and `refresh=idle`. `/am enable` → every container comes
+     back with its text showing, none blank. No Lua error throughout.
+     Result:

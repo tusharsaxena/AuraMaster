@@ -20,7 +20,20 @@ Other timers and frames of the addon's own: a next-frame `C_Timer.NewTimer(0)` t
 the frame picker's `OnUpdate`, which runs only while a pick is in progress. While containers are
 unlocked out of combat and test mode, `modules/EmptyWatch.lua` adds a 0.2 s pass timer, armed by a
 `UNIT_AURA` on a watched container's units, and one timer at the soonest weapon enchant's expiry.
-Every timer keeps its handle, and a stand-down cancels it rather than leaving it armed.
+The font primer arms two one-shot timers only when it has drawn a new font (below). Every timer keeps
+its handle, and a stand-down cancels it rather than leaving it armed.
+
+### The font primer's cost
+
+`modules/FontPrimer.lua` hears no event and runs no aura-driven path. It runs at login and stand-up,
+on a settings write and on a profile or registry change, and then only walks the containers' seven
+text blocks and resolves each font (`Style.FontKey`), which allocates nothing for a triple already
+primed. A triple it has not drawn this session costs one font string on its own frame, one `SetFont`
+and one `SetText`; they are kept, so each triple is paid for once per session, and a profile drawing
+only in the client's own fonts pays nothing at all. A priming that drew something shows the frame
+for 1 s and runs one `UpdateAllAuras` per shown container 0.5 s later, the same call a target swap
+makes. It has no bucket: it runs a handful of times a session and never in response to play, so
+there is nothing a capture's arms could compare.
 
 ### The empty-container watcher's cost
 
