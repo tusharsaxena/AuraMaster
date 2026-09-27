@@ -62,6 +62,7 @@ Example (shortened):
 [Diag] apply queue: all=false ids=[] scheduled=false notice=- mustDefer=false
 [Diag] timed spells learned=0, category spell edits in 0 list(s), user categories=0, enchant slots=mainHand
 [Diag] fonts primed: 2 [Ka0s Prototype.ttf 10 OUTLINE, Ka0s Kait.ttf 36 THICKOUTLINE] refresh=idle
+[Diag] loading screen: world entered 12.40, ended 17.85 (5.45 s later)
 [Unit] player HELPFUL: 7 aura(s)
 [Aura] player+ #1 inst=1234 id=1459 "Arcane Intellect" dispel=nil src=player mine=true dur=3600 left=3412.5 stacks=0 boss=false steal=false
 [Unit] focus: none
@@ -101,11 +102,14 @@ same for a new triple before a settings change or a profile switch is applied. W
 new, it asks each shown container to read its auras again half a second later, so text already drawn
 in that font before it loaded is written again. The login's priming runs under the loading screen,
 where nothing is drawn, so it arms neither: the frame stays shown through the loading screen, and
-the re-read runs 1.5 s and the hide 2 s after `PLAYER_ENTERING_WORLD` (a `/reload` likewise). A
-later loading screen with nothing newly primed does nothing. The header's `fonts primed:` line shows its state:
+the re-read runs 1.5 s and the hide 2 s after the loading screen ends (`LOADING_SCREEN_DISABLED`,
+which the client fires after `PLAYER_ENTERING_WORLD`, seconds later on a slow or cold-cache login; a
+`/reload` likewise). A later loading screen with nothing newly primed does nothing. The header's
+`fonts primed:` line shows its state, and the `loading screen:` line under it the timing:
 
 ```
 [Diag] fonts primed: 2 [Ka0s Prototype.ttf 10 OUTLINE, Ka0s Kait.ttf 36 THICKOUTLINE] refresh=idle
+[Diag] loading screen: world entered 12.40, ended 17.85 (5.45 s later)
 ```
 
 - The count is every triple drawn this session, and the list gives each by its file's name, size and
@@ -113,7 +117,12 @@ later loading screen with nothing newly primed does nothing. The header's `fonts
 - `refresh=` is the follow-up re-read: `armed` (due, after a change in play), `armed-world` (due,
   after the loading screen), `awaiting-world` (fonts primed under the loading screen, the re-read not
   armed until it ends) or `idle` (it ran, or none was needed). `awaiting-world` seen after the loading
-  screen has ended means `PLAYER_ENTERING_WORLD` never reached the primer.
+  screen has ended means `LOADING_SCREEN_DISABLED` never reached the primer.
+- `loading screen:` gives the `GetTime()` of the last `PLAYER_ENTERING_WORLD` and of the loading
+  screen's end after it, and the gap between them; `-` for one not seen. `ended -` after the loading
+  screen is gone means the end was never heard (a client that refused `LOADING_SCREEN_DISABLED` times
+  the world from `PLAYER_ENTERING_WORLD` instead, and the `[Init]` line names the refused event). With
+  logging on, each loading screen's end also writes a `[Fonts]` line with both timestamps.
 - `fonts primed: 0 []` on a profile that uses only built-in fonts is correct: those need no priming.
 - The line reads state only, so it prints while auras are secret and while the addon is stood down.
 

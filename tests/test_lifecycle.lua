@@ -10,6 +10,7 @@ local fresh = dofile("tests/fresh_env.lua")
 -- Every lifecycle event and the method it is registered to (core/AuraMaster.lua).
 local LIFECYCLE = {
     PLAYER_ENTERING_WORLD = "OnEnterWorld",
+    LOADING_SCREEN_DISABLED = "OnLoadingScreenEnd",
     PLAYER_REGEN_DISABLED = "OnCombatChanged",
     PLAYER_REGEN_ENABLED = "OnCombatChanged",
     PLAYER_TARGET_CHANGED = "OnUnitSwap",
@@ -54,7 +55,7 @@ end
 
 -- ── events ───────────────────────────────────────────────────────────────────────────────────
 
-test("lifecycle: the eight lifecycle events are registered to their handlers, and nothing else is", function()
+test("lifecycle: the nine lifecycle events are registered to their handlers, and nothing else is", function()
     local NS = fresh()
     local events = NS.addon.__events
     for event in pairs(events) do
@@ -255,7 +256,7 @@ test("lifecycle: the degraded latch stands up and down only on an edge", functio
     NS2.SyncEnabled()
     assertFalse(NS2.IsStoodDown())
     assertEqual(calls.PLAYER_ENTERING_WORLD, 1, "the stand-up registered once")
-    assertEqual(#lifecycleRegs(NS2, mocks2), 8, "every lifecycle event is back")
+    assertEqual(#lifecycleRegs(NS2, mocks2), 9, "every lifecycle event is back")
 end)
 
 -- ── one bad event name (events-frames-taint-§1) ──────────────────────────────────────────────
@@ -280,7 +281,7 @@ local function badEventEnv(noEventUtils)
     end })
 end
 
---- Assert the other seven lifecycle events are held by NS.addon, BAD is recorded exactly once
+--- Assert the other eight lifecycle events are held by NS.addon, BAD is recorded exactly once
 --- across a disable/enable cycle, and the [Init] summary names it.
 local function assertOneBadName(NS, mocks)
     local held = {}
@@ -299,7 +300,7 @@ local function assertOneBadName(NS, mocks)
     NS.DebugLog:SetEnabled(false)
 end
 
-test("lifecycle: one bad event name leaves the other seven registered and is recorded", function()
+test("lifecycle: one bad event name leaves the other eight registered and is recorded", function()
     -- red under: bare self:RegisterEvent
     local NS, mocks = badEventEnv(false)
     assertOneBadName(NS, mocks)

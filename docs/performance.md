@@ -32,9 +32,10 @@ primed. A triple it has not drawn this session costs one font string on its own 
 and one `SetText`; they are kept, so each triple is paid for once per session, and a profile drawing
 only in the client's own fonts pays nothing at all. A priming that drew something shows the frame
 for 1 s and runs one `UpdateAllAuras` per shown container 0.5 s later, the same call a target swap
-makes. A priming under the loading screen pays the same once, counted from `PLAYER_ENTERING_WORLD`
-instead (the refresh at 1.5 s, the hide at 2 s); `FontPrimer.OnEnterWorld` otherwise reads two
-flags, so a loading screen with nothing newly primed costs nothing more. The mark it reads is
+makes. A priming under the loading screen pays the same once, counted from the loading screen's end
+(`LOADING_SCREEN_DISABLED`) instead (the refresh at 1.5 s, the hide at 2 s);
+`FontPrimer.OnEnterWorld` reads the clock and scans the short rejected-events list, and
+`FontPrimer.OnLoadingScreenEnd` otherwise reads two flags, so a loading screen with nothing newly primed costs nothing more. The mark it reads is
 cleared only by a loading screen, so the first loading screen after a font change in play runs the
 refresh once more. It has no bucket: it runs a handful of times a session and never in response to play, so
 there is nothing a capture's arms could compare.
@@ -83,7 +84,7 @@ Declared in report order in `buckets` (`core/PerfSetup.lua:48`), each bracketed 
 
 | Bucket | Declared parent | Bracket | Why it is bracketed |
 |---|---|---|---|
-| `unitSwap` | — | `core/AuraMaster.lua:118`, `:126` | The one path driven by play: target, focus or pet changed, so every container on that unit calls the engine's `UpdateAllAuras`. The bracket spans that call, so whatever the engine does synchronously inside it lands here |
+| `unitSwap` | — | `core/AuraMaster.lua:125`, `:133` | The one path driven by play: target, focus or pet changed, so every container on that unit calls the engine's `UpdateAllAuras`. The bracket spans that call, so whatever the engine does synchronously inside it lands here |
 | `applyPass` | — | `modules/ContainerManager.lua:324-332` | The coalesced pass applying pending configuration to every dirty container, plus re-placing container-attached ones |
 | `applyContainer` | `applyPass` | `modules/Container.lua:384-430` | One container: compile, place, build or update the engine, restyle, visibility. The call site passes `"applyPass"`, so the record carries observed containment |
 | `visibilityPass` | — | `modules/ContainerManager.lua:351` | The show ladder over every container, on combat transitions, world entry and the master rows |

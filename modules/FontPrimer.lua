@@ -15,7 +15,8 @@ local _, NS = ...
 --
 -- HOW. One 1x1 frame on UIParent, placed above the top edge of the screen and SHOWN: each new triple
 -- gets a font string on it, set to the triple and written with SAMPLE. The frame is hidden again HOLD
--- seconds later (WORLD_HOLD after PLAYER_ENTERING_WORLD for a login priming, below). The font strings are kept: the fonts stay loaded, and a triple is never primed twice.
+-- seconds later (WORLD_HOLD after the loading screen ends for a login priming, below). The font
+-- strings are kept: the fonts stay loaded, and a triple is never primed twice.
 --
 -- WHEN. From CM.StartListening (login and stand-up, before the first build), from the CONFIG_CHANGED
 -- handler before the apply is requested, and from CM.Announce before a profile switch or a registry
@@ -24,17 +25,21 @@ local _, NS = ...
 --
 -- THE LOADING SCREEN (FP-06). Nothing is drawn while the loading screen shows, so the priming at
 -- PLAYER_LOGIN loads nothing by itself: a hide and a refresh armed then both ran under the loading
--- screen, and the auras present at login stayed blank. A PrimeAll before the first
--- PLAYER_ENTERING_WORLD therefore shows the frame and arms nothing. FontPrimer.OnEnterWorld (from
--- addon:OnEnterWorld) then keeps the frame shown and arms the hide at WORLD_HOLD and the refresh at
--- WORLD_REFRESH, when anything was primed since the last loading screen, and clears that mark. A
--- loading screen with nothing newly primed arms nothing. A stood-down addon hears no
--- PLAYER_ENTERING_WORLD, so FontPrimer.Stop ends the wait: a stand-up happens in play.
+-- screen, and the auras present at login stayed blank. A PrimeAll before the first loading screen
+-- ends therefore shows the frame and arms nothing. The client fires PLAYER_ENTERING_WORLD while the
+-- loading screen is still up, and LOADING_SCREEN_DISABLED when it ends, seconds later on a slow or
+-- cold-cache login. FontPrimer.OnLoadingScreenEnd (from addon:OnLoadingScreenEnd) is the anchor: it
+-- keeps the frame shown and arms the hide at WORLD_HOLD and the refresh at WORLD_REFRESH, when
+-- anything was primed since the last loading screen, and clears that mark. FontPrimer.OnEnterWorld
+-- (from addon:OnEnterWorld) only notes the time, for the Fonts debug line and the report's
+-- `loading screen:` line that show the gap, and is the anchor itself only on a client that refused LOADING_SCREEN_DISABLED (NS.RejectedEvents). A
+-- loading screen with nothing newly primed arms nothing. A stood-down addon hears neither event, so
+-- FontPrimer.Stop ends the wait: a stand-up happens in play.
 --
 -- THE REFRESH. A triple primed after text was already drawn in it (a font changed in settings, or a
 -- /reload that builds with auras present) leaves that text blank, so a PrimeAll that primed anything
--- arms one refresh REFRESH seconds later (WORLD_REFRESH after PLAYER_ENTERING_WORLD for a login
--- priming, below). It rewrites both kinds of text. The engine's: ContainerClass:
+-- arms one refresh REFRESH seconds later (WORLD_REFRESH after the loading screen ends for a login
+-- priming, above). It rewrites both kinds of text. The engine's: ContainerClass:
 -- Refresh (UpdateAllAuras) on each live instance that has an engine, is neither parked nor stale, and
 -- is shown and not previewing (a disabled engine would clear its auras); it is the only engine call
 -- made here. The addon's own, written once per apply and by nothing later (the name label, a Text
@@ -46,8 +51,9 @@ local FP = NS.FontPrimer
 
 local HOLD = 1.0      -- seconds the frame stays shown after the last new triple
 local REFRESH = 0.5   -- seconds from priming a new triple to the follow-up refresh
-local WORLD_HOLD = 2.0     -- seconds the frame stays shown after PLAYER_ENTERING_WORLD
-local WORLD_REFRESH = 1.5  -- seconds from PLAYER_ENTERING_WORLD to the follow-up refresh
+local WORLD_HOLD = 2.0     -- seconds the frame stays shown after the loading screen ends
+local WORLD_REFRESH = 1.5  -- seconds from the loading screen's end to the follow-up refresh
+local SCREEN_END = "LOADING_SCREEN_DISABLED"
 
 --- What each font string is written with: every character a name, time or stack count is likely to
 --- draw (probe v4 drew this set and every blank went).
@@ -66,8 +72,10 @@ local seen = {}       -- [file][size][flags] = true, primed this session (no str
 local primed = {}     -- { path, size, flags } in priming order, for the diagnostics report
 local holdTimer, refreshTimer
 local refreshAt           -- "play" or "world": which refresh refreshTimer is, for the report
-local inWorld = false     -- the first PLAYER_ENTERING_WORLD has come (or a stand-down ended the wait)
+local inWorld = false     -- the first loading screen has ended (or a stand-down ended the wait)
 local primedSinceLoad = false   -- something was primed since the last loading screen
+local pendingEnter        -- GetTime() at a PLAYER_ENTERING_WORLD no loading screen's end has paired yet
+local lastEnter, lastEnd  -- GetTime() at the last PLAYER_ENTERING_WORLD and loading screen's end (report)
 
 --- Whether `path` is a font built into the client (always loaded).
 local function builtIn(path)
@@ -169,18 +177,57 @@ function FP.PrimeAll()
     return n
 end
 
---- PLAYER_ENTERING_WORLD, from addon:OnEnterWorld: the loading screen is gone. Anything primed since
---- the last one is drawn only now, so the frame stays shown for WORLD_HOLD and one refresh runs at
---- WORLD_REFRESH; then the mark clears. Nothing newly primed arms nothing.
-function FP.OnEnterWorld()
+--- The loading screen has ended. Anything primed since the last one is drawn only now, so the frame
+--- stays shown for WORLD_HOLD and one refresh runs at WORLD_REFRESH; then the mark clears. Nothing
+--- newly primed arms nothing.
+local function worldReady()
     inWorld = true
     if NS.IsStoodDown() or not primedSinceLoad then return end
     primedSinceLoad = false
     arm(WORLD_HOLD, WORLD_REFRESH, "world")
 end
 
+--- Whether this client refused LOADING_SCREEN_DISABLED, so the loading screen's end is never heard.
+local function screenEndRefused()
+    for _, name in ipairs(NS.RejectedEvents or {}) do
+        if name == SCREEN_END then return true end
+    end
+    return false
+end
+
+--- PLAYER_ENTERING_WORLD, from addon:OnEnterWorld. The loading screen is still up: this only notes
+--- the time for the gap line, unless this client cannot say when the loading screen ends, when it is
+--- the best anchor there is.
+function FP.OnEnterWorld()
+    local now = GetTime()
+    pendingEnter, lastEnter, lastEnd = now, now, nil
+    if not screenEndRefused() then return end
+    if NS.Debug then
+        NS.Debug("Fonts", "PLAYER_ENTERING_WORLD at %.2f, no %s on this client: timing from here",
+            now, SCREEN_END)
+    end
+    worldReady()
+end
+
+--- LOADING_SCREEN_DISABLED, from addon:OnLoadingScreenEnd: the loading screen is gone. Logs both
+--- timestamps (the smoke check FP10 reads the gap), then arms the world timers.
+function FP.OnLoadingScreenEnd()
+    local now = GetTime()
+    lastEnd = now
+    if NS.Debug then
+        if pendingEnter then
+            NS.Debug("Fonts", "PLAYER_ENTERING_WORLD at %.2f, loading screen ended at %.2f (%.2f s later)",
+                pendingEnter, now, now - pendingEnter)
+        else
+            NS.Debug("Fonts", "loading screen ended at %.2f, no PLAYER_ENTERING_WORLD before it", now)
+        end
+    end
+    pendingEnter = nil
+    worldReady()
+end
+
 --- Stand-down: cancel every timer and hide the frame. The primed set stays: the fonts stay loaded.
---- It also ends any wait for the world: a stood-down addon hears no PLAYER_ENTERING_WORLD, and the
+--- It also ends any wait for the world: a stood-down addon hears no loading-screen event, and the
 --- stand-up that follows happens in play.
 function FP.Stop()
     if holdTimer then holdTimer:Cancel() end
@@ -190,8 +237,9 @@ function FP.Stop()
     if frame then frame:Hide() end
 end
 
---- The refresh's state for the report: "armed" (the short one, in play), "armed-world" (from
---- PLAYER_ENTERING_WORLD), "awaiting-world" (primed before the world, nothing armed yet) or "idle".
+--- The refresh's state for the report: "armed" (the short one, in play), "armed-world" (from the
+--- loading screen's end), "awaiting-world" (primed under the first loading screen, nothing armed
+--- yet) or "idle".
 local function refreshState()
     if refreshTimer then return refreshAt == "world" and "armed-world" or "armed" end
     if not inWorld and primedSinceLoad then return "awaiting-world" end
@@ -199,12 +247,15 @@ local function refreshState()
 end
 
 --- State for the diagnostics report, read only: the primed triples (copies, in priming order),
---- whether the refresh is armed, and which state it is in.
---- @return table { primed = { { path, size, flags }, ... }, refresh = boolean, state = string }
+--- whether the refresh is armed, which state it is in, and the GetTime() of the last
+--- PLAYER_ENTERING_WORLD and of the last loading screen's end after it (nil when not seen).
+--- @return table { primed = { { path, size, flags }, ... }, refresh = boolean, state = string,
+---   enteredAt = number|nil, screenEndAt = number|nil }
 function FP.DiagState()
     local list = {}
     for i, e in ipairs(primed) do list[i] = { path = e.path, size = e.size, flags = e.flags } end
-    return { primed = list, refresh = refreshTimer ~= nil, state = refreshState() }
+    return { primed = list, refresh = refreshTimer ~= nil, state = refreshState(),
+        enteredAt = lastEnter, screenEndAt = lastEnd }
 end
 
 --- The primer's frame, or nil before anything was primed (a test seam).

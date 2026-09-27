@@ -206,8 +206,8 @@ end
 
 --- The font primer (modules/FontPrimer.lua, issue #24): each triple drawn this session as its file's
 --- name, size and flags (`-` for none), capped at MAX_IDS, and the follow-up refresh's state: `armed`
---- (in play), `armed-world` (from PLAYER_ENTERING_WORLD), `awaiting-world` (primed under the loading
---- screen) or `idle`. Read from FontPrimer.DiagState, which reads state only, so it prints while
+--- (in play), `armed-world` (from the loading screen's end), `awaiting-world` (primed under the
+--- loading screen) or `idle`. Read from FontPrimer.DiagState, which reads state only, so it prints while
 --- stood down and while auras are secret.
 local function primerLine(out)
     local FP = NS.FontPrimer
@@ -227,12 +227,28 @@ local function primerLine(out)
         s.state or (s.refresh and "armed" or "idle"))
 end
 
+local function stamp(t) return type(t) == "number" and string.format("%.2f", t) or "-" end
+
+--- When the last PLAYER_ENTERING_WORLD came and when the loading screen after it ended, and the gap:
+--- the client fires the first while the loading screen is still up, and the font primer times its
+--- world hide and refresh from the second (issue #24, FP-06). Session logging is off at login, so
+--- the report is where the smoke check FP10 reads the gap. `-` for one not seen.
+local function screenLine(out)
+    local FP = NS.FontPrimer
+    if not (FP and FP.DiagState) then return end
+    local s = FP.DiagState()
+    local a, b = s.enteredAt, s.screenEndAt
+    local gap = (type(a) == "number" and type(b) == "number") and string.format(" (%.2f s later)", b - a) or ""
+    out:add("Diag", "loading screen: world entered %s, ended %s%s", stamp(a), stamp(b), gap)
+end
+
 function Diag.Header(out)
     stateLine(out)
     downLine(out)
     queueLine(out)
     countsLine(out)
     primerLine(out)
+    screenLine(out)
 end
 
 -- ---------------------------------------------------------------------------

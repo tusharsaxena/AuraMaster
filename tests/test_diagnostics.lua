@@ -715,8 +715,8 @@ local PRIMER_KAIT = "Interface\\AddOns\\SharedMedia_MyMedia\\font\\Ka0s Kait.ttf
 
 --- A fresh environment with a LibSharedMedia stand-in that knows two addon fonts and the client's
 --- Friz Quadrata (the harness loads no media library, so every font would resolve to the fallback).
---- It enters the world (the fresh environment stops at PLAYER_LOGIN), so a priming takes the short
---- path; with `atLogin` it stays before the first PLAYER_ENTERING_WORLD.
+--- It enters the world (the fresh environment stops at PLAYER_LOGIN): PLAYER_ENTERING_WORLD, then the
+--- loading screen's end, so a priming takes the short path; with `atLogin` it stays before either.
 local function primerEnv(atLogin)
     local NS, mocks = fresh({ before = function(m)
         local media = { ["Ka0s Prototype"] = PRIMER_PROTO, ["Ka0s Kait"] = PRIMER_KAIT,
@@ -734,6 +734,7 @@ local function primerEnv(atLogin)
     mocks.__fireTimers(); mocks.__fireTimers()
     if not atLogin then
         mocks.__fireEvent("PLAYER_ENTERING_WORLD")
+        mocks.__fireEvent("LOADING_SCREEN_DISABLED")
         mocks.__fireTimers()
     end
     return NS, mocks
@@ -826,9 +827,27 @@ test("diag: the fonts primed line tells a priming waiting for the world from the
     -- red under: refresh= read from the refresh handle alone (a login priming reads idle until the world)
     assertEqual(primerLine(NS), head .. "refresh=awaiting-world")
     mocks.__fireEvent("PLAYER_ENTERING_WORLD")
+    -- red under: the world refresh armed at PLAYER_ENTERING_WORLD, under the loading screen
+    assertEqual(primerLine(NS), head .. "refresh=awaiting-world")
+    mocks.__fireEvent("LOADING_SCREEN_DISABLED")
     assertEqual(primerLine(NS), head .. "refresh=armed-world")
     mocks.__fireTimers()
     assertEqual(primerLine(NS), head .. "refresh=idle")
+end)
+
+test("diag: the loading screen line shows when the world was entered and when the loading screen ended", function()
+    -- Session logging is off at login, so the report is where the smoke check FP10 reads the gap
+    -- between PLAYER_ENTERING_WORLD and LOADING_SCREEN_DISABLED.
+    local NS, mocks = primerEnv(true)
+    -- red under: no such line (the gap visible only in a trace nobody was logging at login)
+    assertEqual(has(build(NS), "[Diag] loading screen: "), "[Diag] loading screen: world entered -, ended -")
+    mocks.__now = 50
+    mocks.__fireEvent("PLAYER_ENTERING_WORLD")
+    assertEqual(has(build(NS), "[Diag] loading screen: "), "[Diag] loading screen: world entered 50.00, ended -")
+    mocks.__now = 57.25
+    mocks.__fireEvent("LOADING_SCREEN_DISABLED")
+    assertEqual(has(build(NS), "[Diag] loading screen: "),
+        "[Diag] loading screen: world entered 50.00, ended 57.25 (7.25 s later)")
 end)
 
 test("diag: the fonts primed list stops at MAX_IDS and flags the cap; the count stays whole", function()

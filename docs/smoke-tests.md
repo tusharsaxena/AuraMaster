@@ -1903,6 +1903,8 @@ setting**: each of those rewrites every name on its own and would hide a blank.
      aura or a flask) in containers on **Ka0s Prototype**. Do not `/reload` and do not touch any
      setting. → Every name present at login draws within about 2 s after the loading screen ends, and
      stays drawn; no row stays blank until a `/reload`. `/am diagnostics` straight after the loading
-     screen may read `refresh=armed-world`; a few seconds later it reads `refresh=idle`. Then zone
+     screen may read `refresh=armed-world`; a few seconds later it reads `refresh=idle`. Its
+     `loading screen:` line gives both times and the gap (record the gap here; `ended -` is a
+     failure). Then zone
      (take a portal or enter an instance) → nothing blanks after that loading screen. No Lua error.
      Result:

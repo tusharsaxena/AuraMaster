@@ -261,7 +261,7 @@ hides it, and clearing does not show it again.
 `UpdateAllAuras` exists for external refreshes such as target changes.
 
 **What this addon does.** `PLAYER_TARGET_CHANGED`, `PLAYER_FOCUS_CHANGED` and `UNIT_PET` (for the
-player) call `UpdateAllAuras` on every container on that unit (`core/AuraMaster.lua:117-129`).
+player) call `UpdateAllAuras` on every container on that unit (`core/AuraMaster.lua:124-136`).
 
 ## An addon font loads lazily, and the engine writes a name once (measured 2026-09-27)
 
@@ -312,10 +312,14 @@ in combat.
 `PLAYER_LOGIN` runs under the loading screen, and a 1 s hide and a 0.5 s refresh armed there both
 ran before it ended: the auras present at login were then the first text drawn in the font, came
 out blank and stayed blank until a `/reload`, while every aura cast later drew. So a priming before
-the first `PLAYER_ENTERING_WORLD` shows the frame and arms nothing, and `FontPrimer.OnEnterWorld`
-(from `addon:OnEnterWorld`) keeps it shown 2 s more and runs the refresh 1.5 s after
-`PLAYER_ENTERING_WORLD`, when anything was primed since the last loading screen. The working
-assumption is that the loading screen draws nothing at all; the smoke check FP10 tests it. Nothing runs while the addon is stood down. The pattern is ChonkyCharacterSheet's
+the first loading screen ends shows the frame and arms nothing. `PLAYER_ENTERING_WORLD` is not that
+end: the client fires it while the loading screen is still up, and fires `LOADING_SCREEN_DISABLED`
+when it ends, seconds later on a slow or cold-cache login. So `FontPrimer.OnLoadingScreenEnd` (from
+`addon:OnLoadingScreenEnd`) keeps the frame shown 2 s more and runs the refresh 1.5 s after the
+loading screen ends, when anything was primed since the last loading screen; `PLAYER_ENTERING_WORLD`
+only notes the time, unless the client refused `LOADING_SCREEN_DISABLED`. The working assumption is
+that the loading screen draws nothing at all; the smoke check FP10 tests it, and the report's
+`loading screen:` line shows the gap. Nothing runs while the addon is stood down. The pattern is ChonkyCharacterSheet's
 `CCS:PrimeFontsAndTextures`. How to check it: `docs/debug.md` (*Bar names that do not show*).
 
 ## Weapon enchants
@@ -351,7 +355,7 @@ so the failure is latent: it would only show up once a patch retires one of them
 
 **What this addon does.** Every registration goes through `NS.SafeRegisterEvent`, which is
 `LibKa0s-Core-1.0`'s `SafeRegisterEvent` (`core/CoreSetup.lua`), or its unit-event twin
-`NS.SafeRegisterUnitEvent`. That covers the eight lifecycle events (`LIFECYCLE_EVENTS` in
+`NS.SafeRegisterUnitEvent`. That covers the nine lifecycle events (`LIFECYCLE_EVENTS` in
 `core/AuraMaster.lua`), the timed-spell gate and its unit frame's `UNIT_AURA`
 (`modules/TimedSpells.lua`), the empty-container prediction's two unit frames and their swap events
 (`modules/EmptyWatch.lua`), and the stand-down's pending `PLAYER_REGEN_ENABLED`

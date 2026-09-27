@@ -198,7 +198,7 @@ test("disabled: enabled, the addon registers a non-empty set", function()
     local NS, mocks, R_on = baseline()
     assertTrue(#sortedKeys(R_on) > 0, "an addon that registers nothing when enabled would pass every later case trivially")
     -- Named, so the baseline cannot silently shrink to one row and keep this case green.
-    assertEqual(#regsOn(mocks, NS.addon), 8, "the eight lifecycle events: " .. dump(regsOn(mocks, NS.addon)))
+    assertEqual(#regsOn(mocks, NS.addon), 9, "the nine lifecycle events: " .. dump(regsOn(mocks, NS.addon)))
     assertTrue(#regsOn(mocks, NS.TimedSpells.__bus()) == 2, "TimedSpells' two subscriptions")
 end)
 
@@ -555,7 +555,7 @@ test("disabled: re-enabling restores the registration set, from the settings as 
     for _, c in ipairs(NS.Database.GetContainers()) do NS.ContainerManager.Delete(c.id) end
     enable(NS)
     mocks.__fireTimers()
-    assertEqual(#regsOn(mocks, NS.addon), 8, "the lifecycle events come back either way")
+    assertEqual(#regsOn(mocks, NS.addon), 9, "the lifecycle events come back either way")
     assertEqual(#regsOn(mocks, NS.TimedSpells.__events()), 0,
         "with no container left, nothing to listen for: " .. dump(regsOn(mocks, NS.TimedSpells.__events())))
 end)
@@ -579,7 +579,7 @@ test("disabled: releasing one hold does not stand up an addon the other still ho
     enable(NS)
     mocks.__fireTimers()
     assertFalse(NS.IsStoodDown())
-    assertEqual(#regsOn(mocks, NS.addon), 8)
+    assertEqual(#regsOn(mocks, NS.addon), 9)
 
     -- The other order, which fails the same way for the mirror-image reason: a `disable` that calls
     -- a bare stand-up on its way out ruins a run just as thoroughly.
@@ -591,7 +591,7 @@ test("disabled: releasing one hold does not stand up an addon the other still ho
     NS.lifecycle:Release(NS.HOLD_PERF)
     mocks.__fireTimers()
     assertFalse(NS.IsStoodDown())
-    assertEqual(#regsOn(mocks, NS.addon), 8)
+    assertEqual(#regsOn(mocks, NS.addon), 9)
 end)
 
 test("disabled: a profile switch to an enabled profile stands the addon back up", function()
@@ -605,7 +605,7 @@ test("disabled: a profile switch to an enabled profile stands the addon back up"
     NS.OnProfileChanged()
     mocks.__fireTimers()
     assertFalse(NS.IsStoodDown(), "the new profile has the addon enabled")
-    assertEqual(#regsOn(mocks, NS.addon), 8)
+    assertEqual(#regsOn(mocks, NS.addon), 9)
 end)
 
 -- ---------------------------------------------------------------------------

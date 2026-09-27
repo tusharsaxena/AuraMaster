@@ -243,7 +243,8 @@ after they were hidden; a visibility pass alone leaves them as they are.
 | File load | Every file in TOC order; the options category registers its pages; LSM registration |
 | `ADDON_LOADED` (ours) → `OnInitialize` | `NS.InitDB` → AceDB, `RunMigrations`, `PrepareProfile` (seeds the starters on a fresh profile); `/am` registered |
 | `PLAYER_LOGIN` → `OnEnable` | Lifecycle events registered; `ContainerManager.Init` primes every container font (`FontPrimer.PrimeAll`, below), then builds an instance per container and applies them (a disabled login builds none: the stand-up primes and builds them); `BlizzardFrames.Apply`; the options panel category is created. Built here, not at load, so the engine's access restrictions (applied at `PLAYER_ENTERING_WORLD`) come after every button's first `initializeFrame` |
-| `PLAYER_ENTERING_WORLD` | Visibility pass; flush anything pending; `FontPrimer.OnEnterWorld` arms the primer's hide and refresh for a font primed under the loading screen (below) |
+| `PLAYER_ENTERING_WORLD` | Visibility pass; flush anything pending; `FontPrimer.OnEnterWorld` notes the time (the loading screen is still up), and arms the primer's hide and refresh itself only on a client that refused `LOADING_SCREEN_DISABLED` |
+| `LOADING_SCREEN_DISABLED` | The loading screen has ended: `FontPrimer.OnLoadingScreenEnd` arms the primer's hide and refresh for a font primed under it (below) |
 | `PLAYER_REGEN_DISABLED` / `ENABLED` | Visibility pass; on combat end, flush pending applies, apply the Blizzard-frame settings, and place again any frame-attached container whose frame appeared during combat |
 | `ADDON_RESTRICTION_STATE_CHANGED` | Flush pending applies — secrecy can lift outside a combat transition (a key or encounter ending) |
 | `PLAYER_TARGET_CHANGED`, `PLAYER_FOCUS_CHANGED`, `UNIT_PET` | Every container on that unit calls the engine's `UpdateAllAuras`, because the engine keeps showing the old unit's auras until told |
@@ -267,12 +268,12 @@ player switched off. There is no `StandUp()` to call; the only route out is rele
 
 | | |
 |---|---|
-| The eight lifecycle events | `addon:UnregisterLifecycleEvents()` — unregistered, not gated |
+| The nine lifecycle events | `addon:UnregisterLifecycleEvents()` — unregistered, not gated |
 | `modules/TimedSpells.lua` | `TS.StandDown()`: its unit frame's `UNIT_AURA` (unregistered by hand; the frame is kept for the next stand-up), its gate events, its two bus subscriptions, and a queued scan timer, canceled |
 | `modules/EmptyWatch.lua` | `EW.Stop()`: both unit frames' registrations (unregistered by hand; the frames are kept), its AceEvent pet, inventory, target and focus events, and a queued pass or enchant-expiry timer, canceled |
 | `modules/ContainerManager.lua` | `CM.StopListening()`: its three bus subscriptions, and the pending queue behind them |
 | The coalescing apply timer | canceled by `CM.StopListening`; `CM.RequestApply` returns immediately, so nothing re-arms |
-| `modules/FontPrimer.lua` | `FontPrimer.Stop()`, from `CM.StopListening`: the hide timer and the follow-up refresh, canceled, and the frame hidden; a stood-down addon hears no `PLAYER_ENTERING_WORLD`, so the primer stops waiting for one. The fonts it drew stay loaded, so what it primed is kept, and `PrimeAll` does nothing while stood down |
+| `modules/FontPrimer.lua` | `FontPrimer.Stop()`, from `CM.StopListening`: the hide timer and the follow-up refresh, canceled, and the frame hidden; a stood-down addon hears no loading-screen event, so the primer stops waiting for one. The fonts it drew stay loaded, so what it primed is kept, and `PrimeAll` does nothing while stood down |
 | `modules/FramePicker.lua` | `FP.Stop()` — the overlay's `OnUpdate` cleared |
 | Every container | `ContainerClass:ShouldShow` answers no at **step 0**, so the engine is disabled, the preview and handle hidden and the anchor hidden |
 | Blizzard's buff and debuff frames | reparented back where they belong: an addon that is not running must not still be hiding them |
@@ -338,9 +339,10 @@ once*). `modules/FontPrimer.lua` therefore draws each font before any container 
   screen, shown and written with a sample of letters, digits and punctuation, then hidden 1 s later.
 - **The follow-up.** A priming that drew anything arms one refresh 0.5 s later (re-arming restarts
   it), so text drawn in the font before it loaded is written again. Under the loading screen nothing
-  is drawn, so a priming before the first `PLAYER_ENTERING_WORLD` arms neither timer and keeps the
-  frame shown; `FontPrimer.OnEnterWorld` then arms the hide 2 s and the refresh 1.5 s after it, when
-  anything was primed since the last loading screen. The engine's text:
+  is drawn, so a priming before the first loading screen ends arms neither timer and keeps the
+  frame shown; `FontPrimer.OnLoadingScreenEnd` (`LOADING_SCREEN_DISABLED`, which comes after
+  `PLAYER_ENTERING_WORLD`) then arms the hide 2 s and the refresh 1.5 s after it, when anything was
+  primed since the last loading screen. The engine's text:
   `ContainerClass:Refresh`, the engine's `UpdateAllAuras`, on each live container that has an
   engine, is neither parked nor stale, and is shown and not previewing. The addon's own text, which
   an apply writes once and nothing rewrites (the name label, a Text line's literal pieces, the

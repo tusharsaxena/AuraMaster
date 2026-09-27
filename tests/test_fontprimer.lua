@@ -21,16 +21,18 @@ local FRIZ = "Fonts\\FRIZQT__.TTF"
 
 -- The delays, spelled out rather than read back off the module (a suite that asked the code under
 -- test for the expected answer would pass on any value at all). HOLD and REFRESH are a priming
--- during play; WORLD_HOLD and WORLD_REFRESH count from PLAYER_ENTERING_WORLD (FP-06).
+-- during play; WORLD_HOLD and WORLD_REFRESH count from the end of the loading screen,
+-- LOADING_SCREEN_DISABLED, which the client fires after PLAYER_ENTERING_WORLD (FP-06).
 local HOLD, REFRESH = 1.0, 0.5
 local WORLD_HOLD, WORLD_REFRESH = 2.0, 1.5
 
 --- A fresh environment, settled, with the media stand-in. The starter containers are 1 (player
 --- bars), 2 (player icons), 3 (target icons) and 4 (player text), every font Friz Quadrata. The
 --- harness's fresh environment stops at PLAYER_LOGIN, so this one then enters the world through the
---- addon's own handler, as the client does; with `atLogin` it stays under the loading screen, before
---- the first PLAYER_ENTERING_WORLD.
-local function env(atLogin)
+--- addon's own handlers, as the client does: PLAYER_ENTERING_WORLD, then LOADING_SCREEN_DISABLED.
+--- With `atLogin` it stays under the loading screen, before either. `extra` runs in the harness's
+--- `before` hook, after the media stand-in.
+local function env(atLogin, extra)
     local NS2, mocks = fresh({ before = function(m)
         local media = { ["Ka0s Prototype"] = PROTO, ["Ka0s Kait"] = KAIT, ["Friz Quadrata TT"] = FRIZ,
             ["Arial Narrow"] = "Fonts\\ARIALN.TTF" }
@@ -43,10 +45,12 @@ local function env(atLogin)
             return nil
         end
         m.__libs["LibSharedMedia-3.0"] = lsm
+        if extra then extra(m) end
     end })
     mocks.__fireTimers(); mocks.__fireTimers()
     if not atLogin then
         mocks.__fireEvent("PLAYER_ENTERING_WORLD")
+        mocks.__fireEvent("LOADING_SCREEN_DISABLED")
         mocks.__fireTimers()
     end
     return NS2, mocks, NS2.FontPrimer, NS2.ContainerManager
@@ -431,7 +435,10 @@ end)
 -- -- the loading screen (FP-06) -------------------------------------------------------------------
 -- Nothing is drawn under the loading screen, so a font primed at PLAYER_LOGIN is not loaded by the
 -- priming: the frame stays shown through the loading screen and the hide and the refresh count from
--- PLAYER_ENTERING_WORLD instead (docs/superpowers/plans/2026-09-27-font-primer-addendum-loading-screen.md).
+-- its end instead (docs/superpowers/plans/2026-09-27-font-primer-addendum-loading-screen.md). The
+-- client fires PLAYER_ENTERING_WORLD while the loading screen is still up and LOADING_SCREEN_DISABLED
+-- when it ends, so the world timers are armed from the second; the first arms them only on a client
+-- that refused the second.
 
 test("fontprimer: a login priming waits for the world, then refreshes at WORLD_REFRESH and hides at WORLD_HOLD", function()
     local NS2, mocks, FP, CM = env(true)
@@ -450,7 +457,11 @@ test("fontprimer: a login priming waits for the world, then refreshes at WORLD_R
     assertEqual(#mocks.__timers(), 0, "nothing armed before the world")
 
     mocks.__fireEvent("PLAYER_ENTERING_WORLD")
-    -- red under: no FontPrimer.OnEnterWorld in addon:OnEnterWorld
+    -- red under: the world timers armed at PLAYER_ENTERING_WORLD, under the loading screen
+    assertEqual(#mocks.__timers(), 0, "nothing armed while the loading screen is still up")
+    assertTrue(got.frame:IsShown(), "still shown under the loading screen")
+    mocks.__fireEvent("LOADING_SCREEN_DISABLED")
+    -- red under: no LOADING_SCREEN_DISABLED handler reaching FontPrimer
     assertEqual(armed(mocks, WORLD_HOLD), 1)
     assertEqual(armed(mocks, WORLD_REFRESH), 1)
     assertEqual(armed(mocks, HOLD) + armed(mocks, REFRESH), 0)
@@ -464,16 +475,61 @@ test("fontprimer: a login priming waits for the world, then refreshes at WORLD_R
     CM.instances[901] = nil
 end)
 
+test("fontprimer: a loading screen that outlasts WORLD_HOLD after PLAYER_ENTERING_WORLD still primes before the refresh", function()
+    -- A slow or cold-cache login: the loading screen ends seconds after PLAYER_ENTERING_WORLD. Timers
+    -- counted from PLAYER_ENTERING_WORLD would hide the frame and run the refresh under it.
+    local NS2, mocks, FP, CM = env(true)
+    local _, got = recordFrame(mocks)
+    local eligible = fakeInst({ ApplyVisibility = function() return false, false, false end })
+    CM.instances[901] = eligible
+    local t = cfgOf(NS2, 1).bars.name
+    t.font, t.fontSize = "Ka0s Prototype", 10
+    FP.PrimeAll()
+    NS2.DebugLog:SetEnabled(true)
+    mocks.__now = 100
+    mocks.__fireEvent("PLAYER_ENTERING_WORLD")
+    mocks.__now = 100 + WORLD_HOLD + 4
+    mocks.__fireTimers(); mocks.__fireTimers()
+    -- red under: the world timers counted from PLAYER_ENTERING_WORLD (hidden and refreshed unseen)
+    assertTrue(got.frame:IsShown(), "shown until the loading screen ends")
+    assertEqual(eligible.refreshed, 0, "no refresh under the loading screen")
+    mocks.__fireEvent("LOADING_SCREEN_DISABLED")
+    assertEqual(armed(mocks, WORLD_HOLD), 1)
+    assertEqual(armed(mocks, WORLD_REFRESH), 1)
+    fire(mocks, WORLD_REFRESH)
+    assertEqual(eligible.refreshed, 1)
+    fire(mocks, WORLD_HOLD)
+    assertFalse(got.frame:IsShown())
+    -- red under: no Fonts line with both timestamps (FP10 cannot show the gap)
+    local line = NS2.DebugLog:FindLine("PLAYER_ENTERING_WORLD at 100.00, loading screen ended at 106.00 (6.00 s later)")
+    assertTrue(line ~= nil, "the Fonts gap line")
+    NS2.DebugLog:SetEnabled(false)
+    CM.instances[901] = nil
+end)
+
+test("fontprimer: a client that refuses LOADING_SCREEN_DISABLED times the world from PLAYER_ENTERING_WORLD", function()
+    local NS2, mocks, FP = env(true, function(m) m.__badEvents = { LOADING_SCREEN_DISABLED = true } end)
+    local _, got = recordFrame(mocks)
+    local t = cfgOf(NS2, 1).bars.name
+    t.font, t.fontSize = "Ka0s Prototype", 10
+    FP.PrimeAll()
+    mocks.__fireEvent("PLAYER_ENTERING_WORLD")
+    -- red under: no fallback (the frame shown and no refresh, for good, on a client without the event)
+    assertEqual(armed(mocks, WORLD_HOLD), 1)
+    assertEqual(armed(mocks, WORLD_REFRESH), 1)
+    assertTrue(got.frame:IsShown())
+end)
+
 test("fontprimer: a later loading screen with nothing newly primed arms nothing", function()
     local NS2, mocks, FP = env(true)
     local _, got = recordFrame(mocks)
     local t = cfgOf(NS2, 1).bars.name
     t.font, t.fontSize = "Ka0s Prototype", 10
     FP.PrimeAll()
-    mocks.__fireEvent("PLAYER_ENTERING_WORLD")
+    mocks.__fireEvent("PLAYER_ENTERING_WORLD"); mocks.__fireEvent("LOADING_SCREEN_DISABLED")
     fire(mocks, WORLD_REFRESH); fire(mocks, WORLD_HOLD)
     mocks.__fireTimers()
-    mocks.__fireEvent("PLAYER_ENTERING_WORLD")
+    mocks.__fireEvent("PLAYER_ENTERING_WORLD"); mocks.__fireEvent("LOADING_SCREEN_DISABLED")
     -- red under: the mark never cleared (every zone change re-shows the frame and refreshes)
     assertEqual(armed(mocks, WORLD_HOLD) + armed(mocks, WORLD_REFRESH), 0)
     assertFalse(got.frame:IsShown())
@@ -494,7 +550,7 @@ test("fontprimer: Stop cancels the world timers, and ends the wait for the world
     local t = cfgOf(NS2, 1).bars.name
     t.font, t.fontSize = "Ka0s Prototype", 10
     FP.PrimeAll()
-    mocks.__fireEvent("PLAYER_ENTERING_WORLD")
+    mocks.__fireEvent("PLAYER_ENTERING_WORLD"); mocks.__fireEvent("LOADING_SCREEN_DISABLED")
     assertEqual(armed(mocks, WORLD_HOLD) + armed(mocks, WORLD_REFRESH), 2)
     FP.Stop()
     -- red under: Stop canceling only the short timers
@@ -523,6 +579,8 @@ test("fontprimer: DiagState names which refresh is armed, or that it waits for t
     assertEqual(FP.DiagState().state, "awaiting-world")
     assertFalse(FP.DiagState().refresh)
     mocks.__fireEvent("PLAYER_ENTERING_WORLD")
+    assertEqual(FP.DiagState().state, "awaiting-world", "the loading screen is still up")
+    mocks.__fireEvent("LOADING_SCREEN_DISABLED")
     assertEqual(FP.DiagState().state, "armed-world")
     assertTrue(FP.DiagState().refresh)
     fire(mocks, WORLD_REFRESH)

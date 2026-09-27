@@ -57,6 +57,8 @@ end
 --- both the stand-up and the stand-down, so the two cannot drift apart.
 local LIFECYCLE_EVENTS = {
     { "PLAYER_ENTERING_WORLD", "OnEnterWorld" },
+    -- The loading screen's end, which PLAYER_ENTERING_WORLD is not: the font primer times from it.
+    { "LOADING_SCREEN_DISABLED", "OnLoadingScreenEnd" },
     { "PLAYER_REGEN_DISABLED", "OnCombatChanged" },
     { "PLAYER_REGEN_ENABLED", "OnCombatChanged" },
     { "PLAYER_TARGET_CHANGED", "OnUnitSwap" },
@@ -86,8 +88,13 @@ function addon:OnEnterWorld()
     NS.Debug("World", "entering world")
     NS.bus:SendMessage(NS.MSG.VISIBILITY_CHANGED)
     if NS.ContainerManager then NS.ContainerManager.FlushPending() end
-    -- The loading screen is gone: a font primed under it is drawn only now (issue #24, FP-06).
+    -- The loading screen is still up here; the primer notes the time (issue #24, FP-06).
     if NS.FontPrimer then NS.FontPrimer.OnEnterWorld() end
+end
+
+-- The loading screen is gone: a font primed under it is drawn only now (issue #24, FP-06).
+function addon:OnLoadingScreenEnd()
+    if NS.FontPrimer then NS.FontPrimer.OnLoadingScreenEnd() end
 end
 
 function addon:OnCombatChanged(event)

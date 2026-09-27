@@ -209,13 +209,14 @@ optional. The full table and the reasons:
 
 | Event | Registered by | Handler → effect |
 |---|---|---|
-| `PLAYER_ENTERING_WORLD` | `core/AuraMaster.lua:59` (AceEvent, through `NS.SafeRegisterEvent`) | `OnEnterWorld` → `VISIBILITY_CHANGED`, `ContainerManager.FlushPending`, `FontPrimer.OnEnterWorld` |
-| `PLAYER_REGEN_DISABLED` | `core/AuraMaster.lua:60` | `OnCombatChanged` → `VISIBILITY_CHANGED` |
-| `PLAYER_REGEN_ENABLED` | `core/AuraMaster.lua:61` | `OnCombatChanged` → `VISIBILITY_CHANGED`, `FlushPending`, `ReapplyStaleClass`, `BlizzardFrames.Apply`, `Anchors.ResolvePending` (a frame that appeared during combat) |
-| `PLAYER_TARGET_CHANGED`, `PLAYER_FOCUS_CHANGED` | `core/AuraMaster.lua:62-63` | `OnUnitSwap` → `RefreshUnit` → the engine's `UpdateAllAuras` (bucket `unitSwap`); re-applies the class-colored containers of that unit when the new unit's class differs, or marks them stale, silently, while an apply must wait |
-| `UNIT_PET` | `core/AuraMaster.lua:64` | `OnUnitPet` (player only) → `RefreshUnit("pet")` (bucket `unitSwap`); re-applies the class-colored pet containers when the pet's class differs, or marks them stale while an apply must wait |
-| `ADDON_LOADED` | `core/AuraMaster.lua:65` | `OnAddonLoaded` → `Anchors.ResolvePending` (frame-attached containers) |
-| `ADDON_RESTRICTION_STATE_CHANGED` | `core/AuraMaster.lua:67` | `OnRestrictionChanged` → `FlushPending`, `ReapplyStaleClass` (a deferred apply runs when secrecy lifts) |
+| `PLAYER_ENTERING_WORLD` | `core/AuraMaster.lua:59` (AceEvent, through `NS.SafeRegisterEvent`) | `OnEnterWorld` → `VISIBILITY_CHANGED`, `ContainerManager.FlushPending`, `FontPrimer.OnEnterWorld` (notes the time: the loading screen is still up; the primer's anchor only on a client that refused `LOADING_SCREEN_DISABLED`) |
+| `LOADING_SCREEN_DISABLED` | `core/AuraMaster.lua:61` | `OnLoadingScreenEnd` → `FontPrimer.OnLoadingScreenEnd` (the loading screen's real end: arms the primer's world hide and refresh) |
+| `PLAYER_REGEN_DISABLED` | `core/AuraMaster.lua:62` | `OnCombatChanged` → `VISIBILITY_CHANGED` |
+| `PLAYER_REGEN_ENABLED` | `core/AuraMaster.lua:63` | `OnCombatChanged` → `VISIBILITY_CHANGED`, `FlushPending`, `ReapplyStaleClass`, `BlizzardFrames.Apply`, `Anchors.ResolvePending` (a frame that appeared during combat) |
+| `PLAYER_TARGET_CHANGED`, `PLAYER_FOCUS_CHANGED` | `core/AuraMaster.lua:64-65` | `OnUnitSwap` → `RefreshUnit` → the engine's `UpdateAllAuras` (bucket `unitSwap`); re-applies the class-colored containers of that unit when the new unit's class differs, or marks them stale, silently, while an apply must wait |
+| `UNIT_PET` | `core/AuraMaster.lua:66` | `OnUnitPet` (player only) → `RefreshUnit("pet")` (bucket `unitSwap`); re-applies the class-colored pet containers when the pet's class differs, or marks them stale while an apply must wait |
+| `ADDON_LOADED` | `core/AuraMaster.lua:67` | `OnAddonLoaded` → `Anchors.ResolvePending` (frame-attached containers) |
+| `ADDON_RESTRICTION_STATE_CHANGED` | `core/AuraMaster.lua:69` | `OnRestrictionChanged` → `FlushPending`, `ReapplyStaleClass` (a deferred apply runs when secrecy lifts) |
 | `UNIT_AURA` for `player` and `pet` | `modules/TimedSpells.lua` — the module's one private frame, `TS.unitFrame` (events-frames-taint-§1's carve-out: the vendored AceEvent has no `RegisterUnitEvent`), through `NS.SafeRegisterUnitEvent`; built once and reused, registered only while a container uses "without a duration", the addon is not suspended, and auras are readable (no combat lockdown, not secret), and unregistered by hand in `TS.Stop` | the frame's one `OnEvent` → `onUnitAura`: the client delivers only `player` and `pet`; the handler still proves the unit a safe key and compares it (defense in depth), then schedules a scan 0.5 s later (bucket `timedScan`). A scan that comes due after the gate closed is dropped too |
 | `UNIT_AURA` for `player` and `pet`, and for `target` and `focus` | `modules/EmptyWatch.lua` — its two private frames, `EW.unitFrames[1]` (player, pet) and `[2]` (target, focus), the same carve-out, each filtering `UNIT_AURA` and nothing else, through `NS.SafeRegisterUnitEvent`; built once and reused, each registered only while a shown container on its units is unlocked and out of test mode, the addon is not suspended, combat has not started and auras are readable, and unregistered by hand in `EW.Stop` | the frames' one `OnEvent` only marks a pass due: one pass 0.2 s later (bucket `emptyPass`) re-predicts every watched container and re-runs the visibility pass of any whose answer changed |
 | `PLAYER_TARGET_CHANGED`, `PLAYER_FOCUS_CHANGED` | `modules/EmptyWatch.lua` (AceEvent, on its own target) — while its target and focus frame is registered | the pass run at once, not 0.2 s later, folding in one already due: the engine redraws for the new unit in the same frame, so a follower hung from a parent that just emptied would otherwise sit on the engine's 1x1 rect for the delay |
@@ -233,9 +234,12 @@ The font primer (`modules/FontPrimer.lua`) registers no event of its own. It run
 `CONFIG_CHANGED` handler before the apply is requested, and from `CM.Announce` before a profile
 switch or a registry change is built. A priming that drew a new font arms two `C_Timer` handles, the
 1 s hide and the 0.5 s follow-up refresh; `CM.StopListening` cancels both through `FontPrimer.Stop`.
-A priming before the first `PLAYER_ENTERING_WORLD` (under the loading screen) arms neither, and
-`addon:OnEnterWorld` calls `FontPrimer.OnEnterWorld`, which arms them at 2 s and 1.5 s when anything
-was primed since the last loading screen.
+A priming before the first loading screen ends arms neither. The client fires
+`PLAYER_ENTERING_WORLD` while the loading screen is still up and `LOADING_SCREEN_DISABLED` when it
+ends, so `addon:OnLoadingScreenEnd` calls `FontPrimer.OnLoadingScreenEnd`, which arms them at 2 s and
+1.5 s when anything was primed since the last loading screen. `FontPrimer.OnEnterWorld` only notes
+the time for the report's gap line, and arms them itself only on a client that refused
+`LOADING_SCREEN_DISABLED`.
 
 **Every registration goes through one helper** (events-frames-taint-§1): `NS.SafeRegisterEvent`, which
 is `LibKa0s-Core-1.0`'s `SafeRegisterEvent`, published by `core/CoreSetup.lua`. That covers every row
