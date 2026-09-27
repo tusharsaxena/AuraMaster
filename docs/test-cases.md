@@ -661,12 +661,11 @@ badge and any count quoted in the docs must agree with it.
 - seam: an attached child's strip sits before its own block, in its own column (batch 10 F1)
 - seam: a screen container's strip keeps its place above or below its auras
 
-### test_anchors_edges.lua (15)
+### test_anchors_edges.lua (14)
 
 - edges: EDGES lists the nine tokens, after then ahead then behind, and no before or center side
 - edges: EdgePoints gives the design table's pair for every token and growth
 - edges: EdgePoints(L, 'after-start') is exactly the old DerivedPoints for all 8 axis, growH and growV combinations
-- edges: every one of the nine is allowed, behind on a wide child too; only a non-token is not (G5)
 - edges: SeamOffset leaves the child's own gap across for a side, and after is unchanged (AP-2)
 - edges: a side-attached child is placed at its edge's points with its gap across and the nudge on top
 - edges: flipping the root's growth mirrors an Automatic child; an explicit pair stays and takes the seam of the side it now is
@@ -1964,7 +1963,7 @@ badge and any count quoted in the docs must agree with it.
 | test_anchors.lua | 50 |
 | test_anchors_handle.lua | 27 |
 | test_anchors_seam.lua | 10 |
-| test_anchors_edges.lua | 15 |
+| test_anchors_edges.lua | 14 |
 | test_anchors_hang.lua | 11 |
 | test_emptywatch.lua | 25 |
 | test_fontprimer.lua | 32 |
@@ -2021,4 +2020,4 @@ badge and any count quoted in the docs must agree with it.
 | test_eol.lua | 2 |
 | test_layout_cap.lua | 13 |
 | test_diagnostics_contract.lua | 7 |
-| **Total** | **1703** |
+| **Total** | **1702** |
