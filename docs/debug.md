@@ -93,7 +93,8 @@ whose template has the name token, through the engine's own `UpdateAllAuras`, wh
 and rewrites every name. Per unit it runs about 0.5 s after the first `UNIT_AURA` of a quiet unit
 (`quick`), again 2 s later (`settle`, repeated every 2 s only while the unit keeps changing), 3 s
 after a loading screen (`enter`, then `settle` at 5 s), and after a target, focus or pet swap: 0.5 s
-later when nothing is armed for that unit, otherwise at the armed follow-up (within about 2 s).
+later when nothing is armed for that unit, otherwise at the armed follow-up (within about 2 s, or
+3 s just after a loading screen).
 It runs in combat too. An icons container, or a bars container with its name hidden, is never
 repainted: it shows no name the engine writes.
 

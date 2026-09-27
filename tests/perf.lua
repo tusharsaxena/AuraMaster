@@ -190,7 +190,10 @@ assert_(swap.apiPerIter == targets,
 --    against the same bodies with no brackets at all (performance-§9): probeAbsent is exactly
 --    CM.ApplyVisibility plus addon:OnUnitSwap("PLAYER_TARGET_CHANGED") minus their brackets.
 --    It also leaves out the NameRepaint.Sync that ends every visibility pass and the Arm a swap
---    sends (modules/NameRepaint.lua), so the bytes assertion below proves both add 0 B.
+--    sends (modules/NameRepaint.lua). The starter's target container is icons, so no frame listens
+--    for target here and that Arm returns at its listened check: the bytes assertion below proves
+--    that Sync adds 0 B and that Arm's early return adds 0 B, not that arming is free (arming a
+--    quiet unit allocates one timer handle; nameRepaintAura measures the armed unit's 0 B).
 local off = measure("probeOverheadOff", 1000, function() CM.ApplyVisibility(); NS.addon:OnUnitSwap("PLAYER_TARGET_CHANGED") end)
 NS.Perf.on = true
 local on = measure("probeOverheadOn", 1000, function() CM.ApplyVisibility(); NS.addon:OnUnitSwap("PLAYER_TARGET_CHANGED") end)

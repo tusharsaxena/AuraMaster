@@ -23,8 +23,15 @@ local _, NS = ...
 -- SETTLE fires, the unit is repainted again, and SETTLE is rearmed only if the unit went dirty in the
 -- meantime. So a single new aura gets two repaints, and constant churn one every SETTLE seconds.
 -- A loading screen (NameRepaint.OnEnterWorld) arms every listened unit at ENTER, replacing any armed
--- timer, and a unit swap arms its unit (NameRepaint.Arm). The callbacks are built once at load, so
--- the event path allocates nothing, and nothing arms while stood down (slash-commands-§7).
+-- timer, and a unit swap arms its unit (NameRepaint.Arm). The callbacks are built once at load, so an
+-- event on a unit that already has a timer armed allocates nothing (it only sets the dirty mark);
+-- arming allocates one C_Timer handle, at most one per unit per QUICK, SETTLE or ENTER stage. Nothing
+-- arms while stood down (slash-commands-§7).
+--
+-- WHAT A PASS COSTS. UpdateAllAuras on a managed container only marks it dirty for a full rebuild
+-- and refreshes its item enchantments. The engine does the rebuild itself (parse every aura, release
+-- and reacquire every button, lay them out) in that container's next OnUpdate, after the pass has
+-- returned, so the `nameRepaint` perf bucket times the mark and never the rebuild.
 
 NS.NameRepaint = NS.NameRepaint or {}
 local NR = NS.NameRepaint

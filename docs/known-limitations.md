@@ -59,8 +59,10 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   the name only when the aura is assigned to a button or updated, and on a first sighting the client
   may not have the name yet, so it writes an empty string (issue #24). The addon asks the engine to
   read the auras again 0.5 s after the first change on that unit and 2 s after that, so a name can be
-  blank for up to about 2.5 s after a first sighting, and for about 3 to 5 s after a loading screen
-  (`modules/NameRepaint.lua`). A name that arrives later than that stays blank until the next aura
+  blank for up to about 2.5 s after a first sighting on a quiet unit. On a unit that is already
+  changing, a new aura only marks the follow-up already armed, up to 2 s away, and a name still
+  missing there waits for the next follow-up 2 s later: up to about 4 s. After a loading screen the
+  first pass comes at 3 s and its follow-up at 5 s (`modules/NameRepaint.lua`). A name that arrives later than that stays blank until the next aura
   change on that unit, which starts the cycle again. An aura that never changes on a unit that stays
   quiet can therefore keep its blank until something else on that unit changes, or a `/reload`.
 - **Spell-id filters are honored only for buffs on friendly units and debuffs on hostile units** (the

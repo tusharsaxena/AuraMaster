@@ -306,7 +306,8 @@ bars container unless its name is hidden, a Text container whose template holds 
 icons), and reads nothing but a unit argument `NS.Secrets.IsSafeKey` proves readable. Per unit it
 repaints 0.5 s after the first `UNIT_AURA` of a quiet unit and again 2 s later, then every 2 s only
 while the unit keeps changing; at 3 s and 5 s after a loading screen; and after a target, focus or pet
-swap as after any `UNIT_AURA` (0.5 s later when nothing is armed, else at the armed follow-up). A pass skips a container that is hidden, previewing, parked or
+swap as after any `UNIT_AURA` (0.5 s later when nothing is armed, else at the armed follow-up, within
+about 2 s, or 3 s just after a loading screen). A pass skips a container that is hidden, previewing, parked or
 stale, so it never sends `UpdateAllAuras` to a disabled engine, and it sends nothing else: no apply,
 no restyle and no button access. A name that arrives later than the follow-up stays blank until the
 next `UNIT_AURA` on that unit (`docs/known-limitations.md`). How to see it working: `docs/debug.md`

@@ -68,7 +68,10 @@ NS.Perf = lib:New({
         { key = "emptyPass" },
         -- modules/NameRepaint.lua: one repaint of a unit's name-showing containers, one UpdateAllAuras
         -- each, so a name the engine wrote blank on first sighting appears. Runs in combat and while
-        -- auras are secret, bounded by its timers: at most once every 2 s per unit under churn.
+        -- auras are secret, bounded by its timers: one pass every 2 s per unit under constant churn,
+        -- and at most two per 2.5 s (as little as 0.5 s apart) when changes come in bursts. It times
+        -- only the UpdateAllAuras calls, which mark each container dirty; the engine's rebuild runs in
+        -- the container's next OnUpdate, outside every addon bucket.
         { key = "nameRepaint" },
     },
 

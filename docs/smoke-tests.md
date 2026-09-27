@@ -1859,15 +1859,18 @@ change any other setting**: each of those redraws every name on its own and woul
      Start the client and log in on a character that has several of its own buffs up at login (a
      long class buff, a food or flask buff). Do not `/reload` and do not touch anything. → Within
      about 5 s of the world appearing, every bar in #1 shows its spell name, with no `/reload` and no
-     toggle. The console shows `[Names] repaint player: N container(s) (enter)` and then
-     `(settle)`, with N at least 1. No Lua error.
+     toggle. Then run `/am diagnostics`: the `[Diag] name repaint:` line reads `passes=` at least 2
+     (the `enter` pass at 3 s and its `settle` at 5 s) and `last=player@<time>`. The trace is off at
+     login and the two passes run before it can be turned on, so no `[Names]` line is expected
+     here. No Lua error.
      Result:
 282. **BN2.** Out of combat at a target dummy, cast a spell you have not cast this session that puts
      a buff on you (a bar in #1). → The bar has its name within about 2.5 s: a `[Names] repaint
      player: ... (quick)` line, then `(settle)`. No Lua error.
      Result:
-283. **BN3.** Clear the cache again as in BN1, log in, and pull the first pack of a Mythic+ key (or
-     fight a dummy with a rotation that gains several new buffs). → No Lua error during the fight.
+283. **BN3.** Clear the cache again as in BN1, log in, turn the trace on with `/am debug on` (it is
+     off after every login), and pull the first pack of a Mythic+ key (or fight a dummy with a
+     rotation that gains several new buffs). → No Lua error during the fight.
      A bar that appears blank in combat gets its name within a few seconds, still in combat, and
      `[Names]` lines appear while in combat. The bars do not visibly flicker when a repaint runs.
      No Lua error.
@@ -1875,7 +1878,9 @@ change any other setting**: each of those redraws every name on its own and woul
 284. **BN4.** Before the check, make a bars container on the target's buffs (`/am new target buffs
      bars`). Out of combat, target a unit that already carries buffs that are not changing (a city
      guard, an NPC with a permanent aura, a player with long buffs), then another such unit, then
-     the first again. → After each swap the new target's bars show their names within about 2.5 s,
+     the first again, waiting after each swap for its `(settle)` line (about 3 s) before the next: a
+     swap while the last swap's follow-up is still armed only marks it, and is repainted at that
+     `(settle)` instead. → After each swap the new target's bars show their names within about 2.5 s,
      with no aura change on the target, and the console shows `[Names] repaint target: N
      container(s) (quick)` after each swap. No Lua error.
      Result:
@@ -1896,13 +1901,31 @@ change any other setting**: each of those redraws every name on its own and woul
      `/am diagnostics` reads `name repaint: listening=none armed=none`. `/am enable`, then cast a
      buff → `[Names] repaint player` lines appear again. No Lua error.
      Result:
-288. **BN8.** Take a capture in a busy fight (a Mythic+ pull, or a dummy with a rotation that keeps
-     gaining and losing buffs), with every other addon disabled: `/am perf start blank-names`,
-     `/am perf measure a` and fight, then `/am perf measure b` and the same fight, `/am perf
-     finish`, `/am perf report` (`docs/performance.md`, *Taking a capture*). Record the report and
-     the JSON as `docs/perf-analysis/README.md` describes. → The report lists a `nameRepaint`
-     bucket in arm A with `calls` of no more than about one per 1.25 s per listened unit over the
-     arm (two per 2.5 s, which already counts target, focus and pet swaps), plus two per listened
-     unit for each loading screen in the arm,
-     and a `maxMs` in line with `unitSwap`'s; arm B has none. No Lua error.
+288. **BN8.** Take two captures of the same busy fight (a Mythic+ pull, or a dummy with a rotation
+     that keeps gaining and losing buffs), with every other addon disabled and #4 disabled for both.
+     Capture 1 as the starters are: `/am perf start blank-names`, `/am perf measure a` and fight,
+     then `/am perf measure b` and the same fight, `/am perf finish`, `/am perf report`
+     (`docs/performance.md`, *Taking a capture*). Capture 2 the same, named `blank-names-off`, after
+     unticking #1's Bars → Name text → **Show**, so that no container shows a name the engine writes
+     and the repaint neither listens nor runs (`/am diagnostics` reads `name repaint:
+     listening=none`). Record both reports and JSONs as `docs/perf-analysis/README.md` describes.
+     → Capture 1 lists a `nameRepaint` bucket in arm A with `calls` of no more than about one per
+     1.25 s per listened unit over the arm (two per 2.5 s, which already counts target, focus and
+     pet swaps), plus two per listened unit for each loading screen in the arm; its arm B has none,
+     and capture 2 has none in either arm. The bucket's `totalMs` and `maxMs` are not a cost
+     measure: they hold only the `UpdateAllAuras` calls, which mark each container dirty, and the
+     engine's rebuild runs in the container's next `OnUpdate`, outside every bucket. Judge the
+     rebuild from the frame-time arms instead: capture 1's arm A against arm B, beside capture 2's,
+     is what the repaint adds in combat, and it should be small beside the fight's own frame time.
+     No Lua error.
+     Result:
+289. **BN9.** A Text line's loop across a repaint. On #4, open Text → Animation and set the Loop to
+     a pulse (then, a second time, a bounce), keep its template holding `$spellname$`, and fight a
+     dummy with a rotation that keeps gaining and losing cooldowns and buffs, with the trace on. →
+     When a `[Names] repaint player` line prints, no line's pulse or bounce visibly snaps to a
+     different phase or offset. A repaint makes the engine release and reacquire every button, so a
+     line can be drawn by a different button afterwards, and buttons dressed at different times run
+     their loops out of step. If lines do snap, record it: the fix is to leave Text containers with
+     a running loop out of the repaint, or to restart every loop together, and until then it is a
+     known limitation. No Lua error.
      Result:

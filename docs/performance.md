@@ -40,14 +40,19 @@ the name. A unit with only icons containers registers nothing. Unlike the two wa
 combat. That makes it the addon's first aura-driven path that runs in combat, and these are its bounds
 (issue #24, `docs/midnight-quirks.md`):
 
-- **Each event costs** one `OnEvent` call, one `Secrets.IsSafeKey` and a unit compare, with no
-  allocation and no aura read. The first event of a quiet unit arms the 0.5 s timer; every later one
-  while a timer is armed only marks the unit dirty. Offline (`nameRepaintAura`): 0 B/iter, and a burst
-  arms no further timer.
+- **Each event costs** one `OnEvent` call, one `Secrets.IsSafeKey` and a unit compare, with no aura
+  read. The first event of a quiet unit arms the 0.5 s timer, which allocates one timer handle; every
+  later one while a timer is armed only marks the unit dirty and allocates nothing. Offline
+  (`nameRepaintAura`, measured after the first event armed): 0 B/iter, and a burst arms no further
+  timer.
 - **Each pass costs** one `UpdateAllAuras` per eligible container on that unit, the same call a target
-  swap sends, and the engine's full rebuild of those containers, which runs inside the call and so
-  lands in the bucket. Offline (`nameRepaintPass`): one engine call per eligible container and 0
-  B/iter. The mock engine does no rebuild, so the rebuild's real cost shows only in game.
+  swap sends. That call only marks the container dirty for a full rebuild and refreshes its item
+  enchantments, and that is all the `nameRepaint` bucket holds. The engine runs the rebuild itself
+  (it parses every aura, releases and reacquires every button, and lays them out again) in the
+  container's next `OnUpdate`, after the pass has returned, so the rebuild lands in no addon bucket
+  and shows only in a capture's frame-time arms. Offline (`nameRepaintPass`): one engine call per
+  eligible container and 0 B/iter, which is the mark and nothing more. How to measure the rebuild in
+  game: `docs/smoke-tests.md`, *Blank bar names*, BN8.
 - **The rate is bounded per unit.** A single new aura gets two passes, 0.5 s and 2.5 s after it
   appears, and then the unit goes quiet. Constant churn gets one pass every 2 s. The worst case is
   churn in bursts: a change just after a `settle` pass starts a new cycle, so a unit can take two
@@ -111,7 +116,7 @@ Declared in report order in `buckets` (`core/PerfSetup.lua:49`), each bracketed 
 | `styleElement` | — | `modules/Style.lua:849-859` | Dressing one bar, icon or line of text: called by the engine's `initializeFrame` as it creates buttons, by a restyle, and by the preview |
 | `timedScan` | — | `modules/TimedSpells.lua` `scanTick` | One readable-state scan of the player's and pet's buffs, 0.5 s after their auras changed or the readable gate reopened. The addon's only path that reads aura data while locked; absent from a capture with no "without a duration" container |
 | `emptyPass` | — | `modules/EmptyWatch.lua` `runPass` | One re-prediction of every unlocked container, 0.2 s after its units' auras changed, and the visibility pass of any whose answer changed. Only while unlocked, out of test mode and out of combat; absent from a capture taken locked |
-| `nameRepaint` | — | `modules/NameRepaint.lua` `NR.Repaint` | One repaint of a unit's name-showing containers, one `UpdateAllAuras` each, so a name the engine wrote blank on first sighting appears. The addon's only aura-driven Lua path that runs in combat and while auras are secret, bounded by its timers to at most two passes per 2.5 s per unit (one every 2 s under constant churn); the engine's rebuild inside each call lands here. Absent from a capture with no bars container showing its name and no Text container showing the name |
+| `nameRepaint` | — | `modules/NameRepaint.lua` `NR.Repaint` | One repaint of a unit's name-showing containers, one `UpdateAllAuras` each, so a name the engine wrote blank on first sighting appears. The addon's only aura-driven Lua path that runs in combat and while auras are secret, bounded by its timers to at most two passes per 2.5 s per unit (one every 2 s under constant churn). It times only the `UpdateAllAuras` calls, which mark each container dirty; the engine's rebuild runs in the container's next `OnUpdate` and lands in no bucket. Absent from a capture with no bars container showing its name and no Text container showing the name |
 
 **Never sum `applyPass` and `applyContainer`**: the parent already contains its children
 (performance-§3). **`styleElement` is declared at the root because its callers differ**, and it
@@ -186,8 +191,10 @@ end of the run would bring the addon back under a player who had switched it off
   retarget; `applyPass` from one where nothing was changed.
 - **`nameRepaint` follows `unitSwap`.** A target, focus or pet swap arms a repaint of that unit
   0.5 s later and a follow-up 2 s after it, so each swap adds one or two `nameRepaint` calls on top of
-  the aura churn. Its `totalMs` holds the engine's rebuild of each repainted container, which is why it
-  can outweigh the handful of `UpdateAllAuras` calls it counts.
+  the aura churn. Its `totalMs` holds only the `UpdateAllAuras` calls, which mark each repainted
+  container dirty. The engine's rebuild of that container runs in its next `OnUpdate`, outside every
+  bucket, so a small `nameRepaint` figure says nothing about what the rebuild costs: judge that from
+  the frame-time arms (BN8 in `docs/smoke-tests.md`).
 
 ## The offline runner
 
@@ -216,7 +223,7 @@ charged to the addon. Figures from bundles recorded before this change are not c
 | `unitSwap` | A target change refreshing the containers on that unit |
 | `probeOverheadOff` | The hottest bracketed path with capture off |
 | `probeOverheadOn` | The same path with capture on, for orientation; must make the same engine calls |
-| `probeAbsent` | The same bodies with no brackets at all. `probeOverheadOff` must match its engine calls and allocate no more, which is the evidence that a dormant bracket costs nothing (performance-§9). It also leaves out the `NameRepaint.Sync` that ends every visibility pass and the `NameRepaint.Arm` a swap sends, so the same check proves both allocate nothing |
+| `probeAbsent` | The same bodies with no brackets at all. `probeOverheadOff` must match its engine calls and allocate no more, which is the evidence that a dormant bracket costs nothing (performance-§9). It also leaves out the `NameRepaint.Sync` that ends every visibility pass and the `NameRepaint.Arm` a swap sends. The runner has no name-showing target container, so that `Arm` returns at its listened check: the same check proves `Sync` and that early return allocate nothing, not that arming is free (arming a quiet unit allocates one timer handle) |
 | `unitAuraFiltered` | TimedSpells' unit frame, dispatched as the client does from its `RegisterUnitEvent` unit list: a `nameplate1` `UNIT_AURA` must never reach the handler, which must be registered for exactly `player,pet`; the measured loop is a player `UNIT_AURA` with its scan already queued, which must allocate 0 B/iter and arm no further timer |
 | `emptyWatchAura` | EmptyWatch's player frame: nothing registered while locked; unlocked, a player `UNIT_AURA` with the pass already queued must allocate 0 B/iter and arm no further timer |
 | `nameRepaintAura` | NameRepaint's player frame, registered while locked: the first player `UNIT_AURA` of a quiet unit arms exactly one timer, and a burst after that must arm no further timer and allocate 0 B/iter |
