@@ -745,10 +745,14 @@ test("diag: the name repaint line reads state only: it registers nothing and arm
     local NS, mocks = fresh()
     mocks.__fireTimers(); mocks.__fireTimers()
     local NR = NS.NameRepaint
+    -- The target container now shows a name, but its visibility pass has not run: a Sync would open
+    -- the target frame, so the report must leave it closed.
+    NS.SetByPath("container.style", "bars", 3)
     local timersBefore = #mocks.__timers()
     local units = table.concat(NR.unitFrames[1].__unitEvents.UNIT_AURA, ",")
     build(NS); build(NS)
-    -- red under: a report that syncs or arms the repaint (a timer or a registration of its own)
+    -- red under: a report that syncs (NR.Sync opens the target frame) or arms the repaint (NR.Arm or
+    -- NR.OnEnterWorld adds a timer)
     assertEqual(#mocks.__timers(), timersBefore, "no timer armed by the report")
     assertEqual(table.concat(NR.unitFrames[1].__unitEvents.UNIT_AURA, ","), units, "no registration")
     local f2 = NR.unitFrames[2]

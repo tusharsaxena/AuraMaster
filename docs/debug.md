@@ -98,8 +98,10 @@ The header's `name repaint:` line reads the module's state, and reading it chang
 - `passes=` how many repaints have run this session, and `last=` the unit and `GetTime()` of the
   latest one, or `never`.
 
-A name that stays blank while `passes` climbs and `last` is recent is not this cause. A unit missing
-from `listening` has no container the repaint thinks shows a name.
+Both counters are session-wide, and a pass counts even when it reaches no container (one that is
+parked, stale, hidden or previewing is skipped). So they rule this cause out only when `last=` names
+the blank bar's unit, the pass ran after the name went blank, and that container is shown and not
+previewing. A unit missing from `listening` has no container the repaint thinks shows a name.
 
 ### The plan verdict
 
