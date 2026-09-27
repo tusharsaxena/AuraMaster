@@ -109,6 +109,8 @@ modules\FramePicker.lua
 modules\BlizzardFrames.lua
 modules\Container.lua
 modules\ContainerManager.lua
+# Conventional: the blank bar name repaint; reaches ContainerManager, Style and Secrets at call time.
+modules\NameRepaint.lua
 # Conventional: `/am diagnostics` and `/am debug diagnostics`; reads every module above at call time.
 modules\Diagnostics.lua
 

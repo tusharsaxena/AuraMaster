@@ -721,7 +721,7 @@ badge and any count quoted in the docs must agree with it.
 - empty: a target switch re-predicts at once, so no follower hangs from the emptied engine in between
 - empty: a target switch folds a pass already due into its own, leaving no timer behind
 
-### test_namerepaint.lua (8)
+### test_namerepaint.lua (26)
 
 - names: a bars container shows the engine's name by default
 - names: a bars container with its name hidden shows none
@@ -731,6 +731,24 @@ badge and any count quoted in the docs must agree with it.
 - names: an escaped $$spellname$$ is literal text, not the name token
 - names: the name token is found in any case
 - names: a refused text template draws the default, which has a name
+- repaint: the player frame registers only the units a name-showing container tracks
+- repaint: a name-showing target or focus container opens the second frame, and its loss closes it
+- repaint: Sync is idempotent and registers again only when a frame's pair changes
+- repaint: each frame is created hidden
+- repaint: while stood down Sync closes both frames and arms nothing
+- repaint: Stop closes both frames, cancels every timer and clears the dirty marks
+- repaint: a unit that stops being wanted loses its armed timer
+- repaint: a UNIT_AURA burst arms one QUICK timer per unit, and nothing runs inside the handler
+- repaint: a unit outside the frame's registered pair arms nothing
+- repaint: an unreadable unit argument schedules the units that frame registered
+- repaint: QUICK repaints and always arms SETTLE; a quiet SETTLE repaints once more and stops
+- repaint: a unit that goes dirty while SETTLE is armed gets another SETTLE
+- repaint: OnEnterWorld arms ENTER for every listened unit, replacing any armed timer
+- repaint: Arm is bounded to the listened units
+- repaint: a pass reaches only shown, live, name-showing containers on its unit
+- repaint: a parked, stale, previewing or engine-less container is never repainted
+- repaint: the pass still runs in combat lockdown and while auras are secret
+- repaint: one Names debug line per pass and none per event
 
 ### test_anchors_close.lua (6)
 
@@ -1937,7 +1955,7 @@ badge and any count quoted in the docs must agree with it.
 | test_anchors_edges.lua | 15 |
 | test_anchors_hang.lua | 11 |
 | test_emptywatch.lua | 25 |
-| test_namerepaint.lua | 8 |
+| test_namerepaint.lua | 26 |
 | test_anchors_close.lua | 6 |
 | test_anchors_label.lua | 23 |
 | test_anchors_strip.lua | 7 |
@@ -1991,4 +2009,4 @@ badge and any count quoted in the docs must agree with it.
 | test_eol.lua | 2 |
 | test_layout_cap.lua | 13 |
 | test_diagnostics_contract.lua | 7 |
-| **Total** | **1673** |
+| **Total** | **1691** |
