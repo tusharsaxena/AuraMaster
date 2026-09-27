@@ -757,10 +757,25 @@ test("diag: the fonts primed line lists each primed file, size and flags, and th
     local NS, mocks = primerEnv()
     primerFonts(NS)
     NS.FontPrimer.PrimeAll()
-    -- red under: the full path printed, the client's empty flag string printed as nothing, or the
-    -- refresh read from the hold timer rather than its own
+    -- red under: the full path printed, or the client's empty flag string printed as nothing
     assertEqual(primerLine(NS), "[Diag] fonts primed: 2 [Prototype.ttf 10 -, Kait.ttf 17 THICKOUTLINE] "
         .. "refresh=armed")
+    -- Fire only the 0.5 s refresh; the 1 s hold timer stays armed and the frame stays shown.
+    local fired, holdLive = 0, false
+    local queued = #mocks.__timers
+    for i = queued, 1, -1 do                -- taken off the queue, so the fire below skips it
+        local t = mocks.__timers[i]
+        if t.delay == 0.5 then
+            table.remove(mocks.__timers, i); fired = fired + 1; t.fn()
+        elseif t.delay == 1.0 then
+            holdLive = true
+        end
+    end
+    assertEqual(fired, 1, "one refresh timer fired")
+    assertTrue(holdLive, "the hold timer still armed")
+    -- red under: the refresh read from the hold timer rather than its own
+    assertEqual(primerLine(NS), "[Diag] fonts primed: 2 [Prototype.ttf 10 -, Kait.ttf 17 THICKOUTLINE] "
+        .. "refresh=idle")
     mocks.__fireTimers()
     -- red under: the refresh state cached at priming rather than read at report time
     assertEqual(primerLine(NS), "[Diag] fonts primed: 2 [Prototype.ttf 10 -, Kait.ttf 17 THICKOUTLINE] "
