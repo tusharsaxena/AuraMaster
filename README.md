@@ -10,12 +10,15 @@ Ka0s Aura Master lets you build your own buff and debuff displays. Each one is a
 whose auras it shows (yours, your target's, your focus's or your pet's), whether it shows buffs,
 debuffs or your weapon enchants, and whether they draw as timer bars, as icons or as lines of text.
 
-Make as many as you like and trim each one down to the auras you actually care about. Choose from several predefined spell categories (offensive cooldowns, defensive cooldowns, movement abilities, utility spells, etc) to select which auras are shown in which container, create your own custom spell categories or use a blacklist/whitelist to fine-tune further per container.
+Make as many as you like, and trim each one down to the auras you actually care about. Each
+container picks from the built-in spell categories (offensive cooldowns, defensive cooldowns,
+movement abilities, utility spells and so on) or ones you make yourself, and has its own whitelist
+and blacklist for anything the categories don't cover.
 
-Aura Master is built on the Aura Container APIs that arrived in 12.1. The game hides aura details
+Aura Master is built on the Aura Container API that arrived in 12.1. The game hides aura details
 from addons during combat, so Aura Master never reads your auras at all. It tells the game's own
-aura display what to show and how to style it, and the game does the rest, in combat and out of it. A container
-can sit anywhere on screen, or attach to another container or to any in-game frame. 
+aura display what to show and how to style it, and the game does the rest, in combat and out of it.
+A container can sit anywhere on screen, or attach to another container or to any in-game frame.
 
 ## Screenshots
 
@@ -24,13 +27,13 @@ can sit anywhere on screen, or attach to another container or to any in-game fra
 ![AuraMaster live in combat](https://media.forgecdn.net/attachments/1980/662/auramaster-screenshot-01-jpg.jpg)
 _[Watch on YouTube](https://www.youtube.com/watch?v=lJoZiVA_SBE)_
 
-**_Unlocked Mode_**
+**_Unlocked mode_**
 
-![Unlocked Mode](https://media.forgecdn.net/attachments/1979/411/auramaster-screenshot-02-jpg.jpg)
+![Unlocked mode](https://media.forgecdn.net/attachments/1979/411/auramaster-screenshot-02-jpg.jpg)
 
-**_Unlocked Mode with Test Spells_**
+**_Unlocked mode with test spells_**
 
-![Unlocked Mode with Test Spells](https://media.forgecdn.net/attachments/1979/412/auramaster-screenshot-03-jpg.jpg)
+![Unlocked mode with test spells](https://media.forgecdn.net/attachments/1979/412/auramaster-screenshot-03-jpg.jpg)
 
 **_Spell categories_**
 
@@ -50,24 +53,10 @@ Building your own display takes four steps, all on the Containers page. The Cont
 the top picks which container you're working on, and the list down the left side takes you through
 the rest.
 
-1. Create a container. Click **New container**, or type `/am new target debuffs icons` in chat. On
-   General, pick whose auras it shows (yours, your target's, your focus's or your pet's), whether it
-   shows buffs or debuffs, and whether it draws them as bars, icons or text. You can rename,
-   duplicate or delete it there too, or copy another container's settings onto it.
-2. Choose what it shows. Filters decides which auras make the cut: who cast them, timed or
-   permanent, a maximum duration, and the spell categories. Each category is set to Show or Hide,
-   and an aura in any category set to Show gets drawn. The Overrides tab holds a whitelist and a
-   blacklist for single spells, and the whitelist always wins. General → Spell Categories is where
-   you change which spells a category holds, or make your own. If a filter can't work where you've
-   put it, an orange line at the top of the page says why.
-3. Place it. Layout decides where the container lives: anywhere on screen, following another
-   container as that one grows, or attached to a frame such as your unit frame or an action bar.
-   **Pick a frame…** closes the settings so you can just click the one you want. Growth direction,
-   spacing, scale and the optional name label are on Layout too.
-4. Make it look right. The last entry in the list is the container's style, Bar, Icon or Text, with
-   its textures, fonts, colors and borders. A Text container draws each aura as one line from a
-   template such as `$spellname$[ x$stacks$][ - $remainingduration$]`, and the page lists every
-   token it understands. General → Dispel Colors picks the color for each dispel type.
+- **Create a container**. Click New container, or type `/am new target debuffs icons` in chat. On General, pick whose auras it shows (yours, your target's, your focus's or your pet's), whether it shows buffs or debuffs, and whether it draws them as bars, icons or text. You can rename, duplicate or delete it there too, or copy another container's settings onto it.
+- **Choose what it shows**. Filters decides which auras make the cut: who cast them, timed or permanent, a maximum duration, and the spell categories. Each category is set to Show or Hide, and an aura in any category set to Show gets drawn. The Overrides tab holds a whitelist and a blacklist for single spells, and the whitelist always wins. General → Spell Categories is where you change which spells a category holds, or make your own. If a filter can't work where you've put it, an orange line at the top of the page says why.
+- **Place it**. Layout decides where the container lives: anywhere on screen, following another container as that one grows, or attached to a frame such as your unit frame or an action bar. **Pick a frame…** closes the settings so you can just click the one you want. Growth direction, spacing, scale and the optional name label are on Layout too.
+- **Make it look right**. The last entry in the list is the container's style, Bar, Icon or Text, with its textures, fonts, colors and borders. A Text container draws each aura as one line from a template such as `$spellname$[ x$stacks$][ - $remainingduration$]`, and the page lists every token it understands. General → Dispel Colors picks the color for each dispel type.
 
 If you change something mid-fight, it waits until combat ends (or until the encounter, key or match
 is over), and chat tells you which. `/am disable` hides every container at once and `/am enable`
@@ -86,16 +75,12 @@ and text, which the game fills in with the details the addon itself is not allow
 So Aura Master never looks at an aura itself. That sounds roundabout, but on 12.1 it's the only way
 an addon can still show your auras in the middle of a boss fight. The steps go like this:
 
-1. You describe a container: whose auras, which kind, what to filter out and how it should look.
-2. Aura Master turns your filters into rules the game understands (one set for each category you set
-   to Show, or a single set when none is) and hands them to the aura display the game added in 12.1.
-3. The game watches that unit's auras, in combat too, where addons aren't allowed to look, and keeps
+- You describe a container: whose auras, which kind, what to filter out and how it should look.
+- Aura Master turns your filters into rules the game understands (one set for each category you set to Show, or a single set when none is) and hands them to the aura display the game added in 12.1.
+- The game watches that unit's auras, in combat too, where addons aren't allowed to look, and keeps
    the ones that match.
-4. For each match the game makes a bar, an icon or a line of text, and Aura Master dresses it with
-   your textures, fonts, colors and border. The game fills in the icon, the name, the time left and
-   the stack count, and runs the countdown.
-5. When you change a setting, Aura Master rebuilds the rules and redresses what's already on screen
-   as soon as the game allows it.
+- For each match the game makes a bar, an icon or a line of text, and Aura Master dresses it with your textures, fonts, colors and border. The game fills in the icon, the name, the time left and the stack count, and runs the countdown.
+- When you change a setting, Aura Master rebuilds the rules and redresses what's already on screen as soon as the game allows it.
 
 Two limits come out of this. The game has no rule for "auras without a duration", so for that filter
 Aura Master learns which of your and your pet's buffs carry a timer while you're out of combat, and
@@ -137,9 +122,9 @@ on your own debuffs does nothing, and the Filters section warns you when that's 
 
 ## Reporting a bug
 
-1. Type `/am debug on` and reproduce the bug.
-2. Type `/am diagnostics`.
-3. If the debug window isn't open, open it with `/am debug`. Press **Copy**, copy the entire output, and include it with your bug report.
+- Type `/am debug on` and reproduce the bug.
+- Type `/am diagnostics`.
+- If the debug window isn't open, open it with `/am debug`. Press **Copy**, copy the entire output, and include it with your bug report.
 
 The diagnostics report goes in after the debug trace in the same window, so one copy gets you both.
 
@@ -153,6 +138,7 @@ Please file reports there rather than in comments, so nothing gets lost.
 
 | Version | Date | Highlights |
 |---------|------|------------|
+| 1.0.1 | 2026-09-27 | - Fixed bar names and timers that stayed blank until a `/reload` when a container used an addon font such as Ka0s Prototype. Aura Master now loads every font your containers use at login and again after each loading screen |
 | 1.0.0 | 2026-09-27 | - First release: build your own buff and debuff displays for yourself, your target, your focus and your pet, drawn as bars, icons or lines of text<br>- Choose what each one shows with spell categories (the built-in ones or your own), who cast it, how long it lasts, and a whitelist and blacklist<br>- Put a container anywhere on screen, or attach it to another container or to any frame; unlocked, each one shows a handle and an optional name label<br>- Test mode fills every container with sample auras, so you can style it before a real buff turns up<br>- Weapon enchants, dispel-type colors, and `/am diagnostics` for bug reports |
 
 ## Credits
