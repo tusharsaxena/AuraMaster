@@ -1,0 +1,34 @@
+FP-04 whole-branch review (fix/2026-09-27-blank-bar-names vs master)
+Lenses: runtime, standards, tests, docs. Adversarial verification applied.
+
+Confirmed (8), all fixed in 2fb1abe:
+- [runtime/medium] Addon-written label and Text-line literal text is drawn in the same frame as the prime, and the follow-up refresh cannot repaint it
+- [runtime/low] Test-mode placeholders are excluded from the refresh, so a font changed while styling in test mode can leave preview names blank
+- [tests/high] No test catches the frame never being shown; the 'red under: priming on a hidden frame' note is false
+- [tests/medium] The walk test's red-under claims it catches any block left out, but dropping { "bars", "time" } passes it
+- [tests/low] A font the client refuses (SetFont answers false) is untested
+- [tests/low] The stood-down gate inside the refresh callback is untested
+- [docs/medium] The primed-font file names in debug.md and smoke check FP6 are not the real ones
+- [docs/low] The applyPass bracket citation this branch shifted is off by one
+
+Refuted (3):
+- [standards] performance.md says an already-primed PrimeAll allocates nothing, but every call allocates the container list
+- [standards] A font the client refuses is dropped silently: no trace, and debug.md's explanation for a missing font leaves this case out
+- [docs] The performance.md claim that the walk allocates nothing for an already-primed triple overstates it
+
+Fix commit: 2fb1abe FP-04: address whole-branch review: the refresh re-applies
+for addon-written text; primer tests tightened; real font names in docs
+- FontPrimer refresh() now also calls CM.RequestApply(nil, true) once, so labels,
+  Text literals and test-mode previews are re-dressed (waits quietly in combat/secrecy).
+- Tests added: re-apply rewrites a name label; test mode re-applies the previewing
+  container, never its engine; stood-down refresh does nothing; a refused font is not
+  counted, listed, traced or refreshed for.
+- Tests tightened: frame built hidden and asserted shown/hidden; walk test gives
+  bars.time its own triple; SetPoint anchor asserted.
+- Docs: real font names (Ka0s Prototype.ttf, Ka0s Kait.ttf) in debug.md, FP6 and
+  fixtures; applyPass citation ContainerManager.lua:324-332; data-flow.md and
+  module-map.md describe the re-apply; new owner smoke check FP9 (result blank).
+- Not edited: spec P2 "Follow-up refresh" still says UpdateAllAuras only.
+
+Battery at FP-05: 1685/1685 sharded and -j 1; lint 0 warnings / 0 errors in 146 files;
+complexity 0 functions above CCN 15; perf.lua ok.
