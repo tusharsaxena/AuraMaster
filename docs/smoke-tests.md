@@ -1844,3 +1844,63 @@ lines, so each check confirms nothing else moved.
      page moves to General/General on the new container, the same as the button. Then go to
      Filters, close the panel and type `/am new`: the panel does not open. Open it with `/am`: it
      is on General/General with that container. Result: **PASS** (owner, 2026-09-26)
+
+## Blank bar names (2026-09-27, owner to run)
+
+Issue #24, branch `fix/2026-09-27-blank-bar-names`. Use the starter containers (#1 Player buffs as
+bars, #2 Player debuffs as icons, #3 Target debuffs (mine) as icons, #4 Player cooldowns as text),
+turn on Lua errors, and turn on the trace with `/am debug on`; `/am debug` opens the console, where
+each repaint writes one `[Names] repaint <unit>: N container(s) (<stage>)` line. **Between an aura
+appearing and the check, do not lock or unlock, toggle test mode, change a visibility setting or
+change any other setting**: each of those redraws every name on its own and would hide the bug
+(`docs/debug.md`, *Bar names that do not show*).
+
+281. **BN1.** Log out and quit the client. Rename `World of Warcraft\_retail_\Cache` to `Cache.old`.
+     Start the client and log in on a character that has several of its own buffs up at login (a
+     long class buff, a food or flask buff). Do not `/reload` and do not touch anything. → Within
+     about 5 s of the world appearing, every bar in #1 shows its spell name, with no `/reload` and no
+     toggle. The console shows `[Names] repaint player: N container(s) (enter)` and then
+     `(settle)`, with N at least 1. No Lua error.
+     Result:
+282. **BN2.** Out of combat at a target dummy, cast a spell you have not cast this session that puts
+     a buff on you (a bar in #1). → The bar has its name within about 2.5 s: a `[Names] repaint
+     player: ... (quick)` line, then `(settle)`. No Lua error.
+     Result:
+283. **BN3.** Clear the cache again as in BN1, log in, and pull the first pack of a Mythic+ key (or
+     fight a dummy with a rotation that gains several new buffs). → No Lua error during the fight.
+     A bar that appears blank in combat gets its name within a few seconds, still in combat, and
+     `[Names]` lines appear while in combat. The bars do not visibly flicker when a repaint runs.
+     No Lua error.
+     Result:
+284. **BN4.** Before the check, make a bars container on the target's buffs (`/am new target buffs
+     bars`). Out of combat, target a unit that already carries buffs that are not changing (a city
+     guard, an NPC with a permanent aura, a player with long buffs), then another such unit, then
+     the first again. → After each swap the new target's bars show their names within about 2.5 s,
+     with no aura change on the target, and the console shows `[Names] repaint target: N
+     container(s) (quick)` after each swap. No Lua error.
+     Result:
+285. **BN5.** On Containers, select #1 and untick Bars → Name text → **Show**; select #4 and untick
+     **Enabled**. Run `/am diagnostics`, then cast a buff on yourself. → The `[Diag] name repaint:`
+     line's `listening=` does not name `player`, and the buff writes no `[Names] repaint player`
+     line: the icons containers #2 and #3 and a bars container with its name hidden are never
+     repainted. Tick #1's **Show** and #4's **Enabled** again and cast the buff again → `listening=`
+     names `player`, and a `[Names] repaint player` line appears. No Lua error.
+     Result:
+286. **BN6.** After BN2, run `/am diagnostics`. → The header has one `[Diag] name repaint:
+     listening=... armed=... passes=N last=<unit>@<time>` line, with `player` in `listening=`, N at
+     least 1 and `last=` naming a unit. There is no `time-text widths cached` line, and no `Shown`
+     line carries `nameW=`, `timeW=` or `barW=`. No Lua error.
+     Result:
+287. **BN7.** `/am disable`, keep the trace on, then cast a buff on yourself, swap targets, and take
+     a loading screen (a portal or a dungeon entrance). → No `[Names]` line appears, and
+     `/am diagnostics` reads `name repaint: listening=none armed=none`. `/am enable`, then cast a
+     buff → `[Names] repaint player` lines appear again. No Lua error.
+     Result:
+288. **BN8.** Take a capture in a busy fight (a Mythic+ pull, or a dummy with a rotation that keeps
+     gaining and losing buffs), with every other addon disabled: `/am perf start blank-names`,
+     `/am perf measure a` and fight, then `/am perf measure b` and the same fight, `/am perf
+     finish`, `/am perf report` (`docs/performance.md`, *Taking a capture*). Record the report and
+     the JSON as `docs/perf-analysis/README.md` describes. → The report lists a `nameRepaint`
+     bucket in arm A with `calls` of no more than about one per 2 s per listened unit over the arm,
+     and a `maxMs` in line with `unitSwap`'s; arm B has none. No Lua error.
+     Result:

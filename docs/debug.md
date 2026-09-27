@@ -81,13 +81,20 @@ Automatic or `(picked)`, and `join=`, the batch 9 side the pair is under the par
 
 ### Bar names that do not show
 
-Blizzard's aura engine writes a bar's spell name from the aura's data when the aura is assigned to a
-button or updated, and at no other time. On a first sighting that name can still be missing, the
-engine writes an empty string, and an aura that never updates keeps the blank for its whole life
-(issue #24, docs/superpowers/research/2026-09-27-blank-bar-names-findings.md).
-`modules/NameRepaint.lua` repaints every bars container, and every text container whose template
-shows the name, through the engine's own `UpdateAllAuras`: about 0.5 s after the first `UNIT_AURA`
-of a quiet unit, again 2 s later, and 3 s after a loading screen.
+A bar with its icon, fill and time but no spell name is not a layout or font fault. Blizzard's aura
+engine writes a bar's spell name from the aura's data when the aura is assigned to a button or
+updated, and at no other time. On a first sighting that name can still be missing, the engine writes
+an empty string, and an aura that never updates keeps the blank for its whole life. A permanent buff
+present at login is the worst case (issue #24, docs/superpowers/research/2026-09-27-blank-bar-names-findings.md,
+and `docs/midnight-quirks.md`).
+
+`modules/NameRepaint.lua` repaints every bars container that shows its name, and every Text container
+whose template has the name token, through the engine's own `UpdateAllAuras`, which rereads every aura
+and rewrites every name. Per unit it runs about 0.5 s after the first `UNIT_AURA` of a quiet unit
+(`quick`), again 2 s later (`settle`, repeated every 2 s only while the unit keeps changing), 3 s
+after a loading screen (`enter`, then `settle` at 5 s), and 0.5 s after a target, focus or pet swap.
+It runs in combat too. An icons container, or a bars container with its name hidden, is never
+repainted: it shows no name the engine writes.
 
 The header's `name repaint:` line reads the module's state, and reading it changes nothing:
 
@@ -102,6 +109,26 @@ Both counters are session-wide, and a pass counts even when it reaches no contai
 parked, stale, hidden or previewing is skipped). So they rule this cause out only when `last=` names
 the blank bar's unit, the pass ran after the name went blank, and that container is shown and not
 previewing. A unit missing from `listening` has no container the repaint thinks shows a name.
+
+**The `Names` trace.** With logging on (`/am debug on`), each pass writes one line. An event writes
+none, so a busy fight adds at most one line every 2 s per unit:
+
+```
+[Names] repaint player: 2 container(s) (quick)
+[Names] repaint player: 2 container(s) (settle)
+```
+
+The count is how many containers the pass reached, and the stage is the timer that asked. A blank bar
+whose unit shows a pass after the name went blank, with a count that includes that container, was
+repainted, and the name was still not there: the next `UNIT_AURA` on that unit starts another cycle
+(`docs/known-limitations.md`). A count of 0 means every container on that unit was skipped. No
+`Names` line at all after an aura appeared means the unit is not in `listening=`, or the addon is
+disabled or stood down.
+
+**Do not toggle to test it.** Locking or unlocking, test mode, a visibility change, or any restyle
+also redraws the names, because each one switches the engine off and on or re-dresses its buttons,
+and the engine rereads every aura when it does. A name that appears after one of those says nothing
+about the repaint. To check it, turn on the trace, let the aura appear, and change nothing.
 
 ### The plan verdict
 

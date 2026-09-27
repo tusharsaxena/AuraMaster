@@ -27,12 +27,16 @@ settings row ─► NS.SetByPath ─► CONFIG_CHANGED ─► ContainerManager.R
    ─► engine creates buttons ─► initializeFrame ─► Style.Element dresses them ─► engine renders
 ```
 
-There is therefore **no per-aura Lua path while auras are secret**: no timer and no `OnUpdate`
-driving a bar. There are two aura-driven Lua paths, both only out of combat with auras readable:
-the readable-state timed-spell scan (`modules/TimedSpells.lua`), bracketed `timedScan`, which runs
-only while a container shows auras without a duration; and the empty-container prediction
-(`modules/EmptyWatch.lua`), bracketed `emptyPass`, which runs only while containers are unlocked and
-out of test mode. The full pipeline is in `docs/data-flow.md`.
+There is therefore **no Lua path that reads an aura while auras are secret**: no timer and no
+`OnUpdate` driving a bar. There are three aura-driven Lua paths. Two read aura data, so they run only
+out of combat with auras readable: the readable-state timed-spell scan (`modules/TimedSpells.lua`),
+bracketed `timedScan`, which runs only while a container shows auras without a duration; and the
+empty-container prediction (`modules/EmptyWatch.lua`), bracketed `emptyPass`, which runs only while
+containers are unlocked and out of test mode. The third, the blank-name repaint
+(`modules/NameRepaint.lua`, issue #24), bracketed `nameRepaint`, **runs in combat and while auras are
+secret**: it reads nothing but its event's unit, and a few seconds after a unit's auras change it asks
+the engine to read them again (`UpdateAllAuras`), so a name the engine wrote blank on first sighting
+appears. The full pipeline is in `docs/data-flow.md`.
 
 ### Libraries
 
@@ -44,7 +48,7 @@ what each LibKa0s setup file publishes: `docs/module-map.md` → *Libraries*.
 ## Module Map
 
 Five source folders in the TOC's load order — `locales/` → `core/` → `defaults/` → `modules/` →
-`settings/` (layout-§1) — 53 authored Lua files under them: one locale, 16 core, 4 defaults, 17
+`settings/` (layout-§1) — 54 authored Lua files under them: one locale, 16 core, 4 defaults, 18
 modules and 15 settings. The load-bearing positions are annotated at their TOC lines:
 `core/MediaSetup.lua` before `core/Constants.lua` (the monospace face), `core/CoreSetup.lua` before
 anything that prints, `core/PerfSetup.lua` before every module that takes `NS.Perf` as an upvalue,
@@ -206,15 +210,16 @@ optional. The full table and the reasons:
 
 | Event | Registered by | Handler → effect |
 |---|---|---|
-| `PLAYER_ENTERING_WORLD` | `core/AuraMaster.lua:59` (AceEvent, through `NS.SafeRegisterEvent`) | `OnEnterWorld` → `VISIBILITY_CHANGED`, `ContainerManager.FlushPending` |
+| `PLAYER_ENTERING_WORLD` | `core/AuraMaster.lua:59` (AceEvent, through `NS.SafeRegisterEvent`) | `OnEnterWorld` → `VISIBILITY_CHANGED`, `ContainerManager.FlushPending`, `NameRepaint.OnEnterWorld` (every listened unit repainted 3 s in, then 5 s) |
 | `PLAYER_REGEN_DISABLED` | `core/AuraMaster.lua:60` | `OnCombatChanged` → `VISIBILITY_CHANGED` |
 | `PLAYER_REGEN_ENABLED` | `core/AuraMaster.lua:61` | `OnCombatChanged` → `VISIBILITY_CHANGED`, `FlushPending`, `ReapplyStaleClass`, `BlizzardFrames.Apply`, `Anchors.ResolvePending` (a frame that appeared during combat) |
-| `PLAYER_TARGET_CHANGED`, `PLAYER_FOCUS_CHANGED` | `core/AuraMaster.lua:62-63` | `OnUnitSwap` → `RefreshUnit` → the engine's `UpdateAllAuras` (bucket `unitSwap`); re-applies the class-colored containers of that unit when the new unit's class differs, or marks them stale, silently, while an apply must wait |
-| `UNIT_PET` | `core/AuraMaster.lua:64` | `OnUnitPet` (player only) → `RefreshUnit("pet")` (bucket `unitSwap`); re-applies the class-colored pet containers when the pet's class differs, or marks them stale while an apply must wait |
+| `PLAYER_TARGET_CHANGED`, `PLAYER_FOCUS_CHANGED` | `core/AuraMaster.lua:62-63` | `OnUnitSwap` → `RefreshUnit` → the engine's `UpdateAllAuras` (bucket `unitSwap`); re-applies the class-colored containers of that unit when the new unit's class differs, or marks them stale, silently, while an apply must wait; then `NameRepaint.Arm(unit)`, because the rebuild is the new unit's first sighting |
+| `UNIT_PET` | `core/AuraMaster.lua:64` | `OnUnitPet` (player only) → `RefreshUnit("pet")` (bucket `unitSwap`); re-applies the class-colored pet containers when the pet's class differs, or marks them stale while an apply must wait; then `NameRepaint.Arm("pet")` |
 | `ADDON_LOADED` | `core/AuraMaster.lua:65` | `OnAddonLoaded` → `Anchors.ResolvePending` (frame-attached containers) |
 | `ADDON_RESTRICTION_STATE_CHANGED` | `core/AuraMaster.lua:67` | `OnRestrictionChanged` → `FlushPending`, `ReapplyStaleClass` (a deferred apply runs when secrecy lifts) |
 | `UNIT_AURA` for `player` and `pet` | `modules/TimedSpells.lua` — the module's one private frame, `TS.unitFrame` (events-frames-taint-§1's carve-out: the vendored AceEvent has no `RegisterUnitEvent`), through `NS.SafeRegisterUnitEvent`; built once and reused, registered only while a container uses "without a duration", the addon is not suspended, and auras are readable (no combat lockdown, not secret), and unregistered by hand in `TS.Stop` | the frame's one `OnEvent` → `onUnitAura`: the client delivers only `player` and `pet`; the handler still proves the unit a safe key and compares it (defense in depth), then schedules a scan 0.5 s later (bucket `timedScan`). A scan that comes due after the gate closed is dropped too |
 | `UNIT_AURA` for `player` and `pet`, and for `target` and `focus` | `modules/EmptyWatch.lua` — its two private frames, `EW.unitFrames[1]` (player, pet) and `[2]` (target, focus), the same carve-out, each filtering `UNIT_AURA` and nothing else, through `NS.SafeRegisterUnitEvent`; built once and reused, each registered only while a shown container on its units is unlocked and out of test mode, the addon is not suspended, combat has not started and auras are readable, and unregistered by hand in `EW.Stop` | the frames' one `OnEvent` only marks a pass due: one pass 0.2 s later (bucket `emptyPass`) re-predicts every watched container and re-runs the visibility pass of any whose answer changed |
+| `UNIT_AURA` for `player` and `pet`, and for `target` and `focus` | `modules/NameRepaint.lua` — its two private frames, `NR.unitFrames[1]` (player, pet) and `[2]` (target, focus), the same carve-out, each filtering `UNIT_AURA` and nothing else, through `NS.SafeRegisterUnitEvent`; built once, hidden and reused, each registered only for the units that have an enabled container showing a name the engine writes (`Style.ShowsEngineName`), **in combat and while auras are secret too**, re-derived by `NR.Sync` at the end of every apply and visibility pass, and unregistered by hand in `NR.Stop` | the frames' one `OnEvent` → `NR.Arm` for a readable unit the frame holds (an unreadable one arms every unit the frame holds); the payload is never read. Per unit, one repaint 0.5 s later and a follow-up 2 s after that, rearmed only while the unit keeps changing (bucket `nameRepaint`): one `UpdateAllAuras` per shown, live, non-previewing container on the unit that shows a name |
 | `PLAYER_TARGET_CHANGED`, `PLAYER_FOCUS_CHANGED` | `modules/EmptyWatch.lua` (AceEvent, on its own target) — while its target and focus frame is registered | the pass run at once, not 0.2 s later, folding in one already due: the engine redraws for the new unit in the same frame, so a follower hung from a parent that just emptied would otherwise sit on the engine's 1x1 rect for the delay |
 | `UNIT_PET`, `UNIT_INVENTORY_CHANGED` | `modules/EmptyWatch.lua` (AceEvent, on its own target) — while its player and pet frame is registered | the same pass marked due, for the `player` unit only |
 | `PLAYER_REGEN_DISABLED`, `PLAYER_REGEN_ENABLED`, `ADDON_RESTRICTION_STATE_CHANGED` | `modules/TimedSpells.lua` (AceEvent, on its own target) — while a container uses "without a duration" and the addon is not suspended | `syncAuraListen`: `PLAYER_REGEN_DISABLED` closes the readable gate by itself (it fires before combat lockdown begins); the other two re-check it, dropping or restoring `UNIT_AURA`; reopening schedules one scan |
@@ -227,7 +232,7 @@ stand-down and the stand-up remove and restore the same list.
 
 **Every registration goes through one helper** (events-frames-taint-§1): `NS.SafeRegisterEvent`, which
 is `LibKa0s-Core-1.0`'s `SafeRegisterEvent`, published by `core/CoreSetup.lua`. That covers every row
-above and the stand-down's pending `PLAYER_REGEN_ENABLED`, except the unit frames' `UNIT_AURA` (TimedSpells' one, EmptyWatch's two), which
+above and the stand-down's pending `PLAYER_REGEN_ENABLED`, except the unit frames' `UNIT_AURA` (TimedSpells' one, EmptyWatch's two, NameRepaint's two), which
 go through its unit-event twin, `NS.SafeRegisterUnitEvent`. A name the client does not know costs only
 itself: the rest of the block still registers, and the name is appended once to `NS.RejectedEvents`.
 Where a player sees it: the `[Init]` line that `/am debug` writes adds `rejected events: A, B` when
@@ -253,7 +258,8 @@ from current state. What stands down, what survives and the library-absent path:
 No secure template of our own: the only protected machinery is Blizzard's aura engine, and each
 container's anchor opts in through `DisableUntrustedLayoutScriptsTemplate`. No structural work runs
 while auras are secret or under combat lockdown (`ContainerManager.MustDefer`); visibility in combat
-goes through the engine's `SetEnabled`; protected opens and frame-creating verbs are refused in
+goes through the engine's `SetEnabled`, and the blank-name repaint through its `UpdateAllAuras`, which
+is not a protected call; protected opens and frame-creating verbs are refused in
 combat, and a teardown under lockdown is parked; every engine binding is `pcall`-guarded; no border
 reads a secret size; and secret values never reach a string operation. Every rule and the code that
 keeps it: `docs/midnight-quirks.md` → *Taint notes*.
@@ -262,7 +268,8 @@ keeps it: `docs/midnight-quirks.md` → *Taint notes*.
 
 Units stop at player, target, focus and pet. Nothing structural happens while auras are secret or
 under lockdown, so settings changes, teardown and class colors wait for it to lift. The engine bounds
-what a Text line can do, which spell-id filters it honors, and when a non-Solid border redraws. A
+what a Text line can do, which spell-id filters it honors, and when a non-Solid border redraws, and
+a bar's name can show blank for a few seconds after a first sighting until the repaint catches it. A
 handful of user-category trade-offs were accepted by the owner. Every limitation, its cause and any
 ruling: `docs/known-limitations.md`.
 

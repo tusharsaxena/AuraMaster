@@ -242,10 +242,11 @@ after they were hidden; a visibility pass alone leaves them as they are.
 | File load | Every file in TOC order; the options category registers its pages; LSM registration |
 | `ADDON_LOADED` (ours) → `OnInitialize` | `NS.InitDB` → AceDB, `RunMigrations`, `PrepareProfile` (seeds the starters on a fresh profile); `/am` registered |
 | `PLAYER_LOGIN` → `OnEnable` | Lifecycle events registered; `ContainerManager.Init` builds an instance per container and applies them (a disabled login builds none: the stand-up builds them); `BlizzardFrames.Apply`; the options panel category is created. Built here, not at load, so the engine's access restrictions (applied at `PLAYER_ENTERING_WORLD`) come after every button's first `initializeFrame` |
-| `PLAYER_ENTERING_WORLD` | Visibility pass; flush anything pending |
+| `PLAYER_ENTERING_WORLD` | Visibility pass; flush anything pending; the name repaint arms every unit it listens for at 3 s, with a follow-up 2 s later (`NameRepaint.OnEnterWorld`), so a name written blank at login or on a loading screen appears with no `/reload` |
 | `PLAYER_REGEN_DISABLED` / `ENABLED` | Visibility pass; on combat end, flush pending applies, apply the Blizzard-frame settings, and place again any frame-attached container whose frame appeared during combat |
 | `ADDON_RESTRICTION_STATE_CHANGED` | Flush pending applies — secrecy can lift outside a combat transition (a key or encounter ending) |
-| `PLAYER_TARGET_CHANGED`, `PLAYER_FOCUS_CHANGED`, `UNIT_PET` | Every container on that unit calls the engine's `UpdateAllAuras`, because the engine keeps showing the old unit's auras until told |
+| `PLAYER_TARGET_CHANGED`, `PLAYER_FOCUS_CHANGED`, `UNIT_PET` | Every container on that unit calls the engine's `UpdateAllAuras`, because the engine keeps showing the old unit's auras until told; then the name repaint arms that unit (`NameRepaint.Arm`), because the rebuild is the new unit's first sighting |
+| `UNIT_AURA` on the name repaint's own frames (player, pet, target, focus) | For a unit with a container that shows a name the engine writes, in combat too: the first event of a quiet unit arms a repaint 0.5 s later and the rest only mark it dirty; each repaint sends `UpdateAllAuras` to that unit's eligible containers and is followed 2 s later, again only while the unit stayed dirty (*Repainting blank bar names*, below) |
 | `ADDON_LOADED` (any) | Frame-attached containers whose frame did not exist yet are placed again |
 | Profile changed, copied or reset | `NS.OnProfileChanged`: `PrepareProfile`, selection cleared, `ContainerManager.Announce` (instances follow the registry, apply all, `CONTAINERS_CHANGED`), Blizzard frames, panel refresh |
 
@@ -269,6 +270,7 @@ player switched off. There is no `StandUp()` to call; the only route out is rele
 | The eight lifecycle events | `addon:UnregisterLifecycleEvents()` — unregistered, not gated |
 | `modules/TimedSpells.lua` | `TS.StandDown()`: its unit frame's `UNIT_AURA` (unregistered by hand; the frame is kept for the next stand-up), its gate events, its two bus subscriptions, and a queued scan timer, canceled |
 | `modules/EmptyWatch.lua` | `EW.Stop()`: both unit frames' registrations (unregistered by hand; the frames are kept), its AceEvent pet, inventory, target and focus events, and a queued pass or enchant-expiry timer, canceled |
+| `modules/NameRepaint.lua` | `NR.Stop()`: both unit frames' registrations (unregistered by hand; the frames are kept), every armed repaint timer, canceled, and every dirty mark cleared. `NR.Sync` stops again instead of registering while the addon is down, so the stand-down's own visibility pass cannot reopen them |
 | `modules/ContainerManager.lua` | `CM.StopListening()`: its three bus subscriptions, and the pending queue behind them |
 | The coalescing apply timer | canceled by `CM.StopListening`; `CM.RequestApply` returns immediately, so nothing re-arms |
 | `modules/FramePicker.lua` | `FP.Stop()` — the overlay's `OnUpdate` cleared |
@@ -371,6 +373,31 @@ re-runs the visibility pass of each whose answer changed, which re-places its fo
 enchant fires no `UNIT_AURA`. `PLAYER_REGEN_DISABLED` reaches `EW.SetCombat` before the combat
 visibility pass, so that pass predicts nil and moves every follower onto its engine while that is
 still allowed; `PLAYER_REGEN_ENABLED` predicts again.
+
+## Repainting blank bar names
+
+The engine writes a bar's spell name only when an aura is assigned to a button or updated. A name
+still nil on a first sighting is written blank and stays blank (`docs/midnight-quirks.md`, issue
+#24). `modules/NameRepaint.lua` asks the engine to read the auras again a few seconds later.
+
+`NR.Sync`, run at the end of every apply pass and every visibility pass, registers `UNIT_AURA` on the
+module's two hidden frames (player and pet, target and focus) for the units that have an enabled
+container showing a name the engine writes (`Style.ShowsEngineName`: bars unless the name is hidden,
+Text only when the compiled template has the name token, icons never). It touches a frame only when
+the units it holds change, and it allocates nothing. Unlike EmptyWatch and TimedSpells, the frames
+stay registered in combat and while auras are secret. The handler reads only its unit argument,
+through `NS.Secrets.IsSafeKey`, and never the payload.
+
+Per unit there are two stages. The first `UNIT_AURA` of a quiet unit arms `QUICK` (0.5 s); an event
+while a timer is armed only marks the unit dirty. When `QUICK` fires, the unit is repainted and
+`SETTLE` (2 s) is always armed. When `SETTLE` fires, the unit is repainted again, and `SETTLE` is
+rearmed only if the unit went dirty in the meantime. `PLAYER_ENTERING_WORLD` arms every listened unit
+at `ENTER` (3 s), replacing any armed timer, and a target, focus or pet swap arms its unit like a
+first event. A repaint (`NR.Repaint`, bracketed `nameRepaint`) sends one `UpdateAllAuras`, through
+`ContainerClass:Refresh`, to each container on the unit that has an engine, is neither parked nor
+stale, and shows without previewing, which is exactly when its engine is enabled: a disabled engine
+would clear its auras on that call. Nothing else is sent, so no apply and no restyle runs in combat.
+While the addon is stood down nothing arms and `NR.Sync` stops instead.
 
 ## Learning timed buffs
 

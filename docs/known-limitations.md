@@ -55,6 +55,14 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
 - **A Text animation cannot start, stop or change in combat.** Every call on an engine button's
   objects is refused in combat; loops are built and played at dress time and keep running, and a
   change made in combat applies with the deferred restyle (`docs/midnight-quirks.md`).
+- **A bar's name can show blank for a few seconds after an aura first appears.** The engine writes
+  the name only when the aura is assigned to a button or updated, and on a first sighting the client
+  may not have the name yet, so it writes an empty string (issue #24). The addon asks the engine to
+  read the auras again 0.5 s after the first change on that unit and 2 s after that, so a name can be
+  blank for up to about 2.5 s after a first sighting, and for about 3 to 5 s after a loading screen
+  (`modules/NameRepaint.lua`). A name that arrives later than that stays blank until the next aura
+  change on that unit, which starts the cycle again. An aura that never changes on a unit that stays
+  quiet can therefore keep its blank until something else on that unit changes, or a `/reload`.
 - **Spell-id filters are honored only for buffs on friendly units and debuffs on hostile units** (the
   engine's identity gate). `FilterCompiler` emits a warning per container where that bites
   (`identityWarning`, `modules/FilterCompiler.lua:417`, choosing its sentence from `FC.IdsHonored`),
