@@ -209,7 +209,7 @@ optional. The full table and the reasons:
 
 | Event | Registered by | Handler → effect |
 |---|---|---|
-| `PLAYER_ENTERING_WORLD` | `core/AuraMaster.lua:59` (AceEvent, through `NS.SafeRegisterEvent`) | `OnEnterWorld` → `VISIBILITY_CHANGED`, `ContainerManager.FlushPending` |
+| `PLAYER_ENTERING_WORLD` | `core/AuraMaster.lua:59` (AceEvent, through `NS.SafeRegisterEvent`) | `OnEnterWorld` → `VISIBILITY_CHANGED`, `ContainerManager.FlushPending`, `FontPrimer.OnEnterWorld` |
 | `PLAYER_REGEN_DISABLED` | `core/AuraMaster.lua:60` | `OnCombatChanged` → `VISIBILITY_CHANGED` |
 | `PLAYER_REGEN_ENABLED` | `core/AuraMaster.lua:61` | `OnCombatChanged` → `VISIBILITY_CHANGED`, `FlushPending`, `ReapplyStaleClass`, `BlizzardFrames.Apply`, `Anchors.ResolvePending` (a frame that appeared during combat) |
 | `PLAYER_TARGET_CHANGED`, `PLAYER_FOCUS_CHANGED` | `core/AuraMaster.lua:62-63` | `OnUnitSwap` → `RefreshUnit` → the engine's `UpdateAllAuras` (bucket `unitSwap`); re-applies the class-colored containers of that unit when the new unit's class differs, or marks them stale, silently, while an apply must wait |
@@ -233,6 +233,9 @@ The font primer (`modules/FontPrimer.lua`) registers no event of its own. It run
 `CONFIG_CHANGED` handler before the apply is requested, and from `CM.Announce` before a profile
 switch or a registry change is built. A priming that drew a new font arms two `C_Timer` handles, the
 1 s hide and the 0.5 s follow-up refresh; `CM.StopListening` cancels both through `FontPrimer.Stop`.
+A priming before the first `PLAYER_ENTERING_WORLD` (under the loading screen) arms neither, and
+`addon:OnEnterWorld` calls `FontPrimer.OnEnterWorld`, which arms them at 2 s and 1.5 s when anything
+was primed since the last loading screen.
 
 **Every registration goes through one helper** (events-frames-taint-§1): `NS.SafeRegisterEvent`, which
 is `LibKa0s-Core-1.0`'s `SafeRegisterEvent`, published by `core/CoreSetup.lua`. That covers every row

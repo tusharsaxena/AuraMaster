@@ -15,16 +15,26 @@ local _, NS = ...
 --
 -- HOW. One 1x1 frame on UIParent, placed above the top edge of the screen and SHOWN: each new triple
 -- gets a font string on it, set to the triple and written with SAMPLE. The frame is hidden again HOLD
--- seconds later. The font strings are kept: the fonts stay loaded, and a triple is never primed twice.
+-- seconds later (WORLD_HOLD after PLAYER_ENTERING_WORLD for a login priming, below). The font strings are kept: the fonts stay loaded, and a triple is never primed twice.
 --
 -- WHEN. From CM.StartListening (login and stand-up, before the first build), from the CONFIG_CHANGED
 -- handler before the apply is requested, and from CM.Announce before a profile switch or a registry
 -- change is built. Never while stood down: FontPrimer.Stop runs from CM.StopListening and cancels
 -- both timers.
 --
+-- THE LOADING SCREEN (FP-06). Nothing is drawn while the loading screen shows, so the priming at
+-- PLAYER_LOGIN loads nothing by itself: a hide and a refresh armed then both ran under the loading
+-- screen, and the auras present at login stayed blank. A PrimeAll before the first
+-- PLAYER_ENTERING_WORLD therefore shows the frame and arms nothing. FontPrimer.OnEnterWorld (from
+-- addon:OnEnterWorld) then keeps the frame shown and arms the hide at WORLD_HOLD and the refresh at
+-- WORLD_REFRESH, when anything was primed since the last loading screen, and clears that mark. A
+-- loading screen with nothing newly primed arms nothing. A stood-down addon hears no
+-- PLAYER_ENTERING_WORLD, so FontPrimer.Stop ends the wait: a stand-up happens in play.
+--
 -- THE REFRESH. A triple primed after text was already drawn in it (a font changed in settings, or a
 -- /reload that builds with auras present) leaves that text blank, so a PrimeAll that primed anything
--- arms one refresh REFRESH seconds later. It rewrites both kinds of text. The engine's: ContainerClass:
+-- arms one refresh REFRESH seconds later (WORLD_REFRESH after PLAYER_ENTERING_WORLD for a login
+-- priming, below). It rewrites both kinds of text. The engine's: ContainerClass:
 -- Refresh (UpdateAllAuras) on each live instance that has an engine, is neither parked nor stale, and
 -- is shown and not previewing (a disabled engine would clear its auras); it is the only engine call
 -- made here. The addon's own, written once per apply and by nothing later (the name label, a Text
@@ -36,6 +46,8 @@ local FP = NS.FontPrimer
 
 local HOLD = 1.0      -- seconds the frame stays shown after the last new triple
 local REFRESH = 0.5   -- seconds from priming a new triple to the follow-up refresh
+local WORLD_HOLD = 2.0     -- seconds the frame stays shown after PLAYER_ENTERING_WORLD
+local WORLD_REFRESH = 1.5  -- seconds from PLAYER_ENTERING_WORLD to the follow-up refresh
 
 --- What each font string is written with: every character a name, time or stack count is likely to
 --- draw (probe v4 drew this set and every blank went).
@@ -53,6 +65,9 @@ local frame
 local seen = {}       -- [file][size][flags] = true, primed this session (no string built per look-up)
 local primed = {}     -- { path, size, flags } in priming order, for the diagnostics report
 local holdTimer, refreshTimer
+local refreshAt           -- "play" or "world": which refresh refreshTimer is, for the report
+local inWorld = false     -- the first PLAYER_ENTERING_WORLD has come (or a stand-down ended the wait)
+local primedSinceLoad = false   -- something was primed since the last loading screen
 
 --- Whether `path` is a font built into the client (always loaded).
 local function builtIn(path)
@@ -97,7 +112,7 @@ end
 --- Every eligible live instance gets one UpdateAllAuras (the engine's text), and every container one
 --- system apply (the addon's own text: labels, literal pieces, placeholders).
 local function refresh()
-    refreshTimer = nil
+    refreshTimer, refreshAt = nil, nil
     if NS.IsStoodDown() then return end
     local CM = NS.ContainerManager
     if not CM then return end
@@ -115,13 +130,24 @@ local function hide()
     if frame then frame:Hide() end
 end
 
---- Show the frame for HOLD more seconds and (re)arm the one refresh.
-local function armAfterPrime()
+--- Show the frame, and (re)arm the hide `hold` seconds and the one refresh `delay` seconds from now.
+local function arm(hold, delay, at)
     frame:Show()
     if holdTimer then holdTimer:Cancel() end
-    holdTimer = C_Timer.NewTimer(HOLD, hide)
+    holdTimer = C_Timer.NewTimer(hold, hide)
     if refreshTimer then refreshTimer:Cancel() end
-    refreshTimer = C_Timer.NewTimer(REFRESH, refresh)
+    refreshTimer, refreshAt = C_Timer.NewTimer(delay, refresh), at
+end
+
+--- After a priming that drew something: the short hide and refresh in play; before the world, the
+--- frame shown and nothing armed (OnEnterWorld arms both).
+local function armAfterPrime()
+    primedSinceLoad = true
+    if inWorld then
+        arm(HOLD, REFRESH, "play")
+    else
+        frame:Show()
+    end
 end
 
 --- Prime every font triple the active profile's containers use that has not been primed yet. A
@@ -143,21 +169,42 @@ function FP.PrimeAll()
     return n
 end
 
---- Stand-down: cancel both timers and hide the frame. The primed set stays: the fonts stay loaded.
+--- PLAYER_ENTERING_WORLD, from addon:OnEnterWorld: the loading screen is gone. Anything primed since
+--- the last one is drawn only now, so the frame stays shown for WORLD_HOLD and one refresh runs at
+--- WORLD_REFRESH; then the mark clears. Nothing newly primed arms nothing.
+function FP.OnEnterWorld()
+    inWorld = true
+    if NS.IsStoodDown() or not primedSinceLoad then return end
+    primedSinceLoad = false
+    arm(WORLD_HOLD, WORLD_REFRESH, "world")
+end
+
+--- Stand-down: cancel every timer and hide the frame. The primed set stays: the fonts stay loaded.
+--- It also ends any wait for the world: a stood-down addon hears no PLAYER_ENTERING_WORLD, and the
+--- stand-up that follows happens in play.
 function FP.Stop()
     if holdTimer then holdTimer:Cancel() end
     if refreshTimer then refreshTimer:Cancel() end
-    holdTimer, refreshTimer = nil, nil
+    holdTimer, refreshTimer, refreshAt = nil, nil, nil
+    inWorld = true
     if frame then frame:Hide() end
 end
 
---- State for the diagnostics report, read only: the primed triples (copies, in priming order) and
---- whether the refresh is armed.
---- @return table { primed = { { path, size, flags }, ... }, refresh = boolean }
+--- The refresh's state for the report: "armed" (the short one, in play), "armed-world" (from
+--- PLAYER_ENTERING_WORLD), "awaiting-world" (primed before the world, nothing armed yet) or "idle".
+local function refreshState()
+    if refreshTimer then return refreshAt == "world" and "armed-world" or "armed" end
+    if not inWorld and primedSinceLoad then return "awaiting-world" end
+    return "idle"
+end
+
+--- State for the diagnostics report, read only: the primed triples (copies, in priming order),
+--- whether the refresh is armed, and which state it is in.
+--- @return table { primed = { { path, size, flags }, ... }, refresh = boolean, state = string }
 function FP.DiagState()
     local list = {}
     for i, e in ipairs(primed) do list[i] = { path = e.path, size = e.size, flags = e.flags } end
-    return { primed = list, refresh = refreshTimer ~= nil }
+    return { primed = list, refresh = refreshTimer ~= nil, state = refreshState() }
 end
 
 --- The primer's frame, or nil before anything was primed (a test seam).

@@ -261,7 +261,7 @@ hides it, and clearing does not show it again.
 `UpdateAllAuras` exists for external refreshes such as target changes.
 
 **What this addon does.** `PLAYER_TARGET_CHANGED`, `PLAYER_FOCUS_CHANGED` and `UNIT_PET` (for the
-player) call `UpdateAllAuras` on every container on that unit (`core/AuraMaster.lua:115-127`).
+player) call `UpdateAllAuras` on every container on that unit (`core/AuraMaster.lua:117-129`).
 
 ## An addon font loads lazily, and the engine writes a name once (measured 2026-09-27)
 
@@ -306,7 +306,16 @@ When a priming drew anything new, text may already have been drawn in that font 
 settings, or a `/reload` that builds with auras up), so 0.5 s later it runs `ContainerClass:Refresh`
 (the engine's `UpdateAllAuras`) once on each live container that has an engine, is neither parked nor
 stale, and is shown and not previewing. That is not a protected call and reads no aura, so it may run
-in combat. Nothing runs while the addon is stood down. The pattern is ChonkyCharacterSheet's
+in combat.
+
+**Nothing is drawn under the loading screen** (FP-06, the owner's first in-game run). The priming at
+`PLAYER_LOGIN` runs under the loading screen, and a 1 s hide and a 0.5 s refresh armed there both
+ran before it ended: the auras present at login were then the first text drawn in the font, came
+out blank and stayed blank until a `/reload`, while every aura cast later drew. So a priming before
+the first `PLAYER_ENTERING_WORLD` shows the frame and arms nothing, and `FontPrimer.OnEnterWorld`
+(from `addon:OnEnterWorld`) keeps it shown 2 s more and runs the refresh 1.5 s after
+`PLAYER_ENTERING_WORLD`, when anything was primed since the last loading screen. The working
+assumption is that the loading screen draws nothing at all; the smoke check FP10 tests it. Nothing runs while the addon is stood down. The pattern is ChonkyCharacterSheet's
 `CCS:PrimeFontsAndTextures`. How to check it: `docs/debug.md` (*Bar names that do not show*).
 
 ## Weapon enchants

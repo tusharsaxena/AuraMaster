@@ -715,7 +715,9 @@ local PRIMER_KAIT = "Interface\\AddOns\\SharedMedia_MyMedia\\font\\Ka0s Kait.ttf
 
 --- A fresh environment with a LibSharedMedia stand-in that knows two addon fonts and the client's
 --- Friz Quadrata (the harness loads no media library, so every font would resolve to the fallback).
-local function primerEnv()
+--- It enters the world (the fresh environment stops at PLAYER_LOGIN), so a priming takes the short
+--- path; with `atLogin` it stays before the first PLAYER_ENTERING_WORLD.
+local function primerEnv(atLogin)
     local NS, mocks = fresh({ before = function(m)
         local media = { ["Ka0s Prototype"] = PRIMER_PROTO, ["Ka0s Kait"] = PRIMER_KAIT,
             ["Friz Quadrata TT"] = "Fonts\\FRIZQT__.TTF" }
@@ -730,6 +732,10 @@ local function primerEnv()
         m.__libs["LibSharedMedia-3.0"] = lsm
     end })
     mocks.__fireTimers(); mocks.__fireTimers()
+    if not atLogin then
+        mocks.__fireEvent("PLAYER_ENTERING_WORLD")
+        mocks.__fireTimers()
+    end
     return NS, mocks
 end
 
@@ -810,6 +816,19 @@ test("diag: the fonts primed line prints while stood down and while auras are se
     NS.lifecycle:Release(NS.HOLD_PERF)
     -- red under: the line skipped while stood down (debug-logging-§14: the report runs regardless)
     assertTrue(has(lines, want) ~= nil, dump(lines))
+end)
+
+test("diag: the fonts primed line tells a priming waiting for the world from the world refresh", function()
+    local NS, mocks = primerEnv(true)
+    primerFonts(NS)
+    NS.FontPrimer.PrimeAll()
+    local head = "[Diag] fonts primed: 2 [Ka0s Prototype.ttf 10 -, Ka0s Kait.ttf 17 THICKOUTLINE] "
+    -- red under: refresh= read from the refresh handle alone (a login priming reads idle until the world)
+    assertEqual(primerLine(NS), head .. "refresh=awaiting-world")
+    mocks.__fireEvent("PLAYER_ENTERING_WORLD")
+    assertEqual(primerLine(NS), head .. "refresh=armed-world")
+    mocks.__fireTimers()
+    assertEqual(primerLine(NS), head .. "refresh=idle")
 end)
 
 test("diag: the fonts primed list stops at MAX_IDS and flags the cap; the count stays whole", function()

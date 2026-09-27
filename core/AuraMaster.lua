@@ -86,6 +86,8 @@ function addon:OnEnterWorld()
     NS.Debug("World", "entering world")
     NS.bus:SendMessage(NS.MSG.VISIBILITY_CHANGED)
     if NS.ContainerManager then NS.ContainerManager.FlushPending() end
+    -- The loading screen is gone: a font primed under it is drawn only now (issue #24, FP-06).
+    if NS.FontPrimer then NS.FontPrimer.OnEnterWorld() end
 end
 
 function addon:OnCombatChanged(event)

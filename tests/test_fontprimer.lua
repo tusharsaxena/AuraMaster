@@ -19,13 +19,18 @@ local PROTO = "Interface\\AddOns\\SharedMedia_MyMedia\\font\\Ka0s Prototype.ttf"
 local KAIT = "Interface\\AddOns\\SharedMedia_MyMedia\\font\\Ka0s Kait.ttf"
 local FRIZ = "Fonts\\FRIZQT__.TTF"
 
--- The two delays, spelled out rather than read back off the module (a suite that asked the code
--- under test for the expected answer would pass on any value at all).
+-- The delays, spelled out rather than read back off the module (a suite that asked the code under
+-- test for the expected answer would pass on any value at all). HOLD and REFRESH are a priming
+-- during play; WORLD_HOLD and WORLD_REFRESH count from PLAYER_ENTERING_WORLD (FP-06).
 local HOLD, REFRESH = 1.0, 0.5
+local WORLD_HOLD, WORLD_REFRESH = 2.0, 1.5
 
 --- A fresh environment, settled, with the media stand-in. The starter containers are 1 (player
---- bars), 2 (player icons), 3 (target icons) and 4 (player text), every font Friz Quadrata.
-local function env()
+--- bars), 2 (player icons), 3 (target icons) and 4 (player text), every font Friz Quadrata. The
+--- harness's fresh environment stops at PLAYER_LOGIN, so this one then enters the world through the
+--- addon's own handler, as the client does; with `atLogin` it stays under the loading screen, before
+--- the first PLAYER_ENTERING_WORLD.
+local function env(atLogin)
     local NS2, mocks = fresh({ before = function(m)
         local media = { ["Ka0s Prototype"] = PROTO, ["Ka0s Kait"] = KAIT, ["Friz Quadrata TT"] = FRIZ,
             ["Arial Narrow"] = "Fonts\\ARIALN.TTF" }
@@ -40,6 +45,10 @@ local function env()
         m.__libs["LibSharedMedia-3.0"] = lsm
     end })
     mocks.__fireTimers(); mocks.__fireTimers()
+    if not atLogin then
+        mocks.__fireEvent("PLAYER_ENTERING_WORLD")
+        mocks.__fireTimers()
+    end
     return NS2, mocks, NS2.FontPrimer, NS2.ContainerManager
 end
 
@@ -417,6 +426,109 @@ test("fontprimer: disabling the addon stops the primer, and nothing primes while
     CM.Sync = sync
     -- red under: no PrimeAll in CM.StartListening
     assertEqual(seen, 2)
+end)
+
+-- -- the loading screen (FP-06) -------------------------------------------------------------------
+-- Nothing is drawn under the loading screen, so a font primed at PLAYER_LOGIN is not loaded by the
+-- priming: the frame stays shown through the loading screen and the hide and the refresh count from
+-- PLAYER_ENTERING_WORLD instead (docs/superpowers/plans/2026-09-27-font-primer-addendum-loading-screen.md).
+
+test("fontprimer: a login priming waits for the world, then refreshes at WORLD_REFRESH and hides at WORLD_HOLD", function()
+    local NS2, mocks, FP, CM = env(true)
+    local _, got = recordFrame(mocks)
+    -- PLAYER_ENTERING_WORLD runs the visibility pass over every instance, this one included.
+    local eligible = fakeInst({ ApplyVisibility = function() return false, false, false end })
+    CM.instances[901] = eligible
+    local live = CM.instances[1]
+    local before = live.engine.__counts.UpdateAllAuras or 0
+    local t = cfgOf(NS2, 1).bars.name
+    t.font, t.fontSize = "Ka0s Prototype", 10
+    FP.PrimeAll()                           -- as CM.Init's, under the loading screen
+    assertTrue(got.frame:IsShown(), "shown through the loading screen")
+    -- red under: the login priming arming its short hide and refresh (both run under the loading screen)
+    assertEqual(armed(mocks, HOLD) + armed(mocks, REFRESH), 0)
+    assertEqual(#mocks.__timers(), 0, "nothing armed before the world")
+
+    mocks.__fireEvent("PLAYER_ENTERING_WORLD")
+    -- red under: no FontPrimer.OnEnterWorld in addon:OnEnterWorld
+    assertEqual(armed(mocks, WORLD_HOLD), 1)
+    assertEqual(armed(mocks, WORLD_REFRESH), 1)
+    assertEqual(armed(mocks, HOLD) + armed(mocks, REFRESH), 0)
+    assertTrue(got.frame:IsShown())
+    fire(mocks, WORLD_REFRESH)
+    assertEqual(eligible.refreshed, 1)
+    assertEqual(live.engine.__counts.UpdateAllAuras or 0, before + 1, "the real bars container")
+    assertTrue(got.frame:IsShown(), "still shown after the refresh")
+    fire(mocks, WORLD_HOLD)
+    assertFalse(got.frame:IsShown(), "hidden at WORLD_HOLD")
+    CM.instances[901] = nil
+end)
+
+test("fontprimer: a later loading screen with nothing newly primed arms nothing", function()
+    local NS2, mocks, FP = env(true)
+    local _, got = recordFrame(mocks)
+    local t = cfgOf(NS2, 1).bars.name
+    t.font, t.fontSize = "Ka0s Prototype", 10
+    FP.PrimeAll()
+    mocks.__fireEvent("PLAYER_ENTERING_WORLD")
+    fire(mocks, WORLD_REFRESH); fire(mocks, WORLD_HOLD)
+    mocks.__fireTimers()
+    mocks.__fireEvent("PLAYER_ENTERING_WORLD")
+    -- red under: the mark never cleared (every zone change re-shows the frame and refreshes)
+    assertEqual(armed(mocks, WORLD_HOLD) + armed(mocks, WORLD_REFRESH), 0)
+    assertFalse(got.frame:IsShown())
+end)
+
+test("fontprimer: a font change during play keeps the short path, never the world timers", function()
+    local NS2, mocks = env()
+    NS2.SetByPath("container.bars.name.font", "Ka0s Prototype", 1)
+    -- red under: every priming waiting for a PLAYER_ENTERING_WORLD that is not coming
+    assertEqual(armed(mocks, HOLD), 1)
+    assertEqual(armed(mocks, REFRESH), 1)
+    assertEqual(armed(mocks, WORLD_HOLD) + armed(mocks, WORLD_REFRESH), 0)
+end)
+
+test("fontprimer: Stop cancels the world timers, and ends the wait for the world", function()
+    local NS2, mocks, FP = env(true)
+    local _, got = recordFrame(mocks)
+    local t = cfgOf(NS2, 1).bars.name
+    t.font, t.fontSize = "Ka0s Prototype", 10
+    FP.PrimeAll()
+    mocks.__fireEvent("PLAYER_ENTERING_WORLD")
+    assertEqual(armed(mocks, WORLD_HOLD) + armed(mocks, WORLD_REFRESH), 2)
+    FP.Stop()
+    -- red under: Stop canceling only the short timers
+    assertEqual(armed(mocks, WORLD_HOLD) + armed(mocks, WORLD_REFRESH), 0)
+    assertFalse(got.frame:IsShown())
+end)
+
+test("fontprimer: a login stood down takes the short path on a stand-up in play", function()
+    -- A stood-down addon hears no PLAYER_ENTERING_WORLD, so the primer cannot wait for one.
+    local NS2, mocks = env(true)
+    NS2.SetByPath("enabled", false)
+    cfgOf(NS2, 1).bars.name.font = "Ka0s Prototype"
+    NS2.SetByPath("enabled", true)
+    -- red under: the stand-up's priming waiting for the world (the frame shown and no refresh, for good)
+    assertEqual(armed(mocks, HOLD), 1)
+    assertEqual(armed(mocks, REFRESH), 1)
+end)
+
+test("fontprimer: DiagState names which refresh is armed, or that it waits for the world", function()
+    local NS2, mocks, FP = env(true)
+    assertEqual(FP.DiagState().state, "idle")
+    local t = cfgOf(NS2, 1).bars.name
+    t.font, t.fontSize = "Ka0s Prototype", 10
+    FP.PrimeAll()
+    -- red under: DiagState without a state (the report cannot tell a waiting priming from an idle one)
+    assertEqual(FP.DiagState().state, "awaiting-world")
+    assertFalse(FP.DiagState().refresh)
+    mocks.__fireEvent("PLAYER_ENTERING_WORLD")
+    assertEqual(FP.DiagState().state, "armed-world")
+    assertTrue(FP.DiagState().refresh)
+    fire(mocks, WORLD_REFRESH)
+    assertEqual(FP.DiagState().state, "idle")
+    NS2.SetByPath("container.bars.name.fontSize", 11, 1)
+    assertEqual(FP.DiagState().state, "armed")
 end)
 
 -- -- wiring ------------------------------------------------------------------------------------------

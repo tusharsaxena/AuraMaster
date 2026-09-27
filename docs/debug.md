@@ -99,7 +99,10 @@ first build, it draws every (file, size, flags) triple any container in the acti
 one shown 1x1 frame above the top edge of the screen, and hides the frame a second later. It does the
 same for a new triple before a settings change or a profile switch is applied. When it drew something
 new, it asks each shown container to read its auras again half a second later, so text already drawn
-in that font before it loaded is written again. The header's `fonts primed:` line shows its state:
+in that font before it loaded is written again. The login's priming runs under the loading screen,
+where nothing is drawn, so it arms neither: the frame stays shown through the loading screen, and
+the re-read runs 1.5 s and the hide 2 s after `PLAYER_ENTERING_WORLD` (a `/reload` likewise). A
+later loading screen with nothing newly primed does nothing. The header's `fonts primed:` line shows its state:
 
 ```
 [Diag] fonts primed: 2 [Ka0s Prototype.ttf 10 OUTLINE, Ka0s Kait.ttf 36 THICKOUTLINE] refresh=idle
@@ -107,7 +110,10 @@ in that font before it loaded is written again. The header's `fonts primed:` lin
 
 - The count is every triple drawn this session, and the list gives each by its file's name, size and
   outline flags (`-` for none), in the order drawn, up to 40 (the per-list cap).
-- `refresh=armed` means the follow-up re-read is still due; `idle` means it ran or none was needed.
+- `refresh=` is the follow-up re-read: `armed` (due, after a change in play), `armed-world` (due,
+  after the loading screen), `awaiting-world` (fonts primed under the loading screen, the re-read not
+  armed until it ends) or `idle` (it ran, or none was needed). `awaiting-world` seen after the loading
+  screen has ended means `PLAYER_ENTERING_WORLD` never reached the primer.
 - `fonts primed: 0 []` on a profile that uses only built-in fonts is correct: those need no priming.
 - The line reads state only, so it prints while auras are secret and while the addon is stood down.
 

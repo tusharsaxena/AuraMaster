@@ -721,7 +721,7 @@ badge and any count quoted in the docs must agree with it.
 - empty: a target switch re-predicts at once, so no follower hangs from the emptied engine in between
 - empty: a target switch folds a pass already due into its own, leaving no timer behind
 
-### test_fontprimer.lua (17)
+### test_fontprimer.lua (23)
 
 - fontprimer: the starter profile draws only in the client's own font, so nothing is primed
 - fontprimer: the triples come from every text block of every container, deduplicated
@@ -737,6 +737,12 @@ badge and any count quoted in the docs must agree with it.
 - fontprimer: a refresh timer that fires on a stood-down addon does nothing
 - fontprimer: Stop cancels both timers and hides the frame, and the primed set survives
 - fontprimer: disabling the addon stops the primer, and nothing primes while stood down
+- fontprimer: a login priming waits for the world, then refreshes at WORLD_REFRESH and hides at WORLD_HOLD
+- fontprimer: a later loading screen with nothing newly primed arms nothing
+- fontprimer: a font change during play keeps the short path, never the world timers
+- fontprimer: Stop cancels the world timers, and ends the wait for the world
+- fontprimer: a login stood down takes the short path on a stand-up in play
+- fontprimer: DiagState names which refresh is armed, or that it waits for the world
 - fontprimer: a settings write primes before its apply is requested
 - fontprimer: a profile switch primes the new profile's fonts before it builds
 - fontprimer: one Fonts debug line per PrimeAll that primed something, and none otherwise
@@ -1337,7 +1343,7 @@ badge and any count quoted in the docs must agree with it.
 - slash verbs: the disabled gate is ONE decision over the whole verb table, not a per-verb guard
 - slash verbs: /am new enchants makes a player buff container showing only Weapon enchants (feedback #6)
 
-### test_diagnostics.lua (44)
+### test_diagnostics.lua (45)
 
 - diag: /am diagnostics writes the report to the console ungated, opens it, and says so once
 - diag: /am diagnostics answers while the addon is disabled, and the state line says so
@@ -1382,6 +1388,7 @@ badge and any count quoted in the docs must agree with it.
 - diag: the fonts primed line lists each primed file, size and flags, and the refresh state
 - diag: the fonts primed line reads state only: it primes nothing and arms nothing
 - diag: the fonts primed line prints while stood down and while auras are secret
+- diag: the fonts primed line tells a priming waiting for the world from the world refresh
 - diag: the fonts primed list stops at MAX_IDS and flags the cap; the count stays whole
 
 ### test_bulklog.lua (20)
@@ -1949,7 +1956,7 @@ badge and any count quoted in the docs must agree with it.
 | test_anchors_edges.lua | 15 |
 | test_anchors_hang.lua | 11 |
 | test_emptywatch.lua | 25 |
-| test_fontprimer.lua | 17 |
+| test_fontprimer.lua | 23 |
 | test_anchors_close.lua | 6 |
 | test_anchors_label.lua | 23 |
 | test_anchors_strip.lua | 7 |
@@ -1973,7 +1980,7 @@ badge and any count quoted in the docs must agree with it.
 | test_disabled.lua | 18 |
 | test_slash.lua | 28 |
 | test_slash_verbs.lua | 50 |
-| test_diagnostics.lua | 44 |
+| test_diagnostics.lua | 45 |
 | test_bulklog.lua | 20 |
 | test_optionssetup.lua | 17 |
 | test_options_descriptor.lua | 18 |
@@ -2003,4 +2010,4 @@ badge and any count quoted in the docs must agree with it.
 | test_eol.lua | 2 |
 | test_layout_cap.lua | 13 |
 | test_diagnostics_contract.lua | 7 |
-| **Total** | **1685** |
+| **Total** | **1692** |

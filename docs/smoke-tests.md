@@ -1876,7 +1876,7 @@ setting**: each of those rewrites every name on its own and would hide a blank.
      back within about 1 s without touching anything else. No Lua error.
      Result:
 285. **FP5.** With auras up in every container, `/reload`. → After the loading screen every
-     container's text shows, and any that is blank at first fills in within about 1 s. No Lua error.
+     container's text shows, and any that is blank at first fills in within about 2 s. No Lua error.
      Result:
 286. **FP6.** Run `/am diagnostics`. → The header has one `[Diag] fonts primed: N [...] refresh=idle`
      line, with N at least 1, listing `Ka0s Prototype.ttf` with each size and outline your containers use
@@ -1893,8 +1893,16 @@ setting**: each of those rewrites every name on its own and would hide a blank.
 289. **FP9.** Turn on one container's name label (Layout → Label → **Show name label**) and give a Text
      container a template with literal text between its tokens (for example `$spellname$ - $stacks$`),
      the label and the Text line both in **Ka0s Prototype**, then `/reload` with auras up. → The
-     label and the Text line's literal text show from the start, or fill in within about 1 s. Then, out of combat, turn on test mode and change the label font and a
+     label and the Text line's literal text show from the start, or fill in within about 2 s. Then, out of combat, turn on test mode and change the label font and a
      Bars name font to a size not used yet this session. → The label and the placeholder names and
      stack counts show in the new font, or fill in within about 1 s without touching anything else.
      No Lua error.
+     Result:
+290. **FP10.** Log out and quit the client. Delete `World of Warcraft\_retail_\Cache` (the client
+     rebuilds it). Start the client and log in on a character with permanent buffs up (a long class buff, an
+     aura or a flask) in containers on **Ka0s Prototype**. Do not `/reload` and do not touch any
+     setting. → Every name present at login draws within about 2 s after the loading screen ends, and
+     stays drawn; no row stays blank until a `/reload`. `/am diagnostics` straight after the loading
+     screen may read `refresh=armed-world`; a few seconds later it reads `refresh=idle`. Then zone
+     (take a portal or enter an instance) → nothing blanks after that loading screen. No Lua error.
      Result:

@@ -205,9 +205,10 @@ local function countsLine(out)
 end
 
 --- The font primer (modules/FontPrimer.lua, issue #24): each triple drawn this session as its file's
---- name, size and flags (`-` for none), capped at MAX_IDS, and whether the one follow-up refresh is
---- armed. Read from FontPrimer.DiagState, which reads state only, so it prints while stood down and
---- while auras are secret.
+--- name, size and flags (`-` for none), capped at MAX_IDS, and the follow-up refresh's state: `armed`
+--- (in play), `armed-world` (from PLAYER_ENTERING_WORLD), `awaiting-world` (primed under the loading
+--- screen) or `idle`. Read from FontPrimer.DiagState, which reads state only, so it prints while
+--- stood down and while auras are secret.
 local function primerLine(out)
     local FP = NS.FontPrimer
     if not (FP and FP.DiagState) then return end
@@ -223,7 +224,7 @@ local function primerLine(out)
         named[i] = (path:match("[^\\/]+$") or path) .. " " .. str(e.size) .. " " .. flags
     end
     out:add("Diag", "fonts primed: %s [%s] refresh=%s", #s.primed, table.concat(named, ", "),
-        s.refresh and "armed" or "idle")
+        s.state or (s.refresh and "armed" or "idle"))
 end
 
 function Diag.Header(out)
