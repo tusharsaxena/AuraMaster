@@ -82,6 +82,8 @@ local function arm(unit, delay, stage, fire)
     timers[unit] = C_Timer.NewTimer(delay, fire[unit])
 end
 
+-- Clearing the dirty mark is defensive: onFirst clears it before SETTLE is armed, so a stale mark
+-- never reaches onSettle.
 local function cancel(unit)
     if timers[unit] then timers[unit]:Cancel() end
     timers[unit], stages[unit], dirty[unit] = nil, nil, nil

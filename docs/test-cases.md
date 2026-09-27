@@ -721,7 +721,7 @@ badge and any count quoted in the docs must agree with it.
 - empty: a target switch re-predicts at once, so no follower hangs from the emptied engine in between
 - empty: a target switch folds a pass already due into its own, leaving no timer behind
 
-### test_namerepaint.lua (26)
+### test_namerepaint.lua (28)
 
 - names: a bars container shows the engine's name by default
 - names: a bars container with its name hidden shows none
@@ -736,7 +736,9 @@ badge and any count quoted in the docs must agree with it.
 - repaint: Sync is idempotent and registers again only when a frame's pair changes
 - repaint: each frame is created hidden
 - repaint: while stood down Sync closes both frames and arms nothing
-- repaint: Stop closes both frames, cancels every timer and clears the dirty marks
+- repaint: while stood down Arm and OnEnterWorld arm nothing, even with the frames still held
+- repaint: a QUICK or SETTLE that fires after a stand-down repaints nothing and rearms nothing
+- repaint: Stop closes both frames and cancels every timer, and the next Sync starts clean
 - repaint: a unit that stops being wanted loses its armed timer
 - repaint: a UNIT_AURA burst arms one QUICK timer per unit, and nothing runs inside the handler
 - repaint: a unit outside the frame's registered pair arms nothing
@@ -1855,7 +1857,7 @@ badge and any count quoted in the docs must agree with it.
 
 - prose: no authored file carries a British spelling from localization-§5's published list
 - prose: the gate carries localization-§5's two lists whole, and nothing of its own
-- prose: the exclusions this repository declared suppressed 11 of 182 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (11): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, docs/spell-research/2026-09-24-logs/CORRECTIONS.md, docs/spell-research/2026-09-24-logs/CURRENT_CATEGORIES.md, docs/spell-research/2026-09-24-logs/DECISIONS.md, docs/spell-research/2026-09-24-logs/FLAGS.md, docs/spell-research/2026-09-24-logs/PROPOSED_ADDITIONS.md, docs/spell-research/2026-09-24-logs/REVIEW.md, docs/spell-research/2026-09-24-logs/SOURCES.md, docs/spell-research/2026-09-24-logs/dictionary/AURAS.md
+- prose: the exclusions this repository declared suppressed 11 of 183 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (11): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, docs/spell-research/2026-09-24-logs/CORRECTIONS.md, docs/spell-research/2026-09-24-logs/CURRENT_CATEGORIES.md, docs/spell-research/2026-09-24-logs/DECISIONS.md, docs/spell-research/2026-09-24-logs/FLAGS.md, docs/spell-research/2026-09-24-logs/PROPOSED_ADDITIONS.md, docs/spell-research/2026-09-24-logs/REVIEW.md, docs/spell-research/2026-09-24-logs/SOURCES.md, docs/spell-research/2026-09-24-logs/dictionary/AURAS.md
 - prose: no path this repository narrows the gate by is loaded by a TOC
 - prose: every path this repository narrows the gate by is one .pkgmeta keeps out of the zip
 - prose self-test: the carve-out suppresses the named generated folder, and only it
@@ -1955,7 +1957,7 @@ badge and any count quoted in the docs must agree with it.
 | test_anchors_edges.lua | 15 |
 | test_anchors_hang.lua | 11 |
 | test_emptywatch.lua | 25 |
-| test_namerepaint.lua | 26 |
+| test_namerepaint.lua | 28 |
 | test_anchors_close.lua | 6 |
 | test_anchors_label.lua | 23 |
 | test_anchors_strip.lua | 7 |
@@ -2009,4 +2011,4 @@ badge and any count quoted in the docs must agree with it.
 | test_eol.lua | 2 |
 | test_layout_cap.lua | 13 |
 | test_diagnostics_contract.lua | 7 |
-| **Total** | **1691** |
+| **Total** | **1693** |

@@ -182,13 +182,50 @@ test("repaint: while stood down Sync closes both frames and arms nothing", funct
     -- red under: Sync without the stood-down gate (the stand-down's own visibility pass reopens it)
     assertNil(auraUnits(NR, 1), "closed")
     assertEqual(#queued(mocks), 0, "the armed timer canceled")
+end)
+
+--- Stub the stand-down latch on `NS2` without the Stop a stand-down runs, so the frames stay held
+--- and each gate is reached on its own. Returns the restore.
+local function standDown(NS2)
+    local real = NS2.IsStoodDown
+    NS2.IsStoodDown = function() return true end
+    return function() NS2.IsStoodDown = real end
+end
+
+test("repaint: while stood down Arm and OnEnterWorld arm nothing, even with the frames still held", function()
+    local NS2, mocks, NR = env()
+    local restore = standDown(NS2)
+    assertEqual(auraUnits(NR, 1), "player", "held: listened() alone would let it through")
     NR.Arm("player")
     NR.OnEnterWorld()
+    restore()
     -- red under: Arm or OnEnterWorld with no stood-down gate
     assertEqual(#queued(mocks), 0, "nothing arms while stood down")
 end)
 
-test("repaint: Stop closes both frames, cancels every timer and clears the dirty marks", function()
+test("repaint: a QUICK or SETTLE that fires after a stand-down repaints nothing and rearms nothing", function()
+    local NS2, mocks, NR, CM = env()
+    fireAura(NR, 1, "player")
+    local restore = standDown(NS2)
+    local before = paintCounts(CM)
+    assertEqual(mocks.__fireTimers(), 1)
+    restore()
+    -- red under: onFirst without the stood-down gate (a queued QUICK repaints and arms SETTLE)
+    assertEqual(repainted(CM, before), "")
+    assertEqual(#queued(mocks), 0, "QUICK: no SETTLE")
+    fireAura(NR, 1, "player")
+    mocks.__fireTimers()
+    fireAura(NR, 1, "player")
+    restore = standDown(NS2)
+    before = paintCounts(CM)
+    assertEqual(mocks.__fireTimers(), 1)
+    restore()
+    -- red under: onSettle without the stood-down gate (a dirty SETTLE repaints and rearms)
+    assertEqual(repainted(CM, before), "")
+    assertEqual(#queued(mocks), 0, "SETTLE: not rearmed")
+end)
+
+test("repaint: Stop closes both frames and cancels every timer, and the next Sync starts clean", function()
     local NS2, mocks, NR = env()
     write(NS2, mocks, "container.style", "bars", 3)
     fireAura(NR, 1, "player"); fireAura(NR, 1, "player"); fireAura(NR, 2, "target")
@@ -199,7 +236,7 @@ test("repaint: Stop closes both frames, cancels every timer and clears the dirty
     NR.Sync()
     fireAura(NR, 1, "player")
     mocks.__fireTimers()
-    -- red under: a dirty mark surviving Stop (a quiet SETTLE rearming)
+    -- red under: Stop canceling a timer but keeping its handle (the next UNIT_AURA only marks dirty)
     assertEqual(delays(mocks), "2", "QUICK fired: one SETTLE")
     mocks.__fireTimers()
     assertEqual(#queued(mocks), 0, "quiet: done")
