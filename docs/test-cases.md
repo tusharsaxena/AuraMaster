@@ -721,6 +721,17 @@ badge and any count quoted in the docs must agree with it.
 - empty: a target switch re-predicts at once, so no follower hangs from the emptied engine in between
 - empty: a target switch folds a pass already due into its own, leaving no timer behind
 
+### test_namerepaint.lua (8)
+
+- names: a bars container shows the engine's name by default
+- names: a bars container with its name hidden shows none
+- names: an unknown style counts as bars, as Style.StyleKey draws it
+- names: an icons container never shows a name
+- names: a text container shows a name only when its template has the name token
+- names: an escaped $$spellname$$ is literal text, not the name token
+- names: the name token is found in any case
+- names: a refused text template draws the default, which has a name
+
 ### test_anchors_close.lua (6)
 
 - close: the X sits immediately left of the help mark, the catalog close glyph at the help mark's size
@@ -1926,6 +1937,7 @@ badge and any count quoted in the docs must agree with it.
 | test_anchors_edges.lua | 15 |
 | test_anchors_hang.lua | 11 |
 | test_emptywatch.lua | 25 |
+| test_namerepaint.lua | 8 |
 | test_anchors_close.lua | 6 |
 | test_anchors_label.lua | 23 |
 | test_anchors_strip.lua | 7 |
@@ -1979,4 +1991,4 @@ badge and any count quoted in the docs must agree with it.
 | test_eol.lua | 2 |
 | test_layout_cap.lua | 13 |
 | test_diagnostics_contract.lua | 7 |
-| **Total** | **1665** |
+| **Total** | **1673** |
