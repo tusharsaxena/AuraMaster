@@ -337,9 +337,12 @@ once*). `modules/FontPrimer.lua` therefore draws each font before any container 
 - **How.** A font string per new triple on one 1x1 frame on `UIParent`, above the top edge of the
   screen, shown and written with a sample of letters, digits and punctuation, then hidden 1 s later.
 - **The follow-up.** A priming that drew anything arms one refresh 0.5 s later (re-arming restarts
-  it): `ContainerClass:Refresh`, the engine's `UpdateAllAuras`, on each live container that has an
-  engine, is neither parked nor stale, and is shown and not previewing, so text drawn in the font
-  before it loaded is written again. It reads no aura and changes no setting.
+  it), so text drawn in the font before it loaded is written again. The engine's text:
+  `ContainerClass:Refresh`, the engine's `UpdateAllAuras`, on each live container that has an
+  engine, is neither parked nor stale, and is shown and not previewing. The addon's own text, which
+  an apply writes once and nothing rewrites (the name label, a Text line's literal pieces, the
+  test-mode placeholders): one system apply of every container, `CM.RequestApply(nil, true)`, which
+  waits quietly while an apply has to. It reads no aura and changes no setting.
 
 ## Registry changes
 

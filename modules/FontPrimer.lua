@@ -22,11 +22,14 @@ local _, NS = ...
 -- change is built. Never while stood down: FontPrimer.Stop runs from CM.StopListening and cancels
 -- both timers.
 --
--- THE REFRESH. A triple primed after live bars already drew in it (a font changed in settings, or a
--- /reload that builds with auras present) leaves those names blank, so a PrimeAll that primed anything
--- arms one refresh REFRESH seconds later: ContainerClass:Refresh (the engine's UpdateAllAuras) on each
--- live instance that has an engine, is neither parked nor stale, and is shown and not previewing (a
--- disabled engine would clear its auras). Re-arming restarts it. It is the only engine call made here.
+-- THE REFRESH. A triple primed after text was already drawn in it (a font changed in settings, or a
+-- /reload that builds with auras present) leaves that text blank, so a PrimeAll that primed anything
+-- arms one refresh REFRESH seconds later. It rewrites both kinds of text. The engine's: ContainerClass:
+-- Refresh (UpdateAllAuras) on each live instance that has an engine, is neither parked nor stale, and
+-- is shown and not previewing (a disabled engine would clear its auras); it is the only engine call
+-- made here. The addon's own, written once per apply and by nothing later (the name label, a Text
+-- line's literal pieces, the test-mode placeholders): one system apply of every container
+-- (CM.RequestApply(nil, true)), which waits quietly if an apply has to. Re-arming restarts it.
 
 NS.FontPrimer = NS.FontPrimer or {}
 local FP = NS.FontPrimer
@@ -91,17 +94,20 @@ local function primeBlock(t, tdef)
     return 1
 end
 
---- Every eligible live instance gets one UpdateAllAuras.
+--- Every eligible live instance gets one UpdateAllAuras (the engine's text), and every container one
+--- system apply (the addon's own text: labels, literal pieces, placeholders).
 local function refresh()
     refreshTimer = nil
     if NS.IsStoodDown() then return end
     local CM = NS.ContainerManager
-    for _, inst in pairs(CM and CM.instances or {}) do
+    if not CM then return end
+    for _, inst in pairs(CM.instances) do
         if inst.engine and not inst.parked and not inst.staleData then
             local show, previewing = inst:ShouldShow()
             if show and not previewing then inst:Refresh() end
         end
     end
+    CM.RequestApply(nil, true)
 end
 
 local function hide()

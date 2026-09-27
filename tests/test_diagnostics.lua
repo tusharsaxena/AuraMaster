@@ -710,8 +710,8 @@ end)
 -- `fonts primed:` line reads the primer's own state: each triple it drew this session, by file,
 -- size and flags, and whether its one follow-up refresh is armed.
 
-local PRIMER_PROTO = "Interface\\AddOns\\SharedMedia_MyMedia\\font\\Prototype.ttf"
-local PRIMER_KAIT = "Interface\\AddOns\\SharedMedia_MyMedia\\font\\Kait.ttf"
+local PRIMER_PROTO = "Interface\\AddOns\\SharedMedia_MyMedia\\font\\Ka0s Prototype.ttf"
+local PRIMER_KAIT = "Interface\\AddOns\\SharedMedia_MyMedia\\font\\Ka0s Kait.ttf"
 
 --- A fresh environment with a LibSharedMedia stand-in that knows two addon fonts and the client's
 --- Friz Quadrata (the harness loads no media library, so every font would resolve to the fallback).
@@ -758,7 +758,7 @@ test("diag: the fonts primed line lists each primed file, size and flags, and th
     primerFonts(NS)
     NS.FontPrimer.PrimeAll()
     -- red under: the full path printed, or the client's empty flag string printed as nothing
-    assertEqual(primerLine(NS), "[Diag] fonts primed: 2 [Prototype.ttf 10 -, Kait.ttf 17 THICKOUTLINE] "
+    assertEqual(primerLine(NS), "[Diag] fonts primed: 2 [Ka0s Prototype.ttf 10 -, Ka0s Kait.ttf 17 THICKOUTLINE] "
         .. "refresh=armed")
     -- Fire only the 0.5 s refresh; the 1 s hold timer stays armed and the frame stays shown.
     local fired, holdLive = 0, false
@@ -774,11 +774,11 @@ test("diag: the fonts primed line lists each primed file, size and flags, and th
     assertEqual(fired, 1, "one refresh timer fired")
     assertTrue(holdLive, "the hold timer still armed")
     -- red under: the refresh read from the hold timer rather than its own
-    assertEqual(primerLine(NS), "[Diag] fonts primed: 2 [Prototype.ttf 10 -, Kait.ttf 17 THICKOUTLINE] "
+    assertEqual(primerLine(NS), "[Diag] fonts primed: 2 [Ka0s Prototype.ttf 10 -, Ka0s Kait.ttf 17 THICKOUTLINE] "
         .. "refresh=idle")
     mocks.__fireTimers()
     -- red under: the refresh state cached at priming rather than read at report time
-    assertEqual(primerLine(NS), "[Diag] fonts primed: 2 [Prototype.ttf 10 -, Kait.ttf 17 THICKOUTLINE] "
+    assertEqual(primerLine(NS), "[Diag] fonts primed: 2 [Ka0s Prototype.ttf 10 -, Ka0s Kait.ttf 17 THICKOUTLINE] "
         .. "refresh=idle")
 end)
 
@@ -798,7 +798,7 @@ test("diag: the fonts primed line prints while stood down and while auras are se
     primerFonts(NS)
     NS.FontPrimer.PrimeAll()
     mocks.__fireTimers()
-    local want = "[Diag] fonts primed: 2 [Prototype.ttf 10 -, Kait.ttf 17 THICKOUTLINE] refresh=idle"
+    local want = "[Diag] fonts primed: 2 [Ka0s Prototype.ttf 10 -, Ka0s Kait.ttf 17 THICKOUTLINE] refresh=idle"
     mocks.__aurasSecret = true
     local lines = build(NS)
     mocks.__aurasSecret = false
@@ -822,6 +822,6 @@ test("diag: the fonts primed list stops at MAX_IDS and flags the cap; the count 
     local lines = build(NS)
     Diag.MAX_IDS = max
     -- red under: an uncapped list (every triple a long session primed on one line)
-    assertTrue(has(lines, "[Diag] fonts primed: 2 [Prototype.ttf 10 -] refresh=armed") ~= nil, dump(lines))
+    assertTrue(has(lines, "[Diag] fonts primed: 2 [Ka0s Prototype.ttf 10 -] refresh=armed") ~= nil, dump(lines))
     assertTrue(has(lines, "per-list caps hit=yes") ~= nil, dump(lines))
 end)

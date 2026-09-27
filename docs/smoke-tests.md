@@ -1879,8 +1879,8 @@ setting**: each of those rewrites every name on its own and would hide a blank.
      container's text shows, and any that is blank at first fills in within about 1 s. No Lua error.
      Result:
 286. **FP6.** Run `/am diagnostics`. → The header has one `[Diag] fonts primed: N [...] refresh=idle`
-     line, with N at least 1, listing `Prototype.ttf` with each size and outline your containers use
-     (and `Kait.ttf` after FP4), and no Friz Quadrata entry. No Lua error.
+     line, with N at least 1, listing `Ka0s Prototype.ttf` with each size and outline your containers use
+     (and `Ka0s Kait.ttf` after FP4), and no Friz Quadrata entry. No Lua error.
      Result:
 287. **FP7.** `/am debug on`, open the console with `/am debug`, then change a container's font size
      to a size not used yet. → One `[Fonts] primed 1 new font(s)` line appears. Change another
@@ -1889,4 +1889,12 @@ setting**: each of those rewrites every name on its own and would hide a blank.
 288. **FP8.** `/am disable`, wait a few seconds, then `/am diagnostics`. → The report still prints the
      `fonts primed:` line, with the same list and `refresh=idle`. `/am enable` → every container comes
      back with its text showing, none blank. No Lua error throughout.
+     Result:
+289. **FP9.** Turn on one container's name label (Layout → Label → **Show name label**) and give a Text
+     container a template with literal text between its tokens (for example `$spellname$ - $stacks$`),
+     the label and the Text line both in **Ka0s Prototype**, then `/reload` with auras up. → The
+     label and the Text line's literal text show from the start, or fill in within about 1 s. Then, out of combat, turn on test mode and change the label font and a
+     Bars name font to a size not used yet this session. → The label and the placeholder names and
+     stack counts show in the new font, or fill in within about 1 s without touching anything else.
+     No Lua error.
      Result:

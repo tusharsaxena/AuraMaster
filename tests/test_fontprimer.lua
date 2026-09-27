@@ -15,8 +15,8 @@ local test, assertEqual, assertTrue, assertFalse, assertNil =
 local fresh = dofile("tests/fresh_env.lua")
 local R = dofile("tests/region_recorder.lua")
 
-local PROTO = "Interface\\AddOns\\SharedMedia_MyMedia\\font\\Prototype.ttf"
-local KAIT = "Interface\\AddOns\\SharedMedia_MyMedia\\font\\Kait.ttf"
+local PROTO = "Interface\\AddOns\\SharedMedia_MyMedia\\font\\Ka0s Prototype.ttf"
+local KAIT = "Interface\\AddOns\\SharedMedia_MyMedia\\font\\Ka0s Kait.ttf"
 local FRIZ = "Fonts\\FRIZQT__.TTF"
 
 -- The two delays, spelled out rather than read back off the module (a suite that asked the code
@@ -47,19 +47,22 @@ end
 local function cfgOf(NS2, id) return NS2.Database.FindContainer(id) end
 
 --- The primer's frame, built as a recorder: every call on it and on each font string it creates is
---- logged. Installed around CreateFrame until the primer has built its frame. Answers the list of
+--- logged. Installed around CreateFrame until the primer has built its frame, which starts HIDDEN, as
+--- a real frame parented to nothing shown would not answer IsShown for the primer. With `refuse`, each
+--- font string answers SetFont with false (a font the client did not accept). Answers the list of
 --- font strings, filled as they are created, and the frame once built.
-local function recordFrame(mocks)
+local function recordFrame(mocks, refuse)
     local strings, got = {}, {}
     local real = mocks.CreateFrame
     mocks.CreateFrame = function(kind, name, parent, template)
         if parent ~= mocks.UIParent then return real(kind, name, parent, template) end
         mocks.CreateFrame = real
         local f = R()
-        f.__shown = true
+        f.__shown = false
         f.__answer.CreateFontString = function(self)
             local fs = R()
             fs.parent = self
+            if refuse then fs.__answer.SetFont = function() return false end end
             strings[#strings + 1] = fs
             return fs
         end
@@ -112,8 +115,8 @@ test("fontprimer: the triples come from every text block of every container, ded
     local NS2, _, FP = env()
     local c1, c2, c3, c4 = cfgOf(NS2, 1), cfgOf(NS2, 2), cfgOf(NS2, 3), cfgOf(NS2, 4)
     c1.bars.name.font, c1.bars.name.fontSize = "Ka0s Prototype", 10
-    c1.bars.time.font, c1.bars.time.fontSize = "Ka0s Prototype", 10          -- the same triple
-    c1.bars.stacks.font, c1.bars.stacks.fontSize = "Ka0s Prototype", 9
+    c1.bars.time.font, c1.bars.time.fontSize = "Ka0s Prototype", 11
+    c1.bars.stacks.font, c1.bars.stacks.fontSize = "Ka0s Prototype", 10      -- the name's triple
     c2.icons.time.font, c2.icons.time.fontSize = "Ka0s Kait", 14
     c2.icons.stacks.font, c2.icons.stacks.fontSize = "Ka0s Kait", 15
     c3.enabled = false                                                         -- primed all the same
@@ -123,7 +126,7 @@ test("fontprimer: the triples come from every text block of every container, ded
     FP.PrimeAll()
     -- red under: any block left out of the walk, a disabled container skipped, or no dedup
     assertEqual(primed(FP), table.concat({
-        PROTO .. "|10|OUTLINE", PROTO .. "|9|OUTLINE", KAIT .. "|14|OUTLINE", KAIT .. "|15|OUTLINE",
+        PROTO .. "|10|OUTLINE", PROTO .. "|11|OUTLINE", KAIT .. "|14|OUTLINE", KAIT .. "|15|OUTLINE",
         KAIT .. "|16|OUTLINE", KAIT .. "|17|THICKOUTLINE" }, ","))
 end)
 
@@ -163,6 +166,27 @@ test("fontprimer: the primed triple is the one Style.ApplyFont sets, flags and f
     assertEqual(#FP.DiagState().primed, n)
 end)
 
+test("fontprimer: a font the client refuses is not counted, listed, traced or refreshed for", function()
+    local NS2, mocks, FP = env()
+    local strings = recordFrame(mocks, true)
+    local lines = {}
+    local debug = NS2.Debug
+    NS2.Debug = function(tag)
+        local n = #lines
+        if tag == "Fonts" then lines[n + 1] = tag end
+    end
+    local t = cfgOf(NS2, 1).bars.name
+    t.font, t.fontSize = "Ka0s Prototype", 10
+    local n = FP.PrimeAll()
+    NS2.Debug = debug
+    assertEqual(#strings, 1, "the font was tried")
+    -- red under: SetFont's answer ignored (a refused font reported as primed and refreshed for)
+    assertEqual(n, 0)
+    assertEqual(primed(FP), "")
+    assertEqual(armed(mocks, HOLD) + armed(mocks, REFRESH), 0)
+    assertEqual(#lines, 0)
+end)
+
 -- -- how it primes -----------------------------------------------------------------------------------
 
 test("fontprimer: one shown 1x1 frame on UIParent draws each new triple, and hides after HOLD", function()
@@ -175,7 +199,11 @@ test("fontprimer: one shown 1x1 frame on UIParent draws each new triple, and hid
     assertTrue(f ~= nil, "no frame was built")
     assertEqual(got.parent, mocks.UIParent)
     assertEqual(table.concat(f:__last("SetSize"), ","), "1,1")
-    assertTrue(f:__last("SetPoint") ~= nil, "the frame is placed")
+    local at = f:__last("SetPoint")
+    -- red under: the frame placed on screen (the sample drawn where the player can see it)
+    assertEqual(("%s|%s|%s|%s"):format(at[1], tostring(at[2] == mocks.UIParent), at[3], tostring(at[4])),
+        "BOTTOMLEFT|true|TOPLEFT|0")
+    assertTrue(at[5] > 0, "above the top edge")
     -- red under: priming on a hidden frame (the client does not load a font for it)
     assertTrue(f:IsShown(), "the frame is shown while priming")
     assertEqual(#strings, 1)
@@ -210,13 +238,16 @@ end)
 
 test("fontprimer: a font change primes only the new triple and arms one refresh", function()
     local NS2, mocks, FP = env()
-    local strings = recordFrame(mocks)
+    local strings, got = recordFrame(mocks)
     local t = cfgOf(NS2, 1).bars.name
     t.font, t.fontSize = "Ka0s Prototype", 10
     FP.PrimeAll()
     fire(mocks, HOLD); fire(mocks, REFRESH)
+    assertFalse(got.frame:IsShown(), "hidden after the first hold")
     -- Through the write seam, as the settings panel writes it: CONFIG_CHANGED primes.
     NS2.SetByPath("container.bars.name.font", "Ka0s Kait", 1)
+    -- red under: a later triple primed without showing the frame again (a hidden frame loads nothing)
+    assertTrue(got.frame:IsShown(), "shown again for the new triple")
     assertEqual(#strings, 2)
     assertEqual(table.concat(strings[2]:__last("SetFont"), "|"), KAIT .. "|10|OUTLINE")
     assertEqual(armed(mocks, REFRESH), 1)
@@ -270,6 +301,73 @@ test("fontprimer: the refresh reaches only live, shown, non-previewing instances
     assertEqual(live.engine.__counts.UpdateAllAuras or 0, before + 1, "the real bars container")
     assertFalse(FP.DiagState().refresh, "one-shot: idle once it has run")
     for _, id in ipairs(ids) do CM.instances[id] = nil end
+end)
+
+test("fontprimer: the refresh re-applies, so a name label drawn in the font is written again", function()
+    local NS2, mocks, FP, CM = env()
+    local c = cfgOf(NS2, 1)
+    c.label.show = true
+    c.label.font.font, c.label.font.fontSize = "Ka0s Prototype", 12
+    FP.PrimeAll()
+    CM.RequestApply(1)
+    fire(mocks, 0)                          -- the apply, in the just-primed font
+    local inst = CM.instances[1]
+    assertTrue(inst.labelText ~= nil, "the label was built")
+    local writes, text = 0, nil
+    local set = inst.labelText.SetText
+    inst.labelText.SetText = function(self, v)
+        writes, text = writes + 1, v
+        return set(self, v)
+    end
+    fire(mocks, REFRESH)
+    fire(mocks, 0)
+    -- red under: a refresh that reaches only the engine (UpdateAllAuras never rewrites the label)
+    assertEqual(writes, 1)
+    assertEqual(text, c.name)
+end)
+
+test("fontprimer: in test mode the refresh re-applies the previewing container, never its engine", function()
+    local NS2, mocks, _, CM = env()
+    NS2.Preview.SetTestMode(true)
+    mocks.__fireTimers()
+    local inst = CM.instances[1]
+    local updates = inst.engine.__counts.UpdateAllAuras or 0
+    local applies = 0
+    local apply = inst.Apply
+    inst.Apply = function(self)
+        applies = applies + 1
+        return apply(self)
+    end
+    NS2.SetByPath("container.bars.name.font", "Ka0s Prototype", 1)
+    fire(mocks, 0)                          -- the write's own apply
+    assertEqual(applies, 1)
+    fire(mocks, REFRESH)
+    fire(mocks, 0)
+    inst.Apply = nil
+    -- red under: previewing containers left out of the refresh (the placeholders stay as first drawn)
+    assertEqual(applies, 2)
+    assertEqual(inst.engine.__counts.UpdateAllAuras or 0, updates, "a previewing engine is not refreshed")
+end)
+
+test("fontprimer: a refresh timer that fires on a stood-down addon does nothing", function()
+    local NS2, mocks, FP, CM = env()
+    -- The stand-down runs the visibility pass over every instance, this one included.
+    local eligible = fakeInst({ ApplyVisibility = function() return false, false, false end })
+    CM.instances[901] = eligible
+    local t = cfgOf(NS2, 1).bars.name
+    t.font, t.fontSize = "Ka0s Prototype", 10
+    FP.PrimeAll()
+    local handle
+    for _, h in ipairs(mocks.__timers()) do
+        if h.delay == REFRESH then handle = h end
+    end
+    assertTrue(handle ~= nil, "a refresh was armed")
+    NS2.SetByPath("enabled", false)
+    handle.fn()
+    CM.instances[901] = nil
+    -- red under: the refresh without its stood-down gate
+    assertEqual(eligible.refreshed, 0)
+    assertEqual(#mocks.__timers(), 0, "nothing re-armed")
 end)
 
 -- -- stand-down --------------------------------------------------------------------------------------

@@ -61,7 +61,7 @@ Example (shortened):
 [Diag] state: enabled=true stoodDown=false disabledHold=false holds=- locked=true testMode=false ...
 [Diag] apply queue: all=false ids=[] scheduled=false notice=- mustDefer=false
 [Diag] timed spells learned=0, category spell edits in 0 list(s), user categories=0, enchant slots=mainHand
-[Diag] fonts primed: 2 [Prototype.ttf 10 OUTLINE, Kait.ttf 36 THICKOUTLINE] refresh=idle
+[Diag] fonts primed: 2 [Ka0s Prototype.ttf 10 OUTLINE, Ka0s Kait.ttf 36 THICKOUTLINE] refresh=idle
 [Unit] player HELPFUL: 7 aura(s)
 [Aura] player+ #1 inst=1234 id=1459 "Arcane Intellect" dispel=nil src=player mine=true dur=3600 left=3412.5 stacks=0 boss=false steal=false
 [Unit] focus: none
@@ -102,7 +102,7 @@ new, it asks each shown container to read its auras again half a second later, s
 in that font before it loaded is written again. The header's `fonts primed:` line shows its state:
 
 ```
-[Diag] fonts primed: 2 [Prototype.ttf 10 OUTLINE, Kait.ttf 36 THICKOUTLINE] refresh=idle
+[Diag] fonts primed: 2 [Ka0s Prototype.ttf 10 OUTLINE, Ka0s Kait.ttf 36 THICKOUTLINE] refresh=idle
 ```
 
 - The count is every triple drawn this session, and the list gives each by its file's name, size and
