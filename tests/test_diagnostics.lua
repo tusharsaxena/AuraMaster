@@ -851,30 +851,37 @@ test("diag: the loading screen line shows when the world was entered and when th
 end)
 
 --- Make the primer's frame refuse `path` at SetFont (FP-07): the kit's CreateFontString hands back
---- the frame itself, so the frame's own SetFont answers for every font string on it.
+--- the frame itself, so the frame's own SetFont answers for every font string on it. Returns a table
+--- whose `calls` counts every SetFont the primer makes, so a test can tell a retry of the refused font.
 local function primerRefuses(mocks, path)
+    local counter = { calls = 0 }
     local real = mocks.CreateFrame
     mocks.CreateFrame = function(kind, name, parent, template)
         local f = real(kind, name, parent, template)
         if parent ~= mocks.UIParent then return f end
         mocks.CreateFrame = real
-        f.SetFont = function(_, p) return p ~= path end
+        f.SetFont = function(_, p)
+            counter.calls = counter.calls + 1
+            return p ~= path
+        end
         return f
     end
+    return counter
 end
 
 test("diag: the fonts primed line lists each refused file, size and flags after refused=", function()
     local NS, mocks = primerEnv()
-    primerRefuses(mocks, PRIMER_PROTO)
+    local setFont = primerRefuses(mocks, PRIMER_PROTO)
     primerFonts(NS)
     NS.FontPrimer.PrimeAll()
     mocks.__fireTimers()
     -- red under: refused triples invisible to the report (the owner's run read as a clean priming)
     assertEqual(primerLine(NS), "[Diag] fonts primed: 1 [Ka0s Kait.ttf 17 THICKOUTLINE] refresh=idle "
         .. "refused=1 [Ka0s Prototype.ttf 10 -]")
-    local timers = #mocks.__timers()
+    local timers, calls = #mocks.__timers(), setFont.calls
     build(NS)
-    -- red under: a report that retries the refused font (state only)
+    -- red under: a report that retries the refused font (the retry calls SetFont, refused or not)
+    assertEqual(setFont.calls, calls, "no SetFont by the report")
     assertEqual(#mocks.__timers(), timers)
     assertEqual(#NS.FontPrimer.DiagState().primed, 1)
 end)
