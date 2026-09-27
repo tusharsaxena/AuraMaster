@@ -55,4 +55,6 @@ test("names: a refused text template draws the default, which has a name", funct
     local c = cfg({ style = "text", text = { template = "x$stacks$ $foo$" } })
     assertFalse(NS.TextTemplate.Compile(c.text.template).ok, "the template is refused")
     assertTrue(NS.Style.ShowsEngineName(c))
+    c.text = nil
+    assertTrue(NS.Style.ShowsEngineName(c), "an absent text block draws the default too")
 end)

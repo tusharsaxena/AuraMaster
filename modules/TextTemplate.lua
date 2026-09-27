@@ -407,12 +407,14 @@ local function hasKind(pieces, kind)
 end
 
 local cache = {}
+-- The refusal of a template that is not a string, shared like the cached ones so no call allocates.
+local NOT_A_STRING = { ok = false, err = L["Use at least one $token$."] }
 
---- Compile one template.
+--- Compile one template. Memoized: a result is shared, never to be written to.
 --- @param template any  the stored or typed template
 --- @return table  { ok = true, pieces, single, shape, hasDuration, hasDispel } or { ok = false, err }
 function TT.Compile(template)
-    if type(template) ~= "string" then return { ok = false, err = L["Use at least one $token$."] } end
+    if type(template) ~= "string" then return NOT_A_STRING end
     local hit = cache[template]
     if hit then return hit end
     local result

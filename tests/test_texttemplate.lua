@@ -201,6 +201,9 @@ end)
 test("template: compiled results are memoized per template string", function()
     -- red under: TT.Compile rebuilding on every dress (every button, every restyle)
     assertTrue(TT.Compile("$spellname$ x") == TT.Compile("$spellname$ x"))
+    -- red under: a template that is not a string refused with a fresh table on every call
+    -- (Style.ShowsEngineName on a container with no text block, on every repaint)
+    assertTrue(TT.Compile(nil) == TT.Compile(42), "one shared refusal for a non-string")
 end)
 
 test("template: Validate answers true, or false and the refusal", function()
