@@ -1,0 +1,36 @@
+NR-06: whole-branch review of fix/2026-09-27-blank-bar-names (#24)
+
+Lenses run: runtime, engine-cost, standards, tests, docs.
+
+Confirmed findings (13), all fixed in 71c3432 and a4261d7:
+- [engine-cost, medium] The nameRepaint bucket does not contain the engine rebuild, but the docs and smoke check BN8 say it does.
+- [engine-cost, low] A full rebuild reassigns every button, so a Text container's looping animation can jump at each repaint.
+- [engine-cost, low] The PerfSetup comment says 'at most once every 2 s per unit', which contradicts the bursty-churn bound.
+- [standards, low] The claim that the event path allocates nothing is false for the first event of a quiet unit (C_Timer.NewTimer).
+- [tests, medium] No test covers a focus swap arming the focus unit.
+- [tests, low] The two-stage timer test for a burst during QUICK never runs QUICK, so onFirst's dirty clear is untested.
+- [tests, low] The red-under note for the parked gate is false: removing inst.parked from eligible() fails nothing.
+- [tests, low] The case where the frame's registration is refused (SafeRegisterUnitEvent returns false) is untested.
+- [docs, medium] performance.md says the engine's rebuild runs inside UpdateAllAuras and is counted in the nameRepaint bucket, but the engine defers it to the next frame.
+- [docs, medium] Smoke check BN1 cannot pass as written: the Names trace is off at login, and the enter and settle passes run before the tester can turn it on.
+- [docs, low] PerfSetup bucket comment gives a repaint-rate bound that the review fix disproved.
+- [docs, low] Worst-case blank-name latency is understated when a repaint timer is already armed.
+- [docs, low] BN4 expects a (quick) line after every target swap, but a swap soon after the previous one gives (settle).
+
+Fixes:
+- 71c3432 NR-06: address review: pin the focus swap, the QUICK-window dirty clear, the parked gate and a refused registration
+- a4261d7 NR-06: address review: the pass times only the mark, honest allocation and latency bounds, runnable BN checks
+  * Engine claim checked against Blizzard_ManagedAuraContainer.lua: UpdateAllAuras only marks FullAuraRebuild; the rebuild runs on the next OnUpdate via ProcessDirtyFlags. performance.md, NameRepaint.lua header and PerfSetup.lua comment now say the bucket times only the mark.
+  * BN8 isolates the rebuild's cost with two captures (second with #1's Name text unticked), no debug flag added.
+  * New owner smoke check BN9 for the Text loop snap; no known-limitations entry until verified in game.
+  * Rate bound: one pass per 2 s under constant churn, at most two per 2.5 s in bursts.
+  * Allocation claim reworded: an event on an armed unit allocates nothing; arming allocates one timer handle per stage; probeAbsent proves only Sync and Arm's early return.
+  * Latency bounds per case in known-limitations.md (~2.5 s quiet, ~4 s churning, 3 s / 5 s after a loading screen); debug.md and midnight-quirks.md aligned.
+  * BN1 checks passes>=2 and last=player@ via /am diagnostics; BN3 enables the trace after login; BN4 waits for each (settle) line.
+  * Frozen spec, plan and findings docs untouched; CRLF preserved.
+
+Refuted findings (2):
+- [runtime] An engine built or re-pointed after the ENTER window gets no repaint, so its first-sighting blanks persist.
+- [runtime] Deleting or restyling a container under MustDefer leaves its unit listened until the next combat edge.
+
+Final checkpoint (NR-07) battery on a4261d7: 1705 passed / 0 failed / 0 skipped (16 shards; -j 1 matches); lint 0/0 in 146 files; complexity 4442 functions, 0 above CCN 15; perf exit 0; largest file core/Database.lua 1327 lines; test-cases.md byte-identical; badge 1705/1705.
