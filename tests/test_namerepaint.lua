@@ -252,6 +252,32 @@ test("repaint: a unit that stops being wanted loses its armed timer", function()
     assertNil(delays(mocks):find("0.5", 1, true), "only the queued flush is left: " .. delays(mocks))
 end)
 
+test("repaint: a refused UNIT_AURA registration leaves the unit unheard and unarmed, and the next Sync retries", function()
+    local NS2, mocks, NR = env()
+    fireAura(NR, 1, "player")
+    assertEqual(delays(mocks), "0.5", "player armed before the refusal")
+    local f = NR.unitFrames[1]
+    local register = f.RegisterUnitEvent
+    rawset(f, "RegisterUnitEvent", function() error('Attempt to register unknown event "UNIT_AURA"') end)
+    write(NS2, mocks, "container.unit", "pet", 2)
+    write(NS2, mocks, "container.style", "bars", 2)
+    -- red under: setFrame storing the wanted units whatever the registration answered (a frame that
+    -- hears nothing reported as listening, and Sync never trying again)
+    assertNil(auraUnits(NR, 1), "nothing registered")
+    assertEqual(#NR.DiagState().listening, 0, "the report names no unit")
+    assertEqual(#NR.DiagState().armed, 0, "the player's armed timer canceled")
+    local seen = 0
+    for _, name in ipairs(NS2.RejectedEvents) do
+        if name == "UNIT_AURA" then seen = seen + 1 end
+    end
+    assertEqual(seen, 1, "UNIT_AURA recorded once")
+    NR.Arm("player")
+    assertEqual(#queued(mocks), 0, "an unheard unit arms nothing")
+    rawset(f, "RegisterUnitEvent", register)
+    NR.Sync()
+    assertEqual(auraUnits(NR, 1), "player,pet", "the next Sync retried")
+end)
+
 -- the handler
 
 test("repaint: a UNIT_AURA burst arms one QUICK timer per unit, and nothing runs inside the handler", function()
@@ -261,6 +287,11 @@ test("repaint: a UNIT_AURA burst arms one QUICK timer per unit, and nothing runs
     -- red under: a timer per event (no coalescing), or a repaint inside the handler
     assertEqual(delays(mocks), "0.5")
     assertEqual(repainted(CM, before), "")
+    assertEqual(mocks.__fireTimers(), 1)
+    assertEqual(delays(mocks), "2", "QUICK fired: one SETTLE")
+    assertEqual(mocks.__fireTimers(), 1)
+    -- red under: onFirst keeping the QUICK-window dirty mark (the burst rearms SETTLE after it fires)
+    assertEqual(#queued(mocks), 0, "a burst inside QUICK: QUICK, one SETTLE, done")
 end)
 
 test("repaint: a unit outside the frame's registered pair arms nothing", function()
@@ -368,7 +399,8 @@ test("repaint: a parked, stale, previewing or engine-less container is never rep
     one.parked = true
     four.staleData = true
     local before = paintCounts(CM)
-    -- red under: the parked or staleData gate missing
+    -- red under: the staleData gate missing (container 4 repainted). A parked container is also
+    -- refused by ShouldShow, so container 1 here does not pin the parked gate; the next case does.
     assertEqual(NR.Repaint("player"), 0)
     assertEqual(repainted(CM, before), "")
     one.parked, four.staleData = nil, nil
@@ -382,6 +414,19 @@ test("repaint: a parked, stale, previewing or engine-less container is never rep
     -- red under: the engine gate missing (Refresh would do nothing, but the pass counts it)
     assertEqual(NR.Repaint("player"), 1, "only the bars container has an engine")
     four.engine = engine
+end)
+
+test("repaint: a parked container is skipped even when ShouldShow would answer yes", function()
+    local _, _, NR, CM = env()
+    local one = CM.instances[1]
+    one.parked = true
+    rawset(one, "ShouldShow", function() return true, false end)
+    local before = paintCounts(CM)
+    -- red under: eligible() without its own parked gate (only ShouldShow standing between a parked
+    -- container and UpdateAllAuras)
+    assertEqual(NR.Repaint("player"), 1, "only the text container")
+    assertEqual(repainted(CM, before), "4")
+    one.parked, one.ShouldShow = nil, nil
 end)
 
 test("repaint: the pass still runs in combat lockdown and while auras are secret", function()
@@ -512,6 +557,21 @@ test("repaint: a target swap arms target, and its pass reaches only target conta
     mocks.__fireTimers()
     assertEqual(repainted(CM, before), "3")
     assertEqual(NR.Repaint("focus"), 0, "no focus container")
+end)
+
+test("repaint: a focus swap arms focus alone, and its pass reaches only focus containers", function()
+    local NS2, mocks, NR, CM = env()
+    write(NS2, mocks, "container.style", "bars", 3)
+    write(NS2, mocks, "container.unit", "focus", 2)
+    write(NS2, mocks, "container.style", "bars", 2)
+    assertEqual(auraUnits(NR, 2), "target,focus", "both listened: a wrong unit would arm too")
+    mocks.__fireEvent("PLAYER_FOCUS_CHANGED")
+    -- red under: OnUnitSwap arming target on every swap, or dropping the focus branch
+    local armed = NR.DiagState().armed
+    assertEqual(table.concat(armed, ","), "focus:quick")
+    local before = paintCounts(CM)
+    mocks.__fireTimers()
+    assertEqual(repainted(CM, before), "2")
 end)
 
 test("repaint: a pet swap arms pet", function()
