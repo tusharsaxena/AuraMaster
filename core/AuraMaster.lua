@@ -84,8 +84,29 @@ function addon:UnregisterLifecycleEvents()
     end
 end
 
-function addon:OnEnterWorld()
-    NS.Debug("World", "entering world")
+-- THE [Event] TRACE: one line per event that changes what the addon may do (world entry, the loading
+-- screen, combat, aura secrecy), each ending in the three reads every apply decision turns on —
+-- whether auras are secret, lockdown, and what is queued. Written BEFORE the handler acts, so the
+-- queue is the one the event found; the [Apply] line that follows says what the flush did. Built
+-- only while logging is on (debug-logging-§4): QueueSnapshot allocates. Target, focus and pet swaps
+-- and ADDON_LOADED are deliberately left out (owner, 2026-09-29): they fire too often in a key.
+local function traceEvent(event, fmt, ...)
+    if not (NS.State and NS.State.debug) then return end
+    local CM = NS.ContainerManager
+    local q = CM and CM.QueueSnapshot and CM.QueueSnapshot()
+    local queued = "-"
+    if q then
+        local n = #q.ids
+        queued = q.all and "all" or tostring(n)
+    end
+    -- The sink stringifies every argument (LibKa0s-DebugLog's D.Debug), so booleans go in raw; the
+    -- event's own fields come last because only a trailing `...` passes all of its values.
+    NS.Debug("Event", "%s secret=%s lockdown=%s queued=%s" .. (fmt or ""), event,
+        NS.Compat.AurasAreSecret(), InCombatLockdown() and true or false, queued, ...)
+end
+
+function addon:OnEnterWorld(event, isLogin, isReload)
+    traceEvent(event, " login=%s reload=%s", isLogin and true or false, isReload and true or false)
     NS.bus:SendMessage(NS.MSG.VISIBILITY_CHANGED)
     if NS.ContainerManager then NS.ContainerManager.FlushPending() end
     -- The loading screen is still up here; the primer notes the time (issue #24, FP-06).
@@ -93,11 +114,13 @@ function addon:OnEnterWorld()
 end
 
 -- The loading screen is gone: a font primed under it is drawn only now (issue #24, FP-06).
-function addon:OnLoadingScreenEnd()
+function addon:OnLoadingScreenEnd(event)
+    traceEvent(event)
     if NS.FontPrimer then NS.FontPrimer.OnLoadingScreenEnd() end
 end
 
 function addon:OnCombatChanged(event)
+    traceEvent(event)
     -- First, so the visibility pass below predicts nothing at the pull: PLAYER_REGEN_DISABLED fires
     -- before lockdown, the last moment every follower can still move onto its engine (batch 9 HG-1).
     if NS.EmptyWatch then NS.EmptyWatch.SetCombat(event == "PLAYER_REGEN_DISABLED") end
@@ -141,7 +164,8 @@ function addon:OnAddonLoaded()
     if NS.Anchors and NS.Anchors.ResolvePending then NS.Anchors.ResolvePending() end
 end
 
-function addon:OnRestrictionChanged()
+function addon:OnRestrictionChanged(event, restrictionType, active)
+    traceEvent(event, " type=%s active=%s", restrictionType, active)
     if NS.ContainerManager then
         NS.ContainerManager.FlushPending()
         NS.ContainerManager.ReapplyStaleClass()

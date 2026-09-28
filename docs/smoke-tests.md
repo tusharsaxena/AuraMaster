@@ -1915,3 +1915,27 @@ setting**: each of those rewrites every name on its own and would hide a blank.
      every Ka0s font your containers use, with each size and outline (every Ka0s Prototype triple
      included, not only Ka0s Kait), and ends `refused=0`. No Lua error.
      Result:
+
+## Mid-key reload and the event trace (2026-09-29, owner to run)
+
+Needs a restricted instance: a Mythic+ key (a boss encounter in a raid or dungeon also restricts auras,
+see the notes in 294).
+
+292. **MK1.** In a key, out of combat between pulls, `/reload`. → Every container draws straight
+     after the loading screen (the buffs you carry show), not only once the key ends. `/am debug on`,
+     then `/am diagnostics` → `apply queue: all=false` and every `[Cont]` line reads `engine=yes`.
+     No Lua error. Pull the next pack → auras appear and time down in every container as usual.
+     Result:
+293. **MK2.** Same key, `/am debug on`, then play on: a pull, the kill, a boss, and the key's end.
+     → The console carries `[Event] PLAYER_REGEN_DISABLED` / `_ENABLED` lines at each pull and kill,
+     and `[Event] ADDON_RESTRICTION_STATE_CHANGED … type=<n> active=<bool>` lines; each line ends
+     `secret=… lockdown=… queued=…`. No `[Event]` line on a target, focus or pet change. Copy the
+     whole console into the bug thread: the `type=` values seen at the key's start, a boss and the
+     key's end are the record this test exists to take.
+     Result:
+294. **MK3.** Without a key: a boss encounter anywhere (a follower dungeon or LFR boss) with
+     `/am debug on` → `[Event] ADDON_RESTRICTION_STATE_CHANGED … active=true` at the pull and
+     `… active=false` at the kill. This is no stand-in for MK1: a `/reload` mid-encounter lands in
+     combat, where the login build waits for combat to end by design. MK1 needs auras secret OUT of
+     combat at login, which only a key between pulls gives (a PvP match may too; unverified).
+     Result:

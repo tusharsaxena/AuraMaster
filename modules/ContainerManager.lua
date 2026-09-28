@@ -297,8 +297,19 @@ local function replaceAttached()
 end
 
 --- Destroy what was parked, then apply everything pending — unless it has to wait. Returns how many
---- containers were applied. `edge` names the event that asked ("regen" for PLAYER_REGEN_ENABLED);
---- the coalescing timer passes nothing.
+--- containers were applied. `edge` names the event that asked ("regen" for PLAYER_REGEN_ENABLED,
+--- "startup" for CM.Init's build); the coalescing timer passes nothing.
+---
+--- THE STARTUP BUILD IGNORES SECRECY, never lockdown. CM.Init runs at PLAYER_LOGIN, before the engine
+--- applies its access restrictions to aura buttons (PLAYER_ENTERING_WORLD, docs/midnight-quirks.md),
+--- so that is the one window a build is legal even while auras are secret. A /reload or relog in the
+--- middle of a key logs in with auras already secret; held there, every container stayed blank until
+--- the restriction lifted at the key's end.
+local function mustHold(edge)
+    if edge == "startup" then return InCombatLockdown() end
+    return CM.MustDefer()
+end
+
 function CM.FlushPending(edge)
     -- A flush run directly (the startup build, an event edge) makes the queued one redundant: cancel
     -- it, so `flushTimer` always names the one live coalescing timer, the one a stand-down cancels.
@@ -311,7 +322,7 @@ function CM.FlushPending(edge)
     -- reason it is down (slash-commands-§7). Stand-up's own RequestApply drains the queue.
     if NS.IsStoodDown() then return 0 end
     local idle = not pendingAll and next(pending) == nil and next(retiring) == nil
-    if CM.MustDefer() then
+    if mustHold(edge) then
         if not idle then noteDeferred(edge, not userPending) end
         return 0
     end
@@ -675,6 +686,6 @@ function CM.Init()
     CM.StartListening()
     CM.Sync()
     CM.RequestApply(nil, true)   -- the startup build: a reload in combat changed no setting
-    CM.FlushPending()
+    CM.FlushPending("startup")
     if NS.TimedSpells and NS.TimedSpells.Sync then NS.TimedSpells.Sync() end
 end

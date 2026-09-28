@@ -338,3 +338,65 @@ test("lifecycle: the degraded Core stub's SafeRegisterEvent records a bad name a
     for _, event in ipairs(lifecycleRegs(NS2, mocks2)) do held[event] = true end
     assertTrue(held.PLAYER_ENTERING_WORLD and held.UNIT_PET and held.ADDON_LOADED, "the rest registered")
 end)
+
+-- ── the [Event] trace (debug-logging) ───────────────────────────────────────────────────────────
+
+--- Capture every NS.Debug line under `tag` as its formatted text.
+local function traceOf(NS, tag)
+    local lines = {}
+    NS.Debug = function(t, fmt, ...)
+        if t ~= tag then return end
+        local args = { ... }
+        for i = 1, select("#", ...) do args[i] = tostring(args[i]) end
+        local n = #lines
+        lines[n + 1] = fmt:format(unpack(args, 1, select("#", ...)))
+    end
+    return lines
+end
+
+local function anyLine(lines, needle)
+    for _, l in ipairs(lines) do
+        if l:find(needle, 1, true) then return l end
+    end
+    return nil
+end
+
+test("lifecycle: the state-changing events each leave one [Event] line while logging is on", function()
+    local NS, mocks = fresh()
+    NS.State.debug = true
+    local lines = traceOf(NS, "Event")
+    mocks.__aurasSecret = true
+    mocks.__fireEvent("ADDON_RESTRICTION_STATE_CHANGED", 4, true)
+    mocks.__fireEvent("PLAYER_ENTERING_WORLD", false, true)
+    mocks.__fireEvent("LOADING_SCREEN_DISABLED")
+    mocks.__fireEvent("PLAYER_REGEN_DISABLED")
+    mocks.__fireEvent("PLAYER_REGEN_ENABLED")
+    -- red under: an event handler with no trace line
+    local r = anyLine(lines, "type=4 active=true")
+    assertTrue(r ~= nil, "the restriction line names its type and edge")
+    assertTrue(r:find("secret=true", 1, true) ~= nil, "and whether auras are secret after it")
+    assertTrue(anyLine(lines, "login=false reload=true") ~= nil)
+    assertTrue(anyLine(lines, "LOADING_SCREEN_DISABLED") ~= nil)
+    assertTrue(anyLine(lines, "PLAYER_REGEN_DISABLED") ~= nil)
+    assertTrue(anyLine(lines, "PLAYER_REGEN_ENABLED") ~= nil)
+end)
+
+test("lifecycle: target, focus and pet swaps and ADDON_LOADED leave no [Event] line", function()
+    local NS, mocks = fresh()
+    NS.State.debug = true
+    local lines = traceOf(NS, "Event")
+    mocks.__fireEvent("PLAYER_TARGET_CHANGED")
+    mocks.__fireEvent("PLAYER_FOCUS_CHANGED")
+    mocks.__fireEvent("UNIT_PET", "player")
+    mocks.__fireEvent("ADDON_LOADED", "Other")
+    assertEqual(#lines, 0, "the owner ruled these out (2026-09-29)")
+end)
+
+test("lifecycle: with logging off no [Event] line is written", function()
+    local NS, mocks = fresh()
+    NS.State.debug = false
+    local lines = traceOf(NS, "Event")
+    mocks.__fireEvent("ADDON_RESTRICTION_STATE_CHANGED", 1, false)
+    mocks.__fireEvent("PLAYER_REGEN_DISABLED")
+    assertEqual(#lines, 0)
+end)

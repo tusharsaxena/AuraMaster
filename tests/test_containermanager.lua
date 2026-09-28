@@ -816,6 +816,27 @@ test("manager: a reload in combat builds silently and applies once combat ends",
     assertTrue(NS.ContainerManager.FlushPending("regen") > 0, "the startup apply runs once combat ends")
 end)
 
+test("manager: a reload while auras are secret (mid-key, out of combat) still builds at login", function()
+    local lines
+    local NS, mocks = fresh({ before = function(m)
+        m.__aurasSecret, m.__lockdown = true, false
+        lines = chat(m)
+    end })
+    -- red under: CM.Init's startup flush held by the secrecy half of CM.MustDefer. PLAYER_LOGIN is
+    -- before the engine's access restrictions (PLAYER_ENTERING_WORLD), so building there is the one
+    -- legal window; holding it left every container blank until the key ended.
+    for id, inst in pairs(NS.ContainerManager.instances) do
+        assertTrue(inst.engine ~= nil, "container #" .. tostring(id) .. " built its engine at login")
+    end
+    assertTrue(next(NS.ContainerManager.instances) ~= nil, "the seeded containers exist")
+    assertFalse(NS.ContainerManager.QueueSnapshot().all, "nothing left queued")
+    assertEqual(countLines(lines, "will apply"), 0, "the player changed no setting")
+    -- A later request while still secret waits as before: only the startup build is exempt.
+    NS.ContainerManager.RequestApply(1)
+    mocks.__fireTimers()
+    assertEqual(NS.ContainerManager.QueueSnapshot().ids[1], 1, "a post-login apply still waits")
+end)
+
 -- ── the queue ────────────────────────────────────────────────────────────────────────────────
 
 --- Count Container:Apply per id, still calling through. Returns the counts table.
