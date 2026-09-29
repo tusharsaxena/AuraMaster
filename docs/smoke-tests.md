@@ -1386,14 +1386,14 @@ a red border frames the icon on every line, the art inside it. Result:
 icon and its gap, and with Size to fit off a long line is cut at its box rather than drawn under the
 icon. Result:
 
-**TEXT-8. Changes keep every line.** `/am debug` and auras showing, on the Text container with its
-icon on the left and its red border on: change Text → General → **Width (px)** several times (drag,
-then type), then the other Text settings one after another (font, size, template, icon size, the
-border) → every line keeps its text, its icon and its border; no empty bordered squares, no `[Style]
-text icon failed` line, no Lua error. Rows that go blank must come with a `[Style] … failed:` debug
-line and one Lua error naming it: copy both word for word. A refused icon call costs the icon alone,
-the text still drawing; rows that go empty with no such line are a defect too, so report the steps.
-Result:
+**TEXT-8. Changes keep every line.** `/am debug on`, then bare `/am debug` to open the console, with
+auras showing, on the Text container with its icon on the left and its red border on: change Text →
+General → **Width (px)** several times (drag, then type), then the other Text settings one after
+another (font, size, template, icon size, the border) → every line keeps its text, its icon and its
+border; no empty bordered squares, no `[Style] text icon failed` line in the console, no Lua error.
+Rows that go blank must come with a `[Style] … failed:` line in the console and one Lua error naming
+it: copy both word for word. A refused icon call costs the icon alone, the text still drawing; rows
+that go empty with no such line are a defect too, so report the steps. Result:
 
 **TEXT-9. Template refusals.** In the Template box, and with `/am set container.text.template
 $spellname$ $bogus$` (no quotes) → chat prints `Invalid value for container.text.template` and,
@@ -1462,8 +1462,9 @@ word, tinted, and Mortal Wounds shows no type and no tint. Result:
 debuff's line has a box in its type's color behind the text, the text on top and readable; a typeless
 debuff has none. **Backdrop opacity** changes its strength and is dimmed while the backdrop is off.
 With the icon on the left, the box covers the text area only. With Pulse or Bounce, the box moves and
-fades with the line. Test mode → the Bloodlust placeholder has a Magic box, the other buffs none. Turn
-the backdrop off → every box goes at once. Result:
+fades with the line. Test mode → each typed placeholder (Shadow Word: Pain, Hex, Frost Fever, Deadly
+Poison, Rupture) has a box in its type's color, and Mortal Wounds has none. Turn the backdrop off →
+every box goes at once. Result:
 
 **TEXT-21. The dispel edge.** **Edge in the dispel color** on, backdrop off → a thin outline in the
 type's color around a typed debuff's text area, none on a typeless one; **Edge thickness** 1 to 4
@@ -1476,10 +1477,11 @@ the line has no tint on its type word, no backdrop box and no edge, the same as 
 no blank space held for them. A box or edge that shows (white, or any color): report it with the mob
 and the buff's name. Result:
 
-**TEXT-23. A stacked icon keeps one row's height.** An icon container's own text, Text → General →
-Justify Center, a multi-piece template → the rows stack and center as a Text container's do, but the
-icon keeps its configured size (icon size 0 included), and a row that does not fit is clipped rather
-than making the icon taller. Result:
+**TEXT-23. A stacked icon keeps one row's height.** On the Text container with Icon position Left,
+Text → General → Justify Center, template *Centered: name over time* → the rows stack and center and
+the container grows to hold them, but the icon keeps its configured size. Set **Icon size (0 = line
+height)** to 0 → the icon is one row's height (the font size), not the height of the whole stack.
+Justify Left with size 0 → the icon is the box's height again. Result:
 
 **TEXT-24. The Text Template section.** Text → General → the subsection is titled **Text Template**.
 Under the Custom template box, **Preview** is a disabled edit box holding the rendered line in the
@@ -1626,6 +1628,9 @@ line, then remove its row here.
 | STYLE-13 | 65, batch 5 |
 | STYLE-14 | 66, batch 5 |
 | STYLE-20 to STYLE-30 | 281 to 291 (FP1 to FP11), font primer |
+| TEXT-8 | 99, 153 and 159: its logging step corrected on 2026-09-29 to `/am debug on` (bare `/am debug` only toggles the console, and the `[Style]` line is written only while logging is on) |
+| TEXT-20 | 131: its test-mode step corrected on 2026-09-29 (a debuff container previews the debuff placeholders, each typed one boxed in its type's color, Mortal Wounds none) |
+| TEXT-23 | 134: corrected on 2026-09-29 to a Text container's own icon on a stacked Center (an Icons container has no Text section and draws no template text) |
 | TEXT-27 | 200, batch 8 (failed 2026-09-25): all but the migrated-profile step, which passed as 213 |
 | TEXT-28 | 201, batch 8 (failed 2026-09-25) |
 | TEXT-29 | 202, batch 8 (failed 2026-09-25): the in and out of combat, in-combat and SharedMedia steps, its in-combat Size to fit step rewritten on 2026-09-29 for `/am set container.text.autoSize`, since the panel is locked in combat; the rest passed as 214 |
