@@ -434,7 +434,7 @@ badge and any count quoted in the docs must agree with it.
 - container: an engine whose frame level reads secret leaves the blocker at level 0, never raising (E)
 - container: ApplyVisibility records the hang mode for test mode, unlocked and locked; Park and Destroy reset it
 
-### test_containermanager.lua (53)
+### test_containermanager.lua (54)
 
 - manager: Create appends a container, names it uniquely and announces it
 - manager: two containers with one name become 'X' and 'X (2)'
@@ -476,6 +476,7 @@ badge and any count quoted in the docs must agree with it.
 - manager: /am forgettimed in combat is the player's change, so it says it waits
 - manager: a player's change held beside the addon's own request is announced once
 - manager: a reload in combat builds silently and applies once combat ends
+- manager: a reload while auras are secret (mid-key, out of combat) still builds at login
 - manager: a request for one container applies only that one
 - manager: a flushed queue is empty, and a later request schedules a pass of its own
 - manager: a held request keeps exactly its container through the hold
@@ -547,7 +548,7 @@ badge and any count quoted in the docs must agree with it.
 - state: the session flags start off, are never saved, and a reload starts them clean
 - state: test mode is session-only and off at login; unlocking keeps real auras drawing (B1)
 
-### test_lifecycle.lua (15)
+### test_lifecycle.lua (18)
 
 - lifecycle: the nine lifecycle events are registered to their handlers, and nothing else is
 - lifecycle: a focus change refreshes the focus containers, a target change the target ones
@@ -564,6 +565,9 @@ badge and any count quoted in the docs must agree with it.
 - lifecycle: one bad event name, on a client without C_EventUtils, is caught by the probe rung
 - lifecycle: a rejection while logging is on is traced at the moment it happens
 - lifecycle: the degraded Core stub's SafeRegisterEvent records a bad name and keeps the rest
+- lifecycle: the state-changing events each leave one [Event] line while logging is on
+- lifecycle: target, focus and pet swaps and ADDON_LOADED leave no [Event] line
+- lifecycle: with logging off no [Event] line is written
 
 ### test_anchors.lua (50)
 
@@ -1954,12 +1958,12 @@ badge and any count quoted in the docs must agree with it.
 | test_filtercompiler.lua | 85 |
 | test_filtercompiler_categories.lua | 9 |
 | test_container.lua | 52 |
-| test_containermanager.lua | 53 |
+| test_containermanager.lua | 54 |
 | test_compat.lua | 29 |
 | test_secrets.lua | 6 |
 | test_bus.lua | 8 |
 | test_state.lua | 2 |
-| test_lifecycle.lua | 15 |
+| test_lifecycle.lua | 18 |
 | test_anchors.lua | 50 |
 | test_anchors_handle.lua | 27 |
 | test_anchors_seam.lua | 10 |
@@ -2020,4 +2024,4 @@ badge and any count quoted in the docs must agree with it.
 | test_eol.lua | 2 |
 | test_layout_cap.lua | 13 |
 | test_diagnostics_contract.lua | 7 |
-| **Total** | **1702** |
+| **Total** | **1706** |

@@ -219,6 +219,29 @@ Every field is stringified through `NS.SafeToString`, `left` is computed only fr
 numbers, and each section runs under `pcall`, as does each plan group, each group's button listing
 and the predictions, so one failure prints `section ... failed` and the report goes on. For the full picture, run it out of combat.
 
+## The event trace
+
+With `/am debug on`, every event that changes what the addon may do leaves one `[Event]` line,
+written before the handler acts, so `queued=` is the queue the event found. Each line ends in the
+three reads every apply decision turns on: `secret=` (`Compat.AurasAreSecret`), `lockdown=`
+(`InCombatLockdown`) and `queued=` (`all`, a container count, or `-`). The `[Apply]` line after it
+says what the flush did (`applied N container(s)` or `deferred: …`).
+
+| Event | Line |
+|---|---|
+| `ADDON_RESTRICTION_STATE_CHANGED` | `[Event] ADDON_RESTRICTION_STATE_CHANGED secret=… lockdown=… queued=… type=<n> active=<0|1|2>` (Enum.AddOnRestrictionState: 0 inactive, 1 active, 2 activating) |
+| `PLAYER_ENTERING_WORLD` | `[Event] PLAYER_ENTERING_WORLD secret=… lockdown=… queued=… login=<bool> reload=<bool>` |
+| `LOADING_SCREEN_DISABLED` | `[Event] LOADING_SCREEN_DISABLED secret=… lockdown=… queued=…` |
+| `PLAYER_REGEN_DISABLED` / `_ENABLED` | `[Event] PLAYER_REGEN_… secret=… lockdown=… queued=…` |
+
+Logging is session-only and off after every `/reload` (debug-logging-§5), so the login itself is
+never in the trace. After a mid-key `/reload`, turn it back on with `/am debug on`, then run
+`/am diagnostics`: `apply queue: all=false` and `engine=yes` on every `[Cont]` line mean the login
+build ran; `all=true` with `mustDefer=true` means it is still waiting.
+
+Target, focus and pet swaps and `ADDON_LOADED` are left out on purpose (owner, 2026-09-29): they
+fire too often in a key to read around.
+
 ## Caps
 
 The report stops short of the console's 3000-line buffer, so Copy always starts at the begin
