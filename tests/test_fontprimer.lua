@@ -498,7 +498,7 @@ test("fontprimer: a loading screen that outlasts WORLD_HOLD after PLAYER_ENTERIN
     assertEqual(eligible.refreshed, 1)
     fire(mocks, WORLD_HOLD)
     assertFalse(got.frame:IsShown())
-    -- red under: no Fonts line with both timestamps (FP10 cannot show the gap)
+    -- red under: no Fonts line with both timestamps (STYLE-29 cannot show the gap)
     local line = NS2.DebugLog:FindLine("PLAYER_ENTERING_WORLD at 100.00, loading screen ended at 106.00 (6.00 s later)")
     assertTrue(line ~= nil, "the Fonts gap line")
     NS2.DebugLog:SetEnabled(false)

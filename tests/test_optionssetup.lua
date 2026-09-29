@@ -29,7 +29,7 @@ test("options: General and Containers register, in TOC order; the former sub-pag
         assertTrue(mocks.__subcategories[p.label] ~= nil, "page " .. p.label)
     end
     for _, gone in ipairs({ "Filters", "Layout", "Bars", "Icons", "Text" }) do
-        -- red under: a page file still registering a Blizzard subcategory (smoke 1)
+        -- red under: a page file still registering a Blizzard subcategory (smoke PANEL-1)
         assertNil(mocks.__subcategories[gone], gone .. " has no tree entry")
         assertNil(mocks.__subcategories["  - " .. gone], gone .. " has no D6-marked tree entry")
     end

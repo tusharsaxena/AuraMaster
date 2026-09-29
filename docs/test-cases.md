@@ -1756,15 +1756,15 @@ badge and any count quoted in the docs must agree with it.
 - rail: the page opens on General, today's one General tab under the band, beside a 120px rail
 - rail: the draw order is PageBanner, NavRail, TabStrip
 - rail: a rail click draws that section's strip and rows under the same band
-- rail: each section keeps its own tab: Filters, Categories, Layout, back to Filters lands on Categories (smoke 5)
-- rail: a Style change heals an active style section to the new style's entry; other sections stay (smoke 4)
+- rail: each section keeps its own tab: Filters, Categories, Layout, back to Filters lands on Categories (smoke PANEL-12)
+- rail: a Style change heals an active style section to the new style's entry; other sections stay (smoke PANEL-11)
 - rail: choosing a container of another style in the band moves Bars to Icons
 - rail: with no containers the rail lists General alone, which says how to make one
-- rail: a former sub-page key opens Containers on that section, drawn on the next show (smoke 7)
+- rail: a former sub-page key opens Containers on that section, drawn on the next show (smoke LAYOUT-6)
 - rail: a style key the container is not drawn in opens Containers and moves nothing; Containers keeps the section
 - rail: SelectTab on a section key selects the section and its tab; on the General page it is the library's
 - rail: selecting a section is refused in combat and moves nothing
-- rail: Defaults restores only the active section's rows for the selected container (smoke 6)
+- rail: Defaults restores only the active section's rows for the selected container (smoke PANEL-13)
 - rail: the Defaults tooltip names the section on screen and the kept name
 - new container: from Bars -> Time text, New container lands on General/General on the new container
 - new container: the section left keeps its tab: back to Bars reopens Time text

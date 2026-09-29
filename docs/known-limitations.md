@@ -286,7 +286,7 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   prediction is re-read 0.2 s after an aura change (at once on a target or focus switch, so a
   switch never makes a follower jump to the emptied engine and back), so for that moment a follower can sit on the
   placeholder over a new first aura, or past an aura that just ended. It relies on `C_UnitAuras`
-  reading a filter string as the engine does (smoke check 191). Combat moves every follower onto its
+  reading a filter string as the engine does (smoke check CONT-23). Combat moves every follower onto its
   engine at the pull (PLAYER_REGEN_DISABLED, before lockdown) and back after it. While the strips
   show, each follower sits one strip row further along the chain (batch 10 F2), so no two strips in a
   chain overlap; locked, the seam is the follower's own spacing again, plus its label's row while its
@@ -297,14 +297,14 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   leaves empty (`docs/midnight-quirks.md`). The spark must sit wholly on the elapsed side to be
   clipped, so it moves half its width off center. With the option on (the default) the spark is
   centered, as before. That a zero-duration bar leaves the region empty is still an in-game check
-  (`docs/smoke-tests.md`, checks 26 and 63). Moving the spark off the fill onto the elapsed
+  (`docs/smoke-tests.md`, STYLE-3). Moving the spark off the fill onto the elapsed
   background also moves it onto a different backdrop — the elapsed side's background defaults to
   half-opaque and lets whatever sits behind the frame bleed through. So the bar dress
   (`modules/Style_Bars.lua`) keeps the spark additive and desaturates its art in both modes, and
   over the elapsed side it reads as the player's spark color, not the art's native gold (owner
   report 2026-09-14, batch 7 `SP-1`). Normal blending was tried for the clipped spark and painted
   the art's black matte as a box taller than the bar (feedback batch 8 `SP-1`), so the blend is
-  never BLEND. Verified in-game only (`docs/smoke-tests.md`, check 85).
+  never BLEND. Verified in-game only (`docs/smoke-tests.md`, STYLE-4).
 - **A font a media addon registers after login is not primed until the next settings change.** The
   font primer (`modules/FontPrimer.lua`, issue #24) draws every container font at login, when every
   addon loaded with the client has registered its LibSharedMedia fonts. A media addon loaded on

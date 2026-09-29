@@ -241,7 +241,7 @@ local function stamp(t) return type(t) == "number" and string.format("%.2f", t) 
 --- When the last PLAYER_ENTERING_WORLD came and when the loading screen after it ended, and the gap:
 --- the client fires the first while the loading screen is still up, and the font primer times its
 --- world hide and refresh from the second (issue #24, FP-06). Session logging is off at login, so
---- the report is where the smoke check FP10 reads the gap. `-` for one not seen.
+--- the report is where the smoke check STYLE-29 reads the gap. `-` for one not seen.
 local function screenLine(out)
     local FP = NS.FontPrimer
     if not (FP and FP.DiagState) then return end

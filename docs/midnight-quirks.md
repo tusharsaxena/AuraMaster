@@ -203,7 +203,7 @@ live bar's spark rides a clip frame (`SetClipsChildren`) bounded by the elapsed 
 status-bar texture, and sits wholly on that side of the moving edge (`modules/Style_Bars.lua:141`).
 A timeless aura has zero elapsed, so the clip frame has no width and the spark is clipped away. A
 timed bar's spark sits just inside its edge rather than centered on it. This rests on the client
-leaving a zero-duration bar's texture at zero width, which is an in-game check (smoke check 26). The
+leaving a zero-duration bar's texture at zero width, which is an in-game check (smoke check STYLE-3). The
 preview reads its placeholders' durations and hides the spark directly.
 
 ## Text chains and animations on engine buttons
@@ -324,7 +324,7 @@ when it ends, seconds later on a slow or cold-cache login. So `FontPrimer.OnLoad
 `addon:OnLoadingScreenEnd`) first runs a priming pass, then keeps the frame shown 2 s more and runs the refresh 1.5 s after the
 loading screen ends, when anything was primed since the last loading screen; `PLAYER_ENTERING_WORLD`
 only notes the time, unless the client refused `LOADING_SCREEN_DISABLED`. The working assumption is
-that the loading screen draws nothing at all; the smoke check FP10 tests it, and the report's
+that the loading screen draws nothing at all; the smoke check STYLE-29 tests it, and the report's
 `loading screen:` line shows the gap. Nothing runs while the addon is stood down. The pattern is ChonkyCharacterSheet's
 `CCS:PrimeFontsAndTextures`. How to check it: `docs/debug.md` (*Bar names that do not show*).
 
@@ -534,7 +534,7 @@ the gap is that empty string's own width.
 - **The gap itself** would then be the client laying an empty, single-anchored font string out with a
   non-zero width, which no addon code can read (the string is engine-written and secret) or trim.
 
-**The in-game check** (docs/smoke-tests.md section T) runs three `/run` probes that tell these apart:
+**The in-game check** (docs/smoke-tests.md, STYLE-8) runs three `/run` probes that tell these apart:
 the rule formatter on `45.5` and `45`, the binding's zero-duration text, and an empty font string's
 width.
 
