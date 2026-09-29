@@ -1928,14 +1928,14 @@ see the notes in 294).
      Result:
 293. **MK2.** Same key, `/am debug on`, then play on: a pull, the kill, a boss, and the key's end.
      → The console carries `[Event] PLAYER_REGEN_DISABLED` / `_ENABLED` lines at each pull and kill,
-     and `[Event] ADDON_RESTRICTION_STATE_CHANGED … type=<n> active=<bool>` lines; each line ends
+     and `[Event] ADDON_RESTRICTION_STATE_CHANGED … type=<n> active=<0|1|2>` lines; each line ends
      `secret=… lockdown=… queued=…`. No `[Event]` line on a target, focus or pet change. Copy the
      whole console into the bug thread: the `type=` values seen at the key's start, a boss and the
      key's end are the record this test exists to take.
      Result:
 294. **MK3.** Without a key: a boss encounter anywhere (a follower dungeon or LFR boss) with
-     `/am debug on` → `[Event] ADDON_RESTRICTION_STATE_CHANGED … active=true` at the pull and
-     `… active=false` at the kill. This is no stand-in for MK1: a `/reload` mid-encounter lands in
+     `/am debug on` → `[Event] ADDON_RESTRICTION_STATE_CHANGED … type=1 active=1` at the pull and
+     `… type=1 active=0` at the kill. This is no stand-in for MK1: a `/reload` mid-encounter lands in
      combat, where the login build waits for combat to end by design. MK1 needs auras secret OUT of
      combat at login, which only a key between pulls gives (a PvP match may too; unverified).
      Result:

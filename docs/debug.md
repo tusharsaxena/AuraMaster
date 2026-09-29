@@ -229,7 +229,7 @@ says what the flush did (`applied N container(s)` or `deferred: …`).
 
 | Event | Line |
 |---|---|
-| `ADDON_RESTRICTION_STATE_CHANGED` | `[Event] ADDON_RESTRICTION_STATE_CHANGED secret=… lockdown=… queued=… type=<n> active=<bool>` |
+| `ADDON_RESTRICTION_STATE_CHANGED` | `[Event] ADDON_RESTRICTION_STATE_CHANGED secret=… lockdown=… queued=… type=<n> active=<0|1|2>` (Enum.AddOnRestrictionState: 0 inactive, 1 active, 2 activating) |
 | `PLAYER_ENTERING_WORLD` | `[Event] PLAYER_ENTERING_WORLD secret=… lockdown=… queued=… login=<bool> reload=<bool>` |
 | `LOADING_SCREEN_DISABLED` | `[Event] LOADING_SCREEN_DISABLED secret=… lockdown=… queued=…` |
 | `PLAYER_REGEN_DISABLED` / `_ENABLED` | `[Event] PLAYER_REGEN_… secret=… lockdown=… queued=…` |
