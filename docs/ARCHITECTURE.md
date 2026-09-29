@@ -227,7 +227,10 @@ optional. The full table and the reasons:
 Each container's own `UNIT_AURA` belongs to the engine (`SetUnit`, `modules/Container.lua:298`) and
 is not addon code. The nine `core/AuraMaster.lua` registrations are one module-level list,
 `LIFECYCLE_EVENTS`, which `RegisterLifecycleEvents` and `UnregisterLifecycleEvents` both walk, so the
-stand-down and the stand-up remove and restore the same list.
+stand-down and the stand-up remove and restore the same list. With logging on, the world-entry, loading-screen, combat and
+restriction handlers each write one `[Event]` line before acting (`traceEvent`,
+`core/AuraMaster.lua:93`; `docs/debug.md` -> *The event trace*); the unit swaps and `ADDON_LOADED`
+do not.
 
 The font primer (`modules/FontPrimer.lua`) registers no event of its own. It runs from
 `CM.StartListening` (the login's `CM.Init` and every stand-up, before the first build), from the
