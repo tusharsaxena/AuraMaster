@@ -1,0 +1,1 @@
+OK SP-AMX-01 clean: spec S6 met; flip gated identically to the show ladder (engine, enchant frames, parked, staleData, ShouldShow, previewing, stood-down), SetEnabled only, legal in combat/secret; 16 mutations all red; gate 1736/1736, luacheck 0/0, lizard no CCN>15; citations, counts, test-cases, badge, CRLF, FILT-42 Pending verified
