@@ -6,7 +6,7 @@ eight-or-more trigger (documentation-§3).
 ## Registration and dispatch
 
 - **Registration** is AceConsole's `RegisterChatCommand`, twice, in `Slash.Register`
-  (`settings/Slash.lua:571`), called from `OnInitialize`. There is no `SLASH_*` global. It is
+  (`settings/Slash.lua:575`), called from `OnInitialize`. There is no `SLASH_*` global. It is
   **never torn down**, which is what makes `enable` and `disable` a pair rather than a one-way
   door: every verb still answers while the addon is disabled (slash-commands-§2). The chat command,
   the dispatcher and `NS.COMMANDS` are **setup, not features**, so the stand-down does not reach
@@ -129,12 +129,12 @@ banner last chose, or `/am select`, or the first container when nothing has been
 (`NS.ActiveContainer`, `settings/Schema.lua:198`). So `/am set container.bars.width 300` means the
 same thing on the CLI as the Width slider does in the panel. Every `container.` line `/am list` and
 `/am get` print is annotated in gray with the container's name (`cli:SetRowAnnotator`,
-`settings/Slash.lua:532`), so a value never reads as the only one. `/am containers` then `/am select`
+`settings/Slash.lua:536`), so a value never reads as the only one. `/am containers` then `/am select`
 changes the target.
 
 A Filters category row (`printLabel`) prints the label the Categories grid shows, Show or Hide
 (schema v3), with the stored value `/am set` takes after it in gray: `Hide (hide)`. The descriptor's
-`format` hook (`formatValue`, `settings/Slash.lua:455`) does it; every other row prints as the
+`format` hook (`formatValue`, `settings/Slash.lua:459`) does it; every other row prints as the
 library formats it.
 
 Examples:
@@ -154,16 +154,17 @@ through the seam but have no row, so `/am list` does not print them; the Filters
 
 ## Degraded path
 
-With `LibKa0s-Slash-1.0` absent, `settings/Slash.lua:379` builds a stub dispatcher: the host verbs
-keep working (they never went to the library), a bare `/am` runs `config` as the library's does (the
-panel's own stub then says the library is missing), `help` prints a plain command list, and `list`, `get`,
-`set` and `reset` each print the one library-absent line (`/am set is unavailable: the LibKa0s library
-did not load.`). The stub copies none of the library's formatting or parsing; its refusal line for a
-disabled addon is formatted from `STUB_DISABLED_LINE_FORMAT`, the library's `DISABLED_LINE_FORMAT` byte
-for byte, published as `Sl.__stubDisabledLineFormat` in both builds so `tests/test_surface_parity.lua`
-pins it to the live major. `/am enable`, `/am disable`, `/am lock` and `/am unlock` still store their
-paths in that build through `NS.WRITE_THROUGH` (`docs/settings-panel.md`, *The degraded panel*).
-`tests/degraded_env.lua` loads the addon that way.
+With `LibKa0s-Slash-1.0` absent, `settings/Slash.lua:379` builds a stub dispatcher: the host verbs keep
+working (they never went to the library), a bare `/am` runs `config` as the library's does (the panel's
+own stub then says the library is missing), `help` prints a plain command list, and `list`, `get`, `set`
+and `reset` each print the one library-absent line (`/am set is unavailable: the LibKa0s library did not
+load.`). The stub's `CliProfile` and `ProfileSwitch` (the live instance has both from Slash minor 17)
+print that line for `/am profile` and switch nothing. The stub copies none of the library's formatting
+or parsing; its refusal line for a disabled addon is formatted from `STUB_DISABLED_LINE_FORMAT`, the
+library's `DISABLED_LINE_FORMAT` byte for byte, published as `Sl.__stubDisabledLineFormat` in both
+builds so `tests/test_surface_parity.lua` pins it to the live major. `/am enable`, `/am disable`,
+`/am lock` and `/am unlock` still store their paths in that build through `NS.WRITE_THROUGH`
+(`docs/settings-panel.md`, *The degraded panel*). `tests/degraded_env.lua` loads the addon that way.
 
 ## Adding a verb
 

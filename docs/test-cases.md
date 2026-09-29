@@ -1302,7 +1302,7 @@ badge and any count quoted in the docs must agree with it.
 - slash: /am debug on and off flip the session flag; it never reaches the profile
 - slash: the dispatcher's isEnabled is NS.EnabledStored
 
-### test_slash_verbs.lua (50)
+### test_slash_verbs.lua (51)
 
 - slash verbs: /am help prints the alias header, then one row per NS.COMMANDS verb in order
 - slash verbs: the landing page's rows are /am help's rows without the chat indent
@@ -1350,6 +1350,7 @@ badge and any count quoted in the docs must agree with it.
 - slash verbs: without the library /am set on a composed row or a writeThrough path prints the one line and writes nothing
 - slash verbs: without the library a bare /am still runs config, help prints the list, aliases route, and an unknown verb says so
 - slash verbs: without the library the host verbs keep working
+- slash verbs: without the library the stub's CliProfile and ProfileSwitch name what is missing and switch nothing
 - slash verbs: while disabled every feature verb refuses on ONE line naming /am enable, and acts on nothing
 - slash verbs: while disabled the live set still answers — settings stay readable and repairable
 - slash verbs: the disabled gate is ONE decision over the whole verb table, not a per-verb guard
@@ -1993,7 +1994,7 @@ badge and any count quoted in the docs must agree with it.
 | test_framepicker.lua | 15 |
 | test_disabled.lua | 18 |
 | test_slash.lua | 28 |
-| test_slash_verbs.lua | 50 |
+| test_slash_verbs.lua | 51 |
 | test_diagnostics.lua | 47 |
 | test_bulklog.lua | 20 |
 | test_optionssetup.lua | 17 |
@@ -2024,4 +2025,4 @@ badge and any count quoted in the docs must agree with it.
 | test_eol.lua | 2 |
 | test_layout_cap.lua | 13 |
 | test_diagnostics_contract.lua | 7 |
-| **Total** | **1706** |
+| **Total** | **1707** |

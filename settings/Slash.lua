@@ -385,9 +385,13 @@ if not SlashLib then
         local function absent(verb)
             return function() printf(L["%s is unavailable: the LibKa0s library did not load."], "/am " .. verb) end
         end
-        for _, verb in ipairs({ "List", "Get", "Set", "Reset" }) do
+        for _, verb in ipairs({ "List", "Get", "Set", "Reset", "Profile" }) do
             stub["Cli" .. verb] = absent(verb:lower())
         end
+        -- The live instance's switch (LibKa0s-Slash minor 17), on the same route: with no library
+        -- there is no store adapter to trust, so it names the missing library and switches nothing.
+        local profileAbsent = absent("profile")
+        stub.ProfileSwitch = function() profileAbsent(); return false end
         stub.LandingRows = function()
             local out = {}
             for _, e in ipairs(d.commands) do

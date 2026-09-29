@@ -749,6 +749,25 @@ test("slash verbs: without the library the host verbs keep working", function()
     assertEqual(p[#p], "All settings reset to defaults.")
 end)
 
+test("slash verbs: without the library the stub's CliProfile and ProfileSwitch name what is missing and switch nothing", function()
+    local NS2, mocks = degraded()
+    local lines = capture(mocks)
+    -- Spend the degraded printer's one-time library note, so each line below stands alone.
+    slash(NS2, lines, "containers")
+    local cli = NS2.Slash.__cli
+    NS2.db:SetProfile("Other")
+    NS2.db:SetProfile("Default")
+    for k in pairs(lines) do lines[k] = nil end
+    -- red under: a stub with no CliProfile (LibKa0s-Slash minor 17 put it on the live instance)
+    cli:CliProfile("Other")
+    assertEqual(dump(plain(lines)), "{/am profile is unavailable: the LibKa0s library did not load.}")
+    for k in pairs(lines) do lines[k] = nil end
+    -- red under: a stub ProfileSwitch that switches, or answers anything but false
+    assertEqual(cli:ProfileSwitch("Other"), false)
+    assertEqual(dump(plain(lines)), "{/am profile is unavailable: the LibKa0s library did not load.}")
+    assertEqual(NS2.db:GetCurrentProfile(), "Default", "nothing switched")
+end)
+
 -- ── the disabled state (slash-commands-§2) ────────────────────────────────────────────────────
 --
 -- Disabled means the addon stands its FEATURES down. A verb that drives those features answers on
