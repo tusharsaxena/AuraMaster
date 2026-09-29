@@ -264,7 +264,7 @@ hides it, and clearing does not show it again.
 `UpdateAllAuras` exists for external refreshes such as target changes.
 
 **What this addon does.** `PLAYER_TARGET_CHANGED`, `PLAYER_FOCUS_CHANGED` and `UNIT_PET` (for the
-player) call `UpdateAllAuras` on every container on that unit (`core/AuraMaster.lua:147-159`).
+player) call `UpdateAllAuras` on every container on that unit (`core/AuraMaster.lua:159-171`).
 
 ## An addon font loads lazily, and the engine writes a name once (measured 2026-09-27)
 
@@ -341,6 +341,34 @@ toggling *Hide enchants without a duration* is a change of shape and rebuilds th
 sort direction re-sends the enchant sort in place, once. Hiding Blizzard's buff frame takes its
 enchants with it, and the setting's description says so.
 
+**How the engine names an enchant.** Enchant data carries no name, so the engine names the frame
+after the equipped item: `Item:CreateFromEquipmentSlot(slot):GetItemName()`
+(Blizzard_AuraContainerUtil.lua, `SetSpellNameForAura`). That is why the bar reads the weapon's
+name, not the oil's. When the item's data is not loaded yet it writes an empty name and waits for
+one `ITEM_DATA_LOAD_RESULT`; a failed load drops that wait, and nothing else asks again. The engine
+also only updates an unchanged enchant in place: same frame, same string. Unlike a pooled aura
+frame, an enchant frame is never cleared and reassigned while the engine is on; only a disabled
+engine clears its enchants. So a name drawn empty at login stays empty until a `/reload`, whether the
+cause was the item's data (not loaded yet) or the font (not loaded yet, the font primer's case
+above). `UpdateAllAuras` and a restyle only write the same string again. The owner's check while a
+bar is blank: `/dump C_Item.GetItemName(ItemLocation:CreateFromEquipmentSlot(16))`. A name there
+points at the font, nil at the data.
+
+**What this addon does about the name (SP-AMX-01).** `ContainerClass:ResetEnchants` turns a live
+engine off and on again (`SetEnabled(false)`, then `SetEnabled(true)`): the disable clears its
+enchant frames and the enable draws them afresh, with a fresh name lookup. It flips only an engine
+that has enchant frames and should be on: not parked, not `staleData`, shown (`ShouldShow`) and not
+previewing. `SetEnabled` is the call the visibility pass makes in combat, and enchant data is not a
+secret aura, so the reset runs in combat and while auras are secret. Two triggers arm it through one
+debounced `C_Timer` in `modules/ContainerManager.lua`: every loading screen's end
+(`LOADING_SCREEN_DISABLED`, 1.75 s later: after the font primer's 1.5 s world refresh and before its
+2 s hide, and whether or not the primer drew anything), and an equipped weapon's item data arriving
+(`ITEM_DATA_LOAD_RESULT` or `GET_ITEM_INFO_RECEIVED` for the item in slot 16 or 17, a successful
+load only, 0.5 s later, after the engine's own retry). A trigger that comes while one is armed keeps
+the later deadline, so a burst of item events flips once. Both item events are lifecycle events, so a
+stand-down removes them, and it cancels an armed reset. Each reset writes one line,
+`[Apply] enchants reset on N container(s) after the loading screen` (or `after item data`).
+
 ## Combat state: which question to ask
 
 - **`UnitAffectingCombat("player")`** answers General visibility (`Container:ShouldShow`) — the
@@ -361,7 +389,7 @@ so the failure is latent: it would only show up once a patch retires one of them
 
 **What this addon does.** Every registration goes through `NS.SafeRegisterEvent`, which is
 `LibKa0s-Core-1.0`'s `SafeRegisterEvent` (`core/CoreSetup.lua`), or its unit-event twin
-`NS.SafeRegisterUnitEvent`. That covers the nine lifecycle events (`LIFECYCLE_EVENTS` in
+`NS.SafeRegisterUnitEvent`. That covers the eleven lifecycle events (`LIFECYCLE_EVENTS` in
 `core/AuraMaster.lua`), the timed-spell gate and its unit frame's `UNIT_AURA`
 (`modules/TimedSpells.lua`), the empty-container prediction's two unit frames and their swap events
 (`modules/EmptyWatch.lua`), and the stand-down's pending `PLAYER_REGEN_ENABLED`
@@ -612,6 +640,10 @@ values was secret.
 - **The font primer's frame hangs from `UIParent`, not from any anchor**, so nothing it does reaches
   an aura engine's ancestry. Its one engine call, the follow-up `UpdateAllAuras`, is not protected,
   reads no aura, and skips a disabled engine, which it would clear (`modules/FontPrimer.lua`).
+- **The weapon-enchant reset is two `SetEnabled` calls** (`ContainerClass:ResetEnchants`), the same
+  combat-legal call the visibility pass makes, so it runs in combat and while auras are secret. It
+  rebuilds nothing, touches no button, and skips every engine that should be off (parked, stale, not
+  shown or previewing), because it ends with the engine on (*Weapon enchants*, above).
 - **Blizzard's `BuffFrame` and `DebuffFrame` are reparented, never hidden**, and only out of combat
   (`modules/BlizzardFrames.lua`, events-frames-taint-§3).
 - **Protected opens are refused, not deferred.** The options panel (the library, options-ui-§2),

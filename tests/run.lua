@@ -104,6 +104,7 @@ Kit.run{
         "test_anchors_hang",
         "test_emptywatch",
         "test_fontprimer",
+        "test_enchantreset",
         "test_anchors_close",
         "test_anchors_label",
         "test_anchors_strip",

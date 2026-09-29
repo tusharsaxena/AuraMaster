@@ -22,7 +22,7 @@ check's number is not reused. Checks with no recorded pass, and checks new or co
 | COMBAT-1 to COMBAT-7 | Combat and restrictions | Deferred changes, the settings lock, resets in combat, Mythic+ keys |
 | DIAG-1 to DIAG-12 | Debug, diagnostics, perf | The debug console, bulk `[Set]` lines, `/am diagnostics`, `/am perf`, the event trace |
 | CONT-1 to CONT-25 | Containers | Create, duplicate, delete, rename, copy; handles, strips and the close mark; test mode; unit swaps; empty placeholders |
-| FILT-1 to FILT-41 | Filters and spell categories | Cast by, the category grids, Overrides, the add-a-spell box, aura ids, your own categories, weapon enchants |
+| FILT-1 to FILT-42 | Filters and spell categories | Cast by, the category grids, Overrides, the add-a-spell box, aura ids, your own categories, weapon enchants and their names |
 | LAYOUT-1 to LAYOUT-38 | Layout | Anchor modes, attaching, chains, growth, anchor points, seams, the name label, mouse and tooltips |
 | STYLE-1 to STYLE-30 | Bars and Icons style, fonts | Bars and Icons tabs, the spark, borders, dispel colors, pandemic, the font primer |
 | TEXT-1 to TEXT-29 | Text style | Templates and tokens, justify, the icon, dispel type word, backdrop and edge, animation, Size to fit |
@@ -891,6 +891,15 @@ returns. **Hide enchants without a duration** hides a permanent one. Result:
 whose Filters → Categories are all Hide but **Weapon enchants**: it shows your enchants and no buff.
 `/am new enchants text` → the same as Text, showing the enchant's name and time. Result:
 
+**FILT-42. The weapon's name after a fresh login.** Apply a temporary weapon enchant (an oil, a stone,
+a poison) so *Player buffs* shows it. Exit the game completely and log back in (not `/reload`) → within
+about two seconds of the loading screen ending, the enchant bar shows the weapon's name, not only its
+icon and time. Then `/am debug on` and take a loading screen (a hearthstone, a portal or a dungeon
+entrance) → the console shows `[Apply] enchants reset on N container(s) after the loading screen`, N
+counting the shown containers with an enchant on, and the name is still there. If a name is ever
+blank, run `/dump C_Item.GetItemName(ItemLocation:CreateFromEquipmentSlot(16))` and note what it
+prints on this line. Result:
+
 ## Layout
 
 **LAYOUT-1. Tabs, and Anchor drawn by mode.** Layout → **[ Frame ][ Anchor ][ Growth ][ Mouse ][ Label
@@ -1559,8 +1568,8 @@ range the owner verified on 2026-09-20 (143 to 161), the settings redesign check
 reported individually (2026-09-26), the batch 8 and batch 9 checks whose items failed the owner's two
 2026-09-25 runs and that no later run passed, the font primer (2026-09-27) and the mid-key reload
 (2026-09-29).
-Second, every check that is new on 2026-09-29 or whose expected result was corrected against the
-code then, since none of those has been run in its current form. Sign one off on its own `Result:`
+Second, every check that is new on 2026-09-29 or later, or whose expected result was corrected against
+the code then, since none of those has been run in its current form. Sign one off on its own `Result:`
 line, then remove its row here.
 
 | ID | Origin (old numbering) |
@@ -1610,6 +1619,7 @@ line, then remove its row here.
 | FILT-19 | 75, batch 5 (the tooltip half) |
 | FILT-21 | 179 and 180: the chat line's expected text corrected on 2026-09-29 (each spell named, its id in brackets) |
 | FILT-27 | 82, batch 6 |
+| FILT-42 | new on 2026-09-30 with the weapon-enchant name reset (SP-AMX-01) |
 | LAYOUT-1 | 69, batch 5 |
 | LAYOUT-6 | 162, smoke batch 2 (owed, as CONT-8): the outline moving across aura buttons; 42: its combat refusal corrected on 2026-09-29 to `/am pick` alone, since the panel's button is locked in combat |
 | LAYOUT-11 | 67, batch 8 (failed 2026-09-25): the **Per row** step; the rest passed as 238 |

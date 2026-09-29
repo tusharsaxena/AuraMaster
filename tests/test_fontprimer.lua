@@ -761,8 +761,9 @@ test("fontprimer: a loading screen's end with a font still refused arms nothing"
     t.font, t.fontSize = "Ka0s Prototype", 10
     FP.PrimeAll()
     mocks.__fireEvent("PLAYER_ENTERING_WORLD"); mocks.__fireEvent("LOADING_SCREEN_DISABLED")
-    -- red under: a refusal treated as a priming (the frame shown and a refresh for nothing drawn)
-    assertEqual(#mocks.__timers(), 0)
+    -- red under: a refusal treated as a priming (the frame shown and a refresh for nothing drawn).
+    -- The primer's four delays only: the loading screen's end also arms the enchant reset (SP-AMX-01).
+    assertEqual(armed(mocks, HOLD) + armed(mocks, REFRESH) + armed(mocks, WORLD_HOLD) + armed(mocks, WORLD_REFRESH), 0)
     assertFalse(got.frame:IsShown())
     assertEqual(refused(FP), PROTO .. "|10|OUTLINE")
 end)

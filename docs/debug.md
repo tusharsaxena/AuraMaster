@@ -240,7 +240,12 @@ never in the trace. After a mid-key `/reload`, turn it back on with `/am debug o
 build ran; `all=true` with `mustDefer=true` means it is still waiting.
 
 Target, focus and pet swaps and `ADDON_LOADED` are left out on purpose (owner, 2026-09-29): they
-fire too often in a key to read around.
+fire too often in a key to read around. So are `ITEM_DATA_LOAD_RESULT` and `GET_ITEM_INFO_RECEIVED`,
+which fire for every item the client loads. What they can start, the weapon-enchant reset, writes
+its own line when it fires: `[Apply] enchants reset on N container(s) after the loading screen` (or
+`after item data`), N counting the live containers with enchant slots it turned off and on again
+(`docs/midnight-quirks.md` → *Weapon enchants*). A blank enchant name with no such line after the
+loading screen means the reset never ran; a line with `0` means no container qualified.
 
 ## Caps
 

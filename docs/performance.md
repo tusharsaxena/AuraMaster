@@ -20,8 +20,12 @@ Other timers and frames of the addon's own: a next-frame `C_Timer.NewTimer(0)` t
 the frame picker's `OnUpdate`, which runs only while a pick is in progress. While containers are
 unlocked out of combat and test mode, `modules/EmptyWatch.lua` adds a 0.2 s pass timer, armed by a
 `UNIT_AURA` on a watched container's units, and one timer at the soonest weapon enchant's expiry.
-The font primer arms two one-shot timers only when it has drawn a new font (below). Every timer keeps
-its handle, and a stand-down cancels it rather than leaving it armed.
+The font primer arms two one-shot timers only when it has drawn a new font (below). The weapon-enchant
+reset keeps one debounced timer, armed 1.75 s after each loading screen and 0.5 s after an equipped
+weapon's item data arrives; when it fires it sends two `SetEnabled` calls to each live engine with
+enchant slots. Its item events fire for every item the client loads and cost two
+`GetInventoryItemID` reads each. Every timer keeps its handle, and a stand-down cancels it rather
+than leaving it armed.
 
 ### The font primer's cost
 
@@ -88,7 +92,7 @@ Declared in report order in `buckets` (`core/PerfSetup.lua:48`), each bracketed 
 
 | Bucket | Declared parent | Bracket | Why it is bracketed |
 |---|---|---|---|
-| `unitSwap` | — | `core/AuraMaster.lua:148`, `:156` | The one path driven by play: target, focus or pet changed, so every container on that unit calls the engine's `UpdateAllAuras`. The bracket spans that call, so whatever the engine does synchronously inside it lands here |
+| `unitSwap` | — | `core/AuraMaster.lua:160`, `:156` | The one path driven by play: target, focus or pet changed, so every container on that unit calls the engine's `UpdateAllAuras`. The bracket spans that call, so whatever the engine does synchronously inside it lands here |
 | `applyPass` | — | `modules/ContainerManager.lua:335-343` | The coalesced pass applying pending configuration to every dirty container, plus re-placing container-attached ones |
 | `applyContainer` | `applyPass` | `modules/Container.lua:384-430` | One container: compile, place, build or update the engine, restyle, visibility. The call site passes `"applyPass"`, so the record carries observed containment |
 | `visibilityPass` | — | `modules/ContainerManager.lua:362` | The show ladder over every container, on combat transitions, world entry and the master rows |

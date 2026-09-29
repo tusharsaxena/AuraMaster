@@ -550,7 +550,7 @@ badge and any count quoted in the docs must agree with it.
 
 ### test_lifecycle.lua (18)
 
-- lifecycle: the nine lifecycle events are registered to their handlers, and nothing else is
+- lifecycle: the eleven lifecycle events are registered to their handlers, and nothing else is
 - lifecycle: a focus change refreshes the focus containers, a target change the target ones
 - lifecycle: UNIT_PET refreshes the pet containers only for the player's own pet
 - lifecycle: entering the world runs an apply held while auras were secret
@@ -561,7 +561,7 @@ badge and any count quoted in the docs must agree with it.
 - lifecycle: a reset profile gets its starters back, numbered from 1 again
 - lifecycle: a profile switch applies the new profile's Blizzard-frame settings
 - lifecycle: the degraded latch stands up and down only on an edge
-- lifecycle: one bad event name leaves the other eight registered and is recorded
+- lifecycle: one bad event name leaves the other ten registered and is recorded
 - lifecycle: one bad event name, on a client without C_EventUtils, is caught by the probe rung
 - lifecycle: a rejection while logging is on is traced at the moment it happens
 - lifecycle: the degraded Core stub's SafeRegisterEvent records a bad name and keeps the rest
@@ -758,6 +758,31 @@ badge and any count quoted in the docs must agree with it.
 - fontprimer: a loading screen's end with a font still refused arms nothing
 - fontprimer: one Fonts debug line per PrimeAll that met a refusal, counts only
 - fontprimer: DiagState lists the refused triples, copies only, and a primed one leaves the list
+
+### test_enchantreset.lua (22)
+
+- enchantreset: a live, shown enchant container is turned off and on again, in that order
+- enchantreset: the flip is two SetEnabled calls on the same engine and nothing else
+- enchantreset: a container with no enchant frames is not flipped
+- enchantreset: a container without an engine is not flipped
+- enchantreset: a parked or stale container is not flipped
+- enchantreset: a hidden container is not flipped
+- enchantreset: a previewing container is not flipped
+- enchantreset: a stood-down addon flips nothing
+- enchantreset: the flip runs under combat lockdown and while auras are secret
+- enchantreset: CM.ResetEnchants flips every eligible container and counts them
+- enchantreset: the loading screen's end arms one reset WORLD_DELAY later, and it flips then
+- enchantreset: the loading-screen reset does not wait on the font primer
+- enchantreset: every loading screen arms a reset, a zone change included
+- enchantreset: the main-hand weapon's item data arriving arms one reset ITEM_DELAY later
+- enchantreset: GET_ITEM_INFO_RECEIVED for the off-hand weapon arms the reset too
+- enchantreset: item data for anything but an equipped weapon, or a failed load, arms nothing
+- enchantreset: with no weapon equipped, item data arms nothing
+- enchantreset: a burst of item data arms one timer and flips once
+- enchantreset: an armed reset keeps the later of two deadlines
+- enchantreset: a fired reset clears the debounce, so the next trigger arms again
+- enchantreset: a stand-down cancels an armed reset and hears no trigger
+- enchantreset: a reset writes one [Apply] line naming its count and its trigger
 
 ### test_anchors_close.lua (6)
 
@@ -1978,6 +2003,7 @@ badge and any count quoted in the docs must agree with it.
 | test_anchors_hang.lua | 11 |
 | test_emptywatch.lua | 25 |
 | test_fontprimer.lua | 32 |
+| test_enchantreset.lua | 22 |
 | test_anchors_close.lua | 6 |
 | test_anchors_label.lua | 23 |
 | test_anchors_strip.lua | 7 |
@@ -2031,4 +2057,4 @@ badge and any count quoted in the docs must agree with it.
 | test_eol.lua | 2 |
 | test_layout_cap.lua | 13 |
 | test_diagnostics_contract.lua | 7 |
-| **Total** | **1713** |
+| **Total** | **1735** |

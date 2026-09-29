@@ -641,6 +641,26 @@ function ContainerClass:Refresh()
     if self.engine then callEngine(self.engine, "UpdateAllAuras") end
 end
 
+--- Redraw the weapon-enchant frames from scratch: the engine turned off and on again (SP-AMX-01).
+--- The engine names an enchant frame from the equipped weapon's item name, written once when the
+--- enchant is first shown, and only updates an unchanged enchant in place, so a name lost at login
+--- (the item's data or the font not loaded yet) stays blank. A disabled engine clears its enchant
+--- frames and an enabled one draws them afresh, asking for the name again (docs/midnight-quirks.md,
+--- "Weapon enchants"). Only a LIVE engine with enchant frames is flipped: never one that should be
+--- off (parked, stale, not shown, or previewing, when ApplyVisibility keeps it disabled), because
+--- the flip ends enabled. SetEnabled is the combat-legal call ApplyLive makes, so this runs in combat
+--- and while auras are secret. Answers whether it flipped.
+function ContainerClass:ResetEnchants()
+    local engine = self.engine
+    local slots = #self.enchantFrames
+    if not engine or slots == 0 or self.parked or self.staleData then return false end
+    local show, previewing = self:ShouldShow()
+    if not show or previewing then return false end
+    callEngine(engine, "SetEnabled", false)
+    callEngine(engine, "SetEnabled", true)
+    return true
+end
+
 --- Set the container aside under combat lockdown, when its anchor and the engine's ancestry must not
 --- be shown, hidden or re-anchored (events-frames-taint-§2): the engine is disabled — combat-legal,
 --- the same call ApplyVisibility makes — and only our own preview and handle are hidden.
