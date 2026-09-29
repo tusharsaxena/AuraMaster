@@ -719,7 +719,7 @@ different container (*Racials*) → it lands on Racials. **See spells** on the *
 Weapon enchants selected, showing the three slot toggles. Result:
 
 **FILT-11. The Spell Categories tab.** General → **Spell Categories** → the **Category** dropdown
-with **Restore this category's starter list** on its own line, right half. On a category of yours,
+with **Restore this category's starter list** on the dropdown's line, right half. On a category of yours,
 the rename box and **Delete** sit directly under the picker, with no heading between them, then
 **Make a new category**, then **Spells in this category** with the library's rule under it, then the
 **Add a spell** box and the list; each block is separated by the gap under it. Pick **Healing** → no
