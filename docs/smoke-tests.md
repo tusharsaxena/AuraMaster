@@ -660,10 +660,13 @@ once, with columns **Show · Hide** and the category name (hover it for its desc
 container.filter.categories.<key>` prints `Hide`. Right under the grid sits **Hide enchants without a
 duration**, tied by name to the **Weapon enchants** row above it. Result:
 
-**FILT-4. A debuff container's Categories.** Switch the container's aura type to Debuffs →
-**Blizzard Categories**, **Dispel Types**, **Who Cast It**, and a **Spell Categories** grid holding
-only its own **Uncategorized** row (no starter list, no See spells link, no line above it naming
-General → Spell Categories). Result:
+**FILT-4. A debuff container's Categories.** Switch the container's aura type to Debuffs → four
+grids, **Blizzard Categories**, **Spell Categories**, **Dispel Types** and **Who Cast It**. Above the
+Spell Categories grid the line reads "These are the lists on General -> Spell Categories, shared by
+every container."; the grid holds **Hard CC (loss of control)**, **Soft CC (roots & snares)** and
+**Racials**, each with a **See spells** link, then **Uncategorized** with none (plus any debuff
+category of your own); under it a note reads "Hard CC and Soft CC only work on a hostile target or
+focus. …". Result:
 
 **FILT-5. The grid cells.** Look at a lit cell (Show or Hide) → an ordinary checkbox check, the same
 shape and color as every other checkbox in the panel, no colored fill. Click the other cell on the
@@ -682,19 +685,19 @@ only defensive cooldowns appear. Set every category back to Show except *Uncateg
 cancelable buff in none of the profile's Spell Categories lists disappears too. Result:
 
 **FILT-7. Many groups, nothing lost.** On a *player debuffs* container, set one debuff category (say
-*Dispellable*) to **Hide** and leave the rest at **Show** → the container compiles to one group per
-Show category plus a catch-all, not one. Apply enough different debuffs to populate several
-categories → every one you expect appears: a debuff only in *Dispellable* disappears, one in
-*Dispellable* and *Boss* still shows (rank 3); nothing missing, garbled or duplicated. `/am perf` a
-few seconds with the container populated, then again with every category at Show → report if the
+*Dispellable by anyone*) to **Hide** and leave the rest at **Show** → the container compiles to one
+group per Show category plus a catch-all, not one. Apply enough different debuffs to populate several
+categories → every one you expect appears: a debuff only in *Dispellable by anyone* disappears, one
+in *Dispellable by anyone* and *Boss debuffs* still shows (rank 3); nothing missing, garbled or
+duplicated. `/am perf` a few seconds with the container populated, then again with every category at Show → report if the
 many-group container is far slower per apply, or if a group's auras never draw though its category
 has live spells (the client capping `AddAuraGroup` calls). Set Sort by to Time Remaining → auras are
 ordered category block by category block, each block sorted, not one run across the container, as
 the Sorting row's description says. Result:
 
-**FILT-8. Who Cast It covers every debuff.** On a debuff container set both *From players* and *From
-non-players* to **Hide**. Apply a debuff to the dummy → it disappears. Have a pet, an NPC or another
-player apply a different debuff to you or the dummy → it disappears too. Any debuff that still shows
+**FILT-8. Who Cast It covers every debuff.** On a debuff container set both *From any player* and
+*From non-players* to **Hide**. Apply a debuff to the dummy → it disappears. Have a pet, an NPC or
+another player apply a different debuff to you or the dummy → it disappears too. Any debuff that still shows
 with both Hidden reports its `isFromPlayerOrPlayerPet` as neither true nor false: report it, with the
 spell. Result:
 
@@ -762,7 +765,8 @@ Pick one → only it is added. Result:
 
 **FILT-18. An unknown name.** Type `Zzz Spell`, Enter → nothing is added, and the line under the box
 reads "No spell named 'Zzz Spell' in your spellbook. Names work for spells in your spellbook and ones
-this list knows; otherwise use the id or shift-click a link." Result:
+this list knows; otherwise use the id or shift-click a link." The same in the Whitelist's **Add a
+spell** box on Filters → Overrides. Result:
 
 **FILT-19. The add box's tooltip.** Hover **Add a spell** → the tooltip says "The id has to be the one
 the AURA carries, which is not always the one you cast." before the sentence on where a name can come
@@ -1546,18 +1550,21 @@ add it either way. Result:
 Two kinds of check are listed here. First, old checks with no recorded pass: the batch 5 and batch 6
 checks that were listed as owed (2026-09-13 and 2026-09-14/15), the smoke batch 2 checks after the
 range the owner verified on 2026-09-20 (143 to 161), the settings redesign checks that were not
-reported individually (2026-09-26), the batch 8 checks whose items failed the owner's 2026-09-25 run
-and that no later run passed, the font primer (2026-09-27) and the mid-key reload (2026-09-29).
+reported individually (2026-09-26), the batch 8 and batch 9 checks whose items failed the owner's two
+2026-09-25 runs and that no later run passed, the font primer (2026-09-27) and the mid-key reload
+(2026-09-29).
 Second, every check that is new on 2026-09-29 or whose expected result was corrected against the
 code then, since none of those has been run in its current form. Sign one off on its own `Result:`
 line, then remove its row here.
 
 | ID | Origin (old numbering) |
 |---|---|
+| INSTALL-2 | 2 and 103: the starter count corrected on 2026-09-29 (four, #4 *Player cooldowns* included) |
+| INSTALL-4 | 4: the starter count corrected on 2026-09-29 (four) |
 | INSTALL-5 | 58a, batch 5 |
 | INSTALL-6 | 125 and 135: the upgrade read-out corrected on 2026-09-29 (the `[Migrate]` lines are written while logging is still off at login, so the check reads the `[Init]` line's schema version) |
-| INSTALL-8 | 68, batch 8 (failed 2026-09-25): its v8 step, the 0/-4 offsets of an attached container reading 0/0; the rest passed as 212, 234 and 242, but its upgrade read-out was corrected on 2026-09-29 as INSTALL-6's |
-| SLASH-2 | 208, batch 8 (failed 2026-09-25): the help-order step; and its row count, 24 with `profile` listed, new on 2026-09-29 |
+| INSTALL-8 | 68, batch 8 (failed 2026-09-25): its v8 step, the 0/-4 offsets of an attached container reading 0/0; 212, batch 9 (failed in the late 2026-09-25 run): its step switching a screen container to Another container; the chains and `attach.y` steps passed as 234 and 242, but its upgrade read-out was corrected on 2026-09-29 as INSTALL-6's |
+| SLASH-2 | 208, batch 8 (failed 2026-09-25): the help-order step, which the 2026-09-26 diagnostics run did not repeat; and its row count, 24 with `profile` listed, new on 2026-09-29 |
 | PANEL-1 | 251 (S1), settings redesign |
 | PANEL-6 | 264 (S14), settings redesign |
 | PANEL-9 | 259 (S9), settings redesign |
@@ -1565,26 +1572,26 @@ line, then remove its row here.
 | PANEL-13 | 256 (S6), settings redesign |
 | PANEL-14 | 263 (S13), settings redesign; its empty-rail half (270, I23-4) passed |
 | PANEL-22 | 87: the tooltip title's expected text corrected on 2026-09-29 (the name, then the version) |
+| PROFILE-2 | 50: the starter count corrected on 2026-09-29 (four) |
 | PROFILE-5 to PROFILE-11 | new on 2026-09-29 with the `/am profile` verb; PROFILE-10 extends 58's profile switch while disabled |
 | PROFILE-12 | 47: rewritten on 2026-09-29, a reset being the one profile change combat allows |
 | STATE-1 | 21: its in-combat step rewritten on 2026-09-29 for `/am set`, since the panel is locked in combat |
 | COMBAT-5 | 265 (S15), settings redesign |
 | COMBAT-7 | 292 (MK1), mid-key reload |
-| DIAG-2 | 208, batch 8 (failed 2026-09-25): the bare `/am debug` and `/am debug on`/`off` step |
 | DIAG-3 | 54: the Profiles → Copy line corrected on 2026-09-29 to the ASCII `->` the code prints; the rest is unchanged or passed as 271 to 273 |
 | DIAG-5 | 206, batch 8 (failed 2026-09-25): the steps 210 does not repeat; 210 passed |
 | DIAG-6 | 207, batch 8 (failed 2026-09-25): the in-combat steps; the disabled steps passed as 235 |
-| DIAG-7 | 208, batch 8 (failed 2026-09-25) |
-| DIAG-8 | 209, batch 8 (failed 2026-09-25) |
+| DIAG-9 | 211, batch 9 (failed in the late 2026-09-25 run): all of it; its `attach.y=-4` step moved to INSTALL-8 and passed as 234 |
 | DIAG-11 | 293 (MK2), mid-key reload; its line shape corrected on 2026-09-29 |
 | DIAG-12 | 294 (MK3), mid-key reload |
 | CONT-5 | 205: its in-combat rename rewritten on 2026-09-29 for `/am set container.name` |
 | CONT-8 | 162, smoke batch 2 (owed: the owner verified 143 to 161 only) |
 | CONT-21 | 136 and 224: the placeholder count corrected on 2026-09-29 (one per ticked slot, three by default) |
 | FILT-2 | 80, batch 6 |
+| FILT-4 | 24: its Spell Categories grid corrected on 2026-09-29 (Hard CC, Soft CC and Racials with their See spells links, the line naming General -> Spell Categories and the hostile-unit note, since issue #11) |
 | FILT-5 | 78 and 81, batch 6 |
-| FILT-7 | 77, batch 6 |
-| FILT-8 | 83, batch 6 |
+| FILT-7 | 77, batch 6; its row labels corrected on 2026-09-29 (*Dispellable by anyone*, *Boss debuffs*) |
+| FILT-8 | 83, batch 6; its row label corrected on 2026-09-29 (*From any player*) |
 | FILT-10 | 79, batch 6; 262 (S12), settings redesign |
 | FILT-11 | 164, smoke batch 2 (owed, as CONT-8) |
 | FILT-13 | 166, smoke batch 2 (owed, as CONT-8) |
@@ -1598,8 +1605,11 @@ line, then remove its row here.
 | FILT-27 | 82, batch 6 |
 | LAYOUT-1 | 69, batch 5 |
 | LAYOUT-6 | 162, smoke batch 2 (owed, as CONT-8): the outline moving across aura buttons |
+| LAYOUT-11 | 67, batch 8 (failed 2026-09-25): the **Per row** step; the rest passed as 238 |
+| LAYOUT-17 | 67, batch 8 (failed 2026-09-25): all but the inherited-growth note, which passed as 233 |
 | LAYOUT-18 | 68, batch 8 (failed 2026-09-25) |
 | LAYOUT-20 | 221 and 227: no outline on lock since 2026-09-27 (commit d01ac9d), after both passes |
+| LAYOUT-25 | 202, batch 8 (failed 2026-09-25): the step with two chained Text containers; the rest passed as 194 |
 | LAYOUT-37 | 64 and 76, batch 5 |
 | LAYOUT-38 | 84, batch 6 |
 | STYLE-3 | 63, batch 5 |
@@ -1612,4 +1622,5 @@ line, then remove its row here.
 | STYLE-20 to STYLE-30 | 281 to 291 (FP1 to FP11), font primer |
 | TEXT-27 | 200, batch 8 (failed 2026-09-25): all but the migrated-profile step, which passed as 213 |
 | TEXT-28 | 201, batch 8 (failed 2026-09-25) |
+| TEXT-29 | 202, batch 8 (failed 2026-09-25): the in and out of combat, in-combat and SharedMedia steps; the rest passed as 214 |
 | LOC-1, LOC-2 | new on 2026-09-29 (the Non-English client section) |
