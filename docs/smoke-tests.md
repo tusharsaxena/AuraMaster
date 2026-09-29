@@ -582,10 +582,9 @@ return at the same stored position. With that page already open on it, click its
 unticks live. Close a container others are attached to → the followers re-place exactly as when
 Enabled is unticked in the panel. Result:
 
-**CONT-15. What the close mark does not do.** Right-click on the strip and on the "?" still opens the
-Containers page; a left-drag on the strip or the "?" still moves the container; a left-drag that
-starts on the X moves nothing, and releasing off the X does not disable it. In combat, unlocked, click
-an X → the container hides with no Lua error, no taint and no `ADDON_ACTION_BLOCKED`. Result:
+**CONT-15. What the close mark does not do.** `/am unlock`, left-drag starting on the X → nothing
+moves, and releasing off the X does not disable it. In combat, unlocked, click an X → the container
+hides with no Lua error, no taint and no `ADDON_ACTION_BLOCKED`. Result:
 
 **CONT-16. The strip is never wider than its container.** Five one-bar-wide Bars containers with long
 names, `/am unlock` and `/am test` → every strip's left and right edges line up with its bars; a name
@@ -659,9 +658,9 @@ Overrides carry no lead-in or rank line: Categories opens on its first grid, Ove
 **FILT-3. The category grids.** On a buff container, Filters → **Categories** opens straight onto two
 grids, **Blizzard Categories** then **Spell Categories** (its last row **Uncategorized**), each headed
 once, with columns **Show · Hide** and the category name (hover it for its description). Click
-**Hide** on a line → that cell shows a plain checkbox check and the other goes unlit, and `/am get
-container.filter.categories.<key>` prints `Hide`. Right under the grid sits **Hide enchants without a
-duration**, tied by name to the **Weapon enchants** row above it. Result:
+**Hide** on a line → `/am get container.filter.categories.<key>` prints `Hide`. Right under the grid
+sits **Hide enchants without a duration**, tied by name to the **Weapon enchants** row above it.
+Result:
 
 **FILT-4. A debuff container's Categories.** Switch the container's aura type to Debuffs → four
 grids, **Blizzard Categories**, **Spell Categories**, **Dispel Types** and **Who Cast It**. Above the
