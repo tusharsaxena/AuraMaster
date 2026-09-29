@@ -12,7 +12,7 @@ It writes a one-shot report of what the addon sees and what it drew into the deb
 the console, and prints one chat line with the line count. Press **Copy** in the console and paste
 the text into a bug report.
 
-- `diagnostics` is its own verb in `NS.COMMANDS` (23 verbs) and a sub-verb of `debug`. Both answer
+- `diagnostics` is its own verb in `NS.COMMANDS` (24 verbs) and a sub-verb of `debug`. Both answer
   while the addon is disabled: `diagnostics` is named in `liveVerbs()` next to `debug`.
 - It writes through the **ungated** append, as debug-logging-§12 requires for an explicit
   diagnostic run. The logging flag is printed in the header and is not changed.

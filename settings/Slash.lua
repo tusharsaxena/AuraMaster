@@ -55,6 +55,12 @@ NS.COMMANDS = {
         function(rest) cli:CliReset(rest) end},
     {"resetall",      L["Reset every setting to defaults"],
         function() runResetAll() end},
+    -- The verb is the library's (LibKa0s-Slash minor 17): bare lists the profiles, a name switches
+    -- to an EXISTING one (quotes stripped, case and spaces kept), an unknown name is refused with
+    -- the list and never created, and a switch in combat is refused. The switch's one debug line is
+    -- NS.OnProfileChanged's, fired by AceDB (core/AuraMaster.lua).
+    {"profile",       L["List profiles, or switch to one: profile <name>"],
+        function(rest) cli:CliProfile(rest) end},
     {"containers",    L["List your containers; the selected one is marked"],
         function() runContainers() end},
     {"select",        L["Choose the container settings apply to — /am select id or name"],
@@ -95,7 +101,8 @@ NS.COMMANDS = {
 -- one host writes backwards -- which is precisely what happened the last time the rule moved.
 --
 -- WHAT ANSWERS WHILE DISABLED: everything. `help`, `config`, `version`, `enable`, `disable`, `debug`,
--- `diagnostics`, `perf` and the whole schema CLI -- `get`, `set`, `list`, `reset`, `resetall` -- and the BARE `/am`,
+-- `diagnostics`, `perf`, `profile` and the whole schema CLI -- `get`, `set`, `list`, `reset`,
+-- `resetall` -- and the BARE `/am`,
 -- which opens the settings panel. That last one is the case that settled it: the panel is the one
 -- surface a player switches the addon back on from by hand, and a rule that answers it with a
 -- refusal has hidden the off switch. Reading and repairing settings is what a player needs from an
@@ -114,7 +121,7 @@ NS.COMMANDS = {
 --- and it is named rather than copied, so a change upstream arrives with the re-vendor instead of
 --- being missed here.
 ---
---- THREE MORE THAN THE LIBRARY SHIPS, and the reason is this addon's path model. Almost every schema
+--- FOUR MORE THAN THE LIBRARY SHIPS, and the reason is this addon's path model. Almost every schema
 --- path here is container-relative (`container.bars.width`) and resolves against the SELECTED
 --- container, so `/am containers` and `/am select` are how a player AIMS get, set and reset at the
 --- container they mean -- they are part of reading and repairing settings, not features. Neither
@@ -124,8 +131,13 @@ NS.COMMANDS = {
 ---
 --- AND `diagnostics`, the third, for the same reason `debug` is live: it is a diagnostic, not a
 --- feature, and the report is most wanted when something is misbehaving (owner, 2026-09-25).
+---
+--- AND `profile`, the fourth, because it is a host verb the library does not reserve (LibKa0s-Slash
+--- minor 17 leaves it out of LIVE_VERBS) and a switch is how a disabled player reaches a profile
+--- where the addon is on: NS.OnProfileChanged re-reads the latch. It sits in `out`, so the
+--- library-absent fallback below carries it too (spec S3, 2026-09-29).
 local function liveVerbs()
-    local out = { "containers", "select", "diagnostics" }
+    local out = { "containers", "select", "diagnostics", "profile" }
     for _, verb in ipairs((SlashLib and SlashLib.LIVE_VERBS) or {
         "help", "config", "version", "enable", "disable", "debug", "perf",
         "get", "set", "list", "reset", "resetall",
@@ -496,6 +508,11 @@ cli = SlashLib:New({
     -- forbidden escape sequences, which is what makes it safe to drop into a colored line.
     brandName    = "Ka0s Aura Master",
     liveVerbs    = liveVerbs(),
+    -- The profile store the `profile` verb reads (LibKa0s-Slash minor 17), asked at CALL time
+    -- because NS.db is built in OnInitialize, after this file runs. AceDB-3.0's db is the shape the
+    -- library duck-types; the no-AceDB fallback table (core/Database.lua) lacks the methods, and the
+    -- verb then answers that profiles are not available.
+    profiles     = function() return NS.db end,
 
     print   = function(line) print(line) end,
     version = function() return NS.Version() end,

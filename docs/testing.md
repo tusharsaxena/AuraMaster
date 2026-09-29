@@ -81,9 +81,8 @@ Suites worth knowing by name:
   addon's events, messages and timers and hides its frames at the source; re-enabling rebuilds from
   the settings as they are then; the `disabled` and `perf` holds release independently. The slash
   step walks every entry in `NS.COMMANDS`: the reserved verbs, the schema CLI, `containers`,
-  `select`, `diagnostics` and the bare `/am` (which opens the panel) answer normally, and only the
-  feature verbs
-  refuse on the collection's one line with no SavedVariables write. The launcher's left-click still
+  `select`, `diagnostics`, `profile` and the bare `/am` (which opens the panel) answer normally, and
+  only the feature verbs refuse on the collection's one line with no SavedVariables write. The launcher's left-click still
   opens the panel; its right-click menu grays *Locked* and *Test mode*, and a grayed entry clicked
   anyway writes nothing. The negative steps carry testing-§12
   falsification comments.

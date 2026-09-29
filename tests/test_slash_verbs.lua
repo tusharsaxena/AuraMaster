@@ -765,6 +765,8 @@ test("slash verbs: without the library the stub's CliProfile and ProfileSwitch n
     -- red under: a stub ProfileSwitch that switches, or answers anything but false
     assertEqual(cli:ProfileSwitch("Other"), false)
     assertEqual(dump(plain(lines)), "{/am profile is unavailable: the LibKa0s library did not load.}")
+    -- And the verb itself, through the stub's dispatcher: the COMMANDS row reaches the stub's member.
+    assertEqual(dump(slash(NS2, lines, "profile Other")), "{/am profile is unavailable: the LibKa0s library did not load.}")
     assertEqual(NS2.db:GetCurrentProfile(), "Default", "nothing switched")
 end)
 
@@ -858,7 +860,7 @@ function()
     local LIVE = {
         help = true, config = true, version = true, enable = true, disable = true,
         debug = true, perf = true, get = true, set = true, list = true, reset = true,
-        resetall = true, containers = true, select = true, diagnostics = true,
+        resetall = true, containers = true, select = true, diagnostics = true, profile = true,
     }
     for _, entry in ipairs(NS2.COMMANDS) do
         NS2.SetByPath("enabled", false)

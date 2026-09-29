@@ -416,11 +416,14 @@ test("disabled: every reserved verb answers, and the bare /am opens the panel", 
     -- EVERY ENTRY in NS.COMMANDS, through the real dispatcher (slash-commands-§7 step 7), so a verb
     -- added later is classified here rather than skipped. The live set is SPELLED OUT, not read back
     -- off settings/Slash.lua: the twelve reserved verbs plus `containers` and `select`, which aim the
-    -- schema CLI, and `diagnostics`, a diagnostic like `debug` (owner, 2026-09-25). Disabled again before each verb, because `enable` and `resetall` legitimately turn
+    -- schema CLI, `diagnostics`, a diagnostic like `debug` (owner, 2026-09-25), and `profile`, since
+    -- switching to a profile where the addon is on is how a disabled player brings it back
+    -- (2026-09-29). Disabled again before each verb, because `enable` and `resetall` legitimately turn
     -- the addon back on, and a walk without that would test the rest of the table enabled.
     local LIVE = {}
     for _, v in ipairs({ "help", "config", "version", "enable", "disable", "debug", "perf", "get",
-                         "set", "list", "reset", "resetall", "containers", "select", "diagnostics" }) do
+                         "set", "list", "reset", "resetall", "containers", "select", "diagnostics",
+                         "profile" }) do
         LIVE[v] = true
     end
     local refused = {}

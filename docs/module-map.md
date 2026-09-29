@@ -101,7 +101,7 @@ category collapse and the `weaponEnchants` category row — both over every stor
 | File | Responsibility |
 |---|---|
 | `settings/Schema.lua` | The path machinery: container-relative resolution, `NS.RegisterSchemaRows` (appending, or inserting before a named path so a runtime category row lands in schema order), `NS.UnregisterSchemaRows` (the removal path issue #10 needed, rebuilding `NS.Schema` in place), the read seam `NS.GetSetting`, the write seam `NS.SetByPath`, the carve-outs, `NS.Choices`, `NS.ValidateSchema` |
-| `settings/Slash.lua` | `NS.COMMANDS` (23 verbs), the host verbs, the `LibKa0s-Slash-1.0` descriptor and its degradation stub, `/am` and `/auramaster` registration |
+| `settings/Slash.lua` | `NS.COMMANDS` (24 verbs), the host verbs, the `LibKa0s-Slash-1.0` descriptor and its degradation stub, `/am` and `/auramaster` registration |
 | `settings/OptionsSetup.lua` | The `LibKa0s-Options-1.0` descriptor (its `get` shows a row's `panelGet`; its `set` hands a row's `confirmWrite` popup the write instead, `confirmFirst`) and its load-completing stub; the container banner (`ContainerBanner`, with the Containers page's New container as the library `PageBanner`'s `action`); `RenderPage`, which maps a page or section spec (its own tabs filtered by aura type, `intro`, `afterGroup`, `pairWith`) onto the library's `O.RenderTabbedSchema`; the section registry (`NS.RegisterContainerSection`, `NS.ContainerSection`, `SECTION_ORDER`) and the Containers page's renderer `RenderContainerPage` (band, `O.NavRail`, the selected section; per-section tab memory and the style heal, #6); `SelectSection` and the section-aware `SelectTab`; `LandOnGeneral` (New container and `/am new` put the page on General/General); `NS.OpenOptionsPage` (a former sub-page key opens Containers on that section), `NS.RequestPanelRefresh` |
 | `settings/About.lua` | The landing page body: logo, the TOC Notes line, the slash command list |
 | `settings/GeneralUserCategories.lua` | The Spell Categories tab's own-category block, peeled out of `GeneralSpells.lua` along its *Make a new category* seam (AM-ATS-03): the rename and Delete under the picker, the way out of a record the sync cannot read, and the *Make a new category* form, which create, rename and delete a player's own category; the answer line every act of the block sets (stamped with the profile and category it is about) and the tab's selection it is stamped with; the delete and forget-unreadable confirmations; publishes `NS.GeneralUserCategories` (`Render`, `Say`, `EndVisit`, `Rerender`, `Selected` / `SetSelected`, `SECTION_GAP`); registers no rows |
@@ -254,7 +254,7 @@ All vendored under `libs/`, loaded by the `# Libraries` block of `AuraMaster.toc
 | AceAddon-3.0 | `NS` promoted to the addon object by `NewAddon` (`core/AuraMaster.lua:17`) |
 | AceEvent-3.0 | Lifecycle events and the message bus (`core/Bus.lua`) |
 | AceTimer-3.0 | The color picker's drag throttle, via the options descriptor's `scheduleTimer` |
-| AceConsole-3.0 | `/am` and `/auramaster` registration (`settings/Slash.lua:576-577`) |
+| AceConsole-3.0 | `/am` and `/auramaster` registration (`settings/Slash.lua:593-594`) |
 | AceDB-3.0 | `AuraMasterDB` and its profiles (`core/Database.lua:272`) |
 | AceGUI-3.0, AceGUI-3.0-SharedMediaWidgets | The settings panel body and its `LSM30_*` media dropdowns |
 | AceConfig-3.0, AceDBOptions-3.0 | The Profiles sub-page only (`settings/Profiles.lua`, options-ui-§3) |

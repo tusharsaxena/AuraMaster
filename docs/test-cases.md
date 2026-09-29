@@ -1271,11 +1271,11 @@ badge and any count quoted in the docs must agree with it.
 - disabled: a profile switch while disabled builds nothing until enable
 - disabled: a profile switch while down, then a stand-up in combat, keeps a reused id parked
 
-### test_slash.lua (28)
+### test_slash.lua (34)
 
 - slash: every command is a positional {name, desc, fn} triple
 - slash: the reserved verbs are all present
-- slash: NS.COMMANDS carries 23 verbs, diagnostics right after debug, and no diag verb
+- slash: NS.COMMANDS carries 24 verbs, profile right after resetall, diagnostics right after debug, and no diag verb
 - slash: /am new creates the described container and selects it
 - slash: /am new text creates a text-style container
 - slash: /am new gives the new container the Fill its style suits (B5)
@@ -1301,6 +1301,12 @@ badge and any count quoted in the docs must agree with it.
 - slash: /am resetall and the General reset print the same line
 - slash: /am debug on and off flip the session flag; it never reaches the profile
 - slash: the dispatcher's isEnabled is NS.EnabledStored
+- slash: /am profile with no name lists every profile, the current one marked, and switches nothing
+- slash: /am profile <name> switches to an existing profile and the profile handler runs once
+- slash: /am profile keeps the name's case and spaces and strips one pair of quotes
+- slash: /am profile with an unknown name is refused with the list and creates nothing
+- slash: /am profile in combat refuses and switches nothing
+- slash: /am profile answers while disabled, and the switch re-reads the new profile's enabled flag
 
 ### test_slash_verbs.lua (51)
 
@@ -1993,7 +1999,7 @@ badge and any count quoted in the docs must agree with it.
 | test_blizzardframes.lua | 8 |
 | test_framepicker.lua | 15 |
 | test_disabled.lua | 18 |
-| test_slash.lua | 28 |
+| test_slash.lua | 34 |
 | test_slash_verbs.lua | 51 |
 | test_diagnostics.lua | 47 |
 | test_bulklog.lua | 20 |
@@ -2025,4 +2031,4 @@ badge and any count quoted in the docs must agree with it.
 | test_eol.lua | 2 |
 | test_layout_cap.lua | 13 |
 | test_diagnostics_contract.lua | 7 |
-| **Total** | **1707** |
+| **Total** | **1713** |
