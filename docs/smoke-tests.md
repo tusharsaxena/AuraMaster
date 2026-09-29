@@ -191,10 +191,12 @@ fill and a thin gray tooltip border); entries gold, the selected one white on a 
 on hover, visibly different from the gold tabs. Each entry's tooltip says what the section holds.
 Result:
 
-**PANEL-11. The style section follows the container.** On Bars, pick #2 (icons) in the band → the
-style entry renames to Icons, its tabs follow, and the page stays on the style section, not General.
-Back on #1's Bars, change Containers → General → Style to Icons → the same. Open Layout → the band
-still has the same container selected. Result:
+**PANEL-11. The style section follows the container.** Make a second bars container (Containers →
+**New container**), then pick #1 in the band and open Bars → **Icon**. Pick the new container in the
+band → the page stays on Bars → **Icon**, now showing the new container. On Bars, pick #2 (icons) in
+the band → the style entry renames to Icons, its tabs follow, and the page stays on the style section,
+not General. Back on #1's Bars, change Containers → General → Style to Icons → the same. Open Layout →
+the band still has the same container selected. Result:
 
 **PANEL-12. Each section keeps its tab.** Filters → Categories, then Layout, then back to Filters →
 Filters opens on Categories. Rail → Bars → Time text, then another section, then Bars → it reopens
@@ -454,14 +456,14 @@ the first. Result:
 
 **DIAG-6. Diagnostics in combat and while disabled.** In combat on a dummy, `/am diagnostics` → the
 units read unreadable, `[Cont]`, `[Filt]` and `[Plan]` still print, `frames=` is a number or `?`,
-`shown=?`, and no `[Shown]` button lines. Change a container's Cast by in combat and run it again →
-that container reads PENDING (combat); after combat → plan in sync. `/am disable`, then `/am
-diagnostics` and `/am debug diagnostics` → each runs, the state line reads enabled=false, and after
-the state flags the header adds "addon disabled: containers are hidden and not updated; the plan
-lines are from the last apply". `/reload` still disabled, `/am diagnostics` → "addon disabled:
-containers are not built; predictions only", each `[Plan]` reads `not built (addon disabled)`, and
-`Shown` holds only `predicted:` lines. `/am enable`, run it → no such line, and the verdicts read as
-before. Result:
+`shown=?`, and no `[Shown]` button lines. With #1 selected (`/am select 1`), in combat `/am set
+container.filter.castBy mine` (the page itself is locked in combat) and run it again → #1 reads
+PENDING (combat); after combat → plan in sync. `/am disable`, then `/am diagnostics` and `/am debug
+diagnostics` → each runs, the state line reads enabled=false, and after the state flags the header
+adds "addon disabled: containers are hidden and not updated; the plan lines are from the last apply".
+`/reload` still disabled, `/am diagnostics` → "addon disabled: containers are not built; predictions
+only", each `[Plan]` reads `not built (addon disabled)`, and `Shown` holds only `predicted:` lines.
+`/am enable`, run it → no such line, and the verdicts read as before. Result:
 
 **DIAG-7. Report caps.** With about eight containers and a long whitelist → the report stays under
 the cap or ends with a `truncated` line, and the console never holds more than 3000 lines. Result:
@@ -506,11 +508,12 @@ container named *Container N* appears, offset from the last new one, and is sele
 20 px. **Delete** → a confirmation popup; **Yes** removes it, and any container attached to it falls
 back to the screen. Result:
 
-**CONT-3. Create and delete are refused in combat.** In combat, **New container**, **Duplicate** and
-`/am new` → the gray "cannot create a container during combat — it would not be drawn or placed until
-combat ends" line; the Delete popup's **Yes** and `/am delete` → the gray "cannot delete a container
-during combat — its display cannot be torn down until combat ends" line. Nothing is created or
-removed. Result:
+**CONT-3. Create and delete are refused in combat.** The page itself is locked in combat (COMBAT-3),
+so these run from chat and from a popup opened before the pull. In combat, `/am new` → the gray
+"cannot create a container during combat — it would not be drawn or placed until combat ends" line.
+Out of combat click **Delete** and leave the popup up, pull a dummy, then click the popup's **Yes** →
+the gray "cannot delete a container during combat — its display cannot be torn down until combat ends"
+line; `/am delete` in combat → the same line. Nothing is created or removed. Result:
 
 **CONT-4. Copy settings from.** Containers → General → **Copy settings from** → pick a source and
 *Bar style* → the selected container takes only the source's bar look; its name and position are
@@ -931,13 +934,14 @@ line says so. `/am set container.attach.container <A's id>` on a container of di
 container mode → no popup, one chat line. Open the popup, enter combat, press **Attach** → refused
 with a gray line and nothing attaches. Result:
 
-**LAYOUT-6. The frame picker.** **Pick a frame…** → the settings close, and a blue 2px outline
-tracks the named frame under the cursor, its name beside it; move across several frames, aura
-buttons included → the outline follows each, no Lua error. Left-click your player frame → the
-container attaches to it and the settings reopen on Containers → Layout with the frame name filled
-in. Repeat and press **Escape** → canceled, and the settings reopen on Containers → Layout. `/am pick`
-does the same from chat. In combat, both are refused with the gray "cannot pick a frame during combat
-— attaching to a frame waits until combat ends" line. Result:
+**LAYOUT-6. The frame picker.** **Pick a frame…** → the settings close, and a blue 2px outline tracks
+the named frame under the cursor, its name beside it; move across several frames, aura buttons
+included → the outline follows each, no Lua error. Left-click your player frame → the container
+attaches to it and the settings reopen on Containers → Layout with the frame name filled in. Repeat
+and press **Escape** → canceled, and the settings reopen on Containers → Layout. `/am pick` does the
+same from chat. In combat, `/am pick` is refused with the gray "cannot pick a frame during combat —
+attaching to a frame waits until combat ends" line (the button is under the combat cover, COMBAT-3).
+Result:
 
 **LAYOUT-7. A frame that is not there yet.** Attach to a frame name belonging to an addon that loads
 on demand → the container sits at its screen position until that addon loads, then moves. Attach to
@@ -1514,10 +1518,11 @@ uncut). A long-lived aura (hours or days) shows its whole time string. Result:
 Guardian of Ancient Kings (or a buff whose name is longer than every sample) → the whole name draws,
 past the box's edge if need be, from the justify point: Left runs right, Right runs left, Center both
 ways, in and out of combat. Two such auras at once → neither is cut. Untick Size to fit (a narrow
-Width) → cut at the box again; tick it → whole again, no `/reload`. `/am test` on and off with the buff
-up → the samples, then the whole live name. In combat, gain and lose auras → no error and the size
-does not change; tick Size to fit in combat → it applies after combat. With a SharedMedia font, log in
-→ at worst one apply at the stored size, then sized to fit. Result:
+Width) → cut at the box again; tick it → whole again, no `/reload`. `/am test` on and off with the
+buff up → the samples, then the whole live name. In combat, gain and lose auras → no error and the
+size does not change; untick Size to fit out of combat, then in combat `/am set
+container.text.autoSize true` (the page itself is locked in combat) → it applies after combat. With a SharedMedia font, log in → at worst one
+apply at the stored size, then sized to fit. Result:
 
 ## Library-absent install
 
@@ -1580,10 +1585,11 @@ line, then remove its row here.
 | COMBAT-7 | 292 (MK1), mid-key reload |
 | DIAG-3 | 54: the Profiles → Copy line corrected on 2026-09-29 to the ASCII `->` the code prints; the rest is unchanged or passed as 271 to 273 |
 | DIAG-5 | 206, batch 8 (failed 2026-09-25): the steps 210 does not repeat; 210 passed |
-| DIAG-6 | 207, batch 8 (failed 2026-09-25): the in-combat steps; the disabled steps passed as 235 |
+| DIAG-6 | 207, batch 8 (failed 2026-09-25): the in-combat steps, its Cast by change rewritten on 2026-09-29 for `/am set container.filter.castBy`, since the panel is locked in combat; the disabled steps passed as 235 |
 | DIAG-9 | 211, batch 9 (failed in the late 2026-09-25 run): all of it; its `attach.y=-4` step moved to INSTALL-8 and passed as 234 |
 | DIAG-11 | 293 (MK2), mid-key reload; its line shape corrected on 2026-09-29 |
 | DIAG-12 | 294 (MK3), mid-key reload |
+| CONT-3 | 31: its in-combat steps rewritten on 2026-09-29 for `/am new`, `/am delete` and a Delete popup opened before the pull, since the panel is locked in combat |
 | CONT-5 | 205: its in-combat rename rewritten on 2026-09-29 for `/am set container.name` |
 | CONT-8 | 162, smoke batch 2 (owed: the owner verified 143 to 161 only) |
 | CONT-21 | 136 and 224: the placeholder count corrected on 2026-09-29 (one per ticked slot, three by default) |
@@ -1604,7 +1610,7 @@ line, then remove its row here.
 | FILT-21 | 179 and 180: the chat line's expected text corrected on 2026-09-29 (each spell named, its id in brackets) |
 | FILT-27 | 82, batch 6 |
 | LAYOUT-1 | 69, batch 5 |
-| LAYOUT-6 | 162, smoke batch 2 (owed, as CONT-8): the outline moving across aura buttons |
+| LAYOUT-6 | 162, smoke batch 2 (owed, as CONT-8): the outline moving across aura buttons; 42: its combat refusal corrected on 2026-09-29 to `/am pick` alone, since the panel's button is locked in combat |
 | LAYOUT-11 | 67, batch 8 (failed 2026-09-25): the **Per row** step; the rest passed as 238 |
 | LAYOUT-17 | 67, batch 8 (failed 2026-09-25): all but the inherited-growth note, which passed as 233 |
 | LAYOUT-18 | 68, batch 8 (failed 2026-09-25) |
@@ -1622,5 +1628,5 @@ line, then remove its row here.
 | STYLE-20 to STYLE-30 | 281 to 291 (FP1 to FP11), font primer |
 | TEXT-27 | 200, batch 8 (failed 2026-09-25): all but the migrated-profile step, which passed as 213 |
 | TEXT-28 | 201, batch 8 (failed 2026-09-25) |
-| TEXT-29 | 202, batch 8 (failed 2026-09-25): the in and out of combat, in-combat and SharedMedia steps; the rest passed as 214 |
+| TEXT-29 | 202, batch 8 (failed 2026-09-25): the in and out of combat, in-combat and SharedMedia steps, its in-combat Size to fit step rewritten on 2026-09-29 for `/am set container.text.autoSize`, since the panel is locked in combat; the rest passed as 214 |
 | LOC-1, LOC-2 | new on 2026-09-29 (the Non-English client section) |
