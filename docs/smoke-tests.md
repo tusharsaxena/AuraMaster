@@ -7,8 +7,8 @@ debug console on only where a step says so. Checks are grouped by theme and each
 [Before you start](#before-you-start) is done. Record each run on the check's `Result:` line as
 `PASS` or `FAIL`, who ran it and the date, plus a note on anything that failed. Every check has an
 ID `<THEME>-<n>`. IDs are stable: a new check takes the next number in its theme, and a retired
-check's number is not reused. Checks that were written for the owner and never signed off are listed
-under [Pending sign-off](#pending-sign-off).
+check's number is not reused. Checks with no recorded pass, and checks new or corrected on
+2026-09-29, are listed under [Pending sign-off](#pending-sign-off).
 
 ## Index
 
@@ -80,12 +80,12 @@ Magic shows the color you set. Layout → Frame → Strata reads High where it w
 other profile → the same. Result:
 
 **INSTALL-6. Upgrade of a Weapon enchants container (schema v5).** Use a SavedVariables file with a
-Weapon enchants container whose "Always shown" list held spells. Log in with `/am debug on` → one
-`[Migrate]` line names the converted container and a second one the cleared whitelist. The container
-now reads unit Player, aura type Buffs, only **Weapon enchants** shown on Filters → Categories, and
-an empty Overrides list; it draws no group from the cleared whitelist. Apply an enchant (a
-sharpening stone, a rogue poison, a shaman imbue) → it shows, with no "can never match" warning. The
-Aura type dropdown on Containers → General offers Buffs and Debuffs only. Result:
+Weapon enchants container whose "Always shown" list held spells. Log in, then `/am debug on` → the
+console's `[Init]` line reads `schema v11`. The container now reads unit Player, aura type Buffs,
+only **Weapon enchants** shown on Filters → Categories, and an empty Overrides list; it draws no
+group from the cleared whitelist. Apply an enchant (a sharpening stone, a rogue poison, a shaman
+imbue) → it shows, with no "can never match" warning. The Aura type dropdown on Containers → General
+offers Buffs and Debuffs only. Result:
 
 **INSTALL-7. Size to fit on upgrade (schema v8 and v9).** On a SavedVariables file from before
 schema v8 → every Text container keeps its Width and Height, and **Size to fit** is unticked on its
@@ -93,28 +93,28 @@ Text page. `/dump` a bars and an icons container's stored `text` table from `Aur
 `autoSize` key; a Text container keeps its stored value. Change a bars container's Style to Text →
 **Size to fit** starts ticked. Result:
 
-**INSTALL-8. Chains stay put through the attach upgrades (schema v8 to v11).** Note where every chain
-sits on the old build, locked and in test mode. Log in on this build, then `/am debug` → the console
-holds one `[Migrate] v<N> profile '<name>'` line per profile for each step the file needed, and none
-for a step it already had. Every chain sits where it did, locked and in test mode, with these
-exceptions only: a follower that was on the old default side now reads Automatic in both anchor-point
-rows and takes Automatic's place, so a Text follower justified Center moves to the center, and one
-justified to its growth's end side to that end (LAYOUT-10); an Icons or Bars follower under a Text
-parent justified Center moves to the center (LAYOUT-12). A follower that had a picked side reads that
-pick in both rows (Side Bottom reads Parent **Bottom**, This **Top**). A container attached to another
-with the old 0/-4 offsets reads 0/0 on its Layout page; any other offsets are unchanged. `/am select`
-a screen container, `/am get container.attach.y` → `0`; `/am diagnostics` lists no `attach.y=-4`.
-Switch a container that was on the screen to Another container → it gains no 4px nudge (its X/Y
-offsets read 0).
-`/am get container.attach.edge` → "Setting not found". `/reload` → no `[Migrate]` line at all.
-Result:
+**INSTALL-8. Chains stay put through the attach upgrades (schema v8 to v11).** Note where every
+chain sits on the old build, locked and in test mode. Log in on this build, then `/am debug on` →
+the console's `[Init]` line reads `schema v11`. Every chain sits where it did, locked and in test
+mode, with these exceptions only: a follower that was on the old default side now reads Automatic in
+both anchor-point rows and takes Automatic's place, so a Text follower justified Center moves to the
+center, and one justified to its growth's end side to that end (LAYOUT-10); an Icons or Bars
+follower under a Text parent justified Center moves to the center (LAYOUT-12). A follower that had a
+picked side reads that pick in both rows (Side Bottom reads Parent **Bottom**, This **Top**). A
+container attached to another with the old 0/-4 offsets reads 0/0 on its Layout page; any other
+offsets are unchanged. `/am select` a screen container, `/am get container.attach.y` → `0`; `/am
+diagnostics` lists no `attach.y=-4`. Switch a container that was on the screen to Another container
+→ it gains no 4px nudge (its X/Y offsets read 0). `/am get container.attach.edge` → "Setting not
+found". `/reload`, then `/am debug on` → nothing has moved, and the `[Init]` line still reads
+`schema v11`. Result:
 
 ## Slash commands
 
 **SLASH-1. Opening the settings from chat.** `/am` → Settings opens at **Ka0s Aura Master** with no
 chat line. `/am` followed by only spaces, `/auramaster`, `/am config` and `/am options` (an alias of
 `config`) → the same. In combat, `/am` and `/am config` → the gray "cannot open settings during
-combat" line, no taint warning, and the panel does not pop open when combat ends. Result:
+combat — Blizzard's category-switch is protected" line, no taint warning, and the panel does not pop
+open when combat ends. Result:
 
 **SLASH-2. Help.** `/am help` → the version line, then one row per command, 24 in all: a gold `/am
 verb`, an em dash and a white description. `profile`, `test` and `diagnostics` are listed,
@@ -242,11 +242,11 @@ ends. Result:
 Master* shows the addon's own logo, not a blank square and not a Blizzard icon. Result:
 
 **PANEL-22. The minimap button.** A round button wearing that logo sits on the minimap ring. Drag it
-around the ring → it follows; `/reload` → it is where you left it. Hover it → `Ka0s Aura Master
-v<the TOC version>`, `Enabled: Yes`, `Locked: Yes|No`, `Test mode: On|Off` (green or red, matching
-General → Master controls), `Left-click: Open settings`, `Right-click: Options menu`, nothing twice.
-`/am unlock` or `/am test` → the next hover says so. `/am disable` → the tooltip still shows,
-`Enabled: No`, with the same two hints; `/am enable`. Result:
+around the ring → it follows; `/reload` → it is where you left it. Hover it → the title **Ka0s Aura
+Master** followed by `v<the TOC version>`, `Enabled: Yes`, `Locked: Yes|No`, `Test mode: On|Off`
+(green or red, matching General → Master controls), `Left-click: Open settings`, `Right-click:
+Options menu`, nothing twice. `/am unlock` or `/am test` → the next hover says so. `/am disable` →
+the tooltip still shows, `Enabled: No`, with the same two hints; `/am enable`. Result:
 
 **PANEL-23. Left-click opens the settings.** Left-click the button → Settings opens at **Ka0s Aura
 Master**, and neither the lock nor test mode changes. `/am disable`, left-click → the panel still
@@ -302,9 +302,9 @@ switches. Result:
 
 **PROFILE-6. `/am profile <name>` switches.** `/am debug on`, then `/am profile <another profile>`,
 typed in its exact case → `Switched to profile '<name>'.`; that profile's containers replace the
-current set at once, and the debug console holds one `[Profile] changed -> <name>` line. Run it
-again with Profiles open → the page shows the new current profile without a reopen. `/am profile
-Default` → back. Result:
+current set at once, and the debug console holds one `[Profile] changed -> <name>` line. Open
+Profiles and leave it open, then `/am profile Default` → `Switched to profile 'Default'.`, and the
+page's current profile reads Default without a reopen. Result:
 
 **PROFILE-7. Already on it.** `/am profile <the current profile>` → `Already on profile '<name>'.`,
 and nothing redraws. Result:
@@ -315,8 +315,9 @@ a profile named `Raid`, `/am profile raid` → `No profile named 'raid'.`, then 
 then the list, and nothing switches. Result:
 
 **PROFILE-9. Quotes and spaces.** Create a profile named `Raid Night` on the Profiles page, switch
-back to Default. `/am profile "Raid Night"` → `Switched to profile 'Raid Night'.` Back to Default,
-then `/am profile 'Raid Night'` and `/am profile Raid Night` → the same switch each time. Result:
+back to Default. `/am profile "Raid Night"` → `Switched to profile 'Raid Night'.` `/am profile
+Default`, then `/am profile 'Raid Night'` → the same switch. `/am profile Default` again, then `/am
+profile Raid Night` → the same switch again. Result:
 
 **PROFILE-10. While disabled.** On Default, `/am disable`, then `/am profile` → the list, not the
 disabled refusal. `/am profile <another profile>`, one whose General → **Enable Aura Master** is
@@ -484,11 +485,12 @@ line reads `point=TOPLEFT(picked) relPoint=BOTTOM(auto)` with `join=free`; pick 
 prints no `point=` or `join=`. Put both rows back to Automatic. Result:
 
 **DIAG-11. The event trace through a key.** In a Mythic+ key, `/am debug on`, then play on: a pull,
-the kill, a boss and the key's end → the console carries `[Event] PLAYER_REGEN_DISABLED` / `_ENABLED`
-lines at each pull and kill, and `[Event] ADDON_RESTRICTION_STATE_CHANGED … type=<n> active=<0|1|2>`
-lines, each line ending `secret=… lockdown=… queued=…`. No `[Event]` line on a target, focus or pet
-change. Copy the whole console into the bug thread: the `type=` values seen at the key's start, a boss
-and the key's end are the record this check takes. Result:
+the kill, a boss and the key's end → the console carries `[Event] PLAYER_REGEN_DISABLED` /
+`_ENABLED` lines at each pull and kill, and `[Event] ADDON_RESTRICTION_STATE_CHANGED secret=…
+lockdown=… queued=… type=<n> active=<0|1|2>` lines; every `[Event]` line has `secret=… lockdown=…
+queued=…` right after the event name. No `[Event]` line on a target, focus or pet change. Copy the
+whole console into the bug thread: the `type=` values seen at the key's start, a boss and the key's
+end are the record this check takes. Result:
 
 **DIAG-12. The event trace at a boss.** Without a key, a boss encounter anywhere (a follower dungeon
 or LFR boss) with `/am debug on` → `[Event] ADDON_RESTRICTION_STATE_CHANGED … type=1 active=1` at the
@@ -558,10 +560,11 @@ and after. Result:
 `/reload` it stays. A drag that starts on the "?" moves it too. An empty container drags by its
 handle. Unlock, enter combat, try to drag → it does not move. Result:
 
-**CONT-12. Right-click opens the Containers page.** Close the panel; right-click a container's strip,
-then its "?" → each time the panel opens on Containers with that container in the band's picker, on
-the section you last left, not General. In combat, the right-click prints the gray "cannot open
-settings during combat" line, nothing opens, and the picker is unchanged afterwards. Result:
+**CONT-12. Right-click opens the Containers page.** Close the panel; right-click a container's
+strip, then its "?" → each time the panel opens on Containers with that container in the band's
+picker, on the section you last left, not General. In combat, the right-click prints the gray
+"cannot open settings during combat — Blizzard's category-switch is protected" line, nothing opens,
+and the picker is unchanged afterwards. Result:
 
 **CONT-13. The close mark.** `/am unlock` → every strip shows a gray X immediately left of the "?",
 the same size, turning white on hover; the name stays centered and does not run under the X, even for
@@ -773,9 +776,10 @@ cast, but the aura it applies is … — added 146739 instead, which is what the
 swap is never silent. Result:
 
 **FILT-21. A cast id with several auras.** Add **Renewing Mist**, or `115151` → it is stored exactly
-as typed, and chat lists the candidates: "115151 never appears as an aura, so this entry will match
-nothing. Auras with that name: 119611, 144080, 448430, 1238851, 1242480. Add the one you meant." It
-does not pick one. Add `119611` → it goes in silently; remove 115151. Result:
+as typed, and chat lists the candidates: "Renewing Mist (115151) never appears as an aura, so this
+entry will match nothing. Auras with that name: … Add the one you meant.", the list giving 119611,
+144080, 448430, 1238851 and 1242480, each as its name then its id in brackets. It does not pick one.
+Add `119611` → it goes in silently; remove 115151. Result:
 
 **FILT-22. An unknown id is never refused.** Add `999999` → it is added, with nothing said. Result:
 
@@ -1025,10 +1029,11 @@ faint outline sits in its own slot, strip between them, in the same order. A con
 Result:
 
 **LAYOUT-20. A chain in test mode.** On the chain, unlocked, `/am test` → the same order around the
-placeholder blocks, each block enclosed by an outline of its own and no placeholder under another
-container's strip. `/am lock` with test mode on → the strips and outlines go, and each follower closes
-up to one Spacing past the block before it. `/am test off` while locked → no outline at all; unlocked
-→ only an empty container's one-element outline. Result:
+placeholder blocks: each follower's strip one of its Spacings past the block before it and its
+placeholders starting right under its strip, each block enclosed by an outline of its own, and no
+placeholder under another container's strip. `/am lock` with test mode on → the strips and outlines
+go, and each follower closes up to one Spacing past the block before it. `/am test off` while locked
+→ no outline at all; unlocked → only an empty container's one-element outline. Result:
 
 **LAYOUT-21. The chain closes up on lock.** From LAYOUT-19, `/am lock` → every strip goes, and the
 chain closes up: B one Spacing below A's last line, C one below B's, plus any X/Y nudge. `/am unlock`
@@ -1142,13 +1147,14 @@ canceled; untick **Right-click to cancel** → nothing happens. **Click-through*
 clicks pass through. A new container sits in the **Medium** strata (Layout → Frame → Strata). Result:
 
 **LAYOUT-37. No world tooltip beside the aura's.** Put a bar container with two or more auras over a
-world unit (an NPC or a player), Show tooltips on and Click-through off. Hover a bar → only the aura's
-tooltip. Hover the gap between two bars, and the container's padding past the last bar → still only
-the nearest aura's tooltip (or none past every bar), never the unit's beside it. A unit tooltip that
-was up when the cursor entered fades rather than lingering. An icon container → the same. Turn
-Click-through on → the unit's tooltip shows in the gap; off again, then Show tooltips off → it shows
-there too. `/am test` and hover a placeholder over a unit → no unit tooltip; the gap between
-placeholders shows the unit's tooltip by design (the blocker hides with the engine). Result:
+world unit (an NPC or a player), Show tooltips on and Click-through off. Hover a bar → only the
+aura's tooltip. Hover the gap between two bars, and the container's padding past the last bar →
+still only the nearest aura's tooltip (or none past every bar), never the unit's beside it. A unit
+tooltip that was up when the cursor entered fades rather than lingering. An icon container → the
+same. Turn Click-through on → hovering a bar, and the gap between two, shows the unit's tooltip;
+Click-through off again, then Show tooltips off → the unit's tooltip shows on the bar and in the gap
+too. `/am test` and hover a placeholder over a unit → no unit tooltip; the gap between placeholders
+shows the unit's tooltip by design (the blocker hides with the engine). Result:
 
 **LAYOUT-38. The mouse blocker covers the whole container.** Anchor a bar container with Show
 tooltips on and Click-through off over a unit frame, or ground you mouseover-target through, so its
@@ -1207,17 +1213,18 @@ Consecration and run the three `/run` lines in `docs/midnight-quirks.md` → "Ma
 dispel type"; copy the output there. On a bar container colored by dispel type, say whether those
 debuffs' background is dark (typeless) or blue (the engine reports a type; the probe's `dispelName`
 column says which). The Bars **Color by** tooltips and General → Dispel Colors say buffs and many
-debuffs have no dispel type. Result:
+debuffs have no dispel type, naming class debuffs such as Judgment or Consecration. Result:
 
 **STYLE-9. The Dispel Colors tab.** General → **Dispel Colors** → above the five swatches (no None
-swatch), "One color per dispel type, shared by every container:" on its own line, then three lines
-each opening with "- ": where the colors are read (bars by dispel type, and a text line's dispel type
-word, backdrop or edge), what has no dispel type and how that looks, and that an icon's dispel border
-keeps Blizzard's own colors. A hairline gap between the bullets, none sharing a line, nothing cut off
-or scrolling sideways. Set Magic to pure red → a bar container colored by dispel type shows a Magic
-debuff's fill red, while an icon container's Magic dispel border stays Blizzard's blue. Each swatch's
-tooltip says it colors a bar's fill or background and a text line's dispel type word, backdrop or
-edge, and that an icon's dispel border keeps Blizzard's own colors. Result:
+swatch), "One color per dispel type, shared by every container:" on its own line, then four lines
+each opening with "- ": where the colors are read (bars by dispel type, and a text line's dispel
+type word, backdrop or edge, ending "(Text -> Font)"), that buffs and many debuffs have no dispel
+type, class debuffs such as Judgment or Consecration included, how those look, and that an icon's
+dispel border keeps Blizzard's own colors. A hairline gap between the bullets, none sharing a line,
+nothing cut off or scrolling sideways. Set Magic to pure red → a bar container colored by dispel
+type shows a Magic debuff's fill red, while an icon container's Magic dispel border stays Blizzard's
+blue. Each swatch's tooltip says it colors a bar's fill or background and a text line's dispel type
+word, backdrop or edge, and that an icon's dispel border keeps Blizzard's own colors. Result:
 
 **STYLE-10. The Icons tabs and the countdown.** Rail → Icons → **[ Size ][ Border ][ Cooldown ][ Time
 text ][ Stack text ][ Pandemic ]**. On Cooldown tick **Blizzard countdown numbers** → on a timed aura
@@ -1536,51 +1543,68 @@ add it either way. Result:
 
 ## Pending sign-off
 
-Owner checks carried over from the old numbering with no pass recorded: the batch 5 and batch 6
-checks that were listed as owed (2026-09-13 and 2026-09-14/15), the settings redesign checks that
-were not reported individually (2026-09-26), the batch 8 checks whose items failed the owner's
-2026-09-25 run and that no later run passed, the font primer (2026-09-27) and the mid-key reload
-(2026-09-29). Sign one off on its own `Result:` line, then remove its row here.
+Two kinds of check are listed here. First, old checks with no recorded pass: the batch 5 and batch 6
+checks that were listed as owed (2026-09-13 and 2026-09-14/15), the smoke batch 2 checks after the
+range the owner verified on 2026-09-20 (143 to 161), the settings redesign checks that were not
+reported individually (2026-09-26), the batch 8 checks whose items failed the owner's 2026-09-25 run
+and that no later run passed, the font primer (2026-09-27) and the mid-key reload (2026-09-29).
+Second, every check that is new on 2026-09-29 or whose expected result was corrected against the
+code then, since none of those has been run in its current form. Sign one off on its own `Result:`
+line, then remove its row here.
 
 | ID | Origin (old numbering) |
 |---|---|
 | INSTALL-5 | 58a, batch 5 |
-| INSTALL-8 | 68, batch 8 (failed 2026-09-25): its v8 step, the 0/-4 offsets of an attached container reading 0/0; the rest passed as 212, 234 and 242 |
-| SLASH-2 | 208, batch 8 (failed 2026-09-25): the help-order step |
+| INSTALL-6 | 125 and 135: the upgrade read-out corrected on 2026-09-29 (the `[Migrate]` lines are written while logging is still off at login, so the check reads the `[Init]` line's schema version) |
+| INSTALL-8 | 68, batch 8 (failed 2026-09-25): its v8 step, the 0/-4 offsets of an attached container reading 0/0; the rest passed as 212, 234 and 242, but its upgrade read-out was corrected on 2026-09-29 as INSTALL-6's |
+| SLASH-2 | 208, batch 8 (failed 2026-09-25): the help-order step; and its row count, 24 with `profile` listed, new on 2026-09-29 |
 | PANEL-1 | 251 (S1), settings redesign |
 | PANEL-6 | 264 (S14), settings redesign |
 | PANEL-9 | 259 (S9), settings redesign |
 | PANEL-10 | 260 (S10), settings redesign |
 | PANEL-13 | 256 (S6), settings redesign |
 | PANEL-14 | 263 (S13), settings redesign; its empty-rail half (270, I23-4) passed |
+| PANEL-22 | 87: the tooltip title's expected text corrected on 2026-09-29 (the name, then the version) |
+| PROFILE-5 to PROFILE-11 | new on 2026-09-29 with the `/am profile` verb; PROFILE-10 extends 58's profile switch while disabled |
+| PROFILE-12 | 47: rewritten on 2026-09-29, a reset being the one profile change combat allows |
+| STATE-1 | 21: its in-combat step rewritten on 2026-09-29 for `/am set`, since the panel is locked in combat |
 | COMBAT-5 | 265 (S15), settings redesign |
 | COMBAT-7 | 292 (MK1), mid-key reload |
 | DIAG-2 | 208, batch 8 (failed 2026-09-25): the bare `/am debug` and `/am debug on`/`off` step |
+| DIAG-3 | 54: the Profiles → Copy line corrected on 2026-09-29 to the ASCII `->` the code prints; the rest is unchanged or passed as 271 to 273 |
 | DIAG-5 | 206, batch 8 (failed 2026-09-25): the steps 210 does not repeat; 210 passed |
 | DIAG-6 | 207, batch 8 (failed 2026-09-25): the in-combat steps; the disabled steps passed as 235 |
 | DIAG-7 | 208, batch 8 (failed 2026-09-25) |
 | DIAG-8 | 209, batch 8 (failed 2026-09-25) |
-| DIAG-11 | 293 (MK2), mid-key reload |
+| DIAG-11 | 293 (MK2), mid-key reload; its line shape corrected on 2026-09-29 |
 | DIAG-12 | 294 (MK3), mid-key reload |
+| CONT-5 | 205: its in-combat rename rewritten on 2026-09-29 for `/am set container.name` |
+| CONT-8 | 162, smoke batch 2 (owed: the owner verified 143 to 161 only) |
+| CONT-21 | 136 and 224: the placeholder count corrected on 2026-09-29 (one per ticked slot, three by default) |
 | FILT-2 | 80, batch 6 |
 | FILT-5 | 78 and 81, batch 6 |
 | FILT-7 | 77, batch 6 |
 | FILT-8 | 83, batch 6 |
 | FILT-10 | 79, batch 6; 262 (S12), settings redesign |
+| FILT-11 | 164, smoke batch 2 (owed, as CONT-8) |
+| FILT-13 | 166, smoke batch 2 (owed, as CONT-8) |
 | FILT-14 | 70, batch 5 |
 | FILT-15 | 72, batch 5 |
 | FILT-16 | 73, batch 5 |
 | FILT-17 | 74, batch 5 |
 | FILT-18 | 75, batch 5 |
 | FILT-19 | 75, batch 5 (the tooltip half) |
+| FILT-21 | 179 and 180: the chat line's expected text corrected on 2026-09-29 (each spell named, its id in brackets) |
 | FILT-27 | 82, batch 6 |
 | LAYOUT-1 | 69, batch 5 |
+| LAYOUT-6 | 162, smoke batch 2 (owed, as CONT-8): the outline moving across aura buttons |
 | LAYOUT-18 | 68, batch 8 (failed 2026-09-25) |
+| LAYOUT-20 | 221 and 227: no outline on lock since 2026-09-27 (commit d01ac9d), after both passes |
 | LAYOUT-37 | 64 and 76, batch 5 |
 | LAYOUT-38 | 84, batch 6 |
 | STYLE-3 | 63, batch 5 |
 | STYLE-6 | 59a, batch 5 |
-| STYLE-9 | 61, batch 5 |
+| STYLE-9 | 61, batch 5; 163, smoke batch 2 (owed, as CONT-8); its bullet count corrected to four on 2026-09-29 |
 | STYLE-10 | 62, batch 5 |
 | STYLE-11 | 60, batch 5 |
 | STYLE-13 | 65, batch 5 |
@@ -1588,3 +1612,4 @@ were not reported individually (2026-09-26), the batch 8 checks whose items fail
 | STYLE-20 to STYLE-30 | 281 to 291 (FP1 to FP11), font primer |
 | TEXT-27 | 200, batch 8 (failed 2026-09-25): all but the migrated-profile step, which passed as 213 |
 | TEXT-28 | 201, batch 8 (failed 2026-09-25) |
+| LOC-1, LOC-2 | new on 2026-09-29 (the Non-English client section) |
