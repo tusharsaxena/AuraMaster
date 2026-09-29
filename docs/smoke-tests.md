@@ -104,6 +104,8 @@ parent justified Center moves to the center (LAYOUT-12). A follower that had a p
 pick in both rows (Side Bottom reads Parent **Bottom**, This **Top**). A container attached to another
 with the old 0/-4 offsets reads 0/0 on its Layout page; any other offsets are unchanged. `/am select`
 a screen container, `/am get container.attach.y` → `0`; `/am diagnostics` lists no `attach.y=-4`.
+Switch a container that was on the screen to Another container → it gains no 4px nudge (its X/Y
+offsets read 0).
 `/am get container.attach.edge` → "Setting not found". `/reload` → no `[Migrate]` line at all.
 Result:
 
@@ -208,11 +210,11 @@ alone with "No containers yet. Click New container, or type /am new." There is n
 "Container" tab and no "Create one on Containers" line. Click **New container** → Filters, Layout and
 the style section appear. Result:
 
-**PANEL-15. A new container lands on General.** Rail → Bars → Time text, then **New container** in
-the band → a new container is made and selected, and the page shows the General section and tab
-with its Name. Go back to Bars → Time text, keep the panel open, type `/am new` → the page moves to
-General on the new container, the same as the button. Go to Filters, close the panel, type `/am new`
-→ the panel does not open; `/am` → it opens on General with that container. Result:
+**PANEL-15. A new container lands on General.** Rail → Bars → Time text, then **New container** in the
+band → a new container is made and selected, and the page shows the General section and tab with its
+Name. Rail → Bars → it reopens on Time text. Keep the panel open, type `/am new` → the page moves to
+General on the new container, the same as the button. Go to Filters, close the panel, type `/am new` →
+the panel does not open; `/am` → it opens on General with that container. Result:
 
 **PANEL-16. Media dropdowns.** Every media dropdown (bar texture, background, border, font) opens with
 entries in it. Result:
@@ -438,15 +440,16 @@ count; Profiles → **Copy** → only `[Set] copied profile 'A' -> 'B'`. Result:
 **DIAG-4. A memory spot-check.** `/run print(collectgarbage("count"))`, change a bar container's
 width 10 times, print it again, and record both numbers and the growth. Result:
 
-**DIAG-5. `/am diagnostics` out of combat.** With a target, a focus and a pet, `/am diagnostics` →
-the console opens, one chat line gives the line count, and the report runs from the begin marker to
-the end marker with no `attempt to compare ... secret boolean` line. Its `[Aura]` names and stacks
-match Blizzard's own buff and debuff frames; every container has its `[Cont]`, `[Filt]` and `[Plan]`
-lines, each `[Plan]` reading `shown=` with a number, `?`, or a `<n>+<k>?` count (a `[Shown]` line
-with `shown=?` for each button that could not be read). Press **Copy** → no color codes; paste it
-into a file and nothing is cut off. Whitelist a spell whose buff is up → `[Shown]` lists a button and
-`predicted:` reads shown (rank 1). `/am test` → run it again: the same, no error; `/am test off` → a
-third run matches the first. Result:
+**DIAG-5. `/am diagnostics` out of combat.** With a target, a focus and a pet, `/am diagnostics` → the
+console opens, one chat line gives the line count, and the report runs from the begin marker to the
+end marker with no `attempt to compare ... secret boolean` line. Its `[Aura]` names and stacks match
+Blizzard's own buff and debuff frames; every container has its `[Cont]`, `[Filt]` and `[Plan]` lines,
+each `[Plan]` reading `shown=` with a number, `?`, or a `<n>+<k>?` count (a `[Shown]` line with
+`shown=?` for each button that could not be read). Press **Copy** → no color codes; paste it into a
+file and nothing is cut off. Whitelist a spell whose buff is up → `[Shown]` lists a button and
+`predicted:` reads shown (rank 1); record whether the button line carries the aura's inst/id or only
+its name or icon. `/am test` → run it again: the same, no error; `/am test off` → a third run matches
+the first. Result:
 
 **DIAG-6. Diagnostics in combat and while disabled.** In combat on a dummy, `/am diagnostics` → the
 units read unreadable, `[Cont]`, `[Filt]` and `[Plan]` still print, `frames=` is a number or `?`,
@@ -643,9 +646,9 @@ Categories ][ Overrides ][ Sorting ]**, no Spell lists tab on any aura type. **G
 Cast by, Duration and Max duration, with a **Filter priority logic** heading, the lead-in "Highest
 priority first:" and the five numbered rank lines: each rank on its own line, a hairline gap between
 them, no word cut off, no horizontal scrollbar. The rank lines read at the same size as the Whitelist
-and Blacklist notes on Overrides. Categories and Overrides carry no lead-in or rank line: Categories
-opens on its first grid, Overrides on **Whitelist**. A narrower WoW window → each line still wraps
-cleanly on its own. Result:
+and Blacklist notes on Overrides, and the lead-in is in the normal font's color. Categories and
+Overrides carry no lead-in or rank line: Categories opens on its first grid, Overrides on
+**Whitelist**. A narrower WoW window → each line still wraps cleanly on its own. Result:
 
 **FILT-3. The category grids.** On a buff container, Filters → **Categories** opens straight onto two
 grids, **Blizzard Categories** then **Spell Categories** (its last row **Uncategorized**), each headed
@@ -719,8 +722,10 @@ category" heading. Result:
 **FILT-12. Starter lists.** Every spell row carries an X on its left and no checkbox; check the X's
 height and vertical alignment against the name (the library's Icon widget is 26 px tall). Remove a
 starter spell from *Defensive cooldowns* with its X, cast it → it no longer shows in any container
-showing Defensive cooldowns. **Restore this category's starter list** → back to shipped. Filters →
-Overrides lists carry the X too, and it removes the spell. Result:
+showing Defensive cooldowns. Type a spell of yours by name into **Add a spell** → it is listed with
+its icon; cast it → it shows in a container showing Defensive cooldowns. **Restore this category's
+starter list** → back to shipped. Filters → Overrides lists carry the X too, and it removes the
+spell. Result:
 
 **FILT-13. Lists read alphabetically.** The **Category** dropdown offers **Defensive cooldowns**,
 **Hard CC (loss of control)** and **Soft CC (roots & snares)**, the parentheses and `&` as written in
@@ -891,9 +896,8 @@ container, Layout → Growth → Grow vertically Down → Up → the bars stack 
 sat, nothing hangs below it, and the handle (`/am unlock`) moves below the block; back to Down → they
 stack down again. On an icons container, Grow horizontally Right → Left and back → likewise,
 sideways. On a container attached to `PlayerFrame`, the same two flips → the first aura keeps its
-attached corner and the others grow the new way. On A with a follower B, flip A's Grow vertically →
-B moves to A's other side and its own auras follow A's new direction, B's own settings unchanged.
-Every flip shows real auras at once. Result:
+attached corner and the others grow the new way. A follower's flip is LAYOUT-17. Every flip shows
+real auras at once. Result:
 
 **LAYOUT-3. The Point rows and the facing-growth hint.** On a container attached to `PlayerFrame`
 (Named frame): This container anchor point's tooltip says it is the corner of the container's first
@@ -932,9 +936,10 @@ on demand → the container sits at its screen position until that addon loads, 
 back to *Screen* → it detaches. Result:
 
 **LAYOUT-8. A named frame's two anchor points.** Attach to *Named frame* → below Frame name one line
-reads **Named frame anchor point** on the left and **This container anchor point** on the right. Pick
-a corner in each → the container moves at once. The Screen section still reads Point / Relative
-point. Result:
+reads **Named frame anchor point** on the left and **This container anchor point** on the right, each
+holding its own corner: a container set on an older build to Bottom left / Top left (container /
+frame) reads Top left on the left and Bottom left on the right. Pick a corner in each → the container
+moves at once. The Screen section still reads Point / Relative point. Result:
 
 **LAYOUT-9. The two anchor-point rows.** On the chain, select B, Layout → Anchor → below **Parent
 container** sit **Parent container anchor point** and **This container anchor point**, and no
@@ -1256,7 +1261,8 @@ window, Pandemic-window highlight color). On Text, Time color with those three a
 pandemic window, and the gray "The pandemic window needs a duration token, such as $remainingduration$,
 in the template." under them on a template without one; Text → Animation holds the Loop rows alone.
 No tooltip says "running out" or "refresh window", and `/am list` names the same paths as before.
-Result:
+Values set on a build that still had the Highlights tab are kept (a pandemic window of 8 still reads
+8). Result:
 
 **STYLE-17. An icon border through the pandemic settings.** An Icons container with auras up, Icons →
 Border → Show border on (Solid, 2). Out of combat, change Icons → Pandemic one row at a time
@@ -1433,8 +1439,9 @@ rest in the font color; a Curse in its color. Change the Magic swatch → the wo
 re-apply. In combat the word keeps its color as auras come and go. If the word shows raw `|cff…`
 characters, report it. With a template without `$dispeltype$` the toggle is dimmed. The Dispel type
 subsection (Color the dispel type, Backdrop in the dispel color, Backdrop opacity, Edge in the dispel
-color, Edge thickness) sits on the Font tab under Countdown, not on Animation. In test mode each
-placeholder line shows its type word, tinted, and Mortal Wounds shows no type and no tint. Result:
+color, Edge thickness) sits on the Font tab under Countdown, not on Animation; toggles set on a build
+that still had them on Animation keep their values. In test mode each placeholder line shows its type
+word, tinted, and Mortal Wounds shows no type and no tint. Result:
 
 **TEXT-20. The dispel backdrop.** Same container, **Backdrop in the dispel color** on → a typed
 debuff's line has a box in its type's color behind the text, the text on top and readable; a typeless
