@@ -92,7 +92,7 @@ Declared in report order in `buckets` (`core/PerfSetup.lua:48`), each bracketed 
 
 | Bucket | Declared parent | Bracket | Why it is bracketed |
 |---|---|---|---|
-| `unitSwap` | — | `core/AuraMaster.lua:160`, `:156` | The one path driven by play: target, focus or pet changed, so every container on that unit calls the engine's `UpdateAllAuras`. The bracket spans that call, so whatever the engine does synchronously inside it lands here |
+| `unitSwap` | — | `core/AuraMaster.lua:160`, `:168` | The one path driven by play: target, focus or pet changed, so every container on that unit calls the engine's `UpdateAllAuras`. The bracket spans that call, so whatever the engine does synchronously inside it lands here |
 | `applyPass` | — | `modules/ContainerManager.lua:335-343` | The coalesced pass applying pending configuration to every dirty container, plus re-placing container-attached ones |
 | `applyContainer` | `applyPass` | `modules/Container.lua:384-430` | One container: compile, place, build or update the engine, restyle, visibility. The call site passes `"applyPass"`, so the record carries observed containment |
 | `visibilityPass` | — | `modules/ContainerManager.lua:362` | The show ladder over every container, on combat transitions, world entry and the master rows |
@@ -144,7 +144,7 @@ same way it goes down when a player unticks *Enable Aura Master* (slash-commands
 anti-pattern #85's last clause — two mechanisms that must agree about what inert means and diverge
 on the first module added after the second was written.
 
-So `standDown` (`core/LifecycleSetup.lua:90`) calls `addon:UnregisterLifecycleEvents()` — the nine
+So `standDown` (`core/LifecycleSetup.lua:90`) calls `addon:UnregisterLifecycleEvents()` — the eleven
 events `core/AuraMaster.lua` registers — then `NS.TimedSpells.StandDown()`, which drops TimedSpells'
 own `UNIT_AURA`, its three gate events and its two bus subscriptions, `NS.EmptyWatch.Stop()`,
 `CM.StopListening()` (which also stops the font primer, `FontPrimer.Stop`), `FramePicker.Stop()`,

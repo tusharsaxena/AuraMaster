@@ -62,9 +62,13 @@ end
 --- The SetEnabled values engine `e` has been sent since call index `from` (exclusive).
 local function enabledSince(e, from)
     local out = {}
-    for i = from + 1, #e.__calls do
+    local last = #e.__calls
+    for i = from + 1, last do
         local c = e.__calls[i]
-        if c[1] == "SetEnabled" then out[#out + 1] = tostring(c[2]) end
+        if c[1] == "SetEnabled" then
+            local n = #out
+            out[n + 1] = tostring(c[2])
+        end
     end
     return table.concat(out, ",")
 end
@@ -127,10 +131,26 @@ test("enchantreset: a parked or stale container is not flipped", function()
     inst.staleData = nil
     inst:Park()
     from = #e.__calls
-    -- red under: no parked gate (Park's SetEnabled(false) undone)
+    -- red under: neither ResetEnchants' parked gate nor ShouldShow's parked check (either alone
+    -- holds it; the next case pins ResetEnchants' own gate)
     assertFalse(inst:ResetEnchants())
     assertEqual(enabledSince(e, from), "")
     assertFalse(e.__enabled, "still off")
+end)
+
+test("enchantreset: the parked gate holds on its own, whatever ShouldShow answers", function()
+    local _, _, CM = env()
+    local inst, e = mark(CM)
+    inst:Park()
+    local from = #e.__calls
+    -- ShouldShow answers false for a parked container too; shadow it on the instance so the gate
+    -- in ResetEnchants is the only thing between a parked engine and the flip.
+    inst.ShouldShow = function() return true, false end
+    -- red under: no parked gate in ResetEnchants (Park's SetEnabled(false) undone)
+    assertFalse(inst:ResetEnchants())
+    assertEqual(enabledSince(e, from), "")
+    assertFalse(e.__enabled, "still off")
+    inst.ShouldShow = nil
 end)
 
 test("enchantreset: a hidden container is not flipped", function()

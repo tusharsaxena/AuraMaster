@@ -759,13 +759,14 @@ badge and any count quoted in the docs must agree with it.
 - fontprimer: one Fonts debug line per PrimeAll that met a refusal, counts only
 - fontprimer: DiagState lists the refused triples, copies only, and a primed one leaves the list
 
-### test_enchantreset.lua (22)
+### test_enchantreset.lua (23)
 
 - enchantreset: a live, shown enchant container is turned off and on again, in that order
 - enchantreset: the flip is two SetEnabled calls on the same engine and nothing else
 - enchantreset: a container with no enchant frames is not flipped
 - enchantreset: a container without an engine is not flipped
 - enchantreset: a parked or stale container is not flipped
+- enchantreset: the parked gate holds on its own, whatever ShouldShow answers
 - enchantreset: a hidden container is not flipped
 - enchantreset: a previewing container is not flipped
 - enchantreset: a stood-down addon flips nothing
@@ -1902,7 +1903,7 @@ badge and any count quoted in the docs must agree with it.
 
 - prose: no authored file carries a British spelling from localization-§5's published list
 - prose: the gate carries localization-§5's two lists whole, and nothing of its own
-- prose: the exclusions this repository declared suppressed 11 of 183 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (11): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, docs/spell-research/2026-09-24-logs/CORRECTIONS.md, docs/spell-research/2026-09-24-logs/CURRENT_CATEGORIES.md, docs/spell-research/2026-09-24-logs/DECISIONS.md, docs/spell-research/2026-09-24-logs/FLAGS.md, docs/spell-research/2026-09-24-logs/PROPOSED_ADDITIONS.md, docs/spell-research/2026-09-24-logs/REVIEW.md, docs/spell-research/2026-09-24-logs/SOURCES.md, docs/spell-research/2026-09-24-logs/dictionary/AURAS.md
+- prose: the exclusions this repository declared suppressed 11 of 184 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (11): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, docs/spell-research/2026-09-24-logs/CORRECTIONS.md, docs/spell-research/2026-09-24-logs/CURRENT_CATEGORIES.md, docs/spell-research/2026-09-24-logs/DECISIONS.md, docs/spell-research/2026-09-24-logs/FLAGS.md, docs/spell-research/2026-09-24-logs/PROPOSED_ADDITIONS.md, docs/spell-research/2026-09-24-logs/REVIEW.md, docs/spell-research/2026-09-24-logs/SOURCES.md, docs/spell-research/2026-09-24-logs/dictionary/AURAS.md
 - prose: no path this repository narrows the gate by is loaded by a TOC
 - prose: every path this repository narrows the gate by is one .pkgmeta keeps out of the zip
 - prose self-test: the carve-out suppresses the named generated folder, and only it
@@ -2003,7 +2004,7 @@ badge and any count quoted in the docs must agree with it.
 | test_anchors_hang.lua | 11 |
 | test_emptywatch.lua | 25 |
 | test_fontprimer.lua | 32 |
-| test_enchantreset.lua | 22 |
+| test_enchantreset.lua | 23 |
 | test_anchors_close.lua | 6 |
 | test_anchors_label.lua | 23 |
 | test_anchors_strip.lua | 7 |
@@ -2057,4 +2058,4 @@ badge and any count quoted in the docs must agree with it.
 | test_eol.lua | 2 |
 | test_layout_cap.lua | 13 |
 | test_diagnostics_contract.lua | 7 |
-| **Total** | **1735** |
+| **Total** | **1736** |
