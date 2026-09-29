@@ -316,19 +316,22 @@ then the list, and nothing switches. Result:
 back to Default. `/am profile "Raid Night"` → `Switched to profile 'Raid Night'.` Back to Default,
 then `/am profile 'Raid Night'` and `/am profile Raid Night` → the same switch each time. Result:
 
-**PROFILE-10. While disabled.** `/am disable`, then `/am profile` → the list, not the disabled
-refusal. `/am profile <another profile>` → it switches. Switch back, `/am enable` → the containers
-draw. Result:
+**PROFILE-10. While disabled.** On Default, `/am disable`, then `/am profile` → the list, not the
+disabled refusal. `/am profile <another profile>`, one whose General → **Enable Aura Master** is
+ticked → it switches and the addon comes up with it: that profile's containers draw and **Enable Aura
+Master** reads ticked. `/am profile Default` → the addon goes down again: every container hides and
+**Enable Aura Master** reads unticked. `/am enable` → Default's containers draw. Result:
 
 **PROFILE-11. Refused in combat.** Enter combat, `/am profile <another profile>` → `Can't switch
 profiles in combat.`, and nothing switches. `/am profile` alone still lists the profiles in combat.
 Result:
 
-**PROFILE-12. A page switch or reset in combat.** Point container 1 at focus first. In combat, switch
-profile on the Profiles page to one without one of your containers (or reset or copy the profile) →
-that container stops drawing, is torn down when combat ends, and no taint warning appears. Container
-1 draws nothing in combat, never focus auras under the reset container's name, and once combat ends
-it draws the new container 1 (player buffs). Result:
+**PROFILE-12. A reset in combat tears containers down.** The Profiles page and `/am profile` are
+refused in combat (COMBAT-3, PROFILE-11), so a reset is the one profile change combat allows. Out of
+combat, make a fifth container (CONT-1) and point container 1 at focus. In combat, `/am resetall` →
+the fifth container stops drawing, is torn down when combat ends, and no taint warning appears.
+Container 1 draws nothing in combat, never focus auras under the reset container's name, and once
+combat ends it draws the new container 1 (player buffs). Result:
 
 **PROFILE-13. Your categories belong to the profile.** Make a category (FILT-31), then Profiles →
 create and switch to a second profile → General → Spell Categories does not list it, and the Filters
@@ -340,8 +343,10 @@ Result:
 
 **STATE-1. Enable and visibility.** Untick **Enable Aura Master** → every container disappears;
 re-tick → back. Set **General visibility** to *Only in combat* → containers hide out of combat and
-show in combat; *Only out of combat* is the reverse; *Never* hides them; *Always* restores. Change it
-while in combat → it takes effect at once. Result:
+show in combat; *Only out of combat* is the reverse; *Never* hides them; *Always* restores. In
+combat, `/am set visibility never` (the page itself is locked in combat) → every container hides at
+once, with no "will apply when combat ends" line; `/am set visibility always` → they are back at
+once. Result:
 
 **STATE-2. Disable and enable from chat.** Out of combat, `/am disable` → `enabled = false` (gold
 key, white value, the shape `/am get enabled` prints) and every container hides; General → **Enable
@@ -353,8 +358,7 @@ back if you had them hidden; changing target, entering and leaving combat and su
 nothing at all; `/am` still opens the panel, and `/am list`, `/am get` and `/am set` still read and
 repair settings; `/am lock` answers `Ka0s Aura Master is disabled — enable it with /am enable` on one
 line. Ticking **General → Master controls → Test mode** answers that same line and the box stays
-unticked. After `/am enable`, the box and the minimap menu's Test mode entry both toggle test mode.
-Result:
+unticked. Result:
 
 **STATE-4. Reload while disabled.** `/am disable`, `/reload` → it comes up disabled, still answers
 `/am`, and built no container: `/framestack` over the screen shows no `AuraMasterAnchor` frame and
@@ -425,10 +429,11 @@ change settings; `/am debug off` stops them. `/reload` → logging off, window c
 **DIAG-3. One line per bulk act.** With `/am debug on`, each bulk act logs one `[Set]` line and no
 per-row lines: #1's Bars **Defaults** after changing Width → `[Set] reset bars: N rows` with N at
 least 1, and again → `reset bars: 0 rows`; **Copy settings from** #1 to #2 → `[Set] copy container
-1->2 (<section>): N rows`; `/am resetposition` twice → `[Set] reset positions: N rows`, then `0 rows`;
-Filters → Categories → **Hide all** → one `[Set] hide all …` line; General → **Reset all settings**
-→ only `[Set] reset profile 'Default' to defaults`, no row count; Profiles → **Copy** → only `[Set]
-copied profile 'A' → 'B'`. Result:
+1->2 (<section>): N rows`; General → **Reset position** → `[Set] reset positions: N rows`, then
+`/am resetposition` straight after → `[Set] reset positions: 0 rows` (the first container's `-0`
+offset over a stored `0` is no change); Filters → Categories → **Hide all** → one `[Set] hide all …`
+line; General → **Reset all settings** → only `[Set] reset profile 'Default' to defaults`, no row
+count; Profiles → **Copy** → only `[Set] copied profile 'A' -> 'B'`. Result:
 
 **DIAG-4. A memory spot-check.** `/run print(collectgarbage("count"))`, change a bar container's
 width 10 times, print it again, and record both numbers and the growth. Result:
@@ -507,8 +512,10 @@ removed. Result:
 unchanged. Pick What = *Label* → the label settings copy and the name does not. Result:
 
 **CONT-5. Rename.** Rename a container on Containers → General (Enter to apply) → the handle label,
-every picker and `/am containers` show the new name; a blank name is refused. Rename one with its name
-label on, in combat too → the label changes at once. Result:
+every picker and `/am containers` show the new name; a blank name is refused. With the container's
+name label on (Layout → Label → **Show name label**) and the container selected (`/am select`), in
+combat `/am set container.name <a new name>` (the page itself is locked in combat) → the label
+changes at once. Result:
 
 **CONT-6. Style switch with auras up.** Locked, with live auras in a container, switch its **Style**
 Bars → Icons → Bars → Text → Icons → Text → each time the elements redraw in the new style only: no
@@ -601,10 +608,11 @@ debuff container → only Shadow Word: Pain, Hex and Frost Fever. Result:
 
 **CONT-21. Weapon enchant placeholders.** A container showing only Weapon enchants (`/am new
 enchants`), before applying a real enchant, `/am test` → it previews weapon enchants (Windfury Weapon,
-Flametongue Weapon running out, Instant Poison with no timer), not buffs, and no more placeholders
-than the enchant slots it can ever draw (one per weapon that can carry an enchant, at most two). A
-Player buffs container with Weapon enchants also on still previews buffs. A Text container of
-enchants under Size to fit sizes to those names. Result:
+Flametongue Weapon running out, Instant Poison with no timer), not buffs: one placeholder per slot
+ticked under General → Spell Categories → *Weapon enchants* (Main hand, Off hand and Ranged, all
+ticked by default, so three). Untick **Ranged**, then `/am test off` and `/am test` → two
+placeholders; tick it again. A Player buffs container with Weapon enchants also on still previews
+buffs. A Text container of enchants under Size to fit sizes to those names. Result:
 
 **CONT-22. Unit swaps.** With a target container, change target several times; with a focus
 container, set and clear focus → each shows the new unit's auras at once, never the previous unit's.
@@ -646,11 +654,10 @@ once, with columns **Show · Hide** and the category name (hover it for its desc
 container.filter.categories.<key>` prints `Hide`. Right under the grid sits **Hide enchants without a
 duration**, tied by name to the **Weapon enchants** row above it. Result:
 
-**FILT-4. Debuff and enchant containers' Categories.** Switch the container's aura type to Debuffs →
+**FILT-4. A debuff container's Categories.** Switch the container's aura type to Debuffs →
 **Blizzard Categories**, **Dispel Types**, **Who Cast It**, and a **Spell Categories** grid holding
 only its own **Uncategorized** row (no starter list, no See spells link, no line above it naming
-General → Spell Categories). An enchant-only container → the strip is **[ Categories ][ Sorting ]**,
-Categories holding only **Hide enchants without a duration** and Sorting only **Direction**. Result:
+General → Spell Categories). Result:
 
 **FILT-5. The grid cells.** Look at a lit cell (Show or Hide) → an ordinary checkbox check, the same
 shape and color as every other checkbox in the panel, no colored fill. Click the other cell on the
@@ -1035,7 +1042,9 @@ B's overlaps A's. `/am lock` → B stays one label row lower while A's label sho
 runs over B's; untick A's label → B sits level with A. Put B on A's left (This container Top right,
 Parent container Top left) → B is never pushed, and its strip lines up with its edge that faces A,
 over none of A's elements. With C below B, C's strip sits above C, covering none of B's elements.
-Result:
+Put B back on A's right and untick both labels: while A's strip runs past its one icon (the long
+name), unlocked → B sits one strip row lower than A, clear of A's strip; `/am lock` → B moves back
+level with A. When A's strip is no wider than its icon, B sits level unlocked too. Result:
 
 **LAYOUT-24. One geometry.** With B below A, on A's right and on A's left in turn, and A showing live
 auras: locked and unlocked → B sits on the same side of A (below, it sits one strip row further down
@@ -1506,8 +1515,10 @@ non-English account).
 
 **LOC-1. Spell names come from the client.** Log in with the starter set → no Lua error. `/am test`
 → the placeholders show their spells' names in the client's language, each with its real icon. General
-→ Spell Categories → *Defensive cooldowns* → the starter spells read in the client's language, in that
-language's alphabetical order. A Text container on your buffs shows the live aura names in the client's
+→ Spell Categories → *Defensive cooldowns* → the starter spells read in the client's language, sorted
+by name with case ignored for the plain letters A to Z; a name that starts with an accented or
+non-Latin letter sorts after every name that starts with a plain one (the list sorts the lowercased
+names byte by byte, not by the language's alphabet). A Text container on your buffs shows the live aura names in the client's
 language. The addon's own labels, chat lines and the `$dispeltype$` word are English, with no raw key
 and no blank label. Result:
 
@@ -1520,12 +1531,15 @@ add it either way. Result:
 
 Owner checks carried over from the old numbering with no pass recorded: the batch 5 and batch 6
 checks that were listed as owed (2026-09-13 and 2026-09-14/15), the settings redesign checks that
-were not reported individually (2026-09-26), the font primer (2026-09-27) and the mid-key reload
+were not reported individually (2026-09-26), the batch 8 checks whose items failed the owner's
+2026-09-25 run and that no later run passed, the font primer (2026-09-27) and the mid-key reload
 (2026-09-29). Sign one off on its own `Result:` line, then remove its row here.
 
 | ID | Origin (old numbering) |
 |---|---|
 | INSTALL-5 | 58a, batch 5 |
+| INSTALL-8 | 68, batch 8 (failed 2026-09-25): its v8 step, the 0/-4 offsets of an attached container reading 0/0; the rest passed as 212, 234 and 242 |
+| SLASH-2 | 208, batch 8 (failed 2026-09-25): the help-order step |
 | PANEL-1 | 251 (S1), settings redesign |
 | PANEL-6 | 264 (S14), settings redesign |
 | PANEL-9 | 259 (S9), settings redesign |
@@ -1534,6 +1548,11 @@ were not reported individually (2026-09-26), the font primer (2026-09-27) and th
 | PANEL-14 | 263 (S13), settings redesign; its empty-rail half (270, I23-4) passed |
 | COMBAT-5 | 265 (S15), settings redesign |
 | COMBAT-7 | 292 (MK1), mid-key reload |
+| DIAG-2 | 208, batch 8 (failed 2026-09-25): the bare `/am debug` and `/am debug on`/`off` step |
+| DIAG-5 | 206, batch 8 (failed 2026-09-25): the steps 210 does not repeat; 210 passed |
+| DIAG-6 | 207, batch 8 (failed 2026-09-25): the in-combat steps; the disabled steps passed as 235 |
+| DIAG-7 | 208, batch 8 (failed 2026-09-25) |
+| DIAG-8 | 209, batch 8 (failed 2026-09-25) |
 | DIAG-11 | 293 (MK2), mid-key reload |
 | DIAG-12 | 294 (MK3), mid-key reload |
 | FILT-2 | 80, batch 6 |
@@ -1549,6 +1568,7 @@ were not reported individually (2026-09-26), the font primer (2026-09-27) and th
 | FILT-19 | 75, batch 5 (the tooltip half) |
 | FILT-27 | 82, batch 6 |
 | LAYOUT-1 | 69, batch 5 |
+| LAYOUT-18 | 68, batch 8 (failed 2026-09-25) |
 | LAYOUT-37 | 64 and 76, batch 5 |
 | LAYOUT-38 | 84, batch 6 |
 | STYLE-3 | 63, batch 5 |
@@ -1559,3 +1579,5 @@ were not reported individually (2026-09-26), the font primer (2026-09-27) and th
 | STYLE-13 | 65, batch 5 |
 | STYLE-14 | 66, batch 5 |
 | STYLE-20 to STYLE-30 | 281 to 291 (FP1 to FP11), font primer |
+| TEXT-27 | 200, batch 8 (failed 2026-09-25): all but the migrated-profile step, which passed as 213 |
+| TEXT-28 | 201, batch 8 (failed 2026-09-25) |
