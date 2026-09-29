@@ -15,7 +15,7 @@ check's number is not reused. Checks with no recorded pass, and checks new or co
 | ID range | Theme | What it covers |
 |---|---|---|
 | INSTALL-1 to INSTALL-8 | Install, load and upgrade | First login, the starter containers, `/reload`, and SavedVariables from older builds |
-| SLASH-1 to SLASH-8 | Slash commands | `/am` and `/auramaster`, help, unknown verbs, the container verbs and the schema CLI |
+| SLASH-1 to SLASH-11 | Slash commands | `/am` and `/auramaster`, help, unknown verbs, the container verbs, the schema CLI and `/am redraw` |
 | PANEL-1 to PANEL-27 | Settings panel and launcher | The tree, landing page, General page, the Containers band and rail, Blizzard frames, the minimap button and broker |
 | PROFILE-1 to PROFILE-13 | Profiles | The Profiles page, the `/am profile` verb, and what a profile holds |
 | STATE-1 to STATE-5 | Master switch | Enable and disable, visibility, the inert disabled addon |
@@ -116,9 +116,9 @@ chat line. `/am` followed by only spaces, `/auramaster`, `/am config` and `/am o
 combat — Blizzard's category-switch is protected" line, no taint warning, and the panel does not pop
 open when combat ends. Result:
 
-**SLASH-2. Help.** `/am help` → the version line, then one row per command, 24 in all: a gold `/am
-verb`, an em dash and a white description. `profile`, `test` and `diagnostics` are listed,
-`diagnostics` right after `debug`, and the `debug` row does not mention `diag`. Result:
+**SLASH-2. Help.** `/am help` → the version line, then one row per command, 25 in all: a gold `/am
+verb`, an em dash and a white description. `profile`, `test`, `redraw` and `diagnostics` are listed,
+`redraw` right after `forgettimed`, `diagnostics` right after `debug`, and the `debug` row does not mention `diag`. Result:
 
 **SLASH-3. Unknown verb.** `/am wibble`, and `/am preview` → the unknown-command line, then the help
 block. Result:
@@ -141,6 +141,29 @@ select 999` → `No such container …`. Result:
 gray. `/am set container.layout.scale 1.5` → it grows; `/am reset container.layout.scale` → back.
 `/am list` → every row, the `container.` rows annotated. `/am get container` and `/am set container 1`
 → both answer "Setting not found: container", and `/am list` reads as before. Result:
+
+**SLASH-9. Light redraw.** With the starter containers showing, `/am debug on`, then `/am redraw light`
+→ `Light redraw: N container(s) repainted`, N counting the containers on screen, and the console
+shows `[Apply] redraw light: N container(s) flipped`. Every container still shows the same auras
+with their timers running. `/am redraw LIGHT` → the same. `/am redraw everything` → `Usage: /am
+redraw [light|full]` and nothing else. Pull a dummy and `/am redraw light` in combat → the same
+line, no "will apply" notice, no taint warning and no `ADDON_ACTION_BLOCKED`. Result:
+
+**SLASH-10. Full redraw.** Out of combat, `/am debug on`, `/am diagnostics`, then `/am redraw full`
+→ `Full redraw: fonts primed, N container(s) repainted, every container re-dressed`, and the console
+shows `[Apply] redraw full: N container(s) flipped, re-apply queued`, then `[Apply] applied M
+container(s)`. `/am diagnostics` again → each `[Cont]` line's `retired=` count is the same as before:
+no engine was rebuilt. Pull a dummy and `/am redraw full` in combat → `Full redraw: fonts primed, N
+container(s) repainted; the re-dress waits until it is allowed`, then `[AM] Aura Master settings
+changes will apply when combat ends.` (unless that line already printed this fight); leave combat →
+`[Apply] applied M container(s)` with no error. Result:
+
+**SLASH-11. Bare redraw.** Out of combat, `/am redraw` → the `Full redraw: …` line of SLASH-10. In
+combat, `/am redraw` → `Light redraw: N container(s) repainted`, then `A full redraw has to wait right
+now, so a light one ran; /am redraw full queues the rest`, and no "will apply" notice. Inside a
+Mythic+ key or a boss encounter, out of combat between pulls → the same two lines. `/am disable`,
+then `/am redraw`, `/am redraw light` and `/am redraw full` → each answers only `Ka0s Aura Master is
+disabled — enable it with /am enable`; `/am enable` after. Result:
 
 ## Settings panel and launcher
 
@@ -1579,7 +1602,8 @@ line, then remove its row here.
 | INSTALL-5 | 58a, batch 5 |
 | INSTALL-6 | 125 and 135: the upgrade read-out corrected on 2026-09-29 (the `[Migrate]` lines are written while logging is still off at login, so the check reads the `[Init]` line's schema version) |
 | INSTALL-8 | 68, batch 8 (failed 2026-09-25): its v8 step, the 0/-4 offsets of an attached container reading 0/0; 212, batch 9 (failed in the late 2026-09-25 run): its step switching a screen container to Another container; the chains and `attach.y` steps passed as 234 and 242, but its upgrade read-out was corrected on 2026-09-29 as INSTALL-6's |
-| SLASH-2 | 208, batch 8 (failed 2026-09-25): the help-order step, which the 2026-09-26 diagnostics run did not repeat; and its row count, 24 with `profile` listed, new on 2026-09-29 |
+| SLASH-2 | 208, batch 8 (failed 2026-09-25): the help-order step, which the 2026-09-26 diagnostics run did not repeat; and its row count, 24 with `profile` listed, new on 2026-09-29, now 25 with `redraw` listed (2026-09-30) |
+| SLASH-9 to SLASH-11 | new on 2026-09-30 with `/am redraw` (SP-AMX-02) |
 | PANEL-1 | 251 (S1), settings redesign |
 | PANEL-6 | 264 (S14), settings redesign |
 | PANEL-9 | 259 (S9), settings redesign |

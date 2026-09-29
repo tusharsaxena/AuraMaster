@@ -34,7 +34,7 @@ Sl.__stubDisabledLineFormat = STUB_DISABLED_LINE_FORMAT
 local cli
 
 local runEnabled, runResetAll, runContainers, runSelect, runNew, runDelete, runLock, runPick
-local runResetPosition, runForgetTimed, runDebug, runPerf, runTest
+local runResetPosition, runForgetTimed, runRedraw, runDebug, runPerf, runTest
 
 NS.COMMANDS = {
     {"help",          L["List available commands"],
@@ -81,6 +81,9 @@ NS.COMMANDS = {
         function() runResetPosition() end},
     {"forgettimed",   L["Forget which buffs were learned to have a duration"],
         function() runForgetTimed() end},
+    -- A feature verb (SP-AMX-02): refused while disabled, as it is not in liveVerbs below.
+    {"redraw",        L["Repaint every container: light now, full with fonts and styling — /am redraw [light|full]"],
+        function(rest) runRedraw(rest) end},
     {"debug",         L["Toggle the debug console - on/off enable or disable logging"],
         function(rest) runDebug(rest) end},
     {"diagnostics",   L["Write a diagnostic report to the debug console (also /am debug diagnostics)"],
@@ -353,6 +356,31 @@ end
 function runForgetTimed()
     NS.TimedSpells.Forget()
     print(L["Forgot every learned timed buff; they are relearned out of combat"])
+end
+
+-- `/am redraw [light|full]` (SP-AMX-02). light flips every live container now, in any state; full
+-- primes the fonts, flips, and re-dresses every container through one system apply, which waits
+-- with the usual deferral notice while combat or aura secrecy holds applies (CM.RedrawFull). A bare
+-- `/am redraw` is full when nothing holds an apply right now, else light, and says a full one waits.
+-- Each form's line names which ran.
+local REDRAW_WORDS = { light = true, full = true }
+
+function runRedraw(rest)
+    local word = firstWord(rest)
+    if word ~= "" and not REDRAW_WORDS[word] then return print(L["Usage: /am redraw [light|full]"]) end
+    local CM = NS.ContainerManager
+    local held = word == "" and CM.MustDefer()
+    if word == "light" or held then
+        printf(L["Light redraw: %d container(s) repainted"], CM.RedrawLight())
+        if held then print(L["A full redraw has to wait right now, so a light one ran; /am redraw full queues the rest"]) end
+        return
+    end
+    local n, waits = CM.RedrawFull()
+    printf(waits and L["Full redraw: fonts primed, %d container(s) repainted; the re-dress waits until it is allowed"]
+        or L["Full redraw: fonts primed, %d container(s) repainted, every container re-dressed"], n)
+    -- The usual deferral notice, once per blocked stretch: the queued request is the addon's own, so
+    -- its flush says nothing.
+    if waits then CM.NoteDeferred() end
 end
 
 -- /am debug        toggles the console WINDOW (the logging flag is untouched).

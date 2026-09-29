@@ -12,7 +12,8 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   name lost at login stayed blank until a `/reload`. The addon now turns each live container with
   enchant slots off and on again after every loading screen and when an equipped weapon's item data
   arrives (SP-AMX-01). That repaints the container's aura bars too, not only its enchants. A name
-  whose item data has not loaded yet stays blank until it loads, when the reset runs again. Details:
+  whose item data has not loaded yet stays blank until it loads, when the reset runs again.
+  `/am redraw` does the same flip by hand on every live container, any time (SP-AMX-02). Details:
   `docs/midnight-quirks.md` → *Weapon enchants*.
 - **A profile copy or reset discards the player's own spell categories, without asking.** Profiles
   → Copy From and Reset Profile replace the profile wholesale, and `userCategories`,

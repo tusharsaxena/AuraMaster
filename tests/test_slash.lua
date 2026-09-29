@@ -41,16 +41,18 @@ test("slash: the reserved verbs are all present", function()
     end
 end)
 
-test("slash: NS.COMMANDS carries 24 verbs, profile right after resetall, diagnostics right after debug, and no diag verb", function()
+test("slash: NS.COMMANDS carries 25 verbs, profile right after resetall, redraw right after forgettimed, diagnostics right after debug, and no diag verb", function()
     local n = #NS.COMMANDS
     -- red under: the count claims in docs/ARCHITECTURE.md, docs/slash-dispatch.md and
     -- docs/module-map.md left behind a verb added or removed (owner, 2026-09-25: 22 -> 23;
-    -- 2026-09-29: 23 -> 24, the profile verb)
-    assertEqual(n, 24)
+    -- 2026-09-29: 23 -> 24, the profile verb; 2026-09-30: 24 -> 25, the redraw verb)
+    assertEqual(n, 25)
     local at = {}
     for i, e in ipairs(NS.COMMANDS) do at[e[1]] = i end
     -- red under: the profile verb moved away from the settings verbs it sits beside
     assertEqual(at.profile, at.resetall + 1, "profile follows resetall")
+    -- red under: the redraw verb moved away from the maintenance verbs it sits beside
+    assertEqual(at.redraw, at.forgettimed + 1, "redraw follows forgettimed")
     assertEqual(at.diagnostics, at.debug + 1, "diagnostics follows debug")
     assertTrue(at.diag == nil, "diag is not a verb")
 end)

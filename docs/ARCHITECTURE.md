@@ -133,8 +133,8 @@ pass on.
 | Message | Sender | Payload | Consumers |
 |---|---|---|---|
 | `Ka0s_AuraMaster_ContainersChanged` (`NS.MSG.CONTAINERS_CHANGED`) | `modules/ContainerManager.lua` — create, delete, rename, duplicate, profile change (copy-from and reset positions are settings writes, announced by `CONFIG_CHANGED`) | none | `settings/OptionsSetup.lua:351` — `NS.RequestPanelRefresh`, a coalesced panel re-render (every banner lists containers); `modules/TimedSpells.lua:204` — `TS.Sync`, which starts or stops the timed-spell scan (a container added or removed can change whether any needs it) |
-| `Ka0s_AuraMaster_ConfigChanged` (`NS.MSG.CONFIG_CHANGED`) | `settings/Schema.lua:598` — the write seam, once per write; never for a session row | `{ section, containerId, path }`; `containerId` nil for an addon-wide row, `path` the row written | `modules/ContainerManager.lua:695` — first `FontPrimer.PrimeAll` (a new font is drawn before anything is applied in it), then by the row's `effect`: `"visibility"` runs `ApplyVisibility()` at once, `"none"` queues nothing, otherwise `RequestApply(containerId)` (nil re-applies all), a write to a flow or attachment path also re-applies every container following that one (`Anchors.Followers`), and a write to a container's attach points, mode or target also re-applies the container it attaches to (`requestParents`); `modules/TimedSpells.lua:203` — `TS.Sync`, the same re-sync (a filter write can change whether any container needs the scan) |
-| `Ka0s_AuraMaster_VisibilityChanged` (`NS.MSG.VISIBILITY_CHANGED`) | `core/AuraMaster.lua` — entering the world, combat start and end; `modules/Preview.lua` — `Preview.SetTestMode`, when test mode switches on or off | none | `modules/ContainerManager.lua:707` — `ApplyVisibility()` over every container |
+| `Ka0s_AuraMaster_ConfigChanged` (`NS.MSG.CONFIG_CHANGED`) | `settings/Schema.lua:598` — the write seam, once per write; never for a session row | `{ section, containerId, path }`; `containerId` nil for an addon-wide row, `path` the row written | `modules/ContainerManager.lua:742` — first `FontPrimer.PrimeAll` (a new font is drawn before anything is applied in it), then by the row's `effect`: `"visibility"` runs `ApplyVisibility()` at once, `"none"` queues nothing, otherwise `RequestApply(containerId)` (nil re-applies all), a write to a flow or attachment path also re-applies every container following that one (`Anchors.Followers`), and a write to a container's attach points, mode or target also re-applies the container it attaches to (`requestParents`); `modules/TimedSpells.lua:203` — `TS.Sync`, the same re-sync (a filter write can change whether any container needs the scan) |
+| `Ka0s_AuraMaster_VisibilityChanged` (`NS.MSG.VISIBILITY_CHANGED`) | `core/AuraMaster.lua` — entering the world, combat start and end; `modules/Preview.lua` — `Preview.SetTestMode`, when test mode switches on or off | none | `modules/ContainerManager.lua:754` — `ApplyVisibility()` over every container |
 | `Ka0s_AuraMaster_TimedSpellsChanged` (`NS.MSG.TIMED_SPELLS_CHANGED`) | `modules/TimedSpells.lua` — a scan learned timed spells, or `/am forgettimed` emptied the set | none from a scan; `{ byPlayer = true }` from `/am forgettimed` | `modules/ContainerManager.lua` `CM.Init` — `RequestApply(nil, system)` over every container (their excluded ids moved); a scan's request is the addon's own, so a deferral of it prints no notice |
 
 Four messages, well under the more-than-ten trigger for a separate `message-bus.md`.
@@ -171,13 +171,14 @@ button's left click.
 | `/am pick` | Attach the selected container to a frame by clicking it |
 | `/am resetposition` | Move every container back to its default screen position |
 | `/am forgettimed` | Forget which buffs were learned to have a duration |
+| `/am redraw [light\|full]` | Repaint every container. `light` turns every live engine off and on again now, in any state, combat and aura secrecy included (the weapon-enchant flip, SP-AMX-01). `full` primes the fonts, does the same flip, then asks for one system apply of every container, which re-dresses every button in place; while combat or aura secrecy holds applies that part waits, the line says so and the usual deferral notice follows. A bare `/am redraw` runs `full` when nothing holds an apply, else `light` with a line saying a full one waits. Neither form retires or builds an engine |
 | `/am debug [on\|off\|diagnostics]` | Toggle the debug console; `on`/`off` enable or disable logging; `diagnostics` writes the diagnostic report, the same as `/am diagnostics` |
 | `/am diagnostics` | Write the diagnostic report to the debug console (`docs/debug.md`); answers while disabled |
 | `/am perf …` | Measure performance — bare `/am perf` opens the workflow |
 | `/am version` | Print the addon version |
 
-**While the addon is disabled** the eight verbs that drive its features — `new`, `delete`, `lock`,
-`unlock`, `test`, `pick`, `resetposition`, `forgettimed` — answer on one tagged line naming `/am enable` and
+**While the addon is disabled** the nine verbs that drive its features — `new`, `delete`, `lock`,
+`unlock`, `test`, `pick`, `resetposition`, `forgettimed`, `redraw` — answer on one tagged line naming `/am enable` and
 do nothing else (slash-commands-§2). Everything else keeps working, the bare `/am` included: it
 opens the settings panel, which is the surface a player switches the addon back on from by hand. The
 gate is `LibKa0s-Slash-1.0`'s, closed by the descriptor's `isEnabled` in `settings/Slash.lua` with
@@ -316,7 +317,7 @@ span bundle is `<date>-v<A>-v<B>/`, and the one untagged bundle is `docs/revendo
 | Doc | Status | Trigger |
 |---|---|---|
 | `perf-analysis/README.md` | Present | The performance harness is wired (`core/PerfSetup.lua`) |
-| `slash-dispatch.md` | Present | 24 commands in `NS.COMMANDS`, over the eight-or-more threshold |
+| `slash-dispatch.md` | Present | 25 commands in `NS.COMMANDS`, over the eight-or-more threshold |
 | `midnight-quirks.md` | Present | Client-version workarounds of the addon's own: 12.1 aura secrecy and the aura container engine, and the taint notes that follow from them |
 | `compat-layer.md` | Present | 22 shims in `core/Compat.lua`, over the three-or-more threshold |
 | `message-bus.md` | Not applicable | 4 messages in `NS.MSG`; the trigger is more than ten. The table lives in `## Message Bus` above |

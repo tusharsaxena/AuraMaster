@@ -4,7 +4,7 @@
 ![CurseForge Version](https://img.shields.io/curseforge/v/1698345)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-1736%2F1736_passing-green)
+![Tests](https://img.shields.io/badge/Tests-1749%2F1749_passing-green)
 
 Ka0s Aura Master lets you build your own buff and debuff displays. Each one is a container. You pick
 whose auras it shows (yours, your target's, your focus's or your pet's), whether it shows buffs,
@@ -64,7 +64,8 @@ brings them back.
 
 Everything else is on the addon's page under Settings → AddOns, and `/am` on its own opens it.
 `/am help` (or `/auramaster help`) lists every command. `/am profile` lists your profiles, and
-`/am profile Raid` switches to the one called Raid.
+`/am profile Raid` switches to the one called Raid. `/am redraw` repaints every container if one
+drew wrong.
 
 ## How the containers work
 
@@ -117,6 +118,7 @@ on your own debuffs does nothing, and the Filters section warns you when that's 
 | A container attached to a frame is sitting somewhere else | The frame wasn't found, so the container fell back to its screen position. Check the name in **Frame name** (`/fstack` shows frame names), or pick the frame again. |
 | Blizzard's buff frame is still showing after I hid it | Blizzard's frames can't be moved during combat. The change goes through as soon as combat ends. |
 | My weapon enchants don't show | Enchants appear in a player buff container whose **Weapon enchants** row on Filters → Categories is set to Show (the default). `/am new enchants` makes a container that shows nothing else. You choose which weapon slots count under General → Spell Categories → Weapon enchants. Enchants that never expire are skipped while **Hide enchants without a duration** is on. |
+| A bar lost its name or its text looks wrong | Type `/am redraw`. `/am redraw light` repaints every container straight away, even in combat. `/am redraw full` also reloads the fonts and re-applies each container's styling; in combat or during an encounter, key or match that part waits, and chat says so. A bare `/am redraw` does the full one when it can and the light one when it can't. |
 | Chat says the client has no aura container API | Aura Master needs Retail patch 12.1 or later. |
 | A container vanished after I clicked the X on its handle | The X turns the container off. Tick its **Enabled** box on the Containers page to bring it back. Its settings were kept. |
 | Something looks wrong and I want to report it | Follow [Reporting a bug](#reporting-a-bug) below. |

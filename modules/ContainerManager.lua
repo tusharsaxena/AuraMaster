@@ -239,7 +239,8 @@ local function noteDeferred(edge, quiet)
 end
 
 --- A settings write outside the apply queue had to wait as well — a Blizzard-frame toggle under
---- lockdown, which BlizzardFrames.Apply catches up on PLAYER_REGEN_ENABLED (core/AuraMaster.lua).
+--- lockdown, which BlizzardFrames.Apply catches up on PLAYER_REGEN_ENABLED (core/AuraMaster.lua) —
+--- or `/am redraw full` queued its re-dress, a system request whose flush says nothing (SP-AMX-02).
 --- Say so under the same once-per-stretch rule, so one fight never prints the line twice.
 function CM.NoteDeferred()
     noteDeferred()
@@ -469,6 +470,52 @@ end
 local function cancelEnchantReset()
     if enchantTimer then enchantTimer:Cancel() end
     enchantTimer, enchantDue = nil, nil
+end
+
+-- ---------------------------------------------------------------------------
+-- /am redraw (SP-AMX-02)
+-- ---------------------------------------------------------------------------
+
+-- Two ways to repaint every container on demand, for a bar or a name that drew wrong and stayed
+-- wrong. LIGHT is the SP-AMX-01 flip on every live instance (ContainerClass:Flip): legal in combat
+-- and while auras are secret, so it runs now, in any state. FULL adds the font primer before it and
+-- one system apply of every container after it, which re-dresses every button in place (Apply ->
+-- Update -> Restyle: fonts, textures, labels, bindings). That apply is an ordinary queued request:
+-- while an apply must wait (CM.MustDefer) it waits for the flush on the edge that lifts the hold,
+-- and the verb says so after its own line with the usual deferral notice, once per blocked stretch
+-- (CM.NoteDeferred; settings/Slash.lua). Neither form retires or builds an engine: a rebuild would
+-- leak one engine frame per container per run, since frames are never freed. Each run writes one
+-- [Apply] line.
+
+--- Flip every live instance now. Answers how many were flipped.
+local function flipAll()
+    local n = 0
+    for _, inst in pairs(CM.instances) do
+        if inst:Flip() then n = n + 1 end
+    end
+    return n
+end
+
+--- `/am redraw light`: flip every live instance now. Answers how many were flipped.
+function CM.RedrawLight()
+    local n = flipAll()
+    if NS.Debug then NS.Debug("Apply", "redraw light: %d container(s) flipped", n) end
+    return n
+end
+
+--- `/am redraw full`: prime the fonts, flip every live instance now, and ask for one system apply of
+--- every container. Answers how many were flipped, and whether the re-apply has to wait (the caller
+--- then says so through CM.NoteDeferred). A stood-down addon does nothing (slash-commands-§7).
+function CM.RedrawFull()
+    if NS.IsStoodDown() then return 0, false end
+    if NS.FontPrimer then NS.FontPrimer.PrimeAll() end
+    local n = flipAll()
+    CM.RequestApply(nil, true)
+    local held = CM.MustDefer()
+    if NS.Debug then
+        NS.Debug("Apply", "redraw full: %d container(s) flipped, re-apply %s", n, held and "deferred" or "queued")
+    end
+    return n, held
 end
 
 -- ---------------------------------------------------------------------------

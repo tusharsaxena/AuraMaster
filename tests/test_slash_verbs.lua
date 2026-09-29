@@ -798,7 +798,7 @@ function()
     assertFalse(NS2.GetSetting("enabled"))
 
     for _, line in ipairs({ "new target debuffs icons", "delete " .. id, "lock", "unlock", "pick",
-                            "resetposition", "forgettimed" }) do
+                            "resetposition", "forgettimed", "redraw", "redraw full" }) do
         local p = slash(NS2, lines, line)
         -- IT SAID SO, on one line and one only: no partial work, no second line explaining the
         -- state to a player who is about to re-run the command anyway.

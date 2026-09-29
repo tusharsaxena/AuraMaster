@@ -439,7 +439,7 @@ test("disabled: every reserved verb answers, and the bare /am opens the panel", 
             refused[#refused + 1] = verb
         end
     end
-    assertEqual(table.concat(refused, ","), "new,delete,lock,unlock,test,pick,resetposition,forgettimed",
+    assertEqual(table.concat(refused, ","), "new,delete,lock,unlock,test,pick,resetposition,forgettimed,redraw",
         "exactly the feature verbs refuse")
 
     -- And `set` really wrote. The point of keeping the schema CLI live is repair, not politeness.
@@ -459,7 +459,7 @@ test("disabled: this addon's own feature verbs refuse on one line and reach no w
     -- This addon ADOPTS slash-commands-§2's SHOULD, so the suite pins that choice: a later pass that quietly let
     -- the feature verbs act would redden here rather than drift.
     for _, line in ipairs({ "new target debuffs icons", "delete " .. id, "lock", "unlock", "pick",
-                            "resetposition", "forgettimed" }) do
+                            "resetposition", "forgettimed", "redraw", "redraw light", "redraw full" }) do
         local p = slash(NS, lines, line)
         assertEqual(#p, 1, "/am " .. line .. " answered " .. dump(p))
         assertEqual(p[1], REFUSAL, "/am " .. line)

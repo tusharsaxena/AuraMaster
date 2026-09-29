@@ -785,6 +785,22 @@ badge and any count quoted in the docs must agree with it.
 - enchantreset: a stand-down cancels an armed reset and hears no trigger
 - enchantreset: a reset writes one [Apply] line naming its count and its trigger
 
+### test_redraw.lua (13)
+
+- redraw: /am redraw light flips every live container, enchant slots or not, and says how many
+- redraw: light is the flip alone: no rebuild, no apply, no font priming
+- redraw: light leaves a hidden, parked, stale or previewing container off
+- redraw: light runs under combat lockdown and while auras are secret, with no deferral notice
+- redraw: /am redraw full primes the fonts, flips now, then re-dresses every container in place
+- redraw: full in combat flips now and queues the re-dress with the combat notice
+- redraw: full while auras are secret names the restriction instead
+- redraw: the deferral notice keeps its once-per-stretch rule
+- redraw: a bare /am redraw runs full when nothing holds an apply, and says so
+- redraw: a bare /am redraw in combat or while secret runs light, says so, and queues nothing
+- redraw: the word is read in any case, and any other word prints the usage and flips nothing
+- redraw: while disabled every form refuses on one line and flips, primes and queues nothing
+- redraw: each run writes one [Apply] line naming the form and the count
+
 ### test_anchors_close.lua (6)
 
 - close: the X sits immediately left of the help mark, the catalog close glyph at the help mark's size
@@ -1301,7 +1317,7 @@ badge and any count quoted in the docs must agree with it.
 
 - slash: every command is a positional {name, desc, fn} triple
 - slash: the reserved verbs are all present
-- slash: NS.COMMANDS carries 24 verbs, profile right after resetall, diagnostics right after debug, and no diag verb
+- slash: NS.COMMANDS carries 25 verbs, profile right after resetall, redraw right after forgettimed, diagnostics right after debug, and no diag verb
 - slash: /am new creates the described container and selects it
 - slash: /am new text creates a text-style container
 - slash: /am new gives the new container the Fill its style suits (B5)
@@ -2005,6 +2021,7 @@ badge and any count quoted in the docs must agree with it.
 | test_emptywatch.lua | 25 |
 | test_fontprimer.lua | 32 |
 | test_enchantreset.lua | 23 |
+| test_redraw.lua | 13 |
 | test_anchors_close.lua | 6 |
 | test_anchors_label.lua | 23 |
 | test_anchors_strip.lua | 7 |
@@ -2058,4 +2075,4 @@ badge and any count quoted in the docs must agree with it.
 | test_eol.lua | 2 |
 | test_layout_cap.lua | 13 |
 | test_diagnostics_contract.lua | 7 |
-| **Total** | **1736** |
+| **Total** | **1749** |

@@ -69,7 +69,7 @@ applies these access restrictions from `PLAYER_ENTERING_WORLD`.
   button's first dressing has an unrestricted window. That build ignores aura secrecy (never combat
   lockdown): a `/reload` or relog mid-key logs in with auras already secret, and holding the build
   there left every container blank until the key ended (`FlushPending("startup")`,
-  `modules/ContainerManager.lua:313`).
+  `modules/ContainerManager.lua:314`).
 - **Defers every structural apply and restyle** while `Compat.AurasAreSecret()` or
   `InCombatLockdown()` is true (`ContainerManager.MustDefer`, `modules/ContainerManager.lua:214`),
   prints one notice, and flushes on `PLAYER_REGEN_ENABLED`, `PLAYER_ENTERING_WORLD` and
@@ -368,6 +368,13 @@ load only, 0.5 s later, after the engine's own retry). A trigger that comes whil
 the later deadline, so a burst of item events flips once. Both item events are lifecycle events, so a
 stand-down removes them, and it cancels an armed reset. Each reset writes one line,
 `[Apply] enchants reset on N container(s) after the loading screen` (or `after item data`).
+
+**By hand: `/am redraw` (SP-AMX-02).** `light` is the same flip on every live container, enchant
+slots or not (`ContainerClass:Flip`, which `ResetEnchants` calls), so it repaints aura bars as well
+as enchant names, and runs in combat and while auras are secret. `full` primes the fonts first and
+then asks for one system apply of every container, which re-dresses every button in place; that part
+is held like any apply while combat or aura secrecy lasts. Neither form retires or builds an engine:
+frames are never freed, so a rebuild per run would leak one engine frame per container.
 
 ## Combat state: which question to ask
 
