@@ -453,6 +453,7 @@ L["Light redraw: %d container(s) repainted"] = "Light redraw: %d container(s) re
 L["A full redraw has to wait right now, so a light one ran; /am redraw full queues the rest"] = "A full redraw has to wait right now, so a light one ran; /am redraw full queues the rest"
 L["Full redraw: fonts primed, %d container(s) repainted; the re-dress waits until it is allowed"] = "Full redraw: fonts primed, %d container(s) repainted; the re-dress waits until it is allowed"
 L["Full redraw: fonts primed, %d container(s) repainted, every container re-dressed"] = "Full redraw: fonts primed, %d container(s) repainted, every container re-dressed"
+L["Full redraw skipped: Aura Master is stood down while a perf capture runs"] = "Full redraw skipped: Aura Master is stood down while a perf capture runs"
 L["%s is unavailable: the LibKa0s library did not load."] = "%s is unavailable: the LibKa0s library did not load."
 L["v%s — slash commands"] = "v%s — slash commands"
 L["Unknown command '%s'"] = "Unknown command '%s'"

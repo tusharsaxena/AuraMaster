@@ -159,11 +159,14 @@ changes will apply when combat ends.` (unless that line already printed this fig
 `[Apply] applied M container(s)` with no error. Result:
 
 **SLASH-11. Bare redraw.** Out of combat, `/am redraw` → the `Full redraw: …` line of SLASH-10. In
-combat, `/am redraw` → `Light redraw: N container(s) repainted`, then `A full redraw has to wait right
-now, so a light one ran; /am redraw full queues the rest`, and no "will apply" notice. Inside a
-Mythic+ key or a boss encounter, out of combat between pulls → the same two lines. `/am disable`,
+combat, `/am redraw` → `Light redraw: N container(s) repainted`, then `A full redraw has to wait
+right now, so a light one ran; /am redraw full queues the rest`, and no "will apply" notice. Inside
+a Mythic+ key or a boss encounter, out of combat between pulls → the same two lines. `/am disable`,
 then `/am redraw`, `/am redraw light` and `/am redraw full` → each answers only `Ka0s Aura Master is
-disabled — enable it with /am enable`; `/am enable` after. Result:
+disabled — enable it with /am enable`; `/am enable` after. During the suspended arm of a perf
+capture (`/am perf measure b`), `/am redraw` and `/am redraw full` → `Full redraw skipped: Aura
+Master is stood down while a perf capture runs`, and `/am redraw light` → `Light redraw: 0
+container(s) repainted`. Result:
 
 ## Settings panel and launcher
 

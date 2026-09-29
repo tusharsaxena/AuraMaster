@@ -362,7 +362,8 @@ end
 -- primes the fonts, flips, and re-dresses every container through one system apply, which waits
 -- with the usual deferral notice while combat or aura secrecy holds applies (CM.RedrawFull). A bare
 -- `/am redraw` is full when nothing holds an apply right now, else light, and says a full one waits.
--- Each form's line names which ran.
+-- Each form's line names which ran. While a perf capture stands the addon down, full does nothing
+-- (CM.RedrawFull answers nil) and the line says so rather than claim a repaint.
 local REDRAW_WORDS = { light = true, full = true }
 
 function runRedraw(rest)
@@ -376,6 +377,7 @@ function runRedraw(rest)
         return
     end
     local n, waits = CM.RedrawFull()
+    if n == nil then return print(L["Full redraw skipped: Aura Master is stood down while a perf capture runs"]) end
     printf(waits and L["Full redraw: fonts primed, %d container(s) repainted; the re-dress waits until it is allowed"]
         or L["Full redraw: fonts primed, %d container(s) repainted, every container re-dressed"], n)
     -- The usual deferral notice, once per blocked stretch: the queued request is the addon's own, so

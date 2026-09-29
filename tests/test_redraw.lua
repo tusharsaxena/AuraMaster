@@ -18,6 +18,7 @@ local COMBAT_LINE = "Aura Master settings changes will apply when combat ends."
 local SECRET_LINE = "Aura Master settings changes will apply once aura information is available again (after the encounter, key or match)."
 local REFUSAL = "Ka0s Aura Master is disabled — enable it with /am enable"
 local HINT = "A full redraw has to wait right now, so a light one ran; /am redraw full queues the rest"
+local STOOD_DOWN = "Full redraw skipped: Aura Master is stood down while a perf capture runs"
 
 --- A fresh environment with its startup build flushed, and a chat capture.
 local function env()
@@ -52,7 +53,8 @@ local function marks(CM)
     local out = {}
     for id, inst in pairs(CM.instances) do
         local n = #out
-        out[n + 1] = { id = id, inst = inst, engine = inst.engine, from = #inst.engine.__calls }
+        local from = #inst.engine.__calls
+        out[n + 1] = { id = id, inst = inst, engine = inst.engine, from = from }
     end
     table.sort(out, function(a, b) return a.id < b.id end)
     return out
@@ -116,7 +118,8 @@ test("redraw: /am redraw light flips every live container, enchant slots or not,
         assertEqual(flips(m), "false,true", "container " .. m.id)
         assertTrue(m.engine.__enabled, "container " .. m.id .. " left enabled")
     end
-    assertEqual(dump(p), dump({ ("Light redraw: %d container(s) repainted"):format(#ms) }))
+    local want = ("Light redraw: %d container(s) repainted"):format(#ms)
+    assertEqual(dump(p), dump({ want }))
 end)
 
 test("redraw: light is the flip alone: no rebuild, no apply, no font priming", function()
@@ -200,7 +203,8 @@ test("redraw: /am redraw full primes the fonts, flips now, then re-dresses every
         assertTrue(m.inst.engine == m.engine, "container " .. m.id .. " keeps its engine")
         assertEqual(#m.inst.retired, 0, "nothing retired")
     end
-    assertEqual(dump(p), dump({ ("Full redraw: fonts primed, %d container(s) repainted, every container re-dressed"):format(#ms) }))
+    local want = ("Full redraw: fonts primed, %d container(s) repainted, every container re-dressed"):format(#ms)
+    assertEqual(dump(p), dump({ want }))
     NS.FontPrimer.PrimeAll = primeOrig
 end)
 
@@ -279,7 +283,8 @@ test("redraw: a bare /am redraw in combat or while secret runs light, says so, a
         -- red under: bare running full while held (a queued re-dress the player did not ask for)
         assertEqual(requests[1], 0, flag .. ": no apply requested")
         assertEqual(primes[1], 0, flag .. ": no priming")
-        assertEqual(dump(p), dump({ ("Light redraw: %d container(s) repainted"):format(#ms), HINT }), flag)
+        local want = ("Light redraw: %d container(s) repainted"):format(#ms)
+        assertEqual(dump(p), dump({ want, HINT }), flag)
     end
 end)
 
@@ -310,6 +315,24 @@ test("redraw: while disabled every form refuses on one line and flips, primes an
     for _, m in ipairs(ms) do assertEqual(flips(m), "", "container " .. m.id) end
     assertEqual(primes[1] + requests[1], 0, "nothing primed or requested")
     assertEqual(#mocks.__timers(), 0, "nothing armed")
+end)
+
+test("redraw: while a perf capture stands the addon down, full and bare say they were skipped, light repaints none", function()
+    local NS, _, CM, lines = env()
+    NS.lifecycle:Hold(NS.HOLD_PERF)
+    local ms = marks(CM)
+    local primes = spy(NS.FontPrimer, "PrimeAll")
+    local requests = spy(CM, "RequestApply")
+    for _, line in ipairs({ "redraw full", "redraw" }) do
+        local p = slash(NS, lines, line)
+        -- red under: a full redraw reporting fonts primed and every container re-dressed when none was
+        assertEqual(dump(p), dump({ STOOD_DOWN }), "/am " .. line)
+    end
+    local p = slash(NS, lines, "redraw light")
+    assertEqual(dump(p), "{Light redraw: 0 container(s) repainted}")
+    for _, m in ipairs(ms) do assertEqual(flips(m), "", "container " .. m.id) end
+    assertEqual(primes[1] + requests[1], 0, "nothing primed or requested")
+    NS.lifecycle:Release(NS.HOLD_PERF)
 end)
 
 test("redraw: each run writes one [Apply] line naming the form and the count", function()

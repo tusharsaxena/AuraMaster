@@ -6,7 +6,7 @@ eight-or-more trigger (documentation-§3).
 ## Registration and dispatch
 
 - **Registration** is AceConsole's `RegisterChatCommand`, twice, in `Slash.Register`
-  (`settings/Slash.lua:620`), called from `OnInitialize`. There is no `SLASH_*` global. It is
+  (`settings/Slash.lua:622`), called from `OnInitialize`. There is no `SLASH_*` global. It is
   **never torn down**, which is what makes `enable` and `disable` a pair rather than a one-way
   door: every verb still answers while the addon is disabled (slash-commands-§2). The chat command,
   the dispatcher and `NS.COMMANDS` are **setup, not features**, so the stand-down does not reach
@@ -58,7 +58,7 @@ eight-or-more trigger (documentation-§3).
 | 18 | `pick` | host | Starts `FramePicker` for the selected container; refused in combat |
 | 19 | `resetposition` | host | `ContainerManager.ResetPositions()` |
 | 20 | `forgettimed` | host | `TimedSpells.Forget()` |
-| 21 | `redraw [light\|full]` | host | `runRedraw`: `light` → `ContainerManager.RedrawLight()`, every live engine turned off and on again now (`ContainerClass:Flip`), in combat and while auras are secret too; `full` → `ContainerManager.RedrawFull()`, `FontPrimer.PrimeAll()`, the same flip, then `RequestApply(nil, true)`, whose apply re-dresses every button in place; when `CM.MustDefer()` holds, the line says the re-dress waits and `CM.NoteDeferred()` prints the usual deferral notice once per blocked stretch. Bare runs `full` unless `CM.MustDefer()` holds, then `light` plus a line saying a full one waits. Any other word prints `Usage: /am redraw [light\|full]`. No engine is retired or built (SP-AMX-02) |
+| 21 | `redraw [light\|full]` | host | `runRedraw`: `light` → `ContainerManager.RedrawLight()`, every live engine turned off and on again now (`ContainerClass:Flip`), in combat and while auras are secret too; `full` → `ContainerManager.RedrawFull()`, `FontPrimer.PrimeAll()`, the same flip, then `RequestApply(nil, true)`, whose apply re-dresses every button in place; when `CM.MustDefer()` holds, the line says the re-dress waits and `CM.NoteDeferred()` prints the usual deferral notice once per blocked stretch. Bare runs `full` unless `CM.MustDefer()` holds, then `light` plus a line saying a full one waits. While the addon is stood down (a perf capture's `perf` hold), `RedrawFull` answers nil and the line says the full redraw was skipped; `light` flips nothing and reports 0. Any other word prints `Usage: /am redraw [light\|full]`. No engine is retired or built (SP-AMX-02) |
 | 22 | `debug [on\|off\|diagnostics]` | host | Bare toggles the console window; `on`/`off` go through `NS.DebugLog:SetEnabled`; `diagnostics` runs `NS.DebugLog:RunDiagnostics` (`docs/debug.md`). Any other word, `diag` included, toggles the window: there is no `diag` alias (owner, 2026-09-25) |
 | 23 | `diagnostics` | host | `NS.DebugLog:RunDiagnostics()`, the one-shot diagnostic report in the debug console (`docs/debug.md`); the same report as `/am debug diagnostics` |
 | 24 | `perf …` | host | Prints the lines `NS.Perf.OnCommand(rest)` returns (performance-§4); `docs/performance.md` |
@@ -133,12 +133,12 @@ banner last chose, or `/am select`, or the first container when nothing has been
 (`NS.ActiveContainer`, `settings/Schema.lua:198`). So `/am set container.bars.width 300` means the
 same thing on the CLI as the Width slider does in the panel. Every `container.` line `/am list` and
 `/am get` print is annotated in gray with the container's name (`cli:SetRowAnnotator`,
-`settings/Slash.lua:581`), so a value never reads as the only one. `/am containers` then `/am select`
+`settings/Slash.lua:583`), so a value never reads as the only one. `/am containers` then `/am select`
 changes the target.
 
 A Filters category row (`printLabel`) prints the label the Categories grid shows, Show or Hide
 (schema v3), with the stored value `/am set` takes after it in gray: `Hide (hide)`. The descriptor's
-`format` hook (`formatValue`, `settings/Slash.lua:499`) does it; every other row prints as the
+`format` hook (`formatValue`, `settings/Slash.lua:501`) does it; every other row prints as the
 library formats it.
 
 Examples:
@@ -158,7 +158,7 @@ through the seam but have no row, so `/am list` does not print them; the Filters
 
 ## Degraded path
 
-With `LibKa0s-Slash-1.0` absent, `settings/Slash.lua:419` builds a stub dispatcher: the host verbs keep
+With `LibKa0s-Slash-1.0` absent, `settings/Slash.lua:421` builds a stub dispatcher: the host verbs keep
 working (they never went to the library), a bare `/am` runs `config` as the library's does (the panel's
 own stub then says the library is missing), `help` prints a plain command list, and `list`, `get`, `set`
 and `reset` each print the one library-absent line (`/am set is unavailable: the LibKa0s library did not

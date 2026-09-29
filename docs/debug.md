@@ -248,7 +248,8 @@ its own line when it fires: `[Apply] enchants reset on N container(s) after the 
 loading screen means the reset never ran; a line with `0` means no container qualified.
 `/am redraw` writes one `[Apply]` line per run as well: `redraw light: N container(s) flipped`, or
 `redraw full: N container(s) flipped, re-apply queued` (`deferred` when combat or aura secrecy holds
-the re-apply, followed by the queue's own `deferred:` line).
+the re-apply, followed by the queue's own `deferred:` line). A full redraw skipped because a perf
+capture stands the addon down writes no line.
 
 ## Caps
 

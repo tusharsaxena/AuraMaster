@@ -505,9 +505,10 @@ end
 
 --- `/am redraw full`: prime the fonts, flip every live instance now, and ask for one system apply of
 --- every container. Answers how many were flipped, and whether the re-apply has to wait (the caller
---- then says so through CM.NoteDeferred). A stood-down addon does nothing (slash-commands-§7).
+--- then says so through CM.NoteDeferred). A stood-down addon (a perf capture's hold) does nothing
+--- and answers nil, so the caller never reports work that did not run (slash-commands-§7).
 function CM.RedrawFull()
-    if NS.IsStoodDown() then return 0, false end
+    if NS.IsStoodDown() then return nil end
     if NS.FontPrimer then NS.FontPrimer.PrimeAll() end
     local n = flipAll()
     CM.RequestApply(nil, true)

@@ -785,7 +785,7 @@ badge and any count quoted in the docs must agree with it.
 - enchantreset: a stand-down cancels an armed reset and hears no trigger
 - enchantreset: a reset writes one [Apply] line naming its count and its trigger
 
-### test_redraw.lua (13)
+### test_redraw.lua (14)
 
 - redraw: /am redraw light flips every live container, enchant slots or not, and says how many
 - redraw: light is the flip alone: no rebuild, no apply, no font priming
@@ -799,6 +799,7 @@ badge and any count quoted in the docs must agree with it.
 - redraw: a bare /am redraw in combat or while secret runs light, says so, and queues nothing
 - redraw: the word is read in any case, and any other word prints the usage and flips nothing
 - redraw: while disabled every form refuses on one line and flips, primes and queues nothing
+- redraw: while a perf capture stands the addon down, full and bare say they were skipped, light repaints none
 - redraw: each run writes one [Apply] line naming the form and the count
 
 ### test_anchors_close.lua (6)
@@ -1919,7 +1920,7 @@ badge and any count quoted in the docs must agree with it.
 
 - prose: no authored file carries a British spelling from localization-§5's published list
 - prose: the gate carries localization-§5's two lists whole, and nothing of its own
-- prose: the exclusions this repository declared suppressed 11 of 184 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (11): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, docs/spell-research/2026-09-24-logs/CORRECTIONS.md, docs/spell-research/2026-09-24-logs/CURRENT_CATEGORIES.md, docs/spell-research/2026-09-24-logs/DECISIONS.md, docs/spell-research/2026-09-24-logs/FLAGS.md, docs/spell-research/2026-09-24-logs/PROPOSED_ADDITIONS.md, docs/spell-research/2026-09-24-logs/REVIEW.md, docs/spell-research/2026-09-24-logs/SOURCES.md, docs/spell-research/2026-09-24-logs/dictionary/AURAS.md
+- prose: the exclusions this repository declared suppressed 11 of 185 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (11): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, docs/spell-research/2026-09-24-logs/CORRECTIONS.md, docs/spell-research/2026-09-24-logs/CURRENT_CATEGORIES.md, docs/spell-research/2026-09-24-logs/DECISIONS.md, docs/spell-research/2026-09-24-logs/FLAGS.md, docs/spell-research/2026-09-24-logs/PROPOSED_ADDITIONS.md, docs/spell-research/2026-09-24-logs/REVIEW.md, docs/spell-research/2026-09-24-logs/SOURCES.md, docs/spell-research/2026-09-24-logs/dictionary/AURAS.md
 - prose: no path this repository narrows the gate by is loaded by a TOC
 - prose: every path this repository narrows the gate by is one .pkgmeta keeps out of the zip
 - prose self-test: the carve-out suppresses the named generated folder, and only it
@@ -2021,7 +2022,7 @@ badge and any count quoted in the docs must agree with it.
 | test_emptywatch.lua | 25 |
 | test_fontprimer.lua | 32 |
 | test_enchantreset.lua | 23 |
-| test_redraw.lua | 13 |
+| test_redraw.lua | 14 |
 | test_anchors_close.lua | 6 |
 | test_anchors_label.lua | 23 |
 | test_anchors_strip.lua | 7 |
@@ -2075,4 +2076,4 @@ badge and any count quoted in the docs must agree with it.
 | test_eol.lua | 2 |
 | test_layout_cap.lua | 13 |
 | test_diagnostics_contract.lua | 7 |
-| **Total** | **1749** |
+| **Total** | **1750** |
