@@ -14,7 +14,11 @@ local fresh = dofile("tests/fresh_env.lua")
 --- The console's lines since `from` (a buffer index), as written.
 local function since(NS, from)
     local out, buf = {}, NS.DebugLog.buffer
-    for i = (from or 0) + 1, #buf do out[#out + 1] = buf[i] end
+    local last = #buf
+    for i = (from or 0) + 1, last do
+        local n = #out
+        out[n + 1] = buf[i]
+    end
     return out
 end
 
