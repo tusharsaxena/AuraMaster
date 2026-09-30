@@ -545,15 +545,16 @@ end
 -- The dress
 -- ---------------------------------------------------------------------------
 
-local warned = {}
-
 --- The compiled template this element draws: the stored one, or the default when the stored one is
---- refused, which is said once per template in the debug log and never raised.
+--- refused, which is said once per template in the debug log and never raised. The once is the
+--- console's gate (DebugLog 18, DebugLogGates 1), keyed by the template: a Clear or turning logging on
+--- re-arms it, and a refusal met while logging is off is said when it is next met with it on.
 function Text.Compiled(s)
     local compiled, fellBack = TT.ForDraw(s.template)
-    if fellBack and not warned[tostring(s.template)] then
-        warned[tostring(s.template)] = true
-        if NS.Debug then NS.Debug("Style", "text template refused, drawing the default: %s", s.template) end
+    local Dl = fellBack and NS.DebugLog
+    if Dl and Dl.DebugOnce then
+        Dl.DebugOnce("Text.template." .. tostring(s.template), "Style",
+            "text template refused, drawing the default: %s", s.template)
     end
     return compiled
 end

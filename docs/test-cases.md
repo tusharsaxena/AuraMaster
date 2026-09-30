@@ -1494,9 +1494,23 @@ badge and any count quoted in the docs must agree with it.
 - coverage: the checkbox's test-mode start refused while disabled names the guard
 - coverage: a Blizzard-frame toggle held by combat writes its flush line once combat ends, and only then
 - coverage: test mode switched outside the seam says who switched it; the checkbox's row does not repeat its [Set] line
-- coverage: the stand-down and the stand-up are one [State] line each, naming the holds
+- coverage: the stand-down and the stand-up are one [Lifecycle] line each, the library's, naming the holds
 - coverage: a stand-down combat holds says so, and its finish after combat is traced
 - coverage: the [Init] line names a missing optional library and a stand-down, once per enable
+
+### test_debug_library_lines.lua (11)
+
+- library lines: an unknown verb is one [Cmd] refusal line in this addon's log
+- library lines: the disabled gate's refusal is one [Cmd] line, and no host line beside it
+- library lines: a get / set usage refusal names the verb and the guard
+- library lines: a stand-down and a stand-up are one [Lifecycle] line each, and no [State] edge line
+- library lines: a call that moves no edge writes no [Lifecycle] line
+- library lines: a write the combat lock refuses is one [Cfg] line per combat
+- library lines: the Launcher's dependency line, written at OnEnable with logging off, lands when logging is turned on, once
+- library lines: a caught error is said once, and again after a Clear
+- library lines: with logging off a caught error is not spent, so it is said once logging is on
+- library lines: the apply queue's hold trace is re-armed by a Clear (the onClear hook)
+- library lines: a screen fallback is said again after a Clear
 
 ### test_optionssetup.lua (17)
 
@@ -1942,7 +1956,7 @@ badge and any count quoted in the docs must agree with it.
 
 - prose: no authored file carries a British spelling from localization-§5's published list
 - prose: the gate carries localization-§5's two lists whole, and nothing of its own
-- prose: the exclusions this repository declared suppressed 11 of 186 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (11): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, docs/spell-research/2026-09-24-logs/CORRECTIONS.md, docs/spell-research/2026-09-24-logs/CURRENT_CATEGORIES.md, docs/spell-research/2026-09-24-logs/DECISIONS.md, docs/spell-research/2026-09-24-logs/FLAGS.md, docs/spell-research/2026-09-24-logs/PROPOSED_ADDITIONS.md, docs/spell-research/2026-09-24-logs/REVIEW.md, docs/spell-research/2026-09-24-logs/SOURCES.md, docs/spell-research/2026-09-24-logs/dictionary/AURAS.md
+- prose: the exclusions this repository declared suppressed 11 of 188 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (11): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, docs/spell-research/2026-09-24-logs/CORRECTIONS.md, docs/spell-research/2026-09-24-logs/CURRENT_CATEGORIES.md, docs/spell-research/2026-09-24-logs/DECISIONS.md, docs/spell-research/2026-09-24-logs/FLAGS.md, docs/spell-research/2026-09-24-logs/PROPOSED_ADDITIONS.md, docs/spell-research/2026-09-24-logs/REVIEW.md, docs/spell-research/2026-09-24-logs/SOURCES.md, docs/spell-research/2026-09-24-logs/dictionary/AURAS.md
 - prose: no path this repository narrows the gate by is loaded by a TOC
 - prose: every path this repository narrows the gate by is one .pkgmeta keeps out of the zip
 - prose self-test: the carve-out suppresses the named generated folder, and only it
@@ -2073,6 +2087,7 @@ badge and any count quoted in the docs must agree with it.
 | test_diagnostics.lua | 49 |
 | test_bulklog.lua | 20 |
 | test_debug_coverage.lua | 10 |
+| test_debug_library_lines.lua | 11 |
 | test_optionssetup.lua | 17 |
 | test_options_descriptor.lua | 18 |
 | test_pages_general.lua | 35 |
@@ -2101,4 +2116,4 @@ badge and any count quoted in the docs must agree with it.
 | test_eol.lua | 2 |
 | test_layout_cap.lua | 13 |
 | test_diagnostics_contract.lua | 9 |
-| **Total** | **1771** |
+| **Total** | **1782** |

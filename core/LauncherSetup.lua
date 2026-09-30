@@ -136,4 +136,8 @@ NS.Launcher = Launcher:New({
     -- core/AuraMaster.lua, which loads after this file.
     print = function(line) NS.Print(line) end,
     debug = function(tag, message) NS.Debug(tag, "%s", message) end,
+    -- Register's state lines (LibDataBroker / LibDBIcon absent, no minimap table, registered) run at
+    -- OnEnable, with logging off by design, so they go to the console's at-enable queue (Launcher 5,
+    -- DebugLogGates 1) and land the first time the player turns logging on (debug-logging-§8).
+    debugAtEnable = function(tag, message) NS.DebugLog.DebugAtEnable(tag, "%s", message) end,
 })

@@ -8,6 +8,7 @@
 -- own calls, and nothing below writes to the environment.
 
 local T = _G.AM_TEST
+local spyConsole = dofile("tests/console_spy.lua")
 local test, assertEqual, assertTrue, assertFalse, assertNil =
     T.test, T.assertEqual, T.assertTrue, T.assertFalse, T.assertNil
 local B = dofile("tests/region_builder.lua")
@@ -573,10 +574,10 @@ local function refusedRedress(region, method, times)
         end end
     end })
     NS.State.debug = true
-    NS.Debug = function(tag, fmt, ...)
+    spyConsole(NS, function(tag, fmt, ...)
         local n = #lines
         lines[n + 1] = tag .. ":" .. fmt:format(...)
-    end
+    end)
     local c = NS.Database.Merge(NS.Database.DeepCopy(NS.CONTAINER_TEMPLATE), { style = "text", text = {
         icon = "LEFT", iconSize = 14, iconGap = 2, iconBorderShow = true, iconBorderStyle = "Solid",
         iconBorderSize = 2 } })
@@ -713,14 +714,17 @@ end)
 test("text style: a refused stored template draws the default one and logs it once", function()
     local NS = E()
     local lines = {}
-    local debug = NS.Debug
-    NS.Debug = function(tag, fmt, ...)
+    -- The once is the console's gate now (DebugLog 18), gated as NS.Debug is: logging on for the case.
+    local was = NS.State.debug
+    NS.State.debug = true
+    local restore = spyConsole(NS, function(tag, fmt, ...)
         local n = #lines
         lines[n + 1] = tag .. ":" .. fmt:format(...)
-    end
+    end)
     local _, am = dressed(text({ template = "$broken$" }))
     dressed(text({ template = "$broken$" }))
-    NS.Debug = debug
+    restore()
+    NS.State.debug = was
     -- red under: Compiled handing the refusal to the dresser (a raise, or an element with no pieces)
     assertEqual(am.shape, NS.TextTemplate.Compile(NS.CONTAINER_TEMPLATE.text.template).shape)
     assertEqual(#lines, 1, "said once: " .. table.concat(lines, " | "))

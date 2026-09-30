@@ -277,25 +277,44 @@ and built behind the gate. A path that repeats (a timer, an event that fires thr
 priming on every settings write) writes only when what it reports has changed. The diagnostic
 report's own tags (`Diag`, `Cfg`, `Unit`, `Aura`, `Cont`, `Filt`, `Plan`, `Shown`) are above.
 
-| Tag | What writes it | When |
-|---|---|---|
-| `Debug`, `Init` | LibKa0s-DebugLog-1.0 (`core/DebugLogSetup.lua` supplies the summary) | Logging switched on or off. `[Init]` names the version, schema, profile and container count, then anything a healthy session lacks: rejected events, `LibSharedMedia-3.0 missing`, `no aura container API`, `stood down (holds: …)`. `[Init] event X rejected by this client` when a registration is refused |
-| `Event` | `core/AuraMaster.lua` | One line per `PLAYER_ENTERING_WORLD`, `LOADING_SCREEN_DISABLED`, `PLAYER_REGEN_DISABLED` / `_ENABLED` and `ADDON_RESTRICTION_STATE_CHANGED`, before the handler acts (the event trace above) |
-| `Apply` | `modules/ContainerManager.lua`, `modules/BlizzardFrames.lua` | `applied N container(s)` per apply pass that ran; `deferred: secret=… lockdown=… edge=… queued=…` when a hold starts or changes (a Blizzard-frame toggle made in combat included); `Blizzard frames applied after combat` when that held toggle lands; `container #id failed: <error>` once per distinct error an apply raised; the enchant reset and `/am redraw` lines |
-| `State` | `core/LifecycleSetup.lua` | The addon standing down (`/am disable`, a perf capture) and standing up, with the holds; `hiding held until combat ends` when combat refuses the stand-down's secure half, and `stand-down finished after combat` when it completes |
-| `Set` | `settings/Schema.lua` (the write seam), the bulk bracket, the profile callbacks, the user-category writes, `ContainerManager.CopyFrom` | Every stored setting (`<path> = <value>`), every refused one (`<path> refused: <reason>`), one line per bulk copy or reset, a refused copy (`copy … refused at <key>: <reason>`), profile reset and copy |
-| `Profile` | `core/AuraMaster.lua` | A profile switch |
-| `Containers` | `modules/ContainerManager.lua`, `settings/Slash.lua`, `settings/Containers.lua` | A container created or deleted; `create refused (in combat)`, `delete refused (in combat)` |
-| `Preview` | `modules/Preview.lua`, `settings/General.lua` | Test mode switched by `/am test` (or the launcher) or ended by combat, naming who; `test mode refused (in combat)`; `test mode refused (addon disabled)` when the Master controls checkbox asks while the addon is disabled (the seam's `[Set]` line after it records the request, not a stored value). The checkbox is a session row, so its `[Set]` line covers a switch it makes |
-| `Anchor` | `modules/Anchors.lua`, `modules/FramePicker.lua`, `settings/Layout.lua` | A container falling back to the screen, once until it lands again; the pending-frame resolve skipped under lockdown, once per fight while one waits; `resolved N pending frame target(s)`; a drag whose position read secret; `attach refused (in combat)`, `frame pick refused (in combat)` |
-| `Cfg` | LibKa0s-Options-1.0, `settings/OptionsSetup.lua` | The settings window opened; an open refused in combat (`open <page> refused (in combat)`) |
-| `Engine` | `modules/Container.lua` | An engine call that raised, once per distinct method and error |
-| `Style` | `modules/Style.lua`, `modules/Style_Text.lua` | A binding or a guarded dress that raised, once per distinct error; a Text template refused, once per template |
-| `Fonts` | `modules/FontPrimer.lua` | `primed N new font(s)`; `N font(s) refused` when the refused count changes; each loading screen's end with its timing |
-| `Timed` | `modules/TimedSpells.lua` | A scan that learned something (`learned N timed spell(s)`); `/am forgettimed` |
-| `Migrate` | `core/Database.lua`, `defaults/UserCategories.lua` | A schema migration step that ran, a seeded starter set, a stored user category skipped |
-| `Launcher` | LibKa0s-Launcher-1.0 | The launcher's own lines |
-| `Perf` | `core/PerfSetup.lua` | A perf capture's report, written ungated because the player asked for it |
+**Whose line it is.** The *Writer* column says who writes each tag. A **library** line is written by
+a LibKa0s module through the gated sink this addon hands its descriptor as `debug` (LibKa0s v1.65.0,
+debug-logging-§4): the Slash dispatcher's refusals (`Cmd`), the Lifecycle latch's edges
+(`Lifecycle`), the Options combat lock's refusals (`Cfg`), the Launcher's lines and the console's
+own (`Debug`, `Init`). This addon writes no second copy of any of them: its own stand-down and
+stand-up lines were retired when the library began writing the edge. The **host** lines are this
+addon's.
+
+**The change gates are the console's.** "Once" and "when it changes" (the `Anchor` fallback and
+lockdown skip, the `Fonts` refused count, a caught error, a refused Text template) are
+`NS.DebugLog.DebugOnce` / `DebugChanged` (DebugLog 18), so a **Clear** of the console, or turning
+logging on, re-arms them and the next pass says its line again. The one gate kept here, the apply
+queue's hold trace (it compares the hold, not the line, because the edge is in the line), is re-armed
+on Clear through the console descriptor's `onClear`. The Launcher's state lines, written at
+`OnEnable` while logging is off, are held by the console's at-enable queue and land just after the
+`[Init]` summary the first time logging is turned on.
+
+| Tag | Writer | What writes it | When |
+|---|---|---|---|
+| `Debug`, `Init` | library | LibKa0s-DebugLog-1.0 (`core/DebugLogSetup.lua` supplies the summary) | Logging switched on or off. `[Init]` names the version, schema, profile and container count, then anything a healthy session lacks: rejected events, `LibSharedMedia-3.0 missing`, `no aura container API`, `stood down (holds: …)`. `[Init] event X rejected by this client` when a registration is refused |
+| `Event` | host | `core/AuraMaster.lua` | One line per `PLAYER_ENTERING_WORLD`, `LOADING_SCREEN_DISABLED`, `PLAYER_REGEN_DISABLED` / `_ENABLED` and `ADDON_RESTRICTION_STATE_CHANGED`, before the handler acts (the event trace above) |
+| `Apply` | host | `modules/ContainerManager.lua`, `modules/BlizzardFrames.lua` | `applied N container(s)` per apply pass that ran; `deferred: secret=… lockdown=… edge=… queued=…` when a hold starts or changes (a Blizzard-frame toggle made in combat included); `Blizzard frames applied after combat` when that held toggle lands; `container #id failed: <error>` once per distinct error an apply raised; the enchant reset and `/am redraw` lines |
+| `Lifecycle` | library | LibKa0s-Lifecycle-1.0 (Lifecycle 3), through `core/LifecycleSetup.lua`'s descriptor | Each stand-down and stand-up edge (`/am disable`, `/am enable`, a perf capture), before the callback runs: `stood down: added <hold> (holds: <set>)`, `stood up: released <hold> (holds: none)`. A call that moves no edge writes nothing |
+| `State` | host | `core/LifecycleSetup.lua` | The stand-down's secure half only: `stand-down: hiding held until combat ends` when combat refuses it, and `stand-down finished after combat` when it completes (the edge itself is the `Lifecycle` line) |
+| `Cmd` | library | LibKa0s-Slash-1.0 (Slash 18), through `settings/Slash.lua`'s descriptor | Every refusal the dispatcher decides, after its chat line: `refused <verb>[ <arg>]: <guard>` for the disabled gate, an unknown verb, `get` / `set` / `reset` usage and not-found, a parse or write refusal, a reset with no default, and the `profile` verb's refusals (in combat among them). A verb's own refusal (`delete refused (in combat)`) is the host's line under its own tag |
+| `Set` | host | `settings/Schema.lua` (the write seam), the bulk bracket, the profile callbacks, the user-category writes, `ContainerManager.CopyFrom` | Every stored setting (`<path> = <value>`), every refused one (`<path> refused: <reason>`), one line per bulk copy or reset, a refused copy (`copy … refused at <key>: <reason>`), profile reset and copy |
+| `Profile` | host | `core/AuraMaster.lua` | A profile switch |
+| `Containers` | host | `modules/ContainerManager.lua`, `settings/Slash.lua`, `settings/Containers.lua` | A container created or deleted; `create refused (in combat)`, `delete refused (in combat)` |
+| `Preview` | host | `modules/Preview.lua`, `settings/General.lua` | Test mode switched by `/am test` (or the launcher) or ended by combat, naming who; `test mode refused (in combat)`; `test mode refused (addon disabled)` when the Master controls checkbox asks while the addon is disabled (the seam's `[Set]` line after it records the request, not a stored value). The checkbox is a session row, so its `[Set]` line covers a switch it makes |
+| `Anchor` | host | `modules/Anchors.lua`, `modules/FramePicker.lua`, `settings/Layout.lua` | A container falling back to the screen, once until it lands again (or the console is cleared); the pending-frame resolve skipped under lockdown, once per fight while one waits; `resolved N pending frame target(s)`; a drag whose position read secret; `attach refused (in combat)`, `frame pick refused (in combat)` |
+| `Cfg` | library, host | LibKa0s-Options-1.0 (Options 27); `settings/OptionsSetup.lua` | The library's: the settings window opened, `open refused (in combat)`, and each act the combat lock refuses on an open panel, once per combat (`write <path>`, `defaults <page>`, `tab <key>`, `button <text>` … `refused (in combat)`), `register parked (in combat)` and `register flushed (combat ended)`. The host's: a page open refused in combat (`open <page> refused (in combat)`) |
+| `Engine` | host | `modules/Container.lua` | An engine call that raised, once per distinct method and error |
+| `Style` | host | `modules/Style.lua`, `modules/Style_Text.lua` | A binding or a guarded dress that raised, once per distinct error; a Text template refused, once per template |
+| `Fonts` | host | `modules/FontPrimer.lua` | `primed N new font(s)`; `N font(s) refused` when the refused count changes; each loading screen's end with its timing |
+| `Timed` | host | `modules/TimedSpells.lua` | A scan that learned something (`learned N timed spell(s)`); `/am forgettimed` |
+| `Migrate` | host | `core/Database.lua`, `defaults/UserCategories.lua` | A schema migration step that ran, a seeded starter set, a stored user category skipped |
+| `Launcher` | library | LibKa0s-Launcher-1.0 (Launcher 5), through `core/LauncherSetup.lua`'s descriptor | Its state lines (`LibDataBroker-1.1 absent`, `LibDBIcon-1.0 absent`, no minimap table, `registered`) through the at-enable queue, so they land after `[Init]` the first time logging is turned on; its events at once |
+| `Perf` | host | `core/PerfSetup.lua` | A perf capture's report, written ungated because the player asked for it |
 
 Left out on purpose: target, focus and pet swaps, `ADDON_LOADED`, the item-data events (above), each
 `UNIT_AURA` pass of the empty prediction and the timed-spell scan (quiet unless a scan learns

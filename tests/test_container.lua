@@ -5,6 +5,7 @@
 -- nothing touched while auras are secret.
 
 local T = _G.AM_TEST
+local spyConsole = dofile("tests/console_spy.lua")
 local test, assertEqual, assertTrue, assertFalse, assertNil =
     T.test, T.assertEqual, T.assertTrue, T.assertFalse, T.assertNil
 local fresh = dofile("tests/fresh_env.lua")
@@ -564,10 +565,10 @@ test("container: an engine call that raises is traced, and the build carries on 
     local NS, mocks = fresh()
     NS.State.debug = true
     local lines = {}
-    NS.Debug = function(tag, fmt, ...)
+    spyConsole(NS, function(tag, fmt, ...)
         local n = #lines
         lines[n + 1] = "[" .. tag .. "] " .. fmt:format(...)
-    end
+    end)
     refusing(mocks, "AddAuraGroup", function() return true end)
     local id = NS.ContainerManager.Create({})
     mocks.__fireTimers()
@@ -601,10 +602,10 @@ test("container: a re-dress that raises is reported, a debug line and the client
         end end
     end })
     NS.State.debug = true
-    NS.Debug = function(tag, fmt, ...)
+    spyConsole(NS, function(tag, fmt, ...)
         local n = #lines
         lines[n + 1] = "[" .. tag .. "] " .. fmt:format(...)
-    end
+    end)
     local inst = NS.ContainerManager.instances[1]
     local cfg = inst:Cfg()
     inst.engine.__frames.g1 = { mocks.__stubFrame(), mocks.__stubFrame() }

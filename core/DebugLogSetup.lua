@@ -12,24 +12,25 @@ local addonName, NS = ...
 
 local lib = LibStub and LibStub("LibKa0s-DebugLog-1.0", true)
 
--- Keys NS.DebugOnce has logged this session: the tag, the site and the error's first line.
-local loggedOnce = {}
-
 --- An error a pcall of ours caught, logged ONCE per distinct error (debug-logging-§8, "Errors
 --- caught"): `[<tag>] <site> failed: <first line>`, or `<site> #<id> failed: ...` with an `id`. A
 --- guarded call on a repeating path (a restyle of forty buttons, a refresh on every target swap)
 --- that keeps failing the same way writes one line, not one per pass (§9). Gated first: with logging
 --- off it builds and records nothing, so an error first met then is logged once logging is on.
+---
+--- THE GATE IS THE CONSOLE'S (DebugLog 18, DebugLogGates 1): `D.DebugOnce` keeps the key, so a
+--- Clear or turning logging on re-arms it and the error is said again to a reader starting over.
+--- This wrapper only builds the key (the tag, the site, the id and the error's first line) and the
+--- line's shape. Looked up at call time: NS.DebugLog is built below, after this definition.
 function NS.DebugOnce(tag, site, err, id)
-    if not (NS.State and NS.State.debug and NS.Debug) then return end
+    local D = NS.DebugLog
+    if not (D and D.DebugOnce and D:IsEnabled()) then return end
     local first = tostring(err):match("^[^\n]*")
     local key = ("%s|%s|%s|%s"):format(tostring(tag), tostring(site), tostring(id), first)
-    if loggedOnce[key] then return end
-    loggedOnce[key] = true
     if id ~= nil then
-        NS.Debug(tag, "%s #%s failed: %s", site, id, first)
+        D.DebugOnce(key, tag, "%s #%s failed: %s", site, id, first)
     else
-        NS.Debug(tag, "%s failed: %s", site, first)
+        D.DebugOnce(key, tag, "%s failed: %s", site, first)
     end
 end
 
@@ -51,6 +52,12 @@ if not lib then
         buffer = {},
         Add             = function() end,
         Debug           = function() end,
+        -- The console's change gates and at-enable queue (DebugLog 18, DebugLogGates 1): gated off
+        -- with no console, so each answers false, as the library does with logging off.
+        DebugOnce       = function() return false end,
+        DebugChanged    = function() return false end,
+        DebugForget     = function() end,
+        DebugAtEnable   = function() return false end,
         Clear           = function() end,
         Show            = function() sayOnce() end,
         Hide            = function() end,
@@ -174,6 +181,13 @@ NS.DebugLog = lib:New({
         local notes = initNotes()
         if notes[1] then line = line .. ", " .. table.concat(notes, ", ") end
         return line
+    end,
+
+    -- The one change gate this addon keeps of its own, the apply queue's hold trace (its memory is
+    -- the hold's state, not its line: see modules/ContainerManager.lua's traceHold), re-armed here so
+    -- a Clear starts it over as it does the console's own gates (DebugLog 18).
+    onClear = function()
+        if NS.ContainerManager and NS.ContainerManager.RearmHoldTrace then NS.ContainerManager.RearmHoldTrace() end
     end,
 
     -- The Master controls tab's console row mirrors the window, so `/am debug` has to move the
