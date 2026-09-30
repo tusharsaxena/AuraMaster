@@ -129,7 +129,7 @@ on your own debuffs does nothing, and the Filters section warns you when that's 
 - Type `/am diagnostics`.
 - If the debug window isn't open, open it with `/am debug`. Press **Copy**, copy the entire output, and include it with your bug report.
 
-The diagnostics report goes in after the debug trace in the same window, so one copy gets you both.
+The report is added after the debug trace in the same window, so one copy carries both.
 
 ## Issues and feature requests
 
