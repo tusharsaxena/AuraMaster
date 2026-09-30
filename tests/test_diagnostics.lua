@@ -433,6 +433,45 @@ test("diag: predictions come from ExplainSpell over the unit's readable auras", 
     assertTrue(has(lines, "[Shown] #2 predicted: 774") == nil, dump(lines))
 end)
 
+test("diag: predictions apply the cast-by and duration gates before the category verdict", function()
+    local NS, mocks = fresh()
+    mocks.__spells[1459] = { name = "Arcane Intellect", iconID = 1 }
+    mocks.__spells[21562] = { name = "Power Word: Fortitude", iconID = 1 }
+    withAuras(mocks, { ["player:HELPFUL"] = {
+        aura(1, 774, "Rejuvenation", { duration = 12 }),
+        aura(2, 1459, "Arcane Intellect", { duration = 0 }),
+        aura(3, 21562, "Power Word: Fortitude", { duration = 3600, isFromPlayerOrPlayerPet = false }),
+    } })
+    local f = NS.Database.FindContainer(1).filter
+    f.durationMode, f.maxDuration = "timed", 30
+    local lines = build(NS)
+    -- red under: predictions reading ExplainSpell alone (all three predicted shown by category)
+    assertTrue(has(lines, "[Shown] #1 predicted: 774 Rejuvenation -> shown") ~= nil, dump(lines))
+    assertTrue(has(lines, "[Shown] #1 predicted: 1459 Arcane Intellect -> hidden (permanent") ~= nil, dump(lines))
+    assertTrue(has(lines, "[Shown] #1 predicted: 21562 Power Word: Fortitude -> hidden (duration 3600s > max 30s)")
+        ~= nil, dump(lines))
+    f.durationMode, f.maxDuration, f.castBy = "any", 0, "mine"
+    lines = build(NS)
+    assertTrue(has(lines, "[Shown] #1 predicted: 21562 Power Word: Fortitude -> hidden (cast by others)") ~= nil,
+        dump(lines))
+    assertTrue(has(lines, "[Shown] #1 predicted: 1459 Arcane Intellect -> shown") ~= nil, dump(lines))
+    f.castBy = "others"
+    lines = build(NS)
+    assertTrue(has(lines, "[Shown] #1 predicted: 774 Rejuvenation -> hidden (cast by you)") ~= nil, dump(lines))
+end)
+
+test("diag: a secret duration or source passes its gate instead of guessing", function()
+    local NS, mocks = fresh()
+    mocks.issecretvalue = function(v) return rawequal(v, mocks.__SECRET) end
+    withAuras(mocks, { ["player:HELPFUL"] = {
+        aura(1, 774, "Rejuvenation", { duration = mocks.__SECRET, isFromPlayerOrPlayerPet = mocks.__SECRET }),
+    } })
+    local f = NS.Database.FindContainer(1).filter
+    f.durationMode, f.maxDuration, f.castBy = "timed", 30, "others"
+    local lines = build(NS)
+    assertTrue(has(lines, "[Shown] #1 predicted: 774 Rejuvenation -> shown") ~= nil, dump(lines))
+end)
+
 -- ── secret-safe button reads and isolation (batch 9 DX-1) ─────────────────────────────────────
 
 --- A secret BOOLEAN, the value an engine button's IsShown answers out of combat (B9 Problem D). Lua

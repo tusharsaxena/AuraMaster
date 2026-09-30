@@ -687,8 +687,37 @@ local function explainText(result)
     return str(result.verdict) .. " (rank " .. str(result.rank) .. " " .. why .. ")"
 end
 
---- The PREDICTED verdict for every readable aura on the container's unit and type. Approximate:
---- ExplainSpell reasons about spell-list categories only; the engine decides the rest.
+--- The container's cast-by and duration gates, checked against one aura's readable fields the way
+--- modules/FilterCompiler.lua compiles them (baseFor, applyDuration). Returns the hidden verdict when
+--- a gate drops the aura, else nil. A secret or absent field passes its gate: unknown is not proof.
+--- Timeless mode is left to the category verdict, since it filters by learned spell ids, not by duration.
+local function castGate(f, a)
+    local mine = a.isFromPlayerOrPlayerPet
+    if type(mine) ~= "boolean" or not NS.Secrets.CanAccess(mine) then return nil end
+    if f.castBy == "mine" and not mine then return "hidden (cast by others)" end
+    if f.castBy == "others" and mine then return "hidden (cast by you)" end
+    return nil
+end
+
+local function durationGate(c, f, a)
+    local mode, max = f.durationMode, tonumber(f.maxDuration) or 0
+    if mode == "timeless" and c.auraType == "HELPFUL" then return nil end
+    if max <= 0 and mode ~= "timed" then return nil end
+    local d = a.duration
+    if not NS.Secrets.IsReadableNumber(d) then return nil end
+    if d <= 0 then return "hidden (permanent, duration filter)" end
+    if max > 0 and d > max then return ("hidden (duration %gs > max %gs)"):format(d, max) end
+    return nil
+end
+
+local function gateVerdict(c, a)
+    local f = c.filter or {}
+    return castGate(f, a) or durationGate(c, f, a)
+end
+
+--- The PREDICTED verdict for every readable aura on the container's unit and type: the cast-by and
+--- duration gates first (gateVerdict), then ExplainSpell's spell-list category verdict. Approximate:
+--- the engine still decides sorting and maxAuras.
 local function predictions(out, x)
     local c = x.c
     if not unitExists(c.unit) then return end
@@ -704,7 +733,7 @@ local function predictions(out, x)
             end
             listed = listed + 1
             out:add("Shown", "#%s predicted: %s %s -> %s", x.id, id, spellName(id),
-                explainText(FC.ExplainSpell(c, id, ctx)))
+                gateVerdict(c, a) or explainText(FC.ExplainSpell(c, id, ctx)))
         end
     end
 end

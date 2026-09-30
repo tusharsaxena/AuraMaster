@@ -186,9 +186,13 @@ While the addon is not running, the header adds one plain line after the state f
   by the name or icon our own regions display, and `id=?` when neither can be read (an Icons
   container shows no name).
 - `id=? (probe failed: ...)` means reading the button raised; the report goes on.
-- `predicted` runs `FilterCompiler.ExplainSpell` over each readable aura. It is approximate: it
-  reasons only about spell-list categories and the whitelist and blacklist. Cast by, duration,
-  token, flag and dispel categories, and the friend or foe id rule, are decided by the engine.
+- `predicted` first checks each readable aura against the container's cast-by and duration
+  settings (`hidden (cast by others)`, `hidden (cast by you)`, `hidden (permanent, duration
+  filter)`, `hidden (duration 3600s > max 30s)`); an aura that passes both gets
+  `FilterCompiler.ExplainSpell`'s spell-list category verdict. A secret source or duration passes
+  its check rather than guess, and Timeless mode is left to the category verdict. It stays
+  approximate: token, flag and dispel categories, the friend or foe id rule, sorting and the aura
+  cap are decided by the engine.
 
 ### `non-default:` and `inert:`
 
