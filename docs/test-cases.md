@@ -143,7 +143,7 @@ badge and any count quoted in the docs must agree with it.
 - v5: the profile's retired dispelColors.None leaf is cleared (feedback #7)
 - database: GetContainersByName sorts by name, case-insensitively, the id breaking a tie; display order untouched (B2-2)
 
-### test_database_categories.lua (22)
+### test_database_categories.lua (24)
 
 - v6: MigrateV6 stamps the user-category store, and a second run changes nothing
 - v6: a profile that predates user categories climbs the ladder and stays valid
@@ -154,6 +154,8 @@ badge and any count quoted in the docs must agree with it.
 - user categories: one round-trips through a reload, with its spells
 - user categories: the sync runs BEFORE PrepareProfile, so a stored one reaches every container
 - user categories: the schema row resolves, and the seam reads and writes it per container
+- user categories: a new one starts hidden in every existing container, shown in a container made after it
+- user categories: creating one never overwrites a state a container already holds for its key
 - user categories: Cat.AuraTypeOf answers for a user category KEY, not only for its definition
 - user categories: a profile switch swaps the set and leaves no stale definition, row or template key
 - user categories: a new key collides with nothing shipped and with nothing in any stored profile
@@ -1483,12 +1485,14 @@ badge and any count quoted in the docs must agree with it.
 - bulklog: Bulk.Run stays silent only when its act sets info.profileReset, the profile reset's signal
 - bulklog: a library Defaults a row's onChange stops counts the write it stored
 
-### test_debug_coverage.lua (8)
+### test_debug_coverage.lua (10)
 
 - coverage: a held apply is traced once while the hold lasts, however many edges flush it (quiet steady state)
 - coverage: with logging off a hold builds and records nothing, so turning logging on traces it
 - coverage: a container apply that raises is one [Apply] line per distinct error, naming the container
 - coverage: every combat refusal writes one line naming the guard
+- coverage: the checkbox's test-mode start refused while disabled names the guard
+- coverage: a Blizzard-frame toggle held by combat writes its flush line once combat ends, and only then
 - coverage: test mode switched outside the seam says who switched it; the checkbox's row does not repeat its [Set] line
 - coverage: the stand-down and the stand-up are one [State] line each, naming the holds
 - coverage: a stand-down combat holds says so, and its finish after combat is traced
@@ -2019,7 +2023,7 @@ badge and any count quoted in the docs must agree with it.
 | test_setups.lua | 14 |
 | test_launcher.lua | 30 |
 | test_database.lua | 73 |
-| test_database_categories.lua | 22 |
+| test_database_categories.lua | 24 |
 | test_migrations.lua | 28 |
 | test_schema.lua | 38 |
 | test_schema_paths.lua | 38 |
@@ -2066,7 +2070,7 @@ badge and any count quoted in the docs must agree with it.
 | test_slash_verbs.lua | 51 |
 | test_diagnostics.lua | 49 |
 | test_bulklog.lua | 20 |
-| test_debug_coverage.lua | 8 |
+| test_debug_coverage.lua | 10 |
 | test_optionssetup.lua | 17 |
 | test_options_descriptor.lua | 18 |
 | test_pages_general.lua | 35 |
@@ -2095,4 +2099,4 @@ badge and any count quoted in the docs must agree with it.
 | test_eol.lua | 2 |
 | test_layout_cap.lua | 13 |
 | test_diagnostics_contract.lua | 7 |
-| **Total** | **1765** |
+| **Total** | **1769** |

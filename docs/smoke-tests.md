@@ -883,10 +883,12 @@ under the rename box and in chat says it was created, empty, and where to set it
 list is empty, and there is no Restore button on the picker's line. Result:
 
 **FILT-32. It is a real category everywhere.** Filters → Categories on the buff container → the Spell
-Categories grid holds **Cooldowns I watch (yours)** with Show lit, after the shipped lists and above
-**Weapon enchants** and **Uncategorized** (still last). `/am list` shows the row (no `(yours)`), and
-`/am get container.filter.categories.user…` answers **Show**. The debuff container's grid has no such
-row. Result:
+Categories grid holds **Cooldowns I watch (yours)** with **Hide** lit (a new category starts hidden
+in every container that already existed), after the shipped lists and above **Weapon enchants** and
+**Uncategorized** (still last). `/am list` shows the row (no `(yours)`), and
+`/am get container.filter.categories.user…` answers **Hide**. The debuff container's grid has no such
+row. Make a new player-buff container → its grid shows the category with **Show** lit; delete it
+again. Result:
 
 **FILT-33. It filters.** Add a buff you can cast on yourself to it. On the buff container Hide every
 other category (Hide all on both grids, then this one back to Show) → cast the buff → it is drawn,
