@@ -249,7 +249,7 @@ local function templatePicker(cfg, id)
         order[n + 1] = CUSTOM
         list[CUSTOM] = L["Custom"]
         local s = cfg.text or {}
-        local dd = NS.AceGUI:Create("Dropdown")
+        local dd = NS.CreateDropdown()
         dd:SetLabel(L["Template"])
         dd:SetList(list, order)
         dd:SetValue(isCustom(cfg, id) and CUSTOM or TT.MatchBuiltin(cfg.auraType, s.template, s.justifyH or D.justifyH))

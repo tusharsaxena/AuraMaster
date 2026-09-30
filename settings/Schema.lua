@@ -89,6 +89,7 @@ NS.SchemaRuntime = S
 
 local CONTAINER = "container"
 local L = NS.L
+local C = NS.Constants
 local NO_CONTAINER = L["No container exists yet — create one on Containers."]
 
 -- THE MINIMAP ROW IS THE ONE PATH THAT IS NOT THE PROFILE'S (launcher-§3).
@@ -321,6 +322,10 @@ function NS.RegisterSchemaRows(rows, beforePath)
             if d == nil then d = row.nilAs end
             if d ~= nil then row.default = d end
         end
+        -- Every list row draws through the addon's own left-justified dropdown. The library falls
+        -- back to the stock Dropdown while the type is unregistered (the headless kit, or before
+        -- NS.RegisterDropdownWidget ran). A row that names its own control (EditBox, LSM30_*) keeps it.
+        if row.values ~= nil and row.dialogControl == nil then row.dialogControl = C.DROPDOWN_WIDGET end
     end
     if S then
         S.AddRows(rows, at)   -- `at` nil appends; AddRows re-indexes
@@ -952,10 +957,17 @@ end
 -- ---------------------------------------------------------------------------
 
 --- An ordered `{ value, text }` list from one of core/Constants.lua's key arrays and its labels,
---- localized. The ordered-array shape keeps the declared order in the dropdown.
-function NS.Choices(keys, labels)
+--- localized. The ordered-array shape keeps the declared order in the dropdown. `colors`, when
+--- given, maps a key to the AARRGGBB body of a "|c" escape its text is drawn in; the CLI accepts and
+--- lists the VALUE, never the text, so the escape reaches only what is drawn.
+function NS.Choices(keys, labels, colors)
     local out = {}
-    for i, k in ipairs(keys) do out[i] = { value = k, text = L[labels[k] or tostring(k)] } end
+    for i, k in ipairs(keys) do
+        local text = L[labels[k] or tostring(k)]
+        local color = colors and colors[k]
+        if type(color) == "string" and color ~= "" then text = "|c" .. color .. text .. "|r" end
+        out[i] = { value = k, text = text }
+    end
     return out
 end
 

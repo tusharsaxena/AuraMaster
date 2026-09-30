@@ -89,7 +89,7 @@ local function maxDurationPresets(_, line)
     end
     local cfg, id = NS.ActiveContainer()
     local stored = cfg and cfg.filter and cfg.filter.maxDuration
-    local dd = NS.AceGUI:Create("Dropdown")
+    local dd = NS.CreateDropdown()
     dd:SetLabel(L["Preset"])
     dd:SetList(list, order)
     -- A stored value with no matching preset stays unset (list[stored] == nil): the dropdown shows

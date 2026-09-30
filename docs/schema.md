@@ -141,7 +141,7 @@ backfills it onto every stored container, so it needs no schema step.
 | `expiringThreshold` | `5` | `expiringColor` | `{ 1, 0.25, 0.25, 1 }` |
 | `pandemic` | `false` | `pandemicColor` | `{ 1, 0.85, 0.10, 1 }` |
 
-The profile's `dispelColors` defaults (`C.DEFAULT_DISPEL_COLORS`, `core/Constants.lua:188`): Magic `{0.20, 0.60, 1.00}`, Curse `{0.60, 0.00, 1.00}`, Disease
+The profile's `dispelColors` defaults (`C.DEFAULT_DISPEL_COLORS`, `core/Constants.lua:200`): Magic `{0.20, 0.60, 1.00}`, Curse `{0.60, 0.00, 1.00}`, Disease
 `{0.60, 0.40, 0.00}`, Poison `{0.00, 0.60, 0.00}`,
 Bleed `{0.80, 0.10, 0.10}`, all alpha 1. An aura
 with no dispel type takes the surface's own color instead (feedback #7); schema v5 clears a stored
@@ -234,7 +234,7 @@ player's own; **the schema is a live table, not a frozen one**, and each user ca
 it in schema order, `NS.UnregisterSchemaRows(pred)` takes it down again on a profile switch, and
 `NS.Schema` is rebuilt in place so the live reference the options descriptor and the CLI hold stays
 the same table — the rest of this file). It drives the panel,
-`/am list|get|set|reset` and the resets; one write seam, `NS.SetByPath` (`settings/Schema.lua:865`),
+`/am list|get|set|reset` and the resets; one write seam, `NS.SetByPath` (`settings/Schema.lua:870`),
 is where the panel, the CLI, the Defaults buttons and a drag handle all land. It resolves the
 container, validates against it, runs the row's optional `normalize` hook, writes, reacts and
 announces, in that order.
@@ -380,7 +380,7 @@ A schema row's `path` is absolute into `profile` (`enabled`, `hideBlizzardBuffs`
 `global` — which **one** row is, `global.minimap.shown` — or
 **container-relative**: `container.bars.width` means `profile.containers[activeId].bars.width`,
 where `activeId` is `NS.State.activeContainerId` or, when nothing is selected, the first container in
-`containerOrder` (`NS.ActiveContainer`, `settings/Schema.lua:198`). `NS.DefaultFor(path)` reads the
+`containerOrder` (`NS.ActiveContainer`, `settings/Schema.lua:199`). `NS.DefaultFor(path)` reads the
 same path out of the template (for `container.` paths) or `NS.defaults.profile` (the rest), and
 `NS.ValidateSchema` fails any row whose path resolves against neither. The panel tree and the row
 list per page are in `docs/settings-panel.md`.

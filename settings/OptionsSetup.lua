@@ -51,6 +51,50 @@ local function vetoedFromResetAll(row)
     return not row.sessionOnly
 end
 
+-- ---------------------------------------------------------------------------
+-- The addon's dropdown
+-- ---------------------------------------------------------------------------
+
+-- WHY A TYPE OF ITS OWN. The stock Dropdown's closed box is the Blizzard UIDropDownMenuTemplate's
+-- `$parentText`, which AceGUI adopts without ever justifying it, and AceGUI pools widgets by type
+-- name across every addon loaded. So one caller that justifies a stock Dropdown LEFT hands that
+-- justification to whichever panel is given the widget next: the Unit box read left on one opening
+-- and right on the next (owner, 2026-09-30). A second type name is a second pool: every widget in
+-- it is ours, justified LEFT on every acquire, and none ever returns to the stock pool.
+local DROPDOWN_WIDGET = NS.Constants.DROPDOWN_WIDGET
+
+--- Register the addon's left-justified Dropdown over the stock one `AceGUI` holds now. A no-op when
+--- the stock constructor or its version cannot be read (the headless kit), in which case
+--- NS.CreateDropdown and every schema row fall back to the stock type.
+--- @param AceGUI table
+function NS.RegisterDropdownWidget(AceGUI)
+    local registry = type(AceGUI) == "table" and AceGUI.WidgetRegistry
+    local base = type(registry) == "table" and registry.Dropdown
+    local version = type(base) == "function" and AceGUI.GetWidgetVersion and AceGUI:GetWidgetVersion("Dropdown")
+    if type(version) ~= "number" then return end
+    AceGUI:RegisterWidgetType(DROPDOWN_WIDGET, function()
+        local w = base()
+        w.type = DROPDOWN_WIDGET              -- released into this type's pool, never the stock one
+        local acquire = w.OnAcquire
+        w.OnAcquire = function(self)
+            if acquire then acquire(self) end
+            local fs = self.text
+            if type(fs) == "table" and fs.SetJustifyH then fs:SetJustifyH("LEFT") end
+        end
+        return w
+    end, version)
+end
+
+--- A dropdown for the addon's own hand-built controls: the addon's type once registered, the stock
+--- one otherwise.
+function NS.CreateDropdown()
+    local AceGUI = NS.AceGUI
+    if AceGUI.GetWidgetVersion and AceGUI:GetWidgetVersion(DROPDOWN_WIDGET) then
+        return AceGUI:Create(DROPDOWN_WIDGET)
+    end
+    return AceGUI:Create("Dropdown")
+end
+
 local lib = LibStub and LibStub("LibKa0s-Options-1.0", true)
 
 --- What the PANEL shows for `path`. A row may carry `panelGet()`, answering the value to show in
@@ -136,7 +180,10 @@ local descriptor = {
     scheduleTimer = function(fn, delay) return NS.addon:ScheduleTimer(fn, delay) end,
     getLSM        = function() return LibStub("LibSharedMedia-3.0", true) end,
     validate      = function() NS.ValidateSchema() end,
-    onAceGUI      = function(AceGUI) NS.AceGUI = AceGUI end,
+    onAceGUI      = function(AceGUI)
+        NS.AceGUI = AceGUI
+        NS.RegisterDropdownWidget(AceGUI)
+    end,
     buildMain     = function(ctx)
         if NS.Helpers and NS.Helpers.BuildMainContent then NS.Helpers.BuildMainContent(ctx) end
     end,

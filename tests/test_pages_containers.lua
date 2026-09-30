@@ -324,7 +324,8 @@ test("containers: the Unit dropdown offers the four units in order and writes th
     local NS, _, P, ws = containers()
     local dd = P.row(ws, "container.unit")
     assertEqual(table.concat(dd.order, ","), table.concat(NS.Constants.UNITS, ","))
-    assertEqual(dd.list.focus, NS.L["Focus"], "each unit carries its label")
+    assertEqual(dd.list.focus, "|c" .. NS.Constants.UNIT_COLORS.focus .. NS.L["Focus"] .. "|r",
+        "each unit carries its label, in its color")
     dd:__fire("OnValueChanged", "focus")
     -- red under: the row writing an absolute path, or the active container not being the target
     assertEqual(NS.Database.FindContainer(1).unit, "focus")
@@ -350,6 +351,54 @@ test("containers: changing the aura type redraws an open Filters page for the ne
     local redrawn = P.during(function() m.__fireTimers() end)
     -- red under: the aura type row losing its structural onChange (the tab keeps a buff container's grids)
     assertTrue(drewDispelTypes(redrawn), "redrawn with the debuff container's Dispel Types")
+end)
+
+test("containers: Unit, Aura type and Style draw every value in a color of its own", function()
+    local NS, _, P, ws = containers()
+    local C = NS.Constants
+    for path, colors in pairs({ ["container.unit"] = C.UNIT_COLORS, ["container.auraType"] = C.AURA_TYPE_COLORS,
+        ["container.style"] = C.STYLE_COLORS }) do
+        local dd, seen = P.row(ws, path), {}
+        for _, value in ipairs(dd.order) do
+            local color = colors[value]
+            -- red under: a value with no color, or two values of one dropdown sharing a color
+            assertTrue(type(color) == "string" and not seen[color], path .. " " .. value .. " has a color of its own")
+            seen[color] = true
+            assertTrue(dd.list[value]:find("^|c" .. color) ~= nil, path .. " " .. value .. ": " .. dd.list[value])
+        end
+    end
+end)
+
+--- A stand-in for AceGUI's stock Dropdown constructor: a widget whose closed-box FontString records
+--- its justification, and an OnAcquire that records it ran.
+local function plantStockDropdown(AceGUI)
+    AceGUI.WidgetRegistry.Dropdown = function()
+        local w = { type = "Dropdown", text = {} }
+        function w.text:SetJustifyH(v) self.justify = v end
+        function w:OnAcquire() self.baseAcquired = true end
+        return w
+    end
+    AceGUI.__widgetVersions.Dropdown = 36
+end
+
+test("containers: the addon's dropdown is the stock one in a pool of its own, justified LEFT on acquire", function()
+    local NS = containers()
+    local AceGUI, want = NS.AceGUI, NS.Constants.DROPDOWN_WIDGET
+    -- the headless kit has no stock constructor: nothing is registered, and the stock type is used
+    NS.RegisterDropdownWidget(AceGUI)
+    assertNil(AceGUI:GetWidgetVersion(want))
+    assertEqual(NS.CreateDropdown().type, "Dropdown")
+    plantStockDropdown(AceGUI)
+    NS.RegisterDropdownWidget(AceGUI)
+    assertEqual(AceGUI:GetWidgetVersion(want), 36, "registered at the stock version")
+    local w = AceGUI.WidgetRegistry[want]()
+    -- red under: the wrapper keeping type "Dropdown" (released into the shared stock pool)
+    assertEqual(w.type, want)
+    w:OnAcquire()
+    assertTrue(w.baseAcquired, "the stock acquire still runs")
+    -- red under: the closed box left to the template's justification (the Unit box's left-or-right)
+    assertEqual(w.text.justify, "LEFT")
+    assertEqual(NS.CreateDropdown().type, want, "the hand-built dropdowns use it once registered")
 end)
 
 test("containers: Aura type offers Buffs and Debuffs only; the retired Weapon enchants type is refused (feedback #6)", function()

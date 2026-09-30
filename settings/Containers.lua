@@ -74,19 +74,19 @@ local ROWS = {
     },
     {
         path = "container.unit", page = PAGE, group = GROUP, subgroup = S_SHOWS, type = "string",
-        values = NS.Choices(C.UNITS, C.UNIT_LABELS), label = L["Unit"],
+        values = NS.Choices(C.UNITS, C.UNIT_LABELS, C.UNIT_COLORS), label = L["Unit"],
         desc = L["Whose auras this container shows."],
         onChange = structural,
     },
     {
         path = "container.auraType", page = PAGE, group = GROUP, subgroup = S_SHOWS, type = "string",
-        values = NS.Choices(C.AURA_TYPES, C.AURA_TYPE_LABELS), label = L["Aura type"],
+        values = NS.Choices(C.AURA_TYPES, C.AURA_TYPE_LABELS, C.AURA_TYPE_COLORS), label = L["Aura type"],
         desc = L["Buffs or debuffs. The Filters section offers the categories of whichever you choose; your temporary weapon enchants are a buff category there."],
         onChange = structural,
     },
     {
         path = "container.style", page = PAGE, group = GROUP, subgroup = S_SHOWS, type = "string",
-        values = NS.Choices(C.STYLES, C.STYLE_LABELS), label = L["Style"],
+        values = NS.Choices(C.STYLES, C.STYLE_LABELS, C.STYLE_COLORS), label = L["Style"],
         desc = L["Draw each aura as a bar, an icon or a line of text. Bars, Icons and Text each have their own section on this page."],
         -- B5: a new style resets Fill (Layout -> Growth) to the one it suits, through the one write
         -- seam and for the same container, then the panel rebuilds once. Only on a real change: the
@@ -171,7 +171,7 @@ local function sourceCell(_, parent, rel)
         end
     end
     if not list[copySource] then copySource = order[1] end
-    local dd = NS.AceGUI:Create("Dropdown")
+    local dd = NS.CreateDropdown()
     dd:SetLabel(L["Source container"])
     dd:SetList(list, order)
     dd:SetValue(copySource)
@@ -184,7 +184,7 @@ end
 local function sectionCell(_, parent, rel)
     local list, order = {}, {}
     for i, k in ipairs(SECTION_KEYS) do list[k] = L[SECTION_LABELS[k]]; order[i] = k end
-    local dd = NS.AceGUI:Create("Dropdown")
+    local dd = NS.CreateDropdown()
     dd:SetLabel(L["What to copy"])
     dd:SetList(list, order)
     dd:SetValue(copySection)

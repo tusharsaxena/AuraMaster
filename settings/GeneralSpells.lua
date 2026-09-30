@@ -333,7 +333,7 @@ local ID_TOOLTIP = (L["Type a spell id or a name and pick from the list, or shif
 -- THE WORDS ARE NOT OURS TO CHOOSE. `C.AURA_TYPE_LABELS` is what the panel already calls these two
 -- things everywhere a player meets them: the container's own Aura type dropdown
 -- (settings/Containers.lua:82), the gray summary behind every container in the picker
--- (settings/OptionsSetup.lua:363) and the `/am list` line (settings/Slash.lua:195) -- those three
+-- (settings/OptionsSetup.lua:410) and the `/am list` line (settings/Slash.lua:195) -- those three
 -- are its readers, and the Filters section is not among them; its category rows are labeled from the
 -- category, not from the aura type. So the marker reads the table rather than defining a second
 -- vocabulary here. Read, not copied: a translation that moves those two labels moves the markers
@@ -396,7 +396,7 @@ local TYPE_MARK       = L["[{type}]"]
 -- when there is no color for it: a `|r` with no `|c` in front of it would close a color the panel
 -- never opened.
 local COLOR_END   = "|r"
-local TYPE_COLORS = { HELPFUL = "|cff73bf80", HARMFUL = "|cffcc7373" }
+local TYPE_COLORS = { HELPFUL = "|c" .. C.AURA_TYPE_COLORS.HELPFUL, HARMFUL = "|c" .. C.AURA_TYPE_COLORS.HARMFUL }
 local YOURS_COLOR = "|c" .. C.SECONDARY_GOLD
 
 --- `text` in `color`, or `text` unchanged when there is no color for it.
@@ -502,24 +502,20 @@ end
 -- shape for it: the list is sized to its contents, not to whatever fraction of the panel the
 -- control happens to occupy.
 --
--- THE CLOSED BOX WOULD CLIP THE MARKER ITSELF. Its FontString is not one of AceGUI's: it is the
--- Blizzard UIDropDownMenuTemplate's own `$parentText`, adopted and re-anchored to both edges of the
--- control (AceGUIWidget-DropDown.lua:712-717) with its justification never set -- the single
--- `SetJustifyH` in that file is line 722, on the `label` caption above the box. The template is not
--- in this tree, so what it justifies to cannot be read here, and a RIGHT-justified FontString holds
--- an overlong string by its tail and pushes the HEAD out of the frame, which for a prefix marker is
--- precisely the half that must survive. So it is not inherited: justify LEFT explicitly, and the
--- closed box clips like the pullout rows do, tail first, marker last.
+-- THE CLOSED BOX WOULD CLIP THE MARKER ITSELF if it were right-justified: a RIGHT-justified
+-- FontString holds an overlong string by its tail and pushes the HEAD out of the frame, which for a
+-- prefix marker is precisely the half that must survive. NS.CreateDropdown hands out the addon's own
+-- type, justified LEFT on every acquire (settings/OptionsSetup.lua), so the closed box clips like the
+-- pullout rows do, tail first, marker last. It was once justified here, on a STOCK Dropdown, and that
+-- justification rode the shared AceGUI pool into other panels' boxes (owner, 2026-09-30).
 --
--- Both calls are capability-guarded (the same shape as modules/Style.lua:891): the headless widget
+-- The call is capability-guarded (the same shape as modules/Style.lua:891): the headless widget
 -- kit is a data recorder with neither method, and it is not ours to extend.
 local CATEGORY_PULLOUT_WIDTH = 320
 
---- Size `dd`'s open list to its own entries and pin its closed box to LEFT justification.
+--- Size `dd`'s open list to its own entries.
 local function sizeCategoryDropdown(dd)
     if dd.SetPulloutWidth then dd:SetPulloutWidth(CATEGORY_PULLOUT_WIDTH) end
-    local fs = dd.text
-    if type(fs) == "table" and fs.SetJustifyH then fs:SetJustifyH("LEFT") end
 end
 
 --- The Category picker.
@@ -537,7 +533,7 @@ local function categoryCell(defs, def, wide)
             list[d.key] = categoryLabel(d)
             order[i] = d.key
         end
-        local dd = NS.AceGUI:Create("Dropdown")
+        local dd = NS.CreateDropdown()
         dd:SetLabel(L["Category"])
         dd:SetList(list, order)
         dd:SetValue(def.key)

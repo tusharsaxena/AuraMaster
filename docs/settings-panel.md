@@ -57,7 +57,7 @@ is drawn in, in `SECTION_ORDER`'s order (`settings/OptionsSetup.lua`).
   returns to the tab you left. General, the addon page, is addon-wide, renders through
   `Helpers.RenderPage` and draws no banner.
 - **Rows that do not apply to the selected container are not drawn.** A row may carry `auraTypes`
-  (`settings/Schema.lua:380`): the buff categories and Hide enchants without a duration are not
+  (`settings/Schema.lua:385`): the buff categories and Hide enchants without a duration are not
   offered on a debuff container.
 - **Structural rows re-render the panel.** Changing a container's unit, aura type or style, or its
   attach mode, calls `NS.RequestPanelRefresh` (next frame, coalesced), because the set of rows other
@@ -120,6 +120,10 @@ band holds **the picker itself** (options-ui-§14):
 ## Page → tab → row
 
 Types: `bool` checkbox, `number` slider, `string` dropdown (or edit box where noted), `color` swatch.
+Every dropdown the addon draws, schema row or hand-built, is the addon's own AceGUI type
+(`C.DROPDOWN_WIDGET`, `NS.RegisterDropdownWidget` in `settings/OptionsSetup.lua`): the stock Dropdown
+with its closed box justified LEFT, in a widget pool of its own, so its justification never reaches,
+or arrives from, another panel's stock Dropdown. A row that names a control (`EditBox`, `LSM30_*`) keeps it.
 Every `container.` path is relative to the selected container (`docs/schema.md`).
 
 ### General (18 rows, `settings/General.lua`, `settings/GeneralSpells.lua`, `settings/GeneralUserCategories.lua`, `settings/GeneralDispel.lua`)
@@ -387,9 +391,9 @@ selected, with the page moved to General/General) on one row. With no container,
 | Name | `container.name` | string, edit box | Non-blank; Enter applies; made unique; renames the handle and every picker; never reset (`noReset`) |
 | Enabled | `container.enabled` | bool | A disabled container keeps its settings |
 | *What it shows, and how* | — | subsection | An options-ui-§7 subgroup heading over the three rows below (batch 8): what the container watches and how it is drawn, against Name and Enabled's "which container is this". Name and Enabled carry no heading of their own — one above a tab's first row only repeats the tab |
-| Unit | `container.unit` | string | `player` / `target` / `focus` / `pet`; structural |
-| Aura type | `container.auraType` | string | Buffs / Debuffs; structural (weapon enchants are a buff category, schema v5) |
-| Style | `container.style` | string | Bars / Icons / Text; structural (rebuilds the engine) |
+| Unit | `container.unit` | string | `player` / `target` / `focus` / `pet`, each in its own color (`C.UNIT_COLORS`); structural |
+| Aura type | `container.auraType` | string | Buffs / Debuffs, green / red (`C.AURA_TYPE_COLORS`, the Spell Categories markers' colors); structural (weapon enchants are a buff category, schema v5) |
+| Style | `container.style` | string | Bars / Icons / Text, each in its own color (`C.STYLE_COLORS`); structural (rebuilds the engine) |
 
 Changing Style resets Fill (Layout → Growth) to Columns for Bars and Text and to Rows for Icons;
 re-choosing the same style keeps a Fill set by hand (B5). A new container (**New container**, or

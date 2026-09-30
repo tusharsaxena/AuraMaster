@@ -379,6 +379,33 @@ test("schema paths: Choices keeps the key order and localizes each label, fallin
     assertEqual(list[2].text, "b")
 end)
 
+test("schema paths: Choices draws a colored key in its color and leaves an uncolored one plain", function()
+    local NS2 = fresh()
+    local list = NS2.Choices({ "a", "b" }, { a = "A", b = "B" }, { a = "ff112233" })
+    -- red under: Choices ignoring its third argument
+    assertEqual(list[1].text, "|cff112233A|r")
+    -- red under: a `|r` wrapped round a key with no color (closing a color the panel never opened)
+    assertEqual(list[2].text, "B")
+    assertEqual(list[1].value, "a", "the value stays bare: the CLI takes and lists values")
+end)
+
+test("schema paths: every list row draws through the addon's dropdown; a named control keeps its own", function()
+    local NS2 = fresh()
+    local want, lists = NS2.Constants.DROPDOWN_WIDGET, 0
+    for _, row in ipairs(NS2.Schema) do
+        if row.values ~= nil then
+            lists = lists + 1
+            local ok = row.dialogControl == want or (type(row.dialogControl) == "string"
+                and row.dialogControl:find("^LSM30_") ~= nil)
+            -- red under: RegisterSchemaRows leaving a list row on the stock, shared-pool Dropdown
+            assertTrue(ok, tostring(row.path) .. " draws through " .. tostring(row.dialogControl))
+        end
+    end
+    assertTrue(lists > 0, "the schema has list rows")
+    -- red under: the default overwriting a row that named its own control
+    assertEqual(NS2.FindSchemaRow("container.name").dialogControl, "EditBox")
+end)
+
 -- ── the carve-outs ────────────────────────────────────────────────────────────────────────────
 
 test("schema paths: a spell set goes to the container it names, announced as filters and logged once", function()

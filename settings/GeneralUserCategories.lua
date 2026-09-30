@@ -404,7 +404,7 @@ local function newTypeCell()
             list[auraType] = L[C.AURA_TYPE_LABELS[auraType]]
             order[i] = auraType
         end
-        local dd = NS.AceGUI:Create("Dropdown")
+        local dd = NS.CreateDropdown()
         dd:SetLabel(L["Aura type"])
         dd:SetList(list, order)
         dd:SetValue(newType)

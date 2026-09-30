@@ -49,6 +49,18 @@ C.AURA_TYPE_LABELS = { HELPFUL = "Buffs", HARMFUL = "Debuffs" }
 C.STYLES = { "bars", "icons", "text" }
 C.STYLE_LABELS = { bars = "Bars", icons = "Icons", text = "Text" }
 
+-- The General page's Unit, Aura type and Style values, each in its own color so the chosen one reads
+-- at a glance, in the closed box and the open list alike (owner, 2026-09-30). The AARRGGBB body of a
+-- "|c" escape. Aura types keep the green and red settings/GeneralSpells.lua marks categories with.
+C.UNIT_COLORS = { player = "ff66b3ff", target = "ffff8c40", focus = "ffb38cff", pet = "ff66d9a6" }
+C.AURA_TYPE_COLORS = { HELPFUL = "ff73bf80", HARMFUL = "ffcc7373" }
+C.STYLE_COLORS = { bars = "ffffb366", icons = "ff80d4ff", text = "ffe699e6" }
+
+-- The addon's own AceGUI dropdown type: the stock Dropdown with its closed box justified LEFT
+-- (settings/OptionsSetup.lua's NS.RegisterDropdownWidget). Its own name gives it its own pool, so a
+-- justification set here never reaches another addon's, or the library's, stock Dropdown.
+C.DROPDOWN_WIDGET = "AuraMasterDropdown"
+
 -- The Fill (layout.axis) each style suits, written when a container's Style changes (B5,
 -- settings/Containers.lua): bars and text stack in a column, icons in a row.
 C.STYLE_FILL_AXIS = { bars = "vertical", text = "vertical", icons = "horizontal" }
