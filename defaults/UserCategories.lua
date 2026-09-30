@@ -572,6 +572,34 @@ function Cat.UserCategoryNameTaken(profile, name, exceptKey)
     return false
 end
 
+--- Seed `key` as Hide into every container `profile` already stores, and answer how many it seeded.
+---
+--- A NEW CATEGORY STARTS HIDDEN WHERE IT WAS NOT ASKED FOR (owner, 2026-09-30). Until now every
+--- existing container took the template's Show through the backfill below, so creating a category
+--- for one container quietly put its auras into every other container of that aura type as well. The
+--- template, and so the schema row's default, stays Show: a container made AFTER the category, and a
+--- page's Defaults, still mean Show. Only a key the container does not hold yet is written, so a
+--- state already there (an import, another client's profile) is never overwritten. These are the new
+--- row's initial contents, written by the act that creates the row, before anything has read them:
+--- there is nothing for an `onChange` to tell (architecture-§5, a registry writer's create).
+--- @param profile table
+--- @param key string
+--- @return number
+local function seedExistingHidden(profile, key)
+    local n = 0
+    for _, c in pairs(type(profile.containers) == "table" and profile.containers or {}) do
+        if type(c) == "table" then
+            if type(c.filter) ~= "table" then c.filter = {} end
+            if type(c.filter.categories) ~= "table" then c.filter.categories = {} end
+            if c.filter.categories[key] == nil then
+                c.filter.categories[key] = "hide"
+                n = n + 1
+            end
+        end
+    end
+    return n
+end
+
 --- Create a user category and return its key, or nil plus a player-facing reason.
 ---
 --- The category is LIVE the instant this returns: the sync materializes the definition, stamps the
@@ -580,9 +608,9 @@ end
 --- own -- it is `profile.categorySpells[key]`, empty until the player adds to it on General ->
 --- Spell Categories, exactly like every other category's edits.
 ---
---- THE STORED CONTAINERS GET THE KEY HERE TOO, through Database.PrepareProfile's ordinary backfill
---- -- the same mechanism `Cat.DefaultStates`' comment above promises for a key added in a later
---- version, run one act earlier rather than waited for. The compiler would not have noticed the
+--- THE STORED CONTAINERS GET THE KEY HERE TOO, as HIDE (`seedExistingHidden`, above), before
+--- Database.PrepareProfile's ordinary backfill runs; the backfill fills only a missing key, so it
+--- leaves the seeded Hide alone and still reaches anything the seed could not. The compiler would not have noticed the
 --- difference (`splitCategories` reads an absent state as Show, which is the default anyway), but
 --- the settings panel would: a ChoiceGrid cell lights by comparing the STORED value against its
 --- column, so until the key exists in the container a brand-new category would draw with neither
@@ -609,9 +637,11 @@ function Cat.CreateUserCategory(name, auraType, profile, db)
     local count = #profile.userCategoryOrder
     profile.userCategoryOrder[count + 1] = key
     Cat.SyncUserCategories(profile)
+    local hidden = seedExistingHidden(profile, key)
     if NS.Database and NS.Database.PrepareProfile then NS.Database.PrepareProfile(profile) end
     if NS.Debug then
-        NS.Debug("Set", "user category '%s' created: %s (%s)", key, clean, auraType)
+        NS.Debug("Set", "user category '%s' created: %s (%s), hidden in %d existing container(s)",
+            key, clean, auraType, hidden)
     end
     return key, nil
 end

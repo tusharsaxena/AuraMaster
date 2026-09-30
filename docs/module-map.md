@@ -55,10 +55,10 @@ naming what resolves at load (toc-file-§5); the rest are conventional and free 
 | `core/CoreSetup.lua` | `LibKa0s-Core-1.0` seam: `NS.Print`, `NS.Printf`, `NS.SafeToString`, `NS.ResolveColor`, `NS.ClassColor`, `NS.SKIN`/`ApplySkin` (the skin seam, published for a future standalone window; nothing consumes it today), the `NS.MakeCloseButton` wrapper; `NS.LIBKA0S_MISSING` | **Load-bearing**: after `Namespace.lua`, before everything that prints |
 | `core/Bus.lua` | The closed message bus: `NS.bus`, `NS.NewBusTarget()`, the four `NS.MSG` names (strict, through `LibKa0s-Bus-1.0`'s `Catalog`), `NS.BusLib` | **Load-bearing**: `settings/OptionsSetup.lua` subscribes at load |
 | `core/PoolSetup.lua` | `LibKa0s-Pool-1.0` seam, or a four-member local pool (`New`, `Acquire`, `ReleaseAll`, `Counts`) | Conventional |
-| `core/LifecycleSetup.lua` | `LibKa0s-Lifecycle-1.0` seam: the ONE latch behind both reasons to be inert — `NS.lifecycle`, `NS.IsStoodDown`, `NS.IsDisabled`, `NS.SyncEnabled`, and the `standDown` / `standUp` pair the whole addon goes down and comes back up through | **Load-bearing**: before `core/PerfSetup.lua`, which takes the instance as its `lifecycle` field |
+| `core/LifecycleSetup.lua` | `LibKa0s-Lifecycle-1.0` seam: the ONE latch behind both reasons to be inert — `NS.lifecycle`, `NS.IsStoodDown`, `NS.IsDisabled`, `NS.SyncEnabled`, `NS.HoldsText` (the holds the `[State]` trace and the `[Init]` line name), and the `standDown` / `standUp` pair the whole addon goes down and comes back up through | **Load-bearing**: before `core/PerfSetup.lua`, which takes the instance as its `lifecycle` field |
 | `core/PerfSetup.lua` | `LibKa0s-Perf-1.0` seam: `NS.Perf` with seven buckets, the `perf` hold on that latch, `AuraMasterPerfDB` | **Load-bearing**: before every file taking `local Perf = NS.Perf` |
 | `core/Secrets.lua` | The only place that asks whether a value is secret: `IsSecret`, `CanAccess`, `IsSafeKey` (`LibKa0s-Compat-1.0`'s guards, this file's bodies their library-absent arm), `IsReadableNumber`, `NumberOr` | Conventional |
-| `core/DebugLogSetup.lua` | `LibKa0s-DebugLog-1.0` seam: `NS.DebugLog`, the gated sink `NS.Debug`, the `[Init]` summary | **Load-bearing**: after `Constants`, `State` and `CoreSetup`; before any `NS.Debug` caller |
+| `core/DebugLogSetup.lua` | `LibKa0s-DebugLog-1.0` seam: `NS.DebugLog`, the gated sink `NS.Debug`, `NS.DebugOnce` (a caught error, logged once per distinct error), the `[Init]` summary | **Load-bearing**: after `Constants`, `State` and `CoreSetup`; before any `NS.Debug` caller |
 | `core/LauncherSetup.lua` | `LibKa0s-Launcher-1.0` seam: `NS.Launcher`, the one broker object behind both the minimap button and a broker display. Left-click opens the panel; right-click opens the options menu (*Enabled*, *Locked*, *Test mode*, each the slash verb's own handler) | Conventional: `Register()` is called from `OnInitialize` after `InitDB`, and every click resolves at call time |
 | `core/AuraMaster.lua` | The AceAddon: `OnInitialize`, `OnEnable`, the eleven lifecycle events and their handlers, `NS.OnProfileChanged` | **Load-bearing**: the AceAddon promotion; reclaims `NS.Print` from AceConsole's embed |
 | `core/Database.lua` | AceDB init (with a no-AceDB fallback), the container accessors (`GetContainers` in display order, `GetContainersByName` for the pickers), `RunMigrations` and the `SCHEMA_STEPS` ladder (v2: `MigrateV2`; v3: `MigrateV3`, the Show/Hide
@@ -193,6 +193,7 @@ The suites, in the order `tests/run.lua` runs them (it is the authority on the l
 | `test_slash_verbs.lua` | `settings/Slash.lua` verb by verb through the real dispatcher: the help surface, the schema verbs over relative and absolute paths, the host verbs, the degradation stub |
 | `test_diagnostics.lua` | `modules/Diagnostics.lua` through `/am diagnostics` and `/am debug diagnostics`: the ungated sink and the one chat line, both forms, the branded markers and the library's identity header, the module writing sections only (no `Build`, `Run` or cap of its own), `diag` running nothing, the branch order and the disabled gate, the disabled and stood-down header lines and the not-built reasons, the `fonts primed:` line (state only, capped, printed while stood down or secret, the refused triples after `refused=`), the `loading screen:` line and its gap, the aura dump and its secret rules, the container sections and plan verdicts, button identity and predictions, section isolation, the caps, and the library-absent line |
 | `test_bulklog.lua` | debug-logging-§10's bulk rule, act by act: one `[Set]` line per bulk act counting the rows it changed; one line per profile reset or copy |
+| `test_debug_coverage.lua` | debug-logging-§8's diagnosis lines and §9's quiet steady state (DL-AM-02): the apply queue's hold traced once while it lasts and again when it changes, a caught apply error once per distinct error, every combat refusal naming its guard, test mode's switch naming who switched it, the `[State]` stand-down and stand-up edges and the combat-held secure half, and the `[Init]` line's missing-dependency and stand-down notes |
 | `test_optionssetup.lua` | The panel: the tree's three pages and the Containers sections, tabs, the container banner, per-page Defaults, the global reset's blast radius, the degraded stub |
 | `test_options_descriptor.lua` | `settings/OptionsSetup.lua`'s descriptor seams through real widgets and resets: the Profiles veto, the banner and picker, `RenderPage` and `RenderContainerPage`, the coalesced refresh, `OpenOptionsPage`, the stub's composers |
 | `test_pages_general.lua` | `settings/General.lua`, `settings/GeneralSpells.lua` and `settings/GeneralDispel.lua` through their widgets: the Spell Categories ID list and its restore, the Dispel Colors rows; each Master control and Display row, the composer's two buttons, Defaults; the tab strip with Containers gone from it and no page keyed `containers` to `general`'s rows |
@@ -220,7 +221,7 @@ The suites, in the order `tests/run.lua` runs them (it is the authority on the l
 | `test_lintconfig.lua` | `.luacheckrc` carries no blanket suppression, no source file carries a bare inline luacheck ignore, and no `#` shares its line with a keyword or brace lizard must see |
 | `tests/_kit/test_eol.lua` | Every tracked file carries the line ending `.gitattributes` declares, and `.gitattributes` is the canonical body |
 | `tests/_kit/test_layout_cap.lua` | The layout-§1 cap census in `docs/ARCHITECTURE.md` agrees with the tree |
-| `tests/_kit/test_diagnostics_contract.lua` | The shared debug-logging-§14 diagnostics contract, run against this addon's dispatcher through `Kit.diagnostics` in `tests/run.lua`: both forms, while disabled, append, ungated, the branded markers, and no `diag` or `dx` |
+| `tests/_kit/test_diagnostics_contract.lua` | The shared debug-logging-§14 diagnostics contract, run against this addon's dispatcher through `Kit.diagnostics` in `tests/run.lua`: both forms, while disabled, append, ungated, the branded markers, logging turned on for the session, and no `diag` or `dx` |
 
 ## Root and media
 
@@ -256,13 +257,13 @@ All vendored under `libs/`, loaded by the `# Libraries` block of `AuraMaster.toc
 | AceAddon-3.0 | `NS` promoted to the addon object by `NewAddon` (`core/AuraMaster.lua:17`) |
 | AceEvent-3.0 | Lifecycle events and the message bus (`core/Bus.lua`) |
 | AceTimer-3.0 | The color picker's drag throttle, via the options descriptor's `scheduleTimer` |
-| AceConsole-3.0 | `/am` and `/auramaster` registration (`settings/Slash.lua:623-624`) |
+| AceConsole-3.0 | `/am` and `/auramaster` registration (`settings/Slash.lua:624-625`) |
 | AceDB-3.0 | `AuraMasterDB` and its profiles (`core/Database.lua:272`) |
 | AceGUI-3.0, AceGUI-3.0-SharedMediaWidgets | The settings panel body and its `LSM30_*` media dropdowns |
 | AceConfig-3.0, AceDBOptions-3.0 | The Profiles sub-page only (`settings/Profiles.lua`, options-ui-§3) |
 | LibSharedMedia-3.0 | Texture, border and font lookups through `LSM` (`modules/Style.lua:33`) |
 | LibDataBroker-1.1, LibDBIcon-1.0 | The launcher's broker object and its minimap button (`core/LauncherSetup.lua`, launcher-§1). Both are OPTIONAL: `LibKa0s-Launcher-1.0` resolves them with `LibStub(…, true)` at Register time, so a client missing either degrades rather than raises |
-| LibKa0s v1.63.0 | Fourteen modules bound by name — table below |
+| LibKa0s v1.64.0 | Fourteen modules bound by name — table below |
 
 | LibKa0s module | Setup file | Publishes |
 |---|---|---|
@@ -270,9 +271,9 @@ All vendored under `libs/`, loaded by the `# Libraries` block of `AuraMaster.toc
 | `LibKa0s-Env-1.0` | `core/EnvSetup.lua` | `NS.Meta`, `NS.Version` |
 | `LibKa0s-Core-1.0` | `core/CoreSetup.lua` | `NS.Print`, `NS.Printf`, `NS.SafeToString`, `NS.ResolveColor`, `NS.ClassColor`, `NS.MakeCloseButton` |
 | `LibKa0s-Pool-1.0` | `core/PoolSetup.lua` | `NS.Pool` (preview element pools) |
-| `LibKa0s-Lifecycle-1.0` | `core/LifecycleSetup.lua` | `NS.lifecycle` — the one latch; `NS.IsStoodDown`, `NS.IsDisabled`, `NS.SyncEnabled` |
+| `LibKa0s-Lifecycle-1.0` | `core/LifecycleSetup.lua` | `NS.lifecycle` — the one latch; `NS.IsStoodDown`, `NS.IsDisabled`, `NS.SyncEnabled`, `NS.HoldsText` |
 | `LibKa0s-Perf-1.0` | `core/PerfSetup.lua` | `NS.Perf` (buckets, `/am perf`, and the `perf` hold on that latch) |
-| `LibKa0s-DebugLog-1.0` | `core/DebugLogSetup.lua` | `NS.DebugLog`, `NS.Debug` |
+| `LibKa0s-DebugLog-1.0` | `core/DebugLogSetup.lua` | `NS.DebugLog`, `NS.Debug`, `NS.DebugOnce` |
 | `LibKa0s-Launcher-1.0` | `core/LauncherSetup.lua` | `NS.Launcher` — the one LibDataBroker object, registered with LibDBIcon under the folder name |
 | `LibKa0s-Slash-1.0` | `settings/Slash.lua` | the `/am` dispatcher over `NS.COMMANDS` |
 | `LibKa0s-Compat-1.0` | `core/Compat.lua`, `core/Secrets.lua` | `NS.Compat.GetSpellInfo` (behind this addon's number-only guard) and `NS.Secrets.IsSecret` / `CanAccess` / `IsSafeKey`. Without the library the reader answers `nil` and the guards run this addon's own bodies, a deliberate duplication (a guard stub answering "nothing is secret" on a 12.x client would raise in combat) |

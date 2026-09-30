@@ -35,6 +35,9 @@ local scheduled = false
 local flushTimer = nil     -- the coalescing timer's handle, so a stand-down can cancel it
 local userPending = false -- a pending request is the player's own, so a deferral of it is announced
 local shownReason = nil   -- the cause the deferral notice last named: nil, "combat" or "secret"
+-- The hold the [Apply] deferred line last traced (debug-logging-§9, quiet steady state): its secret
+-- and lockdown reads and what was queued. Cleared when a flush may run, so the next hold traces again.
+local heldSecret, heldLockdown, heldQueued = nil, nil, nil
 
 local function print_(line)
     if NS.Print then NS.Print(line) end
@@ -215,6 +218,26 @@ function CM.MustDefer()
     return NS.Compat.AurasAreSecret() or InCombatLockdown()
 end
 
+--- What the queue holds, for the deferred line: "all", a container count, or "-".
+local function queuedText()
+    if pendingAll then return "all" end
+    local n = 0
+    for _ in pairs(pending) do n = n + 1 end
+    return n > 0 and n or "-"
+end
+
+--- Trace a hold ONCE while it stays the same (debug-logging-§8 deferred work, §9 quiet steady state).
+--- Every edge that flushes while the hold lasts (each combat end in a key, a restriction flip) would
+--- otherwise write the same line; a line comes again only when the hold changes (secrecy, lockdown or
+--- the queue). The flush that ends it is the `applied N container(s)` line. Built behind the gate.
+local function traceHold(lockdown, edge)
+    if not (NS.State and NS.State.debug and NS.Debug) then return end
+    local secret, queued = NS.Compat.AurasAreSecret(), queuedText()
+    if secret == heldSecret and lockdown == heldLockdown and queued == heldQueued then return end
+    heldSecret, heldLockdown, heldQueued = secret, lockdown, queued
+    NS.Debug("Apply", "deferred: secret=%s lockdown=%s edge=%s queued=%s", secret, lockdown, edge or "-", queued)
+end
+
 --- Say ONCE per blocked stretch why a change is waiting — not once per change. The one escalation:
 --- a stretch announced as combat that is still held after combat, by secrecy, says so once more.
 --- Never on the PLAYER_REGEN_ENABLED edge itself (`edge == "regen"`): the order of that event and
@@ -223,12 +246,9 @@ end
 --- the restriction wording already covers combat. `quiet` (nothing held is the player's own change)
 --- traces the deferral and prints nothing.
 local function noteDeferred(edge, quiet)
-    local lockdown = InCombatLockdown()
+    local lockdown = InCombatLockdown() and true or false
     local reason = lockdown and "combat" or "secret"
-    if NS.Debug then
-        NS.Debug("Apply", "deferred: secret=%s lockdown=%s edge=%s",
-            NS.Compat.AurasAreSecret(), lockdown, edge or "-")
-    end
+    traceHold(lockdown, edge)
     if quiet then return end
     local escalate = shownReason == "combat" and reason == "secret" and edge ~= "regen"
     if shownReason == nil or escalate then
@@ -281,6 +301,7 @@ local function applyDirty(all, which)
             if ok then
                 applied = applied + 1
             else
+                if NS.DebugOnce then NS.DebugOnce("Apply", "container", err, c.id) end
                 failed = reportApplyError(err, failed)
             end
         end
@@ -330,6 +351,7 @@ function CM.FlushPending(edge)
     -- Nothing is held any longer, even when the queue is empty: a stretch CM.NoteDeferred announced
     -- for a write outside the queue (a Blizzard-frame toggle) ends here too.
     shownReason = nil
+    heldSecret, heldLockdown, heldQueued = nil, nil, nil
     if idle then return 0 end
     destroyParked()
 
@@ -564,6 +586,7 @@ end
 --- any later caller.
 function CM.Create(overrides)
     if InCombatLockdown() then
+        if NS.Debug then NS.Debug("Containers", "create refused (in combat)") end
         return nil, L["cannot create a container during combat — it would not be drawn or placed until combat ends"], true
     end
     local p = profile()
@@ -649,12 +672,16 @@ end
 --- nothing is written unless every one passes, so a refusal leaves `dstId` untouched and announces
 --- nothing. A checked write cannot then be refused: SetByPath runs those same checks. The writes are
 --- one bulk copy, `scope` naming it: one [Set] line counting the rows they changed
---- (debug-logging-§10). A refused copy logs nothing. Returns ok, err.
+--- (debug-logging-§10). A refused copy writes no row and logs one line naming the refused key
+--- (debug-logging-§8, refusals). Returns ok, err.
 local function copyThrough(src, dstId, keys, scope)
     for _, key in ipairs(keys) do
         if src[key] ~= nil then
             local ok, err = NS.CheckWrite("container." .. key, src[key], dstId)
-            if not ok then return false, err end
+            if not ok then
+                if NS.Debug then NS.Debug("Set", "copy %s refused at %s: %s", scope, key, err) end
+                return false, err
+            end
         end
     end
     NS.Bulk.Run("copy", scope, function()
@@ -779,6 +806,7 @@ function CM.StopListening()
     end
     scheduled = false
     pending, pendingAll, userPending = {}, false, false
+    heldSecret, heldLockdown, heldQueued = nil, nil, nil
     cancelEnchantReset()
     if NS.FontPrimer then NS.FontPrimer.Stop() end
 end

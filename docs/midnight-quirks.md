@@ -52,7 +52,7 @@ replacement: the `AuraContainer` widget (`CustomAuraContainerTemplate`), which r
 itself, gathers auras against declared groups, and creates and fills `AuraButton`s in secure code.
 `SecureAuraHeaderTemplate` is no longer available on Retail.
 
-**What this addon does.** Every container is one `AuraContainer` engine (`modules/Container.lua:250`). The addon
+**What this addon does.** Every container is one `AuraContainer` engine (`modules/Container.lua:251`). The addon
 declares groups — `AddAuraGroup(key, filterString, { candidateFilters, sortMethod, sortDirection,
 maxFrameCount, layout, initializeFrame })` — compiled from the settings by
 `modules/FilterCompiler.lua`, and dresses each button in `initializeFrame` (`modules/Style.lua`). The
@@ -69,9 +69,9 @@ applies these access restrictions from `PLAYER_ENTERING_WORLD`.
   button's first dressing has an unrestricted window. That build ignores aura secrecy (never combat
   lockdown): a `/reload` or relog mid-key logs in with auras already secret, and holding the build
   there left every container blank until the key ended (`FlushPending("startup")`,
-  `modules/ContainerManager.lua:314`).
+  `modules/ContainerManager.lua:335`).
 - **Defers every structural apply and restyle** while `Compat.AurasAreSecret()` or
-  `InCombatLockdown()` is true (`ContainerManager.MustDefer`, `modules/ContainerManager.lua:214`),
+  `InCombatLockdown()` is true (`ContainerManager.MustDefer`, `modules/ContainerManager.lua:217`),
   prints one notice, and flushes on `PLAYER_REGEN_ENABLED`, `PLAYER_ENTERING_WORLD` and
   **`ADDON_RESTRICTION_STATE_CHANGED`** — secrecy can end without a combat transition (a key or an
   encounter finishing).
@@ -139,7 +139,7 @@ addon can no longer anchor it. Another frame may only anchor **to** an aura cont
 their geometry can be secret.
 
 **What this addon does.** The engine is anchored to its container's anchor frame *before* the first
-`AddAuraGroup` (`modules/Container.lua:258-261`). Every anchor frame, and the frame picker's outline,
+`AddAuraGroup` (`modules/Container.lua:259-262`). Every anchor frame, and the frame picker's outline,
 inherits `DisableUntrustedLayoutScriptsTemplate`, so a container can attach to another container's
 engine (`modules/Anchors.lua`) and the picker can outline one. Positions are computed from settings,
 never read back off an engine frame; the anchor is sized to one element from config.
@@ -158,7 +158,7 @@ would inherit forbidden aspects: UntrustedLayoutScriptExecution". The handle's t
 **What this addon does.** A plan of the same shape (group count, enchant slots and their
 hide-permanent flag, style, growth corner —
 `FilterCompiler.StructureKey`) is applied in place, calling only the setters whose values changed;
-candidate filters are compared with `FilterCompiler.Signature` first (`modules/Container.lua:325-333`). A
+candidate filters are compared with `FilterCompiler.Signature` first (`modules/Container.lua:326-334`). A
 new shape disables, hides and retires the old engine and builds a new one (`Container:Retire`).
 
 ## Spell-id filters are honored only on one side of the friend/foe line
@@ -250,7 +250,7 @@ field's brackets (`$spellname$[-$stacks$]`) goes with the field, and the Text se
 **The restriction.** `AddDispelTypeTexture` and `AddPandemicRegion` append to the button.
 
 **What this addon does.** Every live restyle empties both lists FIRST, before any other binding,
-through `Style.ClearAdditiveBindings` (`modules/Style.lua:549`), and then adds again
+through `Style.ClearAdditiveBindings` (`modules/Style.lua:552`), and then adds again
 (`modules/Style_Bars.lua:319-326`, `modules/Style_Icons.lua:175`). The order matters: every `Set*` /
 `Add*` binding re-runs the engine's whole apply pass, which re-tints, shows or hides each dispel
 texture still listed, while `ClearDispelTypeTextures` itself touches no region. A clear made after
@@ -385,7 +385,7 @@ frames are never freed, so a rebuild per run would leak one engine frame per con
   creating a container, and tearing one down. A container that leaves the registry in combat is
   parked (engine disabled, anchor untouched) and destroyed once combat ends.
 - **Visibility in combat is the engine's `SetEnabled`**, not `Show`/`Hide` on an ancestry holding
-  aura buttons (`modules/Container.lua:484`).
+  aura buttons (`modules/Container.lua:485`).
 
 ## An unknown event name raises
 
@@ -620,7 +620,7 @@ values was secret.
 
 - **No secure template of our own.** The only protected machinery is Blizzard's aura engine. Each
   container's anchor (`AuraMasterAnchor<id>`) inherits `DisableUntrustedLayoutScriptsTemplate`,
-  Blizzard's opt-in for a frame anchored to an aura container (`modules/Container.lua:43-44`).
+  Blizzard's opt-in for a frame anchored to an aura container (`modules/Container.lua:44-45`).
 - **Nothing under an anchor may own a tooltip.** The template's restriction reaches every frame
   anchored under the anchor, the drag handle and its help mark included, and the client refuses
   `GameTooltip:SetOwner` on any of them ("Anchoring disallowed as dependent object would inherit
@@ -638,12 +638,12 @@ values was secret.
   only shows or hides, except that a handle never placed (first shown in combat) is placed once so
   it draws. The next visibility pass after combat catches both up.
 - **The engine is anchored before its first `AddAuraGroup`**; after that an addon can no longer
-  anchor it (`modules/Container.lua:258-261`).
+  anchor it (`modules/Container.lua:259-262`).
 - **No structural work while auras are secret or under combat lockdown.** `ContainerManager.MustDefer`
-  (`modules/ContainerManager.lua:214`) holds every build, update and restyle; aura buttons refuse addon
+  (`modules/ContainerManager.lua:217`) holds every build, update and restyle; aura buttons refuse addon
   access while auras are secret.
 - **Visibility in combat goes through the engine's `SetEnabled`**, never `Show`/`Hide` on an aura
-  button's ancestry (`modules/Container.lua:484`).
+  button's ancestry (`modules/Container.lua:485`).
 - **The font primer's frame hangs from `UIParent`, not from any anchor**, so nothing it does reaches
   an aura engine's ancestry. Its one engine call, the follow-up `UpdateAllAuras`, is not protected,
   reads no aura, and skips a disabled engine, which it would clear (`modules/FontPrimer.lua`).
@@ -705,7 +705,8 @@ values was secret.
   the client rejects costs that binding, never the engine's frame batch. A live re-dress is guarded
   per button (`Container:Restyle`), and a Text line's icon block per dress, so a refusal there costs
   the button, or only the icon; neither is silent: `Style.ReportError` writes a `[Style]` debug line
-  every time and hands the error to the client's error handler once per session per message.
+  once per distinct error while logging is on (`NS.DebugOnce`) and hands the error to the client's
+  error handler once per session per message.
 - **No aura-button border reads its size** (B2-3). A laid-out engine button's size reads secret, and
   so does every frame anchored to it, while Blizzard's Backdrop does arithmetic on the frame's size on
   every `SetBackdrop` and from `BackdropTemplate`'s `OnSizeChanged` (line 226 of Blizzard's
@@ -722,7 +723,7 @@ values was secret.
   only while `Compat.AurasAreSecret()` is false, and through the `core/Secrets.lua` gates; chat and
   debug lines go through `NS.SafeToString`.
 - **Right-click cancel uses one click phase** (`RightButtonUp`) so a button reassigned between press
-  and release cannot cancel the wrong aura (`modules/Style.lua:895`).
+  and release cannot cancel the wrong aura (`modules/Style.lua:898`).
 - **Animations on engine buttons are set up at dress time only.** `modules/Style_Text.lua` builds its
   three AnimationGroups with the regions and calls `Stop`/`Play` only in a dress (initializeFrame or a
   restyle while auras are readable), each through `Style.Bind`, so a refusal costs one call and is

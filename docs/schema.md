@@ -234,7 +234,7 @@ player's own; **the schema is a live table, not a frozen one**, and each user ca
 it in schema order, `NS.UnregisterSchemaRows(pred)` takes it down again on a profile switch, and
 `NS.Schema` is rebuilt in place so the live reference the options descriptor and the CLI hold stays
 the same table — the rest of this file). It drives the panel,
-`/am list|get|set|reset` and the resets; one write seam, `NS.SetByPath` (`settings/Schema.lua:870`),
+`/am list|get|set|reset` and the resets; one write seam, `NS.SetByPath` (`settings/Schema.lua:893`),
 is where the panel, the CLI, the Defaults buttons and a drag handle all land. It resolves the
 container, validates against it, runs the row's optional `normalize` hook, writes, reacts and
 announces, in that order.
@@ -793,7 +793,10 @@ The stamp follows savedvariables-§1 as ruled at WowAddonStandards v2.65.0:
   hand-edited `position = "junk"`) is replaced by the template's section. A whole-section write
   through `NS.SetByPath` backfills without that repair, so a malformed section is refused, not
   silently fixed.
-  A new category key reaches every container the same way, through `DefaultStates()`.
+  A new category key reaches every container the same way, through `DefaultStates()`. A category a
+  player creates is the one exception to the value: `Cat.CreateUserCategory` seeds **Hide** into every
+  container already stored before this backfill runs, so only containers made later take the template's
+  Show (the backfill fills a missing key and leaves the seeded one alone).
 - **A rename, removal or type change needs a step** in the same change that makes it: append the
   next rung (`to = 7`, the ladder ending at 6), transform the stored value, and remember that containers live in every
   profile, not only the active one (`docs/common-tasks.md` has the recipe).

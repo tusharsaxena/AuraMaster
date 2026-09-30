@@ -234,10 +234,43 @@ test("user categories: the schema row resolves, and the seam reads and writes it
     assertEqual(NS.CONTAINER_TEMPLATE.filter.categories[key], "show")
 
     local id = NS.Database.GetContainers()[1].id
-    assertEqual(NS.GetSetting(path, id), "show", "the backfill stamped it into every stored container")
-    NS.SetByPath(path, "hide", id)
-    assertEqual(NS.GetSetting(path, id), "hide")
+    assertEqual(NS.GetSetting(path, id), "hide", "every container that existed before it starts on Hide")
+    NS.SetByPath(path, "show", id)
+    assertEqual(NS.GetSetting(path, id), "show")
     assertEqual(NS.ValidateSchema(), 0)
+end)
+
+test("user categories: a new one starts hidden in every existing container, shown in a container made after it", function()
+    local NS = fresh()
+    local before = NS.Database.GetContainers()
+    local count = #before
+    assertTrue(count >= 2, "the starter set gives more than one container (the premise)")
+    local key = NS.Categories.CreateUserCategory("Affixes", "HELPFUL")
+    for _, c in ipairs(before) do
+        -- red under: CreateUserCategory leaving the backfill to stamp the template's Show into every
+        -- stored container (the owner's report: a category made for one container showed in all)
+        assertEqual(NS.db.profile.containers[c.id].filter.categories[key], "hide", "#" .. c.id)
+    end
+    local newId = NS.ContainerManager.Create()
+    assertTrue(newId ~= nil, "a container made after the category")
+    -- red under: seeding Hide into the template (or the row default) rather than the stored containers
+    assertEqual(NS.db.profile.containers[newId].filter.categories[key], "show", "a later container takes Show")
+    assertEqual(NS.FindSchemaRow("container.filter.categories." .. key).default, "show", "Defaults still mean Show")
+    assertEqual(NS.ValidateSchema(), 0)
+end)
+
+test("user categories: creating one never overwrites a state a container already holds for its key", function()
+    local NS = fresh()
+    local realNew = NS.Categories.NewUserKey
+    local id = NS.Database.GetContainers()[1].id
+    -- A key the container already names (an import, another client): planted before the create.
+    local K = realNew({})
+    NS.db.profile.containers[id].filter.categories[K] = "show"
+    NS.Categories.NewUserKey = function() return K end
+    NS.Categories.CreateUserCategory("Planted", "HELPFUL")
+    NS.Categories.NewUserKey = realNew
+    -- red under: the seed writing Hide over a state that was already stored
+    assertEqual(NS.db.profile.containers[id].filter.categories[K], "show")
 end)
 
 test("user categories: Cat.AuraTypeOf answers for a user category KEY, not only for its definition", function()

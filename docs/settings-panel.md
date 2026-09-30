@@ -283,7 +283,11 @@ category key, so a type that could move would carry a category between two grids
 state. A name is capped at `Cat.USER_NAME_MAX` characters in the box and at the store, is stripped of
 `|` and control characters, and a DUPLICATE is kept and reported rather than refused: the key is
 identity, so two categories called the same thing are two categories. Creating selects the new
-category, so it is not left to be found in a dropdown of twelve and counting.
+category, so it is not left to be found in a dropdown of twelve and counting. A new category starts
+**hidden in every container that already exists** and shown in any container made after it (the
+owner, 2026-09-30): the act seeds Hide into each stored container (`defaults/UserCategories.lua`'s
+`seedExistingHidden`), while the container template, and so the row's default and a page's Defaults,
+stays Show. A category made for one container no longer puts its auras into all the others.
 
 **Restore is not drawn for a category the player made**, and `NS.GeneralSpells.RestoreStarters`
 refuses one at the act, so the drawing rule is a courtesy and never the enforcement. Its starter list

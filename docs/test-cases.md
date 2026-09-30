@@ -143,7 +143,7 @@ badge and any count quoted in the docs must agree with it.
 - v5: the profile's retired dispelColors.None leaf is cleared (feedback #7)
 - database: GetContainersByName sorts by name, case-insensitively, the id breaking a tie; display order untouched (B2-2)
 
-### test_database_categories.lua (22)
+### test_database_categories.lua (24)
 
 - v6: MigrateV6 stamps the user-category store, and a second run changes nothing
 - v6: a profile that predates user categories climbs the ladder and stays valid
@@ -154,6 +154,8 @@ badge and any count quoted in the docs must agree with it.
 - user categories: one round-trips through a reload, with its spells
 - user categories: the sync runs BEFORE PrepareProfile, so a stored one reaches every container
 - user categories: the schema row resolves, and the seam reads and writes it per container
+- user categories: a new one starts hidden in every existing container, shown in a container made after it
+- user categories: creating one never overwrites a state a container already holds for its key
 - user categories: Cat.AuraTypeOf answers for a user category KEY, not only for its definition
 - user categories: a profile switch swaps the set and leaves no stale definition, row or template key
 - user categories: a new key collides with nothing shipped and with nothing in any stored profile
@@ -240,13 +242,13 @@ badge and any count quoted in the docs must agree with it.
 - schema: a color with a -0 channel over 0 is no change, the library's SameValue and the host's (#21)
 - schema: a duplicate path fails validation, the library's and the host's (#21)
 
-### test_schema_paths.lua (36)
+### test_schema_paths.lua (38)
 
 - schema paths: the seam validates before it resolves, so a bad value names the value, not the container
 - schema paths: normalize is handed the resolved id, so a container keeps its own name in any case
 - schema paths: the seam writes, then reacts, then logs, then announces — each seeing the stored value
 - schema paths: onChange, the [Set] line and CONFIG_CHANGED all see the normalized value
-- schema paths: a refused write reacts to nothing, logs nothing and announces nothing
+- schema paths: a refused write reacts to nothing, announces nothing and logs one refusal line naming the guard
 - schema paths: a path that is not a string is refused by every seam, naming what was passed
 - schema paths: a selection naming a container that no longer exists falls back to the first
 - schema paths: an explicit container id that does not exist is refused, never redirected to the selection
@@ -262,6 +264,8 @@ badge and any count quoted in the docs must agree with it.
 - schema paths: ValidateSchema fails an unknown page, an unknown type and an empty group, and says which
 - schema paths: SchemaForPage keeps declaration order and drops hidden rows and rows the container's type does not take
 - schema paths: Choices keeps the key order and localizes each label, falling back to the key
+- schema paths: Choices draws a colored key in its color and leaves an uncolored one plain
+- schema paths: every list row draws through the addon's dropdown; a named control keeps its own
 - schema paths: a spell set goes to the container it names, announced as filters and logged once
 - schema paths: a spell set or a section with no container to land in is refused, naming why
 - schema paths: category edits drop an empty edit set and store a truthy edit as true
@@ -416,7 +420,7 @@ badge and any count quoted in the docs must agree with it.
 - container: an enchant slot the engine refuses costs that slot, not the build
 - container: an engine call that raises is traced, and the build carries on to the unit
 - container: a restyle dresses every group button and every enchant frame, and skips a lookup the engine refuses
-- container: a re-dress that raises is reported, a debug line each time and the client's error handler once per message (item 7)
+- container: a re-dress that raises is reported, a debug line and the client's error handler once per message (item 7)
 - container: an instance whose container is gone applies nothing and touches no engine
 - container: the anchor's scale is the container's times the master's, never below a tenth
 - container: the anchor's alpha is the container's times the master's
@@ -569,13 +573,14 @@ badge and any count quoted in the docs must agree with it.
 - lifecycle: target, focus and pet swaps and ADDON_LOADED leave no [Event] line
 - lifecycle: with logging off no [Event] line is written
 
-### test_anchors.lua (50)
+### test_anchors.lua (51)
 
 - anchors: a chain that would loop is detected
 - anchors: a container attaches to another one, and a loop falls back to the screen
 - anchors: a named frame that does not exist yet waits, and attaches once it does
 - anchors: a frame that appears during combat is attached when combat ends
 - anchors: a screen fallback and a skipped resolve are traced
+- anchors: a fallback and a lockdown skip are traced once while they last, not on every pass (quiet steady state)
 - anchors: a forbidden frame, or something that is not a frame, is never a target
 - anchors: a forbidden frame falls back to the screen without waiting, so an add-on load never re-places it
 - anchors: a drag saves the dragged container's position, rounded, whatever is selected
@@ -756,7 +761,7 @@ badge and any count quoted in the docs must agree with it.
 - fontprimer: a font refused under the loading screen is primed at its end, and the world refresh follows
 - fontprimer: on a client without the loading screen's end, PLAYER_ENTERING_WORLD retries a refused font
 - fontprimer: a loading screen's end with a font still refused arms nothing
-- fontprimer: one Fonts debug line per PrimeAll that met a refusal, counts only
+- fontprimer: one Fonts debug line when the refused count moves, counts only
 - fontprimer: DiagState lists the refused triples, copies only, and a primed one leaves the list
 
 ### test_enchantreset.lua (23)
@@ -1184,7 +1189,7 @@ badge and any count quoted in the docs must agree with it.
 - text style: a left icon with its border on draws the border at its edge size and color, the art inset inside it (item 6)
 - text style: an icon border the client refuses on a live re-dress costs the icon, never the text, and is reported
 - text style: an icon whose SetSize is refused on a live re-dress costs the icon, never the text, and is reported
-- text style: the same refusal on every re-dress reaches the error handler once, and the debug log each time
+- text style: the same refusal on every re-dress reaches the error handler once, and the debug log once
 - text style: a live re-dress with the icon border on under secret geometry draws the border and reports nothing (B2-3)
 - text style: a refused stored template draws the default one and logs it once
 - text style: a template edit that keeps the shape re-dresses the same strings; a new shape swaps chains
@@ -1405,7 +1410,7 @@ badge and any count quoted in the docs must agree with it.
 - slash verbs: the disabled gate is ONE decision over the whole verb table, not a per-verb guard
 - slash verbs: /am new enchants makes a player buff container showing only Weapon enchants (feedback #6)
 
-### test_diagnostics.lua (47)
+### test_diagnostics.lua (49)
 
 - diag: /am diagnostics writes the report to the console ungated, opens it, and says so once
 - diag: /am diagnostics answers while the addon is disabled, and the state line says so
@@ -1430,6 +1435,8 @@ badge and any count quoted in the docs must agree with it.
 - diag: plan groups report the engine's frame and shown counts, or ? when unreadable
 - diag: shown buttons are identified by instance, then by our own regions, else id=?
 - diag: predictions come from ExplainSpell over the unit's readable auras
+- diag: predictions apply the cast-by and duration gates before the category verdict
+- diag: a secret duration or source passes its gate instead of guessing
 - diag: an engine button whose IsShown is secret out of combat costs no section
 - diag: a partly secret group counts the readable buttons and the unknowable ones apart
 - diag: a raising button probe costs one line, never the predictions
@@ -1464,7 +1471,7 @@ badge and any count quoted in the docs must agree with it.
 - bulklog: Slash's CliResetAll, handed the same pair, is one [Set] reset all line
 - bulklog: a profile reset and a profile copy are one [Set] line each; a switch keeps its trace
 - bulklog: CopyFrom is one [Set] line counting the rows it changed, and no [Containers] summary
-- bulklog: a refused CopyFrom logs nothing
+- bulklog: a refused CopyFrom writes no row and logs one line naming the refused key
 - bulklog: ResetPositions is one [Set] line counting the rows it changed
 - bulklog: a bracket inside a bracket logs once, summed, when the outer one closes
 - bulklog: a -0 stored over 0 is not a change, so a settled ResetPositions counts none
@@ -1477,6 +1484,19 @@ badge and any count quoted in the docs must agree with it.
 - bulklog: an error inside a nested bracket marks the outer act's one line
 - bulklog: Bulk.Run stays silent only when its act sets info.profileReset, the profile reset's signal
 - bulklog: a library Defaults a row's onChange stops counts the write it stored
+
+### test_debug_coverage.lua (10)
+
+- coverage: a held apply is traced once while the hold lasts, however many edges flush it (quiet steady state)
+- coverage: with logging off a hold builds and records nothing, so turning logging on traces it
+- coverage: a container apply that raises is one [Apply] line per distinct error, naming the container
+- coverage: every combat refusal writes one line naming the guard
+- coverage: the checkbox's test-mode start refused while disabled names the guard
+- coverage: a Blizzard-frame toggle held by combat writes its flush line once combat ends, and only then
+- coverage: test mode switched outside the seam says who switched it; the checkbox's row does not repeat its [Set] line
+- coverage: the stand-down and the stand-up are one [State] line each, naming the holds
+- coverage: a stand-down combat holds says so, and its finish after combat is traced
+- coverage: the [Init] line names a missing optional library and a stand-down, once per enable
 
 ### test_optionssetup.lua (17)
 
@@ -1592,7 +1612,7 @@ badge and any count quoted in the docs must agree with it.
 - general → spell categories: Restore sits above the Add line and clears that category's edits and no other's (B2)
 - general → spell categories: Restore sits on the Category dropdown's line, to its right (feedback #3)
 
-### test_pages_containers.lua (31)
+### test_pages_containers.lua (33)
 
 - containers: registers its own top-level Blizzard category, with one tab, General (N-1, options-ui-§14)
 - containers: Unit, Aura type and Style sit under their own subsection; Name and Enabled do not
@@ -1611,6 +1631,8 @@ badge and any count quoted in the docs must agree with it.
 - containers: a rename re-lists every picker and re-applies no container
 - containers: the Unit dropdown offers the four units in order and writes the selected container
 - containers: changing the aura type redraws an open Filters page for the new type, on the next frame
+- containers: Unit, Aura type and Style draw every value in a color of its own
+- containers: the addon's dropdown is the stock one in a pool of its own, justified LEFT on acquire
 - containers: Aura type offers Buffs and Debuffs only; the retired Weapon enchants type is refused (feedback #6)
 - containers: the Style dropdown offers bars, icons and text and writes the selected container
 - containers: a new Style resets Fill to the one it suits and leaves the grow directions (B5)
@@ -1920,7 +1942,7 @@ badge and any count quoted in the docs must agree with it.
 
 - prose: no authored file carries a British spelling from localization-§5's published list
 - prose: the gate carries localization-§5's two lists whole, and nothing of its own
-- prose: the exclusions this repository declared suppressed 11 of 185 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (11): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, docs/spell-research/2026-09-24-logs/CORRECTIONS.md, docs/spell-research/2026-09-24-logs/CURRENT_CATEGORIES.md, docs/spell-research/2026-09-24-logs/DECISIONS.md, docs/spell-research/2026-09-24-logs/FLAGS.md, docs/spell-research/2026-09-24-logs/PROPOSED_ADDITIONS.md, docs/spell-research/2026-09-24-logs/REVIEW.md, docs/spell-research/2026-09-24-logs/SOURCES.md, docs/spell-research/2026-09-24-logs/dictionary/AURAS.md
+- prose: the exclusions this repository declared suppressed 11 of 186 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (11): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, docs/spell-research/2026-09-24-logs/CORRECTIONS.md, docs/spell-research/2026-09-24-logs/CURRENT_CATEGORIES.md, docs/spell-research/2026-09-24-logs/DECISIONS.md, docs/spell-research/2026-09-24-logs/FLAGS.md, docs/spell-research/2026-09-24-logs/PROPOSED_ADDITIONS.md, docs/spell-research/2026-09-24-logs/REVIEW.md, docs/spell-research/2026-09-24-logs/SOURCES.md, docs/spell-research/2026-09-24-logs/dictionary/AURAS.md
 - prose: no path this repository narrows the gate by is loaded by a TOC
 - prose: every path this repository narrows the gate by is one .pkgmeta keeps out of the zip
 - prose self-test: the carve-out suppresses the named generated folder, and only it
@@ -1983,13 +2005,15 @@ badge and any count quoted in the docs must agree with it.
 - layoutcap self-test: a census that states nothing is told apart from one that states none
 - layoutcap self-test: the exempt set takes folders as well as paths
 
-### test_diagnostics_contract.lua (7)
+### test_diagnostics_contract.lua (9)
 
 - diagnostics contract: both forms run the report
 - diagnostics contract: the debug word is matched in any case
 - diagnostics contract: both markers carry the brand and the end counts the report
 - diagnostics contract: the report appends after what the console already holds
-- diagnostics contract: the report lands with logging off and leaves it off
+- diagnostics contract: the report lands with logging off and turns it on for the session
+- diagnostics contract: an addon that opts out lands the report and leaves logging off (skipped: this addon keeps the default (Kit.diagnostics.enablesLogging is not false), so its report turns logging on; the case above holds it)
+- diagnostics contract: with logging already on, the report writes no second enable line
 - diagnostics contract: both forms run while the addon is disabled
 - diagnostics contract: no other name runs the report
 
@@ -2001,10 +2025,10 @@ badge and any count quoted in the docs must agree with it.
 | test_setups.lua | 14 |
 | test_launcher.lua | 30 |
 | test_database.lua | 73 |
-| test_database_categories.lua | 22 |
+| test_database_categories.lua | 24 |
 | test_migrations.lua | 28 |
 | test_schema.lua | 38 |
-| test_schema_paths.lua | 36 |
+| test_schema_paths.lua | 38 |
 | test_filtercompiler.lua | 85 |
 | test_filtercompiler_categories.lua | 9 |
 | test_container.lua | 52 |
@@ -2014,7 +2038,7 @@ badge and any count quoted in the docs must agree with it.
 | test_bus.lua | 8 |
 | test_state.lua | 2 |
 | test_lifecycle.lua | 18 |
-| test_anchors.lua | 50 |
+| test_anchors.lua | 51 |
 | test_anchors_handle.lua | 27 |
 | test_anchors_seam.lua | 10 |
 | test_anchors_edges.lua | 14 |
@@ -2046,13 +2070,14 @@ badge and any count quoted in the docs must agree with it.
 | test_disabled.lua | 18 |
 | test_slash.lua | 34 |
 | test_slash_verbs.lua | 51 |
-| test_diagnostics.lua | 47 |
+| test_diagnostics.lua | 49 |
 | test_bulklog.lua | 20 |
+| test_debug_coverage.lua | 10 |
 | test_optionssetup.lua | 17 |
 | test_options_descriptor.lua | 18 |
 | test_pages_general.lua | 35 |
 | test_pages_general_categories.lua | 32 |
-| test_pages_containers.lua | 31 |
+| test_pages_containers.lua | 33 |
 | test_pages_filters.lua | 49 |
 | test_pages_layout.lua | 47 |
 | test_pages_bars.lua | 11 |
@@ -2075,5 +2100,5 @@ badge and any count quoted in the docs must agree with it.
 | test_lintconfig.lua | 6 |
 | test_eol.lua | 2 |
 | test_layout_cap.lua | 13 |
-| test_diagnostics_contract.lua | 7 |
-| **Total** | **1750** |
+| test_diagnostics_contract.lua | 9 |
+| **Total** | **1771** |

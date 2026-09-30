@@ -178,12 +178,15 @@ test("bulklog: CopyFrom is one [Set] line counting the rows it changed, and no [
     assertEqual(NS2.Database.FindContainer(1).icons.width, 55, "the rows are still written")
 end)
 
-test("bulklog: a refused CopyFrom logs nothing", function()
+test("bulklog: a refused CopyFrom writes no row and logs one line naming the refused key", function()
     local NS2 = fresh()
     NS2.Database.FindContainer(2).filter.whitelist = "garbage"
     local lines = capture(NS2)
     assertFalse((NS2.ContainerManager.CopyFrom(2, 1, "filter")))
-    assertEqual(#lines, 0, dump(lines))
+    -- red under: copyThrough's refusal returning without its line (debug-logging-§8, refusals), or
+    -- the refused copy still opening its bulk bracket (a "0 rows" line after it)
+    assertEqual(#lines, 1, dump(lines))
+    assertEqual(lines[1], "[Set] copy container 2->1 (filter) refused at filter: Invalid value for container.filter.whitelist")
 end)
 
 test("bulklog: ResetPositions is one [Set] line counting the rows it changed", function()

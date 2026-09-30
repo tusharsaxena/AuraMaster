@@ -46,6 +46,25 @@ local enabledStored = NS.EnabledStored
 local PENDING_EVENT = "PLAYER_REGEN_ENABLED"
 local pendingHeld = false
 
+--- The holds the addon is down by, as text: the library's sorted list, or the stub latch's one.
+--- Published for the [Init] line's stand-down note (core/DebugLogSetup.lua), read at call time.
+function NS.HoldsText()
+    local lc = NS.lifecycle
+    if lc and lc.Holds then
+        local list = lc:Holds()
+        if list[1] then return table.concat(list, ", ") end
+        return "none"
+    end
+    return NS.IsStoodDown() and NS.HOLD_DISABLED or "none"
+end
+
+--- One [State] line per edge (debug-logging-§8, "State edges" and "Deferred work"): the addon's
+--- own stand-down and stand-up, the holds behind it, and the secure half combat held and finished.
+local function traceEdge(what)
+    if not (NS.State and NS.State.debug and NS.Debug) then return end
+    NS.Debug("State", "%s (holds: %s)", what, NS.HoldsText())
+end
+
 local function releasePending()
     if not pendingHeld then return end
     pendingHeld = false
@@ -75,7 +94,12 @@ local function holdPending()
         -- Released FIRST: the registration is permitted only while work is owed, and a handler that
         -- unregistered itself after re-arming would keep a registration nothing is waiting on.
         releasePending()
-        if NS.IsStoodDown() and not applySecure() then holdPending() end
+        if not NS.IsStoodDown() then return end
+        if applySecure() then
+            traceEdge("stand-down finished after combat: Blizzard frames and anchors restored")
+        else
+            holdPending()
+        end
     end, NS.RejectedEvents)
 end
 
@@ -96,7 +120,12 @@ local function standDown()
     if NS.ContainerManager and NS.ContainerManager.StopListening then NS.ContainerManager.StopListening() end
     -- The frame picker's overlay runs an OnUpdate; a stood-down addon runs none.
     if NS.FramePicker and NS.FramePicker.Stop then NS.FramePicker.Stop() end
-    if not applySecure() then holdPending() end
+    if applySecure() then
+        traceEdge("stood down: events and timers off, containers hidden")
+    else
+        holdPending()
+        traceEdge("stood down: events and timers off; hiding held until combat ends")
+    end
 end
 
 --- NON-EMPTY -> EMPTY: the addon comes back, rebuilt from the settings AS THEY ARE NOW rather than
@@ -119,6 +148,7 @@ local function standUp()
         -- The addon's own request: a player change held by the stand-down keeps its notice.
         if NS.ContainerManager.RequestApply then NS.ContainerManager.RequestApply(nil, true) end
     end
+    traceEdge("stood up: events on, every container re-applied")
 end
 
 -- ---------------------------------------------------------------------------

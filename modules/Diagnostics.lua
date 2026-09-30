@@ -14,8 +14,9 @@ local _, NS = ...
 -- and end markers, the identity header (this addon's initSummary, the client, locale, the debug
 -- flag, the two combat reads, the running LibKa0s minors), one pcall per section, the secret-safe
 -- formatting and escape stripping, the cap (lib.DIAG_MAX_LINES clamped below the console buffer)
--- with its truncated line, the ungated append that never clears and never touches the flag, the
--- reveal and the one chat line. core/DebugLogSetup.lua hands the helper Diag.Sections through the
+-- with its truncated line, the ungated append that never clears, the reveal and the one chat line.
+-- The run (not a section) turns logging on for the session first when it is off (DebugLogDiagnostics
+-- 2, debug-logging-§14); the sections read state only and never touch the flag. core/DebugLogSetup.lua hands the helper Diag.Sections through the
 -- descriptor's `diagnostics`; the dispatcher calls NS.DebugLog:RunDiagnostics(). The body lines
 -- are diagnostic English, not routed through NS.L, like every trace and the [Init] summary.
 --

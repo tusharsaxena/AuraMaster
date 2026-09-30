@@ -20,8 +20,19 @@ end
 --- The console line after its "HH:MM:SS | " stamp.
 local function unstamped(line) return (tostring(line):gsub("^%d%d:%d%d:%d%d | ", "")) end
 
+--- A LibSharedMedia stand-in: enough for Style's and the primer's reads, so a healthy session's
+--- [Init] line has nothing to add (the harness loads no LibSharedMedia).
+local function withMedia(m)
+    local lsm = setmetatable({ MediaType = { FONT = "font", STATUSBAR = "statusbar", BORDER = "border",
+        BACKGROUND = "background", SOUND = "sound" } },
+        { __index = function() return function() return {} end end })
+    function lsm.Register() return true end
+    function lsm.Fetch() return nil end
+    m.__libs["LibSharedMedia-3.0"] = lsm
+end
+
 test("debuglog: enabling logging writes the [Init] summary — name, version, schema, profile and container count", function()
-    local NS2 = fresh()
+    local NS2 = fresh({ before = withMedia })
     NS2.DebugLog:SetEnabled(true)
     -- red under: initSummary dropping a field, or NS.SafeToString of a missing field answering "nil"
     assertEqual(unstamped(NS2.DebugLog:LastLine()),

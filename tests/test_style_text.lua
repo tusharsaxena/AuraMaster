@@ -572,6 +572,7 @@ local function refusedRedress(region, method, times)
             reported[n + 1] = tostring(err)
         end end
     end })
+    NS.State.debug = true
     NS.Debug = function(tag, fmt, ...)
         local n = #lines
         lines[n + 1] = tag .. ":" .. fmt:format(...)
@@ -656,12 +657,14 @@ test("text style: an icon whose SetSize is refused on a live re-dress costs the 
     assertTextSurvives(refusedRedress("icon", "SetSize"), "SetSize refused")
 end)
 
-test("text style: the same refusal on every re-dress reaches the error handler once, and the debug log each time", function()
+test("text style: the same refusal on every re-dress reaches the error handler once, and the debug log once", function()
     local got = refusedRedress("iconBorder", "Show", 3)
     assertTrue(got.ok, tostring(got.err))
     -- red under: geterrorhandler called on every re-dress (a restyle of 40 buttons floods BugSack)
     assertEqual(#got.reported, 1)
-    assertEqual(matching(got.lines, "Show refused"), 3)
+    -- red under: Style.ReportError writing its debug line per failure rather than once per distinct
+    -- error (debug-logging-§8, "Errors caught"; three re-dresses that fail the same way are one line)
+    assertEqual(matching(got.lines, "Show refused"), 1)
 end)
 
 -- ── the icon border on a live button (B2-3) ────────────────────────────────────────────────────

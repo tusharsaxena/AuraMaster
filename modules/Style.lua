@@ -520,21 +520,24 @@ function Style.Bind(frame, method, ...)
     local fn = frame[method]
     if type(fn) ~= "function" then return false end
     local ok, err = pcall(fn, frame, ...)
-    if not ok and NS.Debug then NS.Debug("Style", "%s failed: %s", method, err) end
+    -- Once per distinct error: a restyle binds every button (debug-logging-§8, §9).
+    if not ok and NS.DebugOnce then NS.DebugOnce("Style", method, err) end
     return ok
 end
 
 -- The first line of every error already handed to the client's error handler this session.
 local reportedErrors = {}
 
---- Report an error a guarded dress call caught (smoke batch 2, item 7): one "Style" debug line with its
---- first line every time, and the whole error (a stack attached, Style.WithStack) to the client's
---- error handler ONCE per session per distinct first line, so `/console scriptErrors 1` or BugSack
---- names it without a restyle of forty buttons raising forty times. A client without a handler (the
---- headless harness) keeps the debug line. `what` names the guarded call.
+--- Report an error a guarded dress call caught (smoke batch 2, item 7): one "Style" debug line per
+--- distinct error while logging is on (NS.DebugOnce, debug-logging-§8: a restyle of forty buttons
+--- failing the same way is one line, not forty), and the whole error (a stack attached,
+--- Style.WithStack) to the client's error handler ONCE per session per distinct first line, so
+--- `/console scriptErrors 1` or BugSack names it without a restyle of forty buttons raising forty
+--- times. A client without a handler (the headless harness) keeps the debug line. `what` names the
+--- guarded call.
 function Style.ReportError(what, err)
     local first = tostring(err):match("^[^\n]*")
-    if NS.Debug then NS.Debug("Style", "%s failed: %s", what, first) end
+    if NS.DebugOnce then NS.DebugOnce("Style", what, first) end
     if reportedErrors[first] then return end
     reportedErrors[first] = true
     local handler = type(geterrorhandler) == "function" and geterrorhandler()

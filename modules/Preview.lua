@@ -25,15 +25,22 @@ local C = NS.Constants
 --- gray line and changes nothing (the checkbox then reads false again); combat ending it is
 --- core/AuraMaster.lua's PLAYER_REGEN_DISABLED, which calls this with false. The Master controls
 --- checkbox, `/am test` and the launcher's left-click all come through here.
+---
+--- `why` names a caller outside the write seam (`/am test`, which the launcher runs, and combat
+--- starting), and a switch it makes writes one [Preview] line (debug-logging-§8). The checkbox passes
+--- none: it is a session row, so the seam's [Set] line already records it (§10). A refused start is
+--- traced whoever asked.
 --- @return boolean  whether test mode is now what was asked for
-function Preview.SetTestMode(on)
+function Preview.SetTestMode(on, why)
     on = on and true or false
     if on and InCombatLockdown() then
+        if NS.Debug then NS.Debug("Preview", "test mode refused (in combat)") end
         NS.Printf("|cff808080%s|r", NS.L["Test mode can't start in combat."])
         return false
     end
     if NS.State.testMode ~= on then
         NS.State.testMode = on
+        if why and NS.Debug then NS.Debug("Preview", "test mode %s (%s)", on and "on" or "off", why) end
         NS.bus:SendMessage(NS.MSG.VISIBILITY_CHANGED)
     end
     if NS.Helpers and NS.Helpers.RefreshScalars then NS.Helpers.RefreshScalars() end

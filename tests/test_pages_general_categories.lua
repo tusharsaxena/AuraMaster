@@ -109,7 +109,9 @@ test("general → spell categories: the create form makes a category, shows it, 
     local path = "container.filter.categories." .. key
     assertTrue(NS.FindSchemaRow(path) ~= nil, "a schema row")
     assertEqual(NS.DefaultFor(path), "show")
-    assertEqual(NS.GetSetting(path, NS.Database.GetContainers()[1].id), "show")
+    -- Stored as Hide in a container that existed before the category (owner, 2026-09-30): the
+    -- default above is what a container made later takes.
+    assertEqual(NS.GetSetting(path, NS.Database.GetContainers()[1].id), "hide")
     assertEqual(NS.ValidateSchema(), 0)
     assertEqual(NS.Categories.HARMFUL[#NS.Categories.HARMFUL].key, "uncategorizedDebuffs",
         "Uncategorized is still last after a create (U-1)")

@@ -17,6 +17,8 @@ local BF = NS.BlizzardFrames
 
 local hiddenParent
 local originalParent = {}   -- [frame] = the parent it had before we moved it
+-- A toggle lockdown held (BF.NoteHeld): the apply that finally runs says so once (debug-logging-§8).
+local held = false
 
 local function hidden()
     if not hiddenParent then
@@ -54,7 +56,19 @@ function BF.Apply()
     local down = NS.IsStoodDown()
     apply("BuffFrame", not down and p.hideBlizzardBuffs)
     apply("DebuffFrame", not down and p.hideBlizzardDebuffs)
+    -- The flush line for the hold CM.NoteDeferred traced: without it the log shows a deferral that
+    -- never ends, the evidence of a stuck hold, although the toggle applied (debug-logging-§8).
+    if held then
+        held = false
+        if NS.Debug then NS.Debug("Apply", "Blizzard frames applied after combat") end
+    end
     return true
+end
+
+--- A settings toggle's Apply was refused under lockdown and its deferral traced (settings/General.lua):
+--- the next Apply that runs, PLAYER_REGEN_ENABLED's (core/AuraMaster.lua), writes the flush line.
+function BF.NoteHeld()
+    held = true
 end
 
 --- Whether `name`'s frame is currently moved away by us (a test seam).

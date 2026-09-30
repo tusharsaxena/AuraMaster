@@ -15,23 +15,23 @@ engine does the reading, filtering, sorting, layout and timer animation in its o
 
 ```
  1  a control, /am set, a Defaults button or a drag handle
-        │  NS.SetByPath(path, value[, containerId])            settings/Schema.lua:870
+        │  NS.SetByPath(path, value[, containerId])            settings/Schema.lua:893
         │    write → row.onChange → [Set] debug line → CONFIG_CHANGED { section, containerId, path }
         │    (a session row stops after the debug line: it sends nothing)
         │    (inside a bulk copy or reset the [Set] line is muted and tallied: one line per act)
         ▼
- 2  ContainerManager (CONFIG_CHANGED listener)                 modules/ContainerManager.lua:743
+ 2  ContainerManager (CONFIG_CHANGED listener)                 modules/ContainerManager.lua:770
         │  first FontPrimer.PrimeAll: a font no container drew in yet is drawn on a shown frame
         │  the row's effect:  "visibility" → ApplyVisibility now    "none" → nothing
         │  otherwise RequestApply(containerId)   nil = every container
         │  batched with C_Timer.NewTimer(0) — a slider drag or a profile reset applies once
         ▼
- 3  ContainerManager.FlushPending                              modules/ContainerManager.lua:314
+ 3  ContainerManager.FlushPending                              modules/ContainerManager.lua:335
         │  MustDefer()?  Compat.AurasAreSecret() or InCombatLockdown()
         │     yes → keep the request, print the notice naming the cause (once), return
         │     no  → for each dirty container: Container:Apply(); re-place container-attached ones
         ▼
- 4  Container:Apply                                            modules/Container.lua:384
+ 4  Container:Apply                                            modules/Container.lua:385
         │  plan = FilterCompiler.Compile(cfg, { timedSpells })  (pure)
         │  anchor scale / strata / level; Anchors.Place (screen, container or frame)
         │  structure = #groups : enchant slots (hide-permanent) : style : growth corner
@@ -44,7 +44,7 @@ engine does the reading, filtering, sorting, layout and timer animation in its o
         │  and candidate filters; sorts; lays out with the flow settings; creates buttons
         │  and calls initializeFrame for each new one
         ▼
- 6  Style.Element(button, cfg, true)                           modules/Style.lua:841
+ 6  Style.Element(button, cfg, true)                           modules/Style.lua:844
         │  build the regions once (icon, icon border, bar, fill, spark clip, text, border, pandemic wash)
         │  apply the look; bind regions to the engine: SetIcon, SetDurationBar, SetSpellName,
         │  SetDurationText, SetApplicationCount, AddDispelTypeTexture, AddPandemicRegion,
@@ -66,7 +66,9 @@ only: a stretch announced as combat that secrecy still holds afterwards prints t
 once, on the next held request. The `PLAYER_REGEN_ENABLED` flush passes `"regen"` and never escalates,
 because that event's order against `ADDON_RESTRICTION_STATE_CHANGED` is unverified. Secret then
 combat prints nothing more. A flush that may touch frames clears the stretch, even with nothing
-queued, and every deferral writes one gated `[Apply] deferred: secret=… lockdown=… edge=…` line. A
+queued, and a deferral writes one gated `[Apply] deferred: secret=… lockdown=… edge=… queued=…` line
+when the hold is new or has changed (debug-logging-§9: a key's combat ends all flush the same hold,
+and write it once). A
 Blizzard-frame toggle made under lockdown is not queued (`BlizzardFrames.Apply` catches it up on
 `PLAYER_REGEN_ENABLED`), but its `onChange` announces the wait through
 `ContainerManager.NoteDeferred` under the same rule, so one fight prints the line once.
@@ -180,16 +182,16 @@ only when the direction moved), cap and layout can change on a live engine; hide
 cannot, because a slot takes it only when added, so toggling it is a new shape. A plan of the same
 shape calls only the setters whose values moved. Candidate filters are serialized with
 `FilterCompiler.Signature` (`modules/FilterCompiler.lua:961`) and re-sent only when the two
-signatures differ (`modules/Container.lua:325-333`), because the engine clears and re-gathers a
+signatures differ (`modules/Container.lua:326-334`), because the engine clears and re-gathers a
 group whenever they are set (`docs/midnight-quirks.md`). **Rebuilding.** Groups are add-only and a
 frame is never freed, so a new shape disables and hides the old engine, keeps it aside, and builds a
 new one: flow layout first, then the anchor, then every `AddAuraGroup`, then the enchant slots, then
-`SetUnit` last (`modules/Container.lua:298`).
+`SetUnit` last (`modules/Container.lua:299`).
 
 ## Visibility, separate from applying
 
 Whether a container shows is a cheaper question, and one that is legal in combat:
-`Container:ShouldShow` (`modules/Container.lua:462`) answers, in order — perf suspend, profile and
+`Container:ShouldShow` (`modules/Container.lua:463`) answers, in order — perf suspend, profile and
 container `enabled`, then General visibility against `UnitAffectingCombat("player")`, which an
 unlocked container skips so one that shows only in combat can still be found and moved; it also
 answers whether the container previews, which is the session-only test mode (`NS.State.testMode`),
@@ -225,7 +227,7 @@ so instead of "Drag to move": "Anchored to '*parent or frame*', so it cannot be 
 
 ## Preview
 
-While previewing, the engine is disabled and `Preview.Show` (`modules/Preview.lua:173`) acquires one
+While previewing, the engine is disabled and `Preview.Show` (`modules/Preview.lua:180`) acquires one
 addon-owned button per placeholder aura from a pool, dresses it through the same `Style.Element` with
 `engine = false`, fills in the placeholder set for the container (`Preview.AurasFor`: weapon enchants,
 one per slot, for a container showing only Weapon enchants (batch 9 SEP-4); debuffs of every dispel
@@ -431,7 +433,7 @@ player's forget is announced like a setting change.
 
 ## Where a container sits
 
-`Anchors.Place` (`modules/Anchors.lua:272`) sizes the anchor to one element and attaches it: to
+`Anchors.Place` (`modules/Anchors.lua:285`) sizes the anchor to one element and attaches it: to
 another container's engine frame (or its anchor, before the engine exists; or, while that container
 previews, its preview extent, because the disabled engine keeps a stale rect; or, while it is unlocked,
 not previewing and predicted empty, its one-element anchor, because an engine holding no aura is a

@@ -4,7 +4,7 @@
 ![CurseForge Version](https://img.shields.io/curseforge/v/1698345)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-1750%2F1750_passing-green)
+![Tests](https://img.shields.io/badge/Tests-1770%2F1770_passing-green)
 
 Ka0s Aura Master lets you build your own buff and debuff displays. Each one is a container. You pick
 whose auras it shows (yours, your target's, your focus's or your pet's), whether it shows buffs,
@@ -102,7 +102,7 @@ on your own debuffs does nothing, and the Filters section warns you when that's 
 | A timed buff showed up in my "without a duration" container. Why? | That filter learns which buffs have a timer while you're out of combat. A buff you've never seen out of combat can slip through the first time; after that it's known. `/am forgettimed` clears everything it learned. |
 | How do I cancel a buff? | Right-click it in a container that shows your own buffs or weapon enchants. Untick **Right-click to cancel** on Layout → Mouse if you'd rather it didn't. |
 | Can I hide Blizzard's buff frame? | Yes, on General → Display. Your weapon enchants live in that same Blizzard frame and go with it. If you still want to see them, make sure a player buff container's **Weapon enchants** row on Filters → Categories is set to Show (the default). |
-| Can I make my own category? | Yes. General → Spell Categories → **Make a new category**. Name it, pick buffs or debuffs, then add spells to it. It shows up on every container's Filters → Categories grid marked (yours), where you set it to Show or Hide like any other. Renaming it keeps your spells and each container's choice. Deleting it throws the spell list away, so it asks first. You can't switch a category between buffs and debuffs after you make it; make another one and delete the old one instead. |
+| Can I make my own category? | Yes. General → Spell Categories → **Make a new category**. Name it, pick buffs or debuffs, then add spells to it. It shows up on every container's Filters → Categories grid marked (yours), where you set it to Show or Hide like any other. It starts on Hide in the containers you already have, so turn it on where you want it; containers you make later start on Show. Renaming it keeps your spells and each container's choice. Deleting it throws the spell list away, so it asks first. You can't switch a category between buffs and debuffs after you make it; make another one and delete the old one instead. |
 | Can different characters have different setups? | Yes, through the Profiles page. A profile holds every container, so switching profiles swaps the whole set. `/am profile Raid` in chat switches to a profile called Raid. |
 | Why won't the settings open in combat? | The game protects its settings window during combat, so `/am config` prints a gray line instead of opening it. Try again once combat ends. |
 
@@ -129,7 +129,7 @@ on your own debuffs does nothing, and the Filters section warns you when that's 
 - Type `/am diagnostics`.
 - If the debug window isn't open, open it with `/am debug`. Press **Copy**, copy the entire output, and include it with your bug report.
 
-The diagnostics report goes in after the debug trace in the same window, so one copy gets you both.
+The report is added after the debug trace in the same window, so one copy carries both.
 
 ## Issues and feature requests
 

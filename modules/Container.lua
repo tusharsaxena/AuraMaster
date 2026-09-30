@@ -30,7 +30,8 @@ local function callEngine(engine, method, ...)
     local fn = engine and engine[method]
     if type(fn) ~= "function" then return false end
     local ok, err = pcall(fn, engine, ...)
-    if not ok and NS.Debug then NS.Debug("Engine", "%s failed: %s", method, err) end
+    -- Once per distinct error: a refresh runs on every target swap (debug-logging-§8, §9).
+    if not ok and NS.DebugOnce then NS.DebugOnce("Engine", method, err) end
     return ok
 end
 
