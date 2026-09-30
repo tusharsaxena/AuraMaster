@@ -20,7 +20,7 @@ check's number is not reused. Checks with no recorded pass, and checks new or co
 | PROFILE-1 to PROFILE-13 | Profiles | The Profiles page, the `/am profile` verb, and what a profile holds |
 | STATE-1 to STATE-5 | Master switch | Enable and disable, visibility, the inert disabled addon |
 | COMBAT-1 to COMBAT-7 | Combat and restrictions | Deferred changes, the settings lock, resets in combat, Mythic+ keys |
-| DIAG-1 to DIAG-12 | Debug, diagnostics, perf | The debug console, bulk `[Set]` lines, `/am diagnostics`, `/am perf`, the event trace |
+| DIAG-1 to DIAG-15 | Debug, diagnostics, perf | The debug console, bulk `[Set]` lines, `/am diagnostics`, `/am perf`, the event trace, resizing the console, its copy window and the perf panel |
 | CONT-1 to CONT-25 | Containers | Create, duplicate, delete, rename, copy; handles, strips and the close mark; test mode; unit swaps; empty placeholders |
 | FILT-1 to FILT-42 | Filters and spell categories | Cast by, the category grids, Overrides, the add-a-spell box, aura ids, your own categories, weapon enchants and their names |
 | LAYOUT-1 to LAYOUT-38 | Layout | Anchor modes, attaching, chains, growth, anchor points, seams, the name label, mouse and tooltips |
@@ -524,6 +524,26 @@ end are the record this check takes. Result:
 or LFR boss) with `/am debug on` → `[Event] ADDON_RESTRICTION_STATE_CHANGED … type=1 active=1` at the
 pull and `… type=1 active=0` at the kill. This does not stand in for COMBAT-7: a `/reload`
 mid-encounter lands in combat, where the login build waits for combat to end by design. Result:
+
+**DIAG-13. Resizing the debug console.** Bare `/am debug` → the console opens at 700 × 344 with a
+size grip in its bottom-right corner. Drag the grip out → the window grows on both axes, the lines
+reflow to the new width, the scrollbar and the line counter follow, and no line is lost. Drag it in
+as far as it goes → it stops while every title-bar control and the title still fit, with the status
+bar and a few lines showing. Close it and open it again → the size you left it at. `/reload` → it
+opens at 700 × 344 again. With another Ka0s addon loaded, open its console too → it opens at its own
+default, and resizing one leaves the other as it was. Result:
+
+**DIAG-14. Resizing the copy window.** In the console press **Copy** → the copy window opens at
+560 × 360 with a grip in its bottom-right corner. Drag the grip → it resizes on both axes and the
+text area widens and narrows with it; the scroll bar's down arrow stays clickable above the grip.
+Drag it in as far as it goes → it stops at 240 × 140. Close it and press **Copy** again → the size you
+left. `/reload` → 560 × 360 again. Another Ka0s addon's copy window keeps its own size. Result:
+
+**DIAG-15. Resizing the perf panel.** `/am perf` → the step panel opens at its usual size with a grip
+in its bottom-right corner. Drag the grip → only the width changes, and every step row stretches to
+it; dragging up or down does nothing. Drag it narrower → it stops at the width it opened at. Close
+it and run `/am perf` again → the width you left. `/reload` → the usual width again. Another Ka0s
+addon's perf panel is unaffected. Result:
 
 ## Containers
 
@@ -1626,6 +1646,7 @@ line, then remove its row here.
 | DIAG-9 | 211, batch 9 (failed in the late 2026-09-25 run): all of it; its `attach.y=-4` step moved to INSTALL-8 and passed as 234 |
 | DIAG-11 | 293 (MK2), mid-key reload; its line shape corrected on 2026-09-29 |
 | DIAG-12 | 294 (MK3), mid-key reload |
+| DIAG-13 to DIAG-15 | new on 2026-09-30 with the resizable console, copy window and perf panel (LibKa0s v1.64.0, DL-AM-01) |
 | CONT-3 | 31: its in-combat steps rewritten on 2026-09-29 for `/am new`, `/am delete` and a Delete popup opened before the pull, since the panel is locked in combat |
 | CONT-5 | 205: its in-combat rename rewritten on 2026-09-29 for `/am set container.name` |
 | CONT-8 | 162, smoke batch 2 (owed: the owner verified 143 to 161 only) |
