@@ -34,7 +34,7 @@ local widgets = LibStub and LibStub("LibKa0s-Widgets-1.0", true)
 local NEEDS_WIDGETS = 7
 if not widgets or (widgets.MINOR or 0) < NEEDS_WIDGETS then return end
 
-local MAJOR, MINOR = "LibKa0s-DebugLog-1.0", 16
+local MAJOR, MINOR = "LibKa0s-DebugLog-1.0", 17
 local lib = LibStub:NewLibrary(MAJOR, MINOR)
 if not lib then return end
 
@@ -328,7 +328,7 @@ end
 
 --- The Diagnostics link, drawn only when the instance has the report, and how far its right edge
 --- reaches from the bar's left (the WIDER toggle word's case); nil and 0 without the report. Its
---- click is what `/<prefix> diagnostics` runs: ungated, never touching the logging flag. ANCHORED
+--- click is what `/<prefix> diagnostics` runs, D:RunDiagnostics(), which turns logging on. ANCHORED
 --- TO THE LABEL'S FONT STRING, not the toggle's 80-wide button, so the gap holds after either word;
 --- a level above that button, which runs on under it.
 local function buildDiagnosticsLink(titleBar, toggleBtn, toggleFS, D)
@@ -434,7 +434,8 @@ end
 ---   diagnostics function  optional, minor 14. Returns the host's report sections as
 ---                         `{ { name, fn }, ... }`, each `fn(out)`. CALLED AT RUN TIME rather than
 ---                         read at New, so a module that loads after the console can still supply
----                         a section. Read only when DebugLogDiagnostics.lua is loaded.
+---                         a section. Read only when DebugLogDiagnostics.lua is loaded, like:
+---   diagnosticsEnablesLogging  optional, minor 17. `false` stops a report run turning logging on.
 function lib:New(d)
   d = type(d) == "table" and d or {}
   for _, field in ipairs({ "name", "title", "font", "isEnabled", "setEnabled" }) do
@@ -981,10 +982,9 @@ function lib:New(d)
   end
 
   -- The diagnostics report (minor 14) lives in DebugLogDiagnostics.lua, a secondary file of this
-  -- major, and installs itself here when it loaded. It is handed the private pieces it needs and
-  -- nothing else: the batched append and the one repaint, the chat printer, the stringifier, and
-  -- the descriptor for `brandName`, `title`, `initSummary` and `diagnostics`. Absent, the instance
-  -- has no report methods, which is what a host's own degradation stub already answers for.
+  -- major, and installs itself here when it loaded, handed only what it needs: the batched append,
+  -- the one repaint, the chat printer, the stringifier and the descriptor (for its own fields).
+  -- Absent, the instance has no report methods, which a host's degradation stub already answers.
   if type(lib.__installDiagnostics) == "function" then
     lib.__installDiagnostics(D, {
       d = d,

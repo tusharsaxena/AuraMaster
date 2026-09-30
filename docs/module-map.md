@@ -221,7 +221,7 @@ The suites, in the order `tests/run.lua` runs them (it is the authority on the l
 | `test_lintconfig.lua` | `.luacheckrc` carries no blanket suppression, no source file carries a bare inline luacheck ignore, and no `#` shares its line with a keyword or brace lizard must see |
 | `tests/_kit/test_eol.lua` | Every tracked file carries the line ending `.gitattributes` declares, and `.gitattributes` is the canonical body |
 | `tests/_kit/test_layout_cap.lua` | The layout-§1 cap census in `docs/ARCHITECTURE.md` agrees with the tree |
-| `tests/_kit/test_diagnostics_contract.lua` | The shared debug-logging-§14 diagnostics contract, run against this addon's dispatcher through `Kit.diagnostics` in `tests/run.lua`: both forms, while disabled, append, ungated, the branded markers, and no `diag` or `dx` |
+| `tests/_kit/test_diagnostics_contract.lua` | The shared debug-logging-§14 diagnostics contract, run against this addon's dispatcher through `Kit.diagnostics` in `tests/run.lua`: both forms, while disabled, append, ungated, the branded markers, logging turned on for the session, and no `diag` or `dx` |
 
 ## Root and media
 

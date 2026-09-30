@@ -20,7 +20,7 @@ check's number is not reused. Checks with no recorded pass, and checks new or co
 | PROFILE-1 to PROFILE-13 | Profiles | The Profiles page, the `/am profile` verb, and what a profile holds |
 | STATE-1 to STATE-5 | Master switch | Enable and disable, visibility, the inert disabled addon |
 | COMBAT-1 to COMBAT-7 | Combat and restrictions | Deferred changes, the settings lock, resets in combat, Mythic+ keys |
-| DIAG-1 to DIAG-16 | Debug, diagnostics, perf | The debug console, bulk `[Set]` lines, `/am diagnostics`, `/am perf`, the event trace, resizing the console, its copy window and the perf panel, the console's Diagnostics link |
+| DIAG-1 to DIAG-17 | Debug, diagnostics, perf | The debug console, bulk `[Set]` lines, `/am diagnostics`, `/am perf`, the event trace, resizing the console, its copy window and the perf panel, the console's Diagnostics link, diagnostics turning logging on |
 | CONT-1 to CONT-25 | Containers | Create, duplicate, delete, rename, copy; handles, strips and the close mark; test mode; unit swaps; empty placeholders |
 | FILT-1 to FILT-42 | Filters and spell categories | Cast by, the category grids, Overrides, the add-a-spell box, aura ids, your own categories, weapon enchants and their names |
 | LAYOUT-1 to LAYOUT-38 | Layout | Anchor modes, attaching, chains, growth, anchor points, seams, the name label, mouse and tooltips |
@@ -548,12 +548,22 @@ addon's perf panel is unaffected. Result:
 **DIAG-16. The Diagnostics link.** Bare `/am debug` → in the title bar, top left, the word
 **Diagnostics** sits just right of the Debug On/Off label with a small gap, drawn orange in the same
 plain text as that label: no button art, border or background. Hover it → it brightens; move off →
-orange again. With logging off, click it → the diagnostics report is written into the console (begin
-to end marker, as DIAG-5) with the one chat line giving its line count, and the label still reads
-Debug Off: no `[Set]` or `[Event]` lines follow as you change a setting. `/am debug on`, click it →
-the report appends after the trace lines, and logging stays on. Toggle the label between On and Off
+orange again. With logging off, click it → logging turns on first: the label reads Debug On, chat
+prints the `debug logging ON` line, and the console gains `[Debug] logging enabled` and the `[Init]`
+summary; then the diagnostics report is written after them (begin to end marker, as DIAG-5, its
+header reading `debug logging: on`) with the one chat line giving its line count, and `[Set]` lines
+follow as you change a setting. Click it again → the report appends once more, with no second
+`logging enabled` line, and logging stays on. Toggle the label between On and Off
 → the gap after it holds for either word. Drag the console in as far as it goes (DIAG-13) → the link
 still fits beside the label and the title. Result:
+
+**DIAG-17. Diagnostics turns logging on for the session.** `/reload` → logging is off (DIAG-2).
+`/am diagnostics` → chat prints the `debug logging ON` line, then the report's line-count line; the
+console holds `[Debug] logging enabled` and the `[Init]` summary ahead of the begin marker, the header
+reads `debug logging: on`, and the console's title-bar label reads Debug On. Change a setting → a `[Set]` line streams. `/reload` → logging is off again. `/am debug
+diagnostics` → the same: logging on for the session. `/reload` once more, then `/am debug on` and
+`/am diagnostics` → the report appends with no second `logging enabled` line. `/am debug off` →
+logging stops, and nothing turns it back on until the next report or `/am debug on`. Result:
 
 ## Containers
 
@@ -1659,7 +1669,8 @@ line, then remove its row here.
 | DIAG-11 | 293 (MK2), mid-key reload; its line shape corrected on 2026-09-29 |
 | DIAG-12 | 294 (MK3), mid-key reload |
 | DIAG-13 to DIAG-15 | new on 2026-09-30 with the resizable console, copy window and perf panel (LibKa0s v1.64.0, DL-AM-01) |
-| DIAG-16 | new on 2026-09-30 with the console's Diagnostics link (LibKa0s v1.64.0 re-cut, DebugLog 16, DL-AM-03) |
+| DIAG-16 | new on 2026-09-30 with the console's Diagnostics link (LibKa0s v1.64.0 re-cut, DebugLog 16, DL-AM-03); its click reworded the same day, the link now turning logging on (DebugLogDiagnostics 2, DL-AM-04) |
+| DIAG-17 | new on 2026-09-30: diagnostics turns debug logging on for the session (standard v2.71.0, DebugLogDiagnostics 2, DL-AM-04) |
 | CONT-3 | 31: its in-combat steps rewritten on 2026-09-29 for `/am new`, `/am delete` and a Delete popup opened before the pull, since the panel is locked in combat |
 | CONT-5 | 205: its in-combat rename rewritten on 2026-09-29 for `/am set container.name` |
 | CONT-8 | 162, smoke batch 2 (owed: the owner verified 143 to 161 only) |

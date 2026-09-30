@@ -4,7 +4,7 @@
 ![CurseForge Version](https://img.shields.io/curseforge/v/1698345)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-1769%2F1769_passing-green)
+![Tests](https://img.shields.io/badge/Tests-1770%2F1770_passing-green)
 
 Ka0s Aura Master lets you build your own buff and debuff displays. Each one is a container. You pick
 whose auras it shows (yours, your target's, your focus's or your pet's), whether it shows buffs,
@@ -129,7 +129,7 @@ on your own debuffs does nothing, and the Filters section warns you when that's 
 - Type `/am diagnostics`.
 - If the debug window isn't open, open it with `/am debug`. Press **Copy**, copy the entire output, and include it with your bug report.
 
-The diagnostics report goes in after the debug trace in the same window, so one copy gets you both.
+The diagnostics report goes in after the debug trace in the same window, so one copy gets you both. Running it also turns debug logging on for the rest of the session, if it was off; a `/reload` turns it off again.
 
 ## Issues and feature requests
 

@@ -108,7 +108,8 @@ Suites worth knowing by name:
   and no census row outlives its breach.
 - **`tests/_kit/test_diagnostics_contract.lua`** — the shared debug-logging-§14 diagnostics contract,
   run against this addon's own slash dispatcher through `Kit.diagnostics` in `tests/run.lua`: both
-  forms, both while disabled, append, ungated, the branded markers, and no `diag` or `dx`.
+  forms, both while disabled, append, ungated, the branded markers, logging turned on for the
+  session (no second enable line when it is already on), and no `diag` or `dx`.
 
 ## The degraded environment
 

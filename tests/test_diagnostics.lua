@@ -89,7 +89,17 @@ for _, form in ipairs(FORMS) do
         local NS, mocks = fresh()
         local chat = capture(mocks)
         assertFalse(NS.State.debug)
-        local rep = reportFrom(NS, form)
+        local added = reportFrom(NS, form)
+        -- The run turns logging on for the session first (debug-logging-§14, DebugLogDiagnostics 2), so
+        -- the `[Debug] logging enabled` line and the [Init] summary land ahead of the report.
+        local first
+        for i, l in ipairs(added) do
+            if l:find("diagnostics begin", 1, true) then first = i break end
+        end
+        assertTrue(first ~= nil, "no begin marker: " .. dump(added))
+        -- red under: a run that leaves the flag off, so no enable line precedes the report
+        assertTrue(has({ unpack(added, 1, first - 1) }, "[Debug] logging enabled") ~= nil, dump(added))
+        local rep = { unpack(added, first) }
         local total = #rep
         -- red under: routing through the gated NS.Debug (the flag is off, so nothing would land)
         assertTrue(total > 5, "the report did not reach the buffer")
@@ -100,9 +110,11 @@ for _, form in ipairs(FORMS) do
         assertTrue(n ~= nil, "no end marker: " .. last)
         assertEqual(tonumber(n), total, "the end marker counts every line of the report")
         assertTrue(NS.DebugLog:IsShown(), "the console was not revealed")
-        assertFalse(NS.State.debug, "the diagnostic must not switch logging on")
-        assertEqual(#chat, 1, dump(chat))
-        assertTrue(chat[1]:find(n .. " lines", 1, true) ~= nil, chat[1])
+        assertTrue(NS.State.debug, "the diagnostic turns logging on for the session")
+        -- Two chat lines: the seam's own "debug logging ON", then the report's one line.
+        assertEqual(#chat, 2, dump(chat))
+        assertTrue(chat[1]:find("debug logging", 1, true) ~= nil, chat[1])
+        assertTrue(chat[2]:find(n .. " lines", 1, true) ~= nil, chat[2])
     end)
 
     test("diag: /am " .. form .. " answers while the addon is disabled, and the state line says so", function()
@@ -641,6 +653,8 @@ test("diag: the report is capped below the console buffer and says it was trunca
     assertTrue(lines[total - 1]:find("[Diag] truncated:", 1, true) == 1, lines[total - 1])
     assertTrue(lines[total]:find("diagnostics end: " .. total .. " line(s)", 1, true) ~= nil, lines[total])
     assertEqual(count(lines, "[Aura] player+"), NS.Diagnostics.MAX_AURAS, "per-unit aura cap")
+    -- Logging on first, so the run adds the report alone and no enable line or [Init] summary.
+    NS.DebugLog:SetEnabled(true)
     local before = #NS.DebugLog.buffer
     NS.DebugLog:RunDiagnostics()
     local copy = NS.DebugLog:CopyText()

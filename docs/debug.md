@@ -7,21 +7,30 @@ which exactly two forms run: **`/am diagnostics`** and **`/am debug diagnostics`
 `diag` alias (owner, 2026-09-25): `/am debug diag` toggles the window like any other unknown word.
 The console's title bar also carries the library's orange **Diagnostics** link, just right of the
 Debug On/Off label (DebugLog 16); a click runs the same report, `NS.DebugLog:RunDiagnostics()`.
+Running the report, by either form or the link, also **turns debug logging on for the session**
+(debug-logging-§14, DebugLogDiagnostics 2), as `/am debug on` would; a `/reload` turns it off again.
 
 ## What the report does
 
-It writes a one-shot report of what the addon sees and what it drew into the debug console, opens
-the console, and prints one chat line with the line count. Press **Copy** in the console and paste
+It turns logging on when it is off, writes a one-shot report of what the addon sees and what it drew
+into the debug console, opens the console, and prints one chat line with the line count. Press **Copy** in the console and paste
 the text into a bug report.
 
 - `diagnostics` is its own verb in `NS.COMMANDS` (25 verbs) and a sub-verb of `debug`. Both answer
   while the addon is disabled: `diagnostics` is named in `liveVerbs()` next to `debug`.
+- It turns logging on for the session first, through the one seam (`NS.DebugLog:SetEnabled(true)`),
+  when logging is off, so the `[Debug] logging enabled` line, its chat line and the `[Init]` summary
+  land just ahead of the report and the header reads `debug logging: on`. It never turns logging off,
+  and with logging already on it writes no second enable line. This addon keeps the library's default
+  (its descriptor does not set `diagnosticsEnablesLogging = false`). The sections themselves read
+  state only and never touch the flag.
 - It writes through the **ungated** append, as debug-logging-§12 requires for an explicit
-  diagnostic run. The logging flag is printed in the header and is not changed.
+  diagnostic run.
 - It **appends**. The console keeps the newest 3000 lines, so a long report can push older trace
   lines out. Because it appends after the trace, one Copy carries both: turn logging on with
   `/am debug on`, reproduce the bug, run `/am diagnostics`, then Copy the whole console (the
-  README's *Reporting a bug*).
+  README's *Reporting a bug*). A report run first leaves logging on, so what follows it is traced
+  too.
 - It is read-only. It writes no setting, requests no apply, and never calls a setter on an engine
   button.
 - The body lines are diagnostic English and do not go through `NS.L`, like every trace line. The
@@ -245,8 +254,8 @@ and restriction flips flush it, and the `applied` line after it is the flush tha
 | `PLAYER_REGEN_DISABLED` / `_ENABLED` | `[Event] PLAYER_REGEN_… secret=… lockdown=… queued=…` |
 
 Logging is session-only and off after every `/reload` (debug-logging-§5), so the login itself is
-never in the trace. After a mid-key `/reload`, turn it back on with `/am debug on`, then run
-`/am diagnostics`: `apply queue: all=false` and `engine=yes` on every `[Cont]` line mean the login
+never in the trace. After a mid-key `/reload`, run `/am diagnostics`, which turns it back on as
+well: `apply queue: all=false` and `engine=yes` on every `[Cont]` line mean the login
 build ran; `all=true` with `mustDefer=true` means it is still waiting.
 
 Target, focus and pet swaps and `ADDON_LOADED` are left out on purpose (owner, 2026-09-29): they
