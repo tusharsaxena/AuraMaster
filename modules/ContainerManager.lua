@@ -239,7 +239,8 @@ local function noteDeferred(edge, quiet)
 end
 
 --- A settings write outside the apply queue had to wait as well — a Blizzard-frame toggle under
---- lockdown, which BlizzardFrames.Apply catches up on PLAYER_REGEN_ENABLED (core/AuraMaster.lua).
+--- lockdown, which BlizzardFrames.Apply catches up on PLAYER_REGEN_ENABLED (core/AuraMaster.lua) —
+--- or `/am redraw full` queued its re-dress, a system request whose flush says nothing (SP-AMX-02).
 --- Say so under the same once-per-stretch rule, so one fight never prints the line twice.
 function CM.NoteDeferred()
     noteDeferred()
@@ -404,6 +405,118 @@ function CM.ReapplyStaleClass()
             CM.RequestApply(id, true)
         end
     end
+end
+
+-- ---------------------------------------------------------------------------
+-- The weapon-enchant reset (SP-AMX-01)
+-- ---------------------------------------------------------------------------
+
+-- A fresh login can draw an enchant bar with its icon and time but no name: the engine names it from
+-- the equipped weapon's item name, once, and nothing redraws an unchanged enchant (ContainerClass:
+-- ResetEnchants). Two moments redraw it, through one debounced C_Timer: the loading screen's end
+-- (ENCHANT_DELAY.world, a quarter second after the font primer's WORLD_REFRESH and before its
+-- WORLD_HOLD, so the primer's fonts are drawn by then; armed whether or not the primer primed
+-- anything), and an equipped weapon's item data arriving (ENCHANT_DELAY.item, after the engine's own
+-- retry on the same event). A trigger that comes while one is armed keeps the LATER deadline, so a
+-- burst of item events flips once and never pulls the world reset forward. The timer is canceled
+-- by CM.StopListening; the two events are lifecycle events (core/AuraMaster.lua), gone while stood down.
+local ENCHANT_DELAY = { world = 1.75, item = 0.5 }
+local ENCHANT_REASON = { world = "after the loading screen", item = "after item data" }
+local WEAPON_SLOTS = { 16, 17 }   -- INVSLOT_MAINHAND, INVSLOT_OFFHAND
+local enchantTimer, enchantDue = nil, nil
+
+--- Flip every live instance that has enchant frames now, and write one [Apply] line naming the count
+--- and the trigger (`reason`, a key of ENCHANT_REASON). Answers how many were flipped.
+function CM.ResetEnchants(reason)
+    local n = 0
+    for _, inst in pairs(CM.instances) do
+        if inst:ResetEnchants() then n = n + 1 end
+    end
+    if NS.Debug then
+        NS.Debug("Apply", "enchants reset on %d container(s) %s", n, ENCHANT_REASON[reason] or tostring(reason))
+    end
+    return n
+end
+
+--- Arm the one enchant reset for `reason` ("world" or "item"), unless one armed already comes due
+--- later. Answers whether it armed. A stood-down addon arms nothing (slash-commands-§7).
+function CM.RequestEnchantReset(reason)
+    if NS.IsStoodDown() then return false end
+    local delay = ENCHANT_DELAY[reason] or ENCHANT_DELAY.item
+    local due = GetTime() + delay
+    if enchantTimer then
+        if due <= enchantDue then return false end
+        enchantTimer:Cancel()
+    end
+    enchantDue = due
+    enchantTimer = C_Timer.NewTimer(delay, function()
+        enchantTimer, enchantDue = nil, nil
+        CM.ResetEnchants(reason)
+    end)
+    return true
+end
+
+--- ITEM_DATA_LOAD_RESULT / GET_ITEM_INFO_RECEIVED: an item's data arrived. When it is a weapon the
+--- player has equipped and the load succeeded, arm the reset. Answers whether it armed.
+function CM.OnWeaponItemData(itemID, success)
+    if not (success and itemID) then return false end
+    for _, slot in ipairs(WEAPON_SLOTS) do
+        if GetInventoryItemID("player", slot) == itemID then return CM.RequestEnchantReset("item") end
+    end
+    return false
+end
+
+--- Cancel an armed enchant reset (the stand-down).
+local function cancelEnchantReset()
+    if enchantTimer then enchantTimer:Cancel() end
+    enchantTimer, enchantDue = nil, nil
+end
+
+-- ---------------------------------------------------------------------------
+-- /am redraw (SP-AMX-02)
+-- ---------------------------------------------------------------------------
+
+-- Two ways to repaint every container on demand, for a bar or a name that drew wrong and stayed
+-- wrong. LIGHT is the SP-AMX-01 flip on every live instance (ContainerClass:Flip): legal in combat
+-- and while auras are secret, so it runs now, in any state. FULL adds the font primer before it and
+-- one system apply of every container after it, which re-dresses every button in place (Apply ->
+-- Update -> Restyle: fonts, textures, labels, bindings). That apply is an ordinary queued request:
+-- while an apply must wait (CM.MustDefer) it waits for the flush on the edge that lifts the hold,
+-- and the verb says so after its own line with the usual deferral notice, once per blocked stretch
+-- (CM.NoteDeferred; settings/Slash.lua). Neither form retires or builds an engine: a rebuild would
+-- leak one engine frame per container per run, since frames are never freed. Each run writes one
+-- [Apply] line.
+
+--- Flip every live instance now. Answers how many were flipped.
+local function flipAll()
+    local n = 0
+    for _, inst in pairs(CM.instances) do
+        if inst:Flip() then n = n + 1 end
+    end
+    return n
+end
+
+--- `/am redraw light`: flip every live instance now. Answers how many were flipped.
+function CM.RedrawLight()
+    local n = flipAll()
+    if NS.Debug then NS.Debug("Apply", "redraw light: %d container(s) flipped", n) end
+    return n
+end
+
+--- `/am redraw full`: prime the fonts, flip every live instance now, and ask for one system apply of
+--- every container. Answers how many were flipped, and whether the re-apply has to wait (the caller
+--- then says so through CM.NoteDeferred). A stood-down addon (a perf capture's hold) does nothing
+--- and answers nil, so the caller never reports work that did not run (slash-commands-§7).
+function CM.RedrawFull()
+    if NS.IsStoodDown() then return nil end
+    if NS.FontPrimer then NS.FontPrimer.PrimeAll() end
+    local n = flipAll()
+    CM.RequestApply(nil, true)
+    local held = CM.MustDefer()
+    if NS.Debug then
+        NS.Debug("Apply", "redraw full: %d container(s) flipped, re-apply %s", n, held and "deferred" or "queued")
+    end
+    return n, held
 end
 
 -- ---------------------------------------------------------------------------
@@ -654,7 +767,7 @@ end
 --- have flushed it: canceled, not left armed to wake up and find the latch (slash-commands-§7).
 --- `scheduled` goes down with it, or the stand-up's own RequestApply(nil, true) would be swallowed.
 --- What was pending is not kept: the stand-up rebuilds from the settings AS THEY ARE THEN, never
---- from a snapshot taken on the way down (performance-§6).
+--- from a snapshot taken on the way down (performance-§6). An armed enchant reset is canceled too.
 function CM.StopListening()
     if ev then
         ev:UnregisterAllMessages()
@@ -666,6 +779,7 @@ function CM.StopListening()
     end
     scheduled = false
     pending, pendingAll, userPending = {}, false, false
+    cancelEnchantReset()
     if NS.FontPrimer then NS.FontPrimer.Stop() end
 end
 

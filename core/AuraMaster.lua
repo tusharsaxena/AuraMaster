@@ -67,6 +67,10 @@ local LIFECYCLE_EVENTS = {
     { "ADDON_LOADED", "OnAddonLoaded" },
     -- Fires when aura secrecy starts or stops; a rebuild queued while auras were secret runs here.
     { "ADDON_RESTRICTION_STATE_CHANGED", "OnRestrictionChanged" },
+    -- An item's data arrived: an equipped weapon's redraws the enchant names (SP-AMX-01). Both, as
+    -- either may carry it; the reset they arm is debounced to one (modules/ContainerManager.lua).
+    { "ITEM_DATA_LOAD_RESULT", "OnItemDataLoaded" },
+    { "GET_ITEM_INFO_RECEIVED", "OnItemDataLoaded" },
 }
 
 --- Register the lifecycle events. Extracted so the stand-up restores exactly what the stand-down
@@ -113,10 +117,18 @@ function addon:OnEnterWorld(event, isLogin, isReload)
     if NS.FontPrimer then NS.FontPrimer.OnEnterWorld() end
 end
 
--- The loading screen is gone: a font primed under it is drawn only now (issue #24, FP-06).
+-- The loading screen is gone: a font primed under it is drawn only now (issue #24, FP-06), and the
+-- weapon-enchant names are redrawn a moment later, whatever the primer did (SP-AMX-01).
 function addon:OnLoadingScreenEnd(event)
     traceEvent(event)
     if NS.FontPrimer then NS.FontPrimer.OnLoadingScreenEnd() end
+    if NS.ContainerManager then NS.ContainerManager.RequestEnchantReset("world") end
+end
+
+-- An item's data arrived. Untraced: GET_ITEM_INFO_RECEIVED fires for every item the client loads;
+-- the reset an equipped weapon's arms writes its own [Apply] line.
+function addon:OnItemDataLoaded(_, itemID, success)
+    if NS.ContainerManager then NS.ContainerManager.OnWeaponItemData(itemID, success) end
 end
 
 function addon:OnCombatChanged(event)

@@ -23,6 +23,8 @@ read_globals = {
     "geterrorhandler",    -- a failing container's apply is reported, not raised (modules/ContainerManager.lua)
     -- whether a container is predicted empty (modules/EmptyWatch.lua)
     "UnitExists", "UnitIsFriend", "GetWeaponEnchantInfo",
+    -- which weapon an item-data event names (modules/ContainerManager.lua's enchant reset)
+    "GetInventoryItemID",
 }
 
 globals = {

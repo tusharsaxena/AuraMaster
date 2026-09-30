@@ -550,7 +550,7 @@ badge and any count quoted in the docs must agree with it.
 
 ### test_lifecycle.lua (18)
 
-- lifecycle: the nine lifecycle events are registered to their handlers, and nothing else is
+- lifecycle: the eleven lifecycle events are registered to their handlers, and nothing else is
 - lifecycle: a focus change refreshes the focus containers, a target change the target ones
 - lifecycle: UNIT_PET refreshes the pet containers only for the player's own pet
 - lifecycle: entering the world runs an apply held while auras were secret
@@ -561,7 +561,7 @@ badge and any count quoted in the docs must agree with it.
 - lifecycle: a reset profile gets its starters back, numbered from 1 again
 - lifecycle: a profile switch applies the new profile's Blizzard-frame settings
 - lifecycle: the degraded latch stands up and down only on an edge
-- lifecycle: one bad event name leaves the other eight registered and is recorded
+- lifecycle: one bad event name leaves the other ten registered and is recorded
 - lifecycle: one bad event name, on a client without C_EventUtils, is caught by the probe rung
 - lifecycle: a rejection while logging is on is traced at the moment it happens
 - lifecycle: the degraded Core stub's SafeRegisterEvent records a bad name and keeps the rest
@@ -758,6 +758,49 @@ badge and any count quoted in the docs must agree with it.
 - fontprimer: a loading screen's end with a font still refused arms nothing
 - fontprimer: one Fonts debug line per PrimeAll that met a refusal, counts only
 - fontprimer: DiagState lists the refused triples, copies only, and a primed one leaves the list
+
+### test_enchantreset.lua (23)
+
+- enchantreset: a live, shown enchant container is turned off and on again, in that order
+- enchantreset: the flip is two SetEnabled calls on the same engine and nothing else
+- enchantreset: a container with no enchant frames is not flipped
+- enchantreset: a container without an engine is not flipped
+- enchantreset: a parked or stale container is not flipped
+- enchantreset: the parked gate holds on its own, whatever ShouldShow answers
+- enchantreset: a hidden container is not flipped
+- enchantreset: a previewing container is not flipped
+- enchantreset: a stood-down addon flips nothing
+- enchantreset: the flip runs under combat lockdown and while auras are secret
+- enchantreset: CM.ResetEnchants flips every eligible container and counts them
+- enchantreset: the loading screen's end arms one reset WORLD_DELAY later, and it flips then
+- enchantreset: the loading-screen reset does not wait on the font primer
+- enchantreset: every loading screen arms a reset, a zone change included
+- enchantreset: the main-hand weapon's item data arriving arms one reset ITEM_DELAY later
+- enchantreset: GET_ITEM_INFO_RECEIVED for the off-hand weapon arms the reset too
+- enchantreset: item data for anything but an equipped weapon, or a failed load, arms nothing
+- enchantreset: with no weapon equipped, item data arms nothing
+- enchantreset: a burst of item data arms one timer and flips once
+- enchantreset: an armed reset keeps the later of two deadlines
+- enchantreset: a fired reset clears the debounce, so the next trigger arms again
+- enchantreset: a stand-down cancels an armed reset and hears no trigger
+- enchantreset: a reset writes one [Apply] line naming its count and its trigger
+
+### test_redraw.lua (14)
+
+- redraw: /am redraw light flips every live container, enchant slots or not, and says how many
+- redraw: light is the flip alone: no rebuild, no apply, no font priming
+- redraw: light leaves a hidden, parked, stale or previewing container off
+- redraw: light runs under combat lockdown and while auras are secret, with no deferral notice
+- redraw: /am redraw full primes the fonts, flips now, then re-dresses every container in place
+- redraw: full in combat flips now and queues the re-dress with the combat notice
+- redraw: full while auras are secret names the restriction instead
+- redraw: the deferral notice keeps its once-per-stretch rule
+- redraw: a bare /am redraw runs full when nothing holds an apply, and says so
+- redraw: a bare /am redraw in combat or while secret runs light, says so, and queues nothing
+- redraw: the word is read in any case, and any other word prints the usage and flips nothing
+- redraw: while disabled every form refuses on one line and flips, primes and queues nothing
+- redraw: while a perf capture stands the addon down, full and bare say they were skipped, light repaints none
+- redraw: each run writes one [Apply] line naming the form and the count
 
 ### test_anchors_close.lua (6)
 
@@ -1271,11 +1314,11 @@ badge and any count quoted in the docs must agree with it.
 - disabled: a profile switch while disabled builds nothing until enable
 - disabled: a profile switch while down, then a stand-up in combat, keeps a reused id parked
 
-### test_slash.lua (28)
+### test_slash.lua (34)
 
 - slash: every command is a positional {name, desc, fn} triple
 - slash: the reserved verbs are all present
-- slash: NS.COMMANDS carries 23 verbs, diagnostics right after debug, and no diag verb
+- slash: NS.COMMANDS carries 25 verbs, profile right after resetall, redraw right after forgettimed, diagnostics right after debug, and no diag verb
 - slash: /am new creates the described container and selects it
 - slash: /am new text creates a text-style container
 - slash: /am new gives the new container the Fill its style suits (B5)
@@ -1301,8 +1344,14 @@ badge and any count quoted in the docs must agree with it.
 - slash: /am resetall and the General reset print the same line
 - slash: /am debug on and off flip the session flag; it never reaches the profile
 - slash: the dispatcher's isEnabled is NS.EnabledStored
+- slash: /am profile with no name lists every profile, the current one marked, and switches nothing
+- slash: /am profile <name> switches to an existing profile and the profile handler runs once
+- slash: /am profile keeps the name's case and spaces and strips one pair of quotes
+- slash: /am profile with an unknown name is refused with the list and creates nothing
+- slash: /am profile in combat refuses and switches nothing
+- slash: /am profile answers while disabled, and the switch re-reads the new profile's enabled flag
 
-### test_slash_verbs.lua (50)
+### test_slash_verbs.lua (51)
 
 - slash verbs: /am help prints the alias header, then one row per NS.COMMANDS verb in order
 - slash verbs: the landing page's rows are /am help's rows without the chat indent
@@ -1350,6 +1399,7 @@ badge and any count quoted in the docs must agree with it.
 - slash verbs: without the library /am set on a composed row or a writeThrough path prints the one line and writes nothing
 - slash verbs: without the library a bare /am still runs config, help prints the list, aliases route, and an unknown verb says so
 - slash verbs: without the library the host verbs keep working
+- slash verbs: without the library the stub's CliProfile and ProfileSwitch name what is missing and switch nothing
 - slash verbs: while disabled every feature verb refuses on ONE line naming /am enable, and acts on nothing
 - slash verbs: while disabled the live set still answers — settings stay readable and repairable
 - slash verbs: the disabled gate is ONE decision over the whole verb table, not a per-verb guard
@@ -1749,15 +1799,15 @@ badge and any count quoted in the docs must agree with it.
 - rail: the page opens on General, today's one General tab under the band, beside a 120px rail
 - rail: the draw order is PageBanner, NavRail, TabStrip
 - rail: a rail click draws that section's strip and rows under the same band
-- rail: each section keeps its own tab: Filters, Categories, Layout, back to Filters lands on Categories (smoke 5)
-- rail: a Style change heals an active style section to the new style's entry; other sections stay (smoke 4)
+- rail: each section keeps its own tab: Filters, Categories, Layout, back to Filters lands on Categories (smoke PANEL-12)
+- rail: a Style change heals an active style section to the new style's entry; other sections stay (smoke PANEL-11)
 - rail: choosing a container of another style in the band moves Bars to Icons
 - rail: with no containers the rail lists General alone, which says how to make one
-- rail: a former sub-page key opens Containers on that section, drawn on the next show (smoke 7)
+- rail: a former sub-page key opens Containers on that section, drawn on the next show (smoke LAYOUT-6)
 - rail: a style key the container is not drawn in opens Containers and moves nothing; Containers keeps the section
 - rail: SelectTab on a section key selects the section and its tab; on the General page it is the library's
 - rail: selecting a section is refused in combat and moves nothing
-- rail: Defaults restores only the active section's rows for the selected container (smoke 6)
+- rail: Defaults restores only the active section's rows for the selected container (smoke PANEL-13)
 - rail: the Defaults tooltip names the section on screen and the kept name
 - new container: from Bars -> Time text, New container lands on General/General on the new container
 - new container: the section left keeps its tab: back to Bars reopens Time text
@@ -1870,7 +1920,7 @@ badge and any count quoted in the docs must agree with it.
 
 - prose: no authored file carries a British spelling from localization-§5's published list
 - prose: the gate carries localization-§5's two lists whole, and nothing of its own
-- prose: the exclusions this repository declared suppressed 11 of 183 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (11): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, docs/spell-research/2026-09-24-logs/CORRECTIONS.md, docs/spell-research/2026-09-24-logs/CURRENT_CATEGORIES.md, docs/spell-research/2026-09-24-logs/DECISIONS.md, docs/spell-research/2026-09-24-logs/FLAGS.md, docs/spell-research/2026-09-24-logs/PROPOSED_ADDITIONS.md, docs/spell-research/2026-09-24-logs/REVIEW.md, docs/spell-research/2026-09-24-logs/SOURCES.md, docs/spell-research/2026-09-24-logs/dictionary/AURAS.md
+- prose: the exclusions this repository declared suppressed 11 of 185 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (11): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, docs/spell-research/2026-09-24-logs/CORRECTIONS.md, docs/spell-research/2026-09-24-logs/CURRENT_CATEGORIES.md, docs/spell-research/2026-09-24-logs/DECISIONS.md, docs/spell-research/2026-09-24-logs/FLAGS.md, docs/spell-research/2026-09-24-logs/PROPOSED_ADDITIONS.md, docs/spell-research/2026-09-24-logs/REVIEW.md, docs/spell-research/2026-09-24-logs/SOURCES.md, docs/spell-research/2026-09-24-logs/dictionary/AURAS.md
 - prose: no path this repository narrows the gate by is loaded by a TOC
 - prose: every path this repository narrows the gate by is one .pkgmeta keeps out of the zip
 - prose self-test: the carve-out suppresses the named generated folder, and only it
@@ -1971,6 +2021,8 @@ badge and any count quoted in the docs must agree with it.
 | test_anchors_hang.lua | 11 |
 | test_emptywatch.lua | 25 |
 | test_fontprimer.lua | 32 |
+| test_enchantreset.lua | 23 |
+| test_redraw.lua | 14 |
 | test_anchors_close.lua | 6 |
 | test_anchors_label.lua | 23 |
 | test_anchors_strip.lua | 7 |
@@ -1992,8 +2044,8 @@ badge and any count quoted in the docs must agree with it.
 | test_blizzardframes.lua | 8 |
 | test_framepicker.lua | 15 |
 | test_disabled.lua | 18 |
-| test_slash.lua | 28 |
-| test_slash_verbs.lua | 50 |
+| test_slash.lua | 34 |
+| test_slash_verbs.lua | 51 |
 | test_diagnostics.lua | 47 |
 | test_bulklog.lua | 20 |
 | test_optionssetup.lua | 17 |
@@ -2024,4 +2076,4 @@ badge and any count quoted in the docs must agree with it.
 | test_eol.lua | 2 |
 | test_layout_cap.lua | 13 |
 | test_diagnostics_contract.lua | 7 |
-| **Total** | **1706** |
+| **Total** | **1750** |

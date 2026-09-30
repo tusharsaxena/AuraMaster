@@ -41,13 +41,18 @@ test("slash: the reserved verbs are all present", function()
     end
 end)
 
-test("slash: NS.COMMANDS carries 23 verbs, diagnostics right after debug, and no diag verb", function()
+test("slash: NS.COMMANDS carries 25 verbs, profile right after resetall, redraw right after forgettimed, diagnostics right after debug, and no diag verb", function()
     local n = #NS.COMMANDS
     -- red under: the count claims in docs/ARCHITECTURE.md, docs/slash-dispatch.md and
-    -- docs/module-map.md left behind a verb added or removed (owner, 2026-09-25: 22 -> 23)
-    assertEqual(n, 23)
+    -- docs/module-map.md left behind a verb added or removed (owner, 2026-09-25: 22 -> 23;
+    -- 2026-09-29: 23 -> 24, the profile verb; 2026-09-30: 24 -> 25, the redraw verb)
+    assertEqual(n, 25)
     local at = {}
     for i, e in ipairs(NS.COMMANDS) do at[e[1]] = i end
+    -- red under: the profile verb moved away from the settings verbs it sits beside
+    assertEqual(at.profile, at.resetall + 1, "profile follows resetall")
+    -- red under: the redraw verb moved away from the maintenance verbs it sits beside
+    assertEqual(at.redraw, at.forgettimed + 1, "redraw follows forgettimed")
     assertEqual(at.diagnostics, at.debug + 1, "diagnostics follows debug")
     assertTrue(at.diag == nil, "diag is not a verb")
 end)
@@ -448,4 +453,116 @@ test("slash: the dispatcher's isEnabled is NS.EnabledStored", function()
     assertTrue(seen.isEnabled == NS2.EnabledStored, "one enabled predicate, not two")
     -- Before InitDB the stored read answers nil, and nil is enabled.
     assertTrue(NS2.EnabledStored())
+end)
+
+-- ── the profile verb (LibKa0s-Slash minor 17) ─────────────────────────────────────────────────
+--
+-- The verb's behavior is the library's (tests/test_slash_profile.lua in LibKa0s); what is pinned
+-- here is this addon's wiring: the COMMANDS row reaching cli:CliProfile, the descriptor's
+-- `profiles` handing over NS.db, and AceDB's OnProfileChanged running NS.OnProfileChanged once.
+
+--- Chat lines with color codes and the [AM] tag taken off.
+local function plain(lines)
+    local out = {}
+    for i, l in ipairs(lines) do
+        out[i] = (l:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", ""):gsub("^%[AM%] ", ""))
+    end
+    return out
+end
+
+--- Run one `/am` line and answer what it printed, plain.
+local function run(NS2, lines, msg)
+    for k in pairs(lines) do lines[k] = nil end
+    NS2.Slash:OnSlash(msg)
+    return plain(lines)
+end
+
+local function dump(p) return "{" .. table.concat(p, " | ") .. "}" end
+
+--- A fresh environment holding `names` besides Default, back on Default, with chat captured and
+--- every [Profile] debug line recorded.
+local function profiled(names)
+    local NS2, mocks = fresh()
+    for _, name in ipairs(names or {}) do NS2.db:SetProfile(name) end
+    NS2.db:SetProfile("Default")
+    local lines, traces = capture(mocks), {}
+    NS2.State.debug = true
+    NS2.Debug = function(tag, fmt, ...)
+        if tag ~= "Profile" then return end
+        local n = #traces
+        traces[n + 1] = fmt:format(...)
+    end
+    return NS2, mocks, lines, traces
+end
+
+local function profileCount(NS2)
+    local _, n = NS2.db:GetProfiles({})
+    return n
+end
+
+test("slash: /am profile with no name lists every profile, the current one marked, and switches nothing", function()
+    local NS2, _, lines, traces = profiled({ "Raid", "arena" })
+    local p = run(NS2, lines, "profile")
+    -- red under: no profile row, or one that does not reach cli:CliProfile
+    assertEqual(dump(p), dump({ "Profiles", "  arena", "  Default (current)", "  Raid",
+        "/am profile <name> switches profile" }))
+    assertEqual(NS2.db:GetCurrentProfile(), "Default")
+    assertEqual(#traces, 0, "nothing switched")
+end)
+
+test("slash: /am profile <name> switches to an existing profile and the profile handler runs once", function()
+    local NS2, _, lines, traces = profiled({ "Raid" })
+    local p = run(NS2, lines, "profile Raid")
+    assertEqual(dump(p), "{Switched to profile 'Raid'.}")
+    -- red under: a descriptor with no `profiles`, or one that hands over something other than NS.db
+    assertEqual(NS2.db:GetCurrentProfile(), "Raid")
+    -- red under: the switch skipping AceDB's callback, or the verb logging a second line of its own
+    -- (debug-logging-§10: the one switch line is NS.OnProfileChanged's)
+    assertEqual(dump(traces), "{changed -> Raid}")
+    p = run(NS2, lines, "profile Raid")
+    assertEqual(dump(p), "{Already on profile 'Raid'.}")
+    assertEqual(#traces, 1, "already there: the handler does not run again")
+end)
+
+test("slash: /am profile keeps the name's case and spaces and strips one pair of quotes", function()
+    local NS2, _, lines = profiled({ "Raid Night", "Solo" })
+    -- red under: a handler that lowercases the name, or takes only its first word
+    assertEqual(dump(run(NS2, lines, "profile Raid Night")), "{Switched to profile 'Raid Night'.}")
+    assertEqual(dump(run(NS2, lines, 'profile "Solo"')), "{Switched to profile 'Solo'.}")
+    assertEqual(dump(run(NS2, lines, "profile 'Raid Night'")), "{Switched to profile 'Raid Night'.}")
+    assertEqual(NS2.db:GetCurrentProfile(), "Raid Night")
+end)
+
+test("slash: /am profile with an unknown name is refused with the list and creates nothing", function()
+    local NS2, _, lines, traces = profiled({ "Raid" })
+    local before = profileCount(NS2)
+    local p = run(NS2, lines, "profile raid")
+    -- red under: a verb that hands the name straight to SetProfile, which creates what it is given
+    assertEqual(dump(p), dump({ "No profile named 'raid'.", "Did you mean 'Raid'?", "Profiles",
+        "  Default (current)", "  Raid", "/am profile <name> switches profile" }))
+    run(NS2, lines, "profile Nowhere")
+    assertEqual(profileCount(NS2), before, "no profile was created")
+    assertEqual(NS2.db:GetCurrentProfile(), "Default")
+    assertEqual(#traces, 0)
+end)
+
+test("slash: /am profile in combat refuses and switches nothing", function()
+    local NS2, mocks, lines, traces = profiled({ "Raid" })
+    mocks.__lockdown = true
+    assertEqual(dump(run(NS2, lines, "profile Raid")), "{Can't switch profiles in combat.}")
+    mocks.__lockdown = false
+    assertEqual(NS2.db:GetCurrentProfile(), "Default")
+    assertEqual(#traces, 0)
+end)
+
+test("slash: /am profile answers while disabled, and the switch re-reads the new profile's enabled flag", function()
+    local NS2, _, lines = profiled({ "Raid" })
+    NS2.SetByPath("enabled", false)
+    NS2.db:SetProfile("Raid")
+    NS2.SetByPath("enabled", true)
+    NS2.db:SetProfile("Default")
+    assertFalse(NS2.EnabledStored(), "Default is off")
+    -- red under: `profile` missing from liveVerbs(), so a disabled addon answers the refusal line
+    assertEqual(dump(run(NS2, lines, "profile Raid")), "{Switched to profile 'Raid'.}")
+    assertTrue(NS2.EnabledStored(), "Raid is on, and the switch brought the addon up")
 end)

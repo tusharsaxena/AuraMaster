@@ -641,6 +641,34 @@ function ContainerClass:Refresh()
     if self.engine then callEngine(self.engine, "UpdateAllAuras") end
 end
 
+--- Turn a LIVE engine off and on again (SP-AMX-01): a disabled engine clears its aura and enchant
+--- frames, and an enabled one draws them afresh. Never an engine that should be off (parked, stale,
+--- not shown, or previewing, when ApplyVisibility keeps it disabled), because the flip ends enabled.
+--- SetEnabled is the combat-legal call ApplyLive makes, so this runs in combat and while auras are
+--- secret. Nothing is retired or built. `/am redraw light` flips every container this way
+--- (SP-AMX-02). Answers whether it flipped.
+function ContainerClass:Flip()
+    local engine = self.engine
+    if not engine or self.parked or self.staleData then return false end
+    local show, previewing = self:ShouldShow()
+    if not show or previewing then return false end
+    callEngine(engine, "SetEnabled", false)
+    callEngine(engine, "SetEnabled", true)
+    return true
+end
+
+--- Redraw the weapon-enchant frames from scratch: Flip, on a container with enchant frames only.
+--- The engine names an enchant frame from the equipped weapon's item name, written once when the
+--- enchant is first shown, and only updates an unchanged enchant in place, so a name lost at login
+--- (the item's data or the font not loaded yet) stays blank. The flip draws it afresh, asking for
+--- the name again (docs/midnight-quirks.md, "Weapon enchants"). A container with no enchant frames
+--- is left alone, so an aura bar does not flicker for nothing. Answers whether it flipped.
+function ContainerClass:ResetEnchants()
+    local slots = #self.enchantFrames
+    if slots == 0 then return false end
+    return self:Flip()
+end
+
 --- Set the container aside under combat lockdown, when its anchor and the engine's ancestry must not
 --- be shown, hidden or re-anchored (events-frames-taint-§2): the engine is disabled — combat-legal,
 --- the same call ApplyVisibility makes — and only our own preview and handle are hidden.

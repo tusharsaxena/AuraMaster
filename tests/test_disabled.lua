@@ -198,7 +198,7 @@ test("disabled: enabled, the addon registers a non-empty set", function()
     local NS, mocks, R_on = baseline()
     assertTrue(#sortedKeys(R_on) > 0, "an addon that registers nothing when enabled would pass every later case trivially")
     -- Named, so the baseline cannot silently shrink to one row and keep this case green.
-    assertEqual(#regsOn(mocks, NS.addon), 9, "the nine lifecycle events: " .. dump(regsOn(mocks, NS.addon)))
+    assertEqual(#regsOn(mocks, NS.addon), 11, "the eleven lifecycle events: " .. dump(regsOn(mocks, NS.addon)))
     assertTrue(#regsOn(mocks, NS.TimedSpells.__bus()) == 2, "TimedSpells' two subscriptions")
 end)
 
@@ -416,11 +416,14 @@ test("disabled: every reserved verb answers, and the bare /am opens the panel", 
     -- EVERY ENTRY in NS.COMMANDS, through the real dispatcher (slash-commands-§7 step 7), so a verb
     -- added later is classified here rather than skipped. The live set is SPELLED OUT, not read back
     -- off settings/Slash.lua: the twelve reserved verbs plus `containers` and `select`, which aim the
-    -- schema CLI, and `diagnostics`, a diagnostic like `debug` (owner, 2026-09-25). Disabled again before each verb, because `enable` and `resetall` legitimately turn
+    -- schema CLI, `diagnostics`, a diagnostic like `debug` (owner, 2026-09-25), and `profile`, since
+    -- switching to a profile where the addon is on is how a disabled player brings it back
+    -- (2026-09-29). Disabled again before each verb, because `enable` and `resetall` legitimately turn
     -- the addon back on, and a walk without that would test the rest of the table enabled.
     local LIVE = {}
     for _, v in ipairs({ "help", "config", "version", "enable", "disable", "debug", "perf", "get",
-                         "set", "list", "reset", "resetall", "containers", "select", "diagnostics" }) do
+                         "set", "list", "reset", "resetall", "containers", "select", "diagnostics",
+                         "profile" }) do
         LIVE[v] = true
     end
     local refused = {}
@@ -436,7 +439,7 @@ test("disabled: every reserved verb answers, and the bare /am opens the panel", 
             refused[#refused + 1] = verb
         end
     end
-    assertEqual(table.concat(refused, ","), "new,delete,lock,unlock,test,pick,resetposition,forgettimed",
+    assertEqual(table.concat(refused, ","), "new,delete,lock,unlock,test,pick,resetposition,forgettimed,redraw",
         "exactly the feature verbs refuse")
 
     -- And `set` really wrote. The point of keeping the schema CLI live is repair, not politeness.
@@ -456,7 +459,7 @@ test("disabled: this addon's own feature verbs refuse on one line and reach no w
     -- This addon ADOPTS slash-commands-§2's SHOULD, so the suite pins that choice: a later pass that quietly let
     -- the feature verbs act would redden here rather than drift.
     for _, line in ipairs({ "new target debuffs icons", "delete " .. id, "lock", "unlock", "pick",
-                            "resetposition", "forgettimed" }) do
+                            "resetposition", "forgettimed", "redraw", "redraw light", "redraw full" }) do
         local p = slash(NS, lines, line)
         assertEqual(#p, 1, "/am " .. line .. " answered " .. dump(p))
         assertEqual(p[1], REFUSAL, "/am " .. line)
@@ -555,7 +558,7 @@ test("disabled: re-enabling restores the registration set, from the settings as 
     for _, c in ipairs(NS.Database.GetContainers()) do NS.ContainerManager.Delete(c.id) end
     enable(NS)
     mocks.__fireTimers()
-    assertEqual(#regsOn(mocks, NS.addon), 9, "the lifecycle events come back either way")
+    assertEqual(#regsOn(mocks, NS.addon), 11, "the lifecycle events come back either way")
     assertEqual(#regsOn(mocks, NS.TimedSpells.__events()), 0,
         "with no container left, nothing to listen for: " .. dump(regsOn(mocks, NS.TimedSpells.__events())))
 end)
@@ -579,7 +582,7 @@ test("disabled: releasing one hold does not stand up an addon the other still ho
     enable(NS)
     mocks.__fireTimers()
     assertFalse(NS.IsStoodDown())
-    assertEqual(#regsOn(mocks, NS.addon), 9)
+    assertEqual(#regsOn(mocks, NS.addon), 11)
 
     -- The other order, which fails the same way for the mirror-image reason: a `disable` that calls
     -- a bare stand-up on its way out ruins a run just as thoroughly.
@@ -591,7 +594,7 @@ test("disabled: releasing one hold does not stand up an addon the other still ho
     NS.lifecycle:Release(NS.HOLD_PERF)
     mocks.__fireTimers()
     assertFalse(NS.IsStoodDown())
-    assertEqual(#regsOn(mocks, NS.addon), 9)
+    assertEqual(#regsOn(mocks, NS.addon), 11)
 end)
 
 test("disabled: a profile switch to an enabled profile stands the addon back up", function()
@@ -605,7 +608,7 @@ test("disabled: a profile switch to an enabled profile stands the addon back up"
     NS.OnProfileChanged()
     mocks.__fireTimers()
     assertFalse(NS.IsStoodDown(), "the new profile has the addon enabled")
-    assertEqual(#regsOn(mocks, NS.addon), 9)
+    assertEqual(#regsOn(mocks, NS.addon), 11)
 end)
 
 -- ---------------------------------------------------------------------------

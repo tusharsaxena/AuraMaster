@@ -12,7 +12,7 @@ It writes a one-shot report of what the addon sees and what it drew into the deb
 the console, and prints one chat line with the line count. Press **Copy** in the console and paste
 the text into a bug report.
 
-- `diagnostics` is its own verb in `NS.COMMANDS` (23 verbs) and a sub-verb of `debug`. Both answer
+- `diagnostics` is its own verb in `NS.COMMANDS` (25 verbs) and a sub-verb of `debug`. Both answer
   while the addon is disabled: `diagnostics` is named in `liveVerbs()` next to `debug`.
 - It writes through the **ungated** append, as debug-logging-§12 requires for an explicit
   diagnostic run. The logging flag is printed in the header and is not changed.
@@ -240,7 +240,16 @@ never in the trace. After a mid-key `/reload`, turn it back on with `/am debug o
 build ran; `all=true` with `mustDefer=true` means it is still waiting.
 
 Target, focus and pet swaps and `ADDON_LOADED` are left out on purpose (owner, 2026-09-29): they
-fire too often in a key to read around.
+fire too often in a key to read around. So are `ITEM_DATA_LOAD_RESULT` and `GET_ITEM_INFO_RECEIVED`,
+which fire for every item the client loads. What they can start, the weapon-enchant reset, writes
+its own line when it fires: `[Apply] enchants reset on N container(s) after the loading screen` (or
+`after item data`), N counting the live containers with enchant slots it turned off and on again
+(`docs/midnight-quirks.md` → *Weapon enchants*). A blank enchant name with no such line after the
+loading screen means the reset never ran; a line with `0` means no container qualified.
+`/am redraw` writes one `[Apply]` line per run as well: `redraw light: N container(s) flipped`, or
+`redraw full: N container(s) flipped, re-apply queued` (`deferred` when combat or aura secrecy holds
+the re-apply, followed by the queue's own `deferred:` line). A full redraw skipped because a perf
+capture stands the addon down writes no line.
 
 ## Caps
 

@@ -133,8 +133,8 @@ pass on.
 | Message | Sender | Payload | Consumers |
 |---|---|---|---|
 | `Ka0s_AuraMaster_ContainersChanged` (`NS.MSG.CONTAINERS_CHANGED`) | `modules/ContainerManager.lua` — create, delete, rename, duplicate, profile change (copy-from and reset positions are settings writes, announced by `CONFIG_CHANGED`) | none | `settings/OptionsSetup.lua:351` — `NS.RequestPanelRefresh`, a coalesced panel re-render (every banner lists containers); `modules/TimedSpells.lua:204` — `TS.Sync`, which starts or stops the timed-spell scan (a container added or removed can change whether any needs it) |
-| `Ka0s_AuraMaster_ConfigChanged` (`NS.MSG.CONFIG_CHANGED`) | `settings/Schema.lua:598` — the write seam, once per write; never for a session row | `{ section, containerId, path }`; `containerId` nil for an addon-wide row, `path` the row written | `modules/ContainerManager.lua:630` — first `FontPrimer.PrimeAll` (a new font is drawn before anything is applied in it), then by the row's `effect`: `"visibility"` runs `ApplyVisibility()` at once, `"none"` queues nothing, otherwise `RequestApply(containerId)` (nil re-applies all), a write to a flow or attachment path also re-applies every container following that one (`Anchors.Followers`), and a write to a container's attach points, mode or target also re-applies the container it attaches to (`requestParents`); `modules/TimedSpells.lua:203` — `TS.Sync`, the same re-sync (a filter write can change whether any container needs the scan) |
-| `Ka0s_AuraMaster_VisibilityChanged` (`NS.MSG.VISIBILITY_CHANGED`) | `core/AuraMaster.lua` — entering the world, combat start and end; `modules/Preview.lua` — `Preview.SetTestMode`, when test mode switches on or off | none | `modules/ContainerManager.lua:642` — `ApplyVisibility()` over every container |
+| `Ka0s_AuraMaster_ConfigChanged` (`NS.MSG.CONFIG_CHANGED`) | `settings/Schema.lua:598` — the write seam, once per write; never for a session row | `{ section, containerId, path }`; `containerId` nil for an addon-wide row, `path` the row written | `modules/ContainerManager.lua:743` — first `FontPrimer.PrimeAll` (a new font is drawn before anything is applied in it), then by the row's `effect`: `"visibility"` runs `ApplyVisibility()` at once, `"none"` queues nothing, otherwise `RequestApply(containerId)` (nil re-applies all), a write to a flow or attachment path also re-applies every container following that one (`Anchors.Followers`), and a write to a container's attach points, mode or target also re-applies the container it attaches to (`requestParents`); `modules/TimedSpells.lua:203` — `TS.Sync`, the same re-sync (a filter write can change whether any container needs the scan) |
+| `Ka0s_AuraMaster_VisibilityChanged` (`NS.MSG.VISIBILITY_CHANGED`) | `core/AuraMaster.lua` — entering the world, combat start and end; `modules/Preview.lua` — `Preview.SetTestMode`, when test mode switches on or off | none | `modules/ContainerManager.lua:755` — `ApplyVisibility()` over every container |
 | `Ka0s_AuraMaster_TimedSpellsChanged` (`NS.MSG.TIMED_SPELLS_CHANGED`) | `modules/TimedSpells.lua` — a scan learned timed spells, or `/am forgettimed` emptied the set | none from a scan; `{ byPlayer = true }` from `/am forgettimed` | `modules/ContainerManager.lua` `CM.Init` — `RequestApply(nil, system)` over every container (their excluded ids moved); a scan's request is the addon's own, so a deferral of it prints no notice |
 
 Four messages, well under the more-than-ten trigger for a separate `message-bus.md`.
@@ -142,7 +142,7 @@ Four messages, well under the more-than-ten trigger for a separate `message-bus.
 ## Slash Commands
 
 `/am` with `/auramaster` as the long alias, dispatched by `LibKa0s-Slash-1.0` over the addon's own
-ordered `NS.COMMANDS` (`settings/Slash.lua:39`). Twenty-three verbs; `options` is an alias of `config`.
+ordered `NS.COMMANDS` (`settings/Slash.lua:39`). Twenty-five verbs; `options` is an alias of `config`.
 A bare `/am` runs `config`, opening the settings panel on its landing page (slash-commands-§4); `/am
 help` prints the list.
 `/am test` is the test mode's verb (preview-mode): unlocking no longer previews, so the placeholders
@@ -160,6 +160,7 @@ button's left click.
 | `/am set path value` | Set a setting |
 | `/am reset path` | Reset one setting to its default |
 | `/am resetall` | Reset every setting to defaults (a profile reset) |
+| `/am profile [name]` | List profiles, current marked; with a name, switch to that existing profile (quotes stripped, case kept; an unknown name is refused, never created; refused in combat). The behavior is `LibKa0s-Slash-1.0`'s `CliProfile` (`docs/profiles.md`); answers while disabled |
 | `/am containers` | List your containers; the selected one is marked |
 | `/am select id-or-name` | Choose the container settings apply to |
 | `/am new [unit] [type] [style]` | Create a container (`player`/`target`/`focus`/`pet`, `buffs`/`debuffs`/`enchants`, `bars`/`icons`/`text`) |
@@ -170,13 +171,14 @@ button's left click.
 | `/am pick` | Attach the selected container to a frame by clicking it |
 | `/am resetposition` | Move every container back to its default screen position |
 | `/am forgettimed` | Forget which buffs were learned to have a duration |
+| `/am redraw [light\|full]` | Repaint every container. `light` turns every live engine off and on again now, in any state, combat and aura secrecy included (the weapon-enchant flip, SP-AMX-01). `full` primes the fonts, does the same flip, then asks for one system apply of every container, which re-dresses every button in place; while combat or aura secrecy holds applies that part waits, the line says so and the usual deferral notice follows. A bare `/am redraw` runs `full` when nothing holds an apply, else `light` with a line saying a full one waits. While a perf capture stands the addon down, `full` and a bare `/am redraw` do nothing and say so, and `light` repaints 0. Neither form retires or builds an engine |
 | `/am debug [on\|off\|diagnostics]` | Toggle the debug console; `on`/`off` enable or disable logging; `diagnostics` writes the diagnostic report, the same as `/am diagnostics` |
 | `/am diagnostics` | Write the diagnostic report to the debug console (`docs/debug.md`); answers while disabled |
 | `/am perf …` | Measure performance — bare `/am perf` opens the workflow |
 | `/am version` | Print the addon version |
 
-**While the addon is disabled** the eight verbs that drive its features — `new`, `delete`, `lock`,
-`unlock`, `test`, `pick`, `resetposition`, `forgettimed` — answer on one tagged line naming `/am enable` and
+**While the addon is disabled** the nine verbs that drive its features — `new`, `delete`, `lock`,
+`unlock`, `test`, `pick`, `resetposition`, `forgettimed`, `redraw` — answer on one tagged line naming `/am enable` and
 do nothing else (slash-commands-§2). Everything else keeps working, the bare `/am` included: it
 opens the settings panel, which is the surface a player switches the addon back on from by hand. The
 gate is `LibKa0s-Slash-1.0`'s, closed by the descriptor's `isEnabled` in `settings/Slash.lua` with
@@ -210,13 +212,14 @@ optional. The full table and the reasons:
 | Event | Registered by | Handler → effect |
 |---|---|---|
 | `PLAYER_ENTERING_WORLD` | `core/AuraMaster.lua:59` (AceEvent, through `NS.SafeRegisterEvent`) | `OnEnterWorld` → `VISIBILITY_CHANGED`, `ContainerManager.FlushPending`, `FontPrimer.OnEnterWorld` (notes the time: the loading screen is still up; the primer's anchor only on a client that refused `LOADING_SCREEN_DISABLED`) |
-| `LOADING_SCREEN_DISABLED` | `core/AuraMaster.lua:61` | `OnLoadingScreenEnd` → `FontPrimer.OnLoadingScreenEnd` (the loading screen's real end: arms the primer's world hide and refresh) |
+| `LOADING_SCREEN_DISABLED` | `core/AuraMaster.lua:61` | `OnLoadingScreenEnd` → `FontPrimer.OnLoadingScreenEnd` (the loading screen's real end: arms the primer's world hide and refresh), then `CM.RequestEnchantReset("world")`: the weapon-enchant reset, 1.75 s later, whatever the primer did (SP-AMX-01) |
 | `PLAYER_REGEN_DISABLED` | `core/AuraMaster.lua:62` | `OnCombatChanged` → `VISIBILITY_CHANGED` |
 | `PLAYER_REGEN_ENABLED` | `core/AuraMaster.lua:63` | `OnCombatChanged` → `VISIBILITY_CHANGED`, `FlushPending`, `ReapplyStaleClass`, `BlizzardFrames.Apply`, `Anchors.ResolvePending` (a frame that appeared during combat) |
 | `PLAYER_TARGET_CHANGED`, `PLAYER_FOCUS_CHANGED` | `core/AuraMaster.lua:64-65` | `OnUnitSwap` → `RefreshUnit` → the engine's `UpdateAllAuras` (bucket `unitSwap`); re-applies the class-colored containers of that unit when the new unit's class differs, or marks them stale, silently, while an apply must wait |
 | `UNIT_PET` | `core/AuraMaster.lua:66` | `OnUnitPet` (player only) → `RefreshUnit("pet")` (bucket `unitSwap`); re-applies the class-colored pet containers when the pet's class differs, or marks them stale while an apply must wait |
 | `ADDON_LOADED` | `core/AuraMaster.lua:67` | `OnAddonLoaded` → `Anchors.ResolvePending` (frame-attached containers) |
 | `ADDON_RESTRICTION_STATE_CHANGED` | `core/AuraMaster.lua:69` | `OnRestrictionChanged` → `FlushPending`, `ReapplyStaleClass` (a deferred apply runs when secrecy lifts) |
+| `ITEM_DATA_LOAD_RESULT`, `GET_ITEM_INFO_RECEIVED` | `core/AuraMaster.lua:72-73` | `OnItemDataLoaded` → `CM.OnWeaponItemData`: the item equipped in slot 16 or 17, loaded successfully, arms the weapon-enchant reset 0.5 s later. One debounced `C_Timer` serves both triggers and keeps the later deadline; when it fires, `CM.ResetEnchants` turns each live engine with enchant frames off and on again (`ContainerClass:ResetEnchants`), so the weapon names are drawn afresh (`docs/midnight-quirks.md` → *Weapon enchants*). `CM.StopListening` cancels it |
 | `UNIT_AURA` for `player` and `pet` | `modules/TimedSpells.lua` — the module's one private frame, `TS.unitFrame` (events-frames-taint-§1's carve-out: the vendored AceEvent has no `RegisterUnitEvent`), through `NS.SafeRegisterUnitEvent`; built once and reused, registered only while a container uses "without a duration", the addon is not suspended, and auras are readable (no combat lockdown, not secret), and unregistered by hand in `TS.Stop` | the frame's one `OnEvent` → `onUnitAura`: the client delivers only `player` and `pet`; the handler still proves the unit a safe key and compares it (defense in depth), then schedules a scan 0.5 s later (bucket `timedScan`). A scan that comes due after the gate closed is dropped too |
 | `UNIT_AURA` for `player` and `pet`, and for `target` and `focus` | `modules/EmptyWatch.lua` — its two private frames, `EW.unitFrames[1]` (player, pet) and `[2]` (target, focus), the same carve-out, each filtering `UNIT_AURA` and nothing else, through `NS.SafeRegisterUnitEvent`; built once and reused, each registered only while a shown container on its units is unlocked and out of test mode, the addon is not suspended, combat has not started and auras are readable, and unregistered by hand in `EW.Stop` | the frames' one `OnEvent` only marks a pass due: one pass 0.2 s later (bucket `emptyPass`) re-predicts every watched container and re-runs the visibility pass of any whose answer changed |
 | `PLAYER_TARGET_CHANGED`, `PLAYER_FOCUS_CHANGED` | `modules/EmptyWatch.lua` (AceEvent, on its own target) — while its target and focus frame is registered | the pass run at once, not 0.2 s later, folding in one already due: the engine redraws for the new unit in the same frame, so a follower hung from a parent that just emptied would otherwise sit on the engine's 1x1 rect for the delay |
@@ -225,12 +228,12 @@ optional. The full table and the reasons:
 | AceDB `OnProfileChanged` / `OnProfileCopied` / `OnProfileReset` | `core/Database.lua:275-279` | `NS.OnProfileChanged` / `NS.OnProfileCopied` / `NS.OnProfileReset` → re-prepare the registry, trace the event once in its own words (a switch `[Profile] changed -> X`; a copy or a reset one `[Set]` line, debug-logging-§10), rebuild, re-render |
 
 Each container's own `UNIT_AURA` belongs to the engine (`SetUnit`, `modules/Container.lua:298`) and
-is not addon code. The nine `core/AuraMaster.lua` registrations are one module-level list,
+is not addon code. The eleven `core/AuraMaster.lua` registrations are one module-level list,
 `LIFECYCLE_EVENTS`, which `RegisterLifecycleEvents` and `UnregisterLifecycleEvents` both walk, so the
 stand-down and the stand-up remove and restore the same list. With logging on, the world-entry, loading-screen, combat and
 restriction handlers each write one `[Event]` line before acting (`traceEvent`,
-`core/AuraMaster.lua:93`; `docs/debug.md` -> *The event trace*); the unit swaps and `ADDON_LOADED`
-do not.
+`core/AuraMaster.lua:97`; `docs/debug.md` -> *The event trace*); the unit swaps, `ADDON_LOADED` and
+the two item events do not. The weapon-enchant reset writes one `[Apply]` line when it fires.
 
 The font primer (`modules/FontPrimer.lua`) registers no event of its own. It runs from
 `CM.StartListening` (the login's `CM.Init` and every stand-up, before the first build), from the
@@ -273,7 +276,8 @@ from current state. What stands down, what survives and the library-absent path:
 No secure template of our own: the only protected machinery is Blizzard's aura engine, and each
 container's anchor opts in through `DisableUntrustedLayoutScriptsTemplate`. No structural work runs
 while auras are secret or under combat lockdown (`ContainerManager.MustDefer`); visibility in combat
-goes through the engine's `SetEnabled`; protected opens and frame-creating verbs are refused in
+goes through the engine's `SetEnabled`, and so does the weapon-enchant reset (off, then on, only for
+an engine that should be on); protected opens and frame-creating verbs are refused in
 combat, and a teardown under lockdown is parked; every engine binding is `pcall`-guarded; no border
 reads a secret size; and secret values never reach a string operation. The font primer's frame hangs
 from `UIParent`, outside every anchor, and its one engine call, a follow-up `UpdateAllAuras`, is not
@@ -313,7 +317,7 @@ span bundle is `<date>-v<A>-v<B>/`, and the one untagged bundle is `docs/revendo
 | Doc | Status | Trigger |
 |---|---|---|
 | `perf-analysis/README.md` | Present | The performance harness is wired (`core/PerfSetup.lua`) |
-| `slash-dispatch.md` | Present | 23 commands in `NS.COMMANDS`, over the eight-or-more threshold |
+| `slash-dispatch.md` | Present | 25 commands in `NS.COMMANDS`, over the eight-or-more threshold |
 | `midnight-quirks.md` | Present | Client-version workarounds of the addon's own: 12.1 aura secrecy and the aura container engine, and the taint notes that follow from them |
 | `compat-layer.md` | Present | 22 shims in `core/Compat.lua`, over the three-or-more threshold |
 | `message-bus.md` | Not applicable | 4 messages in `NS.MSG`; the trigger is more than ten. The table lives in `## Message Bus` above |

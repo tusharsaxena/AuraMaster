@@ -1,1941 +1,1673 @@
-# Ka0s Aura Master — in-game smoke tests
-
-Run on a live Retail client at Interface 120100 (12.1.0), in order; later steps assume earlier ones
-passed. Turn on Lua errors first (`/console scriptErrors 1`, or BugSack). Watch chat for the cyan
-`[AM]` tag and for any error frame. The headless gate (`docs/testing.md`) covers the pure logic; this
-suite covers what only the client can show.
-
-## A. Install and load
-
-1. **Fresh install.** Remove `WTF/Account/ACCOUNT/SavedVariables/AuraMaster.lua`, log in → the world
-   loads with **zero Lua errors**.
-2. **Starter containers.** Three containers appear without any setup: *Player buffs* as bars near the
-   top right, *Player debuffs* as icons just above it, *Target debuffs (mine)* as icons below the
-   screen center. Your current buffs are in the first; target a dummy, apply a debuff and it appears
-   in the third.
-3. **`/reload`** → no errors; every container is where it was.
-4. **Delete all three**, `/reload` → they do **not** come back (the profile is marked seeded).
-   Recreate one with `/am new` for the rest of the suite, or reset the profile (step 52) to get the
-   starters back.
-
-## B. Slash surface
-
-5. `/am` → Settings opens at **Ka0s Aura Master**, the page `/am config` opens; no chat line.
-   `/am` followed by only spaces, and `/auramaster` → the same. In combat, `/am` → the gray
-   "cannot open settings during combat" line `/am config` prints.
-6. `/am help` → the version line and the 23-command list; each row is a gold `/am verb`, an em dash
-   and a white description.
-7. `/am wibble` → the unknown-command line, then the help block.
-8. `/am options` → opens the settings (alias of `config`).
-9. `/am version` → `v1.0.1`.
-10. `/am containers` → one line per container, the selected one marked `>`.
-11. `/am new target debuffs icons` → `Created …` naming a target/debuffs/icons container, which appears
-    on screen and becomes the selected one. `/am new nonsense` → `Unknown word 'nonsense' …`, nothing
-    created.
-12. `/am select 1` and `/am select player buffs` (any case) → `Selected …`; `/am select 999` → `No such
-    container …`.
-13. `/am get container.name` → the selected container's name, with its name annotated in gray;
-    `/am set container.layout.scale 1.5` → it grows; `/am reset container.layout.scale` → back;
-    `/am list` → every row, `container.` rows annotated.
-
-## C. Unlock, drag, preview
-
-14. `/am unlock` → every container shows a handle with its name, and one with nothing to show a
-    faint outline one element in size (only while predicted empty, batch 9 HG-1, check 193); real
-    auras keep drawing. `/am test` → every container fills with placeholder auras and its
-    real auras are hidden, the outline giving way to them. The handle is a dark strip with a thin gold edge and a gold label, sitting
-    outside the container: above it when the auras grow down, below when they grow up, lined up with
-    the edge the first aura starts from. The first bar or icon is fully visible, not under the handle.
-    Flip Grow vertically without reloading (Layout → Growth, Down → Up): the bars stack up from the
-    anchor, the handle moves below them, and nothing hangs below the anchor; flip it back and they
-    stack down again. Grow horizontally (Right → Left) likewise, on an icons container.
-    Hovering the strip or the help mark at its right end shows, at the cursor, the name and "Drag to
-    move. Right-click for settings.", with no Lua error. Run this after a `/reload` and again after
-    Profiles → Reset Profile.
-    **Screen edge.** `/am unlock`, drag a container that grows down flush against the top of the
-    screen, `/am lock`, then `/am unlock` again → the container shifts down 20px (the handle strip and
-    its gap), so the handle stays on screen; `/am lock` → it returns to the edge. Its stored position is the same before and after.
-    **Attached container.** Attach one container to another (Layout → Anchor), unlock and `/am test` → the
-    attached container's handle sits above its own first placeholder (below it growing up), in its
-    own column, one of its own Spacings past the target's last placeholder, and its placeholders
-    start one strip row further on, covering none of the target's placeholders (check 41, batch 10
-    F1, F2).
-15. **Drag** a screen-attached container → it moves and, after `/reload`, stays. A drag that starts on
-    the help mark moves it too. Right-click a handle, then its **?** → each time the settings open on
-    the **Containers** page with that container selected in the band's picker (feedback #9); in combat
-    the right-click prints the gray "cannot open settings during combat" line and changes nothing.
-16. `/am test off` → the placeholders go and real auras return; `/am lock` → handles and outlines go.
-17. **Test mode has its own switch.** General → Master controls shows a **Test mode** row beside
-    Minimap button. `/am test` is listed in `/am help`; `/am preview` → an unknown-command line and
-    the help index.
-18. **Combat drag.** Unlock, enter combat, try to drag → the container does not move.
-
-## D. Settings panel — every page and tab
-
-19. `/am config` out of combat → Settings opens at **Ka0s Aura Master**: logo, the Notes line, the
-    Slash Commands list matching `/am help`, and no tab strip. The tree reads **General · Containers · Profiles**. Filters, Layout, Bars, Icons and Text are sections of Containers, on its rail, with no tree entry of their own (#6).
-20. **General** → the strip **[ Master controls ][ Display ][ Spell Categories ][ Dispel Colors ]**, and no Container picker
-    above it. Master controls reads, two per line:
-    Enable Aura Master | General visibility / Master scale | Master alpha / Lock frame | Debug console,
-    then **Reset position** and **Reset all settings**.
-21. Untick **Enable Aura Master** → every container disappears; re-tick → back. Set **General
-    visibility** to *Only in combat* → containers hide out of combat and show in combat; *Only out of
-    combat* is the reverse; *Never* hides them; *Always* restores. Change these **while in combat** →
-    they take effect immediately (visibility is legal in combat).
-22. **Master scale** and **Master alpha** → every container scales and fades together, multiplying each
-    container's own Layout → Frame scale and opacity.
-23. **Containers** (its own top-level page, one tab, **General**) → the band above the tab strip holds the
-    Container picker and **New container**, side by side and aligned. In the tab: Name and Enabled,
-    then the subsection heading
-    **What it shows, and how** with Unit, Aura type and Style under it (batch 8 — there is no heading
-    above Name, and the three rows are visibly one block apart from the two), then Duplicate
-    and Delete, then (with two or more containers) Copy settings from. Select a container and
-    **Delete** it → the picker and New container are still there, and the picker lists what is left.
-    **New container** creates a container and selects it. Hover it → its tooltip. The pair is the
-    library's page banner with its create button (LibKa0s v1.56.0, AM-17): flip the picker between
-    containers 20 times and `/dump collectgarbage("count")` stays flat.
-    Rename a container and change its Unit, then press the page's **Defaults** → Enabled, Unit, Aura
-    type and Style go back to their defaults and the name stays.
-    **Style switch with auras up.** Locked, with live auras in a container, switch its **Style** from
-    Bars to Icons, then back to Bars, then to Icons again → each time the elements redraw in the new
-    style only: no cooldown swipe or icon border left over a bar, no bar, bar text or background left
-    behind an icon, and the bars come back with their fill, name and time text. Watch a few ticks of
-    each aura's countdown; a stray swipe can appear late, when the engine next updates the duration.
-24. **Filters** → a Container dropdown above the strip. On a buff container the strip is
-    **[ General ][ Categories ][ Overrides ][ Sorting ]**, with no Spell lists tab on any aura type
-    (batch 8: Overrides sits right after Categories and Sorting is last; the first tab was called
-    *What to show* until 2026-09-20). **General** ends with the priority block — heading **Filter
-    priority logic**, the lead-in, then the five rank lines — below its own three rows, and neither
-    Categories nor Overrides carries a copy of it any more.
-    **Categories** opens straight onto two grids,
-    **Blizzard Categories** then **Spell Categories** (its last row **Uncategorized**), each headed
-    once, with columns **Show · Hide** and the category name (hover it for its description). Click
-    **Hide** on a line → that line's cell shows a plain checkbox check and the other goes unlit, and
-    `/am get container.filter.categories.<key>` prints `Hide`. Right under the grid sits **Hide
-    enchants without a duration**, tied by name to the **Weapon enchants** row above it. On the
-    **Spell Categories** grid, click **See spells** on a row → the settings jump to General → Spell
-    Categories with that category already selected. Switch the container's aura type to Debuffs →
-    **Blizzard Categories**, **Dispel Types**, **Who Cast It** and a **Spell Categories** grid
-    holding only its own **Uncategorized** row (no starter list, no See spells link, no line above
-    it naming General → Spell Categories); switch to Weapon enchants → the strip becomes
-    **[ Categories ][ Sorting ]**, Categories holding only **Hide
-    enchants without a duration** and Sorting only **Direction**.
-25. **Layout** → **[ Frame ][ Anchor ][ Growth ][ Mouse ]**; Anchor reads **Attach to**, then only
-    the subsections that mode uses, and there is no Attach to the screen button (feedback #4). Set
-    **Attach to** → *Screen* → only **Screen** is drawn under it, no empty headings; → *Named frame* →
-    the tab redraws with **Named frame** (Frame name with **Pick a frame…** beside it) and **Offset**,
-    Screen gone; → *Another container* → **Another container** and **Offset**. Then `/am set
-    container.attach.mode screen` with the page open → it redraws to Screen alone; `/am get
-    container.attach.x` still answers while Offset is hidden.
-26. **Bars** → **[ General ][ Background & border ][ Name text ][ Time text ][ Stack text ][ Icon ][
-    Pandemic ]** — Icon is second-last, right before Pandemic (2026-09-20). On an icon container
-    every tab carries the small gray "Not in use: this container is drawn as icons. Set its Style to Bars on the Containers page to use these settings." note —
-    quiet text, not a full-width orange banner, and not larger than the labels under it — a gap below it, and every control dimmed and unclickable; the tabs
-    and the Container dropdown still work. *(Retired by #6: a container's rail offers only its own style's section, so this notice and the dimmed style page no longer exist; see "Settings redesign (#6)" below.)* **General** opens on its Size subsection (**Width**,
-    **Height**) before Fill and Spark. On **Icon** tick **Show border**, set the thickness to 3 →
-    a border frames each bar's icon and the art shrinks inside it rather than under it. On **General**
-    untick **Show the spark on auras without a duration** → a permanent buff's full bar shows no
-    spark, and a timed buff's spark still rides its moving edge, sitting just inside it (the
-    in-game check docs/midnight-quirks.md names; if the permanent bar still shows a spark, or the
-    timed one loses it, report it). In the preview the "Well Fed" placeholder loses its spark. On
-    **Background & border**, Background reads **Background texture** · **Background opacity** /
-    **Background color** · **Use class color**; drag **Background opacity** down → the bars'
-    background fades while the fill stays as it was.
-27. **Icons** → **[ Size ][ Border ][ Cooldown ][ Time text ][ Stack text ][ Pandemic ]**. On
-    Cooldown tick **Blizzard countdown numbers** → on a timed aura the countdown and the time text
-    read the same whole second throughout, in each time format (both round a fraction up: 12.7 s
-    reads 13). Past 90 s the Blizzard format reads minutes, as the game's own buff text does.
-28. **The picker is shared.** On Bars → Icon, switch the Container dropdown → the page stays on **Icon**,
-    now showing the other container; open Layout → the same container is selected there.
-29. Every media dropdown (bar texture, background, border, font) opens with entries in it.
-
-## E. Create, duplicate, delete
-
-30. Containers → **New container** → a player-buff bar container named *Container N* appears, offset
-    from the last new one, and is selected.
-31. **Duplicate** → a *… (copy)* container with every setting, nudged 20 px; **Delete** → a confirmation
-    popup; **Yes** removes it and any container attached to it falls back to the screen. In combat,
-    **New container**, **Duplicate** and `/am new` are refused with the gray "cannot create a container
-    during combat — it would not be drawn or placed until combat ends" line, and the Delete popup's
-    **Yes** and `/am delete` with the gray "cannot delete a container during combat — its display
-    cannot be torn down until combat ends" line; nothing is created or removed.
-32. **Copy settings from** → pick a source and *Bar style* → the selected container takes only the
-    source's bar look; its name and position are unchanged.
-33. Rename one on Containers (Enter to apply) → the handle label, every picker and `/am containers`
-    show the new name; a blank name is refused.
-
-## F. Filters
-
-34. **Cast by** → *Me (and my pet)* shows only your auras; *Anyone but me* the rest.
-35. **Categories.** On a buff container set *Group buffs* to **Hide**, every other category (including
-    *Uncategorized*) left at Show → your Mark of the Wild / Arcane Intellect / Battle Shout disappears
-    from it, nothing else changes. Now also set
-    *Defensive cooldowns* to **Hide** on a defensive cooldown that is ALSO in *Cancelable* (left at Show) → it
-    still shows (rank 3: a Show elsewhere rescues it). Set every category to **Hide**, *Uncategorized*
-    included, with the Overrides whitelist empty → the container goes empty and shows "These filters
-    can never match anything."; set *Defensive cooldowns* back to Show → only defensive cooldowns appear, and
-    only those. Now set every category back to Show except *Uncategorized*, which stays Hide → a
-    cancelable-but-unlisted buff (one in none of the profile's Spell Categories lists) disappears too,
-    even though nothing named it directly.
-36. **General → Spell Categories and Dispel Colors.** Untick one starter spell in *Defensive cooldowns*, cast it
-    → it no longer shows in any container showing Defensive cooldowns. Type a spell of yours by name into **Add
-    a spell** → it is listed with its icon and counts as a defensive; a name that matches nothing adds
-    nothing and says why under the box. **Restore this category's starter list** → back to shipped. On
-    **Dispel Colors** change *Magic* → a bar colored by dispel type takes the new color; an icon's
-    Magic dispel border keeps Blizzard's own blue.
-37. **Overrides.** Opens with the same five-rank priority sentence as Categories. Add a buff to the
-    *Blacklist* → gone; add a buff to the *Whitelist* by name on a container whose categories exclude
-    it → it is listed with its icon and id, and it shows; a name the game does not know → nothing
-    added, and the reason under the box. Add the SAME spell id to both lists → the entry on the
-    *Blacklist* stays there but the aura shows anyway (the whitelist wins), and a gray note appears
-    under the *Blacklist* entry saying so; remove it from the *Whitelist* only → the *Blacklist*
-    note disappears and the aura is hidden again. Add to the *Whitelist* a spell every category of
-    the container already sets to Hide → a gray note appears under that *Whitelist* entry naming
-    the category (or categories) it is overriding.
-38. **Max duration** `60` → hour-long buffs disappear, short ones stay, permanent ones go.
-39. **Duration → Only auras without a duration** on a player buff container → timed buffs disappear
-    out of combat once learned; a brand-new timed buff cast in combat may show once. `/am forgettimed`
-    → they reappear until relearned out of combat.
-40. **Warnings.** Add a spell to the Overrides *Whitelist* on a *player debuffs* container → the Filters page
-    shows the orange "ignored for debuffs on your own character or pet" line. On a *target buffs*
-    container → "only apply while the unit is friendly". Set every category to **Hide**, *Defensive cooldowns*
-    left at Show, and on General → Spell Categories untick every *Defensive cooldowns* spell (Restore
-    afterward) → "These filters can never match anything." (the only group left, Defensive cooldowns' Show
-    group, now matches no id at all).
-
-## G. Attach
-
-41. **To a container.** Layout → Anchor → Attach to → *Another container*, pick one → it follows that container
-    as it grows and shrinks. Try to attach A to B and B to A → the second is refused. Unlocked and in
-    test mode, with B attached to A → B's handle sits one of B's Spacings below A's block, and B's
-    placeholders start right under it (strip, block, strip, block in one column), rather than on top
-    of A, with B's handle over none of A's placeholders (batch 10 F1, F2); `/am test off` → B moves
-    back to one element and one strip row past A (A's outline) while unlocked (check 191), and
-    follows A's real auras again once locked, one Spacing past them.
-    **Growth conflict (GC-1, E3).** Set B to grow Up and A to grow Down, then B → Another container
-    → pick A → a popup names B, A and the changed growth; **Cancel** → the dropdown shows None again
-    and nothing moves. Pick A again → **Attach** → B attaches and grows down; its Growth tab shows
-    the dimmed inherited values, and A's Growth tab says one container follows it. With another
-    container attached to B, the popup adds that one follows too. Attach to → Screen → B grows up
-    again and one chat line says so. `/am set container.attach.container <A's id>` on a container
-    of differing growth in container mode → no popup, one chat line. Open the popup, enter combat,
-    then press **Attach** → refused with a gray line and nothing attaches; no Lua error or taint.
-42. **To a picked frame.** **Pick a frame…** → the settings close, an outline tracks the named frame
-    under the cursor with its name beside it; left-click your player frame → the container attaches to
-    it and Layout reopens with the frame name filled in. Repeat and press **Escape** → canceled, Layout
-    reopens. `/am pick` does the same from chat. In combat, both are refused with the gray
-    "cannot pick a frame during combat — attaching to a frame waits until combat ends" line.
-43. **Frame not there yet.** Attach to a frame name belonging to an addon that loads on demand →
-    the container sits at its screen position until that addon loads, then moves. Setting **Attach
-    to** back to *Screen* detaches it.
-
-## H. Weapon enchants
-
-44. Apply a temporary weapon enchant (an oil, a stone, a poison). The *Player buffs* starter shows it
-    after the buffs, because its **Weapon enchants** row on Filters → Categories is Show (the
-    default, schema v3). Set that row to **Hide** → the enchant drops out of that container; set it
-    back to **Show** → it returns. **Hide enchants without a duration** hides a permanent one.
-45. `/am new enchants` → a player buff container named *Container N* whose Filters → Categories are
-    all Hide but **Weapon enchants**: it shows your enchants and no buff. The Aura type dropdown on
-    Containers offers Buffs and Debuffs only (schema v5, feedback #6).
-
-## I. Combat deferral
-
-46. **Enter combat** (a training dummy) and change a container's bar width or a filter with `/am set`
-    (the settings window is locked in combat, item 46a) → chat prints once: `[AM] Aura Master settings
-    changes will apply when combat ends.`; nothing changes on screen. Leave combat → the change lands
-    with no reload and no error. In combat, `/am lock` and a `/am set` rename print no notice. With a target container's border on class color, target a player
-    of another class and pull at once → no notice prints (you changed no setting), and the border
-    takes the new class color when combat ends. Repeat inside a Mythic+ key or a boss encounter →
-    the change waits until the key or encounter ends, even if you drop combat between pulls. A change
-    made out of combat inside the key prints once: `[AM] Aura Master settings changes will apply once
-    aura information is available again (after the encounter, key or match).` A change made in combat
-    there prints the combat line; nothing more prints the moment combat ends, and the next change
-    still held after the pull prints the restriction line once.
-47. In combat, `/am config` → refused with the gray "cannot open settings during combat" line; no taint
-    warning, and the panel does not pop open when combat ends. `/am resetall`, and a General → **Reset
-    all settings** popup opened before the pull and answered **Yes** in combat, reset the profile in
-    combat: the acknowledgment prints and no gray line. The button itself, clicked in combat, is
-    refused by the settings lock (item 46a). After either reset, or a switch to a profile without one
-    of your containers, in combat → that container stops drawing, is torn down when combat ends, and
-    no taint warning appears. Point container 1 at focus first: after the reset (or a switch or copy)
-    in combat it draws nothing, never focus auras under the reset container's name, and once combat
-    ends it draws the new container 1 (player buffs).
-
-46a. **The settings lock (LibKa0s v1.46.1).** Open the settings on a Bars page, then pull a dummy:
-    the whole page, the container band and the tab strip included, goes under a gray "Settings are
-    locked during combat." cover. Clicking, dragging, typing, a tab, Defaults, Duplicate: nothing
-    changes, and one gray `settings are locked during combat — changes are refused until it ends`
-    line prints for the whole combat. Switch category in the AddOns sidebar in combat → the new page
-    shows covered; no error (`/console scriptErrors 1`), no `ADDON_ACTION_BLOCKED`, and the window
-    stays open. Change a value with `/am set` in combat, then leave combat → the covers lift and the
-    page shows the new value. A second combat prints the line once more.
-
-## J. Blizzard frames
-
-48. General → Display → **Hide Blizzard buffs** → the default buff frame disappears (with its weapon
-    enchants); **Hide Blizzard debuffs** → the default debuff frame goes. Untick → both return. Set one
-    in combat with `/am set hideBlizzardBuffs true` (the page itself is locked in combat, item 46a) →
-    chat prints `[AM] Aura Master settings changes will apply when combat ends.` once (set the other
-    too: still one line), and it applies when combat ends. No taint warnings on any
-    of this.
-
-## K. Mouse
-
-49. Hover an aura → its tooltip at the configured position; untick **Tooltips in combat** → none in
-    combat. Right-click one of your own buffs in a player-buff container → it is canceled; untick
-    **Right-click to cancel** → nothing happens. **Click-through** → no tooltip and clicks pass through.
-    **World tooltips (L-3).** Put a bar or icon container over a world unit (an NPC or a player).
-    Hover an element → only the aura's tooltip shows, never the unit's tooltip beside it. A unit
-    tooltip that was already up when the cursor entered the element fades rather than lingering.
-    `/am test` and hover a placeholder over a world unit → no unit tooltip. With **Show tooltips** off or
-    **Click-through** on, the hover reaches the world by design → the unit's tooltip shows. A new
-    container sits in the **Medium** strata (Layout → Frame → Strata).
-
-## L. Profiles
-
-**The page draws.** Open another addon's options page first, then Aura Master → Profiles → the
-AceDBOptions controls render (current profile, New, Copy From, Delete, Reset Profile): never a blank
-page under the header.
-50. Profiles → create a new profile → the three starter containers appear on it; switch back → your
-    own set returns, each where you left it.
-51. **Copy** a profile into the active one → its containers replace yours.
-52. General → **Reset all settings** → the popup reads *"Reset this profile to the addon's defaults?
-    Everything you have configured or added in it is discarded — your other profiles are not
-    affected."* → **Yes** → the starter containers, default settings, other profiles untouched. `/am
-    resetall` does the same.
-
-## M. Performance and debug
-
-53. `/am perf` → status lines and the step panel. Run a capture as in `docs/perf-analysis/README.md`
-    → `/am perf report` prints the summary and the JSON line; containers are hidden during the
-    suspended arm and come back after **finish** without a reload.
-54. `/am debug` → the debug console opens; the General page's **Debug console** checkbox follows it.
-    `/am debug on` → lines such as `[Set] … = …` stream as you change settings; `/am debug off` stops
-    them; `/reload` → logging off, window closed. With debug on, each bulk act logs **one** `[Set]`
-    line and no per-row lines (debug-logging-§10): the Bars page's **Defaults** → `[Set] reset bars:
-    N rows` (0 when nothing was off its default); **Copy settings from** → `[Set] copy container
-    A→B (section): N rows`; **Reset position** → `[Set] reset positions: N rows`; **Reset all
-    settings** → only `[Set] reset profile 'Default' to defaults`, with no row count, even when
-    nothing was off its default; Profiles → **Copy** →
-    only `[Set] copied profile 'A' → 'B'`.
-55. Memory spot-check: `/run print(collectgarbage("count"))`, change a bar container's bar width 10
-    times, then print it again. Note the growth. Style objects are built once per look, so the growth
-    should be smaller than on a build from before that change. Record both numbers.
-
-## N. Unit swaps
-
-56. With a target container, change target several times, and target and clear focus with a focus
-    container → each shows the new unit's auras at once, never the previous unit's. Summon and dismiss
-    a pet with a pet container → it follows.
-
-## O. Master switch from chat
-
-57. Out of combat, `/am disable` → `enabled = false` (gold key, white value: the line `/am get enabled`
-    prints, slash-commands-§5's set shape) and every container hides; General → **Enable Aura Master**
-    is unticked. `/am enable` → `enabled = true` and every enabled container shows again; `/am unlock`
-    and `/am lock` confirm the same way, `locked = false` and `locked = true`. Repeat enable and
-    disable **in combat** → the same lines, no
-    gray refusal, no "will apply when combat ends" notice and no taint warning; containers stop
-    drawing and return at once (the anchors themselves finish hiding when combat ends, step 59).
-58. **The disabled addon is inert, not merely blank** (slash-commands-§7). With it disabled: Blizzard's
-    own buff and debuff frames come back if you had them hidden; changing target, entering and leaving
-    combat and summoning a pet all do nothing at all; `/am` still opens the settings panel and
-    `/am list`, `/am get` and `/am set` still read and repair settings; `/am lock` answers
-    `Ka0s Aura Master is disabled — enable it with /am enable` on one line; **left-clicking the
-    minimap button** still opens the panel, and **right-clicking** it shows Locked and Test mode
-    grayed (`(enable the addon first)`) with only Enabled clickable; ticking **General → Master
-    controls → Test mode** answers that same one line and the box stays unticked (after
-    `/am enable`, the box and the menu's Test mode entry both toggle test mode). Then `/reload` while disabled → it comes up disabled and still answers `/am`,
-    and built no container: `/framestack` over the screen shows no `AuraMasterAnchor` frame and
-    `/dump AuraMasterAnchor1` is nil. `/am enable` draws every container at once. Switch to another
-    profile while disabled and back, then `/am enable` → its containers draw.
-59. **Disable it in combat.** Enter combat with containers shown, `/am disable` → the containers'
-    engines go quiet at once and the anchors finish hiding when combat ends; no taint warning either
-    side of the transition.
-
-## P. Feedback batch 5 checks owed (2026-09-13)
-
-What the headless suite cannot settle from the 2026-09-13 feedback batch
-(`docs/superpowers/specs/2026-09-13-feedback-batch5-design.md`). Each item names its requirement
-and, where the client source left the answer open, its question in
-`docs/superpowers/research/2026-09-13-aura-engine-notes.md`. Some live in the sections above; they are
-listed here too, so the batch can be signed off in one pass.
-
-58a. **Schema v2 migration (spec section 7).** Back up
-    `WTF/Account/ACCOUNT/SavedVariables/AuraMaster.lua` first: a profile loaded once on this build
-    cannot go back. On the previous build, in two profiles: untick a starter spell in *Core healing*
-    and add a spell to *Lesser healing* on the same container; add a spell to *Defensive cooldowns* on a
-    second container; set a bar container's **Color by** to dispel type and change its Magic color;
-    leave a container's strata at Medium. Log in on this build → no Lua errors. General → Spell
-    Categories lists one *Healing* category (no Core or Lesser healing) holding the added spell, with
-    the starter unticked; *Defensive cooldowns* holds the other added spell. Dispel Colors → Magic shows the
-    color you set. Layout → Frame → Strata reads High where it was Medium. Switch to the other
-    profile → the same.
-59a. **Color by → dispel type lets go (B-4, question Q1).** On a bar container showing a debuff with a
-    dispel type, set Bars → General → **Color by** to dispel type → the fill takes the General → Dispel
-    Colors color; set it back to one color → the fill returns to the bar color at once. Enter combat
-    with the aura still up → the fill keeps the bar color. The open point is whether a color written
-    after the engine's dispel tint holds while auras are secret.
-60. **Icon border color (I-1, question Q3).** On an icon container showing a buff, set Icons →
-    Border's color to bright red and its thickness to 2 → every icon's border turns red at once. With
-    **Dispel border** on, a debuff with a dispel type shows a square edge in Blizzard's dispel color
-    over yours, the same shape and thickness; a debuff without one, and every buff, keeps yours. If a border does not change, `/fstack` over
-    that icon and report the frame it names.
-61. **Icons keep Blizzard's dispel colors; bars take the palette (G-3, owner 2026-09-13).** On
-    General → Dispel Colors set Magic to pure red. An icon container with **Dispel border** on,
-    showing a Magic debuff → the edge is Blizzard's blue, the same shape as your border. A bar container
-    with **Color by** set to dispel type, showing the same debuff → the fill is red. The tab's line
-    and each swatch's tooltip say the colors drive bars only.
-62. **Countdown and time text agree (I-2, question Q4).** Check 27. Also note the cooldown's own
-    number with 12.x s left: 13 means the countdown rounds up, as the time text now does. The notes'
-    stronger option, handing the cooldown frame our formatter (`SetCountdownFormatter`), was not
-    taken; if the two numbers still disagree by a second, that is the follow-up.
-63. **Spark on auras without a duration (B-3, question Q5).** Check 26, which settles three points:
-    on a permanent buff the bar's status-bar texture has no width (`/fstack`), so the clipped spark
-    is gone; the clip frame hides a spark placed wholly on the elapsed side; a timed bar's spark still
-    reads as riding its edge. If the permanent bar still shows its spark with the option off, stop
-    and report it to the owner (spec B-3, option 3).
-64. **World tooltips (L-3, question Q6).** Check 49's World tooltips paragraph: a live element with
-    tooltips on holds the hover, so no unit tooltip appears beside the aura's; a placeholder over a
-    unit shows no unit tooltip; a unit tooltip already up fades.
-65. **Placeholder time text (B-5, question Q7).** `/am test` on a bar container and switch Time text →
-    **Countdown** between Blizzard, short and detailed → the placeholders' time text changes with it
-    and reads as a live aura's does in the same format. Tick Pandemic → **Recolor the time in the pandemic window** → the
-    *Shield Wall* placeholder (4 s left) takes the pandemic-window time color.
-66. **Text justify (B-5).** On Bars → Name text set **Justify** to Right → the name moves to the
-    right end of its box and stops short of the time text. On Bars → Time text, with the name shown,
-    set **Justify** to Left, then Right → the time moves across a box as wide as its format's longest
-    string ("59m"; "23h 59m" in the detailed format), and the name stops short of that box. On Icons →
-    Time text set it to Left, then Right → the time text moves across the icon's width.
-67. **Inherited flow (L-6).** Attach container B to A (Layout → Anchor → *Another container*) where A
-    fills in columns growing down → B continues below A's last element, and the line beside the
-    Container dropdown names the points. Set A's **Grow vertically** to up → B moves above A, with
-    none of B's own settings changed, and without a reload B's own auras stack up from its first
-    element too. On B's Growth tab, Fill, Grow horizontally and Grow vertically
-    are dimmed and show A's values under "Fill and growth follow 'A' because this container is attached to it." (dim gold, with a
-    gap before the Fill row), while Spacing stays live. Set
-    B's **Attach to** back to *Screen* → B's own flow returns. Repeat with an icon A that fills rows
-    growing right and down (IA-1) → B starts directly under A's first icon, left edges aligned, and
-    the line reads "Its Top left joins the Bottom left of 'A'"; give A a **Per row** that
-    wraps it → B sits below A's last line; set A's **Grow horizontally** to left → B is right-aligned
-    under A (Top right to Bottom right).
-68. **Attached handle while unlocked (L-4, SS-3).** Check 41, and check 14's attached-container paragraph.
-    **Seam (SS-1, SS-2).** Locked, real auras, B attached to A, A a column growing down: the gap from
-    A's last bar to B's first equals the gap between B's bars (2px at Spacing 2, not 4). Set A's
-    **Grow vertically** to up → B sits above A with one B Spacing between them and no overlap. Make A
-    an icon row growing right → B starts under A, one B **Line spacing** below A's last line. Set B's
-    Spacing to 10 → B's inner gaps and the seam change together, and A does not move. B's **Scale**
-    1.5 with A at 1 → the seam still equals B's on-screen gap. `/am test` → the seam between the
-    placeholders equals the locked one. Set B's **Y offset** to -3 → B drops 3px further (a nudge on
-    top). After updating from a build before schema v8, a container that was attached to another with
-    the old 0/-4 offsets reads 0/0 on its Layout page; any other offsets are unchanged.
-69. **Dimming (L-5, B-2).** Check 25 for the Anchor subsections (now drawn by mode, not dimmed); check
-    26 for the Bars page on an icon container, and the Icons page on a bar container the same way.
-70. **ID lists take a link (X-1).** On General → Spell Categories click into **Add a spell** and
-    shift-click a spell in your spellbook → its link lands in the box; press Enter → the spell is
-    added with its icon and name. Do the same on Filters → Overrides → Whitelist. If the shift-click
-    goes to the chat box instead, report it: the list reads spell links, but the client decides
-    which box a shift-click fills.
-71. **Dispel border has the Solid border's shape (batch 8 DB-1, DB-2).** On an icon container
-    showing debuffs with a dispel type and one without (Target Debuffs, a Solid 1 px black border),
-    with Icons → Border → **Color the border by dispel type** on → each typed icon shows a square
-    edge in Blizzard's type color exactly where its neighbors show black: no beveled corners,
-    nothing drawn into the icon spacing. Set Border thickness to 4, then 8 → the colored edge always
-    matches the black edge's thickness. Turn **Show border** off (or style None) → the typed icons
-    still show a 1 px colored edge. Pick a non-Solid border style → the colored edge is flat strips
-    at the border's thickness; report whether that looks acceptable. A Bleed debuff: report the color
-    Blizzard gives it (it may have none).
-72. **Suggestions while typing (#31).** On General → Spell Categories type `rej` into **Add a
-    spell** → a dropdown opens under the box listing Rejuvenation with its icon and id, plus any
-    matching spell in your spellbook; a spell the client gives a rank shows it ("Rank 2") beside
-    the name. Press Down, then Enter → that spell is added once, with its icon and name, and the
-    dropdown closes. Type again and click a row instead → the same. Repeat on Filters → Overrides →
-    Whitelist.
-73. **A name the lists know resolves without the spellbook (#31).** Type the full name of a
-    category starter your character does not have (*Ironbark* on a non-druid) and press Enter → it
-    is added. Add a spell by id to Filters → Overrides → Blacklist, then type that spell's name on
-    General → Spell Categories → it resolves too.
-74. **A shared name is refused until picked (#31).** Add two spells that share a name by id to the
-    Overrides Whitelist (for example the *Blood Fury* racials 20572 and 33697), then on General →
-    Spell Categories type `Blood Fury` and press Enter without picking → nothing is added, the line
-    under the box reads "Several spells are named 'Blood Fury' — pick one from the list, or use the
-    id.", and the dropdown lists each of them. Pick one → only it is added.
-75. **An unknown name says where names come from (#31).** Type a name no list knows and your
-    spellbook lacks (`Zzz Spell`) and press Enter → nothing is added, and the line under the box
-    reads "No spell named 'Zzz Spell' in your spellbook. Names work for spells in your spellbook and
-    ones this list knows; otherwise use the id or shift-click a link." Hover the box → the tooltip
-    ends with the same hint, and promises nothing about names the game cannot find.
-76. **Gaps between bars no longer leak the world tooltip (L-3, owner report 2026-09-14, B-9).** Put a
-    bar container with at least two auras over a world unit (an NPC or a player), with default
-    settings (Show tooltips on, Click-through off). Hover a bar → only the aura's tooltip. Hover the
-    narrow **gap between two bars**, and separately the container's own **padding** past the last bar
-    → in both spots, still only the aura tooltip nearest the cursor (or none, past every bar) — never
-    the unit's tooltip drawn alongside it. This is the failure the report's screenshot showed: two
-    tooltips side by side. Now turn **Click-through** on for that container and hover the same gap
-    again → the unit's tooltip comes back, proving the blocker that closes the gap is gated off, not
-    unconditional. Turn Click-through back off, then turn **Show tooltips** off instead and hover the
-    gap once more → the unit's tooltip shows there too, for the same reason.
-    **Preview is exempt by design.** `/am test` and hover a gap between placeholders
-    → the unit's tooltip shows there, same as Click-through. Expected: the blocker is hidden whenever
-    the engine is (real auras are hidden while previewing too), so this is not a regression to report.
-
-## Q. Feedback batch 6 checks owed (2026-09-14/15)
-
-Categories became Show/Hide, the priority order was revised mid-batch (rank 3's Show now rescues an
-aura from a Hide elsewhere), and a container with anything Hidden compiles to many groups instead of
-one. None of this is reproducible headlessly; these checks are.
-
-77. **Group explosion has a real cost, and nothing silently vanishes (spec §6b, `R-4`).** On a
-    *player debuffs* container, set exactly one debuff category — say *Dispellable* — to **Hide**
-    and leave the other 18 at **Show** → the container now compiles to roughly 17 groups plus a
-    catch-all (spec §6b), not one. (16 and 15 when this check was written; issue #11 added *Hard CC*
-    and *Soft CC* to the debuff list on 2026-09-20.) Cast or apply enough different debuffs to populate several
-    categories at once and confirm **every** one you expect still appears — a debuff in *Dispellable*
-    and nothing else disappears, but one in *Dispellable* and also, say, *Boss* still shows (rank 3).
-    Nothing is missing, garbled or duplicated. Then `/am perf` a capture over a few seconds with the
-    container populated → compare its container-apply bucket against the same container with every
-    category left at Show (one group): if the many-group container is dramatically slower per apply,
-    or the client silently refuses some of the `AddAuraGroup` calls (a group's auras never draw even
-    though its category has live spells), report it — that is the "what does it cost, does the client
-    cap groups" open question this batch could not settle offline. Then check the ORDER, not just
-    the presence: set Sort by to a method with an obvious visual order (e.g. Time Remaining) and
-    confirm the container is no longer sorted end to end — auras are ordered category-block by
-    category-block (each Show category's block internally sorted, blocks laid out one after another),
-    not as one sorted run across the whole container. This is the sort-row description's own claim
-    (Filters → Sorting), so it should read as expected once you know to look for it, not as a bug.
-78. **The Hide column reads as live, never dimmed (`K-1`, `R-10`).** On Filters → Categories, look at
-    a row currently set to Show → its **Hide** cell must look exactly as clickable as every other
-    unlit cell elsewhere in the panel (not grayed out, not lower-contrast) — compare it side by side
-    with a genuinely disabled row on the Bars page of an icon container (check 26) to see
-    the difference.
-    Set **Uncategorized** to **Hide** → every other row's Hide column still looks the same, still
-    clickable, on every row, including one already set to Show; click a lit Show cell's Hide → it
-    moves there, live, exactly as it did before Uncategorized was touched.
-79. **`See spells` lands on the row's own category, not the first one (`F-3`, `K-4`).** On Filters →
-    Categories → Spell Categories, click **See spells** on a category that is NOT the first row
-    (say *Support* or *Utility*) → General → Spell Categories opens with the tab selected AND that
-    same category already chosen in the **Category** dropdown, not defensives or whatever was last
-    selected there. Do it again from a DIFFERENT category (say *Racials*) on a different
-    container → it lands on Racials, not Support. Click **See spells** on the **Weapon enchants**
-    row → it lands on General → Spell Categories with **Weapon enchants** selected, showing the three
-    slot toggles, not a spell list.
-80. **The priority block reads as one rank per line, once, at the foot of General (`F-4`,
-    `P-1`, `T-2`, batch 8).** On Filters → **General**, scroll past Cast by, Duration and Max
-    duration → a **Filter priority logic** section heading, the lead-in line ("Highest priority
-    first:") and the five numbered rank lines below it → each rank is its own line, none sharing a
-    line with another, separated by a hairline gap, no word cut off mid-character, no horizontal
-    scrollbar appearing on the tab. The rank lines read at the SAME size as the Whitelist and
-    Blacklist notes on the **Overrides** tab — flip between the two tabs and compare (2026-09-20);
-    the lead-in is one notch smaller than it was too, and still in the normal font's color. Now open
-    **Categories** and **Overrides** → neither carries the lead-in or any rank line; Categories opens straight onto its
-    first grid and Overrides onto **Whitelist**. Resize the WoW window narrower (if your UI scale
-    allows it) and re-open the tab → each line still wraps cleanly on its own, just onto more
-    sub-lines.
-81. **The grid cell is a plain checkbox, on both columns (`G-1`, `G-2`).** On Filters → Categories,
-    look closely at a lit cell (Show or Hide) → it shows an ordinary checkbox check, the same shape
-    and color as every other checkbox in the panel, with no colored fill behind it. Click the other
-    cell on the same row → the check moves there in full, the previously-lit cell now shows its plain
-    unlit checkbox shape, and at no point are both cells lit or neither lit.
-82. **An Overrides entry's note wraps under it, not through it (`K-3`).** Add a spell to the
-    Whitelist whose categories are ALL set to Hide, on a container with several categories so the
-    note names more than one (a long note, e.g. "Shown here by the whitelist, overriding Defensive cooldowns,
-    Cancelable (set to Hide)."). Confirm the note text wraps onto as many lines as it needs directly
-    under the entry's name/id, in the existing gray, without overlapping the entry's icon, id, or its
-    **Remove** button, and without pushing the NEXT entry's row on top of it.
-83. **Every debuff carries `isFromPlayerOrPlayerPet` one way or the other (`docs/schema.md`'s Who
-    Cast It grid; the assumption `R-4`'s dropped catch-all depends on).** On a debuff container, set
-    BOTH *From players* (`fromPlayers`) and *From non-players* (`fromNonPlayers`) to **Hide** — under
-    the current model this drops the debuff catch-all group as a contradiction, since the two
-    together are assumed to cover every debuff. Apply a debuff you cast on a training dummy → it
-    disappears (claimed by `fromPlayers`'s Hide). Have a pet, NPC, or another player's spell apply a
-    DIFFERENT debuff to you or the dummy → it disappears too (claimed by `fromNonPlayers`'s Hide). If
-    you can find or produce ANY debuff that still shows with both Hidden, its `isFromPlayerOrPlayerPet`
-    is neither true nor false as the engine reports it — report it, since that is exactly the case
-    that would make dropping the catch-all here wrong.
-84. **The mouse blocker's reach is the whole container, not just the bars (owner report,
-    B-9 follow-up).** Anchor a bar container with **Show tooltips** on and Click-through off
-    directly over a unit frame, or over open ground you normally mouseover-target through, so its
-    padding — not just a bar — sits over the target. Bind a `/tar mouseover` (or similar mouseover)
-    macro, or just try to mouseover-target the unit/NPC through the container's padding → it fails
-    while the cursor is over the container, including its padding, not only over a bar; moving the
-    cursor off the container's rect entirely restores mouseover targeting. This is Layout ->
-    Mouse's own documented tradeoff, not a bug — confirm the tab's **Show tooltips** text names it
-    and that turning **Click-through** on restores mouseover targeting everywhere under the
-    container, padding included.
-85. **A timed bar's spark reads the same with the timeless option on or off (owner report
-    2026-09-14, batch 7 `SP-1`; re-fixed in feedback batch 8 `SP-1`/`SP-2`).** Put two live, timed auras of the same kind side by side on one bar
-    container — say, two casts of the same buff so their sparks share a color and position along the
-    bar. On **General** tick **Show the spark on auras without a duration**, screenshot or eyeball
-    one bar's spark, then untick it and compare the same bar's spark again → the spark should look
-    the same both times (same color, same brightness), not "a random yellow-golden spark" that
-    only appears with the option off. This is the half of the check that FAILS if the fix regresses:
-    if the two sparks still visibly differ, report it and cite this check. Repeat the on/off
-    comparison at a CUSTOM spark color, not the default gold: on Bars → General set **Spark color**
-    to something saturated (pure red or pure green) and, separately, something low-alpha (drop the
-    color's own alpha to roughly 25%) → the spark must still read the same with the option on and
-    off at BOTH custom colors. The spark is additive and desaturated in both modes, so its hue comes
-    only from **Spark color** and the two modes differ only in position (centered on the edge when
-    ticked, just inside it when unticked); report it and cite this check if either custom color still
-    visibly differs between on and off. With the option unticked there must be no dark or black
-    rectangle around the spark, and nothing sticking out above or below the bar as a box, at the
-    default color, at the low-alpha color and at **Spark width** 32. A black-and-gold box is the
-    batch 8 regression (the clipped spark drawn with normal blending, which paints the art's black
-    matte); report it and cite this check. Then, without changing anything else, confirm the other half
-    still holds — a permanent (no-duration) aura's bar still
-    shows NO spark with the option off (check 26/63): if unticking the option makes every spark
-    uniform by also restoring the permanent aura's spark, that is a regression of B-3, not a fix of
-    this defect, and must also be reported.
-
-## R. The launcher — the minimap button and the broker plugin
-
-Only the client can settle these: the headless suite proves what was handed to the two libraries,
-never that the icon file actually draws (a TGA in the wrong format draws **nothing** and raises
-nothing).
-
-86. **The AddOns list.** Esc → AddOns (or the character-select AddOns list) → *Ka0s Aura Master*
-    shows **the addon's own logo**, not a blank square and not a Blizzard icon.
-87. **The button is there.** A round button wearing that same logo sits on the minimap ring. Drag it
-    around the ring → it follows; `/reload` → it is still where you left it. **Hover it** → the
-    tooltip reads `Ka0s Aura Master  v<the TOC version>`, `Enabled: Yes`, `Locked: Yes|No`,
-    `Test mode: On|Off` (green or red, matching General → Master controls), `Left-click: Open
-    settings`, `Right-click: Options menu`, and nothing twice. `/am unlock` or `/am test` → the next
-    hover says so. `/am disable` → hover again: the tooltip still shows, `Enabled: No`, with the same
-    two hints; `/am enable` puts it back.
-88. **Left-click = settings.** Left-click the button → Settings opens at **Ka0s Aura Master**, and
-    neither the lock nor test mode changes. `/am disable`, left-click again → the panel still opens
-    (it is where you turn the addon back on). `/am enable`.
-89. **Right-click = the options menu.** Right-click the button → a menu titled **Ka0s Aura Master**
-    with exactly three checkboxes, **Enabled**, **Locked**, **Test mode** (no Show window), each
-    ticked to match General → Master controls. Click **Test mode** → the menu closes, every container
-    shows its placeholder auras, chat prints the line `/am test` prints, and the Test mode checkbox
-    ticks; right-click again → Test mode is ticked; click it → they go. Click **Locked** → chat
-    prints what `/am unlock` (or `/am lock`) prints and the handles appear (or go). Click **Enabled**
-    → chat prints what `/am disable` prints and the containers go. Right-click now → **Locked (enable
-    the addon first)** and **Test mode (enable the addon first)** are grayed and do nothing when
-    clicked; **Enabled** is live: click it → the addon comes back with the `/am enable` line. In
-    combat, click Test mode while it is off → the same combat refusal `/am test` prints.
-90. **The checkbox and the button agree, both ways.** Untick General → Master controls → **Minimap
-    button** → the button vanishes at once, no reload. Tick it → it comes back **at the same angle**.
-    Now hide it from chat instead, `/am set global.minimap.shown false` → reopen the settings and the
-    checkbox is unticked too.
-91. **It survives a profile switch and BOTH resets.** Hide the button, then Profiles → create and
-    switch to a new profile → it stays hidden. Switch back, then General → **Reset all settings** →
-    the button stays hidden and the checkbox stays unticked. Now press General's own **Defaults**
-    button → still hidden, still unticked, while every other General row on the page goes back to
-    its default. Whether the button is shown is a per-installation preference, like the angle you
-    dragged it to, so no reset moves it. `/am reset global.minimap.shown` — you naming that one row —
-    → it comes back.
-    **From chat, in the shown sense:** `/am get global.minimap.shown` → `true` while the button
-    shows; `/am set global.minimap.shown false` → the button hides; `/reload` → still hidden;
-    `/am reset global.minimap.shown` → it comes back. `/am get global.minimap.hide` → `Setting not
-    found` (the storage key is not a path).
-92. **A broker display, if one is installed.** With Titan Panel, Bazooka or ElvUI data texts, add
-    *Ka0s Aura Master* as a plugin → one row labeled exactly that, **grouped with the other Ka0s
-    addons** rather than filed under `A`, the same logo, **no empty value cell beside it**, and its
-    left click opens the settings and its right click opens the same three-entry menu as the
-    minimap button's.
-93. **Without the libraries.** Rename `libs/LibDBIcon-1.0` aside, `/reload` → one chat line naming
-    Aura Master and the missing library, **no error frame**, and the addon otherwise works. Rename
-    `libs/LibDataBroker-1.1` aside too, `/reload` → the same. Put both back.
-
-## S. The Text style (issue #2)
-
-94. **The default template on player buffs.** Style a player-buff container as Text: names, ` x3`
-    stacks and ` - 12s`, all live in combat; a timeless buff shows its name only.
-95. **Several durations.** Template `$spellname$ $remainingduration$ / $maxduration$ ($remainingpercent$)`,
-    justified Left, then Right: the line reads and lines up both ways.
-96. **Dispel type.** `$spellname$[ ($dispeltype$)]` on a target-debuff Text container: correct type
-    names; nothing (brackets included) on a typeless debuff.
-97. **Loops.** Pulse, Blink and Bounce, each through a pull: no piece overlaps another while it
-    animates; a change made in combat starts when combat ends.
-98. **The pandemic window.** On the Pandemic tab, Recolor on, then Blink on: the duration run turns the color, then blinks, in the
-    last N seconds; the rest of the line keeps the font color.
-99. **The icon.** On a new Text container (Icon position None), the Icon tab's rows are dimmed but
-    Icon position and the border's color swatch, under a gray "Set Icon position to show the icon."
-    (smoke batch 2, item 6). Icon Left → the rows go live and the note goes at once; turn Show border
-    on at thickness 2 in red → a red border frames the icon, the art inside it. Then Right, with the
-    border: the text starts after the icon and its gap,
-    and, with Size to fit off, a long line is cut at its box rather than drawn under the icon. Then, with `/am debug` and
-    `/console scriptErrors 1`, and auras showing, change Text settings one after another (font, size,
-    template, icon size, the border): every line keeps its text. Rows that go blank, or become empty
-    bordered squares, must now come with a `[Style] … failed:` line in the debug console and one Lua
-    error naming it; copy both (smoke batch 2, item 7). A refused icon call costs the icon alone,
-    the text still drawing.
-100. **Refusals.** In the Template box and with `/am set container.text.template $spellname$ $bogus$`
-     (no quotes): chat prints `Invalid value for container.text.template` and, indented, the rule
-     that broke; the stored template does not change. Try each rule of spec §3.2 once.
-101. **Style switching.** A container Bars → Text → Icons → Text, out of combat: each redraws cleanly,
-     and Layout → Growth → Fill follows (Columns, Rows, Columns).
-102. **Weapon enchants.** An enchant-only buff container (`/am new enchants text`) shows the enchant's name and time.
-103. **The Player cooldowns starter.** On a NEW profile, the "Player cooldowns" Text container shows
-     an offensive and a defensive cooldown when popped, and nothing else (no food, flask, mount or
-     raid buffs).
-104. **The pandemic-window blink's feel.** Blink on, no recolor, watch the last seconds: the alpha steps
-     in 0.01 s increments with delays under REPEAT, so it reads as a blink, not a flicker or a smooth
-     fade.
-105. **Nested clipping.** A template wider than the box, on a narrow Text container with Size to fit off:
-     the line is cut at the box edge, never drawn past it or under a neighboring container.
-106. **Dispel type text.** `[$dispeltype$]` on a Bleed debuff and on an Enrage-type buff: Bleed prints
-     "Bleed"; check what Enrage's own dispel name actually reads (is it really "Enrage"?) and record
-     it.
-107. **A Text button built in combat.** With a Text container already up, let it gain a brand-new aura
-     mid-fight (one the engine has not drawn before): the new button dresses and animates like every
-     other one, with no error.
-108. **Icon Left → None live.** On an unlocked, already-dressed Text container showing its icon on the
-     Left, switch Icon position to None: the icon disappears cleanly, with no stray icon left behind
-     or reappearing on the next aura change.
-109. **A literal percent sign.** Template `$remainingduration$ % $maxduration$`: the line shows a
-     literal `%` between the two times, not a formatting artifact or an error.
-110. **Bracketed stacks.** Template `[[[$stacks$]]]`: on a stacked aura the line reads `[3]` (or
-     however many stacks); on a non-stacking aura the brackets do not appear at all.
-111. **Unlock keeps live auras.** `/am unlock`: live auras keep drawing, and each container shows an
-     outline and its handle; an EMPTY container can still be dragged by its handle.
-112. **Test mode.** The Master controls checkbox and `/am test` show placeholders without unlocking.
-     Pull a mob: test mode ends and the checkbox unticks. `/am test` in combat prints one gray line
-     and starts nothing. The minimap button's right-click menu toggles it.
-113. **Spell lists.** General → Spell Categories: an X on the left of every row and no checkboxes.
-     X on a starter hides it; Restore, at the top, brings it back. Filters → Overrides lists show
-     the X too, and it removes the spell. Check the X row's height and vertical alignment against the
-     spell name — the library's Icon widget is 26 px tall.
-114. **The "Not in use" notice** heads every tab of Bars, Icons and Text in muted red, not gray, on a
-     container drawn in another style. *(Retired by #6: a container's rail offers only its own style's section, so this notice and the dimmed style page no longer exist; see "Settings redesign (#6)" below.)*
-115. **A 59-minute buff's time on a bar.** A 59-minute Power Word: Fortitude on a default bar reads
-     `59 m` in full, not `59...`, and still does with the time text's X offset at -15.
-116. **Changing Style resets Fill, keeps grow directions.** On the Containers page switch a
-     container's Style: to Icons, Layout → Growth → Fill reads Rows; to Bars or Text, it reads
-     Columns. Whatever Grow horizontally/Grow vertically were set to before the switch are unchanged
-     by it. `/am new target debuffs icons` makes a container whose Fill reads Rows; `/am new text`
-     makes one whose Fill reads Columns.
-
-## T. The smoke-test feedback batch (2026-09-19)
-
-Run with one bar container, one Text container and one icon container on the player's buffs, and a
-debuff container on the target, in a party or with a target dummy.
-
-117. **Attached to another frame: no Lua error (E).** Attach a container to another container, then
-     one to a named frame (`PlayerFrame`), with `/am unlock` → no Lua error, in or out of combat
-     (enable `/console scriptErrors 1`), and each handle's strip is as wide as its container (a long
-     name shortened with "...", batch 11 T11; one icon keeps the width of its name), with
-     no clipped label on the handle's first show (the detached measurer's first measure may read 0).
-     Drag the screen-attached one → it moves and saves; `/reload` → it is where you left it.
-118. **Center stacks the pieces (#1).** A Text container, Text → General → Justify Center, template
-     Centered: name over time → the spell name sits on one row and the time centered under it, each
-     row centered; the container's height grows to hold both, the outline and the handle follow.
-     Justify Left → one line again.
-119. **The Containers band (#2).** Containers opens with the **Container** picker and **New
-     container** side by side above the tab strip, and the first tab is named **General**. New
-     container → the new one is selected in the picker; the picker switches the page's subject.
-120. **Restore beside the Category dropdown (#3).** General → Spell Categories: **Restore** sits on
-     the dropdown's own line, right half; hide a starter spell, Restore → it is back.
-121. **TEST on the handle (#8).** `/am test` then `/am unlock` → every handle reads its name, then an
-     orange **TEST**; end test mode → the tag goes on the next frame, the strip narrows.
-122. **Show all / Hide all (#10).** Filters → Categories: under each grid's heading, **Show all** and
-     **Hide all**. Hide all on Spell categories → every row reads Hide, the container empties at once
-     (one pass, no flicker per row), and `/am debug` shows one `[Set] hide all …` line, not one per row.
-123. **Percent tokens and the `( )` (#5a).** Template `$spellname$ ($remainingpercent$%)` on a 30 s
-     buff → `Name (73%)`, a whole number, no space inside the brackets. Now the three probes, one at a
-     time, and write down what each prints:
-     - `/run local f=C_StringUtil.CreateNumericRuleFormatter() f:SetBreakpoints({{threshold=0,format="%d%%"}}) print("["..f:FormatNumber(45.5).."]","["..f:FormatNumber(45).."]")`
-       — H1 (the old rule): `[]` for 45.5 and `[45%]` for 45 confirms it; `[45%]` twice rules it out.
-     - `/run local f=C_StringUtil.CreateNumericRuleFormatter() f:SetBreakpoints({{threshold=0,step=1,format="%d"}}) print("["..f:FormatNumber(45.5).."]")`
-       — the new rule: `[46]` or `[45]`, never `[]`.
-     - `/run local s=UIParent:CreateFontString(nil,"OVERLAY","GameFontNormal") s:SetPoint("CENTER") s:SetText("") print(s:GetWidth(), s:GetStringWidth())`
-       — the empty-string gap: a non-zero first number is the space seen between `(` and `)`.
-     Then the same template on a buff **without** a duration (a mount, or a permanent aura) → `( )`
-     means H2 (the binding's zero-duration text); `[ ($remainingpercent$%)]` shows nothing there.
-124. **Built-in templates and the Preview (#5b).** Text → General → **Template**: the list names the
-     built-ins (Name, Name + time, …; the debuff container adds Name (type), Name, type, time) and
-     **Custom**. Pick each → the read-only **Preview** box under it changes with it and the
-     live auras follow; Centered: name over time also sets Justify to Center and previews the
-     built-in's own template, `$spellname$[$remainingduration$]` (no separator before the time).
-     Custom → the template box appears.
-125. **Weapon enchants on a real profile (#6).** On a profile that had a Weapon enchants container
-     with an "Always shown" list (back up `WTF/…/SavedVariables/AuraMaster.lua` first): log in → one
-     `[Migrate]` line naming the converted container, plus a second `[Migrate]` line for the cleared
-     whitelist; the container now reads aura type Buffs, unit Player, with only Weapon enchants shown
-     in Filters → Categories, its Overrides list empty, and it still shows your weapon enchant (apply
-     one: a sharpening stone, a rogue poison, a shaman imbue) with no "can never match" warning. The
-     aura-type dropdown has no Weapon enchants entry; `/am new enchants` makes an enchant-only buff
-     container, and `/am test` on it shows exactly as many placeholders as it has enchant slots (one
-     per hand, none for an empty slot), not the usual full set.
-126. **Bars' background by dispel type (#7).** Bars → Background & border → Color by **Dispel type** on
-     a target-debuff bar container: a Magic debuff's background is blue, a Curse's purple; a debuff
-     with no type, and an Enrage-type buff (a type the palette does not cover), each keep the
-     background's own color. Color by Static → the background color alone, including on an empty
-     (currently-unused) button slot that had shown a dispel tint a moment before. General → Dispel
-     Colors lists the five types and no None swatch. Back on Dispel type, set Background opacity to
-     20% (and separately the background color's own alpha to 50%) → a typed and a typeless debuff's
-     background both go see-through, the fill's Bar opacity likewise on Color by Dispel type. Then
-     check it **in combat**, a debuff applied after the pull: the background keeps its 20%. If it
-     turns opaque in combat only, the engine refused the region alpha (`AddDispelTypeTexture` marks
-     the texture's alpha secret) — report it: the fix then moves the background onto its own child
-     frame, whose frame alpha carries the opacity (smoke batch 2, item 4).
-127. **Right-click the "?" (#9).** `/am unlock`; right-click container 2's handle **?** → the settings
-     open on the **Containers** page with container 2 in the band's picker. In combat → the gray
-     "cannot open settings during combat" line, nothing opens, the picker is unchanged afterwards.
-128. **Switched sections, Aura Master (#4).** Check 25: only the chosen mode's subsections on Layout →
-     Anchor, redrawn at once on a change, from the panel and from `/am set`.
-129. **Switched sections, Party Frame Enhanced (#4).** That addon's smoke item 31a on its
-     `feat/switched-sections` build.
-130. **The dispel type word in color (#7).** A Text container on the target's debuffs, template Name,
-     type, time; Text → Font → Dispel type → **Color the dispel type** on. A Magic debuff reads
-     `Name (Magic) - 12s` with only `Magic` in the Magic color from General → Dispel Colors, the
-     brackets and the rest in the font color; a Curse in its color; an Enrage-type buff (a type the
-     palette does not cover) keeps the plain font color. Change the Magic swatch → the word
-     follows after the re-apply. In combat the word keeps its color as auras come and go (the engine
-     writes the text; nothing of ours runs). If the word shows the raw `|cff…` characters instead,
-     the engine's options processing stripped the escape: report it (option c then does not work, and
-     the toggle is withdrawn). With a template without `$dispeltype$` the toggle is dimmed. The
-     Dispel type subsection sits on the Font tab under Countdown, and no longer on Animation (smoke
-     batch 2, item 5); toggles set before the move keep their values.
-131. **The dispel backdrop (#7).** Same container, **Backdrop in the dispel color** on: a typed debuff's
-     line has a Magic-blue (or Curse-purple, …) box behind its text, the text on top and readable; a
-     debuff with no type, and an Enrage-type buff, each have no box. **Backdrop opacity** changes its
-     strength (dimmed while the backdrop is off). With a text icon on the left, the box covers the text
-     area only, not the icon. With Pulse or Bounce on, the box moves and fades with the line. Test
-     mode: the Bloodlust placeholder has a Magic box, the others none. Turn the backdrop off → every
-     box goes at once, a typed aura included.
-132. **The dispel edge (#7).** **Edge in the dispel color** on (backdrop off): a thin outline in the
-     type's color around a typed debuff's text area, none on a typeless one and none on an Enrage-type
-     buff; **Edge thickness** 1–4 thickens it. Both on at once → the edge draws over the backdrop. On a
-     buff container, a Magic buff (Power Word: Fortitude, Arcane Intellect) is outlined too. `/reload`
-     and combat: nothing to fix up, no Lua error.
-133. **The percent formatter, live (Task 6 carry).** `$remainingpercent$` near a round-number boundary
-     (a buff at 99.6% remaining, then watch it tick to 99% and 100%): compare what the live client
-     prints against the Text preview's own rounding (`math.floor(v + 0.5)`, no `%`). Report whether the
-     live formatter rounds (99.6 → 100) or floors (99.6 → 99); a mismatch between the two is a defect,
-     not a matter of taste.
-134. **A stacked icon keeps one row's height (Task 8 fix round).** An icon container's own text piece,
-     Text → General → Justify Center, a multi-piece template: the rows stack and center exactly as a
-     Text container's do, but the icon element itself does NOT grow to fit them — it keeps its
-     configured size (icon size 0 included), and a row that does not fit is clipped rather than
-     pushing the icon taller. This is the one place `Style.ElementSize` does not add `Text.StackHeight`
-     (`modules/Style.lua`, `key == "text"` only).
-135. **A migrated Weapon enchants container's Overrides list (Task 9 fix round).** Repeat item 125 on
-     a backed-up profile whose Weapon enchants container had spells in Overrides → Always shown: after
-     the migration the list reads empty (not just re-filtered to enchants), and the container's compile
-     draws no group from a cleared whitelist — only the enchant slots show, matching the aura-type
-     switch.
-136. **An enchant-only container in test mode (Task 10 fix round).** `/am test` on `/am new enchants`
-     (before applying a real enchant): the number of placeholders shown equals the number of enchant
-     slots the container can ever draw (one per weapon that can carry an enchant on the player's
-     current spec/gear, at most two), never the full generic test-mode set the other aura types show.
-137. **Bars: switching dispel color back to static repaints idle slots (Task 11 fix round).** Color by
-     Dispel type, let several buttons draw and fade out (so pooled bar frames sit hidden with a stale
-     dispel tint on their background texture), then Color by Static: the next auras to use those pooled
-     frames show the plain static background immediately, not a leftover dispel tint from before the
-     switch.
-138. **An out-of-palette dispel type gets no stand-in at all (Task 12 fix round).** With all three of
-     Color the dispel type, Backdrop in the dispel color and Edge in the dispel color on together, an
-     Enrage-type buff (or any other type General → Dispel Colors does not list a swatch for) shows
-     none of the three — plain font color, no backdrop, no edge — the same treatment a typeless aura
-     gets, never a blank/invisible stand-in that still reserves space.
-139. **The Text Template section, PrettyChat's look (Task 20, owner follow-up).** Text → General: the
-     subsection is titled **Text Template**, not "What each line says". Under the Custom template box,
-     **Preview** is a disabled EditBox (PrettyChat's own shape), holding the same rendered line the old
-     Preview line showed, in the container's font color, with a Task 12 colored dispel word still
-     riding live inside it when that option is on. Under it, the cheat sheet reads as two headed,
-     bulleted lists with a gap before each heading — **Tokens** (one gold `$token$` bullet per token)
-     and **Rules** (bracket hiding, the two escapes, how they combine, text outside `[ ]` always
-     showing, a separator inside the brackets of the field it leads), each rule's example on its own indented line in the token gold. On a bars or icons
-     container, the "Not in use" notice at the top of every tab (Bars, Icons and Text alike) reads in a
-     muted red, not the earlier muted gold. *(Retired by #6: a container's rail offers only its own style's section, so this notice and the dimmed style page no longer exist; see "Settings redesign (#6)" below.)* A Center template's Preview shows its stacked rows joined
-     by " / " (Centered: name over time reads "Ignore Pain / 11s"), never a raw line break, while the
-     live container itself still shows them stacked, each on its own row (final review).
-140. **No gap between template pieces (smoke batch 2, item 8).** A target-debuff Text container,
-     Justify Left, template
-     `$spellname$-$stacks$-$dispeltype$-$remainingduration$-$maxduration$-$elapsedduration$-$remainingpercent$-$elapsedpercent$`,
-     on a typed debuff with stacks: the line reads `Fire Breath-3-Magic-6 s-…` with no space either
-     side of any `-` wherever the field beside it is non-empty. Then Justify Right: the same, laid from
-     the right. A field that is empty (one stack, no dispel type) still leaves its `-` and a small gap:
-     rewrite it as `$spellname$[-$stacks$][-$dispeltype$]...` and the empty field's separator goes
-     with it. A gap that remains between two non-empty fields is a defect: report the font and size.
-141. **The Justify note (smoke batch 2, item 3).** Text → General → Placement: a gray note sits under
-     Justify and Vertical justify, above the offsets, on Left, Center and Right alike. It says Center
-     centers a one-piece template only, stacks several fields in rows (text outside `[ ]` not drawn,
-     the box growing, rows kept when a field is empty, an icon at size 0 one row tall) and that aura
-     text is secret so its width cannot be measured. Each of those claims holds on a live container.
-142. **Typeless debuffs (smoke batch 2, item 2).** Out of combat, target a dummy carrying your class's
-     debuffs (a Paladin's Judgment and Consecration) and run the three `/run` lines in
-     `docs/midnight-quirks.md` → "Many debuffs carry no dispel type"; copy the output there. The Bars
-     page's Color by tooltips and General → Dispel Colors say buffs and many debuffs have no dispel
-     type (Judgment, Consecration), and the Dispel Colors line points at Text → Font.
-
-## U. The smoke-test feedback batch 2 (2026-09-19)
-
-Run with `/console scriptErrors 1` throughout, one bar container on the target's debuffs, one Text
-container on the player's buffs (an icon on the left, its border on), one icons container, and one
-container attached to `PlayerFrame`, near a target dummy. Where an earlier item already holds the
-detail, the step points at it rather than repeating it.
-
-143. **The settings lock covers every page (⚔).** Item 46a first, on a Bars page. Then, one combat
-     each (or one long pull), show every page in turn: General, Containers, Layout, Filters, Bars,
-     Icons, Text, Profiles and About → each is under the gray "Settings are locked during combat."
-     cover, the header band (the Container picker, New container, Duplicate) and the tab strip
-     included. On each: a click on a checkbox, a drag of a slider, typing in a box (Template, a
-     spell ID), Defaults and a tab click change nothing; the value on screen after combat is the one
-     from before the pull. A widget that moves, a tab that switches, or a value that lands after combat
-     is a defect.
-144. **Switching category in combat (⚔).** With the settings open, pull, then click other Aura Master
-     categories (and another addon's) in the Blizzard AddOns sidebar → each shows covered, the window
-     stays open, no Lua error, no `ADDON_ACTION_BLOCKED` and no "C stack overflow" in chat or the error
-     frame (`scriptErrors 1` stays silent). The gray `settings are locked during combat — changes are
-     refused until it ends` line prints **once** per combat however many pages you show or click; a
-     second pull prints it once more. Leave combat → the cover lifts on the page you are on, its
-     controls work at once, and it shows current values: a value changed with `/am set` during the pull
-     (item 46) is shown, with no reload and no re-open. A window that closes itself, or a page that stays
-     covered after combat, is a defect.
-145. **A Reset-all confirmation open at the pull (⚔, accepted).** General → **Reset all settings**, leave
-     the popup up, pull, then **Accept** in combat → the profile resets (item 47: the acknowledgment
-     prints, no gray line). The owner accepted this: the popup is Blizzard's, opened before combat, and
-     not part of the locked page. Clicking the button itself in combat stays refused (item 46a).
-146. **Growth flips without a reload (item 1).** Out of combat, and not in test mode:
-     - The screen-attached bar container, Layout → Growth, Grow vertically Down → Up → the bars stack up
-       from where the first one sat, nothing hangs below it, the handle (`/am unlock`) moves below the
-       block (item 14). Back to Down → they stack down again.
-     - The icons container, Grow horizontally Right → Left, then back → likewise, sideways.
-     - The container attached to `PlayerFrame`: the same two flips → the first aura keeps its attached
-       corner and the others grow the new way.
-     - A follower (item 67): container B attached to A; flip A's Grow vertically → B moves to A's other
-       side and its own auras follow A's new direction, B's own settings unchanged.
-     Every flip shows real auras at once, with no `/reload`. A block that hangs across its anchor until a
-     reload is the old bug.
-147. **The reworded Point rows and the facing-growth hint (item 1).** Layout → Anchor on the
-     `PlayerFrame`-attached container (Attach to: Named frame): Point's tooltip says it is the corner of
-     the container's **first aura** that is attached (its full size is secret), Relative point the
-     corner of the target that point is attached to. Set Point Bottom left, Grow vertically Down and
-     Grow horizontally Right → a hint under the tab's rows reads "Point is Bottom left and Grow
-     vertically is Down, so the auras grow back over the frame this container is attached to. Set Grow
-     vertically to Up on the Growth tab instead." Point Top left with Up → the same hint, suggesting
-     Down; a Left point with Grow horizontally Left (and a Right point with Right) → the horizontal
-     hint; Bottom left with Down and Left → both lines, the vertical one first. A pair that does not face
-     → no hint, and changing Point or the growth redraws it at once. On Screen and Another container
-     there is no hint at all (named-frame mode only); the Screen rows' tooltips speak of the first
-     aura too.
-148. **Dispel-mode bar opacity (item 4).** Item 126's last paragraph in full: Color by Dispel type,
-     Background opacity 20% → a typed (Magic, Curse) and a typeless debuff (a Paladin's Judgment) each
-     show a see-through background, and the fill likewise at 20% Bar opacity. Out of combat first; then
-     in combat, on debuffs applied after the pull. Report both, and whether the region alpha lands in
-     combat: a background that goes opaque in combat only means the engine refused `SetAlpha` on the
-     dispel texture (the child-frame fix is then owed).
-149. **The Text style's Enrage stays invisible (item 138 carry).** A Text container on the target's
-     buffs with Color the dispel type, Backdrop in the dispel color and Edge in the dispel color all on,
-     on a mob with an Enrage-type buff (an enraged dungeon mob) → the line has no tint on its type
-     word, no backdrop box and no edge, the same as a typeless aura. The code hands the engine a
-     transparent color for a type the palette does not cover; a box or edge that shows (white, or any
-     color) means the engine dropped that color's alpha: report it, with the mob and the buff's name.
-150. **The Text icon and its border (item 6).** Item 99's first paragraph: with Icon position None the
-     Icon tab's rows are dimmed under the gray "Set Icon position to show the icon." note, while Icon
-     position and the border's color swatch stay live (a color swatch never dims, options-ui-§17). Icon
-     Left → the rows go live, the note goes; Show border on, thickness 2, red → a red border frames
-     the icon on every line.
-151. **The moved Dispel type rows (item 5).** Item 130's last lines: Text → Font carries the Dispel
-     type subsection (Color the dispel type, Backdrop in the dispel color, Backdrop opacity, Edge in the
-     dispel color, Edge thickness) under Countdown; Text → Animation no longer does; values set before
-     the move are kept.
-152. **The Justify note (item 3).** Item 141.
-153. **Item 7's sequence, instrumented.** `/am debug` and `/console scriptErrors 1`, the Text container
-     with its icon on the left and its border on, auras showing. Change Text → General → **Width (px)**
-     several times (drag the slider, then type values), then the other Text settings one after another
-     as item 99 says → every line keeps its text and its icon. If rows go empty (bordered squares, no
-     text), copy the `[Style] … failed:` debug line and the one Lua error that names it, word for word:
-     that named line decides the next fix. Rows that go empty with no such line are a defect too:
-     report the exact steps.
-154. **The owner's all-tokens template (item 8).** Item 140 with the owner's own template, Justify Left
-     and then Right → no gap either side of a separator between two non-empty fields. If gaps remain,
-     report the font, size and flags: the measured padding came back about 0 (`GetStringWidth` on the
-     measurer did not see the padding), so the pull-back did nothing.
-155. **The item-2 probe and the Paladin bars.** Item 142: run the three `/run` lines from
-     `docs/midnight-quirks.md` → "Many debuffs carry no dispel type" on a dummy carrying a Paladin's
-     Judgment and Consecration, out of combat, and copy the output there. Then look at the bar container
-     (Color by Dispel type) for those debuffs: the blue is the default fill; say whether the bar's
-     **empty part** (its background) is dark or blue. Dark confirms they are typeless (the background
-     keeps its own color); blue means the engine reports a type for them, and the probe's `dispelName`
-     column should say which.
-156. **The Pandemic tab (B2-1).** Bars, Icons and Text each draw a **Pandemic** tab: Bars and Icons
-     last (**Highlights** is gone), Text between Icon and Animation. On Bars and Icons it holds two
-     subsections, **Time color** (Recolor the time in the pandemic window, Pandemic window (seconds
-     left), Pandemic-window time color) and **Highlight** (Highlight the pandemic window,
-     Pandemic-window highlight color); on Text, Time color with those three and Blink in the pandemic
-     window, and the gray "The pandemic window needs a duration token, such as $remainingduration$, in
-     the template." note under them on a template without one. Text → Animation now holds the Loop
-     rows alone. Hover each row: no tooltip says "running out" or "refresh window". Values set before
-     the rename are kept (a threshold of 8 still reads 8), and `/am list` still names the same paths.
-157. **The container pickers sort by name (B2-2).** Name three containers "zeta", "Alpha" and "beta"
-     (Containers → Name). The Container dropdown in the Containers page's band (on every rail
-     section) lists Alpha, beta, zeta — capitals do not sort first — each still followed by its
-     gray "(unit, aura type, style)"; Containers → Copy settings from's source and Layout → Anchor →
-     Another container (None first) list in the same order. `/am containers` keeps the creation order.
-158. **The owner's repro: an icon border and the pandemic settings (B2-3).** `/console scriptErrors 1`,
-     an Icons container with auras showing, Icons → Border → Show border on (Solid, thickness 2). Then,
-     out of combat, change Icons → Pandemic one row at a time: Highlight the pandemic window off and on,
-     the highlight color, Recolor the time in the pandemic window, the window's seconds → **no Lua
-     error** (none naming `Backdrop.lua`), the border keeps drawing, and an aura inside its pandemic
-     window still highlights and recolors its time. Repeat with the border off: the same.
-159. **A Text icon border and Width (B2-3).** The Text container with Icon position Left and its icon
-     border on (thickness 2, red). Change Text → General → **Width (px)** several times, by slider and
-     typed → every line keeps its text, its icon and the red border; no empty rows, no `[Style] text
-     icon failed` debug line, no Lua error.
-160. **A bar border (B2-3).** A bar container with Background & border → Show border on, and Icon →
-     Icon border on. Change the bar's Width, then its Pandemic rows → both borders keep drawing at their
-     thickness and color, no Lua error, and the pandemic highlight still shows.
-161. **A border style other than Solid (B2-3).** On any of the three, pick another Border style (a
-     media pack's edge, or "Blizzard Tooltip") → no Lua error; the preview (test mode) draws it at once,
-     while the aura buttons already on screen keep their old look until `/reload`, then draw it. Change
-     its color → the live buttons recolor at once. Hover Border style: the tooltip says Solid redraws at
-     once and any other texture after a `/reload`. Back to Solid → the strips draw at once and no
-     texture edge is left under them.
-162. **The outline and the handle on an attached container (follow-up).** `/console scriptErrors 1`.
-     Attach a container to another frame (Layout → Anchor → Another container, or a frame picked with
-     the frame picker, an aura container of another addon if one is at hand), then `/am unlock`. Change
-     that container's Width and its growth direction, and move the container it is attached to → **no
-     Lua error** (none naming `Backdrop.lua`), and the outline and the handle look as before: a faint
-     1px white outline one element in size at the corner the flow starts from, and a dark strip with a
-     1px gold edge, the gold name label (with the orange TEST tag in test mode) and the "?" mark at its
-     far end. Right-click the strip → the Containers page opens on that container; a screen-attached
-     container still drags by it. While picking a frame, move the cursor across several frames,
-     aura buttons included → the blue 2px outline follows each, no Lua error.
-163. **General → Dispel Colors reads as a list (2026-09-20).** General → **Dispel Colors** → above the
-     five swatches, "One color per dispel type, shared by every container:" on its own line, then three
-     lines each opening with "- ": where the colors are read (bars by dispel type, and a text line's
-     dispel type word, backdrop or edge), what has no dispel type and how that looks, and that an icon's
-     dispel border keeps Blizzard's own colors. No wall of prose, a hairline gap between the bullets, no
-     bullet sharing a line with another, and nothing cut off or scrolling sideways.
-164. **General → Spell Categories is split in two (2026-09-20).** General → **Spell Categories** → the
-     Category dropdown and its **Restore this category's starter list** button, then a **Spells in this
-     category** section heading with the library's own rule under it, and only then the **Add a spell**
-     box and the list of spells. Pick **Weapon enchants** → the three slot toggles, and NO "Spells in
-     this category" heading (there is no spell list to head).
-165. **The Text page's Text Template block dims with the page (2026-09-20).** Select a container drawn
-     as **bars** and open **Text** → the "Not in use: this container is drawn as bars." note, every
-     control dimmed. Now look at the **Text Template** subsection: the **Preview** line, the **Tokens**
-     and **Rules** headings, every bullet and every gold example are all gray, the same gray as the
-     Placement note under Justify — nothing in the block is brighter than the dimmed controls around
-     it. Switch the container's Style to **Text** on the Containers page and come back → the Preview is
-     in the container's own font color again, the tokens and examples in gold, the headings bright. *(Retired by #6: a container's rail offers only its own style's section, so this notice and the dimmed style page no longer exist; see "Settings redesign (#6)" below.)*
-166. **Spell category lists read alphabetically, and three categories are renamed (2026-09-20).**
-     General → **Spell Categories** → the **Category** dropdown now offers **Defensive cooldowns**,
-     **Hard CC (loss of control)** and **Soft CC (roots & snares)** — the parentheses and the `&`
-     render as written, in the dropdown, in its tooltip and on Filters → Categories, with no stray
-     escape. Pick **Soft CC (roots & snares)** → the spells read in name order (Chains of Ice,
-     Concussive Shot, Crippling Poison, … ), NOT Frost Nova (122) first. Add a spell of your own by
-     name → it lands in the alphabet among the starters, not at the bottom of the list. Any id the
-     client cannot name shows as "Unknown spell <id>" at the very END of the list, and the order does
-     not visibly shuffle a second after the tab opens. Pick **Hard CC (loss of control)** → **Wake of
-     Ashes is absent**, and it is absent from Soft CC too; cast it on a target with a Hard CC
-     container up → nothing is drawn for it.
-
-## V. Categories you make (issue #10, 2026-09-21)
-
-Run with `/console scriptErrors 1`, one player-buff bar container and one target-debuff container up,
-near a target dummy. Steps 167–177 run in order: each uses the category the one before it made.
-
-167. **Make one.** General → **Spell Categories** → under **Make a new category**, type `Cooldowns I
-     watch`, leave **Aura type** on *Buffs*, click **Create category** → the **Category** dropdown
-     jumps to the new entry, reading **[Buffs] Cooldowns I watch (yours)** — `[Buffs]` in muted
-     green, `(yours)` in muted gold — and a line under the **Rename this category** box and in chat
-     says it was created, empty, and where to set it to Show or Hide. The list below is empty, and
-     there is **no Restore this category's starter list** button on the picker's line. No Lua error.
-168. **It is a real category everywhere.** Filters → **Categories** on the buff container → the
-     **Spell Categories** grid holds a **Cooldowns I watch (yours)** row, with Show lit, sitting
-     *after* the shipped spell lists and *above* **Weapon enchants** and **Uncategorized** —
-     Uncategorized is still the last row of the grid. `/am list` shows the row (its label with no
-     `(yours)` on it), and `/am get container.filter.categories.user…` answers **Show**. On the debuff
-     container's Categories tab the row is absent, which is right: the category holds buffs.
-169. **It filters.** Put a buff you can cast on yourself into it (General → Spell Categories → **Add a
-     spell**, by name or id). On the buff container set every other category to **Hide** (Hide all on
-     both sections, then set this one back to Show) → cast the buff → it is drawn, and your other
-     buffs are not. Set the category to **Hide** and leave Uncategorized Hidden → the buff goes.
-170. **The overlap mark, on the row and in the tooltip.** Add a spell that is already in a shipped
-     category of the same aura type (Power Word: Shield, in *Defensive cooldowns*, works) → one chat
-     line naming the other category and saying an aura in two categories is drawn once, under the
-     first of them a container sets to Show. **The row form:** that entry reads
-     `(X) [icon] Power Word: Shield (17) (also in 1)` — the count in the same gray as the id, ON the
-     entry's own line, with the entry beside it still sharing the row (a claimed entry does not push
-     its neighbor down). **The tooltip:** hover the entry → the client's spell tooltip, with
-     **Also in: Defensive cooldowns** added under it. Open *Defensive cooldowns* in the dropdown →
-     that same spell reads `(also in 1)` there, and its tooltip says **Also in: Cooldowns I watch
-     (yours)** — the marker is on both surfaces. Nothing was refused: the spell is in both.
-     **Expected degradation:** on a very long name at a narrow panel the `(also in N)` is cut off the
-     end of the row (the library truncates the suffix first, then the id, then the name) — the
-     tooltip still names the categories. Widen the settings window and it comes back.
-170a. **The rename and the Delete sit directly under the picker** (owner, 2026-09-21), with no
-     heading between them and the **Category** dropdown, and **Make a new category** below them: the
-     tab reads picker → rename and Delete → create form → **Spells in this category**. Each block is
-     separated by the gap under it, not by a heading over the acts.
-170b. **The add box suggests from the spellbook as well as from our own lists** (LibKa0s v1.49.1;
-     the tooltip above no longer costs this). In **Add a spell** type the name of a spell that is in
-     one of Aura Master's lists → it is suggested as you type, and Enter adds it. Now type the name
-     of a spell you know but that is on NO list of this addon → **it is suggested too**, with its
-     rank where the client gives one, and clicking the row adds it. Its id and a shift-clicked link
-     still work. A name no spell carries is still refused with
-     "No spell named '…' in your spellbook."
-171. **Rename it.** In **Rename this category**, type `Big cooldowns` and press **Enter** → the
-     dropdown, the rename box, the Filters grid and `/am list` all read the new name, the box is no
-     longer holding what you typed but what is stored, and the answer line says it was renamed and
-     names the OLD name to type back. The spells are all still there, and the Filters row's Show or
-     Hide is unchanged — a rename must never reset it.
-172. **A shipped category draws nothing about itself** (owner, 2026-09-21). Pick **Healing** in the
-     dropdown → between the picker and **Make a new category** there is **no name box, no Delete, no
-     heading and no sentence** — the picker line, then the create form. **Restore this category's
-     starter list** is back on the picker's line and works. Pick **Weapon enchants** → the lead-in
-     above the picker still says it matches temporary enchants and there is nothing to add or remove,
-     a **Weapon slots** heading sits over the three slot toggles, and the toggles sit under THAT
-     heading rather than under **Make a new category**.
-173. **The answer line knows what it is about.** With a line showing under the rename box, switch
-     the dropdown to another category → the line is gone. Say something again (rename, or a refused
-     empty name), then close the settings window and reopen it on the same tab → the line is gone.
-     Say something again, then Profiles → switch profile → come back → the line is gone. Hopping to
-     General's **Display** tab and back deliberately KEEPS it — the panel never left the screen.
-174. **An empty or duplicate name.** Clear the rename box and press Enter → a line saying a category
-     needs a name, and the box snaps back to the stored name. Create a second category with a name you
-     already used → both are kept, and the line says so — they are separate categories with separate
-     spell lists. The dropdown shows two entries reading the same.
-175. **Delete it, with what that costs said first.** Pick the second category, **Delete this
-     category** → the confirmation names it and says the spell list goes, every container in every
-     profile forgets whether it showed or hid it, and anything it was hiding becomes visible again
-     through Uncategorized. **No** → nothing changes. **Yes** → the tab shows another category, a line
-     says which one was deleted and that the tab has moved, the Filters grid no longer holds the row,
-     `/am get` on its old path answers that the setting is unknown, and no Lua error.
-176. **A deleted category stops filtering.** Before deleting the first one, set it to **Show** on the
-     buff container with every other category Hidden, and confirm the buff in it is drawn. Delete the
-     category → the buff container redraws: the aura is no longer drawn by that category, and it comes
-     back only through **Uncategorized** if that is set to Show. `/reload` → it stays gone, the
-     dropdown does not list it, and the Filters grid has no row for it.
-177. **They belong to the profile.** Make a category, then Profiles → create and switch to a second
-     profile → the dropdown does not list it, and the Filters grid has no row for it. Switch back →
-     it is there, with its spells and its Show or Hide. `/reload` on each profile → no Lua error, and
-     no `/am list` row for a category the loaded profile does not have.
-
-
-## W. The id has to be the aura's (issue #15, 2026-09-21)
-
-Run with `/console scriptErrors 1`. Steps 178–184 cover the add box; 185 is the temporary probe, and
-it is the one that needs you rather than the suite.
-
-**What this is about.** Aura Master filters on the id an *aura* carries. Many abilities are cast as
-one id and land as another — Renewing Mist is cast as `115151` and lands as `119611`. Typing a name
-gets you the id the client knows, which is the cast's, so the entry draws perfectly and matches
-nothing. Nothing in the client can answer the mapping, so the addon carries it in
-`defaults/CastToAura.lua`.
-
-178. **A spell the data resolves.** General → **Spell Categories**, pick any category, and add
-     **Corruption** by name or as `172`. → The entry appears as **146739**, not 172, and chat says
-     *"Corruption (172) is cast, but the aura it applies is … — added 146739 instead, which is what
-     the filter can match."* The swap is never silent.
-179. **A spell it cannot resolve.** Add **Renewing Mist**, or `115151`. → The entry is stored
-     **exactly as typed** — still 115151 — and chat lists the candidates: *"115151 never appears as
-     an aura, so this entry will match nothing. Auras with that name: 119611, 144080, 448430,
-     1238851, 1242480. Add the one you meant."* It does **not** pick one for you.
-180. **Then pick one.** Add `119611` → it goes in silently, as an ordinary id. Remove 115151.
-181. **It never refuses.** Add a made-up id, say `999999` → it is added, with nothing said. An id
-     the table has never heard of is not an id the addon may reject; a boss aura the generator has
-     never seen has to be enterable.
-182. **The note on an entry already stored.** With 115151 still in a list, reopen the panel → its
-     row carries a **gray second line** naming the candidate auras. A noted entry takes a full-width
-     row of its own, so it breaks the two-column grid for that row — that is the library's rule for
-     notes and is expected.
-183. **The hint.** Hover the **Add a spell** box → the tooltip says *"The id has to be the one the
-     AURA carries, which is not always the one you cast."* before the usual sentence about where a
-     name can come from.
-184. **The Overrides lists take the same path.** Filters → **Overrides** → add `115151` to the
-     whitelist → the same chat line. If that id also has a verdict note, the two are joined, with
-     the never-matches sentence first.
-
-185. **The four corrected shipped ids.** Five ids in the shipped lists were the CAST, not the aura,
-     and none could be fixed from the data — not one has an `EffectTriggerSpell` edge. A temporary
-     `/am probe` settled four against a live client on 2026-09-21 and was then deleted. Confirm each
-     now matches:
-
-     * **Levitate** on yourself → a container covering *Utility* shows it. (`1706` → `111759`)
-     * **Fear** on the dummy → a *Hard CC* debuff container shows it. (`5782` → `118699`)
-     * **Spirit Link Totem**, standing in it → the container covering it shows it. (`98007` → `325174`)
-     * **Ursol's Vortex**, dummy inside it → a *Soft CC* container shows it. (`102793` → `127797`)
-
-     **`35546` Fatal Flourish is knowingly still the cast id** and matches nothing. It applies no
-     aura, has no trigger edge, and the probe found nothing to observe — it reads as a proc that
-     fires and vanishes. Left in place so the record that the slow exists is not lost. If you ever
-     see a lasting Fatal Flourish debuff on a target, note its id and it can be settled.
-
-## X. Test mode previews debuffs (batch 8 item 4, owner to run)
-
-186. **Each container previews its own kind.** `/am test` on the default profile → *Player debuffs*
-     and *Target debuffs (mine)* show Shadow Word: Pain, Hex, Frost Fever, Deadly Poison (3 stacks),
-     Rupture (running out, 4 s) and Mortal Wounds (no timer), each with its real icon and no
-     question-mark icon. *Player buffs* still shows Power Word: Fortitude, Bloodlust, Shield Wall,
-     Ignore Pain and Well Fed.
-187. **The icon dispel border.** An icons debuff container with Border → **Color the border by
-     dispel type** on → a square edge in Blizzard's color, the same shape as the Solid border, on
-     SW:P (Magic), Hex (Curse), Frost Fever (Disease), Deadly Poison (Poison) and Rupture (Bleed, if
-     the client gives it a color), and none on Mortal Wounds. Turn it off → every one goes at once. An icons buff container never shows
-     one, Bloodlust included.
-188. **Bars colored by dispel type.** A bars debuff container with **Color by** dispel type → each
-     bar takes its type's color from General → Dispel Colors, and Mortal Wounds keeps the bar color.
-     Change the Poison swatch → the Deadly Poison bar recolors while test mode is on. On a buff
-     container only Bloodlust is Magic-colored and the others keep the bar color (before this every
-     bar was Magic). Repeat with the background's color set to dispel type.
-189. **Text.** A Text debuff container on the name, type, time template with the dispel backdrop and
-     edge on → each line shows its type word, tinted when **Color the dispel type** is on; Mortal
-     Wounds shows no type and no tint.
-190. **Switching kind while previewing.** Switch a container's **Shows** between Buffs and Debuffs in
-     test mode → the placeholders swap without a `/reload`, and a container attached to it still sits
-     just past the last placeholder (six for debuffs, five for buffs). **Max auras** 3 on a debuff
-     container → only SW:P, Hex and Frost Fever.
-
-## Y. Empty unlocked chains (batch 8 item 9; batch 9 HG-1 as amended 2026-09-25, owner to run)
-
-A parent's placeholder outline, and its followers hanging from it, now depend on the parent being
-predicted empty (`modules/EmptyWatch.lua`). Test mode is off throughout unless a check says otherwise.
-
-191. **Spike: the filter strings.** With a few buffs up, for each category token a container uses,
-     `/dump C_UnitAuras.GetAuraSlots("player","HELPFUL|BIG_DEFENSIVE",1)` (and the same with the
-     other tokens, `HELPFUL|PLAYER`, `HARMFUL|PLAYER` on a target) → a slot comes back exactly when
-     the engine shows a matching aura. A token the client rejects raises (the prediction then answers
-     not knowable, and that container never shows the placeholder).
-192. **An empty chain unlocked.** Chain three Text containers (B attached to A, C attached to B),
-     none with a matching aura. `/am unlock` → each faint placeholder outline sits in its own slot
-     under the one before, with its own strip between them: A's strip, A's outline, B's strip, B's
-     outline, C's strip, C's outline in one column (batch 10 F1, F2), one Spacing between each
-     outline and the next strip, and no strip covers another strip or another container's outline.
-193. **It fills and empties.** Target Debuffs (Mine) with a follower, unlocked, no target → its
-     placeholder shows, the follower below it. Target something and apply a DoT → within a moment
-     the placeholder hides and the follower sits past the last aura. Let it expire, or clear the
-     target → the placeholder comes back and the follower returns under it.
-194. **No overlap (shot 30).** Player Buffs (All) with five buffs and Player Weapon Enchants attached,
-     unlocked → Player Buffs shows no placeholder, the follower sits past its last bar and covers
-     none of them. `/am lock` and `/am unlock` → nothing moves. `/am test` on and off → the
-     placeholders then the live layout, with no error.
-195. **Weapon enchants.** A Weapon Enchants container with a follower, unlocked: no oil → its
-     placeholder shows. Apply an oil → it hides and the follower sits past the enchant. Let the oil
-     run out → the placeholder comes back within a second of it lapsing.
-196. **Combat and cost.** Unlocked with an empty chain showing placeholders, pull a target dummy → at
-     the pull every follower moves onto its parent's engine and the placeholders hide, with no
-     ADDON_ACTION_BLOCKED or taint report; leave combat → they return. Then `/am lock` and take a
-     perf capture while buffs change → no `emptyPass` bucket appears.
-
-## Z. Feedback batch 8 sign-off (2026-09-25, owner to run)
-
-The in-game checks for every item of feedback batch 8
-(`docs/superpowers/specs/2026-09-25-feedback-batch8-design.md`). None of them has been run: each is
-for the owner, and none is marked passed here. Items already covered by a check above point at it;
-the rest are new below. Run on a build carrying schema v8, and once on a copy of a pre-v8
-SavedVariables file for the migration lines.
-
-| Item | Requirement | Check |
+# Smoke tests — Ka0s Aura Master
+
+These are the in-client checks the headless suite (`docs/testing.md`) cannot make: what the client
+draws, what it refuses, and what it does in combat. Run them on a live Retail client at the
+`## Interface` the TOC names, after a `/reload` on a clean session, with Lua errors on; turn the
+debug console on only where a step says so. Checks are grouped by theme and each stands alone once
+[Before you start](#before-you-start) is done. Record each run on the check's `Result:` line as
+`PASS` or `FAIL`, who ran it and the date, plus a note on anything that failed. Every check has an
+ID `<THEME>-<n>`. IDs are stable: a new check takes the next number in its theme, and a retired
+check's number is not reused. Checks with no recorded pass, and checks new or corrected on
+2026-09-29, are listed under [Pending sign-off](#pending-sign-off).
+
+## Index
+
+| ID range | Theme | What it covers |
 |---|---|---|
-| #1 spark | SP-1, SP-2 | 85 |
-| #3 close mark | CX-1..CX-3 | 197-199 |
-| #4 test-mode debuffs | TD-1..TD-4 | 186-190 |
-| #7 Size to fit | AS-1..AS-3 | 200-202 |
-| #8 name label | NL-1..NL-4 | 203-205 |
-| #9 empty unlocked chains | EO-1, EO-2 | 191-196 |
-| #10 dispel border shape | DB-1, DB-2 | 71 (and 60, 61, 187) |
-| #11 icon attach points | IA-1, IA-2 | 67 |
-| #13 seam spacing | SS-1..SS-3 | 68 (and 14, 41) |
-| #16 `/am diagnostics` | DG-1..DG-4 | 206-209 |
+| INSTALL-1 to INSTALL-8 | Install, load and upgrade | First login, the starter containers, `/reload`, and SavedVariables from older builds |
+| SLASH-1 to SLASH-11 | Slash commands | `/am` and `/auramaster`, help, unknown verbs, the container verbs, the schema CLI and `/am redraw` |
+| PANEL-1 to PANEL-27 | Settings panel and launcher | The tree, landing page, General page, the Containers band and rail, Blizzard frames, the minimap button and broker |
+| PROFILE-1 to PROFILE-13 | Profiles | The Profiles page, the `/am profile` verb, and what a profile holds |
+| STATE-1 to STATE-5 | Master switch | Enable and disable, visibility, the inert disabled addon |
+| COMBAT-1 to COMBAT-7 | Combat and restrictions | Deferred changes, the settings lock, resets in combat, Mythic+ keys |
+| DIAG-1 to DIAG-12 | Debug, diagnostics, perf | The debug console, bulk `[Set]` lines, `/am diagnostics`, `/am perf`, the event trace |
+| CONT-1 to CONT-25 | Containers | Create, duplicate, delete, rename, copy; handles, strips and the close mark; test mode; unit swaps; empty placeholders |
+| FILT-1 to FILT-42 | Filters and spell categories | Cast by, the category grids, Overrides, the add-a-spell box, aura ids, your own categories, weapon enchants and their names |
+| LAYOUT-1 to LAYOUT-38 | Layout | Anchor modes, attaching, chains, growth, anchor points, seams, the name label, mouse and tooltips |
+| STYLE-1 to STYLE-30 | Bars and Icons style, fonts | Bars and Icons tabs, the spark, borders, dispel colors, pandemic, the font primer |
+| TEXT-1 to TEXT-29 | Text style | Templates and tokens, justify, the icon, dispel type word, backdrop and edge, animation, Size to fit |
+| DEGRADED-1 | Library-absent install | The launcher libraries missing |
+| LOC-1 to LOC-2 | Non-English client | Spell names from the client, adding a spell by its localized name |
 
-**Owner run, 2026-09-25.** Everything passed except the items below. Those go to feedback batch 9,
-on the same branch.
+## Before you start
 
-| Item | Checks | Result |
-|---|---|---|
-| #1 spark | 85 | pass |
-| #3 close mark | 197-199 | pass |
-| #4 test-mode debuffs | 186-190 | pass |
-| #8 name label | 203-205 | pass (the tab is renamed Label; batch 9 adds a Justify option) |
-| #10 dispel border shape | 71 | pass |
-| #7 Size to fit | 200-202 | **fail**: live auras longer than the samples are clipped (202's stated limit is rejected), test-mode columns misalign after a width change or Size to fit, and existing Text containers were not stamped off |
-| #9, #11, #13 attached containers | 191-196, 67, 68 | **fail**: an attached child's strip sits beside the parent's first element, so the child reads as attached elsewhere and its test-mode auras read as the parent's. Batch 9 reworks attach points so they can be chosen |
-| #16 `/am diagnostics` | 206-209 | **fail**: out of combat, every container's plan and shown sections error on a secret boolean compare (`modules/Diagnostics.lua` line 453 in the build tested) |
+- **Client.** Live Retail at the TOC's `## Interface` (120100 when this was written). `/console
+  scriptErrors 1`, or BugSack, for the whole run: every check expects no Lua error and no
+  `ADDON_ACTION_BLOCKED` or taint warning unless it says otherwise. Chat lines carry the cyan `[AM]`
+  tag.
+- **Place.** A training dummy, with a party or a friendly player nearby for the target and focus
+  checks. COMBAT-2, COMBAT-7, DIAG-11 and DIAG-12 need a Mythic+ key or a boss encounter.
+- **The starter set.** Most checks start from a fresh profile's four starters: #1 *Player buffs*
+  (bars), #2 *Player debuffs* (icons, growing left), #3 *Target debuffs (mine)* (icons, growing right)
+  and #4 *Player cooldowns* (Text). Make a spare profile for this (PROFILE-2) so your own set is not
+  touched.
+- **The chain.** LAYOUT and some CONT checks use a chain: three Text containers A, B and C, each
+  Justify Center and growing down, B attached to A and C attached to B (Layout → Anchor → Attach to
+  *Another container*), both anchor-point rows left on Automatic. Name them so the names fit their
+  strips.
+- **Upgrade checks** (INSTALL-5 to INSTALL-8) need a copy of `WTF/Account/ACCOUNT/SavedVariables/AuraMaster.lua`
+  saved by an older build. Back the file up first: a profile loaded once on a newer build cannot go
+  back.
+- **Opening the settings.** `/am` opens the panel. Filters, Layout and the style sections (Bars,
+  Icons, Text) are entries of the rail on the Containers page, not Settings tree entries; the band's
+  Container picker chooses which container they edit.
 
-197. **The X on the strip (CX-1, CX-3).** `/am unlock` → every container's strip shows a gray X
-     immediately left of the **?**, the same size, turning white on hover; the name stays centered
-     and does not run under the X, even for a long name with the orange TEST tag in test mode.
-     Hover the X → the tooltip names the container and says a click disables it, its settings are
-     kept, and Enabled on the Containers page brings it back. No "Anchoring disallowed" error,
-     including on a container attached to another.
-198. **Click it (CX-3).** Left-click the X → that container's auras, placeholders, outline and strip
-     disappear, nothing else changes, and one chat line names it and says how to bring it back.
-     Containers page with that container selected → **Enabled** is unticked; tick it → the container
-     and its strip return at the same stored position. With the Containers page already open on it,
-     click its X → the checkbox unticks live. Close a container others are attached to → the
-     followers re-place exactly as when Enabled is unticked in the panel.
-199. **What the X does not do.** Right-click on the strip and on the **?** still opens the Containers
-     page; a left-drag on the strip or the **?** still moves the container; a left-drag that starts
-     on the X moves nothing, and releasing off the X does not disable it. In combat, unlocked at a
-     target dummy, click an X → the container hides with no Lua error, no taint and no
-     ADDON_ACTION_BLOCKED. A container flush against the screen edge on its strip's side is pushed in
-     a little further than before while unlocked (the wider strip) and returns on `/am lock`.
-200. **Size to fit, migrated and new (AS-1, AS-3).** On a profile made before this build, every
-     Text container keeps its width and height and **Size to fit** is unticked on its Text page. Tick it
-     → the box resizes at once and the handle and outline follow; Width and Height gray out with the
-     note under them, and their tooltips say why. A new profile's *Player cooldowns* starter has it
-     ticked, and a container made in an existing profile and set to Text has it ticked too.
-201. **It follows the content (AS-2).** With it on, change the font size, the template, the countdown
-     format, Icon Left with size 24, and Justify Center with a three-field template → each resizes the
-     box. Icon size 0 with Bounce → neither the icon nor the text is cut at the right, and at Justify
-     vertical Middle or Bottom the bounce is not cut at the top (at Top, which gets no headroom, it rises
-     above the box, uncut since batch 9 TX-1). A long-lived
-     aura (hours or days) shows its whole time string.
-202. **Its limits (AS-2, batch 9 TX-1).** A live buff with a name longer than the samples (Guardian of
-     Ancient Kings, Incarnation: Chosen of Elune) draws in full, not cut at either end, at Justify Left,
-     Center and Right, in and out of combat; with Size to fit off and a narrow Width it is cut at the
-     box as before. In combat gain and lose auras →
-     no error and the size does not change; tick Size to fit in combat → it applies after combat.
-     With a SharedMedia font, log in → at worst one apply at the stored size, then sized to fit; no
-     lasting wrong size. Chain two Text containers, the first empty, unlocked, with Size to fit on and
-     off → the strips and outlines never overlap (check 191).
-203. **The name label, locked (NL-1, NL-2, NL-4).** Layout → **Label**, tick **Show name label**
-     on *Player buffs* while locked → its name appears in gold Friz 12 just above its first element
-     (growing down), centered on it (a Bars container, batch 9 E7), and nothing else moves. Grow
-     vertically Up → the label moves below the first element. The **Justify** dropdown reads Center
-     with nothing picked; pick Left, then Right → the name moves to that edge (4px in); Center → back.
-     On *Target debuffs (mine)* (Icons, growing right) Justify reads Left, and Grow horizontally Left
-     → it reads Right and the name right-aligns; pick Center there and flip the growth → it stays
-     centered. *Player debuffs* grows left on a fresh profile, so its Justify reads Right. Change a Bars
-     container's style to Text → it stays centered. X/Y offsets and every font leaf
-     (face, size, flags, shadow, color) apply live; with Show off the offsets and the font rows are
-     grayed, but the color swatch is not.
-204. **Unlocked, both show (NL-3, D6).** `/am unlock` → the label stays, and the drag strip sits
-     past it on the same side, by the label's height plus the strip gap, never covering it;
-     `/am lock` → the strip goes and the label stays where it was. `/am test` locked and unlocked →
-     the placeholders, the label and (unlocked) the strip with its TEST tag, none overlapping. A
-     container attached to another with its label on → the label sits right on its own block's
-     before side (above it growing down), justified inside the block's width, never out at the far
-     left; unlocked, the strip sits past the label, so the order is strip, label, block (batch 10
-     F3), and the follower sits one more row further from its parent to make the room (F2), locked
-     too while the label is on.
-205. **The label with the rest (NL-1, NL-4).** Rename the container, in combat too → the label
-     changes at once. On a target container with the label's class color on, target a warrior then
-     a mage → the color follows; an NPC falls back to the swatch. Scale 2.0, Opacity 0.5 and Master
-     alpha → the label scales and fades with the container. Visibility *Out of combat only* → entering
-     combat hides container and label together; no ADDON_ACTION_BLOCKED. `/am disable` hides it and
-     `/am enable` brings it back; deleting the container removes it. Containers → Copy settings from,
-     What = *Label* → the label settings copy and the name does not. Flush against the top edge
-     with the label above → note whether it is cut off (it is not clamped, a known limitation).
-206. **`/am diagnostics` out of combat (DG-1, DG-2).** With a target, a focus and a pet,
-     `/am diagnostics` → the console opens, one chat line gives the line count, and the report runs
-     from the begin marker to the end marker. Its `[Aura]` names and stacks match Blizzard's own buff
-     and debuff frames; every container has its `[Cont]`, `[Filt]` and `[Plan]` lines. Press **Copy**
-     → the text has no color codes; paste it into a file and check nothing is cut off. Whitelist a
-     spell whose buff is up → `[Shown]` lists a button and `predicted:` reads shown (rank 1); record
-     whether the button line carries the aura's inst/id or only its name or icon.
-207. **In combat and while disabled (DG-1, DG-3).** In combat on a dummy, `/am diagnostics` → no Lua
-     error, the units read unreadable, `[Cont]`, `[Filt]` and `[Plan]` still print, `frames=` is a
-     number or `?`, `shown=?`, and no `[Shown]` button lines. Change a container's Cast by in combat
-     and run it again → that container reads PENDING (combat); after combat → plan in sync.
-     `/am disable`, then `/am diagnostics` and `/am debug diagnostics` → each still runs and the
-     state line reads enabled=false.
-208. **Caps and the old verbs (DG-4).** With about eight containers and a long whitelist → the report
-     stays under the cap or ends with a `truncated` line, and the console never holds more than 3000
-     lines. Bare `/am debug` still toggles the window, `/am debug on` and `off` still switch logging,
-     and `/am help` shows `diagnostics` right after `debug`, with a `debug` row that no longer
-     mentions diag.
-209. **The two forms, and no `diag` (DG-1 as amended 2026-09-25).** `/am debug on`, reproduce
-     anything, then `/am diagnostics` → the report appends after the trace lines, so one **Copy**
-     carries both. `/am debug diagnostics` → the same report again. `/am debug diag` → no report:
-     the console window just toggles, like any other unknown word after `debug`.
+## Install, load and upgrade
 
-## AA. Feedback batch 9 sign-off (owner to run)
+**INSTALL-1. Fresh install.** Remove `WTF/Account/ACCOUNT/SavedVariables/AuraMaster.lua` and log in →
+the world loads with no Lua error. Result:
 
-The in-game checks for feedback batch 9 (`docs/superpowers/specs/2026-09-25-feedback-batch9-design.md`,
-owner decisions E1-E9). None of them has been run: each is for the owner, and none is marked passed
-here. Requirements already covered by a check above point at it; the rest are new below. Run on a
-build carrying schema v9, once on a copy of the SavedVariables file the batch 8 run used (schema v8)
-for the migration lines, and once on a fresh profile.
+**INSTALL-2. Starter containers.** On that fresh install, with no setup → four containers appear: #1
+*Player buffs* as bars near the top right, #2 *Player debuffs* as icons just above it, #3 *Target
+debuffs (mine)* as icons below the screen center, and #4 *Player cooldowns* as Text left of center.
+Your current buffs show in #1; target the dummy and apply a debuff → it appears in #3. Pop an
+offensive and a defensive cooldown → #4 shows both and nothing else (no food, flask, mount or raid
+buff). Result:
 
-| Requirement | Decision | Check |
-|---|---|---|
-| DX-1, DX-2 `/am diagnostics` secret-safe, the `inert:` line | — | 210, 211 |
-| MG-1 schema v9 (autoSize, attach.edge, the screen offset) | E6, E9 | 212, 213 |
-| TX-1 a live line under Size to fit is never clipped | E8 | 214 (and 202) |
-| LJ-1 label Justify | E7 | 215 (and 203) |
-| HG-1 the empty-only placeholder | E1 | 191-196 (and 14) |
-| AP-1..AP-4 the Side row, its limits and its default (the Side row retired by batch 11 G1: checks 236-242) | E2, E5 | 216-220 |
-| GC-1 the growth-conflict popup | E3 | 41 |
-| SEP-1..SEP-4 test-mode outline, join tooltip (the pin removed by batch 11 G6), strip side, enchant preview | E4 | 221-224 |
-| One geometry locked, unlocked and in test mode | E1, E2 | 225 |
+**INSTALL-3. Reload.** `/reload` → no Lua error; every container is where it was. Result:
 
-**Owner run, 2026-09-25 (late).** Every AA check passed except those below, which go to feedback
-batch 10 on the same branch.
+**INSTALL-4. Deleted starters stay deleted.** Delete all four (Containers → General → Delete),
+`/reload` → they do not come back, because the profile is marked seeded. Get them back with
+General → Reset all settings (PROFILE-4). Result:
 
-| Item | Checks | Result |
-|---|---|---|
-| Unlocked handle placement | 221, 225 | **fail**: the attach geometry is correct, but a follower's strip beside the column reads as misleading. The owner wants each strip directly above its own block, with the chain spread out to make room (mockup) |
-| Name label placement | 203, 215 | **fail**: unlocked, a follower's label sits above its beside-strip at the far left; locked, a follower's label sits away from its block; with growth down, the child's label sits above its strip while the root's sits below it |
-| Inherited-growth note | - | **change**: say it is because the container is attached, add spacing below, and draw it dim gold |
-| Screen offset reset | 211, 212 | **fail on the owner's install**: screen containers still carry attach.y=-4. The owner's profile was stamped v9 by an intermediate build before the reset joined the v9 step |
+**INSTALL-5. Upgrade from before schema v2.** On a build before schema v2, in two profiles: untick a
+starter spell in *Core healing* and add a spell to *Lesser healing* on one container; add a spell to
+*Defensive cooldowns* on a second container; set a bar container's **Color by** to dispel type and
+change its Magic color; leave a container's strata at Medium. Log in on this build → no Lua error.
+General → Spell Categories lists one *Healing* category (no Core or Lesser healing) holding the added
+spell, with the starter unticked; *Defensive cooldowns* holds the other added spell. Dispel Colors →
+Magic shows the color you set. Layout → Frame → Strata reads High where it was Medium. Switch to the
+other profile → the same. Result:
 
-210. **`/am diagnostics`, test mode off and on (DX-1).** Out of combat, auras readable, with a
-     target and a focus and at least one container showing a live aura: `/am diagnostics` → the
-     report runs from the begin marker to the end marker with no Lua error and no `attempt to
-     compare ... secret boolean` line; every container has its `[Plan]` lines, and each reads
-     `shown=` with a number, `?`, or a `<n>+<k>?` count where some buttons could not be read (a
-     `[Shown]` line with `shown=?` for each of those). `/am test` → run it again → the same, with no
-     error, while the placeholders show. `/am test off` → a third run matches the first.
-211. **Only the rows in use (DX-2).** In the same report, a container on the screen lists no
-     `attach.container`, `attach.edge` or attach offsets on its `#id non-default:` line (any it still
-     stores sit on its `#id inert:` line), and no screen container lists `attach.y=-4`; a container
-     attached to another lists `attach.edge` (`after-start` is the default, so only a side you picked
-     shows) and puts a stored screen position, if any, on its `inert:` line. A bars or icons container
-     never lists `text.autoSize` on its `non-default:` line. A container with nothing inert prints no
-     `inert:` line at all.
-212. **The v9 migration.** Log in on the batch 8 (v8) SavedVariables copy (back up
-     `WTF/…/SavedVariables/AuraMaster.lua` first), then `/am debug` → the console holds one
-     `[Migrate] v9 profile '<name>'` line per profile. Every existing chain (Player Weapon
-     Enchants under Player Buffs (All); the Text Offensive -> Defensive -> Raid chain; the Target
-     Debuffs chain growing up) sits exactly where it did on the v8 build, locked and in test mode.
-     `/am select` each attached container, then `/am get container.attach.edge` → `after-start`, and
-     its Side dropdown reads Bottom left (Top left on the chain growing up; the mirrored name where
-     a chain grows left). A container that was on
-     the screen and is switched to Another container gains no 4px nudge (X/Y offsets read 0).
-213. **Size to fit is Text-only (E6).** On the migrated profile, `/dump` a bars and an icons
-     container's stored `text` table from `AuraMasterDB` → no `autoSize` key; a Text container keeps
-     its stored value. On a bars container the Text page is dimmed under its not-in-use note, and
-     changing that container's Style to Text → **Size to fit** starts ticked, the default. A Text
-     container made before batch 8 keeps its Width and Height and Size to fit unticked.
-214. **A live long name under Size to fit (TX-1, E8).** A Text container with Size to fit on and a
-     `$spellname$` template, live (test mode off): gain Guardian of Ancient Kings (or another buff
-     whose name is longer than every sample) → the whole name draws, past the box's edge if need
-     be, from the justify point: at Left it runs right, at Right it runs left, at Center both ways.
-     With Justify vertical Top and Bounce on → the bounce rises uncut. Two such auras up at once →
-     neither line is cut. Untick Size to fit → the line is cut at the box again; tick it →
-     whole again, with no `/reload`. `/am test` on and off while the buff is up → the samples, then
-     the whole live name.
-215. **Label Justify defaults (LJ-1, E7).** On a fresh profile with **Show name label** on for each
-     starter: the Bars container's Layout → Label → **Justify** reads Center and the name is
-     centered; Target debuffs (mine), which grows right, reads Left, lined up with its first icon;
-     Player debuffs, which grows left, reads Right, lined up with its first icon on the right; the
-     Text container reads Center. Set Target debuffs (mine)'s **Grow horizontally** to Left →
-     Justify reads Right; set Player debuffs' to Right → it reads Left. Put both back. `/am get
-     container.label.justifyH` on each → `AUTO`. Pick Left on the Bars container → `/am get` reads `LEFT`; `/am reset
-     container.label.justifyH` → back to `AUTO`, and the dropdown reads Center again. An Icons
-     container attached below another with its label on → the name sits above its own first icon,
-     lined up with it as a root's is (check 204, batch 10 F3).
-216. **The Side list (AP-1, AP-3).** A bars parent A filling columns growing down and right, bars
-     child B attached to it (Per row or column 0, so it is one bar wide): B's Layout → Anchor → **Side** lists Bottom left, Bottom, Bottom right,
-     Right, top / middle / bottom and Left, top / middle / bottom, and no Top entry. Pick each in turn
-     → B moves there at once, one B Spacing below A on a Bottom side and one B Line spacing across on
-     a Right or Left side, and the line beside Parent container reads "Its *point* joins the *point* of 'A'"
-     for the side picked. The X and Y offsets nudge it on top. Nothing overlaps A in any of them.
-217. **A growth flip mirrors it (E2).** With B on Bottom right, set A's **Grow vertically** to Up →
-     the Side entries read Top left / Top / Top right, B sits above A on its right end, and no dialog
-     appears. Grow horizontally Left → the Right and Left entries swap sides, and B mirrors. `/am get
-     container.attach.edge` on B reads the same token throughout. Put A back.
-218. **Limits (AP-1, AP-3).** Set A's **Fill** to Rows → B, which follows A's fill, now spans more
-     than one aura across, and its Side lists no Left entry.
-     `/am set container.attach.edge behind-start` → refused with a chat line giving the reason (one
-     aura wide), and nothing moves. `/am set container.attach.edge top` → refused with a chat line.
-     Set A's Fill back to Columns.
-219. **The fallback note (AP-3).** B a bars column on **Left, top**, then B's **Per row or column**
-     set to 3 → B moves below A (Bottom left), the Side dropdown shows Left, top grayed with
-     " (unavailable)", and a gray line under the tab reads "'Left, top' needs this container to be one
-     aura wide (Fill: Columns, Per row or column: 0). It sits Bottom left until then." Set it back to
-     0 → B returns to A's left and the note goes. `/am get container.attach.edge` read `behind-start`
-     throughout.
-220. **The default side of a new attachment (AP-4, E5).** Three Text containers with the same
-     growth and Justify Center, all on the screen (the owner's #13, #14 and #15): attach the second
-     to the first, then the third to the second → each Side starts at Bottom, and the lines are centered under each other; change #13's Width and toggle Size to fit
-     → they stay centered. A Text container justified Right → Bottom right (growing right); Left →
-     Bottom left. A
-     bars or icons container → Bottom left. Pick a side while the mode is Another container but no
-     target is chosen, then choose the target → your pick is kept. Retarget an attached container →
-     its side is kept. An already-attached container migrated from v8 is not moved (check 212).
-221. **The test-mode block outline (SEP-1, E4).** `/am test` locked → no outline (owner, 2026-09-27:
-     the box is an unlocked guide); `/am unlock` → every container's placeholders are enclosed by one
-     outline of its own, the whole block, so a follower's block and its parent's read as two. `/am test off` while locked → no
-     outline at all; unlocked → only an empty container's one-element outline (check 193).
-222. **The join's tooltip, and no join dot (SEP-2 as batch 11 G6 leaves it).** `/am unlock` with the
-     chains of 216 and 212 → no dot or diamond sits on any join, unlocked, locked or in test mode;
-     hover B's strip → the tooltip adds "Joined to the *point* of 'A'. Change the anchor points on
-     Layout > Anchor." A container on the screen or on a named frame adds no such line.
-223. **Every strip in its own column (batch 10 F1, F4; replaces SEP-3's free side).** Unlocked, test
-     mode on and off:
-     - a Bottom-attached follower's strip sits above its own first element, between the parent's
-       block and its own, over none of the parent's elements;
-     - a Right-attached follower's strip sits above it; when the parent's strip is wider than the
-       parent's element (a short name on a single icon is not), the follower sits one strip row
-       lower (two with the parent's label on), so it overlaps neither the parent's strip nor its
-       label; `/am lock` → it moves back level with the parent, or stays one row lower while the
-       parent's label is on, so a long parent name never runs over the follower's own label;
-     - a chain where B is on A's Left and C is below B: B's strip sits above B, lined up with its
-       edge that faces A, and C's strip sits above C, covering none of B's elements;
-     - no two strips stack, each label sits between its strip and its block, and on `/am lock` no
-       strip is left and each follower closes up to one Spacing (plus its label row).
-224. **Weapon enchant placeholders (SEP-4).** A container showing only Weapon enchants, `/am test`
-     → it previews weapon enchants (Windfury Weapon, Flametongue Weapon running out, Instant Poison
-     with no timer), not buffs; a Player Buffs container with Weapon enchants also on
-     still previews buffs. A Text container of enchants under Size to fit sizes to those names.
-225. **One geometry (E1, E2).** With B on each of Bottom, Right, middle and Left, top in turn and A
-     showing live auras: locked and unlocked → B sits on the same side of A (unlocked, A is not
-     empty, so B hangs from A's engine; on Bottom B sits one strip row further down while its strip
-     shows, batch 10 F2); in test mode → B sits on the same side of A's placeholder block; with A
-     empty and unlocked → B sits on that side of A's one-element outline. No Lua error, taint or
-     ADDON_ACTION_BLOCKED in any of them, and entering combat unlocked puts B back on A's engine.
+**INSTALL-6. Upgrade of a Weapon enchants container (schema v5).** Use a SavedVariables file with a
+Weapon enchants container whose "Always shown" list held spells. Log in, then `/am debug on` → the
+console's `[Init]` line reads `schema v11`. The container now reads unit Player, aura type Buffs,
+only **Weapon enchants** shown on Filters → Categories, and an empty Overrides list; it draws no
+group from the cleared whitelist. Apply an enchant (a sharpening stone, a rogue poison, a shaman
+imbue) → it shows, with no "can never match" warning. The Aura type dropdown on Containers → General
+offers Buffs and Debuffs only. Result:
 
-## AB. Feedback batch 10 sign-off (owner to run)
+**INSTALL-7. Size to fit on upgrade (schema v8 and v9).** On a SavedVariables file from before
+schema v8 → every Text container keeps its Width and Height, and **Size to fit** is unticked on its
+Text page. `/dump` a bars and an icons container's stored `text` table from `AuraMasterDB` → no
+`autoSize` key; a Text container keeps its stored value. Change a bars container's Style to Text →
+**Size to fit** starts ticked. Result:
 
-The in-game checks for feedback batch 10 (`docs/superpowers/specs/2026-09-25-feedback-batch10-design.md`,
-owner decisions F1-F8). None of them has been run: each is for the owner, and none is marked passed
-here. Checks above that batch 10 rewrote are listed beside the new ones. Run on a build carrying
-schema v10, first on the owner's own SavedVariables (stamped v9 by the batch 9 build) for check 234,
-then on the owner's setup: the Text chain *Text (Offensive Cooldowns)* (#13) → *Text (Defensive
-Cooldowns)* (#14) → *Text (Raid Cooldowns)* (#15), each attached with Side **Bottom**, growing down.
+**INSTALL-8. Chains stay put through the attach upgrades (schema v8 to v11).** Note where every
+chain sits on the old build, locked and in test mode. Log in on this build, then `/am debug on` →
+the console's `[Init]` line reads `schema v11`. Every chain sits where it did, locked and in test
+mode, with these exceptions only: a follower that was on the old default side now reads Automatic in
+both anchor-point rows and takes Automatic's place, so a Text follower justified Center moves to the
+center, and one justified to its growth's end side to that end (LAYOUT-10); an Icons or Bars
+follower under a Text parent justified Center moves to the center (LAYOUT-12). A follower that had a
+picked side reads that pick in both rows (Side Bottom reads Parent **Bottom**, This **Top**). A
+container attached to another with the old 0/-4 offsets reads 0/0 on its Layout page; any other
+offsets are unchanged. `/am select` a screen container, `/am get container.attach.y` → `0`; `/am
+diagnostics` lists no `attach.y=-4`. Switch a container that was on the screen to Another container
+→ it gains no 4px nudge (its X/Y offsets read 0). `/am get container.attach.edge` → "Setting not
+found". `/reload`, then `/am debug on` → nothing has moved, and the `[Init]` line still reads
+`schema v11`. Result:
 
-| Requirement | Check |
-|---|---|
-| F1 every strip in its own container's column, on its before side (the mockup) | 226, 227 (and 41, 192, 223) |
-| F2 the chain spreads while strips show, and closes up on lock | 226-228 (and 225) |
-| F3 strip, label, block; the label justified inside its block, locked and unlocked | 229, 230 (and 203, 204, 215) |
-| F1, F3 growth up mirrors all of it | 231 |
-| F4 a side follower clears its parent's strip and label | 232 (and 223) |
-| F5 the test-mode block outline and the tooltip line stay (the join diamond removed by batch 11 G6) | 226, 227 (and 221, 222) |
-| F6 the inherited-growth note | 233 (and 67) |
-| F7 schema v10 on the owner's v9 profile | 234 |
-| F8 diagnostics while disabled or stood down | 235 |
+## Slash commands
 
-226. **The mockup, unlocked (F1, F2, F5).** Labels off on all three, test mode off, `/am unlock` →
-     one column reading, top to bottom: #13's strip, #13's block, #14's strip, #14's block, #15's
-     strip, #15's block, as in the owner's mockup. No strip sits beside the column or over another
-     container's block, each strip is lined up with its own block, and each strip sits one Spacing
-     past the block before it. No dot sits on either join; hover #14's strip
-     → the tooltip carries "Joined to the *point* of 'Text (Offensive Cooldowns)'. Change the anchor
-     points on Layout > Anchor."
-227. **The mockup in test mode (F1, F2, F5).** Still unlocked, `/am test` → the same order around
-     the placeholder blocks: strip, block, strip, block, strip, block, each block enclosed by its own
-     outline, no placeholder under another container's strip. `/am lock` with test mode still on →
-     the strips go, each follower closes up to one Spacing past the block before it,
-     and each block keeps its outline. `/am test off`.
-228. **Collapse on lock (F2).** From 226, `/am lock` → every strip goes and the chain
-     closes up: #14 sits one Spacing below #13's last line, #15 one Spacing below #14's, plus any
-     X/Y nudge, where they sat locked on the batch 9 build. `/am unlock` → it spreads again at once,
-     with no `/reload`. Toggle three times; no Lua error, taint or ADDON_ACTION_BLOCKED, and entering
-     combat unlocked raises none either.
-229. **Label order, unlocked (F3, F2).** Tick **Show name label** on all three, `/am unlock` → each
-     container reads strip, label, block, top to bottom, the root included: the label between its
-     own strip and its own block, never above its strip and never at the far left of the screen.
-     Each label is centered inside its block's width (Text, Justify Center), and each follower sits
-     one label row further down to make the room, so no label touches the block above it.
-230. **Label order and justify, locked (F3).** `/am lock` → each label sits directly on top of its
-     own block, centered inside the block's width; none floats to the left of the column (the
-     owner's batch 9 screenshot). #14's Justify Left, then Right → its name moves to that edge of
-     #14's block (4px in); its X and Y offsets move it on top of that; put Center back. Untick #14's
-     label → #15 moves up by one label row; untick all three → the chain matches check 228.
-231. **Growth up mirrors it (F1, F3).** Labels on, set #13's **Grow vertically** to Up → the whole
-     chain mirrors: #14 sits above #13 and #15 above #14, and unlocked each container reads, bottom to
-     top, strip, label, block (the strip below its block, the label between them). `/am lock` → each
-     label sits directly below its own block, centered, and the followers close up. `/am test` → the
-     same around the placeholders. Set it back to Down.
-232. **A side follower (F4).** An Icons A (one icon wide, a long name such as "Player buffs (All)",
-     label on) with an Icons B attached on **Right, top**, label on: unlocked → B's strip and label
-     sit on B's own before side, above B, and B is pushed down past A's strip and label rows, so B's
-     strip and label overlap neither A's strip nor A's label; `/am lock` → B stays one label row
-     lower while A's label shows, so A's name never runs over B's name; untick A's label → B sits
-     level with A. Set B to **Left, top** → B is never pushed, and its strip is lined up with its
-     edge that faces A, over none of A's elements. No Lua error in any of them.
-233. **The inherited note (F6).** Open #14's Layout → **Growth** → above the dimmed Fill, Grow
-     horizontally and Grow vertically rows it reads "Fill and growth follow 'Text (Offensive
-     Cooldowns)' because this container is attached to it." in dim gold, the same gold as "(yours)"
-     on General → Spell Categories, with a row's gap below it before Fill. #13's Growth tab still
-     shows its follower-count line, unchanged.
-234. **Schema v10 on the owner's v9 profile (F7).** Back up `WTF/…/SavedVariables/AuraMaster.lua`,
-     log in with it on the batch 10 build, then `/am debug` → the console holds one
-     `[Migrate] v10 profile '<name>'` line per profile, and no v9 line. `/am diagnostics` → the header
-     reads schema v10, and no screen container lists `attach.y=-4` on its `non-default:` or `inert:`
-     line (check 211). `/am select` a screen container, `/am get container.attach.y` → `0`. `/am
-     select` each attached container, `/am get container.attach.edge` → `after-start`, or the side
-     picked since; its Side dropdown matches (the batch 10 build: batch 11 retires both, check 242). Every chain sits where it did before the login, locked
-     and in test mode. `/reload` → no `[Migrate]` line at all.
-235. **Diagnostics while disabled (F8).** `/am disable`, then `/am diagnostics` → after the state
-     flags the header adds "addon disabled: containers are hidden and not updated; the plan lines are
-     from the last apply", with no Lua error. `/reload` while still disabled, `/am diagnostics` →
-     the line reads "addon disabled: containers are not built; predictions only", and each
-     container's `[Plan]` line reads `not built (addon disabled)`, with the `Shown` section holding
-     only `predicted:` lines. `/am enable`, `/am diagnostics` → no such line, and the plan verdicts
-     read as they did before the disable.
+**SLASH-1. Opening the settings from chat.** `/am` → Settings opens at **Ka0s Aura Master** with no
+chat line. `/am` followed by only spaces, `/auramaster`, `/am config` and `/am options` (an alias of
+`config`) → the same. In combat, `/am` and `/am config` → the gray "cannot open settings during
+combat — Blizzard's category-switch is protected" line, no taint warning, and the panel does not pop
+open when combat ends. Result:
 
-**Owner run, 2026-09-26.** Every AB check passed, except the parts the owner changed by request
-afterwards, which feedback batch 11 carries: the join dot (checks 226 and 227) is removed (G6), and
-the Side row (check 234's last step, and 232's Right, top and Left, top) gives way to the two
-anchor-point dropdowns (G1). Section AC checks those.
+**SLASH-2. Help.** `/am help` → the version line, then one row per command, 25 in all: a gold `/am
+verb`, an em dash and a white description. `profile`, `test`, `redraw` and `diagnostics` are listed,
+`redraw` right after `forgettimed`, `diagnostics` right after `debug`, and the `debug` row does not mention `diag`. Result:
 
-## AC. Feedback batch 11 sign-off (owner to run)
+**SLASH-3. Unknown verb.** `/am wibble`, and `/am preview` → the unknown-command line, then the help
+block. Result:
 
-The in-game checks for feedback batch 11 (`docs/superpowers/specs/2026-09-26-feedback-batch11-design.md`,
-owner decisions G1-G7). None of them has been run: each is for the owner, and none is marked passed
-here. Batch 11 retires batch 9's Side row and the stored `attach.edge`, so the Side and
-`container.attach.edge` steps of checks 211, 212, 216-220 and 234 no longer apply on this build (they
-record what the batch 9 and batch 10 builds did); checks 222 and 226-228 were rewritten for G6. Run on a
-build carrying schema v11, first on the owner's own SavedVariables (stamped v10 by the batch 10 build)
-for check 242, then on the owner's setup: the Text chain *Text (Offensive Cooldowns)* (#13) → *Text
-(Defensive Cooldowns)* (#14) → *Text (Raid Cooldowns)* (#15), each attached with Side **Bottom**
-before the upgrade, growing down.
+**SLASH-4. Version.** `/am version` → the version on the TOC's `## Version` line, as `v<version>`.
+Result:
 
-| Requirement | Check |
-|---|---|
-| G1 the two dropdowns, their Automatic entries, any pair allowed, the joins line | 236 |
-| G2, G3 Automatic defaults: Text under Text (centered) | 237 |
-| G3 Icons under Icons, growing right and growing left | 238 |
-| G3 Bars under a centered Text, and growth up | 239 |
-| G5 an odd pair placed as asked, with no spread and no push | 240 |
-| G5 a picked pair that is one of batch 9's sides behaves as batch 10 | 241 |
-| G4 schema v11 on the owner's v10 profile: a picked side stays put | 242 |
-| G6 no join dot, unlocked or in test mode | 243 (and 222, 226, 227) |
-| G7 `/am set` with both paths | 244 |
-| G7 `/am diagnostics` prints both points and the join | 245 |
+**SLASH-5. List containers.** `/am containers` → one line per container in creation order (not by
+name), the selected one marked `>`. Result:
 
-236. **The two dropdowns (G1, G2).** Select #14, Layout → **Anchor**, Attach to *Another container*,
-     **Parent container** #13 → below the Parent container row sit **Parent container anchor point** and **This container
-     anchor point**, and there is no **Side** row. Open each → the first entry reads "Automatic
-     (*point*)", naming the point Automatic gives, then the nine points: Top left, Top, Top right,
-     Left, Center, Right, Bottom left, Bottom, Bottom right. Pick one in each → #14 moves at once, with
-     no `/reload`, and the line beside Container reads "Its *this point* joins the *parent point* of
-     'Text (Offensive Cooldowns)'" for the pair picked. Pick a pair that looks odd (Bottom right to
-     Top left) → it is stored and drawn as asked, with no refusal, no grayed entry and no note. With
-     a pick in one row, open it again → its Automatic entry still names Automatic's own point, not
-     the pick. Pick Automatic in both → #14 goes back to its default place.
-237. **Text under Text (G3).** Three new Text containers, Justify Center, growing down, all on the
-     screen: attach the second to the first, then the third to the second, leaving both dropdowns on
-     Automatic → each follower sits one Spacing below its parent, centered under it; the dropdowns
-     read "Automatic (Bottom)" (parent) and "Automatic (Top)" (this). Set the second's Justify to
-     Left → it lines up on its parent's left (Bottom left / Top left); Right → its right (Bottom
-     right / Top right). Change the first's Width and toggle Size to fit → the centered ones stay
-     centered. Put Justify back to Center.
-238. **Icons under Icons (G3).** An Icons parent growing right, with an Icons child attached, both
-     rows Automatic → the child sits below the parent, its first icon under the parent's first icon
-     on the left: "Automatic (Bottom left)" (parent) and "Automatic (Top left)" (this). Set the
-     parent's **Grow horizontally** to Left → the child
-     mirrors to the parent's right end: "Automatic (Bottom right)" and "Automatic (Top right)",
-     with no `/reload`. Set it back to Right → it returns to the left.
-239. **Bars under a centered Text, and growth up (G3).** A Bars child attached to a Text parent
-     justified Center, both rows Automatic → the bars are centered under the text ("Automatic
-     (Bottom)" / "Automatic (Top)"); set the parent's Justify to Left → the bars move to start on the
-     parent's left (Bottom left / Top left); put Center back. Set the parent's **Grow vertically** to
-     Up → the bars sit centered above the text, and the rows read "Automatic (Top)" (parent) and
-     "Automatic (Bottom)" (this); the chain's strips and labels mirror as in check 231. Set it back to
-     Down.
-240. **An odd pair (G5).** On #14 pick **This container anchor point** Center and **Parent container
-     anchor point** Top right → #14's first element is centered on #13's top right corner, exactly as
-     asked, plus its X/Y offsets and no Spacing gap. `/am unlock` → the chain does not spread for #14:
-     nothing moves to make room, #14 is not pushed clear of #13's strip or label, and #14's strip and label sit on #14's own before
-     side, where they may overlap #13 (that overlap is the owner's to arrange). `/am lock` → #14 does
-     not move. #15, still on Automatic below #14, follows #14. No Lua error in any of it. Put both rows
-     back to Automatic.
-241. **A picked pair that is a side (G5).** On #14 pick This container Top and Parent container
-     Bottom (batch 9's Bottom) → it behaves as batch 10's Bottom: one Spacing below #13, centered;
-     unlocked, the chain spreads for #14's strip and label, and closes up on lock (checks 226-228).
-     Pick This container Top left and Parent container Top right (batch 9's Right, top) on an Icons
-     follower with its parent's label on → it is pushed clear of the parent's label as in check 232.
-242. **Schema v11 on the owner's v10 profile: a picked side stays put (G4).** Back up
-     `WTF/…/SavedVariables/AuraMaster.lua`, note where every chain sits on the batch 10 build, then
-     log in with it on the batch 11 build and `/am debug` → the console holds one
-     `[Migrate] v11 profile '<name>'` line per profile, and no v9 or v10 line. #14 and #15 (Side
-     Bottom before) sit exactly where they did; their Parent container anchor point reads **Bottom**
-     and This container anchor point **Top**, both picks, not Automatic. A container that was on the
-     old default (Side Bottom left, or Top left growing up) now reads Automatic in both rows and takes
-     G3's default, so it sits where it did unless G3 aligns it differently: a Text follower justified
-     Center moves to the center, and one justified to the end side (Right growing right) to that end,
-     as in check 237; an Icons or Bars follower under a Text parent justified Center moves to the
-     center, as in check 239. Every other one stays put (G4 accepts the re-centering). `/am get container.attach.edge` on any container → "Setting not
-     found". `/reload` → no `[Migrate]` line at all.
-243. **No join dot (G6).** With the chains of 237, 238 and 240: `/am unlock` → no dot, diamond or
-     other mark sits on any join; `/am test` → none either, and each block keeps its own test-mode
-     outline; `/am lock` with test mode on → none. Hover #14's strip while unlocked → the tooltip
-     still adds "Joined to the *point* of 'Text (Offensive Cooldowns)'. Change the anchor points on
-     Layout > Anchor." `/am test off`.
-244. **`/am set` with both paths (G7).** `/am select` #14, then `/am set container.attach.relPoint
-     bottomright` → accepted in lower case, #14 moves, and the Parent container dropdown reads Bottom
-     right; `/am set container.attach.childPoint Top` → accepted; `/am get container.attach.childPoint`
-     reads `TOP`. `/am set container.attach.childPoint auto` and `/am set container.attach.relPoint AUTO` →
-     both back to Automatic, and `/am get` on either reads `auto`. `/am set container.attach.childPoint
-     middle` → refused with an `Invalid value` line, and nothing moves. `/am set container.attach.edge
-     after-end` → "Setting not found: container.attach.edge". `/am reset container.attach.relPoint`
-     after a pick → back to Automatic.
-245. **`/am diagnostics` shows both points (G7).** `/am diagnostics` → the header reads schema v11;
-     #14's `[Cont]` line reads `attach=container#13 point=TOP(auto) relPoint=BOTTOM(auto)
-     join=after-center` while both rows are Automatic on the centered chain (the points it is on).
-     Pick This container Top left → the line reads `point=TOPLEFT(picked) relPoint=BOTTOM(auto)` with
-     `join=free`; pick the odd pair of 240 again → `point=CENTER(picked) relPoint=TOPRIGHT(picked)
-     join=free`. Put both rows back to Automatic.
-     A container on the screen or a named frame prints no `point=` or `join=`. No Lua error.
+**SLASH-6. New from chat.** `/am new target debuffs icons` → `Created …` naming a
+target/debuffs/icons container, which appears on screen, becomes the selected one, and whose Layout →
+Growth → Fill reads Rows. `/am new text` → a Text container whose Fill reads Columns. `/am new
+nonsense` → `Unknown word 'nonsense' …`, nothing created. Result:
 
-**Owner run, 2026-09-26.** Every AC check passed.
+**SLASH-7. Select.** `/am select 1`, and `/am select player buffs` in any case → `Selected …`. `/am
+select 999` → `No such container …`. Result:
 
-## AD. Batch 11 follow-ups (owner to run)
+**SLASH-8. The schema CLI.** `/am get container.name` → the selected container's name, annotated in
+gray. `/am set container.layout.scale 1.5` → it grows; `/am reset container.layout.scale` → back.
+`/am list` → every row, the `container.` rows annotated. `/am get container` and `/am set container 1`
+→ both answer "Setting not found: container", and `/am list` reads as before. Result:
 
-Five changes the owner asked for after section AC (2026-09-26). None has been run here.
+**SLASH-9. Light redraw.** With the starter containers showing, `/am debug on`, then `/am redraw light`
+→ `Light redraw: N container(s) repainted`, N counting the containers on screen, and the console
+shows `[Apply] redraw light: N container(s) flipped`. Every container still shows the same auras
+with their timers running. `/am redraw LIGHT` → the same. `/am redraw everything` → `Usage: /am
+redraw [light|full]` and nothing else. Pull a dummy and `/am redraw light` in combat → the same
+line, no "will apply" notice, no taint warning and no `ADDON_ACTION_BLOCKED`. Result:
 
-246. **An attached container's strip name is gray, and its tooltip says why.** `/am unlock` → a
-     container on the screen shows its strip name in the usual gold; #14 (attached to #13) and a
-     container attached to a named frame show theirs in a desaturated warm gray. `/am test` → the
-     orange TEST tag still follows the gray name. Hover #14's strip or its "?" → the first line reads
-     "Anchored to 'Text (Offensive Cooldowns)', so it cannot be dragged. Right-click for settings.",
-     never "Drag to move"; on the named-frame container it names the frame (for example
-     'EllesmereUIUnitFrames_Player'); on a screen container it still reads "Drag to move. Right-click
-     for settings.". Set #14's Attach to back to Screen → its name turns the usual gold at once and
-     its tooltip says Drag to move; back to Another container → gray again.
-247. **Named frame's two anchor points.** Layout → Anchor, Attach to *Named frame* → below Frame
-     name one line reads **Named frame anchor point** on the left and **This container anchor point**
-     on the right, holding the frame's corner and the container's corner as before the change (a
-     container set to Bottom left / Top left before now reads Top left on the left and Bottom left on
-     the right). Pick a corner in each → the container moves at once. The Screen section still reads
-     Point / Relative point.
-248. **A centered chain holds still when its middle link is empty (T9).** Three Bars containers in
-     one column growing up, Target CC (root) ← Target Buffs (Mine) ← Target Debuffs (Mine), each
-     joined This container Bottom to Parent container Top (and once more with Bottom right to Top
-     right). Target a unit on which you have debuffs but no buffs of yours, so Target Buffs (Mine) is
-     empty. Locked, out of combat → Target Debuffs sits straight above the column, its bars lined up
-     with Target CC's, no sideways shift; `/am unlock` → still lined up; relock and pull a target
-     dummy → still lined up through the fight; unlocked in combat (unlock before the pull) → still
-     lined up. Give Target Buffs (Mine) an aura and let it fall off → Target Debuffs moves only up
-     and down the column, never sideways. No Lua error.
-249. **Show all / Hide all on Dispel Types and Who Cast It (T10).** Filters, select Player debuffs →
-     Categories → the Dispel Types and Who Cast It headings each have **Show all** and **Hide all**
-     beside them, looking like the Blizzard Categories and Spell Categories pairs; hover one → "Set
-     every category in this section to Show (Hide), for this container.". Click Hide all under Dispel
-     Types → every Dispel Types row reads Hide, and the Blizzard, Spell and Who Cast It rows do not
-     change; Hide all under Who Cast It → both of its rows read Hide, Dispel Types unchanged; Show all
-     on each → back to Show. Select Target debuffs (mine) → its rows were never touched. A buff
-     container still shows only its two pairs. No Lua error.
-250. **The strip is never wider than its container (T11).** Five Bars containers of one bar width,
-     among them Target Debuffs (Mine), Target Movement (All), Target Defensive (All), Target Buffs
-     (Mine) and Target CC (All). `/am unlock` and `/am test` → every strip's left and right edges line
-     up with its bars, none running past them; a name too long to fit ends in "..." with the orange
-     TEST tag still whole after it, and the X and "?" marks are fully visible. Hover a shortened strip
-     → the tooltip's title is the whole name. `/am test` off → the name without the tag, shortened
-     only if it still does not fit. Rename one to a short name (Layout or Containers) → it is drawn
-     whole at once. A one-icon Icons container with a long name → its strip keeps the width of its
-     name and marks, running past the icon, as before. `/am lock` → no strips. No Lua error.
+**SLASH-10. Full redraw.** Out of combat, `/am debug on`, `/am diagnostics`, then `/am redraw full`
+→ `Full redraw: fonts primed, N container(s) repainted, every container re-dressed`, and the console
+shows `[Apply] redraw full: N container(s) flipped, re-apply queued`, then `[Apply] applied M
+container(s)`. `/am diagnostics` again → each `[Cont]` line's `retired=` count is the same as before:
+no engine was rebuilt. Pull a dummy and `/am redraw full` in combat → `Full redraw: fonts primed, N
+container(s) repainted; the re-dress waits until it is allowed`, then `[AM] Aura Master settings
+changes will apply when combat ends.` (unless that line already printed this fight); leave combat →
+`[Apply] applied M container(s)` with no error. Result:
 
-**Owner run, 2026-09-26.** Every AD check passed (246 to 250).
+**SLASH-11. Bare redraw.** Out of combat, `/am redraw` → the `Full redraw: …` line of SLASH-10. In
+combat, `/am redraw` → `Light redraw: N container(s) repainted`, then `A full redraw has to wait
+right now, so a light one ran; /am redraw full queues the rest`, and no "will apply" notice. Inside
+a Mythic+ key or a boss encounter, out of combat between pulls → the same two lines. `/am disable`,
+then `/am redraw`, `/am redraw light` and `/am redraw full` → each answers only `Ka0s Aura Master is
+disabled — enable it with /am enable`; `/am enable` after. During the suspended arm of a perf
+capture (`/am perf measure b`), `/am redraw` and `/am redraw full` → `Full redraw skipped: Aura
+Master is stood down while a perf capture runs`, and `/am redraw light` → `Light redraw: 0
+container(s) repainted`. Result:
 
-## AE. An empty link adds nothing along a chain (the engine lead, owner to run)
+## Settings panel and launcher
 
-The owner's chain residue, measured in client on 2026-09-26 (`docs/midnight-quirks.md`, "An empty
-engine is one unit, not nothing"), and the fix (merged to master 2026-09-26). **Owner run, 2026-09-26:** checks 275-278 passed. The chain is the owner's: #22 on a named frame at y=2, #21 on #22, #20 on #21 (This
-container Bottom to Parent container Top), #19 on #20 (Automatic), and #10 on the same frame at y=2.
-The check line prints each container's bottom:
+**PANEL-1. Landing page and tree.** `/am config` out of combat → Settings opens at **Ka0s Aura
+Master**: the logo, the Notes line, the Slash Commands list matching `/am help`, and no tab strip.
+The tree under it reads **General · Containers · Profiles**, with no Filters, Layout, Bars, Icons or
+Text entry, indented or not. Result:
+
+**PANEL-2. The General page.** General → the strip **[ Master controls ][ Display ][ Spell Categories
+][ Dispel Colors ]**, and no Container picker above it. Master controls reads, two per line: Enable
+Aura Master | General visibility / Master scale | Master alpha / Lock frame | Debug console, with the
+**Test mode** row beside **Minimap button**, then **Reset position** and **Reset all settings**.
+Result:
+
+**PANEL-3. Master scale and alpha.** Change **Master scale** and **Master alpha** → every container
+scales and fades together, multiplying each container's own Layout → Frame scale and opacity.
+Result:
+
+**PANEL-4. The Containers band.** Open Containers → the band above the rail and tab strip holds the
+**Container** picker and **New container** side by side and aligned; the General section's first tab
+is named **General**. Hover New container → its tooltip. The picker switches the page's subject.
+Flip the picker between two containers 20 times, then `/dump collectgarbage("count")` → it stays
+flat against a reading taken before. Result:
+
+**PANEL-5. The Containers General tab.** Containers → General → Name and Enabled, then the
+subsection heading **What it shows, and how** with Unit, Aura type and Style under it (no heading
+above Name, and the three rows visibly one block apart from the two), then Duplicate and Delete,
+then, with two or more containers, Copy settings from. Select a container and **Delete** it → the
+picker and New container are still there, and the picker lists what is left. Result:
+
+**PANEL-6. General Defaults keeps the name.** Rename #1 and change its Unit, then press **Defaults**
+on Containers → General → Enabled, Unit, Aura type and Style go back to their defaults, and the name
+you typed stays. Result:
+
+**PANEL-7. The rail.** Open Containers with #1 selected → the band is on top, and the rail on the
+left lists General · Filters · Layout · Bars. The rail's top edge is level with the top of the tab
+art, not the empty space above it. Result:
+
+**PANEL-8. Only the controls scroll.** Rail → Bars → General, scroll to the bottom → only the
+controls move; the band, the rail and the tab strip stay put. Result:
+
+**PANEL-9. The first draw after a reload.** `/reload`, then open Containers as the first page of the
+session → the tabs sit in one row to the right of the rail from the first frame, not stacked one per
+row and none under the rail. Result:
+
+**PANEL-10. The rail's look.** Look at the rail and hover each entry → the tree-pane look (a dark
+fill and a thin gray tooltip border); entries gold, the selected one white on a blue bar, a highlight
+on hover, visibly different from the gold tabs. Each entry's tooltip says what the section holds.
+Result:
+
+**PANEL-11. The style section follows the container.** Make a second bars container (Containers →
+**New container**), then pick #1 in the band and open Bars → **Icon**. Pick the new container in the
+band → the page stays on Bars → **Icon**, now showing the new container. On Bars, pick #2 (icons) in
+the band → the style entry renames to Icons, its tabs follow, and the page stays on the style section,
+not General. Back on #1's Bars, change Containers → General → Style to Icons → the same. Open Layout →
+the band still has the same container selected. Result:
+
+**PANEL-12. Each section keeps its tab.** Filters → Categories, then Layout, then back to Filters →
+Filters opens on Categories. Rail → Bars → Time text, then another section, then Bars → it reopens
+on Time text. Result:
+
+**PANEL-13. Section Defaults.** Change a Layout setting and a Bars setting on #1. With Layout
+selected, click **Defaults** → only the Layout rows go back to defaults, on #1 only; the Bars change
+stays, and other containers are untouched. Result:
+
+**PANEL-14. No containers.** With the Filters section open, delete every container (Containers →
+General → Delete, each), close the panel, `/am config`, open Containers → the rail lists General
+alone with "No containers yet. Click New container, or type /am new." There is no placeholder
+"Container" tab and no "Create one on Containers" line. Click **New container** → Filters, Layout and
+the style section appear. Result:
+
+**PANEL-15. A new container lands on General.** Rail → Bars → Time text, then **New container** in the
+band → a new container is made and selected, and the page shows the General section and tab with its
+Name. Rail → Bars → it reopens on Time text. Keep the panel open, type `/am new` → the page moves to
+General on the new container, the same as the button. Go to Filters, close the panel, type `/am new` →
+the panel does not open; `/am` → it opens on General with that container. Result:
+
+**PANEL-16. Media dropdowns.** Every media dropdown (bar texture, background, border, font) opens with
+entries in it. Result:
+
+**PANEL-17. Other Ka0s addons' pages are unchanged.** Open the settings of another Ka0s addon (KickCD
+or MultiMeters) → their tab strips, content panels and scroll bars sit where they always did: a page
+with no rail does not move. Result:
+
+**PANEL-18. Container pickers sort by name.** Name three containers "zeta", "Alpha" and "beta" →
+the band's Container picker (on every rail section) lists Alpha, beta, zeta, capitals not first,
+each followed by its gray "(unit, aura type, style)". Containers → Copy settings from's source and
+Layout → Anchor → Parent container (None first) list in the same order. Result:
+
+**PANEL-19. Section wording.** Containers → General, hover **Aura type** → "Buffs or debuffs. The
+Filters section offers the categories of whichever you choose; …". No tooltip or line in the panel
+names a Filters, Layout, Bars, Icons or Text *page*. Result:
+
+**PANEL-20. Hide Blizzard frames.** General → Display → **Hide Blizzard buffs** → the default buff
+frame goes, with its weapon enchants; **Hide Blizzard debuffs** → the default debuff frame goes.
+Untick → both return. In combat, `/am set hideBlizzardBuffs true`, then the other one → chat prints
+`[AM] Aura Master settings changes will apply when combat ends.` once, and both apply when combat
+ends. Result:
+
+**PANEL-21. The AddOns list.** Esc → AddOns (or the character-select AddOns list) → *Ka0s Aura
+Master* shows the addon's own logo, not a blank square and not a Blizzard icon. Result:
+
+**PANEL-22. The minimap button.** A round button wearing that logo sits on the minimap ring. Drag it
+around the ring → it follows; `/reload` → it is where you left it. Hover it → the title **Ka0s Aura
+Master** followed by `v<the TOC version>`, `Enabled: Yes`, `Locked: Yes|No`, `Test mode: On|Off`
+(green or red, matching General → Master controls), `Left-click: Open settings`, `Right-click:
+Options menu`, nothing twice. `/am unlock` or `/am test` → the next hover says so. `/am disable` →
+the tooltip still shows, `Enabled: No`, with the same two hints; `/am enable`. Result:
+
+**PANEL-23. Left-click opens the settings.** Left-click the button → Settings opens at **Ka0s Aura
+Master**, and neither the lock nor test mode changes. `/am disable`, left-click → the panel still
+opens. `/am enable`. Result:
+
+**PANEL-24. Right-click opens the options menu.** Right-click → a menu titled **Ka0s Aura Master**
+with exactly three checkboxes, **Enabled**, **Locked** and **Test mode**, each matching General →
+Master controls. Click **Test mode** → the menu closes, every container shows placeholders, chat
+prints what `/am test` prints, and the Test mode checkbox ticks; right-click again → ticked; click it
+→ they go. Click **Locked** → chat prints what `/am unlock` (or `/am lock`) prints, and the handles
+appear (or go). Click **Enabled** → chat prints what `/am disable` prints, and the containers go.
+Right-click now → **Locked (enable the addon first)** and **Test mode (enable the addon first)** are
+grayed and do nothing; **Enabled** brings the addon back with the `/am enable` line. In combat, click
+Test mode while it is off → the combat refusal `/am test` prints. Result:
+
+**PANEL-25. The checkbox and the button agree.** Untick General → Master controls → **Minimap
+button** → the button vanishes at once, no reload; tick it → it returns at the same angle. `/am set
+global.minimap.shown false` → reopen the settings: the checkbox is unticked too. Result:
+
+**PANEL-26. The button survives profile switches and resets.** Hide the button, then Profiles →
+create and switch to a new profile → it stays hidden. Switch back, then General → **Reset all
+settings** → still hidden, the checkbox unticked. Press General's own **Defaults** → still hidden,
+while every other General row goes back to its default. `/am get global.minimap.shown` → `false`;
+`/reload` → still hidden; `/am reset global.minimap.shown` → it comes back and `/am get` reads `true`.
+`/am get global.minimap.hide` → `Setting not found`. Result:
+
+**PANEL-27. A broker display.** With Titan Panel, Bazooka or ElvUI data texts installed, add *Ka0s
+Aura Master* as a plugin → one row labeled exactly that, grouped with the other Ka0s addons rather
+than filed under `A`, the same logo, no empty value cell. Its left click opens the settings, and its
+right click the same three-entry menu as the minimap button's. Result:
+
+## Profiles
+
+**PROFILE-1. The page draws.** Open another addon's options page first, then Aura Master →
+Profiles → the AceDBOptions controls render (current profile, New, Copy From, Delete, Reset Profile),
+never a blank page under the header. Result:
+
+**PROFILE-2. A new profile gets the starters.** Profiles → create a new profile → the four starter
+containers appear on it. Switch back → your own set returns, each where you left it. Result:
+
+**PROFILE-3. Copy.** Profiles → **Copy From** another profile into the active one → its containers
+replace yours. Result:
+
+**PROFILE-4. Reset all settings.** General → **Reset all settings** → the popup reads *"Reset this
+profile to the addon's defaults? Everything you have configured or added in it is discarded — your
+other profiles are not affected."* → **Yes** → the starter containers and default settings return;
+other profiles are untouched. `/am resetall` does the same. Result:
+
+**PROFILE-5. `/am profile` lists the profiles.** With two or more profiles, `/am profile` → a green
+**Profiles** header with no trailing colon, one indented row per profile sorted without regard to
+case, the current one followed by `(current)`, then `/am profile <name> switches profile`. Nothing
+switches. Result:
+
+**PROFILE-6. `/am profile <name>` switches.** `/am debug on`, then `/am profile <another profile>`,
+typed in its exact case → `Switched to profile '<name>'.`; that profile's containers replace the
+current set at once, and the debug console holds one `[Profile] changed -> <name>` line. Open
+Profiles and leave it open, then `/am profile Default` → `Switched to profile 'Default'.`, and the
+page's current profile reads Default without a reopen. Result:
+
+**PROFILE-7. Already on it.** `/am profile <the current profile>` → `Already on profile '<name>'.`,
+and nothing redraws. Result:
+
+**PROFILE-8. An unknown name is refused.** `/am profile Nosuch` → `No profile named 'Nosuch'.`, then
+the list; no profile is created (Profiles lists the same set, and no starter containers appear). With
+a profile named `Raid`, `/am profile raid` → `No profile named 'raid'.`, then `Did you mean 'Raid'?`,
+then the list, and nothing switches. Result:
+
+**PROFILE-9. Quotes and spaces.** Create a profile named `Raid Night` on the Profiles page, switch
+back to Default. `/am profile "Raid Night"` → `Switched to profile 'Raid Night'.` `/am profile
+Default`, then `/am profile 'Raid Night'` → the same switch. `/am profile Default` again, then `/am
+profile Raid Night` → the same switch again. Result:
+
+**PROFILE-10. While disabled.** On Default, `/am disable`, then `/am profile` → the list, not the
+disabled refusal. `/am profile <another profile>`, one whose General → **Enable Aura Master** is
+ticked → it switches and the addon comes up with it: that profile's containers draw and **Enable Aura
+Master** reads ticked. `/am profile Default` → the addon goes down again: every container hides and
+**Enable Aura Master** reads unticked. `/am enable` → Default's containers draw. Result:
+
+**PROFILE-11. Refused in combat.** Enter combat, `/am profile <another profile>` → `Can't switch
+profiles in combat.`, and nothing switches. `/am profile` alone still lists the profiles in combat.
+Result:
+
+**PROFILE-12. A reset in combat tears containers down.** The Profiles page and `/am profile` are
+refused in combat (COMBAT-3, PROFILE-11), so a reset is the one profile change combat allows. Out of
+combat, make a fifth container (CONT-1) and point container 1 at focus. In combat, `/am resetall` →
+the fifth container stops drawing, is torn down when combat ends, and no taint warning appears.
+Container 1 draws nothing in combat, never focus auras under the reset container's name, and once
+combat ends it draws the new container 1 (player buffs). Result:
+
+**PROFILE-13. Your categories belong to the profile.** Make a category (FILT-31), then Profiles →
+create and switch to a second profile → General → Spell Categories does not list it, and the Filters
+grid has no row for it. Switch back → it is there, with its spells and its Show or Hide. `/reload` on
+each profile → no Lua error, and no `/am list` row for a category the loaded profile does not have.
+Result:
+
+## Master switch
+
+**STATE-1. Enable and visibility.** Untick **Enable Aura Master** → every container disappears;
+re-tick → back. Set **General visibility** to *Only in combat* → containers hide out of combat and
+show in combat; *Only out of combat* is the reverse; *Never* hides them; *Always* restores. In
+combat, `/am set visibility never` (the page itself is locked in combat) → every container hides at
+once, with no "will apply when combat ends" line; `/am set visibility always` → they are back at
+once. Result:
+
+**STATE-2. Disable and enable from chat.** Out of combat, `/am disable` → `enabled = false` (gold
+key, white value, the shape `/am get enabled` prints) and every container hides; General → **Enable
+Aura Master** is unticked. `/am enable` → `enabled = true` and every enabled container shows again.
+`/am unlock` and `/am lock` answer the same way, `locked = false` and `locked = true`. Result:
+
+**STATE-3. The disabled addon is inert.** With it disabled: Blizzard's buff and debuff frames come
+back if you had them hidden; changing target, entering and leaving combat and summoning a pet do
+nothing at all; `/am` still opens the panel, and `/am list`, `/am get` and `/am set` still read and
+repair settings; `/am lock` answers `Ka0s Aura Master is disabled — enable it with /am enable` on one
+line. Ticking **General → Master controls → Test mode** answers that same line and the box stays
+unticked. Result:
+
+**STATE-4. Reload while disabled.** `/am disable`, `/reload` → it comes up disabled, still answers
+`/am`, and built no container: `/framestack` over the screen shows no `AuraMasterAnchor` frame and
+`/dump AuraMasterAnchor1` is nil. `/am enable` → every container draws at once. Result:
+
+**STATE-5. Disable and enable in combat.** Enter combat with containers shown, `/am disable` → the
+same `enabled = false` line, no gray refusal and no "will apply when combat ends" notice; the
+containers' engines go quiet at once and the anchors finish hiding when combat ends. `/am enable` in
+combat → the containers return at once. No taint warning either side. Result:
+
+## Combat and restrictions
+
+**COMBAT-1. Changes wait for the end of combat.** Enter combat and change a container's bar width or
+a filter with `/am set` → chat prints once `[AM] Aura Master settings changes will apply when combat
+ends.`, and nothing changes on screen. Leave combat → the change lands with no reload and no error.
+In combat, `/am lock` and a `/am set` rename print no notice. With a target container's border on
+class color, target a player of another class and pull at once → no notice prints, and the border
+takes the new class color when combat ends. Result:
+
+**COMBAT-2. Changes wait for a key or encounter to end.** Inside a Mythic+ key or a boss encounter →
+a change waits until the key or encounter ends, even if you drop combat between pulls. A change made
+out of combat inside the key prints once `[AM] Aura Master settings changes will apply once aura
+information is available again (after the encounter, key or match).` A change made in combat there
+prints the combat line; nothing more prints the moment combat ends, and the next change still held
+after the pull prints the restriction line once. Result:
+
+**COMBAT-3. The settings lock covers every page.** Open the settings on a Bars page, then pull a
+dummy → the whole page, the band, the rail and the tab strip included, goes under a gray "Settings
+are locked during combat." cover. In one long pull, show General, Containers (each rail section),
+Profiles and the landing page in turn → each is covered. On each, clicking a checkbox, dragging a
+slider, typing in a box (Template, a spell id), a tab click, Defaults and Duplicate change nothing;
+the values after combat are the ones from before the pull. Result:
+
+**COMBAT-4. Switching page in combat.** With the settings open, pull, then click other Aura Master
+categories and another addon's in the AddOns sidebar → each shows covered, the window stays open,
+no `ADDON_ACTION_BLOCKED` and no "C stack overflow". The gray `settings are locked during combat —
+changes are refused until it ends` line prints once per combat however many pages you show; a
+second pull prints it once more. Change a value with `/am set` during the pull, then leave combat →
+the cover lifts on the page you are on, its controls work at once, and it shows the new value with no
+reload or reopen. Result:
+
+**COMBAT-5. A rail entry in combat.** In combat, click a rail entry, then leave combat → nothing
+changes during combat and one gray "locked" line prints; after combat the page draws normally.
+Result:
+
+**COMBAT-6. Reset all in combat.** In combat, `/am resetall` → the profile resets, its
+acknowledgment prints, and no gray line. Open General → **Reset all settings** before a pull, leave
+the popup up, pull, then **Yes** in combat → the same. Clicking the button itself in combat is
+refused by the settings lock. Result:
+
+**COMBAT-7. A reload inside a key.** In a Mythic+ key, out of combat between pulls, `/reload` →
+every container draws right after the loading screen (the buffs you carry show), not only once the
+key ends. `/am debug on`, then `/am diagnostics` → `apply queue: all=false`, and every `[Cont]` line
+reads `engine=yes`. Pull the next pack → auras appear and time down in every container as usual.
+This needs auras secret out of combat at login, which a key between pulls gives (a PvP match may
+too; unverified). Result:
+
+## Debug, diagnostics and perf
+
+**DIAG-1. A perf capture.** `/am perf` → status lines and the step panel. Run a capture as in
+`docs/perf-analysis/README.md` → `/am perf report` prints the summary and the JSON line; containers
+hide during the suspended arm and come back after **finish** with no reload. Result:
+
+**DIAG-2. The debug console.** Bare `/am debug` → the console opens (again → it closes), and General's
+**Debug console** checkbox follows it. `/am debug on` → lines such as `[Set] … = …` stream as you
+change settings; `/am debug off` stops them. `/reload` → logging off, window closed. Result:
+
+**DIAG-3. One line per bulk act.** With `/am debug on`, each bulk act logs one `[Set]` line and no
+per-row lines: #1's Bars **Defaults** after changing Width → `[Set] reset bars: N rows` with N at
+least 1, and again → `reset bars: 0 rows`; **Copy settings from** #1 to #2 → `[Set] copy container
+1->2 (<section>): N rows`; General → **Reset position** → `[Set] reset positions: N rows`, then
+`/am resetposition` straight after → `[Set] reset positions: 0 rows` (the first container's `-0`
+offset over a stored `0` is no change); Filters → Categories → **Hide all** → one `[Set] hide all …`
+line; General → **Reset all settings** → only `[Set] reset profile 'Default' to defaults`, no row
+count; Profiles → **Copy** → only `[Set] copied profile 'A' -> 'B'`. Result:
+
+**DIAG-4. A memory spot-check.** `/run print(collectgarbage("count"))`, change a bar container's
+width 10 times, print it again, and record both numbers and the growth. Result:
+
+**DIAG-5. `/am diagnostics` out of combat.** With a target, a focus and a pet, `/am diagnostics` → the
+console opens, one chat line gives the line count, and the report runs from the begin marker to the
+end marker with no `attempt to compare ... secret boolean` line. Its `[Aura]` names and stacks match
+Blizzard's own buff and debuff frames; every container has its `[Cont]`, `[Filt]` and `[Plan]` lines,
+each `[Plan]` reading `shown=` with a number, `?`, or a `<n>+<k>?` count (a `[Shown]` line with
+`shown=?` for each button that could not be read). Press **Copy** → no color codes; paste it into a
+file and nothing is cut off. Whitelist a spell whose buff is up → `[Shown]` lists a button and
+`predicted:` reads shown (rank 1); record whether the button line carries the aura's inst/id or only
+its name or icon. `/am test` → run it again: the same, no error; `/am test off` → a third run matches
+the first. Result:
+
+**DIAG-6. Diagnostics in combat and while disabled.** In combat on a dummy, `/am diagnostics` → the
+units read unreadable, `[Cont]`, `[Filt]` and `[Plan]` still print, `frames=` is a number or `?`,
+`shown=?`, and no `[Shown]` button lines. With #1 selected (`/am select 1`), in combat `/am set
+container.filter.castBy mine` (the page itself is locked in combat) and run it again → #1 reads
+PENDING (combat); after combat → plan in sync. `/am disable`, then `/am diagnostics` and `/am debug
+diagnostics` → each runs, the state line reads enabled=false, and after the state flags the header
+adds "addon disabled: containers are hidden and not updated; the plan lines are from the last apply".
+`/reload` still disabled, `/am diagnostics` → "addon disabled: containers are not built; predictions
+only", each `[Plan]` reads `not built (addon disabled)`, and `Shown` holds only `predicted:` lines.
+`/am enable`, run it → no such line, and the verdicts read as before. Result:
+
+**DIAG-7. Report caps.** With about eight containers and a long whitelist → the report stays under
+the cap or ends with a `truncated` line, and the console never holds more than 3000 lines. Result:
+
+**DIAG-8. The two forms, and no `diag`.** `/am debug on`, reproduce anything, then `/am diagnostics`
+→ the report appends after the trace lines, so one **Copy** carries both. `/am debug diagnostics` →
+the same report again. `/am debug diag` → no report: the console just toggles, as for any unknown
+word after `debug`. Result:
+
+**DIAG-9. Only the rows in use.** In a report: a container on the screen lists no `attach.container`
+or attach offsets on its `#id non-default:` line (any it still stores sit on its `#id inert:` line);
+a container attached to another puts a stored screen position, if any, on its `inert:` line. A bars
+or icons container never lists `text.autoSize` on `non-default:`. A container with nothing inert
+prints no `inert:` line. Result:
+
+**DIAG-10. Both anchor points.** On the chain, `/am diagnostics` → the header reads the current
+schema version; B's `[Cont]` line reads `attach=container#<A's id> point=TOP(auto)
+relPoint=BOTTOM(auto) join=after-center` with both rows Automatic. Pick This container Top left → the
+line reads `point=TOPLEFT(picked) relPoint=BOTTOM(auto)` with `join=free`; pick Center to Top right →
+`point=CENTER(picked) relPoint=TOPRIGHT(picked) join=free`. A container on the screen or a named frame
+prints no `point=` or `join=`. Put both rows back to Automatic. Result:
+
+**DIAG-11. The event trace through a key.** In a Mythic+ key, `/am debug on`, then play on: a pull,
+the kill, a boss and the key's end → the console carries `[Event] PLAYER_REGEN_DISABLED` /
+`_ENABLED` lines at each pull and kill, and `[Event] ADDON_RESTRICTION_STATE_CHANGED secret=…
+lockdown=… queued=… type=<n> active=<0|1|2>` lines; every `[Event]` line has `secret=… lockdown=…
+queued=…` right after the event name. No `[Event]` line on a target, focus or pet change. Copy the
+whole console into the bug thread: the `type=` values seen at the key's start, a boss and the key's
+end are the record this check takes. Result:
+
+**DIAG-12. The event trace at a boss.** Without a key, a boss encounter anywhere (a follower dungeon
+or LFR boss) with `/am debug on` → `[Event] ADDON_RESTRICTION_STATE_CHANGED … type=1 active=1` at the
+pull and `… type=1 active=0` at the kill. This does not stand in for COMBAT-7: a `/reload`
+mid-encounter lands in combat, where the login build waits for combat to end by design. Result:
+
+## Containers
+
+**CONT-1. New container from the panel.** Containers → **New container** → a player-buff bar
+container named *Container N* appears, offset from the last new one, and is selected. Result:
+
+**CONT-2. Duplicate and delete.** **Duplicate** → a *… (copy)* container with every setting, nudged
+20 px. **Delete** → a confirmation popup; **Yes** removes it, and any container attached to it falls
+back to the screen. Result:
+
+**CONT-3. Create and delete are refused in combat.** The page itself is locked in combat (COMBAT-3),
+so these run from chat and from a popup opened before the pull. In combat, `/am new` → the gray
+"cannot create a container during combat — it would not be drawn or placed until combat ends" line.
+Out of combat click **Delete** and leave the popup up, pull a dummy, then click the popup's **Yes** →
+the gray "cannot delete a container during combat — its display cannot be torn down until combat ends"
+line; `/am delete` in combat → the same line. Nothing is created or removed. Result:
+
+**CONT-4. Copy settings from.** Containers → General → **Copy settings from** → pick a source and
+*Bar style* → the selected container takes only the source's bar look; its name and position are
+unchanged. Pick What = *Label* → the label settings copy and the name does not. Result:
+
+**CONT-5. Rename.** Rename a container on Containers → General (Enter to apply) → the handle label,
+every picker and `/am containers` show the new name; a blank name is refused. With the container's
+name label on (Layout → Label → **Show name label**) and the container selected (`/am select`), in
+combat `/am set container.name <a new name>` (the page itself is locked in combat) → the label
+changes at once. Result:
+
+**CONT-6. Style switch with auras up.** Locked, with live auras in a container, switch its **Style**
+Bars → Icons → Bars → Text → Icons → Text → each time the elements redraw in the new style only: no
+cooldown swipe or icon border left over a bar, no bar, bar text or background behind an icon, no
+leftover line on a Text container, and bars come back with their fill, name and time text. Watch a
+few ticks of each countdown: a stray swipe can appear late, when the engine next updates the
+duration. Result:
+
+**CONT-7. Unlock keeps live auras.** `/am unlock` → every container shows its handle, and live auras
+keep drawing. A container with nothing to show draws a faint outline one element in size, only while
+it is predicted empty (CONT-24). Result:
+
+**CONT-8. The handle.** Unlocked → each handle is a dark strip with a thin gold edge and a gold name
+label, sitting outside its container: above it when the auras grow down, below when they grow up,
+lined up with the edge the first aura starts from. The first bar or icon is fully visible, not under
+the handle. The "?" mark sits at the strip's far end. An empty container's outline is a faint 1px
+white box at the corner the flow starts from. Change a container's Width and growth, and move a
+container it is attached to → no Lua error (none naming `Backdrop.lua`), and the outline and handle
+look the same. Run this after a `/reload` and again after Profiles → Reset Profile. Result:
+
+**CONT-9. The handle's tooltip.** Hover a screen container's strip or its "?" → at the cursor, the
+name and "Drag to move. Right-click for settings.", in the usual gold. B (attached to A) and a
+container attached to a named frame show their strip name in a desaturated warm gray; hover B's strip
+or "?" → the first line reads "Anchored to '<A's name>', so it cannot be dragged. Right-click for
+settings.", never "Drag to move", and the named-frame one names its frame. With `/am test on`, the
+named-frame one's tooltip carries the gold line "Attached — set its offsets in the Layout section."
+Set B's Attach to back to Screen → the name turns gold at once and its tooltip says Drag to move; back
+to Another container → gray again. `/am test` → the orange TEST tag still follows the gray name.
+Result:
+
+**CONT-10. The screen edge.** `/am unlock`, drag a container that grows down flush against the top of
+the screen, `/am lock`, then `/am unlock` → the container shifts down by the strip and its gap, so the
+handle stays on screen; `/am lock` → it returns to the edge. Its stored position is the same before
+and after. Result:
+
+**CONT-11. Drag.** Unlocked, drag a screen-attached container by its strip → it moves, and after
+`/reload` it stays. A drag that starts on the "?" moves it too. An empty container drags by its
+handle. Unlock, enter combat, try to drag → it does not move. Result:
+
+**CONT-12. Right-click opens the Containers page.** Close the panel; right-click a container's
+strip, then its "?" → each time the panel opens on Containers with that container in the band's
+picker, on the section you last left, not General. In combat, the right-click prints the gray
+"cannot open settings during combat — Blizzard's category-switch is protected" line, nothing opens,
+and the picker is unchanged afterwards. Result:
+
+**CONT-13. The close mark.** `/am unlock` → every strip shows a gray X immediately left of the "?",
+the same size, turning white on hover; the name stays centered and does not run under the X, even for
+a long name with the orange TEST tag. Hover the X → the tooltip names the container and says a click
+disables it, its settings are kept, and Enabled on the Containers page brings it back. No "Anchoring
+disallowed" error, on an attached container too. Result:
+
+**CONT-14. Closing a container.** Left-click the X → that container's auras, placeholders, outline
+and strip disappear, nothing else changes, and one chat line names it and says how to bring it back.
+Containers → General with it selected → **Enabled** is unticked; tick it → the container and its strip
+return at the same stored position. With that page already open on it, click its X → the checkbox
+unticks live. Close a container others are attached to → the followers re-place exactly as when
+Enabled is unticked in the panel. Result:
+
+**CONT-15. What the close mark does not do.** `/am unlock`, left-drag starting on the X → nothing
+moves, and releasing off the X does not disable it. In combat, unlocked, click an X → the container
+hides with no Lua error, no taint and no `ADDON_ACTION_BLOCKED`. Result:
+
+**CONT-16. The strip is never wider than its container.** Five one-bar-wide Bars containers with long
+names, `/am unlock` and `/am test` → every strip's left and right edges line up with its bars; a name
+too long ends in "..." with the orange TEST tag still whole after it, and the X and "?" fully visible.
+Hover a shortened strip → the tooltip's title is the whole name. `/am test off` → the name without the
+tag, shortened only if it still does not fit. Rename one to a short name → it is drawn whole at once.
+A one-icon Icons container with a long name → its strip keeps the width of its name and marks,
+running past the icon. No clipped label on a handle's first show. `/am lock` → no strips. Result:
+
+**CONT-17. TEST on the handle.** `/am test`, then `/am unlock` → every handle reads its name, then an
+orange **TEST**; end test mode → the tag goes on the next frame and the strip narrows. Result:
+
+**CONT-18. Test mode.** `/am test` → every container fills with placeholder auras and its real auras
+are hidden, without unlocking; an empty container's outline gives way to them. General → Master
+controls → **Test mode** does the same. `/am test off` → the placeholders go and real auras return.
+Start test mode and pull a mob → test mode ends and the checkbox unticks. `/am test` in combat → one
+gray line, and nothing starts. Result:
+
+**CONT-19. Each container previews its own kind.** `/am test` on the starter set → *Player debuffs*
+and *Target debuffs (mine)* show Shadow Word: Pain, Hex, Frost Fever, Deadly Poison (3 stacks),
+Rupture (running out, 4 s) and Mortal Wounds (no timer), each with its real icon and no question-mark
+icon. *Player buffs* shows Power Word: Fortitude, Bloodlust, Shield Wall, Ignore Pain and Well Fed.
+Result:
+
+**CONT-20. Switching kind while previewing.** In test mode, switch a container's **Aura type**
+between Buffs and Debuffs → the placeholders swap without a `/reload`, and a container attached to it
+still sits just past the last placeholder (six for debuffs, five for buffs). **Max auras** 3 on a
+debuff container → only Shadow Word: Pain, Hex and Frost Fever. Result:
+
+**CONT-21. Weapon enchant placeholders.** A container showing only Weapon enchants (`/am new
+enchants`), before applying a real enchant, `/am test` → it previews weapon enchants (Windfury Weapon,
+Flametongue Weapon running out, Instant Poison with no timer), not buffs: one placeholder per slot
+ticked under General → Spell Categories → *Weapon enchants* (Main hand, Off hand and Ranged, all
+ticked by default, so three). Untick **Ranged**, then `/am test off` and `/am test` → two
+placeholders; tick it again. A Player buffs container with Weapon enchants also on still previews
+buffs. A Text container of enchants under Size to fit sizes to those names. Result:
+
+**CONT-22. Unit swaps.** With a target container, change target several times; with a focus
+container, set and clear focus → each shows the new unit's auras at once, never the previous unit's.
+Summon and dismiss a pet with a pet container → it follows. Result:
+
+**CONT-23. The filter strings the empty prediction reads.** With a few buffs up, for each category
+token a container uses, `/dump C_UnitAuras.GetAuraSlots("player","HELPFUL|BIG_DEFENSIVE",1)` (and the
+same with the other tokens, `HELPFUL|PLAYER`, `HARMFUL|PLAYER` on a target) → a slot comes back
+exactly when the engine shows a matching aura. A token the client rejects raises; the prediction then
+answers not knowable, and that container never shows its placeholder outline. Result:
+
+**CONT-24. The empty outline fills and empties.** #3 with a follower, unlocked, no target → its
+outline shows, the follower below it. Target something and apply a DoT → within a moment the outline
+hides and the follower sits past the last aura. Let it expire or clear the target → the outline comes
+back and the follower returns under it. Result:
+
+**CONT-25. An empty enchant container.** A Weapon enchants container with a follower, unlocked, no
+oil → its outline shows. Apply an oil → it hides and the follower sits past the enchant. Let the oil
+run out → the outline comes back within a second of it lapsing. Result:
+
+## Filters and spell categories
+
+**FILT-1. Cast by.** Filters → General → **Cast by** → *Me (and my pet)* shows only your auras;
+*Anyone but me* the rest. Result:
+
+**FILT-2. The Filters tabs and the priority block.** On a buff container, Filters → **[ General ][
+Categories ][ Overrides ][ Sorting ]**, no Spell lists tab on any aura type. **General** ends, past
+Cast by, Duration and Max duration, with a **Filter priority logic** heading, the lead-in "Highest
+priority first:" and the five numbered rank lines: each rank on its own line, a hairline gap between
+them, no word cut off, no horizontal scrollbar. The rank lines read at the same size as the Whitelist
+and Blacklist notes on Overrides, and the lead-in is in the normal font's color. Categories and
+Overrides carry no lead-in or rank line: Categories opens on its first grid, Overrides on
+**Whitelist**. A narrower WoW window → each line still wraps cleanly on its own. Result:
+
+**FILT-3. The category grids.** On a buff container, Filters → **Categories** opens straight onto two
+grids, **Blizzard Categories** then **Spell Categories** (its last row **Uncategorized**), each headed
+once, with columns **Show · Hide** and the category name (hover it for its description). Click
+**Hide** on a line → `/am get container.filter.categories.<key>` prints `Hide`. Right under the grid
+sits **Hide enchants without a duration**, tied by name to the **Weapon enchants** row above it.
+Result:
+
+**FILT-4. A debuff container's Categories.** Switch the container's aura type to Debuffs → four
+grids, **Blizzard Categories**, **Spell Categories**, **Dispel Types** and **Who Cast It**. Above the
+Spell Categories grid the line reads "These are the lists on General -> Spell Categories, shared by
+every container."; the grid holds **Hard CC (loss of control)**, **Soft CC (roots & snares)** and
+**Racials**, each with a **See spells** link, then **Uncategorized** with none (plus any debuff
+category of your own); under it a note reads "Hard CC and Soft CC only work on a hostile target or
+focus. …". Result:
+
+**FILT-5. The grid cells.** Look at a lit cell (Show or Hide) → an ordinary checkbox check, the same
+shape and color as every other checkbox in the panel, no colored fill. Click the other cell on the
+row → the check moves there in full; at no point are both or neither lit. A row set to Show → its
+Hide cell looks exactly as clickable as any unlit checkbox, not grayed or lower in contrast. Set
+**Uncategorized** to **Hide** → every other row's Hide column still looks the same and still clicks,
+live. Result:
+
+**FILT-6. Show and Hide by category.** On a buff container set *Group buffs* to **Hide**, every other
+category (Uncategorized included) at Show → Mark of the Wild, Arcane Intellect or Battle Shout
+disappears from it, nothing else changes. Set *Defensive cooldowns* to **Hide** on a defensive that
+is also in *Cancelable* (left at Show) → it still shows (rank 3: a Show elsewhere rescues it). Set
+every category to **Hide**, Uncategorized included, with the whitelist empty → the container goes
+empty and shows "These filters can never match anything."; set *Defensive cooldowns* back to Show →
+only defensive cooldowns appear. Set every category back to Show except *Uncategorized* → a
+cancelable buff in none of the profile's Spell Categories lists disappears too. Result:
+
+**FILT-7. Many groups, nothing lost.** On a *player debuffs* container, set one debuff category (say
+*Dispellable by anyone*) to **Hide** and leave the rest at **Show** → the container compiles to one
+group per Show category plus a catch-all, not one. Apply enough different debuffs to populate several
+categories → every one you expect appears: a debuff only in *Dispellable by anyone* disappears, one
+in *Dispellable by anyone* and *Boss debuffs* still shows (rank 3); nothing missing, garbled or
+duplicated. `/am perf` a few seconds with the container populated, then again with every category at Show → report if the
+many-group container is far slower per apply, or if a group's auras never draw though its category
+has live spells (the client capping `AddAuraGroup` calls). Set Sort by to Time Remaining → auras are
+ordered category block by category block, each block sorted, not one run across the container, as
+the Sorting row's description says. Result:
+
+**FILT-8. Who Cast It covers every debuff.** On a debuff container set both *From any player* and
+*From non-players* to **Hide**. Apply a debuff to the dummy → it disappears. Have a pet, an NPC or
+another player apply a different debuff to you or the dummy → it disappears too. Any debuff that still shows
+with both Hidden reports its `isFromPlayerOrPlayerPet` as neither true nor false: report it, with the
+spell. Result:
+
+**FILT-9. Show all and Hide all.** Filters → Categories on a buff container → **Show all** and **Hide
+all** under each grid's heading. Hide all on Spell Categories → every row reads Hide, and the
+container empties at once, in one pass with no flicker per row. On Player debuffs → the Dispel Types
+and Who Cast It headings each have the pair too; hover one → "Set every category in this section to
+Show (Hide), for this container.". Hide all under Dispel Types → only its rows read Hide; Hide all
+under Who Cast It → only its two rows; Show all on each → back. #3's rows were never touched. A buff
+container shows only its two pairs. Result:
+
+**FILT-10. See spells lands on its own category.** Filters → Categories → Spell Categories, click
+**See spells** on a row that is not the first (*Support* or *Utility*) → General → Spell Categories
+opens with that category selected in the **Category** dropdown. From a different category on a
+different container (*Racials*) → it lands on Racials. **See spells** on the **Weapon enchants** row →
+Weapon enchants selected, showing the three slot toggles. Result:
+
+**FILT-11. The Spell Categories tab.** General → **Spell Categories** → the **Category** dropdown
+with **Restore this category's starter list** on the dropdown's line, right half. On a category of yours,
+the rename box and **Delete** sit directly under the picker, with no heading between them, then
+**Make a new category**, then **Spells in this category** with the library's rule under it, then the
+**Add a spell** box and the list; each block is separated by the gap under it. Pick **Healing** → no
+name box, no Delete, no heading and no sentence between the picker and **Make a new category**.
+Pick **Weapon enchants** → the lead-in says it matches temporary enchants and there is nothing to
+add or remove, a **Weapon slots** heading sits over the three slot toggles, and no "Spells in this
+category" heading. Result:
+
+**FILT-12. Starter lists.** Every spell row carries an X on its left and no checkbox; check the X's
+height and vertical alignment against the name (the library's Icon widget is 26 px tall). Remove a
+starter spell from *Defensive cooldowns* with its X, cast it → it no longer shows in any container
+showing Defensive cooldowns. Type a spell of yours by name into **Add a spell** → it is listed with
+its icon; cast it → it shows in a container showing Defensive cooldowns. **Restore this category's
+starter list** → back to shipped. Filters → Overrides lists carry the X too, and it removes the
+spell. Result:
+
+**FILT-13. Lists read alphabetically.** The **Category** dropdown offers **Defensive cooldowns**,
+**Hard CC (loss of control)** and **Soft CC (roots & snares)**, the parentheses and `&` as written in
+the dropdown, its tooltip and on Filters → Categories. Pick **Soft CC (roots & snares)** → the spells
+read in name order (Chains of Ice, Concussive Shot, Crippling Poison, …), not Frost Nova first. Add a
+spell of yours by name → it lands in the alphabet among the starters. An id the client cannot name
+reads "Unknown spell <id>" at the end, and the order does not shuffle a second after the tab opens.
+**Wake of Ashes** is in neither Hard CC nor Soft CC; cast it with a Hard CC container up → nothing is
+drawn for it. Result:
+
+**FILT-14. The add box takes a link.** Click into **Add a spell** and shift-click a spell in your
+spellbook → its link lands in the box; Enter → the spell is added with its icon and name. The same on
+Filters → Overrides → Whitelist. If the shift-click goes to the chat box instead, report it. Result:
+
+**FILT-15. Suggestions while typing.** Type `rej` into **Add a spell** → a dropdown under the box
+lists Rejuvenation with its icon and id, plus any matching spell in your spellbook, a ranked spell
+showing its rank ("Rank 2"). Down, then Enter → that spell is added once and the dropdown closes;
+type again and click a row → the same. A spell you know that is on no list of this addon is suggested
+too. The same on Filters → Overrides → Whitelist. Result:
+
+**FILT-16. A name the lists know resolves without the spellbook.** Type the full name of a category
+starter your character does not have (*Ironbark* on a non-druid), Enter → it is added. Add a spell by
+id to Filters → Overrides → Blacklist, then type its name on General → Spell Categories → it resolves
+too. Result:
+
+**FILT-17. A shared name is refused until picked.** Add two spells sharing a name by id to the
+Overrides Whitelist (the *Blood Fury* racials 20572 and 33697), then on General → Spell Categories
+type `Blood Fury` and Enter without picking → nothing is added, the line under the box reads "Several
+spells are named 'Blood Fury' — pick one from the list, or use the id.", and the dropdown lists each.
+Pick one → only it is added. Result:
+
+**FILT-18. An unknown name.** Type `Zzz Spell`, Enter → nothing is added, and the line under the box
+reads "No spell named 'Zzz Spell' in your spellbook. Names work for spells in your spellbook and ones
+this list knows; otherwise use the id or shift-click a link." The same in the Whitelist's **Add a
+spell** box on Filters → Overrides. Result:
+
+**FILT-19. The add box's tooltip.** Hover **Add a spell** → the tooltip says "The id has to be the one
+the AURA carries, which is not always the one you cast." before the sentence on where a name can come
+from, which ends with the same hint as FILT-18 and promises nothing about names the game cannot find.
+Result:
+
+**FILT-20. A cast id swapped for its aura.** Aura Master filters on the id an aura carries, and many
+spells are cast as one id and land as another (`defaults/CastToAura.lua` carries the mapping). Add
+**Corruption** by name or as `172` → the entry appears as **146739**, and chat says "Corruption (172) is
+cast, but the aura it applies is … — added 146739 instead, which is what the filter can match." The
+swap is never silent. Result:
+
+**FILT-21. A cast id with several auras.** Add **Renewing Mist**, or `115151` → it is stored exactly
+as typed, and chat lists the candidates: "Renewing Mist (115151) never appears as an aura, so this
+entry will match nothing. Auras with that name: … Add the one you meant.", the list giving 119611,
+144080, 448430, 1238851 and 1242480, each as its name then its id in brackets. It does not pick one.
+Add `119611` → it goes in silently; remove 115151. Result:
+
+**FILT-22. An unknown id is never refused.** Add `999999` → it is added, with nothing said. Result:
+
+**FILT-23. The note on a stored entry.** With 115151 still in a list, reopen the panel → its row
+carries a gray second line naming the candidate auras, on a full-width row of its own (the library's
+rule for notes). Result:
+
+**FILT-24. The Overrides lists take the same path.** Filters → Overrides → add `115151` to the
+whitelist → the same chat line as FILT-21. If the id also has a verdict note, the two are joined, the
+never-matches sentence first. Result:
+
+**FILT-25. The corrected shipped ids.** Each now matches: **Levitate** on yourself → a container
+covering *Utility* shows it (111759); **Fear** on the dummy → a *Hard CC* debuff container shows it
+(118699); **Spirit Link Totem**, standing in it → the container covering it shows it (325174);
+**Ursol's Vortex**, dummy inside it → a *Soft CC* container shows it (127797). `35546` Fatal Flourish
+is knowingly still the cast id and matches nothing; if you ever see a lasting Fatal Flourish debuff,
+note its id. Result:
+
+**FILT-26. Overrides.** Add a buff to the **Blacklist** → gone. Add a buff by name to the
+**Whitelist** on a container whose categories exclude it → it is listed with its icon and id, and it
+shows. Add the same id to both lists → the Blacklist entry stays but the aura shows anyway, with a
+gray note under the Blacklist entry saying so; remove it from the Whitelist only → the note goes and
+the aura is hidden again. Whitelist a spell every category of the container sets to Hide → a gray
+note under that entry names the category (or categories) it overrides. Result:
+
+**FILT-27. A long note wraps under its entry.** Whitelist a spell whose categories are all Hidden on
+a container where the note names several ("Shown here by the whitelist, overriding Defensive
+cooldowns, Cancelable (set to Hide).") → the note wraps under the entry's name and id in gray,
+overlapping neither the icon, the id nor **Remove**, and never pushing onto the next entry. Result:
+
+**FILT-28. Max duration.** **Max duration** `60` → hour-long buffs disappear, short ones stay,
+permanent ones go. Result:
+
+**FILT-29. Only auras without a duration.** **Duration → Only auras without a duration** on a player
+buff container → timed buffs disappear out of combat once learned; a brand-new timed buff cast in
+combat may show once. `/am forgettimed` → they reappear until relearned out of combat. Result:
+
+**FILT-30. Warnings.** Whitelist a spell on a *player debuffs* container → Filters shows the orange
+"ignored for debuffs on your own character or pet" line. On a *target buffs* container → "only apply
+while the unit is friendly". Set every category to **Hide** but *Defensive cooldowns*, then on
+General → Spell Categories remove every *Defensive cooldowns* spell → "These filters can never match
+anything."; Restore afterward. Result:
+
+**FILT-31. Make a category.** FILT-31 to FILT-39 run in order, on a player-buff bar container and a
+target-debuff container. General → **Spell Categories** → under **Make a new category**, type
+`Cooldowns I watch`, leave **Aura type** on *Buffs*, click **Create category** → the dropdown jumps to
+**[Buffs] Cooldowns I watch (yours)**, `[Buffs]` in muted green and `(yours)` in muted gold; a line
+under the rename box and in chat says it was created, empty, and where to set it to Show or Hide. The
+list is empty, and there is no Restore button on the picker's line. Result:
+
+**FILT-32. It is a real category everywhere.** Filters → Categories on the buff container → the Spell
+Categories grid holds **Cooldowns I watch (yours)** with Show lit, after the shipped lists and above
+**Weapon enchants** and **Uncategorized** (still last). `/am list` shows the row (no `(yours)`), and
+`/am get container.filter.categories.user…` answers **Show**. The debuff container's grid has no such
+row. Result:
+
+**FILT-33. It filters.** Add a buff you can cast on yourself to it. On the buff container Hide every
+other category (Hide all on both grids, then this one back to Show) → cast the buff → it is drawn,
+and your other buffs are not. Set the category to **Hide**, Uncategorized still Hidden → the buff
+goes. Result:
+
+**FILT-34. The overlap mark.** Add a spell already in a shipped buff category (Power Word: Shield,
+in *Defensive cooldowns*) → one chat line naming the other category and saying an aura in two
+categories is drawn once, under the first of them a container sets to Show. The entry reads `(X)
+[icon] Power Word: Shield (17) (also in 1)`, the count in the id's gray on the entry's own line, its
+neighbor still sharing the row. Hover it → the spell tooltip, with **Also in: Defensive cooldowns**
+added. In *Defensive cooldowns* the same spell reads `(also in 1)`, its tooltip **Also in: Cooldowns I
+watch (yours)**. On a very long name at a narrow panel the `(also in N)` is cut off first; the
+tooltip still names the categories, and a wider window brings it back. Result:
+
+**FILT-35. Rename it.** Type `Big cooldowns` in **Rename this category**, Enter → the dropdown, the
+box, the Filters grid and `/am list` read the new name; the box shows what is stored; the answer line
+says it was renamed and names the old name. The spells are still there, and the grid's Show or Hide is
+unchanged. Result:
+
+**FILT-36. The answer line knows what it is about.** With a line under the rename box, switch the
+dropdown to another category → the line is gone. Make it say something again, close and reopen the
+settings on the same tab → gone. Again, then Profiles → switch profile → come back → gone. Hopping to
+General → Display and back keeps it. Result:
+
+**FILT-37. An empty or duplicate name.** Clear the rename box, Enter → a line saying a category needs
+a name, and the box snaps back to the stored name. Create a second category with a name you already
+used → both are kept, the line says so, and the dropdown shows two entries reading the same. Result:
+
+**FILT-38. Delete it.** Pick the second category, **Delete this category** → the confirmation names it
+and says the spell list goes, every container in every profile forgets whether it showed or hid it,
+and anything it hid becomes visible again through Uncategorized. **No** → nothing changes. **Yes** →
+the tab shows another category, a line says which was deleted and that the tab moved, the Filters
+grid no longer holds the row, and `/am get` on its old path answers that the setting is unknown.
+Result:
+
+**FILT-39. A deleted category stops filtering.** Set the first category to **Show** on the buff
+container with every other category Hidden, and confirm its buff is drawn. Delete it → the container
+redraws: the aura comes back only through **Uncategorized** if that is Show. `/reload` → it stays
+gone from the dropdown and the grid. Result:
+
+**FILT-40. Weapon enchants on a buff container.** Apply a temporary weapon enchant (an oil, a stone,
+a poison) → *Player buffs* shows it after the buffs, its **Weapon enchants** row on Filters →
+Categories being Show by default. Set that row to **Hide** → the enchant drops out; **Show** → it
+returns. **Hide enchants without a duration** hides a permanent one. Result:
+
+**FILT-41. `/am new enchants`.** `/am new enchants` → a player buff container named *Container N*
+whose Filters → Categories are all Hide but **Weapon enchants**: it shows your enchants and no buff.
+`/am new enchants text` → the same as Text, showing the enchant's name and time. Result:
+
+**FILT-42. The weapon's name after a fresh login.** Apply a temporary weapon enchant (an oil, a stone,
+a poison) so *Player buffs* shows it. Exit the game completely and log back in (not `/reload`) → within
+about two seconds of the loading screen ending, the enchant bar shows the weapon's name, not only its
+icon and time. Then `/am debug on` and take a loading screen (a hearthstone, a portal or a dungeon
+entrance) → the console shows `[Apply] enchants reset on N container(s) after the loading screen`, N
+counting the shown containers with an enchant on, and the name is still there. If a name is ever
+blank, run `/dump C_Item.GetItemName(ItemLocation:CreateFromEquipmentSlot(16))` and note what it
+prints on this line. Result:
+
+## Layout
+
+**LAYOUT-1. Tabs, and Anchor drawn by mode.** Layout → **[ Frame ][ Anchor ][ Growth ][ Mouse ][ Label
+]**. Anchor reads **Attach to**, then only the subsections that mode uses, with no Attach to the
+screen button. *Screen* → only **Screen** under it, no empty headings; *Named frame* → **Named frame**
+(Frame name with **Pick a frame…** beside it) and **Offset**; *Another container* → **Another
+container** and **Offset**. Each redraws at once. With the page open, `/am set container.attach.mode
+screen` → it redraws to Screen alone; `/am get container.attach.x` still answers while Offset is
+hidden. Result:
+
+**LAYOUT-2. Growth flips without a reload.** Out of combat and out of test mode: on a screen bar
+container, Layout → Growth → Grow vertically Down → Up → the bars stack up from where the first one
+sat, nothing hangs below it, and the handle (`/am unlock`) moves below the block; back to Down → they
+stack down again. On an icons container, Grow horizontally Right → Left and back → likewise,
+sideways. On a container attached to `PlayerFrame`, the same two flips → the first aura keeps its
+attached corner and the others grow the new way. A follower's flip is LAYOUT-17. Every flip shows
+real auras at once. Result:
+
+**LAYOUT-3. The Point rows and the facing-growth hint.** On a container attached to `PlayerFrame`
+(Named frame): This container anchor point's tooltip says it is the corner of the container's first
+aura that is attached (its full size is secret), the Named frame anchor point the frame's corner. Set
+This container Bottom left, Grow vertically Down, Grow horizontally Right → a hint under the rows
+reads "Point is Bottom left and Grow vertically is Down, so the auras grow back over the frame this
+container is attached to. Set Grow vertically to Up on the Growth tab instead." Top left with Up →
+the same hint suggesting Down; a Left point with Grow horizontally Left (a Right point with Right) →
+the horizontal hint; Bottom left with Down and Left → both lines, the vertical first. A pair that does
+not face → no hint, and a change to the point or the growth redraws it at once. Screen and Another
+container show no hint; the Screen rows' tooltips speak of the first aura too. Result:
+
+**LAYOUT-4. Attach to another container.** Layout → Anchor → Attach to → *Another container*, pick one
+→ it follows that container as it grows and shrinks. Attach A to B, then B to A → the second is
+refused. Result:
+
+**LAYOUT-5. The growth-conflict popup.** Set B to grow Up and A to grow Down, then B → Another
+container → pick A → a popup names B, A and the changed growth. **Cancel** → the dropdown shows None
+and nothing moves. Pick A again → **Attach** → B attaches and grows down; its Growth tab shows the
+dimmed inherited values, and A's Growth tab says one container follows it. With another container
+attached to B, the popup adds that it follows too. Attach to → Screen → B grows up again and one chat
+line says so. `/am set container.attach.container <A's id>` on a container of differing growth in
+container mode → no popup, one chat line. Open the popup, enter combat, press **Attach** → refused
+with a gray line and nothing attaches. Result:
+
+**LAYOUT-6. The frame picker.** **Pick a frame…** → the settings close, and a blue 2px outline tracks
+the named frame under the cursor, its name beside it; move across several frames, aura buttons
+included → the outline follows each, no Lua error. Left-click your player frame → the container
+attaches to it and the settings reopen on Containers → Layout with the frame name filled in. Repeat
+and press **Escape** → canceled, and the settings reopen on Containers → Layout. `/am pick` does the
+same from chat. In combat, `/am pick` is refused with the gray "cannot pick a frame during combat —
+attaching to a frame waits until combat ends" line (the button is under the combat cover, COMBAT-3).
+Result:
+
+**LAYOUT-7. A frame that is not there yet.** Attach to a frame name belonging to an addon that loads
+on demand → the container sits at its screen position until that addon loads, then moves. Attach to
+back to *Screen* → it detaches. Result:
+
+**LAYOUT-8. A named frame's two anchor points.** Attach to *Named frame* → below Frame name one line
+reads **Named frame anchor point** on the left and **This container anchor point** on the right, each
+holding its own corner: a container set on an older build to Bottom left / Top left (container /
+frame) reads Top left on the left and Bottom left on the right. Pick a corner in each → the container
+moves at once. The Screen section still reads Point / Relative point. Result:
+
+**LAYOUT-9. The two anchor-point rows.** On the chain, select B, Layout → Anchor → below **Parent
+container** sit **Parent container anchor point** and **This container anchor point**, and no
+**Side** row. Open each → the first entry reads "Automatic (<point>)", naming the point Automatic
+gives, then the nine points: Top left, Top, Top right, Left, Center, Right, Bottom left, Bottom,
+Bottom right. Pick one in each → B moves at once, and the line beside Parent container reads "Its
+<this point> joins the <parent point> of '<A's name>'". A pair that looks odd (Bottom right to Top
+left) is stored and drawn as asked: no refusal, no grayed entry, no note. With a pick in one row, open
+it again → its Automatic entry still names Automatic's own point. Automatic in both → B returns to its
+default place. Result:
+
+**LAYOUT-10. Text under Text.** On the chain, both rows Automatic → each follower sits one Spacing
+below its parent, centered under it, the rows reading "Automatic (Bottom)" (parent) and "Automatic
+(Top)" (this). Set B's Justify to Left → it lines up on A's left (Bottom left / Top left); Right → on
+its right. Change A's Width and toggle Size to fit → the centered ones stay centered. Put Justify back
+to Center. Result:
+
+**LAYOUT-11. Icons under Icons.** An Icons parent A filling rows growing right and down, an Icons
+child B, both rows Automatic → B sits below A, its first icon under A's first icon, left edges
+aligned: "Automatic (Bottom left)" and "Automatic (Top left)", and the line reads "Its Top left joins
+the Bottom left of 'A'". Give A a **Per row** that wraps it → B sits below A's last line. Set A's Grow
+horizontally to Left → B mirrors to A's right end ("Automatic (Bottom right)" / "Automatic (Top
+right)"), with no `/reload`; back to Right → it returns. Result:
+
+**LAYOUT-12. Bars under a centered Text, and growth up.** A Bars child attached to a Text parent
+justified Center, both rows Automatic → the bars are centered under the text ("Automatic (Bottom)" /
+"Automatic (Top)"). Parent Justify Left → the bars start on the parent's left; put Center back. Set
+the parent's Grow vertically to Up → the bars sit centered above the text, the rows reading
+"Automatic (Top)" (parent) and "Automatic (Bottom)" (this), and the strips and labels mirror as in
+LAYOUT-22. Set it back to Down. Result:
+
+**LAYOUT-13. An odd pair.** On B pick This container Center and Parent container Top right → B's
+first element is centered on A's top right corner, plus its X/Y offsets and no Spacing gap.
+`/am unlock` → the chain does not spread for B: nothing moves to make room, B is not pushed clear of
+A's strip or label, and B's strip and label sit on B's own before side, where they may overlap A.
+`/am lock` → B does not move. C, on Automatic below B, follows B. Put both rows back to Automatic.
+Result:
+
+**LAYOUT-14. A picked pair that is a side.** On B pick This container Top and Parent container Bottom
+→ it behaves as the Automatic Bottom: one Spacing below A, centered; unlocked, the chain spreads for
+B's strip and label, and closes up on lock (LAYOUT-19, LAYOUT-21). On an Icons follower with its
+parent's label on, pick This container Top left and Parent container Top right → it is pushed clear
+of the parent's label as in LAYOUT-23. Result:
+
+**LAYOUT-15. The points from chat.** `/am select` B, then `/am set container.attach.relPoint
+bottomright` → accepted in lower case, B moves, and the Parent container anchor point row reads
+Bottom right. `/am set container.attach.childPoint Top` → accepted; `/am get
+container.attach.childPoint` reads `TOP`. `/am set container.attach.childPoint auto` and `/am set
+container.attach.relPoint AUTO` → both Automatic, `/am get` on either reads `auto`. `/am set
+container.attach.childPoint middle` → an `Invalid value` line, and nothing moves. `/am set
+container.attach.edge after-end` → "Setting not found: container.attach.edge". `/am reset
+container.attach.relPoint` after a pick → back to Automatic. Result:
+
+**LAYOUT-16. No join mark, and the join in the tooltip.** On the chain and the pairs of LAYOUT-11 and
+LAYOUT-13: `/am unlock` → no dot, diamond or other mark on any join; `/am test` → none; `/am lock` with
+test mode on → none. Hover B's strip while unlocked → the tooltip adds "Joined to the <point> of
+'<A's name>'. Change the anchor points on Layout > Anchor." A container on the screen or a named frame
+adds no such line. `/am test off`. Result:
+
+**LAYOUT-17. The inherited flow.** Attach B to A where A fills columns growing down → B continues
+below A's last element. Set A's Grow vertically to Up → B moves above A, none of B's own settings
+changed, and without a reload B's own auras stack up from its first element too. B's Growth tab →
+above the dimmed Fill, Grow horizontally and Grow vertically rows, which show A's values, it reads
+"Fill and growth follow '<A's name>' because this container is attached to it." in dim gold (the gold
+of "(yours)" on General → Spell Categories), with a row's gap before Fill; Spacing stays live. A's
+Growth tab shows its follower-count line. Set B's Attach to back to *Screen* → B's own flow returns.
+Result:
+
+**LAYOUT-18. The seam.** Locked, real auras, B attached to A, A a column growing down → the gap from
+A's last bar to B's first equals the gap between B's bars (2px at Spacing 2, not 4). A's Grow
+vertically Up → B sits above A, one B Spacing between them, no overlap. A an icon row growing right →
+B starts under A, one B **Line spacing** below A's last line. B's Spacing 10 → B's inner gaps and the
+seam change together, and A does not move. B's Scale 1.5 with A at 1 → the seam still equals B's
+on-screen gap. `/am test` → the seam between the placeholders equals the locked one. B's Y offset -3 →
+B drops 3px further. Result:
+
+**LAYOUT-19. An unlocked chain spreads.** On the chain, labels off, test mode off, `/am unlock` → one
+column, top to bottom: A's strip, A's block, B's strip, B's block, C's strip, C's block. No strip sits
+beside the column or over another container's block, each strip is lined up with its own block, and
+each strip sits one Spacing past the block before it. With none of the three showing an aura, each
+faint outline sits in its own slot, strip between them, in the same order. A container attached to
+`PlayerFrame` and one attached to another container, unlocked → no Lua error in or out of combat.
+Result:
+
+**LAYOUT-20. A chain in test mode.** On the chain, unlocked, `/am test` → the same order around the
+placeholder blocks: each follower's strip one of its Spacings past the block before it and its
+placeholders starting right under its strip, each block enclosed by an outline of its own, and no
+placeholder under another container's strip. `/am lock` with test mode on → the strips and outlines
+go, and each follower closes up to one Spacing past the block before it. `/am test off` while locked
+→ no outline at all; unlocked → only an empty container's one-element outline. Result:
+
+**LAYOUT-21. The chain closes up on lock.** From LAYOUT-19, `/am lock` → every strip goes, and the
+chain closes up: B one Spacing below A's last line, C one below B's, plus any X/Y nudge. `/am unlock`
+→ it spreads again at once. Toggle three times; enter combat unlocked → no Lua error, taint or
+`ADDON_ACTION_BLOCKED`. Result:
+
+**LAYOUT-22. Growth up mirrors the chain.** Labels on for all three, set A's Grow vertically to Up →
+B sits above A and C above B; unlocked, each reads bottom to top strip, label, block. `/am lock` →
+each label sits directly below its own block, centered, and the followers close up. `/am test` → the
+same around the placeholders. Set it back to Down. Result:
+
+**LAYOUT-23. A side follower.** An Icons A, one icon wide, with a long name and its label on; an Icons
+B attached This container Top left to Parent container Top right (on A's right), label on. Unlocked →
+B's strip and label sit above B, and B is pushed down past A's strip and label rows, so neither of
+B's overlaps A's. `/am lock` → B stays one label row lower while A's label shows, so A's name never
+runs over B's; untick A's label → B sits level with A. Put B on A's left (This container Top right,
+Parent container Top left) → B is never pushed, and its strip lines up with its edge that faces A,
+over none of A's elements. With C below B, C's strip sits above C, covering none of B's elements.
+Put B back on A's right and untick both labels: while A's strip runs past its one icon (the long
+name), unlocked → B sits one strip row lower than A, clear of A's strip; `/am lock` → B moves back
+level with A. When A's strip is no wider than its icon, B sits level unlocked too. Result:
+
+**LAYOUT-24. One geometry.** With B below A, on A's right and on A's left in turn, and A showing live
+auras: locked and unlocked → B sits on the same side of A (below, it sits one strip row further down
+while its strip shows); in test mode → on the same side of A's placeholder block; with A empty and
+unlocked → on that side of A's one-element outline. Entering combat unlocked puts B back on A's
+engine. Result:
+
+**LAYOUT-25. An empty parent, no overlap.** *Player buffs* with five buffs up and an enchant container
+attached to it, unlocked → Player buffs shows no outline, and the follower sits past its last bar,
+covering none. `/am lock` and `/am unlock` → nothing moves; `/am test` on and off → the placeholders,
+then the live layout. Two chained Text containers, the first empty, unlocked, with Size to fit on and
+off → the strips and outlines never overlap. Result:
+
+**LAYOUT-26. An empty chain in combat.** Unlocked, with an empty chain showing outlines, pull a dummy
+→ at the pull every follower moves onto its parent's engine and the outlines hide; leave combat →
+they return. `/am lock` and take a perf capture while buffs change → no `emptyPass` bucket appears.
+Result:
+
+**LAYOUT-27. A centered chain holds still when its middle link is empty.** Three Bars containers in
+one column growing up, X (root, the target's crowd control) ← Y (your buffs on the target) ← Z (your
+debuffs on the target), each joined This container Bottom to Parent container Top (and once more
+Bottom right to Top right). Target a unit with your debuffs but no buff of yours, so Y is empty →
+locked, out of combat, Z sits straight above the column, its bars lined up with X's; `/am unlock` →
+still; relock and pull a dummy → still, through the fight; unlocked in combat → still. Give Y an aura
+and let it fall off → Z moves only up and down, never sideways. Result:
+
+**LAYOUT-28. An empty link adds nothing.** A column of Bars containers growing up from a named frame:
+D on the frame at Y 2, E on D and F on E (This container Bottom to Parent container Top), G on F
+(Automatic), and a reference R on the same frame at Y 2. This line prints each bottom (put your ids in
+place of R, D, E, F and G's 10, 22, 21, 20, 19):
 
     /run local N=LibStub("AceAddon-3.0"):GetAddon("AuraMaster")for _,i in ipairs{10,22,21,20,19}do local c=N.ContainerManager.instances[i]if c then print(i,c.anchor:GetBottom())end end
 
-275. **Locked and live, with #22, #21 and #20 empty.** `/am lock`, out of combat, on a target where
-     none of #22, #21 or #20 shows an aura. → #19's bottom bar is level with #10's, with no 3px step
-     (it was 3px higher). The check line prints the same bottom for 10, 22, 21, 20 and 19 (it printed
-     281.99996948242, 283, 283.99996948242 and 285 for 22, 21, 20 and 19). No Lua error. Result: **PASS** (owner, 2026-09-26)
-276. **After an aura on #20 expires.** Let #20 show one aura. → #19 sits one bar (plus its seam)
-     above where it was. Let the aura expire. → #19 drops back level with #10, and the check line
-     again prints one bottom for 10, 22, 21, 20 and 19. An engine that held an aura and emptied adds
-     nothing either. Result: **PASS** (owner, 2026-09-26)
-277. **In combat.** Stay locked and pull a target dummy with #22, #21 and #20 empty. → #19's bottom
-     bar stays level with #10's through the fight, and it moves only when an aura appears or ends on
-     a link, by exactly that link's bars. Judge by eye: in combat the check line can read secret. Result: **PASS** (owner, 2026-09-26)
-278. **Populated links and the first aura are where they were.** Give #22 two auras. → #19 sits
-     exactly two of #22's bars (plus the seams) above #10's level. #22's first bar starts exactly
-     where the empty #22 sat, with no 1px gap or overlap against the named frame. On any container
-     on the screen, the first aura is where it was before the fix. A centered join (#20 on #21) is
-     still centered across the column, with no sideways shift of half a pixel or more. `/am unlock`
-     and `/am test` → the placeholders and the unlocked chain look as they did before the fix. No
-     Lua error. Result: **PASS** (owner, 2026-09-26)
+`/am lock`, out of combat, on a target where D, E and F show nothing → G's bottom bar is level with
+R's, with no step, and the line prints one bottom for all five. Let F show one aura → G sits one bar
+(plus its seam) higher; let it expire → G drops back level, one bottom again. Result:
 
-## Settings redesign (#6)
+**LAYOUT-29. An empty link in combat.** Locked, pull a dummy with D, E and F empty → G's bottom bar
+stays level with R's through the fight, moving only when an aura appears or ends on a link, by exactly
+that link's bars. Judge by eye: in combat the line can read secret. Result:
 
-**Owner run, 2026-09-26:** S2, S3, S4, S5, S7, S8, S11 and S16 passed, from the owner's report and screenshots. S1, S6, S9, S10 and S12-S15 were not reported individually and stay open.
+**LAYOUT-30. Populated links stay where they were.** Give D two auras → G sits exactly two of D's bars
+(plus the seams) above R's level, and D's first bar starts exactly where the empty D sat, with no 1px
+gap or overlap against the frame. On a screen container, the first aura sits where it always did. A
+centered join is still centered across the column, no sideways shift of half a pixel or more. `/am
+unlock` and `/am test` → the placeholders and the unlocked chain look as they should. Result:
 
-Owner to run, on `feat/2026-09-26-settings-redesign` with LibKa0s v1.61.0 vendored. Open a character
-with the starter containers (#1 Player buffs as bars, #2 Player debuffs as icons, #4 Player
-cooldowns as text) and open the panel with `/am`.
+**LAYOUT-31. The name label, locked.** On a fresh profile, Layout → **Label** → tick **Show name
+label** on each starter while locked → #1 (Bars) shows its name in gold Friz 12 just above its first
+element, centered, **Justify** reading Center; #3 (Icons, growing right) reads Left, lined up with its
+first icon; #2 (growing left) reads Right, lined up on the right; #4 (Text) reads Center. Nothing else
+moves. Grow vertically Up → the label moves below the first element. On #1 pick Left, then Right → the
+name moves to that edge (4px in); Center → back. Set #3's Grow horizontally to Left → Justify reads
+Right and the name right-aligns; pick Center and flip the growth → it stays centered. `/am get
+container.label.justifyH` on an untouched one → `AUTO`; pick Left → `LEFT`; `/am reset
+container.label.justifyH` → `AUTO`, the dropdown Center again. A Bars container changed to Text stays
+centered. X/Y offsets and every font leaf (face, size, flags, shadow, color) apply live; with Show off
+the offsets and font rows are grayed, but not the color swatch. Result:
 
-251. **S1.** Look at the Settings tree under Ka0s Aura Master. → General · Containers · Profiles.
-     There are no Filters, Layout, Bars, Icons or Text entries, indented or not. (spec §8.1) Result:
-252. **S2.** Open Containers with #1 selected. → The band is on top (Container picker and New
-     container). The rail is on the left with General · Filters · Layout · Bars. The rail's top edge
-     is level with the top of the tabs: the tab art, not the empty space above it. (spec §8.2, D5)
-     Result: **PASS** (owner, 2026-09-26: rail top level with the tab art)
-253. **S3.** Rail -> Bars -> General, then scroll to the bottom. → Only the controls move. The band,
-     the rail and the tab strip stay put. (spec §8.3) Result: **PASS** (owner, 2026-09-26: only the controls scroll)
-254. **S4.** On Bars, pick #2 (icons) in the band. Then on Bars again with #1, change General ->
-     Style to Icons. → The style entry renames to Icons, its tabs follow, and the page is on Icons,
-     not General. (spec §8.4, D6) Result: **PASS** (owner, 2026-09-26: the style entry follows the container)
-255. **S5.** Filters -> Categories, then Layout, then back to Filters. → Filters opens on
-     Categories. (spec §8.5, D8) Result: **PASS** (owner, 2026-09-26: each section keeps its tab)
-256. **S6.** Change a Layout setting and a Bars setting on #1. Then, with Layout selected, click
-     Defaults. → Only the Layout rows go back to defaults, on #1 only. The Bars change stays, and
-     other containers are untouched. (spec §8.6, D9) Result:
-257. **S7.** Layout -> Anchor -> Pick a frame..., then click a frame. Repeat and cancel with Esc. →
-     Both times the settings window reopens on Containers -> Layout. (spec §8.7, Review Focus 5)
-     Result: **PASS** (owner, 2026-09-26: "old links land on the right section")
-258. **S8.** Open Containers, then enter combat (attack a training dummy). → The whole page is under
-     the combat cover, the rail included, with "Settings are locked during combat." Nothing under it
-     can be clicked. (spec §8.8, options-ui-§2) Result: **PASS** (owner, 2026-09-26: the whole page is locked in combat)
-259. **S9.** `/reload`, then open Containers as the first page of the session. → The tabs sit in one
-     row to the right of the rail from the first frame. They are not stacked one per row, and none
-     is drawn under the rail. (Review Focus 1 (SR-LK-01)) Result:
-260. **S10.** Look at the rail, and hover each entry. → It has the tree-pane look (a dark fill and a
-     thin gray tooltip border). Entries are gold, the selected one is white on a blue bar, and
-     hovering highlights. Each entry shows a tooltip that says what the section holds. It is visibly
-     different from the gold tabs. (spec §2, A13) Result:
-261. **S11.** Close the panel. Right-click a container's drag handle or its `?`. → The panel opens
-     on Containers with that container in the band, on the section you last left. It does not jump
-     to General. (A9 (SR-AM-04)) Result: **PASS** (owner, 2026-09-26: "old links land on the right section")
-262. **S12.** Filters -> Categories -> "See spells" on a spell-list category. → It lands on the
-     General page's Spell Categories tab, with that category selected. (A10 (unchanged behavior))
-     Result:
-263. **S13.** Delete every container (Containers -> General -> Delete, each). Then click New
-     container. → With none, the rail lists General alone, with "No containers yet. Click New
-     container, or type /am new." After New container, Filters, Layout and Bars appear. (A12)
-     Result:
-264. **S14.** Rename #1, change its Unit, then click Defaults on General. → Enabled, Unit, Aura type
-     and Style go back to defaults. The name you typed is kept. (spec §3, D9) Result:
-265. **S15.** In combat, try clicking a rail entry. Leave combat. → During combat nothing changes
-     and one gray "locked" line prints. After combat the page draws normally. (A1 (SR-LK-01))
-     Result:
-266. **S16.** Open the settings of another Ka0s addon, such as KickCD or MultiMeters. → Their tab
-     strips, content panels and scroll bars are exactly where they were. The library minor
-     AuraMaster ships is the one loaded for every Ka0s addon, and a page with no rail must not move.
-     (Global Constraints (rail width 0 is byte-identical)) Result: **PASS** (owner, 2026-09-26: another Ka0s addon's settings unchanged)
+**LAYOUT-32. The name label, unlocked.** `/am unlock` → the label stays, and the strip sits past it on
+the same side, by the label's height plus the strip gap, never covering it; `/am lock` → the strip
+goes and the label stays. `/am test`, locked and unlocked → the placeholders, the label and
+(unlocked) the strip with its TEST tag, none overlapping. On the chain with every label on, unlocked →
+each container reads strip, label, block, the root included: the label between its own strip and
+block, never above its strip and never at the far left of the screen, centered inside its block's
+width. Each follower sits one label row further down to make room. An Icons container attached below
+another → its name sits above its own first icon, lined up with it as a root's is. Result:
 
-## Issues #21 and #23 (owner to run)
+**LAYOUT-33. Labels on a locked chain.** On the chain with every label on, `/am lock` → each label
+sits directly on its own block, centered inside the block's width, none floating left of the column.
+B's Justify Left, then Right → its name moves to that edge of B's block (4px in); its X and Y offsets
+move it on top of that; put Center back. Untick B's label → C moves up one label row; untick all
+three → the chain matches LAYOUT-21. Result:
 
-**Owner run, 2026-09-26:** checks 267-274 passed (issues #21 and #23, merged to master). Run with LibKa0s v1.61.0 vendored, after `/reload`. Use
-the starter containers (#1 Player buffs as bars, #2 Player debuffs as icons, #4 Player cooldowns as
-text) and open the panel with `/am`. Neither issue changes what a player sees except two reworded
-lines, so each check confirms nothing else moved.
+**LAYOUT-34. The label with the rest.** On a target container with the label's class color on,
+target a warrior, then a mage → the color follows; an NPC falls back to the swatch. Scale 2.0,
+Opacity 0.5 and Master alpha → the label scales and fades with the container. Visibility *Only out of
+combat* → entering combat hides container and label together, no `ADDON_ACTION_BLOCKED`. `/am
+disable` hides it and `/am enable` brings it back; deleting the container removes it. Flush against
+the top edge with the label above → note whether it is cut off (it is not clamped, a known
+limitation). Result:
 
-267. **I23-1.** Containers, select #4 (text), open the Text section's General tab. → The Preview box
-     reads in the container's own font color, and the cheat sheet under it has bright headings,
-     gold tokens and gold examples. Only the Placement notes are gray. No Lua error. (#23: the dead
-     dim path removed) Result: **PASS** (owner, 2026-09-26)
-268. **I23-2.** Containers → General, hover **Aura type**. → The tooltip reads "Buffs or debuffs. The
-     Filters section offers the categories of whichever you choose; ...". No tooltip or line in the
-     panel names a Filters, Layout, Bars, Icons or Text *page*. (#23: the reworded desc) Result: **PASS** (owner, 2026-09-26)
-269. **I23-3.** Attach a container to a frame (Layout → Anchor, **Attach to** a frame such as the
-     player frame), then `/am test on` and hover that container's drag handle. → The gold line reads
-     "Attached — set its offsets in the Layout section." (#23: the reworded tooltip line) Result: **PASS** (owner, 2026-09-26)
-270. **I23-4.** With the Filters section open, delete every container, close the panel and type
-     `/am config`, then open Containers. → The rail lists General alone and "No containers yet. Click New
-     container, or type /am new." There is no placeholder "Container" tab and no "Create one on
-     Containers" line. Create one again afterwards (or reset the profile). (#23: EMPTY_PAGE removed)
-     Result: **PASS** (owner, 2026-09-26)
-271. **I21-1.** `/am debug on`, then on #1's Bars section change Width and click **Defaults**. → One
-     `[Set] reset bars: N rows` line with N at least 1, and no per-row `[Set]` lines. Click Defaults
-     again → `[Set] reset bars: 0 rows`. (#21: the bracket and the SameValue tally) Result: **PASS** (owner, 2026-09-26)
-272. **I21-2.** With debug still on, `/am resetposition` twice. → The first prints `[Set] reset
-     positions: N rows` (N counts the position rows that changed). The second, run straight after, prints
-     `[Set] reset positions: 0 rows`: the first container's staggered `-0` offset over a stored `0`
-     is no change. (#21: SameValue, the -0 case) Result: **PASS** (owner, 2026-09-26)
-273. **I21-3.** Containers → General on #2, **Copy settings from** #1 with the Filters section. → One
-     `[Set] copy container 1->2 (<section>): N rows` line. Then General → **Reset all settings** and
-     confirm → only `[Set] reset profile 'Default' to defaults`, no row count. (#21: the bracket and
-     JC-9's `info.profileReset`) Result: **PASS** (owner, 2026-09-26)
-274. **I21-4.** `/am get container` and `/am set container 1`. → Both answer "Setting not found:
-     container", and nothing is written: `/am list` reads as before. (#21: the Read and Write edge
-     cases) Result: **PASS** (owner, 2026-09-26)
+**LAYOUT-35. Fill follows the style.** On Containers → General switch a container's Style: to Icons →
+Layout → Growth → Fill reads Rows; to Bars or Text → Columns. Grow horizontally and Grow vertically
+are unchanged by the switch. Result:
 
-## New container lands on General (2026-09-26, owner to run)
+**LAYOUT-36. Mouse.** Hover an aura → its tooltip at the configured position; untick **Tooltips in
+combat** → none in combat. Right-click one of your own buffs in a player-buff container → it is
+canceled; untick **Right-click to cancel** → nothing happens. **Click-through** → no tooltip, and
+clicks pass through. A new container sits in the **Medium** strata (Layout → Frame → Strata). Result:
 
-**Owner run, 2026-09-26:** checks 279-280 passed (merged to master). Open the panel with `/am`, Containers, with
-#1 (Player buffs as bars) selected.
+**LAYOUT-37. No world tooltip beside the aura's.** Put a bar container with two or more auras over a
+world unit (an NPC or a player), Show tooltips on and Click-through off. Hover a bar → only the
+aura's tooltip. Hover the gap between two bars, and the container's padding past the last bar →
+still only the nearest aura's tooltip (or none past every bar), never the unit's beside it. A unit
+tooltip that was up when the cursor entered fades rather than lingering. An icon container → the
+same. Turn Click-through on → hovering a bar, and the gap between two, shows the unit's tooltip;
+Click-through off again, then Show tooltips off → the unit's tooltip shows on the bar and in the gap
+too. `/am test` and hover a placeholder over a unit → no unit tooltip; the gap between placeholders
+shows the unit's tooltip by design (the blocker hides with the engine). Result:
 
-279. **NC1.** Rail -> Bars -> Time text, then click **New container** in the band. → A new container
-     is made and selected in the band, and the page shows General on the rail and the General tab,
-     with the new container's Name. Then Rail -> Bars: it reopens on Time text. Result: **PASS** (owner, 2026-09-26)
-280. **NC2.** Go back to Bars -> Time text, keep the panel open, and type `/am new` in chat. → The
-     page moves to General/General on the new container, the same as the button. Then go to
-     Filters, close the panel and type `/am new`: the panel does not open. Open it with `/am`: it
-     is on General/General with that container. Result: **PASS** (owner, 2026-09-26)
+**LAYOUT-38. The mouse blocker covers the whole container.** Anchor a bar container with Show
+tooltips on and Click-through off over a unit frame, or ground you mouseover-target through, so its
+padding sits over the target. Try a `/tar mouseover` macro through the padding → it fails while the
+cursor is over the container, padding included; off the container it works again. Layout → Mouse's
+**Show tooltips** text names this tradeoff, and Click-through on restores mouseover targeting
+everywhere under the container. Result:
 
-## Font primer (2026-09-27, owner to run)
+## Bars and Icons style, fonts
 
-Issue #24, branch `fix/2026-09-27-blank-bar-names`. The font primer (`modules/FontPrimer.lua`)
-draws every container font once on a shown frame before any container text is drawn in it
-(`docs/debug.md`, *Bar names that do not show*). Before the checks: set **every** container's text
-fonts to **Ka0s Prototype** (Bars name, time and stacks; Icons time and stacks; the Text line's font;
-the name label's font), restoring any container the A/B test had switched to Friz Quadrata TT.
-Uninstall the probe addon (AMNameProbe) so nothing else draws the font first. Turn on Lua errors.
-**Between an aura appearing and the check, do not lock or unlock, toggle test mode or change a
-setting**: each of those rewrites every name on its own and would hide a blank.
+**STYLE-1. The Bars tabs.** On a bars container, rail → Bars → **[ General ][ Background & border ][
+Name text ][ Time text ][ Stack text ][ Icon ][ Pandemic ]**. **General** opens on its Size subsection
+(**Width**, **Height**) before Fill and Spark. Result:
 
-281. **FP1.** Log out and quit the client. Rename `World of Warcraft\_retail_\Cache` to `Cache.old`.
-     Start the client and log in on a character with several of its own buffs up (a long class buff,
-     a food or flask buff), and a target dummy nearby. Do not `/reload` and do not touch any setting.
-     → Every bar, icon and Text line present at login shows its text (name, time and stacks) from the
-     moment it appears: no blank row. No Lua error.
-     Result:
-282. **FP2.** Straight after FP1, out of combat, cast spells you have not cast this session that put a
-     buff on you and a debuff on the dummy. → Each new bar, icon and Text line shows its text from
-     the moment it appears. No Lua error.
-     Result:
-283. **FP3.** Still in the same session, attack the dummy and cast the rest of your rotation in
-     combat, including spells not cast yet. → No bar, icon or Text line is ever blank, in combat or
-     after it ends. No Lua error.
-     Result:
-284. **FP4.** Out of combat, with buffs up in a bars container, open the settings and change that
-     container's Bars → Name text font to a font no container has used this session (**Ka0s Kait**,
-     or a new size of Ka0s Prototype). → The names redraw in the new font, and any that go blank come
-     back within about 1 s without touching anything else. No Lua error.
-     Result:
-285. **FP5.** With auras up in every container, `/reload`. → After the loading screen every
-     container's text shows, and any that is blank at first fills in within about 2 s. No Lua error.
-     Result:
-286. **FP6.** Run `/am diagnostics`. → The header has one `[Diag] fonts primed: N [...] refresh=idle`
-     line, with N at least 1, listing `Ka0s Prototype.ttf` with each size and outline your containers use
-     (and `Ka0s Kait.ttf` after FP4), and no Friz Quadrata entry. No Lua error.
-     Result:
-287. **FP7.** `/am debug on`, open the console with `/am debug`, then change a container's font size
-     to a size not used yet. → One `[Fonts] primed 1 new font(s)` line appears. Change another
-     setting that is not a font (a bar height) → no new `[Fonts]` line. No Lua error.
-     Result:
-288. **FP8.** `/am disable`, wait a few seconds, then `/am diagnostics`. → The report still prints the
-     `fonts primed:` line, with the same list and `refresh=idle`. `/am enable` → every container comes
-     back with its text showing, none blank. No Lua error throughout.
-     Result:
-289. **FP9.** Turn on one container's name label (Layout → Label → **Show name label**) and give a Text
-     container a template with literal text between its tokens (for example `$spellname$ - $stacks$`),
-     the label and the Text line both in **Ka0s Prototype**, then `/reload` with auras up. → The
-     label and the Text line's literal text show from the start, or fill in within about 2 s. Then, out of combat, turn on test mode and change the label font and a
-     Bars name font to a size not used yet this session. → The label and the placeholder names and
-     stack counts show in the new font, or fill in within about 1 s without touching anything else.
-     No Lua error.
-     Result:
-290. **FP10.** Log out and quit the client. Delete `World of Warcraft\_retail_\Cache` (the client
-     rebuilds it). Start the client and log in on a character with permanent buffs up (a long class buff, an
-     aura or a flask) in containers on **Ka0s Prototype**. Do not `/reload` and do not touch any
-     setting. → Every name present at login draws within about 2 s after the loading screen ends, and
-     stays drawn; no row stays blank until a `/reload`. `/am diagnostics` straight after the loading
-     screen may read `refresh=armed-world`; a few seconds later it reads `refresh=idle`. Its
-     `loading screen:` line gives both times and the gap (record the gap here; `ended -` is a
-     failure). Then zone
-     (take a portal or enter an instance) → nothing blanks after that loading screen. No Lua error.
-     Result:
-291. **FP11.** Log out and quit the client. Delete `World of Warcraft\_retail_\Cache` (the client
-     rebuilds it). Start the client and log in on a character whose containers use **Ka0s Prototype**
-     (and **Ka0s Kait**, if any container does). Do not `/reload` and do not touch any setting. A few
-     seconds after the loading screen ends, run `/am diagnostics`. → The `fonts primed:` line lists
-     every Ka0s font your containers use, with each size and outline (every Ka0s Prototype triple
-     included, not only Ka0s Kait), and ends `refused=0`. No Lua error.
-     Result:
+**STYLE-2. A bar's icon border.** Bars → Icon → tick **Show border**, thickness 3 → a border frames
+each bar's icon, and the art shrinks inside it rather than under it. Result:
 
-## Mid-key reload and the event trace (2026-09-29, owner to run)
+**STYLE-3. No spark on a timeless aura.** Bars → General → untick **Show the spark on auras without a
+duration** → a permanent buff's full bar shows no spark (`/fstack`: its status-bar texture has no
+width), and a timed buff's spark still rides its moving edge, just inside it; a spark placed wholly on
+the elapsed side is clipped. In test mode the "Well Fed" placeholder loses its spark. If the permanent
+bar still shows a spark, or the timed one loses it, report it. Result:
 
-Needs a restricted instance: a Mythic+ key (a boss encounter in a raid or dungeon also restricts auras,
-see the notes in 294).
+**STYLE-4. A timed bar's spark reads the same either way.** Two live timed auras of the same kind on
+one bar container. Tick, then untick **Show the spark on auras without a duration** → a timed bar's
+spark looks the same both times (color and brightness), differing only in position (centered on the
+edge when ticked, just inside it when not). Repeat at a saturated **Spark color** (pure red or green)
+and at a low-alpha one (about 25%) → still the same on and off. Unticked, no dark or black rectangle
+around the spark and nothing sticking out above or below the bar, at the default color, the low-alpha
+color and **Spark width** 32. A permanent aura's bar still shows no spark with the option off. Report
+any difference, citing this check. Result:
 
-292. **MK1.** In a key, out of combat between pulls, `/reload`. → Every container draws straight
-     after the loading screen (the buffs you carry show), not only once the key ends. `/am debug on`,
-     then `/am diagnostics` → `apply queue: all=false` and every `[Cont]` line reads `engine=yes`.
-     No Lua error. Pull the next pack → auras appear and time down in every container as usual.
-     Result:
-293. **MK2.** Same key, `/am debug on`, then play on: a pull, the kill, a boss, and the key's end.
-     → The console carries `[Event] PLAYER_REGEN_DISABLED` / `_ENABLED` lines at each pull and kill,
-     and `[Event] ADDON_RESTRICTION_STATE_CHANGED … type=<n> active=<0|1|2>` lines; each line ends
-     `secret=… lockdown=… queued=…`. No `[Event]` line on a target, focus or pet change. Copy the
-     whole console into the bug thread: the `type=` values seen at the key's start, a boss and the
-     key's end are the record this test exists to take.
-     Result:
-294. **MK3.** Without a key: a boss encounter anywhere (a follower dungeon or LFR boss) with
-     `/am debug on` → `[Event] ADDON_RESTRICTION_STATE_CHANGED … type=1 active=1` at the pull and
-     `… type=1 active=0` at the kill. This is no stand-in for MK1: a `/reload` mid-encounter lands in
-     combat, where the login build waits for combat to end by design. MK1 needs auras secret OUT of
-     combat at login, which only a key between pulls gives (a PvP match may too; unverified).
-     Result:
+**STYLE-5. Background opacity.** Bars → Background & border → Background reads **Background texture**
+· **Background opacity** / **Background color** · **Use class color**. Drag **Background opacity**
+down → the bars' background fades while the fill stays as it was. Result:
+
+**STYLE-6. The fill by dispel type.** A bar container showing debuffs, Bars → General → **Color by**
+dispel type → each bar's fill takes its type's General → Dispel Colors color; a debuff with no type
+keeps the bar color. Set it back to one color → the fill returns to the bar color at once. Enter combat
+with the aura still up → the fill keeps the bar color. In test mode on a debuff container → each
+placeholder takes its type's color, Mortal Wounds the bar color; change the Poison swatch → the Deadly
+Poison bar recolors while test mode is on. On a buff container only Bloodlust is Magic-colored. Result:
+
+**STYLE-7. The background by dispel type.** Bars → Background & border → Color by **Dispel type** on
+a target-debuff bar container → a Magic debuff's background is blue, a Curse's purple; a typeless
+debuff and an Enrage-type buff keep the background's own color. The same in test mode. Color by Static
+→ the background color alone, including on bar slots that had shown a dispel tint a moment before and
+on the next auras to reuse them. Back on Dispel type, Background opacity 20% (and separately the
+background color's own alpha 50%) → a typed and a typeless debuff's background both go see-through,
+and the fill likewise at 20% Bar opacity. Then in combat, on debuffs applied after the pull → the
+background keeps its 20%. A background that turns opaque in combat only means the engine refused the
+region alpha: report it. Result:
+
+**STYLE-8. Typeless debuffs.** Out of combat, target a dummy carrying a Paladin's Judgment and
+Consecration and run the three `/run` lines in `docs/midnight-quirks.md` → "Many debuffs carry no
+dispel type"; copy the output there. On a bar container colored by dispel type, say whether those
+debuffs' background is dark (typeless) or blue (the engine reports a type; the probe's `dispelName`
+column says which). The Bars **Color by** tooltips and General → Dispel Colors say buffs and many
+debuffs have no dispel type, naming class debuffs such as Judgment or Consecration. Result:
+
+**STYLE-9. The Dispel Colors tab.** General → **Dispel Colors** → above the five swatches (no None
+swatch), "One color per dispel type, shared by every container:" on its own line, then four lines
+each opening with "- ": where the colors are read (bars by dispel type, and a text line's dispel
+type word, backdrop or edge, ending "(Text -> Font)"), that buffs and many debuffs have no dispel
+type, class debuffs such as Judgment or Consecration included, how those look, and that an icon's
+dispel border keeps Blizzard's own colors. A hairline gap between the bullets, none sharing a line,
+nothing cut off or scrolling sideways. Set Magic to pure red → a bar container colored by dispel
+type shows a Magic debuff's fill red, while an icon container's Magic dispel border stays Blizzard's
+blue. Each swatch's tooltip says it colors a bar's fill or background and a text line's dispel type
+word, backdrop or edge, and that an icon's dispel border keeps Blizzard's own colors. Result:
+
+**STYLE-10. The Icons tabs and the countdown.** Rail → Icons → **[ Size ][ Border ][ Cooldown ][ Time
+text ][ Stack text ][ Pandemic ]**. On Cooldown tick **Blizzard countdown numbers** → on a timed aura
+the countdown and the time text read the same whole second throughout, in each time format (both round
+up: 12.7 s reads 13). Past 90 s the Blizzard format reads minutes, as the game's own buff text does.
+If the two still disagree by a second, report it. Result:
+
+**STYLE-11. The icon border color.** On an icon container showing a buff, Icons → Border → color
+bright red, thickness 2 → every icon's border turns red at once. If a border does not change, `/fstack`
+over that icon and report the frame it names. Result:
+
+**STYLE-12. The dispel border's shape.** On an icon debuff container with a Solid 1 px black border,
+Icons → Border → **Color the border by dispel type** on → each typed debuff shows a square edge in
+Blizzard's type color exactly where its neighbors show black: no beveled corners, nothing in the icon
+spacing; a typeless debuff and every buff keep yours. Thickness 4, then 8 → the colored edge always
+matches the black edge's thickness. **Show border** off (or style None) → the typed icons still show a
+1 px colored edge. A non-Solid border style → the colored edge is flat strips at the border's
+thickness; report whether that looks acceptable. In test mode → Shadow Word: Pain (Magic), Hex
+(Curse), Frost Fever (Disease), Deadly Poison (Poison) and Rupture (Bleed, if the client gives it a
+color) show it, Mortal Wounds none; turn it off → every one goes at once. An icon buff container never
+shows one, Bloodlust included. Record the color Blizzard gives a Bleed. Result:
+
+**STYLE-13. Placeholder time text.** `/am test` on a bar container and switch Time text →
+**Countdown** between Blizzard, short and detailed → the placeholders' time text follows and reads as
+a live aura's does in that format. Tick Pandemic → **Recolor the time in the pandemic window** → the
+*Shield Wall* placeholder (4 s left) takes the pandemic-window time color. Result:
+
+**STYLE-14. Justify on bars and icons.** Bars → Name text → **Justify** Right → the name moves to the
+right end of its box and stops short of the time text. Bars → Time text, name shown, **Justify** Left,
+then Right → the time moves across a box as wide as its format's longest string ("59m"; "23h 59m" in
+the detailed format), and the name stops short of that box. Icons → Time text Left, then Right → the
+time moves across the icon's width. Result:
+
+**STYLE-15. A 59-minute buff on a bar.** A 59-minute Power Word: Fortitude on a default bar reads `59
+m` in full, not `59...`, and still does with the time text's X offset at -15. Result:
+
+**STYLE-16. The Pandemic tab.** Bars and Icons each end with a **Pandemic** tab; Text has one between
+Icon and Animation. On Bars and Icons it holds **Time color** (Recolor the time in the pandemic window,
+Pandemic window (seconds left), Pandemic-window time color) and **Highlight** (Highlight the pandemic
+window, Pandemic-window highlight color). On Text, Time color with those three and Blink in the
+pandemic window, and the gray "The pandemic window needs a duration token, such as $remainingduration$,
+in the template." under them on a template without one; Text → Animation holds the Loop rows alone.
+No tooltip says "running out" or "refresh window", and `/am list` names the same paths as before.
+Values set on a build that still had the Highlights tab are kept (a pandemic window of 8 still reads
+8). Result:
+
+**STYLE-17. An icon border through the pandemic settings.** An Icons container with auras up, Icons →
+Border → Show border on (Solid, 2). Out of combat, change Icons → Pandemic one row at a time
+(Highlight off and on, the highlight color, Recolor the time, the window's seconds) → no Lua error
+(none naming `Backdrop.lua`), the border keeps drawing, and an aura in its pandemic window still
+highlights and recolors its time. Repeat with the border off → the same. Result:
+
+**STYLE-18. A bar's borders.** A bar container with Background & border → Show border on, and Icon →
+Show border on. Change the bar's Width, then its Pandemic rows → both borders keep drawing at their
+thickness and color, no Lua error, and the pandemic highlight still shows. Result:
+
+**STYLE-19. A border style other than Solid.** On a bars, an icons and a Text container, pick another
+Border style (a media pack's edge, or "Blizzard Tooltip") → no Lua error; test mode draws it at once,
+while buttons already on screen keep their old look until `/reload`, then draw it. Change its color →
+the live buttons recolor at once. Hover Border style → the tooltip says Solid redraws at once and any
+other texture after a `/reload`. Back to Solid → the strips draw at once, with no texture edge left
+under them. Result:
+
+STYLE-20 to STYLE-30 check the font primer (`modules/FontPrimer.lua`), which draws every container
+font once on a shown frame before any container text uses it. First set every container's text fonts
+to **Ka0s Prototype** (Bars name, time and stacks; Icons time and stacks; the Text line; the name
+label), and disable any other addon that draws that font first. Between an aura appearing and the
+check, do not lock, unlock, toggle test mode or change a setting: each rewrites every name and would
+hide a blank.
+
+**STYLE-20. A cold cache at login.** Quit the client, rename `World of Warcraft\_retail_\Cache` to
+`Cache.old`, start it and log in with several of your own buffs up (a long class buff, a food or flask
+buff) and a dummy nearby. Do not `/reload` or touch any setting → every bar, icon and Text line present
+at login shows its text (name, time and stacks) from the moment it appears. Result:
+
+**STYLE-21. New auras after login.** Straight after STYLE-20, out of combat, cast spells not yet cast
+this session that put a buff on you and a debuff on the dummy → each new bar, icon and Text line shows
+its text from the moment it appears. Result:
+
+**STYLE-22. New auras in combat.** In the same session, attack the dummy and cast the rest of your
+rotation → no bar, icon or Text line is ever blank, in combat or after it. Result:
+
+**STYLE-23. A font change.** Out of combat, buffs up in a bars container, change its Bars → Name text
+font to one no container has used this session (**Ka0s Kait**, or a new size of Ka0s Prototype) → the
+names redraw in it, and any that go blank come back within about 1 s with nothing touched. Result:
+
+**STYLE-24. A reload with auras up.** With auras up in every container, `/reload` → after the loading
+screen every container's text shows; any blank at first fills in within about 2 s. Result:
+
+**STYLE-25. The primed fonts in diagnostics.** `/am diagnostics` → the header has one `[Diag] fonts
+primed: N [...] refresh=idle` line, N at least 1, listing `Ka0s Prototype.ttf` with each size and
+outline your containers use (and `Ka0s Kait.ttf` after STYLE-23), and no Friz Quadrata entry. Result:
+
+**STYLE-26. The primer's debug line.** `/am debug on`, open the console, change a container's font
+size to one not used yet → one `[Fonts] primed 1 new font(s)` line. Change a setting that is not a
+font (a bar height) → no new `[Fonts]` line. Result:
+
+**STYLE-27. While disabled.** `/am disable`, wait a few seconds, `/am diagnostics` → the report still
+prints the `fonts primed:` line, with the same list and `refresh=idle`. `/am enable` → every container
+comes back with its text showing, none blank. Result:
+
+**STYLE-28. Labels and literal text.** Turn on one container's name label and give a Text container a
+template with literal text between tokens (`$spellname$ - $stacks$`), both in Ka0s Prototype, then
+`/reload` with auras up → the label and the literal text show from the start, or fill in within about
+2 s. Out of combat, turn on test mode and change the label font and a Bars name font to a size not
+used yet → the label and the placeholder names and stack counts show in it, or fill in within about
+1 s. Result:
+
+**STYLE-29. The loading-screen gap.** Quit the client, delete `World of Warcraft\_retail_\Cache`, start
+it and log in with permanent buffs up (a long class buff, an aura or a flask) in containers on Ka0s
+Prototype. Do not `/reload` or touch any setting → every name present at login draws within about 2 s
+after the loading screen ends and stays drawn. `/am diagnostics` right after the loading screen may
+read `refresh=armed-world`, and a few seconds later `refresh=idle`; its `loading screen:` line gives
+both times and the gap (record the gap here; `ended -` is a failure). Zone (a portal or an instance) →
+nothing blanks after that loading screen either. Result:
+
+**STYLE-30. Every font primed after a cold start.** Quit the client, delete the Cache folder, start it
+and log in on a character whose containers use Ka0s Prototype (and Ka0s Kait, if any does). Do not
+`/reload` or touch any setting. A few seconds after the loading screen, `/am diagnostics` → the
+`fonts primed:` line lists every Ka0s font in use with each size and outline (every Ka0s Prototype
+triple, not only Ka0s Kait), and ends `refused=0`. Result:
+
+## Text style
+
+TEXT checks run on a Text container on your buffs (an icon on the left, its border on) and one on the
+target's debuffs, near a dummy.
+
+**TEXT-1. The default template.** A player-buff container styled as Text → names, ` x3` stacks and ` -
+12s`, all live in combat; a timeless buff shows its name only. Result:
+
+**TEXT-2. Several durations.** Template `$spellname$ $remainingduration$ / $maxduration$
+($remainingpercent$)`, Justify Left, then Right → the line reads and lines up both ways. Result:
+
+**TEXT-3. The dispel type token.** `$spellname$[ ($dispeltype$)]` on a target-debuff Text container →
+the correct type names; nothing, brackets included, on a typeless debuff. `[$dispeltype$]` on a Bleed
+debuff → "Bleed"; on an Enrage-type buff → record what it reads. Result:
+
+**TEXT-4. Loops.** Pulse, Blink and Bounce, each through a pull → no piece overlaps another while it
+animates; a change made in combat starts when combat ends. Result:
+
+**TEXT-5. The pandemic window.** Text → Pandemic → Recolor on, then Blink on → the duration run turns
+the color, then blinks, in the last N seconds; the rest of the line keeps the font color. Blink on and
+Recolor off → the alpha steps read as a blink, not a flicker or a smooth fade. Result:
+
+**TEXT-6. The Icon tab.** On a new Text container (Icon position None), the Icon tab's rows are dimmed
+under a gray "Set Icon position to show the icon.", except Icon position and the border's color
+swatch. Icon Left → the rows go live and the note goes at once. Show border on at thickness 2 in red →
+a red border frames the icon on every line, the art inside it. Result:
+
+**TEXT-7. An icon on the right.** Icon position Right, with the border → the text starts after the
+icon and its gap, and with Size to fit off a long line is cut at its box rather than drawn under the
+icon. Result:
+
+**TEXT-8. Changes keep every line.** `/am debug on`, then bare `/am debug` to open the console, with
+auras showing, on the Text container with its icon on the left and its red border on: change Text →
+General → **Width (px)** several times (drag, then type), then the other Text settings one after
+another (font, size, template, icon size, the border) → every line keeps its text, its icon and its
+border; no empty bordered squares, no `[Style] text icon failed` line in the console, no Lua error.
+Rows that go blank must come with a `[Style] … failed:` line in the console and one Lua error naming
+it: copy both word for word. A refused icon call costs the icon alone, the text still drawing; rows
+that go empty with no such line are a defect too, so report the steps. Result:
+
+**TEXT-9. Template refusals.** In the Template box, and with `/am set container.text.template
+$spellname$ $bogus$` (no quotes) → chat prints `Invalid value for container.text.template` and,
+indented, the rule that broke; the stored template does not change. Try each template rule once.
+Result:
+
+**TEXT-10. Nested clipping.** A template wider than the box, on a narrow Text container with Size to
+fit off → the line is cut at the box edge, never drawn past it or under a neighboring container.
+Result:
+
+**TEXT-11. A Text button built in combat.** With a Text container up, gain a brand-new aura mid-fight
+→ the new button dresses and animates like the others, with no error. Result:
+
+**TEXT-12. Icon Left to None, live.** On an unlocked Text container showing its icon on the Left,
+switch Icon position to None → the icon disappears cleanly, and none comes back on the next aura
+change. Result:
+
+**TEXT-13. A literal percent sign.** Template `$remainingduration$ % $maxduration$` → a literal `%`
+between the two times, not a formatting artifact or an error. Result:
+
+**TEXT-14. Bracketed stacks.** Template `[[[$stacks$]]]` → `[3]` (however many stacks) on a stacked
+aura; nothing at all on a non-stacking aura. Result:
+
+**TEXT-15. Center stacks the pieces.** Text → General → Justify Center, template *Centered: name over
+time* → the name on one row and the time centered under it, each row centered; the container grows to
+hold both, the outline and the handle following. Justify Left → one line again. Result:
+
+**TEXT-16. Percent tokens.** Template `$spellname$ ($remainingpercent$%)` on a 30 s buff → `Name
+(73%)`, a whole number, no space inside the brackets. On a buff without a duration (a mount) → record
+whether it reads `( )`; `[ ($remainingpercent$%)]` shows nothing there. Run these probes and record
+what each prints:
+
+- `/run local f=C_StringUtil.CreateNumericRuleFormatter() f:SetBreakpoints({{threshold=0,format="%d%%"}}) print("["..f:FormatNumber(45.5).."]","["..f:FormatNumber(45).."]")`
+  (`[]` for 45.5 and `[45%]` for 45 confirms the old rule's gap; `[45%]` twice rules it out);
+- `/run local f=C_StringUtil.CreateNumericRuleFormatter() f:SetBreakpoints({{threshold=0,step=1,format="%d"}}) print("["..f:FormatNumber(45.5).."]")`
+  (the current rule: `[46]` or `[45]`, never `[]`);
+- `/run local s=UIParent:CreateFontString(nil,"OVERLAY","GameFontNormal") s:SetPoint("CENTER") s:SetText("") print(s:GetWidth(), s:GetStringWidth())`
+  (a non-zero first number is the space seen between `(` and `)`).
+
+Result:
+
+**TEXT-17. The percent formatter's rounding.** `$remainingpercent$` near a round number (a buff at
+99.6% remaining, ticking to 99% and 100%) → compare the live line with the Text preview's rounding
+(to the nearest whole number). Report whether the live formatter rounds (99.6 → 100) or floors (99.6 →
+99); a mismatch between the two is a defect. Result:
+
+**TEXT-18. Built-in templates and the Preview.** Text → General → **Template** lists the built-ins
+(Name, Name + time, …; a debuff container adds Name (type) and Name, type, time) and **Custom**. Pick
+each → the read-only **Preview** under it and the live auras follow. *Centered: name over time* also
+sets Justify to Center and previews `$spellname$[$remainingduration$]`, joined by " / " in the Preview
+("Ignore Pain / 11s") while the live container shows the rows stacked. **Custom** → the template box
+appears. Result:
+
+**TEXT-19. The dispel type word in color.** A Text container on the target's debuffs, template Name,
+type, time, Text → Font → Dispel type → **Color the dispel type** on → a Magic debuff reads `Name
+(Magic) - 12s` with only `Magic` in the Magic color from General → Dispel Colors, the brackets and the
+rest in the font color; a Curse in its color. Change the Magic swatch → the word follows after the
+re-apply. In combat the word keeps its color as auras come and go. If the word shows raw `|cff…`
+characters, report it. With a template without `$dispeltype$` the toggle is dimmed. The Dispel type
+subsection (Color the dispel type, Backdrop in the dispel color, Backdrop opacity, Edge in the dispel
+color, Edge thickness) sits on the Font tab under Countdown, not on Animation; toggles set on a build
+that still had them on Animation keep their values. In test mode each placeholder line shows its type
+word, tinted, and Mortal Wounds shows no type and no tint. Result:
+
+**TEXT-20. The dispel backdrop.** Same container, **Backdrop in the dispel color** on → a typed
+debuff's line has a box in its type's color behind the text, the text on top and readable; a typeless
+debuff has none. **Backdrop opacity** changes its strength and is dimmed while the backdrop is off.
+With the icon on the left, the box covers the text area only. With Pulse or Bounce, the box moves and
+fades with the line. Test mode → each typed placeholder (Shadow Word: Pain, Hex, Frost Fever, Deadly
+Poison, Rupture) has a box in its type's color, and Mortal Wounds has none. Turn the backdrop off →
+every box goes at once. Result:
+
+**TEXT-21. The dispel edge.** **Edge in the dispel color** on, backdrop off → a thin outline in the
+type's color around a typed debuff's text area, none on a typeless one; **Edge thickness** 1 to 4
+thickens it. Both on → the edge draws over the backdrop. On a buff container, a Magic buff (Power
+Word: Fortitude, Arcane Intellect) is outlined too. `/reload` and combat → nothing to fix up. Result:
+
+**TEXT-22. A type the palette does not cover.** A Text container on the target's buffs with Color the
+dispel type, Backdrop and Edge all on, on a mob with an Enrage-type buff (an enraged dungeon mob) →
+the line has no tint on its type word, no backdrop box and no edge, the same as a typeless aura, and
+no blank space held for them. A box or edge that shows (white, or any color): report it with the mob
+and the buff's name. Result:
+
+**TEXT-23. A stacked icon keeps one row's height.** On the Text container with Icon position Left,
+Text → General → Justify Center, template *Centered: name over time* → the rows stack and center and
+the container grows to hold them, but the icon keeps its configured size. Set **Icon size (0 = line
+height)** to 0 → the icon is one row's height (the font size), not the height of the whole stack.
+Justify Left with size 0 → the icon is the box's height again. Result:
+
+**TEXT-24. The Text Template section.** Text → General → the subsection is titled **Text Template**.
+Under the Custom template box, **Preview** is a disabled edit box holding the rendered line in the
+container's font color, a colored dispel word riding live in it when that option is on. Under it, the
+cheat sheet: two headed, bulleted lists with a gap before each heading, **Tokens** (one gold `$token$`
+bullet each) and **Rules** (bracket hiding, the two escapes, how they combine, text outside `[ ]`
+always showing, a separator inside the brackets of the field it leads), each rule's example on its own
+indented line in the token gold. The headings are bright; only the Placement notes are gray. Result:
+
+**TEXT-25. No gap between template pieces.** A target-debuff Text container, Justify Left, template
+`$spellname$-$stacks$-$dispeltype$-$remainingduration$-$maxduration$-$elapsedduration$-$remainingpercent$-$elapsedpercent$`,
+on a typed debuff with stacks → `Fire Breath-3-Magic-6 s-…` with no space either side of any `-`
+between two non-empty fields. Justify Right → the same, laid from the right. An empty field (one stack,
+no type) still leaves its `-` and a small gap; rewritten as `$spellname$[-$stacks$][-$dispeltype$]...`
+the empty field's separator goes with it. A gap between two non-empty fields is a defect: report the
+font, size and flags. Result:
+
+**TEXT-26. The Justify note.** Text → General → Placement: a gray note under Justify and Vertical
+justify, above the offsets, on Left, Center and Right alike. It says Center centers a one-piece
+template only and stacks several fields in rows (text outside `[ ]` not drawn, the box growing, rows
+kept when a field is empty, an icon at size 0 one row tall), and that aura text is secret so its width
+cannot be measured. Each claim holds on a live container. Result:
+
+**TEXT-27. Size to fit starts ticked.** A new profile's *Player cooldowns* starter has **Size to fit**
+ticked, and so does a container made in an existing profile and set to Text. Tick it on a container
+that had it off → the box resizes at once and the handle and outline follow; Width and Height gray
+out with the note under them, and their tooltips say why. Result:
+
+**TEXT-28. Size to fit follows the content.** With it on, change the font size, the template, the
+countdown format, Icon Left with size 24, and Justify Center with a three-field template → each
+resizes the box. Icon size 0 with Bounce → neither the icon nor the text is cut at the right; at
+Vertical justify Middle or Bottom the bounce is not cut at the top (at Top it rises above the box,
+uncut). A long-lived aura (hours or days) shows its whole time string. Result:
+
+**TEXT-29. Size to fit and a long live name.** A `$spellname$` template, live, Size to fit on: gain
+Guardian of Ancient Kings (or a buff whose name is longer than every sample) → the whole name draws,
+past the box's edge if need be, from the justify point: Left runs right, Right runs left, Center both
+ways, in and out of combat. Two such auras at once → neither is cut. Untick Size to fit (a narrow
+Width) → cut at the box again; tick it → whole again, no `/reload`. `/am test` on and off with the
+buff up → the samples, then the whole live name. In combat, gain and lose auras → no error and the
+size does not change; untick Size to fit out of combat, then in combat `/am set
+container.text.autoSize true` (the page itself is locked in combat) → it applies after combat. With a SharedMedia font, log in → at worst one
+apply at the stored size, then sized to fit. Result:
+
+## Library-absent install
+
+**DEGRADED-1. Without the launcher libraries.** Rename `libs/LibDBIcon-1.0` aside, `/reload` → one
+chat line naming Aura Master and the missing library, no error frame, and the addon otherwise works.
+Rename `libs/LibDataBroker-1.1` aside too, `/reload` → the same. Put both back. Result:
+
+## Non-English client
+
+Only the enUS locale ships, so the addon's own words stay English on every client; the spell names
+it shows come from the client. Run these on a non-English client (a language pack on the PTR, or a
+non-English account).
+
+**LOC-1. Spell names come from the client.** Log in with the starter set → no Lua error. `/am test`
+→ the placeholders show their spells' names in the client's language, each with its real icon. General
+→ Spell Categories → *Defensive cooldowns* → the starter spells read in the client's language, sorted
+by name with case ignored for the plain letters A to Z; a name that starts with an accented or
+non-Latin letter sorts after every name that starts with a plain one (the list sorts the lowercased
+names byte by byte, not by the language's alphabet). A Text container on your buffs shows the live aura names in the client's
+language. The addon's own labels, chat lines and the `$dispeltype$` word are English, with no raw key
+and no blank label. Result:
+
+**LOC-2. Adding a spell by its localized name.** On General → Spell Categories → **Add a spell**, type
+the client-language name of a spell in your spellbook → it is suggested, and Enter adds it with its
+icon. Type the same spell's English name → record whether it resolves. Its id and a shift-clicked link
+add it either way. Result:
+
+## Pending sign-off
+
+Two kinds of check are listed here. First, old checks with no recorded pass: the batch 5 and batch 6
+checks that were listed as owed (2026-09-13 and 2026-09-14/15), the smoke batch 2 checks after the
+range the owner verified on 2026-09-20 (143 to 161), the settings redesign checks that were not
+reported individually (2026-09-26), the batch 8 and batch 9 checks whose items failed the owner's two
+2026-09-25 runs and that no later run passed, the font primer (2026-09-27) and the mid-key reload
+(2026-09-29).
+Second, every check that is new on 2026-09-29 or later, or whose expected result was corrected against
+the code then, since none of those has been run in its current form. Sign one off on its own `Result:`
+line, then remove its row here.
+
+| ID | Origin (old numbering) |
+|---|---|
+| INSTALL-2 | 2 and 103: the starter count corrected on 2026-09-29 (four, #4 *Player cooldowns* included) |
+| INSTALL-4 | 4: the starter count corrected on 2026-09-29 (four) |
+| INSTALL-5 | 58a, batch 5 |
+| INSTALL-6 | 125 and 135: the upgrade read-out corrected on 2026-09-29 (the `[Migrate]` lines are written while logging is still off at login, so the check reads the `[Init]` line's schema version) |
+| INSTALL-8 | 68, batch 8 (failed 2026-09-25): its v8 step, the 0/-4 offsets of an attached container reading 0/0; 212, batch 9 (failed in the late 2026-09-25 run): its step switching a screen container to Another container; the chains and `attach.y` steps passed as 234 and 242, but its upgrade read-out was corrected on 2026-09-29 as INSTALL-6's |
+| SLASH-2 | 208, batch 8 (failed 2026-09-25): the help-order step, which the 2026-09-26 diagnostics run did not repeat; and its row count, 24 with `profile` listed, new on 2026-09-29, now 25 with `redraw` listed (2026-09-30) |
+| SLASH-9 to SLASH-11 | new on 2026-09-30 with `/am redraw` (SP-AMX-02) |
+| PANEL-1 | 251 (S1), settings redesign |
+| PANEL-6 | 264 (S14), settings redesign |
+| PANEL-9 | 259 (S9), settings redesign |
+| PANEL-10 | 260 (S10), settings redesign |
+| PANEL-13 | 256 (S6), settings redesign |
+| PANEL-14 | 263 (S13), settings redesign; its empty-rail half (270, I23-4) passed |
+| PANEL-22 | 87: the tooltip title's expected text corrected on 2026-09-29 (the name, then the version) |
+| PROFILE-2 | 50: the starter count corrected on 2026-09-29 (four) |
+| PROFILE-5 to PROFILE-11 | new on 2026-09-29 with the `/am profile` verb; PROFILE-10 extends 58's profile switch while disabled |
+| PROFILE-12 | 47: rewritten on 2026-09-29, a reset being the one profile change combat allows |
+| STATE-1 | 21: its in-combat step rewritten on 2026-09-29 for `/am set`, since the panel is locked in combat |
+| COMBAT-5 | 265 (S15), settings redesign |
+| COMBAT-7 | 292 (MK1), mid-key reload |
+| DIAG-3 | 54: the Profiles → Copy line corrected on 2026-09-29 to the ASCII `->` the code prints; the rest is unchanged or passed as 271 to 273 |
+| DIAG-5 | 206, batch 8 (failed 2026-09-25): the steps 210 does not repeat; 210 passed |
+| DIAG-6 | 207, batch 8 (failed 2026-09-25): the in-combat steps, its Cast by change rewritten on 2026-09-29 for `/am set container.filter.castBy`, since the panel is locked in combat; the disabled steps passed as 235 |
+| DIAG-9 | 211, batch 9 (failed in the late 2026-09-25 run): all of it; its `attach.y=-4` step moved to INSTALL-8 and passed as 234 |
+| DIAG-11 | 293 (MK2), mid-key reload; its line shape corrected on 2026-09-29 |
+| DIAG-12 | 294 (MK3), mid-key reload |
+| CONT-3 | 31: its in-combat steps rewritten on 2026-09-29 for `/am new`, `/am delete` and a Delete popup opened before the pull, since the panel is locked in combat |
+| CONT-5 | 205: its in-combat rename rewritten on 2026-09-29 for `/am set container.name` |
+| CONT-8 | 162, smoke batch 2 (owed: the owner verified 143 to 161 only) |
+| CONT-21 | 136 and 224: the placeholder count corrected on 2026-09-29 (one per ticked slot, three by default) |
+| FILT-2 | 80, batch 6 |
+| FILT-4 | 24: its Spell Categories grid corrected on 2026-09-29 (Hard CC, Soft CC and Racials with their See spells links, the line naming General -> Spell Categories and the hostile-unit note, since issue #11) |
+| FILT-5 | 78 and 81, batch 6 |
+| FILT-7 | 77, batch 6; its row labels corrected on 2026-09-29 (*Dispellable by anyone*, *Boss debuffs*) |
+| FILT-8 | 83, batch 6; its row label corrected on 2026-09-29 (*From any player*) |
+| FILT-10 | 79, batch 6; 262 (S12), settings redesign |
+| FILT-11 | 164, smoke batch 2 (owed, as CONT-8) |
+| FILT-13 | 166, smoke batch 2 (owed, as CONT-8) |
+| FILT-14 | 70, batch 5 |
+| FILT-15 | 72, batch 5 |
+| FILT-16 | 73, batch 5 |
+| FILT-17 | 74, batch 5 |
+| FILT-18 | 75, batch 5 |
+| FILT-19 | 75, batch 5 (the tooltip half) |
+| FILT-21 | 179 and 180: the chat line's expected text corrected on 2026-09-29 (each spell named, its id in brackets) |
+| FILT-27 | 82, batch 6 |
+| FILT-42 | new on 2026-09-30 with the weapon-enchant name reset (SP-AMX-01) |
+| LAYOUT-1 | 69, batch 5 |
+| LAYOUT-6 | 162, smoke batch 2 (owed, as CONT-8): the outline moving across aura buttons; 42: its combat refusal corrected on 2026-09-29 to `/am pick` alone, since the panel's button is locked in combat |
+| LAYOUT-11 | 67, batch 8 (failed 2026-09-25): the **Per row** step; the rest passed as 238 |
+| LAYOUT-17 | 67, batch 8 (failed 2026-09-25): all but the inherited-growth note, which passed as 233 |
+| LAYOUT-18 | 68, batch 8 (failed 2026-09-25) |
+| LAYOUT-20 | 221 and 227: no outline on lock since 2026-09-27 (commit d01ac9d), after both passes |
+| LAYOUT-25 | 202, batch 8 (failed 2026-09-25): the step with two chained Text containers; the rest passed as 194 |
+| LAYOUT-37 | 64 and 76, batch 5 |
+| LAYOUT-38 | 84, batch 6 |
+| STYLE-3 | 63, batch 5 |
+| STYLE-6 | 59a, batch 5 |
+| STYLE-9 | 61, batch 5; 163, smoke batch 2 (owed, as CONT-8); its bullet count corrected to four on 2026-09-29 |
+| STYLE-10 | 62, batch 5 |
+| STYLE-11 | 60, batch 5 |
+| STYLE-13 | 65, batch 5 |
+| STYLE-14 | 66, batch 5 |
+| STYLE-20 to STYLE-30 | 281 to 291 (FP1 to FP11), font primer |
+| TEXT-8 | 99, 153 and 159: its logging step corrected on 2026-09-29 to `/am debug on` (bare `/am debug` only toggles the console, and the `[Style]` line is written only while logging is on) |
+| TEXT-20 | 131: its test-mode step corrected on 2026-09-29 (a debuff container previews the debuff placeholders, each typed one boxed in its type's color, Mortal Wounds none) |
+| TEXT-23 | 134: corrected on 2026-09-29 to a Text container's own icon on a stacked Center (an Icons container has no Text section and draws no template text) |
+| TEXT-27 | 200, batch 8 (failed 2026-09-25): all but the migrated-profile step, which passed as 213 |
+| TEXT-28 | 201, batch 8 (failed 2026-09-25) |
+| TEXT-29 | 202, batch 8 (failed 2026-09-25): the in and out of combat, in-combat and SharedMedia steps, its in-combat Size to fit step rewritten on 2026-09-29 for `/am set container.text.autoSize`, since the panel is locked in combat; the rest passed as 214 |
+| LOC-1, LOC-2 | new on 2026-09-29 (the Non-English client section) |

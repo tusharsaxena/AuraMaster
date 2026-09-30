@@ -20,8 +20,12 @@ Other timers and frames of the addon's own: a next-frame `C_Timer.NewTimer(0)` t
 the frame picker's `OnUpdate`, which runs only while a pick is in progress. While containers are
 unlocked out of combat and test mode, `modules/EmptyWatch.lua` adds a 0.2 s pass timer, armed by a
 `UNIT_AURA` on a watched container's units, and one timer at the soonest weapon enchant's expiry.
-The font primer arms two one-shot timers only when it has drawn a new font (below). Every timer keeps
-its handle, and a stand-down cancels it rather than leaving it armed.
+The font primer arms two one-shot timers only when it has drawn a new font (below). The weapon-enchant
+reset keeps one debounced timer, armed 1.75 s after each loading screen and 0.5 s after an equipped
+weapon's item data arrives; when it fires it sends two `SetEnabled` calls to each live engine with
+enchant slots. Its item events fire for every item the client loads and cost two
+`GetInventoryItemID` reads each. Every timer keeps its handle, and a stand-down cancels it rather
+than leaving it armed.
 
 ### The font primer's cost
 
@@ -88,10 +92,10 @@ Declared in report order in `buckets` (`core/PerfSetup.lua:48`), each bracketed 
 
 | Bucket | Declared parent | Bracket | Why it is bracketed |
 |---|---|---|---|
-| `unitSwap` | — | `core/AuraMaster.lua:148`, `:156` | The one path driven by play: target, focus or pet changed, so every container on that unit calls the engine's `UpdateAllAuras`. The bracket spans that call, so whatever the engine does synchronously inside it lands here |
-| `applyPass` | — | `modules/ContainerManager.lua:335-343` | The coalesced pass applying pending configuration to every dirty container, plus re-placing container-attached ones |
+| `unitSwap` | — | `core/AuraMaster.lua:160`, `:168` | The one path driven by play: target, focus or pet changed, so every container on that unit calls the engine's `UpdateAllAuras`. The bracket spans that call, so whatever the engine does synchronously inside it lands here |
+| `applyPass` | — | `modules/ContainerManager.lua:336-344` | The coalesced pass applying pending configuration to every dirty container, plus re-placing container-attached ones |
 | `applyContainer` | `applyPass` | `modules/Container.lua:384-430` | One container: compile, place, build or update the engine, restyle, visibility. The call site passes `"applyPass"`, so the record carries observed containment |
-| `visibilityPass` | — | `modules/ContainerManager.lua:362` | The show ladder over every container, on combat transitions, world entry and the master rows |
+| `visibilityPass` | — | `modules/ContainerManager.lua:363` | The show ladder over every container, on combat transitions, world entry and the master rows |
 | `styleElement` | — | `modules/Style.lua:841-851` | Dressing one bar, icon or line of text: called by the engine's `initializeFrame` as it creates buttons, by a restyle, and by the preview |
 | `timedScan` | — | `modules/TimedSpells.lua` `scanTick` | One readable-state scan of the player's and pet's buffs, 0.5 s after their auras changed or the readable gate reopened. The addon's only aura-driven Lua path while locked; absent from a capture with no "without a duration" container |
 | `emptyPass` | — | `modules/EmptyWatch.lua` `runPass` | One re-prediction of every unlocked container, 0.2 s after its units' auras changed, and the visibility pass of any whose answer changed. Only while unlocked, out of test mode and out of combat; absent from a capture taken locked |
@@ -140,7 +144,7 @@ same way it goes down when a player unticks *Enable Aura Master* (slash-commands
 anti-pattern #85's last clause — two mechanisms that must agree about what inert means and diverge
 on the first module added after the second was written.
 
-So `standDown` (`core/LifecycleSetup.lua:90`) calls `addon:UnregisterLifecycleEvents()` — the nine
+So `standDown` (`core/LifecycleSetup.lua:90`) calls `addon:UnregisterLifecycleEvents()` — the eleven
 events `core/AuraMaster.lua` registers — then `NS.TimedSpells.StandDown()`, which drops TimedSpells'
 own `UNIT_AURA`, its three gate events and its two bus subscriptions, `NS.EmptyWatch.Stop()`,
 `CM.StopListening()` (which also stops the font primer, `FontPrimer.Stop`), `FramePicker.Stop()`,

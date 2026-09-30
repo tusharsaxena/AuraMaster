@@ -34,7 +34,7 @@ Sl.__stubDisabledLineFormat = STUB_DISABLED_LINE_FORMAT
 local cli
 
 local runEnabled, runResetAll, runContainers, runSelect, runNew, runDelete, runLock, runPick
-local runResetPosition, runForgetTimed, runDebug, runPerf, runTest
+local runResetPosition, runForgetTimed, runRedraw, runDebug, runPerf, runTest
 
 NS.COMMANDS = {
     {"help",          L["List available commands"],
@@ -55,6 +55,12 @@ NS.COMMANDS = {
         function(rest) cli:CliReset(rest) end},
     {"resetall",      L["Reset every setting to defaults"],
         function() runResetAll() end},
+    -- The verb is the library's (LibKa0s-Slash minor 17): bare lists the profiles, a name switches
+    -- to an EXISTING one (quotes stripped, case and spaces kept), an unknown name is refused with
+    -- the list and never created, and a switch in combat is refused. The switch's one debug line is
+    -- NS.OnProfileChanged's, fired by AceDB (core/AuraMaster.lua).
+    {"profile",       L["List profiles, or switch to one: profile <name>"],
+        function(rest) cli:CliProfile(rest) end},
     {"containers",    L["List your containers; the selected one is marked"],
         function() runContainers() end},
     {"select",        L["Choose the container settings apply to — /am select id or name"],
@@ -75,6 +81,9 @@ NS.COMMANDS = {
         function() runResetPosition() end},
     {"forgettimed",   L["Forget which buffs were learned to have a duration"],
         function() runForgetTimed() end},
+    -- A feature verb (SP-AMX-02): refused while disabled, as it is not in liveVerbs below.
+    {"redraw",        L["Repaint every container: light now, full with fonts and styling — /am redraw [light|full]"],
+        function(rest) runRedraw(rest) end},
     {"debug",         L["Toggle the debug console - on/off enable or disable logging"],
         function(rest) runDebug(rest) end},
     {"diagnostics",   L["Write a diagnostic report to the debug console (also /am debug diagnostics)"],
@@ -95,7 +104,8 @@ NS.COMMANDS = {
 -- one host writes backwards -- which is precisely what happened the last time the rule moved.
 --
 -- WHAT ANSWERS WHILE DISABLED: everything. `help`, `config`, `version`, `enable`, `disable`, `debug`,
--- `diagnostics`, `perf` and the whole schema CLI -- `get`, `set`, `list`, `reset`, `resetall` -- and the BARE `/am`,
+-- `diagnostics`, `perf`, `profile` and the whole schema CLI -- `get`, `set`, `list`, `reset`,
+-- `resetall` -- and the BARE `/am`,
 -- which opens the settings panel. That last one is the case that settled it: the panel is the one
 -- surface a player switches the addon back on from by hand, and a rule that answers it with a
 -- refusal has hidden the off switch. Reading and repairing settings is what a player needs from an
@@ -114,7 +124,7 @@ NS.COMMANDS = {
 --- and it is named rather than copied, so a change upstream arrives with the re-vendor instead of
 --- being missed here.
 ---
---- THREE MORE THAN THE LIBRARY SHIPS, and the reason is this addon's path model. Almost every schema
+--- FOUR MORE THAN THE LIBRARY SHIPS, and the reason is this addon's path model. Almost every schema
 --- path here is container-relative (`container.bars.width`) and resolves against the SELECTED
 --- container, so `/am containers` and `/am select` are how a player AIMS get, set and reset at the
 --- container they mean -- they are part of reading and repairing settings, not features. Neither
@@ -124,8 +134,13 @@ NS.COMMANDS = {
 ---
 --- AND `diagnostics`, the third, for the same reason `debug` is live: it is a diagnostic, not a
 --- feature, and the report is most wanted when something is misbehaving (owner, 2026-09-25).
+---
+--- AND `profile`, the fourth, because it is a host verb the library does not reserve (LibKa0s-Slash
+--- minor 17 leaves it out of LIVE_VERBS) and a switch is how a disabled player reaches a profile
+--- where the addon is on: NS.OnProfileChanged re-reads the latch. It sits in `out`, so the
+--- library-absent fallback below carries it too (spec S3, 2026-09-29).
 local function liveVerbs()
-    local out = { "containers", "select", "diagnostics" }
+    local out = { "containers", "select", "diagnostics", "profile" }
     for _, verb in ipairs((SlashLib and SlashLib.LIVE_VERBS) or {
         "help", "config", "version", "enable", "disable", "debug", "perf",
         "get", "set", "list", "reset", "resetall",
@@ -343,6 +358,33 @@ function runForgetTimed()
     print(L["Forgot every learned timed buff; they are relearned out of combat"])
 end
 
+-- `/am redraw [light|full]` (SP-AMX-02). light flips every live container now, in any state; full
+-- primes the fonts, flips, and re-dresses every container through one system apply, which waits
+-- with the usual deferral notice while combat or aura secrecy holds applies (CM.RedrawFull). A bare
+-- `/am redraw` is full when nothing holds an apply right now, else light, and says a full one waits.
+-- Each form's line names which ran. While a perf capture stands the addon down, full does nothing
+-- (CM.RedrawFull answers nil) and the line says so rather than claim a repaint.
+local REDRAW_WORDS = { light = true, full = true }
+
+function runRedraw(rest)
+    local word = firstWord(rest)
+    if word ~= "" and not REDRAW_WORDS[word] then return print(L["Usage: /am redraw [light|full]"]) end
+    local CM = NS.ContainerManager
+    local held = word == "" and CM.MustDefer()
+    if word == "light" or held then
+        printf(L["Light redraw: %d container(s) repainted"], CM.RedrawLight())
+        if held then print(L["A full redraw has to wait right now, so a light one ran; /am redraw full queues the rest"]) end
+        return
+    end
+    local n, waits = CM.RedrawFull()
+    if n == nil then return print(L["Full redraw skipped: Aura Master is stood down while a perf capture runs"]) end
+    printf(waits and L["Full redraw: fonts primed, %d container(s) repainted; the re-dress waits until it is allowed"]
+        or L["Full redraw: fonts primed, %d container(s) repainted, every container re-dressed"], n)
+    -- The usual deferral notice, once per blocked stretch: the queued request is the addon's own, so
+    -- its flush says nothing.
+    if waits then CM.NoteDeferred() end
+end
+
 -- /am debug        toggles the console WINDOW (the logging flag is untouched).
 -- /am debug on|off enables or disables session logging through the one SetEnabled seam.
 -- /am debug diagnostics  writes the diagnostic report (the library's RunDiagnostics over modules/Diagnostics.lua's
@@ -385,9 +427,13 @@ if not SlashLib then
         local function absent(verb)
             return function() printf(L["%s is unavailable: the LibKa0s library did not load."], "/am " .. verb) end
         end
-        for _, verb in ipairs({ "List", "Get", "Set", "Reset" }) do
+        for _, verb in ipairs({ "List", "Get", "Set", "Reset", "Profile" }) do
             stub["Cli" .. verb] = absent(verb:lower())
         end
+        -- The live instance's switch (LibKa0s-Slash minor 17), on the same route: with no library
+        -- there is no store adapter to trust, so it names the missing library and switches nothing.
+        local profileAbsent = absent("profile")
+        stub.ProfileSwitch = function() profileAbsent(); return false end
         stub.LandingRows = function()
             local out = {}
             for _, e in ipairs(d.commands) do
@@ -492,6 +538,11 @@ cli = SlashLib:New({
     -- forbidden escape sequences, which is what makes it safe to drop into a colored line.
     brandName    = "Ka0s Aura Master",
     liveVerbs    = liveVerbs(),
+    -- The profile store the `profile` verb reads (LibKa0s-Slash minor 17), asked at CALL time
+    -- because NS.db is built in OnInitialize, after this file runs. AceDB-3.0's db is the shape the
+    -- library duck-types; the no-AceDB fallback table (core/Database.lua) lacks the methods, and the
+    -- verb then answers that profiles are not available.
+    profiles     = function() return NS.db end,
 
     print   = function(line) print(line) end,
     version = function() return NS.Version() end,

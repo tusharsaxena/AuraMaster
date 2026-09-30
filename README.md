@@ -4,7 +4,7 @@
 ![CurseForge Version](https://img.shields.io/curseforge/v/1698345)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-1706%2F1706_passing-green)
+![Tests](https://img.shields.io/badge/Tests-1750%2F1750_passing-green)
 
 Ka0s Aura Master lets you build your own buff and debuff displays. Each one is a container. You pick
 whose auras it shows (yours, your target's, your focus's or your pet's), whether it shows buffs,
@@ -63,7 +63,9 @@ is over), and chat tells you which. `/am disable` hides every container at once 
 brings them back.
 
 Everything else is on the addon's page under Settings → AddOns, and `/am` on its own opens it.
-`/am help` (or `/auramaster help`) lists every command.
+`/am help` (or `/auramaster help`) lists every command. `/am profile` lists your profiles, and
+`/am profile Raid` switches to the one called Raid. `/am redraw` repaints every container if one
+drew wrong.
 
 ## How the containers work
 
@@ -101,7 +103,7 @@ on your own debuffs does nothing, and the Filters section warns you when that's 
 | How do I cancel a buff? | Right-click it in a container that shows your own buffs or weapon enchants. Untick **Right-click to cancel** on Layout → Mouse if you'd rather it didn't. |
 | Can I hide Blizzard's buff frame? | Yes, on General → Display. Your weapon enchants live in that same Blizzard frame and go with it. If you still want to see them, make sure a player buff container's **Weapon enchants** row on Filters → Categories is set to Show (the default). |
 | Can I make my own category? | Yes. General → Spell Categories → **Make a new category**. Name it, pick buffs or debuffs, then add spells to it. It shows up on every container's Filters → Categories grid marked (yours), where you set it to Show or Hide like any other. Renaming it keeps your spells and each container's choice. Deleting it throws the spell list away, so it asks first. You can't switch a category between buffs and debuffs after you make it; make another one and delete the old one instead. |
-| Can different characters have different setups? | Yes, through the Profiles page. A profile holds every container, so switching profiles swaps the whole set. |
+| Can different characters have different setups? | Yes, through the Profiles page. A profile holds every container, so switching profiles swaps the whole set. `/am profile Raid` in chat switches to a profile called Raid. |
 | Why won't the settings open in combat? | The game protects its settings window during combat, so `/am config` prints a gray line instead of opening it. Try again once combat ends. |
 
 ## Troubleshooting
@@ -116,6 +118,7 @@ on your own debuffs does nothing, and the Filters section warns you when that's 
 | A container attached to a frame is sitting somewhere else | The frame wasn't found, so the container fell back to its screen position. Check the name in **Frame name** (`/fstack` shows frame names), or pick the frame again. |
 | Blizzard's buff frame is still showing after I hid it | Blizzard's frames can't be moved during combat. The change goes through as soon as combat ends. |
 | My weapon enchants don't show | Enchants appear in a player buff container whose **Weapon enchants** row on Filters → Categories is set to Show (the default). `/am new enchants` makes a container that shows nothing else. You choose which weapon slots count under General → Spell Categories → Weapon enchants. Enchants that never expire are skipped while **Hide enchants without a duration** is on. |
+| A bar lost its name or its text looks wrong | Type `/am redraw`. `/am redraw light` repaints every container straight away, even in combat. `/am redraw full` also reloads the fonts and re-applies each container's styling; in combat or during an encounter, key or match that part waits, and chat says so. A bare `/am redraw` does the full one when it can and the light one when it can't. |
 | Chat says the client has no aura container API | Aura Master needs Retail patch 12.1 or later. |
 | A container vanished after I clicked the X on its handle | The X turns the container off. Tick its **Enabled** box on the Containers page to bring it back. Its settings were kept. |
 | Something looks wrong and I want to report it | Follow [Reporting a bug](#reporting-a-bug) below. |

@@ -129,7 +129,7 @@ test("rail: a rail click draws that section's strip and rows under the same band
     assertTrue(P.find(ws, "Dropdown", NS.L["Container"]) ~= nil, "the band is drawn with the section")
 end)
 
-test("rail: each section keeps its own tab: Filters, Categories, Layout, back to Filters lands on Categories (smoke 5)", function()
+test("rail: each section keeps its own tab: Filters, Categories, Layout, back to Filters lands on Categories (smoke PANEL-12)", function()
     local NS, _, P = env()
     local ctx = NS.Helpers.__pageCtx.containers
     local L = NS.L
@@ -152,7 +152,7 @@ test("rail: each section keeps its own tab: Filters, Categories, Layout, back to
     assertEqual(ctx.activeTab, L["Categories"], "and through General too")
 end)
 
-test("rail: a Style change heals an active style section to the new style's entry; other sections stay (smoke 4)", function()
+test("rail: a Style change heals an active style section to the new style's entry; other sections stay (smoke PANEL-11)", function()
     local NS, _, P = env()
     local ctx = NS.Helpers.__pageCtx.containers
     NS.Helpers.SelectContainer(1)                   -- bars
@@ -218,7 +218,7 @@ local function recordingOpens()
     return NS, m, pages(NS, m), opened
 end
 
-test("rail: a former sub-page key opens Containers on that section, drawn on the next show (smoke 7)", function()
+test("rail: a former sub-page key opens Containers on that section, drawn on the next show (smoke LAYOUT-6)", function()
     local NS, _, P, opened = recordingOpens()
     local ctx = NS.Helpers.__pageCtx.containers
     NS.Helpers.SelectContainer(1)
@@ -276,7 +276,7 @@ test("rail: selecting a section is refused in combat and moves nothing", functio
     assertEqual(ctx.activeSection, "containers")
 end)
 
-test("rail: Defaults restores only the active section's rows for the selected container (smoke 6)", function()
+test("rail: Defaults restores only the active section's rows for the selected container (smoke PANEL-13)", function()
     local NS, m, P = env()
     local T0 = NS.CONTAINER_TEMPLATE
     NS.Helpers.SelectContainer(1)

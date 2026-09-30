@@ -1,12 +1,12 @@
 # Slash dispatch
 
-`/am` and its long form `/auramaster`. Required because `NS.COMMANDS` carries 23 commands, over the
+`/am` and its long form `/auramaster`. Required because `NS.COMMANDS` carries 25 commands, over the
 eight-or-more trigger (documentation-§3).
 
 ## Registration and dispatch
 
 - **Registration** is AceConsole's `RegisterChatCommand`, twice, in `Slash.Register`
-  (`settings/Slash.lua:571`), called from `OnInitialize`. There is no `SLASH_*` global. It is
+  (`settings/Slash.lua:622`), called from `OnInitialize`. There is no `SLASH_*` global. It is
   **never torn down**, which is what makes `enable` and `disable` a pair rather than a one-way
   door: every verb still answers while the addon is disabled (slash-commands-§2). The chat command,
   the dispatcher and `NS.COMMANDS` are **setup, not features**, so the stand-down does not reach
@@ -47,20 +47,22 @@ eight-or-more trigger (documentation-§3).
 | 7 | `set path value` | library | `cli:CliSet` → type-aware parse (a string row takes the whole rest of the line, trimmed; the descriptor's `parse` hook, `parseValue`, first hands the text to a row's own `cliParse`, which the two anchor-point rows use to take the nine point names in any case or `auto`, batch 11 G7) → `NS.SetByPath(path, value)`; a refusal (`false, err, why`) is returned whole and the library prints it as `Invalid value for <path>` with the reason indented under it, no echo (LibKa0s-Slash minor 15) |
 | 8 | `reset path` | library | `cli:CliReset` → `NS.ApplyDefault(row)`; takes a path, never a page. A `noReset` row (`container.name`) answers false, and the library prints `<path> has no default to restore` instead of an echo. Only that row does: a seam refusal (no container yet) prints the seam's reason from the descriptor, then the library's echo |
 | 9 | `resetall` | host | `NS.Helpers.RestoreAllDefaults()` — the profile reset (options-ui-§12); not refused in combat, where it takes the parked teardown like Profiles → Reset Profile |
-| 10 | `containers` | host | Lists every container: `name #id · unit · type · style`, the selected one marked `>` |
-| 11 | `select id-or-name` | host | `NS.State.SetActiveContainer(id)`; name match is case-insensitive, and a name more than one container shares is refused (below) |
-| 12 | `new [words]` | host | `ContainerManager.Create(overrides)` then selects it; `Create` refuses in combat and the refusal prints gray |
-| 13 | `delete id-or-name` | host | `ContainerManager.Delete(id)`; refused in combat with a gray notice; a shared name is refused (below) |
-| 14 | `lock` | host | `NS.SetByPath("locked", true)` — hides the handles and outlines |
-| 15 | `unlock` | host | `NS.SetByPath("locked", false)` — each container's handle and a faint outline; live auras keep drawing |
-| 16 | `test [on\|off]` | host | Bare toggles test mode, `on`/`off` set it, through `Preview.SetTestMode`: placeholder auras on every container; a start in combat is refused on one gray line, and any other word prints `Usage: /am test [on\|off]` |
-| 17 | `pick` | host | Starts `FramePicker` for the selected container; refused in combat |
-| 18 | `resetposition` | host | `ContainerManager.ResetPositions()` |
-| 19 | `forgettimed` | host | `TimedSpells.Forget()` |
-| 20 | `debug [on\|off\|diagnostics]` | host | Bare toggles the console window; `on`/`off` go through `NS.DebugLog:SetEnabled`; `diagnostics` runs `NS.DebugLog:RunDiagnostics` (`docs/debug.md`). Any other word, `diag` included, toggles the window: there is no `diag` alias (owner, 2026-09-25) |
-| 21 | `diagnostics` | host | `NS.DebugLog:RunDiagnostics()`, the one-shot diagnostic report in the debug console (`docs/debug.md`); the same report as `/am debug diagnostics` |
-| 22 | `perf …` | host | Prints the lines `NS.Perf.OnCommand(rest)` returns (performance-§4); `docs/performance.md` |
-| 23 | `version` | host | `v` + `NS.Version()` |
+| 10 | `profile [name]` | library | `cli:CliProfile(rest)` over the descriptor's `profiles` (`NS.db`): bare lists the profiles, current marked; a name (one pair of quotes stripped, case and spaces kept) switches to that existing profile through `NS.db:SetProfile`, whose `OnProfileChanged` runs `NS.OnProfileChanged` and its one `[Profile]` line; the current name answers `Already on profile`, an unknown name is refused with a did-you-mean and the list and never created, and a switch in combat is refused (LibKa0s-Slash minor 17; `docs/profiles.md`) |
+| 11 | `containers` | host | Lists every container: `name #id · unit · type · style`, the selected one marked `>` |
+| 12 | `select id-or-name` | host | `NS.State.SetActiveContainer(id)`; name match is case-insensitive, and a name more than one container shares is refused (below) |
+| 13 | `new [words]` | host | `ContainerManager.Create(overrides)` then selects it; `Create` refuses in combat and the refusal prints gray |
+| 14 | `delete id-or-name` | host | `ContainerManager.Delete(id)`; refused in combat with a gray notice; a shared name is refused (below) |
+| 15 | `lock` | host | `NS.SetByPath("locked", true)` — hides the handles and outlines |
+| 16 | `unlock` | host | `NS.SetByPath("locked", false)` — each container's handle and a faint outline; live auras keep drawing |
+| 17 | `test [on\|off]` | host | Bare toggles test mode, `on`/`off` set it, through `Preview.SetTestMode`: placeholder auras on every container; a start in combat is refused on one gray line, and any other word prints `Usage: /am test [on\|off]` |
+| 18 | `pick` | host | Starts `FramePicker` for the selected container; refused in combat |
+| 19 | `resetposition` | host | `ContainerManager.ResetPositions()` |
+| 20 | `forgettimed` | host | `TimedSpells.Forget()` |
+| 21 | `redraw [light\|full]` | host | `runRedraw`: `light` → `ContainerManager.RedrawLight()`, every live engine turned off and on again now (`ContainerClass:Flip`), in combat and while auras are secret too; `full` → `ContainerManager.RedrawFull()`, `FontPrimer.PrimeAll()`, the same flip, then `RequestApply(nil, true)`, whose apply re-dresses every button in place; when `CM.MustDefer()` holds, the line says the re-dress waits and `CM.NoteDeferred()` prints the usual deferral notice once per blocked stretch. Bare runs `full` unless `CM.MustDefer()` holds, then `light` plus a line saying a full one waits. While the addon is stood down (a perf capture's `perf` hold), `RedrawFull` answers nil and the line says the full redraw was skipped; `light` flips nothing and reports 0. Any other word prints `Usage: /am redraw [light\|full]`. No engine is retired or built (SP-AMX-02) |
+| 22 | `debug [on\|off\|diagnostics]` | host | Bare toggles the console window; `on`/`off` go through `NS.DebugLog:SetEnabled`; `diagnostics` runs `NS.DebugLog:RunDiagnostics` (`docs/debug.md`). Any other word, `diag` included, toggles the window: there is no `diag` alias (owner, 2026-09-25) |
+| 23 | `diagnostics` | host | `NS.DebugLog:RunDiagnostics()`, the one-shot diagnostic report in the debug console (`docs/debug.md`); the same report as `/am debug diagnostics` |
+| 24 | `perf …` | host | Prints the lines `NS.Perf.OnCommand(rest)` returns (performance-§4); `docs/performance.md` |
+| 25 | `version` | host | `v` + `NS.Version()` |
 
 The **Kind** column says who implements the verb, not who gates it — see below.
 
@@ -77,7 +79,7 @@ That wording is the **collection's**, not this addon's: `LibKa0s-Slash-1.0` buil
 descriptor's `brandName` and `slash`, so eleven addons say it the same way and none of it is an
 `L[]` key here.
 
-Refusing: `new`, `delete`, `lock`, `unlock`, `test`, `pick`, `resetposition`, `forgettimed`.
+Refusing: `new`, `delete`, `lock`, `unlock`, `test`, `pick`, `resetposition`, `forgettimed`, `redraw`.
 
 Still answering, always: `help`, `config`, `version`, `enable`, `disable`, `debug`, `perf` and the
 schema CLI (`get`, `set`, `list`, `reset`, `resetall`) — **and the bare `/am`, which opens the
@@ -88,7 +90,9 @@ index in full with the refusal line under the header, because the player has to 
 almost every schema path here is container-relative, so those two are how a player aims `get`, `set`
 and `reset` at the container they mean. Neither draws, creates or deletes anything. `diagnostics` is
 the third addition: like `debug` it is a diagnostic, not a feature, and the report is most wanted
-when something is misbehaving.
+when something is misbehaving. `profile` is the fourth: the library does not reserve it, so the host
+names it, and a switch to a profile where the addon is on is how a disabled player brings it back
+(`NS.OnProfileChanged` re-reads the latch).
 
 **The gate is the library's**, closed by the descriptor's `isEnabled` (`NS.EnabledStored`, the one enabled predicate `core/LifecycleSetup.lua` publishes) at the bottom of
 `settings/Slash.lua`, with `liveVerbs` naming the live set as data. There is no wrapper around the
@@ -102,7 +106,7 @@ the addon is actually inert is `tests/test_disabled.lua` steps 1–6.
 ### `/am new` words
 
 Any order, any subset, case-insensitive; each word sets one field of the new container
-(`NEW_WORDS`, `settings/Slash.lua:249`):
+(`NEW_WORDS`, `settings/Slash.lua:264`):
 
 | Words | Field |
 |---|---|
@@ -129,12 +133,12 @@ banner last chose, or `/am select`, or the first container when nothing has been
 (`NS.ActiveContainer`, `settings/Schema.lua:198`). So `/am set container.bars.width 300` means the
 same thing on the CLI as the Width slider does in the panel. Every `container.` line `/am list` and
 `/am get` print is annotated in gray with the container's name (`cli:SetRowAnnotator`,
-`settings/Slash.lua:532`), so a value never reads as the only one. `/am containers` then `/am select`
+`settings/Slash.lua:583`), so a value never reads as the only one. `/am containers` then `/am select`
 changes the target.
 
 A Filters category row (`printLabel`) prints the label the Categories grid shows, Show or Hide
 (schema v3), with the stored value `/am set` takes after it in gray: `Hide (hide)`. The descriptor's
-`format` hook (`formatValue`, `settings/Slash.lua:455`) does it; every other row prints as the
+`format` hook (`formatValue`, `settings/Slash.lua:501`) does it; every other row prints as the
 library formats it.
 
 Examples:
@@ -154,16 +158,17 @@ through the seam but have no row, so `/am list` does not print them; the Filters
 
 ## Degraded path
 
-With `LibKa0s-Slash-1.0` absent, `settings/Slash.lua:379` builds a stub dispatcher: the host verbs
-keep working (they never went to the library), a bare `/am` runs `config` as the library's does (the
-panel's own stub then says the library is missing), `help` prints a plain command list, and `list`, `get`,
-`set` and `reset` each print the one library-absent line (`/am set is unavailable: the LibKa0s library
-did not load.`). The stub copies none of the library's formatting or parsing; its refusal line for a
-disabled addon is formatted from `STUB_DISABLED_LINE_FORMAT`, the library's `DISABLED_LINE_FORMAT` byte
-for byte, published as `Sl.__stubDisabledLineFormat` in both builds so `tests/test_surface_parity.lua`
-pins it to the live major. `/am enable`, `/am disable`, `/am lock` and `/am unlock` still store their
-paths in that build through `NS.WRITE_THROUGH` (`docs/settings-panel.md`, *The degraded panel*).
-`tests/degraded_env.lua` loads the addon that way.
+With `LibKa0s-Slash-1.0` absent, `settings/Slash.lua:421` builds a stub dispatcher: the host verbs keep
+working (they never went to the library), a bare `/am` runs `config` as the library's does (the panel's
+own stub then says the library is missing), `help` prints a plain command list, and `list`, `get`, `set`
+and `reset` each print the one library-absent line (`/am set is unavailable: the LibKa0s library did not
+load.`). The stub's `CliProfile` and `ProfileSwitch` (the live instance has both from Slash minor 17)
+print that line for `/am profile` and switch nothing. The stub copies none of the library's formatting
+or parsing; its refusal line for a disabled addon is formatted from `STUB_DISABLED_LINE_FORMAT`, the
+library's `DISABLED_LINE_FORMAT` byte for byte, published as `Sl.__stubDisabledLineFormat` in both
+builds so `tests/test_surface_parity.lua` pins it to the live major. `/am enable`, `/am disable`,
+`/am lock` and `/am unlock` still store their paths in that build through `NS.WRITE_THROUGH`
+(`docs/settings-panel.md`, *The degraded panel*). `tests/degraded_env.lua` loads the addon that way.
 
 ## Adding a verb
 

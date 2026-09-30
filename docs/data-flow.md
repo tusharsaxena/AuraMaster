@@ -20,13 +20,13 @@ engine does the reading, filtering, sorting, layout and timer animation in its o
         │    (a session row stops after the debug line: it sends nothing)
         │    (inside a bulk copy or reset the [Set] line is muted and tallied: one line per act)
         ▼
- 2  ContainerManager (CONFIG_CHANGED listener)                 modules/ContainerManager.lua:630
+ 2  ContainerManager (CONFIG_CHANGED listener)                 modules/ContainerManager.lua:743
         │  first FontPrimer.PrimeAll: a font no container drew in yet is drawn on a shown frame
         │  the row's effect:  "visibility" → ApplyVisibility now    "none" → nothing
         │  otherwise RequestApply(containerId)   nil = every container
         │  batched with C_Timer.NewTimer(0) — a slider drag or a profile reset applies once
         ▼
- 3  ContainerManager.FlushPending                              modules/ContainerManager.lua:313
+ 3  ContainerManager.FlushPending                              modules/ContainerManager.lua:314
         │  MustDefer()?  Compat.AurasAreSecret() or InCombatLockdown()
         │     yes → keep the request, print the notice naming the cause (once), return
         │     no  → for each dirty container: Container:Apply(); re-place container-attached ones
@@ -244,11 +244,12 @@ after they were hidden; a visibility pass alone leaves them as they are.
 | `ADDON_LOADED` (ours) → `OnInitialize` | `NS.InitDB` → AceDB, `RunMigrations`, `PrepareProfile` (seeds the starters on a fresh profile); `/am` registered |
 | `PLAYER_LOGIN` → `OnEnable` | Lifecycle events registered; `ContainerManager.Init` primes every container font (`FontPrimer.PrimeAll`, below), then builds an instance per container and applies them (a disabled login builds none: the stand-up primes and builds them); `BlizzardFrames.Apply`; the options panel category is created. Built here, not at load, so the engine's access restrictions (applied at `PLAYER_ENTERING_WORLD`) come after every button's first `initializeFrame` |
 | `PLAYER_ENTERING_WORLD` | Visibility pass; flush anything pending; `FontPrimer.OnEnterWorld` notes the time (the loading screen is still up), and arms the primer's hide and refresh itself only on a client that refused `LOADING_SCREEN_DISABLED` |
-| `LOADING_SCREEN_DISABLED` | The loading screen has ended: `FontPrimer.OnLoadingScreenEnd` runs a priming pass (a font refused under the loading screen is tried again), then arms the primer's hide and refresh when anything was primed since the last loading screen (below) |
+| `LOADING_SCREEN_DISABLED` | The loading screen has ended: `FontPrimer.OnLoadingScreenEnd` runs a priming pass (a font refused under the loading screen is tried again), then arms the primer's hide and refresh when anything was primed since the last loading screen (below); and arms the weapon-enchant reset 1.75 s later, whatever the primer did (`CM.RequestEnchantReset`, SP-AMX-01) |
 | `PLAYER_REGEN_DISABLED` / `ENABLED` | Visibility pass; on combat end, flush pending applies, apply the Blizzard-frame settings, and place again any frame-attached container whose frame appeared during combat |
 | `ADDON_RESTRICTION_STATE_CHANGED` | Flush pending applies — secrecy can lift outside a combat transition (a key or encounter ending) |
 | `PLAYER_TARGET_CHANGED`, `PLAYER_FOCUS_CHANGED`, `UNIT_PET` | Every container on that unit calls the engine's `UpdateAllAuras`, because the engine keeps showing the old unit's auras until told |
 | `ADDON_LOADED` (any) | Frame-attached containers whose frame did not exist yet are placed again |
+| `ITEM_DATA_LOAD_RESULT`, `GET_ITEM_INFO_RECEIVED` | When the item is the weapon equipped in slot 16 or 17 and the load succeeded, the weapon-enchant reset is armed 0.5 s later (`CM.OnWeaponItemData`); one timer, keeping the later deadline, so a burst flips once. The reset turns each live engine with enchant frames off and on again, so the weapon names are drawn afresh (`docs/midnight-quirks.md` → *Weapon enchants*) |
 | Profile changed, copied or reset | `NS.OnProfileChanged`: `PrepareProfile`, selection cleared, `ContainerManager.Announce` (the new profile's fonts primed, instances follow the registry, apply all, `CONTAINERS_CHANGED`), Blizzard frames, panel refresh |
 
 ## The disabled state
@@ -268,10 +269,10 @@ player switched off. There is no `StandUp()` to call; the only route out is rele
 
 | | |
 |---|---|
-| The nine lifecycle events | `addon:UnregisterLifecycleEvents()` — unregistered, not gated |
+| The eleven lifecycle events | `addon:UnregisterLifecycleEvents()` — unregistered, not gated |
 | `modules/TimedSpells.lua` | `TS.StandDown()`: its unit frame's `UNIT_AURA` (unregistered by hand; the frame is kept for the next stand-up), its gate events, its two bus subscriptions, and a queued scan timer, canceled |
 | `modules/EmptyWatch.lua` | `EW.Stop()`: both unit frames' registrations (unregistered by hand; the frames are kept), its AceEvent pet, inventory, target and focus events, and a queued pass or enchant-expiry timer, canceled |
-| `modules/ContainerManager.lua` | `CM.StopListening()`: its three bus subscriptions, and the pending queue behind them |
+| `modules/ContainerManager.lua` | `CM.StopListening()`: its three bus subscriptions, the pending queue behind them, and an armed weapon-enchant reset, canceled; `CM.RequestEnchantReset` arms nothing while stood down |
 | The coalescing apply timer | canceled by `CM.StopListening`; `CM.RequestApply` returns immediately, so nothing re-arms |
 | `modules/FontPrimer.lua` | `FontPrimer.Stop()`, from `CM.StopListening`: the hide timer and the follow-up refresh, canceled, and the frame hidden; a stood-down addon hears no loading-screen event, so the primer stops waiting for one. The fonts it drew stay loaded, so what it primed is kept, and `PrimeAll` does nothing while stood down |
 | `modules/FramePicker.lua` | `FP.Stop()` — the overlay's `OnUpdate` cleared |

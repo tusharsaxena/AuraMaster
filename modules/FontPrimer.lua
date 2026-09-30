@@ -275,7 +275,7 @@ function FP.OnEnterWorld()
 end
 
 --- LOADING_SCREEN_DISABLED, from addon:OnLoadingScreenEnd: the loading screen is gone. Logs both
---- timestamps (the smoke check FP10 reads the gap), then arms the world timers.
+--- timestamps (the smoke check STYLE-29 reads the gap), then arms the world timers.
 function FP.OnLoadingScreenEnd()
     local now = GetTime()
     lastEnd = now

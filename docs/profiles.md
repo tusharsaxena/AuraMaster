@@ -27,8 +27,8 @@ entirely, performance-§5) and the session state (`debug`, the selected containe
 
 ## Switching, copying, resetting
 
-`NS.OnProfileChanged`, `NS.OnProfileReset` and `NS.OnProfileCopied` (`core/AuraMaster.lua:218`,
-`core/AuraMaster.lua:229`, `core/AuraMaster.lua:236`):
+`NS.OnProfileChanged`, `NS.OnProfileReset` and `NS.OnProfileCopied` (`core/AuraMaster.lua:230`,
+`core/AuraMaster.lua:241`, `core/AuraMaster.lua:248`):
 
 ```
 NS.OnProfileChanged() / OnProfileReset() / OnProfileCopied(source)
@@ -57,7 +57,8 @@ NS.OnProfileChanged() / OnProfileReset() / OnProfileCopied(source)
   and logs nothing of its own, and the session rows it writes first are muted, so a Reset all reads
   as that one line.
 - The apply that follows is deferred like any other while auras are secret or combat lockdown is on.
-- **A switch, copy or reset in combat** cannot be refused, since AceDB fires it. A container the new
+- **A switch, copy or reset in combat** from the page cannot be refused, since AceDB fires it (the
+  `/am profile` verb refuses its own switch in combat, below). A container the new
   profile does not have is parked (its engine disabled, nothing hidden) and torn down after combat;
   a container it adds gets a plain anchor frame now and its engine once combat ends. Ids are reused
   across profiles (a reset reseeds the starters from id 1), so a container whose id the new profile
@@ -88,7 +89,32 @@ defaults — the same thing Profiles → Reset Profile does. Your other profiles
 `AuraMaster-Profiles` and draws it with `AceConfigDialog:Open` into an AceGUI `SimpleGroup` inside
 the canvas, on first show and again on every render (AceConfigDialog re-reads the current profile on
 each open). It is the only AceConfig use in the addon (options-ui-§3) and carries no Defaults button.
-There is no `/am profile` verb; profiles are managed from this page.
+New, copy, delete and reset are managed from this page; switching also has a chat verb (below).
+
+## The `/am profile` verb
+
+`/am profile` lists the profiles, the current one marked `(current)`; `/am profile <name>` switches to
+that profile. The verb's behavior is `LibKa0s-Slash-1.0`'s `CliProfile` (Slash minor 17), reached
+through the `profile` row in `NS.COMMANDS` and the descriptor's `profiles` field, which hands over
+`NS.db` at call time (`settings/Slash.lua`):
+
+- **The name** keeps its case and inner spaces (AceDB names are case-sensitive); one pair of
+  surrounding quotes is stripped, so `/am profile "Raid Night"` and `/am profile Raid Night` are the
+  same.
+- **An existing profile only.** An unknown name prints `No profile named '<name>'.`, a
+  `Did you mean '<name>'?` when exactly one profile matches ignoring case, and the list. It never
+  creates a profile: `SetProfile` would, and a new profile gets the starter containers seeded into it.
+  New profiles come from this page.
+- **The switch** is `NS.db:SetProfile(name)`, so it runs the same `OnProfileChanged` path as the
+  page (above), with its one `[Profile] changed -> <name>` line; the library logs nothing of its own.
+  The current name answers `Already on profile '<name>'.`
+- **Refused in combat** (`Can't switch profiles in combat.`), unlike the page, whose switch AceDB fires
+  and so cannot be refused. The list and the refusals still answer in combat.
+- **Live while disabled.** `profile` is in `liveVerbs()`, so a disabled player can switch to a
+  profile where the addon is on; `prepareProfile` re-reads the latch.
+- **Library absent.** The degraded stub's `CliProfile` prints `/am profile is unavailable: the LibKa0s
+  library did not load.` and switches nothing. With AceDB absent (below) the store lacks the profile
+  methods and the verb prints `Profiles are not available.`
 
 ## Without AceDB
 

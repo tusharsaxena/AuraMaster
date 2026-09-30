@@ -836,7 +836,7 @@ test("diag: the fonts primed line tells a priming waiting for the world from the
 end)
 
 test("diag: the loading screen line shows when the world was entered and when the loading screen ended", function()
-    -- Session logging is off at login, so the report is where the smoke check FP10 reads the gap
+    -- Session logging is off at login, so the report is where the smoke check STYLE-29 reads the gap
     -- between PLAYER_ENTERING_WORLD and LOADING_SCREEN_DISABLED.
     local NS, mocks = primerEnv(true)
     -- red under: no such line (the gap visible only in a trace nobody was logging at login)
