@@ -5,6 +5,8 @@ and the `[Init]` summary). `/am debug` toggles the window and `/am debug on|off`
 logging. This page covers the one debug surface the addon adds: **the diagnostic report**,
 which exactly two forms run: **`/am diagnostics`** and **`/am debug diagnostics`**. There is no
 `diag` alias (owner, 2026-09-25): `/am debug diag` toggles the window like any other unknown word.
+The console's title bar also carries the library's orange **Diagnostics** link, just right of the
+Debug On/Off label (DebugLog 16); a click runs the same report, `NS.DebugLog:RunDiagnostics()`.
 
 ## What the report does
 
