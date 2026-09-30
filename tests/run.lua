@@ -132,6 +132,7 @@ Kit.run{
         "test_diagnostics",
         "test_bulklog",
         "test_debug_coverage",
+        "test_debug_library_lines",
         "test_optionssetup",
         "test_options_descriptor",
         "test_pages_general",

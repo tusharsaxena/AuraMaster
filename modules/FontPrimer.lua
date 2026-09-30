@@ -77,9 +77,10 @@ local seen = {}       -- [file][size][flags] = true, primed this session (no str
 local primed = {}     -- { path, size, flags } in priming order, for the diagnostics report
 local refusedAt = {}  -- [file][size][flags] = its `refused` entry: refused by SetFont, not primed yet
 local refused = {}    -- { path, size, flags, fs } in the order first refused; every priming retries them
--- The refused count the last "refused" line traced: a priming runs on every settings write (a slider
--- drag is dozens), so the line is written only when the count moves (debug-logging-§9).
-local refusedNoted = 0
+-- The "refused" line's key in the console's change gate (DebugLog 18, DebugLogGates 1): a priming
+-- runs on every settings write (a slider drag is dozens), so the line is written only when the count
+-- moves (debug-logging-§9), and a Clear or turning logging on re-arms it.
+local REFUSED_KEY = "FontPrimer.refused"
 local holdTimer, refreshTimer
 local refreshAt           -- "play" or "world": which refresh refreshTimer is, for the report
 local inWorld = false     -- the first loading screen has ended (or a stand-down ended the wait)
@@ -231,9 +232,13 @@ local function primePass()
     end
     if NS.Debug and n > 0 then NS.Debug("Fonts", "primed %d new font(s)", n) end
     -- A retry the client accepts is the `primed` line above; the count going to 0 writes nothing.
-    if r ~= refusedNoted and NS.State.debug and NS.Debug then
-        refusedNoted = r
-        if r > 0 then NS.Debug("Fonts", "%d font(s) refused, retried at the next priming", r) end
+    local Dl = NS.DebugLog
+    if Dl and Dl.DebugChanged then
+        if r > 0 then
+            Dl.DebugChanged(REFUSED_KEY, "Fonts", "%d font(s) refused, retried at the next priming", r)
+        else
+            Dl.DebugForget(REFUSED_KEY)
+        end
     end
     return n
 end

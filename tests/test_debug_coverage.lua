@@ -7,18 +7,20 @@ local T = _G.AM_TEST
 local test, assertEqual, assertTrue, assertFalse, assertNil =
     T.test, T.assertEqual, T.assertTrue, T.assertFalse, T.assertNil
 local fresh = dofile("tests/fresh_env.lua")
+local spyConsole = dofile("tests/console_spy.lua")
 
---- Logging on, and every line of the tags in `tags` (a set; nil for all) recorded as `[Tag] text`.
+--- Logging on, and every line of the tags in `tags` (a set; nil for all) recorded as `[Tag] text`:
+--- the gated sink's and the console's own gates' (tests/console_spy.lua).
 local function record(NS, tags)
     NS.State.debug = true
     local lines = {}
-    NS.Debug = function(tag, fmt, ...)
+    spyConsole(NS, function(tag, fmt, ...)
         if tags and not tags[tag] then return end
         local n, args = select("#", ...), { ... }
         for i = 1, n do args[i] = tostring(args[i]) end
         local k = #lines
         lines[k + 1] = "[" .. tag .. "] " .. fmt:format(unpack(args, 1, n))
-    end
+    end)
     return lines
 end
 
@@ -171,33 +173,36 @@ test("coverage: test mode switched outside the seam says who switched it; the ch
     assertEqual(dump(lines), "[Preview] test mode on (/am test) | [Preview] test mode off (combat started)")
 end)
 
-test("coverage: the stand-down and the stand-up are one [State] line each, naming the holds", function()
+test("coverage: the stand-down and the stand-up are one [Lifecycle] line each, the library's, naming the holds", function()
     local NS = fresh()
-    local lines = record(NS, { State = true })
+    local lines = record(NS, { State = true, Lifecycle = true })
     NS.Slash:OnSlash("disable")
     NS.Slash:OnSlash("enable")
     NS.lifecycle:Hold(NS.HOLD_PERF)
     NS.lifecycle:Release(NS.HOLD_PERF)
-    -- red under: standDown or standUp without traceEdge (the addon's own enable and stand-down
-    -- transitions are debug-logging-§8 state edges), or the holds left out
+    -- red under: core/LifecycleSetup.lua's descriptor without `debug` (the edges, debug-logging-§8
+    -- state edges, would not land), or a [State] edge line of the host's beside the library's
+    -- (debug-logging-§4: the library writes it, the host does not write a second)
     assertEqual(#lines, 4, dump(lines))
-    assertEqual(lines[1], "[State] stood down: events and timers off, containers hidden (holds: disabled)")
-    assertEqual(lines[2], "[State] stood up: events on, every container re-applied (holds: none)")
-    assertEqual(lines[3], "[State] stood down: events and timers off, containers hidden (holds: perf)")
+    assertEqual(lines[1], "[Lifecycle] stood down: added disabled (holds: disabled)")
+    assertEqual(lines[2], "[Lifecycle] stood up: released disabled (holds: none)")
+    assertEqual(lines[3], "[Lifecycle] stood down: added perf (holds: perf)")
+    assertEqual(lines[4], "[Lifecycle] stood up: released perf (holds: none)")
 end)
 
 test("coverage: a stand-down combat holds says so, and its finish after combat is traced", function()
     local NS, mocks = fresh()
-    local lines = record(NS, { State = true })
+    local lines = record(NS, { State = true, Lifecycle = true })
     mocks.__lockdown = true
     NS.Slash:OnSlash("disable")
     mocks.__lockdown = false
     mocks.__fireEvent("PLAYER_REGEN_ENABLED")
     -- red under: holdPending's flush writing nothing (a held-then-never-flushed stand-down must be
-    -- visible, debug-logging-§8 deferred work)
-    assertEqual(#lines, 2, dump(lines))
-    assertEqual(lines[1], "[State] stood down: events and timers off; hiding held until combat ends (holds: disabled)")
-    assertEqual(lines[2], "[State] stand-down finished after combat: Blizzard frames and anchors restored (holds: disabled)")
+    -- visible, debug-logging-§8 deferred work). The edge is the library's line, the hold the host's.
+    assertEqual(#lines, 3, dump(lines))
+    assertEqual(lines[1], "[Lifecycle] stood down: added disabled (holds: disabled)")
+    assertEqual(lines[2], "[State] stand-down: hiding held until combat ends (holds: disabled)")
+    assertEqual(lines[3], "[State] stand-down finished after combat: Blizzard frames and anchors restored (holds: disabled)")
 end)
 
 -- ── dependencies, at enable ──────────────────────────────────────────────────────────────────────
@@ -205,14 +210,16 @@ end)
 test("coverage: the [Init] line names a missing optional library and a stand-down, once per enable", function()
     local NS = fresh()   -- the harness loads no LibSharedMedia
     NS.DebugLog:SetEnabled(true)
-    local line = NS.DebugLog:LastLine()
+    -- The newest [Init] line, not the last line: the first enable flushes the at-enable queue after
+    -- it (the Launcher's dependency line, DebugLogGates 1).
+    local line = NS.DebugLog:FindLine("[Init]")
     -- red under: initNotes dropped (a log from a client with no media library reads as healthy)
     assertTrue(line:find(", LibSharedMedia-3.0 missing (media-pack fonts and textures fall back)", 1, true) ~= nil, line)
     assertNil(line:find("stood down", 1, true), line)
     NS.DebugLog:SetEnabled(false)
     NS.lifecycle:Hold(NS.HOLD_PERF)
     NS.DebugLog:SetEnabled(true)
-    line = NS.DebugLog:LastLine()
+    line = NS.DebugLog:FindLine("[Init]")
     NS.DebugLog:SetEnabled(false)
     NS.lifecycle:Release(NS.HOLD_PERF)
     -- red under: the stand-down note missing from the line a pasted log opens with

@@ -4,6 +4,7 @@
 -- tests/handle_recorder.lua.
 
 local T = _G.AM_TEST
+local spyConsole = dofile("tests/console_spy.lua")
 local test, assertEqual, assertTrue, assertFalse, assertNil =
     T.test, T.assertEqual, T.assertTrue, T.assertFalse, T.assertNil
 local fresh = dofile("tests/fresh_env.lua")
@@ -83,11 +84,11 @@ test("anchors: a screen fallback and a skipped resolve are traced", function()
     local NS, mocks = fresh()
     NS.State.debug = true
     local lines = {}
-    NS.Debug = function(tag, fmt, ...)
+    spyConsole(NS, function(tag, fmt, ...)
         if tag == "Anchor" then
             lines[#lines + 1] = fmt:format(...)
         end
-    end
+    end)
     local CM = NS.ContainerManager
     NS.Anchors.Place(CM.instances[2])
     -- red under: tracing a screen container's placement as a fallback
@@ -109,12 +110,12 @@ test("anchors: a fallback and a lockdown skip are traced once while they last, n
     local NS, mocks = fresh()
     NS.State.debug = true
     local lines = {}
-    NS.Debug = function(tag, fmt, ...)
+    spyConsole(NS, function(tag, fmt, ...)
         if tag == "Anchor" then
             local n = #lines
             lines[n + 1] = fmt:format(...)
         end
-    end
+    end)
     local CM = NS.ContainerManager
     mocks.__lockdown = true
     NS.Anchors.ResolvePending()
@@ -156,11 +157,11 @@ end)
 test("anchors: a forbidden frame falls back to the screen without waiting, so an add-on load never re-places it", function()
     local NS, mocks = fresh()
     local lines = {}
-    NS.Debug = function(tag, fmt, ...)
+    spyConsole(NS, function(tag, fmt, ...)
         if tag == "Anchor" then
             lines[#lines + 1] = fmt:format(...)
         end
-    end
+    end)
     NS.State.debug = true
     plant(mocks, "LockedBar", { forbidden = true })
     local c = NS.Database.FindContainer(1)

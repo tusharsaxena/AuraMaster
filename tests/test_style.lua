@@ -2,6 +2,7 @@
 -- layout, and the bindings handed to the aura engine's buttons.
 
 local T = _G.AM_TEST
+local spyConsole = dofile("tests/console_spy.lua")
 local test, assertEqual, assertTrue, assertNil = T.test, T.assertEqual, T.assertTrue, T.assertNil
 local NS, mocks = T.NS, T.mocks
 
@@ -752,11 +753,11 @@ test("style: a binding the client lacks is skipped, and one it refuses costs tha
     local NS2 = fresh()
     NS2.State.debug = true
     local lines = {}
-    NS2.Debug = function(tag, fmt, ...)
+    spyConsole(NS2, function(tag, fmt, ...)
         if tag == "Style" then
             lines[#lines + 1] = fmt:format(...)
         end
-    end
+    end)
     local frame = R()
     frame.__absent.SetSpellName = true
     frame.__raise.SetIcon = true

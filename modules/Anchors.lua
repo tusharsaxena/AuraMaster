@@ -36,18 +36,32 @@ local EDGE_PARTS, ownScale, attachSpec = AA.EDGE_PARTS, AA.ownScale, AA.Spec
 
 -- Frame-mode containers whose frame did not exist yet, by container id.
 local pending = {}
--- Whether the lockdown skip of a pending resolve has been traced since the last resolve that ran.
-local skipNoted = false
+-- The two lines below are behind the console's change gates (DebugLog 18, DebugLogGates 1), which
+-- a Clear and turning logging on re-arm; these are their keys. The fallback's is per container.
+local SKIP_KEY = "Anchors.skip"
+local function fallbackKey(container) return "Anchors.fallback." .. tostring(container.id) end
+
+--- The console's gates, or nothing when the library is absent (the stub answers them as no-ops).
+local function gates()
+    local Dl = NS.DebugLog
+    return Dl and Dl.DebugChanged and Dl
+end
 
 --- Trace a container's screen fallback ONCE per fallback, not once per placement (debug-logging-§9,
 --- quiet steady state): every apply pass, every visibility pass that re-places a follower and every
---- ADDON_LOADED at login re-places it, and each would repeat the line. `container.fallbackNoted`
---- holds the mode last traced; a placement that lands clears it. Gated first.
+--- ADDON_LOADED at login re-places it, and each would repeat the line. The console's `DebugChanged`
+--- holds the line last traced per container (the mode is in it); a placement that lands forgets it.
 local function noteFallback(container, mode)
-    if not (NS.State and NS.State.debug and NS.Debug) then return end
-    if container.fallbackNoted == mode then return end
-    container.fallbackNoted = mode
-    NS.Debug("Anchor", "container %s: %s target unavailable, screen fallback", container.id, mode)
+    local Dl = gates()
+    if not Dl then return end
+    Dl.DebugChanged(fallbackKey(container), "Anchor", "container %s: %s target unavailable, screen fallback",
+        container.id, mode)
+end
+
+--- A placement landed (or is on the screen by choice): the next fallback is a new one.
+local function forgetFallback(container)
+    local Dl = gates()
+    if Dl then Dl.DebugForget(fallbackKey(container)) end
 end
 
 -- The room a container's own strip and label take on its before side, and the room its parent's
@@ -300,7 +314,7 @@ function Anchors.Place(container)
         local point, relativePoint, x, y = attachSpec(container, cfg, at, mode, owner, onEngine)
         local ok = pcall(anchor.SetPoint, anchor, point, target, relativePoint, x, y)
         if ok then
-            container.fallbackNoted = nil
+            forgetFallback(container)
             return mode
         end
         anchor:ClearAllPoints()
@@ -308,7 +322,7 @@ function Anchors.Place(container)
     if at.mode and at.mode ~= "screen" then
         noteFallback(container, at.mode)
     else
-        container.fallbackNoted = nil
+        forgetFallback(container)
     end
     toScreen(anchor, cfg)
     return "screen"
@@ -357,13 +371,14 @@ end
 --- container waits, and a resolve that attached one. A pass that resolves nothing writes nothing.
 function Anchors.ResolvePending()
     if InCombatLockdown() then
-        if not skipNoted and next(pending) ~= nil and NS.State.debug and NS.Debug then
-            skipNoted = true
-            NS.Debug("Anchor", "pending resolve skipped under lockdown; retried when combat ends")
+        local Dl = gates()
+        if Dl and next(pending) ~= nil then
+            Dl.DebugOnce(SKIP_KEY, "Anchor", "pending resolve skipped under lockdown; retried when combat ends")
         end
         return
     end
-    skipNoted = false
+    local Dl = gates()
+    if Dl then Dl.DebugForget(SKIP_KEY) end
     local CM = NS.ContainerManager
     if not CM then return end
     local resolved, left = 0, 0

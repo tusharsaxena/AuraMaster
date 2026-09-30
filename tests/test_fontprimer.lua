@@ -10,6 +10,7 @@
 -- client's Friz Quadrata, which the starter containers use and the primer must skip.
 
 local T = _G.AM_TEST
+local spyConsole = dofile("tests/console_spy.lua")
 local test, assertEqual, assertTrue, assertFalse, assertNil =
     T.test, T.assertEqual, T.assertTrue, T.assertFalse, T.assertNil
 local fresh = dofile("tests/fresh_env.lua")
@@ -773,12 +774,11 @@ test("fontprimer: one Fonts debug line when the refused count moves, counts only
     recordFrame(mocks, true)
     NS2.State.debug = true
     local lines = {}
-    local debug = NS2.Debug
-    NS2.Debug = function(tag, fmt, ...)
+    local restore = spyConsole(NS2, function(tag, fmt, ...)
         if tag ~= "Fonts" then return end
         local n = #lines
         lines[n + 1] = string.format(fmt, ...)
-    end
+    end)
     local c1 = cfgOf(NS2, 1)
     c1.bars.name.font, c1.bars.name.fontSize = "Ka0s Prototype", 10
     c1.bars.time.font, c1.bars.time.fontSize = "Ka0s Kait", 11
@@ -792,7 +792,7 @@ test("fontprimer: one Fonts debug line when the refused count moves, counts only
     assertEqual(#lines, 1, "ten passes that changed nothing wrote nothing: " .. table.concat(lines, " | "))
     c1.bars.time.fontSize = 12
     FP.PrimeAll()
-    NS2.Debug = debug
+    restore()
     NS2.State.debug = false
     -- red under: the change gate never re-arming (a new refusal would go unsaid)
     assertEqual(#lines, 2, table.concat(lines, " | "))

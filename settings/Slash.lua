@@ -547,6 +547,11 @@ cli = SlashLib:New({
 
     print   = function(line) print(line) end,
     version = function() return NS.Version() end,
+    -- The gated sink (debug-logging-§4). Every refusal the dispatcher decides (the disabled gate,
+    -- an unknown verb, get/set/reset usage and not-found, a parse or write refusal, the profile
+    -- verb's) writes its own `[Cmd] refused <verb>: <guard>` line through it (Slash 18); no verb
+    -- here logs a second one.
+    debug   = function(tag, message) NS.Debug(tag, "%s", message) end,
 
     -- The schema seams. SetByPath rather than a bare write, so a CLI change takes the path a panel
     -- change takes — the [Set] line, the row's onChange, CONFIG_CHANGED and the panel re-sync.

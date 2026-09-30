@@ -58,8 +58,10 @@ function NS.HoldsText()
     return NS.IsStoodDown() and NS.HOLD_DISABLED or "none"
 end
 
---- One [State] line per edge (debug-logging-§8, "State edges" and "Deferred work"): the addon's
---- own stand-down and stand-up, the holds behind it, and the secure half combat held and finished.
+--- One [State] line for the secure half combat held and finished (debug-logging-§8, "Deferred
+--- work"). The EDGES themselves are the library's line (Lifecycle 3, through the descriptor's `debug`
+--- below): `[Lifecycle] stood down: added <hold> (holds: <set>)` and its stand-up twin, written before
+--- the callback runs, so this file writes no second line for either (debug-logging-§4).
 local function traceEdge(what)
     if not (NS.State and NS.State.debug and NS.Debug) then return end
     NS.Debug("State", "%s (holds: %s)", what, NS.HoldsText())
@@ -120,11 +122,9 @@ local function standDown()
     if NS.ContainerManager and NS.ContainerManager.StopListening then NS.ContainerManager.StopListening() end
     -- The frame picker's overlay runs an OnUpdate; a stood-down addon runs none.
     if NS.FramePicker and NS.FramePicker.Stop then NS.FramePicker.Stop() end
-    if applySecure() then
-        traceEdge("stood down: events and timers off, containers hidden")
-    else
+    if not applySecure() then
         holdPending()
-        traceEdge("stood down: events and timers off; hiding held until combat ends")
+        traceEdge("stand-down: hiding held until combat ends")
     end
 end
 
@@ -148,7 +148,6 @@ local function standUp()
         -- The addon's own request: a player change held by the stand-down keeps its notice.
         if NS.ContainerManager.RequestApply then NS.ContainerManager.RequestApply(nil, true) end
     end
-    traceEdge("stood up: events on, every container re-applied")
 end
 
 -- ---------------------------------------------------------------------------
@@ -191,6 +190,9 @@ NS.lifecycle = Lifecycle:New({
     standDown = standDown,
     standUp   = standUp,
     print     = function(line) NS.Print(line) end,
+    -- The gated sink (debug-logging-§4): the library writes each edge's `[Lifecycle]` line through
+    -- it. Call-time, as every sink here: NS.Debug is rebound when the console is built.
+    debug     = function(tag, message) NS.Debug(tag, "%s", message) end,
 })
 
 --- Is the addon inert right now, for ANY reason — the player's switch or a perf capture's suspended

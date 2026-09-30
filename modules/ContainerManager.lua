@@ -811,6 +811,14 @@ function CM.StopListening()
     if NS.FontPrimer then NS.FontPrimer.Stop() end
 end
 
+--- Forget the last hold traced, so the next deferral writes its line again. The console's Clear
+--- calls it (core/DebugLogSetup.lua's `onClear`): this gate compares the hold's state, not its line,
+--- because the edge is in the line and a hold that outlasts several edges is one hold, so it cannot
+--- be the console's `DebugChanged` and is re-armed through the hook instead.
+function CM.RearmHoldTrace()
+    heldSecret, heldLockdown, heldQueued = nil, nil, nil
+end
+
 --- Whether this file is subscribed (a test seam).
 function CM.__listening() return ev ~= nil end
 
