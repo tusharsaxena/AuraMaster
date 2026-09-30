@@ -81,7 +81,10 @@ local masterEffect = {
 -- lockdown BlizzardFrames.Apply waits for PLAYER_REGEN_ENABLED (core/AuraMaster.lua), and the player
 -- is told so by the same once-per-stretch notice a held container apply prints.
 local function applyBlizzardFrames()
-    if NS.BlizzardFrames.Apply() == false then NS.ContainerManager.NoteDeferred() end
+    if NS.BlizzardFrames.Apply() == false then
+        NS.BlizzardFrames.NoteHeld()
+        NS.ContainerManager.NoteDeferred()
+    end
 end
 
 -- The console row is SESSION state: it mirrors the console window, never the profile.
@@ -117,6 +120,9 @@ for _, row in ipairs(masterRows) do
         row.get = function() return NS.State.testMode end
         row.set = function(v)
             if v and NS.IsDisabled() then
+                -- The guard named in the log (debug-logging-§8): the seam's [Set] line that follows
+                -- records the request, and this line says it was refused.
+                if NS.Debug then NS.Debug("Preview", "test mode refused (addon disabled)") end
                 if NS.Slash and NS.Slash.DisabledLine then NS.Print(NS.Slash.DisabledLine()) end
                 if NS.RefreshOptionsPanel then NS.RefreshOptionsPanel() end
                 return

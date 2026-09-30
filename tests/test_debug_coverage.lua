@@ -121,6 +121,41 @@ test("coverage: every combat refusal writes one line naming the guard", function
     assertEqual(count(lines, "[Cfg] open containers refused (in combat)"), 1, dump(lines))
 end)
 
+test("coverage: the checkbox's test-mode start refused while disabled names the guard", function()
+    local NS = fresh()
+    NS.SetByPath("enabled", false)
+    local lines = record(NS, { Preview = true })
+    NS.SetByPath("state.testMode", true)
+    assertFalse(NS.State.testMode)
+    -- red under: settings/General.lua's disabled guard returning without its line (the seam's [Set]
+    -- line alone reads as test mode switched on, debug-logging-§8)
+    assertEqual(dump(lines), "[Preview] test mode refused (addon disabled)")
+end)
+
+-- ── deferred work: a Blizzard-frame toggle held by combat ────────────────────────────────────────
+
+test("coverage: a Blizzard-frame toggle held by combat writes its flush line once combat ends, and only then", function()
+    local NS, mocks = fresh({ before = function(m)
+        m.BuffFrame, m.DebuffFrame = m.__stubFrame(), m.__stubFrame()
+    end })
+    local lines = record(NS, { Apply = true })
+    NS.addon:OnCombatChanged("PLAYER_REGEN_ENABLED")
+    -- red under: the flush line written on every combat end, held or not (debug-logging-§9)
+    assertEqual(count(lines, "Blizzard frames applied after combat"), 0, dump(lines))
+    mocks.__lockdown = true
+    NS.SetByPath("hideBlizzardBuffs", true)
+    mocks.__lockdown = false
+    assertEqual(count(lines, "[Apply] deferred: secret=false lockdown=true"), 1, dump(lines))
+    NS.addon:OnCombatChanged("PLAYER_REGEN_ENABLED")
+    -- red under: BF.Apply after a noted hold writing nothing (a deferral with no flush line reads as
+    -- a stuck hold, debug-logging-§8)
+    assertEqual(count(lines, "[Apply] Blizzard frames applied after combat"), 1, dump(lines))
+    assertTrue(NS.BlizzardFrames.IsHidden("BuffFrame"))
+    NS.addon:OnCombatChanged("PLAYER_REGEN_ENABLED")
+    -- red under: the held flag never cleared (every later combat end repeats it)
+    assertEqual(count(lines, "Blizzard frames applied after combat"), 1, dump(lines))
+end)
+
 -- ── state edges ──────────────────────────────────────────────────────────────────────────────────
 
 test("coverage: test mode switched outside the seam says who switched it; the checkbox's row does not repeat its [Set] line", function()
