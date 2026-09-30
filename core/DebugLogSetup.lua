@@ -12,6 +12,27 @@ local addonName, NS = ...
 
 local lib = LibStub and LibStub("LibKa0s-DebugLog-1.0", true)
 
+-- Keys NS.DebugOnce has logged this session: the tag, the site and the error's first line.
+local loggedOnce = {}
+
+--- An error a pcall of ours caught, logged ONCE per distinct error (debug-logging-§8, "Errors
+--- caught"): `[<tag>] <site> failed: <first line>`, or `<site> #<id> failed: ...` with an `id`. A
+--- guarded call on a repeating path (a restyle of forty buttons, a refresh on every target swap)
+--- that keeps failing the same way writes one line, not one per pass (§9). Gated first: with logging
+--- off it builds and records nothing, so an error first met then is logged once logging is on.
+function NS.DebugOnce(tag, site, err, id)
+    if not (NS.State and NS.State.debug and NS.Debug) then return end
+    local first = tostring(err):match("^[^\n]*")
+    local key = ("%s|%s|%s|%s"):format(tostring(tag), tostring(site), tostring(id), first)
+    if loggedOnce[key] then return end
+    loggedOnce[key] = true
+    if id ~= nil then
+        NS.Debug(tag, "%s #%s failed: %s", site, id, first)
+    else
+        NS.Debug(tag, "%s failed: %s", site, first)
+    end
+end
+
 if not lib then
     -- Degrade, never error. The stub answers EVERY member the addon calls — `/am debug`, the Master
     -- controls tab's console row and core/PerfSetup.lua's log sink all reach for one — and the flag
@@ -80,6 +101,26 @@ if not lib then
     return
 end
 
+--- What the [Init] line adds when something is not as a healthy session has it, each once per
+--- enable (debug-logging-§8, "Dependencies" and the stand-down state): a missing optional library,
+--- no aura container API, a stood-down addon. Nothing on a healthy session, so its line is unchanged.
+local function initNotes()
+    local notes = {}
+    if not (LibStub and LibStub("LibSharedMedia-3.0", true)) then
+        notes[1] = "LibSharedMedia-3.0 missing (media-pack fonts and textures fall back)"
+    end
+    local C = NS.Compat
+    if C and C.HasAuraContainer and not C.HasAuraContainer() then
+        local n = #notes
+        notes[n + 1] = "no aura container API (containers are not drawn)"
+    end
+    if NS.IsStoodDown and NS.IsStoodDown() then
+        local n = #notes
+        notes[n + 1] = "stood down (holds: " .. (NS.HoldsText and NS.HoldsText() or "?") .. ")"
+    end
+    return notes
+end
+
 NS.DebugLog = lib:New({
     -- Seeds AuraMasterDebugWindow / …DebugCopyWindow. Two hosts sharing a name would clobber each
     -- other's globals and Esc handlers.
@@ -130,6 +171,8 @@ NS.DebugLog = lib:New({
         if count > 0 then
             line = line .. ", rejected events: " .. table.concat(rejected, ", ")
         end
+        local notes = initNotes()
+        if notes[1] then line = line .. ", " .. table.concat(notes, ", ") end
         return line
     end,
 

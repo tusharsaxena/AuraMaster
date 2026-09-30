@@ -867,7 +867,7 @@ end
 --- message), which the panel and `/am set` print under `err` (settings/OptionsSetup.lua,
 --- settings/Slash.lua).
 --- @return boolean ok, string|nil err, string|nil why
-function NS.SetByPath(path, value, containerId)
+local function write(path, value, containerId)
     if type(path) ~= "string" then return false, L["Setting not found: %s"]:format(tostring(path)) end
     if path == MINIMAP_PATH then return writeMinimap(value) end
     if CARVE_OUTS[path] then return writeCarveOut(path, value, containerId) end
@@ -885,6 +885,15 @@ function NS.SetByPath(path, value, containerId)
     if row.onChange then row.onChange(stored, id, old) end
     announceWrite(row.page, id, path, stored, row.sessionOnly, false)
     return true
+end
+
+--- The seam itself: `write` above, and ONE [Set] line for a write it refused, naming the path and the
+--- refusal (debug-logging-§8, refusals: the report is "the setting did not change", the line is the
+--- answer). A stored write logs its own `[Set] <path> = <value>` in announceWrite.
+function NS.SetByPath(path, value, containerId)
+    local ok, err, why = write(path, value, containerId)
+    if not ok and NS.Debug then NS.Debug("Set", "%s refused: %s", path, err) end
+    return ok, err, why
 end
 
 --- Whether a spell set would be stored: the carve-out's normalizer accepts it and the container exists.

@@ -131,6 +131,7 @@ Kit.run{
         "test_slash_verbs",
         "test_diagnostics",
         "test_bulklog",
+        "test_debug_coverage",
         "test_optionssetup",
         "test_options_descriptor",
         "test_pages_general",

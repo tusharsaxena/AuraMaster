@@ -750,6 +750,7 @@ end)
 test("style: a binding the client lacks is skipped, and one it refuses costs that binding alone", function()
     -- Its own environment: the debug trace is replaced there, never on the shared one.
     local NS2 = fresh()
+    NS2.State.debug = true
     local lines = {}
     NS2.Debug = function(tag, fmt, ...)
         if tag == "Style" then

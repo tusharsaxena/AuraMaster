@@ -562,6 +562,7 @@ end)
 
 test("container: an engine call that raises is traced, and the build carries on to the unit", function()
     local NS, mocks = fresh()
+    NS.State.debug = true
     local lines = {}
     NS.Debug = function(tag, fmt, ...)
         local n = #lines
@@ -591,7 +592,7 @@ test("container: a restyle dresses every group button and every enchant frame, a
     assertEqual(inst:Restyle(cfg), 3)
 end)
 
-test("container: a re-dress that raises is reported, a debug line each time and the client's error handler once per message (item 7)", function()
+test("container: a re-dress that raises is reported, a debug line and the client's error handler once per message (item 7)", function()
     local reported, lines = {}, {}
     local NS, mocks = fresh({ before = function(m)
         m.geterrorhandler = function() return function(err)
@@ -599,6 +600,7 @@ test("container: a re-dress that raises is reported, a debug line each time and 
             reported[n + 1] = tostring(err)
         end end
     end })
+    NS.State.debug = true
     NS.Debug = function(tag, fmt, ...)
         local n = #lines
         lines[n + 1] = "[" .. tag .. "] " .. fmt:format(...)
@@ -618,8 +620,10 @@ test("container: a re-dress that raises is reported, a debug line each time and 
     for _, l in ipairs(lines) do
         if l:find("[Style]", 1, true) and l:find("refus", 1, true) then dress = dress + 1 end
     end
-    -- red under: Restyle's bare pcall dropping the error (the owner's blank rows named nothing)
-    assertEqual(dress, 15, "one debug line per failed dress")
+    -- red under: Restyle's bare pcall dropping the error (the owner's blank rows named nothing), or
+    -- a debug line per failed dress (15 here: three restyles of five frames), the per-item wall
+    -- debug-logging-§8 ("Errors caught": once per distinct error) and §9 forbid
+    assertEqual(dress, 2, "one debug line per distinct failure")
     -- red under: the handler called per button (a restyle floods BugSack), or never
     assertEqual(#reported, 2, "the client's error handler once per distinct message")
     assertEqual(reported[1], "dress refused")

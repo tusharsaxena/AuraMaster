@@ -193,6 +193,7 @@ The suites, in the order `tests/run.lua` runs them (it is the authority on the l
 | `test_slash_verbs.lua` | `settings/Slash.lua` verb by verb through the real dispatcher: the help surface, the schema verbs over relative and absolute paths, the host verbs, the degradation stub |
 | `test_diagnostics.lua` | `modules/Diagnostics.lua` through `/am diagnostics` and `/am debug diagnostics`: the ungated sink and the one chat line, both forms, the branded markers and the library's identity header, the module writing sections only (no `Build`, `Run` or cap of its own), `diag` running nothing, the branch order and the disabled gate, the disabled and stood-down header lines and the not-built reasons, the `fonts primed:` line (state only, capped, printed while stood down or secret, the refused triples after `refused=`), the `loading screen:` line and its gap, the aura dump and its secret rules, the container sections and plan verdicts, button identity and predictions, section isolation, the caps, and the library-absent line |
 | `test_bulklog.lua` | debug-logging-§10's bulk rule, act by act: one `[Set]` line per bulk act counting the rows it changed; one line per profile reset or copy |
+| `test_debug_coverage.lua` | debug-logging-§8's diagnosis lines and §9's quiet steady state (DL-AM-02): the apply queue's hold traced once while it lasts and again when it changes, a caught apply error once per distinct error, every combat refusal naming its guard, test mode's switch naming who switched it, the `[State]` stand-down and stand-up edges and the combat-held secure half, and the `[Init]` line's missing-dependency and stand-down notes |
 | `test_optionssetup.lua` | The panel: the tree's three pages and the Containers sections, tabs, the container banner, per-page Defaults, the global reset's blast radius, the degraded stub |
 | `test_options_descriptor.lua` | `settings/OptionsSetup.lua`'s descriptor seams through real widgets and resets: the Profiles veto, the banner and picker, `RenderPage` and `RenderContainerPage`, the coalesced refresh, `OpenOptionsPage`, the stub's composers |
 | `test_pages_general.lua` | `settings/General.lua`, `settings/GeneralSpells.lua` and `settings/GeneralDispel.lua` through their widgets: the Spell Categories ID list and its restore, the Dispel Colors rows; each Master control and Display row, the composer's two buttons, Defaults; the tab strip with Containers gone from it and no page keyed `containers` to `general`'s rows |
@@ -256,7 +257,7 @@ All vendored under `libs/`, loaded by the `# Libraries` block of `AuraMaster.toc
 | AceAddon-3.0 | `NS` promoted to the addon object by `NewAddon` (`core/AuraMaster.lua:17`) |
 | AceEvent-3.0 | Lifecycle events and the message bus (`core/Bus.lua`) |
 | AceTimer-3.0 | The color picker's drag throttle, via the options descriptor's `scheduleTimer` |
-| AceConsole-3.0 | `/am` and `/auramaster` registration (`settings/Slash.lua:623-624`) |
+| AceConsole-3.0 | `/am` and `/auramaster` registration (`settings/Slash.lua:624-625`) |
 | AceDB-3.0 | `AuraMasterDB` and its profiles (`core/Database.lua:272`) |
 | AceGUI-3.0, AceGUI-3.0-SharedMediaWidgets | The settings panel body and its `LSM30_*` media dropdowns |
 | AceConfig-3.0, AceDBOptions-3.0 | The Profiles sub-page only (`settings/Profiles.lua`, options-ui-§3) |

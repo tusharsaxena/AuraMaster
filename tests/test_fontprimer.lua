@@ -768,9 +768,10 @@ test("fontprimer: a loading screen's end with a font still refused arms nothing"
     assertEqual(refused(FP), PROTO .. "|10|OUTLINE")
 end)
 
-test("fontprimer: one Fonts debug line per PrimeAll that met a refusal, counts only", function()
+test("fontprimer: one Fonts debug line when the refused count moves, counts only", function()
     local NS2, mocks, FP = env()
     recordFrame(mocks, true)
+    NS2.State.debug = true
     local lines = {}
     local debug = NS2.Debug
     NS2.Debug = function(tag, fmt, ...)
@@ -782,10 +783,20 @@ test("fontprimer: one Fonts debug line per PrimeAll that met a refusal, counts o
     c1.bars.name.font, c1.bars.name.fontSize = "Ka0s Prototype", 10
     c1.bars.time.font, c1.bars.time.fontSize = "Ka0s Kait", 11
     FP.PrimeAll()
-    NS2.Debug = debug
     -- red under: a refusal said nothing (the trace cannot show why a font is missing), or a line per triple
     assertEqual(#lines, 1)
     assertEqual(lines[1], "2 font(s) refused, retried at the next priming")
+    -- Quiet steady state (debug-logging-§9): a priming runs on every settings write, so a slider drag
+    -- retries the same refusals dozens of times. red under: the refused line written per pass
+    for _ = 1, 10 do FP.PrimeAll() end
+    assertEqual(#lines, 1, "ten passes that changed nothing wrote nothing: " .. table.concat(lines, " | "))
+    c1.bars.time.fontSize = 12
+    FP.PrimeAll()
+    NS2.Debug = debug
+    NS2.State.debug = false
+    -- red under: the change gate never re-arming (a new refusal would go unsaid)
+    assertEqual(#lines, 2, table.concat(lines, " | "))
+    assertEqual(lines[2], "3 font(s) refused, retried at the next priming")
 end)
 
 test("fontprimer: DiagState lists the refused triples, copies only, and a primed one leaves the list", function()

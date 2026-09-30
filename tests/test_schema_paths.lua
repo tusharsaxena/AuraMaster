@@ -95,7 +95,7 @@ test("schema paths: onChange, the [Set] line and CONFIG_CHANGED all see the norm
     assertEqual(got[1].containerId, 1)
 end)
 
-test("schema paths: a refused write reacts to nothing, logs nothing and announces nothing", function()
+test("schema paths: a refused write reacts to nothing, announces nothing and logs one refusal line naming the guard", function()
     local NS2 = fresh()
     local reacted = 0
     NS2.FindSchemaRow("container.name").onChange = function() reacted = reacted + 1 end
@@ -107,8 +107,13 @@ test("schema paths: a refused write reacts to nothing, logs nothing and announce
     assertEqual(err, "Setting not found: container.bars.noSuchLeaf")
     -- red under: announceWrite reached on the refusal path
     assertEqual(reacted, 0)
-    assertEqual(#lines, 0)
     assertEqual(#got, 0)
+    -- red under: NS.SetByPath returning a refusal without its [Set] line (debug-logging-§8: the
+    -- report is "the setting did not change", and the guard's words are the answer), or the
+    -- refusal reaching announceWrite's `path = value` line
+    assertEqual(#lines, 2, table.concat(lines, " | "))
+    assertEqual(lines[1], "container.name refused: Invalid value for container.name")
+    assertEqual(lines[2], "container.bars.noSuchLeaf refused: Setting not found: container.bars.noSuchLeaf")
 end)
 
 test("schema paths: a path that is not a string is refused by every seam, naming what was passed", function()

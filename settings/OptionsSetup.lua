@@ -360,6 +360,7 @@ NS.RefreshOptionsPanel = function() Helpers.RefreshAllPanels() end
 --- own open does (options-ui-§2) — a category switch is protected, so it is refused, never deferred.
 function NS.OpenOptionsPage(pageKey)
     if InCombatLockdown() then
+        if NS.Debug then NS.Debug("Cfg", "open %s refused (in combat)", pageKey) end
         NS.Printf("|cff808080%s|r", L["cannot open settings during combat — Blizzard's category-switch is protected"])
         return
     end

@@ -81,6 +81,7 @@ end)
 
 test("anchors: a screen fallback and a skipped resolve are traced", function()
     local NS, mocks = fresh()
+    NS.State.debug = true
     local lines = {}
     NS.Debug = function(tag, fmt, ...)
         if tag == "Anchor" then
@@ -104,6 +105,45 @@ test("anchors: a screen fallback and a skipped resolve are traced", function()
     assertTrue(lines[2]:find("lockdown", 1, true) ~= nil, lines[2])
 end)
 
+test("anchors: a fallback and a lockdown skip are traced once while they last, not on every pass (quiet steady state)", function()
+    local NS, mocks = fresh()
+    NS.State.debug = true
+    local lines = {}
+    NS.Debug = function(tag, fmt, ...)
+        if tag == "Anchor" then
+            local n = #lines
+            lines[n + 1] = fmt:format(...)
+        end
+    end
+    local CM = NS.ContainerManager
+    mocks.__lockdown = true
+    NS.Anchors.ResolvePending()
+    -- red under: the skip traced with nothing pending (every ADDON_LOADED in combat wrote it)
+    assertEqual(#lines, 0, "nothing waits, nothing said: " .. table.concat(lines, " | "))
+    mocks.__lockdown = false
+    local c = NS.Database.FindContainer(1)
+    c.attach.mode, c.attach.frame = "frame", "MissingBar"
+    for _ = 1, 10 do NS.Anchors.Place(CM.instances[1]) end
+    for _ = 1, 10 do NS.addon:OnAddonLoaded() end
+    -- red under: noteFallback's change gate dropped (a line per placement: every apply pass, every
+    -- follower re-place and every ADDON_LOADED at login re-placed it, debug-logging-§9)
+    assertEqual(#lines, 1, table.concat(lines, " | "))
+    mocks.__lockdown = true
+    for _ = 1, 5 do NS.Anchors.ResolvePending() end
+    mocks.__lockdown = false
+    -- red under: the skip traced on every ADDON_LOADED of one combat
+    assertEqual(#lines, 2, table.concat(lines, " | "))
+    plant(mocks, "MissingBar")
+    NS.Anchors.ResolvePending()
+    -- red under: a resolve that attached a waiting container writing nothing (the hold's flush)
+    assertEqual(#lines, 3, table.concat(lines, " | "))
+    assertEqual(lines[3], "resolved 1 pending frame target(s), 0 still pending")
+    c.attach.frame = "GoneAgain"
+    NS.Anchors.Place(CM.instances[1])
+    -- red under: a landed placement leaving the gate shut (a later fallback would go unsaid)
+    assertEqual(#lines, 4, table.concat(lines, " | "))
+end)
+
 test("anchors: a forbidden frame, or something that is not a frame, is never a target", function()
     local NS, mocks = fresh()
     plant(mocks, "Forbidden", { forbidden = true })
@@ -121,6 +161,7 @@ test("anchors: a forbidden frame falls back to the screen without waiting, so an
             lines[#lines + 1] = fmt:format(...)
         end
     end
+    NS.State.debug = true
     plant(mocks, "LockedBar", { forbidden = true })
     local c = NS.Database.FindContainer(1)
     c.attach.mode, c.attach.frame = "frame", "LockedBar"

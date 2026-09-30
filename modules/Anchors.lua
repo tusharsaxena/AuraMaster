@@ -36,6 +36,19 @@ local EDGE_PARTS, ownScale, attachSpec = AA.EDGE_PARTS, AA.ownScale, AA.Spec
 
 -- Frame-mode containers whose frame did not exist yet, by container id.
 local pending = {}
+-- Whether the lockdown skip of a pending resolve has been traced since the last resolve that ran.
+local skipNoted = false
+
+--- Trace a container's screen fallback ONCE per fallback, not once per placement (debug-logging-§9,
+--- quiet steady state): every apply pass, every visibility pass that re-places a follower and every
+--- ADDON_LOADED at login re-places it, and each would repeat the line. `container.fallbackNoted`
+--- holds the mode last traced; a placement that lands clears it. Gated first.
+local function noteFallback(container, mode)
+    if not (NS.State and NS.State.debug and NS.Debug) then return end
+    if container.fallbackNoted == mode then return end
+    container.fallbackNoted = mode
+    NS.Debug("Anchor", "container %s: %s target unavailable, screen fallback", container.id, mode)
+end
 
 -- The room a container's own strip and label take on its before side, and the room its parent's
 -- take that a side follower clears (batch 10 F2, F4), defined with the strip below and handed to
@@ -286,11 +299,16 @@ function Anchors.Place(container)
         local onEngine = owner ~= nil and target == owner.engine
         local point, relativePoint, x, y = attachSpec(container, cfg, at, mode, owner, onEngine)
         local ok = pcall(anchor.SetPoint, anchor, point, target, relativePoint, x, y)
-        if ok then return mode end
+        if ok then
+            container.fallbackNoted = nil
+            return mode
+        end
         anchor:ClearAllPoints()
     end
-    if at.mode and at.mode ~= "screen" and NS.Debug then
-        NS.Debug("Anchor", "container %s: %s target unavailable, screen fallback", container.id, at.mode)
+    if at.mode and at.mode ~= "screen" then
+        noteFallback(container, at.mode)
+    else
+        container.fallbackNoted = nil
     end
     toScreen(anchor, cfg)
     return "screen"
@@ -334,17 +352,33 @@ end
 
 --- Re-place every container whose frame target did not exist when it was placed. Called whenever an
 --- add-on loads, since that is when a new named frame can appear, and when combat ends, since an
---- add-on that loaded during combat could not be resolved then.
+--- add-on that loaded during combat could not be resolved then. Traced only when something is held
+--- or resolved (debug-logging-§8 deferred work): the skip under lockdown once per stretch while a
+--- container waits, and a resolve that attached one. A pass that resolves nothing writes nothing.
 function Anchors.ResolvePending()
     if InCombatLockdown() then
-        if NS.Debug then NS.Debug("Anchor", "pending resolve skipped under lockdown; retried when combat ends") end
+        if not skipNoted and next(pending) ~= nil and NS.State.debug and NS.Debug then
+            skipNoted = true
+            NS.Debug("Anchor", "pending resolve skipped under lockdown; retried when combat ends")
+        end
         return
     end
+    skipNoted = false
     local CM = NS.ContainerManager
     if not CM then return end
+    local resolved, left = 0, 0
     for id in pairs(pending) do
         local inst = CM.instances[id]
-        if inst then Anchors.Place(inst) else pending[id] = nil end
+        if not inst then
+            pending[id] = nil
+        elseif Anchors.Place(inst) == "screen" then
+            left = left + 1
+        else
+            resolved = resolved + 1
+        end
+    end
+    if resolved > 0 and NS.Debug then
+        NS.Debug("Anchor", "resolved %d pending frame target(s), %d still pending", resolved, left)
     end
 end
 

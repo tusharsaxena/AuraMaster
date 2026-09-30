@@ -304,6 +304,7 @@ end
 
 function runDelete(rest)
     if InCombatLockdown() then
+        if NS.Debug then NS.Debug("Containers", "delete refused (in combat)") end
         return refuse(L["cannot delete a container during combat — its display cannot be torn down until combat ends"])
     end
     local c, ambiguous, typed = findContainer(rest)
@@ -332,7 +333,7 @@ function runTest(rest)
         if word ~= "" then return print(L["Usage: /am test [on|off]"]) end
         want = not NS.State.testMode
     end
-    if NS.Preview.SetTestMode(want) then
+    if NS.Preview.SetTestMode(want, "/am test") then
         print(want and L["Test mode on — every container shows placeholder auras"] or L["Test mode off"])
     end
 end

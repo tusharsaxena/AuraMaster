@@ -139,6 +139,7 @@ StaticPopupDialogs["AURAMASTER_DELETE_CONTAINER"] = {
     OnAccept     = function(_, data)
         -- The same gate as /am delete: a popup accepted after combat started must not tear down.
         if InCombatLockdown() then
+            if NS.Debug then NS.Debug("Containers", "delete %s refused (in combat)", data) end
             return printf("|cff808080%s|r", L["cannot delete a container during combat — its display cannot be torn down until combat ends"])
         end
         if data and CM.Delete(data) then H.RefreshAllPanels() end

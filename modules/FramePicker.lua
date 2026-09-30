@@ -141,6 +141,7 @@ function FP.PickFor(onDone, onCanceled)
         return false
     end
     if InCombatLockdown() then
+        if NS.Debug then NS.Debug("Anchor", "frame pick refused (in combat)") end
         NS.Printf("|cff808080%s|r", L["cannot pick a frame during combat — attaching to a frame waits until combat ends"])
         return false
     end

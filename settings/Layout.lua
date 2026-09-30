@@ -140,6 +140,7 @@ StaticPopupDialogs[ATTACH_POPUP] = {
     OnAccept     = function(_, data)
         -- The same gate as the Delete popup: one accepted after combat started writes nothing.
         if InCombatLockdown() then
+            if NS.Debug then NS.Debug("Anchor", "attach refused (in combat)") end
             return NS.Printf("|cff808080%s|r", L["cannot attach a container during combat; try again when combat ends"])
         end
         if not data then return end

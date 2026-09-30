@@ -136,9 +136,11 @@ which the client fires after `PLAYER_ENTERING_WORLD`, seconds later on a slow or
 - The line reads state only, so it prints while auras are secret and while the addon is stood down.
 
 With the trace on (`/am debug on`), each priming that drew anything writes one
-`[Fonts] primed N new font(s)` line, and each priming that met a refusal one
-`[Fonts] N font(s) refused, retried at the next priming` line (counts only; the report names them). The trace is off after a login, so the login's own priming
-is seen only in the report.
+`[Fonts] primed N new font(s)` line, and a priming whose refused count differs from the last one
+traced writes one `[Fonts] N font(s) refused, retried at the next priming` line (counts only; the
+report names them). A priming runs on every settings write, so the same refusal retried through a
+slider drag writes nothing more (debug-logging-§9). The trace is off after a login, so the login's
+own priming is seen only in the report.
 
 If a blank still shows, run `/am diagnostics` and check that the container's font is in the list. A
 font missing from it was registered with LibSharedMedia after login (a media addon loaded on demand),
@@ -229,7 +231,9 @@ With `/am debug on`, every event that changes what the addon may do leaves one `
 written before the handler acts, so `queued=` is the queue the event found. Each line ends in the
 three reads every apply decision turns on: `secret=` (`Compat.AurasAreSecret`), `lockdown=`
 (`InCombatLockdown`) and `queued=` (`all`, a container count, or `-`). The `[Apply]` line after it
-says what the flush did (`applied N container(s)` or `deferred: …`).
+says what the flush did: `applied N container(s)`, or `deferred: …` when the hold is new or has
+changed. A hold that lasts through a key writes its `deferred:` line once, however many combat ends
+and restriction flips flush it, and the `applied` line after it is the flush that ended it.
 
 | Event | Line |
 |---|---|
@@ -254,6 +258,37 @@ loading screen means the reset never ran; a line with `0` means no container qua
 `redraw full: N container(s) flipped, re-apply queued` (`deferred` when combat or aura secrecy holds
 the re-apply, followed by the queue's own `deferred:` line). A full redraw skipped because a perf
 capture stands the addon down writes no line.
+
+## Coverage
+
+What the trace (`/am debug on`) writes, by tag, and when (debug-logging-§8, §9). Every line is gated
+and built behind the gate. A path that repeats (a timer, an event that fires through a fight, a
+priming on every settings write) writes only when what it reports has changed. The diagnostic
+report's own tags (`Diag`, `Cfg`, `Unit`, `Aura`, `Cont`, `Filt`, `Plan`, `Shown`) are above.
+
+| Tag | What writes it | When |
+|---|---|---|
+| `Debug`, `Init` | LibKa0s-DebugLog-1.0 (`core/DebugLogSetup.lua` supplies the summary) | Logging switched on or off. `[Init]` names the version, schema, profile and container count, then anything a healthy session lacks: rejected events, `LibSharedMedia-3.0 missing`, `no aura container API`, `stood down (holds: …)`. `[Init] event X rejected by this client` when a registration is refused |
+| `Event` | `core/AuraMaster.lua` | One line per `PLAYER_ENTERING_WORLD`, `LOADING_SCREEN_DISABLED`, `PLAYER_REGEN_DISABLED` / `_ENABLED` and `ADDON_RESTRICTION_STATE_CHANGED`, before the handler acts (the event trace above) |
+| `Apply` | `modules/ContainerManager.lua` | `applied N container(s)` per apply pass that ran; `deferred: secret=… lockdown=… edge=… queued=…` when a hold starts or changes; `container #id failed: <error>` once per distinct error an apply raised; the enchant reset and `/am redraw` lines |
+| `State` | `core/LifecycleSetup.lua` | The addon standing down (`/am disable`, a perf capture) and standing up, with the holds; `hiding held until combat ends` when combat refuses the stand-down's secure half, and `stand-down finished after combat` when it completes |
+| `Set` | `settings/Schema.lua` (the write seam), the bulk bracket, the profile callbacks, the user-category writes, `ContainerManager.CopyFrom` | Every stored setting (`<path> = <value>`), every refused one (`<path> refused: <reason>`), one line per bulk copy or reset, a refused copy (`copy … refused at <key>: <reason>`), profile reset and copy |
+| `Profile` | `core/AuraMaster.lua` | A profile switch |
+| `Containers` | `modules/ContainerManager.lua`, `settings/Slash.lua`, `settings/Containers.lua` | A container created or deleted; `create refused (in combat)`, `delete refused (in combat)` |
+| `Preview` | `modules/Preview.lua` | Test mode switched by `/am test` (or the launcher) or ended by combat, naming who; `test mode refused (in combat)`. The Master controls checkbox is a session row, so its `[Set]` line covers it |
+| `Anchor` | `modules/Anchors.lua`, `modules/FramePicker.lua`, `settings/Layout.lua` | A container falling back to the screen, once until it lands again; the pending-frame resolve skipped under lockdown, once per fight while one waits; `resolved N pending frame target(s)`; a drag whose position read secret; `attach refused (in combat)`, `frame pick refused (in combat)` |
+| `Cfg` | LibKa0s-Options-1.0, `settings/OptionsSetup.lua` | The settings window opened; an open refused in combat (`open <page> refused (in combat)`) |
+| `Engine` | `modules/Container.lua` | An engine call that raised, once per distinct method and error |
+| `Style` | `modules/Style.lua`, `modules/Style_Text.lua` | A binding or a guarded dress that raised, once per distinct error; a Text template refused, once per template |
+| `Fonts` | `modules/FontPrimer.lua` | `primed N new font(s)`; `N font(s) refused` when the refused count changes; each loading screen's end with its timing |
+| `Timed` | `modules/TimedSpells.lua` | A scan that learned something (`learned N timed spell(s)`); `/am forgettimed` |
+| `Migrate` | `core/Database.lua`, `defaults/UserCategories.lua` | A schema migration step that ran, a seeded starter set, a stored user category skipped |
+| `Launcher` | LibKa0s-Launcher-1.0 | The launcher's own lines |
+| `Perf` | `core/PerfSetup.lua` | A perf capture's report, written ungated because the player asked for it |
+
+Left out on purpose: target, focus and pet swaps, `ADDON_LOADED`, the item-data events (above), each
+`UNIT_AURA` pass of the empty prediction and the timed-spell scan (quiet unless a scan learns
+something), and the frame picker's `OnUpdate`. Their effects that matter write their own line.
 
 ## Caps
 
