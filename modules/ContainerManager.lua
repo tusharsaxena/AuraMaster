@@ -417,6 +417,18 @@ function CM.RefreshUnit(unit)
     end
 end
 
+--- Switch every container on `unit` to the view of its plan that `unit`'s reaction picks now (spell-
+--- list views, V2: ContainerClass:ApplyView). Combat-legal, and never held behind MustDefer. Matched on
+--- the unit the engine was last applied with, the one ApplyView resolves for. Answers how many moved.
+--- @return number
+function CM.ApplyViews(unit)
+    local n = 0
+    for _, inst in pairs(CM.instances) do
+        if inst.unit == unit and inst:ApplyView() then n = n + 1 end
+    end
+    return n
+end
+
 --- Re-apply every container whose class snapshot went stale during combat or aura secrecy. Called on
 --- the same edges as FlushPending (core/AuraMaster.lua), and a no-op while an apply still has to wait.
 function CM.ReapplyStaleClass()
@@ -733,6 +745,40 @@ end
 
 local ev
 
+-- A REACTION CHANGE WITHOUT A SWAP (spell-list views, V2): a duel starting or ending, mind control, an
+-- NPC turning hostile. The unit still names the same creature, so no PLAYER_TARGET_CHANGED fires,
+-- but whether Blizzard applies spell ids to its auras moved. UNIT_FACTION and UNIT_FLAGS for target
+-- and focus come through events-frames-taint-§1's unit-filter frame carve-out, the pattern
+-- modules/TimedSpells.lua uses (the vendored AceEvent has no RegisterUnitEvent): one private frame,
+-- built once and reused, opened by CM.StartListening and closed by hand in CM.StopListening, since
+-- AceEvent's UnregisterAllEvents never reaches it.
+local VIEW_EVENTS = { "UNIT_FACTION", "UNIT_FLAGS" }
+
+--- The unit frame's one OnEvent. The payload's unit is proven a safe key before it is compared.
+local function onViewEvent(_, _, unit)
+    if NS.Secrets.IsSafeKey(unit) and (unit == "target" or unit == "focus") then CM.ApplyViews(unit) end
+end
+
+CM.viewFrame = CM.viewFrame or nil
+local function viewFrame()
+    local f = CM.viewFrame
+    if not f then
+        -- Hidden: a frame hears its events shown or not, and nothing of it is ever drawn.
+        f = CreateFrame("Frame")
+        f:Hide()
+        f:SetScript("OnEvent", onViewEvent)
+        CM.viewFrame = f
+    end
+    return f
+end
+
+local function openViewEvents()
+    local f = viewFrame()
+    for _, event in ipairs(VIEW_EVENTS) do
+        NS.SafeRegisterUnitEvent(f, event, NS.RejectedEvents, "target", "focus")
+    end
+end
+
 --- A write that moves a container's flow or its attachment moves every container following it too
 --- (L-6): they continue its flow and anchor at points derived from it, so each is re-applied.
 local function requestFollowers(p)
@@ -761,7 +807,8 @@ end
 
 --- Subscribe to the bus. Separate from CM.Init because the stand-down UNREGISTERS these three
 --- (slash-commands-§7) and the stand-up has to put them back -- a handler left registered and gated
---- on a flag is the draw gate the section exists to end (anti-pattern #85).
+--- on a flag is the draw gate the section exists to end (anti-pattern #85). The view frame's unit
+--- events (above) are opened here too, and closed with the rest.
 function CM.StartListening()
     if not ev then
         ev = NS.NewBusTarget()
@@ -786,6 +833,7 @@ function CM.StartListening()
             CM.RequestApply(nil, not (type(payload) == "table" and payload.byPlayer))
         end)
     end
+    openViewEvents()
     -- Every font the containers use, drawn once before the first build draws in it (issue #24).
     if NS.FontPrimer then NS.FontPrimer.PrimeAll() end
 end
@@ -794,12 +842,14 @@ end
 --- have flushed it: canceled, not left armed to wake up and find the latch (slash-commands-§7).
 --- `scheduled` goes down with it, or the stand-up's own RequestApply(nil, true) would be swallowed.
 --- What was pending is not kept: the stand-up rebuilds from the settings AS THEY ARE THEN, never
---- from a snapshot taken on the way down (performance-§6). An armed enchant reset is canceled too.
+--- from a snapshot taken on the way down (performance-§6). An armed enchant reset is canceled too,
+--- and the view frame's unit events are closed by hand.
 function CM.StopListening()
     if ev then
         ev:UnregisterAllMessages()
         ev = nil
     end
+    if CM.viewFrame then CM.viewFrame:UnregisterAllEvents() end
     if flushTimer then
         flushTimer:Cancel()
         flushTimer = nil

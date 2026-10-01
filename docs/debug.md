@@ -81,6 +81,7 @@ Example (shortened):
 [Cont] #2 "Player debuffs" unit=player HARMFUL style=icons enabled=true attach=container#1 point=TOPLEFT(auto) relPoint=BOTTOMLEFT(auto) join=after-start | engine=yes ...
 [Filt] #1 whitelist(1)=[1459 Arcane Intellect]
 [Plan] #1 plan in sync
+[Plan] #1 spell lists: mode=always view=ids
 [Plan] #1 g1 "Always shown" filter=HELPFUL cand={includeSpellIDs:1} sort=expirationOnly/normal max=inf frames=3 shown=2
 [Shown] #1 g1 btn1 name="Arcane Intellect"
 [Shown] #1 predicted: 1459 Arcane Intellect -> shown (rank 1 whitelist)
@@ -91,6 +92,12 @@ A container attached to another container prints its join after the target (batc
 points in effect, this container's (`point`) and its parent's (`relPoint`), each `(auto)` while
 Automatic or `(picked)`, and `join=`, the batch 9 side the pair is under the parent's growth
 (`after-start` and the like, `Anchors.AttachEdge`) or `free` for any other pair.
+
+Each built container's `[Plan] #N spell lists:` line says where Blizzard applies its spell ids
+(`mode=`: `always` for buffs on the player and the pet, `never` for their debuffs, `dynamic` for any
+other unit, where the unit's reaction decides, `FC.IdsMode`) and which view of the plan the engine
+holds now (`view=ids`, or `view=noIds`, where spell categories and Overrides are not applied and only
+Blizzard categories set to Show draw). See the `[Filter]` tag below for each switch.
 
 ### Bar names that do not show
 

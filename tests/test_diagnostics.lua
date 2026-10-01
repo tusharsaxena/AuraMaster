@@ -371,6 +371,25 @@ test("diag: a row scoped to an aura type is not listed for a container of the ot
     assertTrue(other:find("icons.width", 1, true) == nil, other)
 end)
 
+test("diag: each container's spell-list mode and the view its engine holds", function()
+    local NS, mocks = fresh()
+    mocks.__canAssist.target = false
+    local id = NS.ContainerManager.Create({ unit = "target", auraType = "HELPFUL" })
+    local deb = NS.ContainerManager.Create({ unit = "player", auraType = "HARMFUL" })
+    local buf = NS.ContainerManager.Create({ unit = "player", auraType = "HELPFUL" })
+    mocks.__fireTimers()
+    local lines = build(NS)
+    -- red under: planLines without the spell-list line (spell-list views, V2)
+    assertTrue(has(lines, "[Plan] #" .. id .. " spell lists: mode=dynamic view=noIds") ~= nil, dump(lines))
+    assertTrue(has(lines, "[Plan] #" .. deb .. " spell lists: mode=never view=noIds") ~= nil, dump(lines))
+    assertTrue(has(lines, "[Plan] #" .. buf .. " spell lists: mode=always view=ids") ~= nil, dump(lines))
+    mocks.__canAssist.target = true
+    NS.ContainerManager.instances[id]:ApplyView()
+    lines = build(NS)
+    -- red under: the view read off the settings rather than the live instance
+    assertTrue(has(lines, "[Plan] #" .. id .. " spell lists: mode=dynamic view=ids") ~= nil, dump(lines))
+end)
+
 test("diag: the plan verdict reads in sync, PENDING, DRIFT or not built", function()
     local NS, mocks = fresh()
     local lines = build(NS)

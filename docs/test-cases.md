@@ -452,7 +452,7 @@ badge and any count quoted in the docs must agree with it.
 - container: an engine whose frame level reads secret leaves the blocker at level 0, never raising (E)
 - container: ApplyVisibility records the hang mode for test mode, unlocked and locked; Park and Destroy reset it
 
-### test_container_views.lua (9)
+### test_container_views.lua (14)
 
 - container views: a target buff container is built on the view its unit's reaction picks
 - container views: player debuffs are always built on the no-ids view, player buffs on the ids view
@@ -463,6 +463,11 @@ badge and any count quoted in the docs must agree with it.
 - container views: an update that leaves the plan's view values alone still sends the view switch
 - container views: a view change writes one [Filter] line, and an unchanged view none
 - container views: a setter the engine refuses is caught, and logged once
+- container views: a target swap switches the view BEFORE it refreshes the engine
+- container views: a focus swap moves focus containers only
+- container views: UNIT_FACTION and UNIT_FLAGS on the target and focus switch the view without a swap
+- container views: a secret unit token from a unit event switches nothing and raises nothing
+- container views: the view frame's unit events go down with the addon and come back with it
 
 ### test_containermanager.lua (54)
 
@@ -729,14 +734,16 @@ badge and any count quoted in the docs must agree with it.
 - hang: a test-mode chain locked shows no strips and keeps its own seams
 - hang: HangMode reads the recorded mode, and before any visibility pass falls back on the preview
 
-### test_emptywatch.lua (25)
+### test_emptywatch.lua (27)
 
 - empty: a token-only group holding an aura is not empty, asked with a count of one
 - empty: a token-only group with nothing to show is empty
 - empty: a unit that does not exist is empty without reading an aura
 - empty: a readable pool of 0 is empty without reading an aura
 - empty: an include id hits and misses
-- empty: spell ids are ignored on a hostile target's buffs, as the engine ignores them
+- empty: spell ids are ignored on a target's buffs it cannot be assisted on, as the engine ignores them
+- empty: whether ids apply is Blizzard's predicate (NS.Compat.IdsApply), not UnitIsFriend
+- empty: the prediction reads the ACTIVE view's groups
 - empty: a max duration drops a permanent aura and one that runs longer
 - empty: dispel types include and exclude
 - empty: a flag the aura data does not carry is not knowable
@@ -1438,7 +1445,7 @@ badge and any count quoted in the docs must agree with it.
 - slash verbs: the disabled gate is ONE decision over the whole verb table, not a per-verb guard
 - slash verbs: /am new enchants makes a player buff container showing only Weapon enchants (feedback #6)
 
-### test_diagnostics.lua (49)
+### test_diagnostics.lua (50)
 
 - diag: /am diagnostics writes the report to the console ungated, opens it, and says so once
 - diag: /am diagnostics answers while the addon is disabled, and the state line says so
@@ -1459,6 +1466,7 @@ badge and any count quoted in the docs must agree with it.
 - diag: every container gets a line and a full filter block, lists sorted and named
 - diag: a container's non-default rows are listed, with no color escape, untouched rows absent
 - diag: a row scoped to an aura type is not listed for a container of the other type
+- diag: each container's spell-list mode and the view its engine holds
 - diag: the plan verdict reads in sync, PENDING, DRIFT or not built
 - diag: plan groups report the engine's frame and shown counts, or ? when unreadable
 - diag: shown buttons are identified by instance, then by our own regions, else id=?
@@ -2085,7 +2093,7 @@ badge and any count quoted in the docs must agree with it.
 | test_filtercompiler_categories.lua | 9 |
 | test_filterviews.lua | 11 |
 | test_container.lua | 52 |
-| test_container_views.lua | 9 |
+| test_container_views.lua | 14 |
 | test_containermanager.lua | 54 |
 | test_compat.lua | 31 |
 | test_secrets.lua | 6 |
@@ -2097,7 +2105,7 @@ badge and any count quoted in the docs must agree with it.
 | test_anchors_seam.lua | 10 |
 | test_anchors_edges.lua | 14 |
 | test_anchors_hang.lua | 11 |
-| test_emptywatch.lua | 25 |
+| test_emptywatch.lua | 27 |
 | test_fontprimer.lua | 32 |
 | test_enchantreset.lua | 23 |
 | test_redraw.lua | 14 |
@@ -2124,7 +2132,7 @@ badge and any count quoted in the docs must agree with it.
 | test_disabled.lua | 18 |
 | test_slash.lua | 34 |
 | test_slash_verbs.lua | 51 |
-| test_diagnostics.lua | 49 |
+| test_diagnostics.lua | 50 |
 | test_bulklog.lua | 20 |
 | test_debug_coverage.lua | 10 |
 | test_debug_library_lines.lua | 11 |
@@ -2157,4 +2165,4 @@ badge and any count quoted in the docs must agree with it.
 | test_layout_cap.lua | 13 |
 | test_diagnostics_contract.lua | 9 |
 | test_lizard_sighted.lua | 8 |
-| **Total** | **1811** |
+| **Total** | **1819** |

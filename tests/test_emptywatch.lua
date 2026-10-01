@@ -101,18 +101,54 @@ test("empty: an include id hits and misses", function()
     assertTrue(NS.EmptyWatch.Predict(fakeInst(PLAYER_BUFFS, plan)), "200 is not")
 end)
 
-test("empty: spell ids are ignored on a hostile target's buffs, as the engine ignores them", function()
+test("empty: spell ids are ignored on a target's buffs it cannot be assisted on, as the engine ignores them", function()
     local NS, mocks = fresh()
     mocks.__unitExists.target = true
-    local friendly = false
-    mocks.UnitIsFriend = function() return friendly end
+    mocks.__canAssist.target = false
     withAuras(mocks, "target", { { spellId = 200 } })
     local cfg = { unit = "target", auraType = "HELPFUL" }
     local plan = { groups = { group("HELPFUL", { includeSpellIDs = { [100] = true } }) } }
     -- red under: ids applied everywhere (a hostile target's buff list is not honored)
-    assertFalse(NS.EmptyWatch.Predict(fakeInst(cfg, plan)), "hostile: every buff counts")
-    friendly = true
-    assertTrue(NS.EmptyWatch.Predict(fakeInst(cfg, plan)), "friendly: the list applies")
+    assertFalse(NS.EmptyWatch.Predict(fakeInst(cfg, plan)), "not assistable: every buff counts")
+    mocks.__canAssist.target = true
+    assertTrue(NS.EmptyWatch.Predict(fakeInst(cfg, plan)), "assistable: the list applies")
+end)
+
+test("empty: whether ids apply is Blizzard's predicate (NS.Compat.IdsApply), not UnitIsFriend", function()
+    local NS, mocks = fresh()
+    mocks.__unitExists.target = true
+    -- A friendly unit you cannot assist (Blizzard's predicate asks UnitCanAssist, not UnitIsFriend).
+    mocks.UnitIsFriend = function() return true end
+    mocks.__canAssist.target = false
+    withAuras(mocks, "target", { { spellId = 200 } })
+    local plan = { groups = { group("HELPFUL", { includeSpellIDs = { [100] = true } }) } }
+    -- red under: EmptyWatch's own UnitIsFriend reading (friendly reads "ids apply", so 200 misses: empty)
+    assertFalse(NS.EmptyWatch.Predict(fakeInst({ unit = "target", auraType = "HELPFUL" }, plan)))
+    -- Debuffs on a unit you can assist: the engine skips the ids there too.
+    mocks.UnitIsFriend = function() return false end
+    mocks.__canAssist.target = true
+    local deb = { groups = { group("HARMFUL", { includeSpellIDs = { [100] = true } }) } }
+    withAuras(mocks, "target", { { spellId = 200 } })
+    -- red under: the UnitIsFriend reading (not friendly reads "debuff ids apply", so 200 misses: empty)
+    assertFalse(NS.EmptyWatch.Predict(fakeInst({ unit = "target", auraType = "HARMFUL" }, deb)))
+end)
+
+test("empty: the prediction reads the ACTIVE view's groups", function()
+    local NS, mocks = fresh()
+    withAuras(mocks, "player", { { spellId = 100 } })
+    local g = group("HELPFUL", { includeSpellIDs = { [100] = true } })
+    g.noIds = { filter = "HELPFUL", candidateFilters = { includeDispelTypes = {} } }
+    local inst = fakeInst(PLAYER_BUFFS, { groups = { g } })
+    assertFalse(NS.EmptyWatch.Predict(inst), "the ids view: 100 is on the list")
+    inst.view = "noIds"
+    -- red under: predicting from the ids view whatever the engine holds (the NEVER group drawn as full)
+    assertTrue(NS.EmptyWatch.Predict(inst), "the no-ids view: the NEVER group matches nothing")
+    -- A no-ids view's filter string is the one asked for, too.
+    g.candidateFilters, g.noIds = nil, { filter = "HELPFUL|RAID" }
+    local calls = withAuras(mocks, "player", { { spellId = 1 } })
+    NS.EmptyWatch.Predict(inst)
+    -- red under: the ids view's filter string sent to GetAuraSlots
+    assertEqual(calls[1][2], "HELPFUL|RAID")
 end)
 
 test("empty: a max duration drops a permanent aura and one that runs longer", function()

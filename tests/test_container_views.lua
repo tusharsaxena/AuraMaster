@@ -6,7 +6,8 @@
 -- no-ids view (modules/FilterViews.lua) instead of the ids view, so spell-list groups match nothing
 -- rather than all becoming the same group. The switch is two live setters per group, sent only where
 -- the two views differ, and it runs in combat and while auras are secret: it never goes through
--- ContainerManager's apply hold.
+-- ContainerManager's apply hold. The wiring (SV-03): a target or focus swap switches the view before
+-- the refresh, and UNIT_FACTION / UNIT_FLAGS on ContainerManager's view frame switch it without a swap.
 
 local T = _G.AM_TEST
 local spyConsole = dofile("tests/console_spy.lua")
@@ -261,4 +262,93 @@ test("container views: a setter the engine refuses is caught, and logged once", 
     end
     assertEqual(#lines, 1, table.concat(lines, " | "))
     assertTrue(lines[1]:find("SetAuraGroupCandidateFilters failed", 1, true) ~= nil, lines[1])
+end)
+
+-- ── wiring: when ApplyView runs (V2, SV-03) ──────────────────────────────────────────────────
+
+--- The registrations on ContainerManager's view frame, as `kind:event:unit`, sorted.
+local function viewRegs(mocks, NS)
+    local out = {}
+    for _, r in ipairs(mocks.__registrations()) do
+        if r.target == NS.ContainerManager.viewFrame then
+            out[#out + 1] = r.kind .. ":" .. tostring(r.event) .. ":" .. tostring(r.unit)
+        end
+    end
+    table.sort(out)
+    return table.concat(out, " | ")
+end
+
+local VIEW_REGS = "unit:UNIT_FACTION:focus | unit:UNIT_FACTION:target | unit:UNIT_FLAGS:focus | unit:UNIT_FLAGS:target"
+
+test("container views: a target swap switches the view BEFORE it refreshes the engine", function()
+    local _, mocks, inst, e = targetBuffs(false)
+    e.__calls = {}
+    mocks.__canAssist.target = true
+    mocks.__fireEvent("PLAYER_TARGET_CHANGED")
+    -- red under: OnUnitSwap refreshing without ApplyView (the new target keeps the old one's view)
+    assertEqual(inst.view, "ids")
+    local set, refresh = e:__firstCall("SetAuraGroupCandidateFilters"), e:__firstCall("UpdateAllAuras")
+    assertTrue(set ~= nil and refresh ~= nil, "both the switch and the refresh were sent")
+    -- red under: ApplyView after RefreshUnit (one UpdateAllAuras draws the new target in the old view)
+    assertTrue(set < refresh, "the switch precedes the refresh")
+end)
+
+test("container views: a focus swap moves focus containers only", function()
+    local _, mocks, inst = targetBuffs(false)
+    mocks.__canAssist.target = true
+    mocks.__fireEvent("PLAYER_FOCUS_CHANGED")
+    -- red under: OnUnitSwap applying the view on every container, whatever its unit
+    assertEqual(inst.view, "noIds", "the target container waits for its own swap")
+end)
+
+test("container views: UNIT_FACTION and UNIT_FLAGS on the target and focus switch the view without a swap", function()
+    local NS, mocks, inst, e = targetBuffs(false)
+    -- red under: no unit-event registration on ContainerManager's view frame
+    assertEqual(viewRegs(mocks, NS), VIEW_REGS)
+    mocks.__canAssist.target = true
+    mocks.__fire("UNIT_FLAGS", "focus")
+    -- red under: the handler ignoring its unit (a focus flag change switching a target container)
+    assertEqual(inst.view, "noIds")
+    e.__calls = {}
+    mocks.__fire("UNIT_FLAGS", "target")
+    -- red under: UNIT_FLAGS not wired to ApplyView (a duel starting mid-target)
+    assertEqual(inst.view, "ids")
+    assertEqual(#e:__callsTo("UpdateAllAuras"), 0, "the setters redraw; no extra refresh")
+    mocks.__canAssist.target = false
+    mocks.__fire("UNIT_FACTION", "target")
+    -- red under: UNIT_FACTION not wired (an NPC turning hostile)
+    assertEqual(inst.view, "noIds")
+end)
+
+test("container views: a secret unit token from a unit event switches nothing and raises nothing", function()
+    local secretUnit = false
+    local NS, mocks = fresh({ before = function(m)
+        m.issecretvalue = function(v) return secretUnit and v == "target" end
+    end })
+    mocks.__canAssist.target = false
+    local id = NS.ContainerManager.Create({ unit = "target", auraType = "HELPFUL", filter = {
+        categories = states(NS, "HELPFUL", { defensives = true, bigDefensive = true }),
+    } })
+    mocks.__fireTimers()
+    local inst = NS.ContainerManager.instances[id]
+    assertEqual(inst.view, "noIds")
+    mocks.__canAssist.target = true
+    secretUnit = true
+    -- red under: the unit compared before NS.Secrets.IsSafeKey proves it a safe key
+    mocks.__fire("UNIT_FLAGS", "target")
+    assertEqual(inst.view, "noIds")
+    secretUnit = false
+    mocks.__fire("UNIT_FLAGS", "target")
+    assertEqual(inst.view, "ids", "a readable token still switches")
+end)
+
+test("container views: the view frame's unit events go down with the addon and come back with it", function()
+    local NS, mocks = targetBuffs(false)
+    assertEqual(viewRegs(mocks, NS), VIEW_REGS)
+    NS.SetByPath("enabled", false)
+    -- red under: CM.StopListening leaving the view frame registered (a frame AceEvent never reaches)
+    assertEqual(viewRegs(mocks, NS), "")
+    NS.SetByPath("enabled", true)
+    -- red under: CM.StartListening not re-opening the view frame on the stand-up
+    assertEqual(viewRegs(mocks, NS), VIEW_REGS)
 end)

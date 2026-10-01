@@ -22,7 +22,7 @@ read_globals = {
     "debugstack",         -- a failing styler's stack, kept for the error handler (modules/Style.lua)
     "geterrorhandler",    -- a failing container's apply is reported, not raised (modules/ContainerManager.lua)
     -- whether a container is predicted empty (modules/EmptyWatch.lua)
-    "UnitExists", "UnitIsFriend", "GetWeaponEnchantInfo",
+    "UnitExists", "GetWeaponEnchantInfo",
     -- which weapon an item-data event names (modules/ContainerManager.lua's enchant reset)
     "GetInventoryItemID",
 }

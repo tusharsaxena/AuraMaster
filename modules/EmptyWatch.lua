@@ -55,21 +55,19 @@ local function unitExists(unit)
     return v and true or false
 end
 
---- Whether the engine honors spell ids for this unit and aura type right now: only on buffs of a
---- friendly unit and debuffs of a hostile one (docs/midnight-quirks.md). Nil when not knowable.
+--- Whether the engine applies spell ids for this unit and aura type right now, from the same answer
+--- the container picked its view from (NS.Container.ResolveView: FC.IdsMode for the player and the
+--- pet, NS.Compat.IdsApply, Blizzard's own predicate, everywhere else), so the prediction agrees
+--- with the engine (spell-list views, V3). Never nil: an unknowable reaction reads "not applied",
+--- as it does for the view.
 local function idsApply(unit, auraType)
-    if unit == "player" or unit == "pet" then return NS.FilterCompiler.IdsHonored(unit, auraType) end
-    local ok, friend = pcall(UnitIsFriend, "player", unit)
-    if not (ok and NS.Secrets.CanAccess(friend)) then return nil end
-    friend = friend and true or false
-    if auraType == "HARMFUL" then return not friend end
-    return friend
+    local at = (auraType == "HARMFUL") and "HARMFUL" or "HELPFUL"
+    return NS.Container.ResolveView(unit, at) == "ids"
 end
 
 --- One spell-id list against the aura: true when it passes, false when it fails, nil when unknowable.
 local function matchIds(aura, key, set, idsOk)
-    if idsOk == false then return true end
-    if idsOk == nil then return nil end
+    if not idsOk then return true end
     local id = aura.spellId
     if not NS.Secrets.IsSafeKey(id) then return nil end
     local listed = set[id] == true
@@ -143,12 +141,19 @@ local function slotsEmpty(api, unit, cand, idsOk, token, ...)
     return true
 end
 
---- Whether group `g` holds nothing for `unit`. A token-only group asks for one slot: any slot back
---- means an aura, and no table is built. Run under pcall: a rejected filter token raises.
-local function groupEmpty(api, unit, g, idsOk)
-    local cand = g.candidateFilters
-    if not cand then return select("#", api.GetAuraSlots(unit, g.filter, 1)) <= 1 end
-    return slotsEmpty(api, unit, cand, idsOk, api.GetAuraSlots(unit, g.filter))
+--- Whether a group with `filter` and `cand` holds nothing for `unit`. A token-only group asks for
+--- one slot: any slot back means an aura, and no table is built. Run under pcall: a rejected filter
+--- token raises.
+local function groupEmpty(api, unit, filter, cand, idsOk)
+    if not cand then return select("#", api.GetAuraSlots(unit, filter, 1)) <= 1 end
+    return slotsEmpty(api, unit, cand, idsOk, api.GetAuraSlots(unit, filter))
+end
+
+--- Group `g`'s filter string and candidate filters in the view the engine holds: its no-ids view
+--- (`g.noIds`, modules/FilterViews.lua) once ApplyView or a build put the engine on it.
+local function activeView(inst, g)
+    local v = (inst.view == "noIds" and g.noIds) or g
+    return v.filter, v.candidateFilters
 end
 
 --- The engine's created-button pool for one group, when it reads as a plain number.
@@ -169,7 +174,8 @@ local function aurasEmpty(inst, plan, cfg)
     for _, g in ipairs(plan.groups) do
         local r = true
         if poolOf(inst.engine, g.key) ~= 0 then
-            local ok, v = pcall(groupEmpty, api, unit, g, idsOk)
+            local filter, cand = activeView(inst, g)
+            local ok, v = pcall(groupEmpty, api, unit, filter, cand, idsOk)
             if ok then r = v else r = nil end
             if exists == nil and r == true then r = nil end
         end

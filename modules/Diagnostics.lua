@@ -549,6 +549,11 @@ local function planLines(out, x)
     out:add("Plan", "#%s %s", x.id, verdictOf(x, fresh))
     local plan = x.inst and x.inst.plan
     if not plan then return end
+    -- Spell-list views (V2): where Blizzard applies spell ids for this unit (FC.IdsMode), and which
+    -- view of the plan the live engine holds now (ContainerClass:ApplyView).
+    local auraType = (x.c.auraType == "HARMFUL") and "HARMFUL" or "HELPFUL"
+    out:add("Plan", "#%s spell lists: mode=%s view=%s", x.id, FC.IdsMode(x.c.unit, auraType),
+        str(x.inst.view))
     for _, g in ipairs(plan.groups or {}) do
         out:section("plan #" .. str(x.id) .. " " .. groupKey(g), groupLine, x, g)
     end
