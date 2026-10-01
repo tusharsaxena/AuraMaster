@@ -203,7 +203,7 @@ step 1, so a `NeverSecret` aura claimed only by a spell category is not drawn wh
 `SetAuraGroupCandidateFilters` only where the two views differ. Blizzard's Lua checks neither combat
 nor secrecy in either setter and both end in `UpdateAllAuras`, so the switch runs in combat. It runs at
 every build and update, on `PLAYER_TARGET_CHANGED` and `PLAYER_FOCUS_CHANGED` before the refresh, and
-on `UNIT_FACTION` and `UNIT_FLAGS` for `target` and `focus` (`CM.ApplyViews`,
+on `UNIT_FACTION` and `UNIT_FLAGS` for `target`, `focus` and `player` (`CM.ApplyViews`,
 `modules/ContainerManager.lua:429`), which catches duels, mind control and an NPC turning hostile.
 A move logs `[Filter] <container>: spell lists off (unit cannot be assisted)` or `... on ...`, and
 `/am diagnostics` prints each container's mode and view. The Filters section says so three times: the

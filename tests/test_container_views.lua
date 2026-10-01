@@ -277,11 +277,11 @@ end)
 
 -- ── wiring: when ApplyView runs (V2, SV-03) ──────────────────────────────────────────────────
 
---- The registrations on ContainerManager's view frame, as `kind:event:unit`, sorted.
-local function viewRegs(mocks, NS)
+--- The registrations on ContainerManager's view frame (or `frameKey`), as `kind:event:unit`, sorted.
+local function viewRegs(mocks, NS, frameKey)
     local out = {}
     for _, r in ipairs(mocks.__registrations()) do
-        if r.target == NS.ContainerManager.viewFrame then
+        if r.target ~= nil and r.target == NS.ContainerManager[frameKey or "viewFrame"] then
             out[#out + 1] = r.kind .. ":" .. tostring(r.event) .. ":" .. tostring(r.unit)
         end
     end
@@ -290,6 +290,7 @@ local function viewRegs(mocks, NS)
 end
 
 local VIEW_REGS = "unit:UNIT_FACTION:focus | unit:UNIT_FACTION:target | unit:UNIT_FLAGS:focus | unit:UNIT_FLAGS:target"
+local PLAYER_REGS = "unit:UNIT_FACTION:player | unit:UNIT_FLAGS:player"
 
 test("container views: a target swap switches the view BEFORE it refreshes the engine", function()
     local _, mocks, inst, e = targetBuffs(false)
@@ -356,12 +357,35 @@ end)
 test("container views: the view frame's unit events go down with the addon and come back with it", function()
     local NS, mocks = targetBuffs(false)
     assertEqual(viewRegs(mocks, NS), VIEW_REGS)
+    assertEqual(viewRegs(mocks, NS, "viewPlayerFrame"), PLAYER_REGS)
     NS.SetByPath("enabled", false)
     -- red under: CM.StopListening leaving the view frame registered (a frame AceEvent never reaches)
     assertEqual(viewRegs(mocks, NS), "")
+    assertEqual(viewRegs(mocks, NS, "viewPlayerFrame"), "")
     NS.SetByPath("enabled", true)
     -- red under: CM.StartListening not re-opening the view frame on the stand-up
     assertEqual(viewRegs(mocks, NS), VIEW_REGS)
+    assertEqual(viewRegs(mocks, NS, "viewPlayerFrame"), PLAYER_REGS)
+end)
+
+test("container views: UNIT_FACTION and UNIT_FLAGS on the player move target and focus views", function()
+    -- Mind control: the charmed player takes the charmer's side, so whether the player can assist the
+    -- target moves while only the PLAYER's faction and flags change.
+    local NS, mocks, inst = targetBuffs(false)
+    -- red under: no registration for the player (RegisterUnitEvent takes two units, so its own frame)
+    assertEqual(viewRegs(mocks, NS, "viewPlayerFrame"), PLAYER_REGS)
+    local moved = 0
+    NS.EmptyWatch.OnViewsMoved = function() moved = moved + 1 end
+    mocks.__canAssist.target = true
+    mocks.__fire("UNIT_FLAGS", "player")
+    -- red under: the player's own reaction change not re-resolving the target's view
+    assertEqual(inst.view, "ids")
+    assertEqual(moved, 1, "EmptyWatch re-predicts once")
+    mocks.__canAssist.target = false
+    mocks.__fire("UNIT_FACTION", "player")
+    assertEqual(inst.view, "noIds")
+    mocks.__fire("UNIT_FACTION", "player")
+    assertEqual(moved, 2, "nothing moved, no re-prediction")
 end)
 
 test("container views: the stand-up moves the view before it re-enables, in combat too", function()

@@ -20,7 +20,7 @@ engine does the reading, filtering, sorting, layout and timer animation in its o
         │    (a session row stops after the debug line: it sends nothing)
         │    (inside a bulk copy or reset the [Set] line is muted and tallied: one line per act)
         ▼
- 2  ContainerManager (CONFIG_CHANGED listener)                 modules/ContainerManager.lua:822
+ 2  ContainerManager (CONFIG_CHANGED listener)                 modules/ContainerManager.lua:837
         │  first FontPrimer.PrimeAll: a font no container drew in yet is drawn on a shown frame
         │  the row's effect:  "visibility" → ApplyVisibility now    "none" → nothing
         │  otherwise RequestApply(containerId)   nil = every container
@@ -251,6 +251,7 @@ after they were hidden; a visibility pass alone leaves them as they are.
 | `ADDON_RESTRICTION_STATE_CHANGED` | Flush pending applies — secrecy can lift outside a combat transition (a key or encounter ending) |
 | `PLAYER_TARGET_CHANGED`, `PLAYER_FOCUS_CHANGED`, `UNIT_PET` | Every container on that unit calls the engine's `UpdateAllAuras`, because the engine keeps showing the old unit's auras until told. On a target or focus swap each such container first switches to the view of its plan the new unit's reaction picks (`CM.ApplyViews`, spell-list views V2) |
 | `UNIT_FACTION`, `UNIT_FLAGS` (target, focus) | The unit's reaction may have moved without a swap: `CM.ApplyViews` switches each container on it to the view that reaction picks (`ContainerClass:ApplyView`), in combat too. When one moved, EmptyWatch re-predicts at once (`EW.OnViewsMoved`), so the empty prediction follows the engine |
+| `UNIT_FACTION`, `UNIT_FLAGS` (player) | The player's own side moved (mind control): `CM.ApplyViews` for both target and focus, on `CM.viewPlayerFrame`, then one `EW.OnViewsMoved` if any view moved |
 | `ADDON_LOADED` (any) | Frame-attached containers whose frame did not exist yet are placed again |
 | `ITEM_DATA_LOAD_RESULT`, `GET_ITEM_INFO_RECEIVED` | When the item is the weapon equipped in slot 16 or 17 and the load succeeded, the weapon-enchant reset is armed 0.5 s later (`CM.OnWeaponItemData`); one timer, keeping the later deadline, so a burst flips once. The reset turns each live engine with enchant frames off and on again, so the weapon names are drawn afresh (`docs/midnight-quirks.md` → *Weapon enchants*) |
 | Profile changed, copied or reset | `NS.OnProfileChanged`: `PrepareProfile`, selection cleared, `ContainerManager.Announce` (the new profile's fonts primed, instances follow the registry, apply all, `CONTAINERS_CHANGED`), Blizzard frames, panel refresh |
@@ -275,7 +276,7 @@ player switched off. There is no `StandUp()` to call; the only route out is rele
 | The eleven lifecycle events | `addon:UnregisterLifecycleEvents()` — unregistered, not gated |
 | `modules/TimedSpells.lua` | `TS.StandDown()`: its unit frame's `UNIT_AURA` (unregistered by hand; the frame is kept for the next stand-up), its gate events, its two bus subscriptions, and a queued scan timer, canceled |
 | `modules/EmptyWatch.lua` | `EW.Stop()`: both unit frames' registrations (unregistered by hand; the frames are kept), its AceEvent pet, inventory, target and focus events, and a queued pass or enchant-expiry timer, canceled |
-| `modules/ContainerManager.lua` | `CM.StopListening()`: its three bus subscriptions, its view frame's `UNIT_FACTION` / `UNIT_FLAGS` (unregistered by hand; the frame is kept), the pending queue behind them, and an armed weapon-enchant reset, canceled; `CM.RequestEnchantReset` arms nothing while stood down |
+| `modules/ContainerManager.lua` | `CM.StopListening()`: its three bus subscriptions, its two view frames' `UNIT_FACTION` / `UNIT_FLAGS` (unregistered by hand; the frames are kept), the pending queue behind them, and an armed weapon-enchant reset, canceled; `CM.RequestEnchantReset` arms nothing while stood down |
 | The coalescing apply timer | canceled by `CM.StopListening`; `CM.RequestApply` returns immediately, so nothing re-arms |
 | `modules/FontPrimer.lua` | `FontPrimer.Stop()`, from `CM.StopListening`: the hide timer and the follow-up refresh, canceled, and the frame hidden; a stood-down addon hears no loading-screen event, so the primer stops waiting for one. The fonts it drew stay loaded, so what it primed is kept, and `PrimeAll` does nothing while stood down |
 | `modules/FramePicker.lua` | `FP.Stop()` — the overlay's `OnUpdate` cleared |

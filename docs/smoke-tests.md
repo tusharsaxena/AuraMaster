@@ -22,7 +22,7 @@ check's number is not reused. Checks with no recorded pass, and checks new or co
 | COMBAT-1 to COMBAT-7 | Combat and restrictions | Deferred changes, the settings lock, resets in combat, Mythic+ keys |
 | DIAG-1 to DIAG-20 | Debug, diagnostics, perf | The debug console, bulk `[Set]` lines, `/am diagnostics`, `/am perf`, the event trace, resizing the console, its copy window and the perf panel, the console's Diagnostics link, diagnostics turning logging on, the library's own lines (a slash refusal, a stand-down edge, the launcher's at-enable line) |
 | CONT-1 to CONT-25 | Containers | Create, duplicate, delete, rename, copy; handles, strips and the close mark; test mode; unit swaps; empty placeholders |
-| FILT-1 to FILT-48 | Filters and spell categories | Cast by, the category grids, Overrides, the add-a-spell box, aura ids, your own categories, weapon enchants and their names, where spell lists apply |
+| FILT-1 to FILT-49 | Filters and spell categories | Cast by, the category grids, Overrides, the add-a-spell box, aura ids, your own categories, weapon enchants and their names, where spell lists apply |
 | LAYOUT-1 to LAYOUT-38 | Layout | Anchor modes, attaching, chains, growth, anchor points, seams, the name label, mouse and tooltips |
 | STYLE-1 to STYLE-30 | Bars and Icons style, fonts | Bars and Icons tabs, the spark, borders, dispel colors, pandemic, the font primer |
 | TEXT-1 to TEXT-29 | Text style | Templates and tokens, justify, the icon, dispel type word, backdrop and edge, animation, Size to fit |
@@ -996,7 +996,7 @@ counting the shown containers with an enchant on, and the name is still there. I
 blank, run `/dump C_Item.GetItemName(ItemLocation:CreateFromEquipmentSlot(16))` and note what it
 prints on this line. Result:
 
-FILT-43 to FILT-48 check the spell-list views (2026-10-02). Blizzard applies spell ids to buffs on a
+FILT-43 to FILT-49 check the spell-list views (2026-10-02). Blizzard applies spell ids to buffs on a
 unit you can assist and to debuffs on a unit you cannot. Elsewhere a container that sets any category
 to Hide draws only the categories set to Show on its Blizzard Categories, Dispel Types and Who Cast It
 grids, each aura once. Turn logging on (`/am debug on`) for the checks that read `[Filter]` lines.
@@ -1047,6 +1047,13 @@ and on one that hides nothing it names only the Overrides lists (no "Only Blizza
 Show draw").
 The README's Usage paragraph on where spell categories apply and the FAQ entry "Why does my target
 container show fewer buffs on enemies?" read the same as these notes. Result:
+
+**FILT-49. Mind control flips the view on the charmer.** On a raid or dungeon boss that mind-controls
+(charms) a player, keep a *Target debuffs (mine)* container with *Hard CC*, *Soft CC* and *Racials*
+**Show** and *Dispellable by anyone* **Hide**, targeting the boss. When you are charmed, the console
+logs `spell lists off (unit can be assisted)` for that container if the charm made the boss
+assistable, with no target change and no Lua error; nothing draws twice while charmed. When the charm
+ends the line flips back to `spell lists on (unit cannot be assisted)`. Result:
 
 ## Layout
 
@@ -1775,6 +1782,7 @@ line, then remove its row here.
 | FILT-30 | its warning sentences corrected on 2026-10-02 (spell-list views, SV-01; the Overrides-only sentence, SV-05) |
 | FILT-42 | new on 2026-09-30 with the weapon-enchant name reset (SP-AMX-01) |
 | FILT-43 to FILT-48 | new on 2026-10-02 with the spell-list views (SV-04) |
+| FILT-49 | new on 2026-10-02: the player's own reaction change (SV-05) |
 | LAYOUT-1 | 69, batch 5 |
 | LAYOUT-6 | 162, smoke batch 2 (owed, as CONT-8): the outline moving across aura buttons; 42: its combat refusal corrected on 2026-09-29 to `/am pick` alone, since the panel's button is locked in combat |
 | LAYOUT-11 | 67, batch 8 (failed 2026-09-25): the **Per row** step; the rest passed as 238 |

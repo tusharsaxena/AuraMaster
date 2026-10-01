@@ -758,6 +758,12 @@ local ev
 -- modules/TimedSpells.lua uses (the vendored AceEvent has no RegisterUnitEvent): one private frame,
 -- built once and reused, opened by CM.StartListening and closed by hand in CM.StopListening, since
 -- AceEvent's UnregisterAllEvents never reaches it.
+--
+-- The PLAYER's own side moves the answer too (SV-05): a charmed (mind-controlled) player takes the
+-- charmer's faction, so `UnitCanAssist("player", boss)` can turn true with no event for the boss.
+-- The same two events for `player` re-resolve every target and focus container. RegisterUnitEvent
+-- takes two units and a second call REPLACES the first, so the player has a frame of its own,
+-- `CM.viewPlayerFrame`, built, opened and closed exactly like the first.
 local VIEW_EVENTS = { "UNIT_FACTION", "UNIT_FLAGS" }
 
 --- The unit frame's one OnEvent. The payload's unit is proven a safe key before it is compared.
@@ -765,22 +771,31 @@ local function onViewEvent(_, _, unit)
     if NS.Secrets.IsSafeKey(unit) and (unit == "target" or unit == "focus") then CM.ApplyViews(unit) end
 end
 
-local function viewFrame()
-    local f = CM.viewFrame
+--- The player frame's one OnEvent: both units' views, quietly, and one re-prediction if either moved.
+local function onPlayerViewEvent(_, _, unit)
+    if not (NS.Secrets.IsSafeKey(unit) and unit == "player") then return end
+    local n = CM.ApplyViews("target", true) + CM.ApplyViews("focus", true)
+    if n > 0 and NS.EmptyWatch then NS.EmptyWatch.OnViewsMoved() end
+end
+
+local function viewFrame(key, onEvent)
+    local f = CM[key]
     if not f then
         -- Hidden: a frame hears its events shown or not, and nothing of it is ever drawn.
         f = CreateFrame("Frame")
         f:Hide()
-        f:SetScript("OnEvent", onViewEvent)
-        CM.viewFrame = f
+        f:SetScript("OnEvent", onEvent)
+        CM[key] = f
     end
     return f
 end
 
 local function openViewEvents()
-    local f = viewFrame()
+    local f = viewFrame("viewFrame", onViewEvent)
+    local p = viewFrame("viewPlayerFrame", onPlayerViewEvent)
     for _, event in ipairs(VIEW_EVENTS) do
         NS.SafeRegisterUnitEvent(f, event, NS.RejectedEvents, "target", "focus")
+        NS.SafeRegisterUnitEvent(p, event, NS.RejectedEvents, "player")
     end
 end
 
@@ -855,6 +870,7 @@ function CM.StopListening()
         ev = nil
     end
     if CM.viewFrame then CM.viewFrame:UnregisterAllEvents() end
+    if CM.viewPlayerFrame then CM.viewPlayerFrame:UnregisterAllEvents() end
     if flushTimer then
         flushTimer:Cancel()
         flushTimer = nil
