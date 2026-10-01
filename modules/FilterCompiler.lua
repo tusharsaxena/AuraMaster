@@ -63,7 +63,8 @@ local _, NS = ...
 -- because this row's Show has no positive constraint to offer. Its group's ONLY constraint is an
 -- `excludeSpellIDs` of that union, so the group is worth emitting only where such a filter both
 -- EXISTS and is CERTAIN to be applied. `FC.IdsMode` answering "always" is that second half: the
--- engine applies include/exclude spell ids to buffs on friendly units and debuffs on hostile ones and
+-- engine applies include/exclude spell ids to buffs on a unit you can assist (or a player-controlled
+-- or group unit) and to debuffs on a unit you cannot, plus any NeverSecret spell on any unit, and
 -- discards them everywhere else (AuraContainerUtil.CanApplyIdentityCandidateFilters), so the only
 -- containers where a plan compiled today is CERTAIN of the answer are buffs on the player and the
 -- pet — the two units that cannot turn hostile. A `target` or `focus` is whichever it happens to be when the engine
@@ -340,8 +341,9 @@ end
 -- ---------------------------------------------------------------------------
 
 --- Whether the engine can EVER honor include/exclude spell ids for this unit and aura type. Blizzard
---- applies them to buffs on friendly units and debuffs on hostile ones, and discards them everywhere
---- else (AuraContainerUtil.CanApplyIdentityCandidateFilters). `target` and `focus` therefore answer
+--- applies them to buffs on a unit you can assist (or a player-controlled or group unit) and to debuffs
+--- on a unit you cannot, plus any NeverSecret spell anywhere, and discards them everywhere else
+--- (AuraContainerUtil.CanApplyIdentityCandidateFilters). `target` and `focus` therefore answer
 --- TRUE for BOTH aura types: whichever the unit turns out to be, one of the two aura types bites
 --- there, and this predicate asks only whether the filter is capable of doing anything at all. Only
 --- the player and the pet are pinned: they are never hostile to you, so their DEBUFF ids are

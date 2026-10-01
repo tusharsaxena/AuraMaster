@@ -757,8 +757,8 @@ grids, **Blizzard Categories**, **Spell Categories**, **Dispel Types** and **Who
 Spell Categories grid the line reads "These are the lists on General -> Spell Categories, shared by
 every container."; the grid holds **Hard CC (loss of control)**, **Soft CC (roots & snares)** and
 **Racials**, each with a **See spells** link, then **Uncategorized** with none (plus any debuff
-category of your own); under it a note reads "Hard CC and Soft CC only work on a hostile target or
-focus. …". On a *player* container, straight under the **Spell Categories** heading and above its
+category of your own); under it a note reads "Hard CC, Soft CC and Racials only match on a target or
+focus you can't assist. …". On a *player* container, straight under the **Spell Categories** heading and above its
 **Show all** / **Hide all**, a line reads "NOTE: on your own debuffs, these spell categories are not
 applied." Result:
 
@@ -1764,7 +1764,7 @@ line, then remove its row here.
 | CONT-8 | 162, smoke batch 2 (owed: the owner verified 143 to 161 only) |
 | CONT-21 | 136 and 224: the placeholder count corrected on 2026-09-29 (one per ticked slot, three by default) |
 | FILT-2 | 80, batch 6 |
-| FILT-4 | 24: its Spell Categories grid corrected on 2026-09-29 (Hard CC, Soft CC and Racials with their See spells links, the line naming General -> Spell Categories and the hostile-unit note, since issue #11); its NOTE line under the Spell Categories heading new on 2026-10-02 (spell-list views, SV-04) |
+| FILT-4 | 24: its Spell Categories grid corrected on 2026-09-29 (Hard CC, Soft CC and Racials with their See spells links, the line naming General -> Spell Categories and the hostile-unit note, since issue #11); its NOTE line under the Spell Categories heading new on 2026-10-02 (spell-list views, SV-04); the note under the grid reworded to "you can't assist" (SV-05) |
 | FILT-5 | 78 and 81, batch 6 |
 | FILT-7 | 77, batch 6; its row labels corrected on 2026-09-29 (*Dispellable by anyone*, *Boss debuffs*) |
 | FILT-8 | 83, batch 6; its row label corrected on 2026-09-29 (*From any player*) |

@@ -69,7 +69,7 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   to Show draw (owner, 2026-10-02). A container built only on spell categories therefore shows nothing
   on a hostile target, and a `NeverSecret` aura (Sated, Exhaustion) claimed only by a spell category is
   not drawn there either, although Blizzard would apply its id. `FilterCompiler` emits a warning per
-  container where that bites (`identityWarning`, `modules/FilterCompiler.lua:415`), rendered in orange
+  container where that bites (`identityWarning`, `modules/FilterCompiler.lua:417`), rendered in orange
   in the Filters section, and Categories and Overrides carry a NOTE (`docs/midnight-quirks.md`).
 - **On a target or focus BUFF container, Uncategorized set to Show no longer rescues an unlisted
   aura.** That row's group carries an `excludeSpellIDs` of the categorized union as its only
@@ -88,7 +88,7 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   build; Axe Toss (89766) and Seduction (6358), on a pet skill line with ClassMask 0, which the same
   test that excludes professions and mounts throws away; and Earthbind Totem (2484) and Earthgrab
   Totem (64695), whose root auras carry no mechanic and no matching name, so Shaman ships no root at
-  all. The KNOWN GAPS comment above `hardCC` (`defaults/Categories.lua:817`) records each one and why
+  all. The KNOWN GAPS comment above `hardCC` (`defaults/Categories.lua:819`) records each one and why
   rather than papering over it. A player who
   wants any of the five adds it by id on General → Spell Categories, which is a profile-wide edit
   every container picks up.

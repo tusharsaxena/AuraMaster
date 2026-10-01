@@ -1723,7 +1723,7 @@ badge and any count quoted in the docs must agree with it.
 - filters: every grid's columns are Show and Hide, then the category (schema v3)
 - filters: the Spell Categories grid opens with a line naming where its lists live (F-2)
 - filters: the 'these are the lists' line draws wherever the grid holds an editable list — both aura types since Hard CC and Soft CC (T-2)
-- filters: a debuff container's Categories tab says Hard CC and Soft CC only work on a hostile target or focus (A3)
+- filters: a debuff container's Categories tab says its spell lists only match on a target or focus you can't assist (A3)
 - filters: the Uncategorized cost note draws only where the engine is certain to honor spell ids (A2)
 - filters: the Spell Categories NOTE names where spell categories are not applied, per unit (SV-04)
 - filters: no Spell Categories NOTE on a buff container on the player or the pet (SV-04)

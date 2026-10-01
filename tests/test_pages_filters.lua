@@ -349,16 +349,20 @@ test("filters: the 'these are the lists' line draws wherever the grid holds an e
     assertTrue(gridLine(NS, debuffWs, "softCC") ~= nil, "and Soft CC")
 end)
 
--- A3 (issue #11): the debuff grid's own limitation note. Blizzard honors debuff spell ids on hostile
--- units only, so Hard CC and Soft CC do nothing on a player, pet or friendly container. Said under
+-- A3 (issue #11): the debuff grid's own limitation note. Blizzard honors debuff spell ids only on a
+-- unit you cannot assist, so on a player, pet or assistable unit the debuff spell lists match nothing. Said under
 -- the grid that offers them and nowhere else — a buff tab's limit is the mirror one and would be
 -- actively misleading here.
-test("filters: a debuff container's Categories tab says Hard CC and Soft CC only work on a hostile target or focus (A3)", function()
+test("filters: a debuff container's Categories tab says its spell lists only match on a target or focus you can't assist (A3)", function()
     local _, _, P2, debuffWs = categories(2)
-    assertTrue(P2.hasText(debuffWs, "only work on a hostile target or focus"),
-        "the debuff grid carries the hostile-unit note")
+    -- red under: the old "Hard CC and Soft CC only work on a hostile target or focus ... change
+    -- nothing" note, which the no-ids view made false
+    assertTrue(P2.hasText(debuffWs, "only match on a target or focus you can't assist"),
+        "the debuff grid carries the spell-list note")
+    assertTrue(P2.hasText(debuffWs, "leaves only the Blizzard categories set to Show"),
+        "and says what a Hide does where the lists match nothing")
     local _, _, P, buffWs = categories(1)
-    assertFalse(P.hasText(buffWs, "only work on a hostile target or focus"),
+    assertFalse(P.hasText(buffWs, "only match on a target or focus you can't assist"),
         "never on a buff container, whose spell lists are honored on friendly units instead")
 end)
 
@@ -591,7 +595,7 @@ test("filters: the priority ranks read at the same size as the Overrides notes (
     local rank = seen[NS.L["1. On the Overrides whitelist — always shown."]]
     assertTrue(rank == false or rank.fontObject == nil, "a rank line names no font object")
     -- the Whitelist note is the yardstick: it passes no opts, so it IS the Label default
-    local note = seen[NS.L["These spells are shown whatever the categories say. Blizzard only honors this for buffs on friendly units and debuffs on hostile ones."]]
+    local note = seen[NS.L["These spells are shown whatever the categories say. Blizzard only honors this for buffs on units you can assist and debuffs on units you can't."]]
     assertEqual(note, false, "the Overrides note names no font object either")
 end)
 

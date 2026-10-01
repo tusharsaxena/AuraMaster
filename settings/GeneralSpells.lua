@@ -122,7 +122,7 @@ local SECTION_GAP = UC.SECTION_GAP
 --- Whether `def` is a row this tab can draw: a spell list of either aura type, or the weapon-enchant
 --- row, whose entry shows its slots rather than a list. Buffs are no longer the whole story — issue
 --- #11 gave `Cat.HARMFUL` its first `spells`-kind categories (`hardCC`, `softCC`) and the engine
---- honors debuff spell ids on a hostile target or focus — so the test is the KIND, never the aura
+--- honors debuff spell ids on a target or focus you cannot assist — so the test is the KIND, never the aura
 --- type. Missing that is how a shipped list becomes uneditable: the Filters section's `See spells` link
 --- offers itself for every `spells`-kind row it draws, including a debuff container's.
 local function editableHere(def)
@@ -317,7 +317,7 @@ local ID_TOOLTIP = (L["Type a spell id or a name and pick from the list, or shif
 -- the list was buff-only and the question never arose; it now mixes `Cat.HELPFUL`'s nine spell
 -- lists and Weapon enchants with `Cat.HARMFUL`'s `hardCC` and `softCC`, and nothing on the row said
 -- so -- a player editing "Hard CC (loss of control)" had no way to tell from this tab that its ids
--- only ever bite on a hostile target or focus.
+-- only ever bite on a target or focus you cannot assist.
 --
 -- A PREFIX, NOT A SUFFIX, and the real labels decide it rather than taste: the two debuff rows
 -- already end in parenthetical suffixes ("Hard CC (loss of control)", "Soft CC (roots & snares)"),
@@ -821,10 +821,10 @@ local function renderSpells(ctx)
     -- (the note above `restoreStarters`): the lead-in drops the Restore clause and the picker line
     -- drops the button, leaving the dropdown the whole width of that line.
     if Cat.IsUserCategory(def) then
-        H.TextRow(ctx, L["The spells this category matches, shared by every container. Click X to leave one out, or add your own. Blizzard only honors spell lists for buffs on friendly units and debuffs on hostile ones."])
+        H.TextRow(ctx, L["The spells this category matches, shared by every container. Click X to leave one out, or add your own. Blizzard only honors spell lists for buffs on units you can assist and debuffs on units you can't."])
         H.RenderGrid(ctx, { categoryCell(defs, def, true) })
     else
-        H.TextRow(ctx, L["The spells each category matches, shared by every container. Click X to leave one out, or add your own; Restore brings the starter list back. Blizzard only honors spell lists for buffs on friendly units and debuffs on hostile ones."])
+        H.TextRow(ctx, L["The spells each category matches, shared by every container. Click X to leave one out, or add your own; Restore brings the starter list back. Blizzard only honors spell lists for buffs on units you can assist and debuffs on units you can't."])
         -- Restore on the dropdown's line (feedback #3): with the checkboxes gone (B2) a removed
         -- starter is off the list, and this is how it comes back.
         H.RenderGrid(ctx, { categoryCell(defs, def), restoreCell(key) })

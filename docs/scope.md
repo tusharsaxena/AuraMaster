@@ -92,7 +92,7 @@ These are not declined; the game forbids them, and a request for one is answered
   units you can assist and debuffs on units you cannot. Where it does not, the addon switches the
   container to its no-ids view, so spell categories and the Overrides lists are not applied and only
   the Blizzard categories set to Show draw (`docs/midnight-quirks.md`), and warns per container
-  (`identityWarning`, `modules/FilterCompiler.lua:415`) rather than letting the filter look broken.
+  (`identityWarning`, `modules/FilterCompiler.lua:417`) rather than letting the filter look broken.
 - **Restyling a button mid-combat.** Size, font and color changes wait until secrecy lifts
   (`CM.MustDefer`, `modules/ContainerManager.lua:217`).
 - **Fake auras inside the engine.** The engine only shows real auras, so preview elements are the
