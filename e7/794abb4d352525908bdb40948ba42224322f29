@@ -1,0 +1,1 @@
+OK CA-AM-NM tests 1792 pass/0 fail/1 skip (1793, --list == test-cases.md, badge 1792); luacheck 0/0 in 151 files; lizard CCN<=15 on touched files; vendor parity clean; dropping the descriptor field turns 3 new tests red
