@@ -185,11 +185,16 @@ and several such groups each draw the same aura: the M+ report of one NPC buff d
 hostile target (seven spell-category groups times two instances).
 
 **What this addon does.** Every compiled group carries two views (`modules/FilterViews.lua`, stamped as
-`group.noIds` by `FV.NoIds` at `modules/FilterCompiler.lua:568`): the ids view, exactly as compiled, and a no-ids
+`group.noIds` by `FV.NoIds` at `modules/FilterCompiler.lua:569`): the ids view, exactly as compiled, and a no-ids
 view in which the whitelist, every spell-category and Uncategorized Show group and the catch-all match
 nothing (`candidateFilters = { includeDispelTypes = {} }`, which fails every aura and which
 `ValidateCandidateFilters` accepts as a table), while a Blizzard Show group keeps its token, flag or
-dispel constraint minus the earlier ones. Both views have the same group count, so switching never
+dispel constraint minus the earlier ones. Every group that still draws in the no-ids view (a Blizzard
+Show group, and the single group of a container that hides nothing) keeps the base's own
+`excludeSpellIDs`, the Overrides blacklist and Timeless's learned ids, and drops the whitelist's and
+the earlier spell categories' excludes (SV-05): Blizzard applies excludes to a `NeverSecret` spell on
+every unit (step 1), so a blacklisted Sated stays hidden there and a whitelisted one is not excluded
+by the group that would otherwise draw it. Both views have the same group count, so switching never
 rebuilds the engine. `FC.IdsMode` pins buffs on the player and the pet to the ids view and their
 debuffs to the no-ids view; for a target or focus, `Compat.IdsApply` (`core/Compat.lua:330`) asks
 steps 2 to 4 above and answers false when a call raises or its answer is secret. It does not model

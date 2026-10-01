@@ -551,8 +551,9 @@ local function splitCategories(Categories, auraType, states)
 end
 
 --- One engine group for `con`, unless it is a contradiction. `role` picks its no-ids view
---- (modules/FilterViews.lua): "never", "same" or "strip".
-local function addGroup(plan, con, label, look, role)
+--- (modules/FilterViews.lua): "never", "same" or "strip"; `baseIds` is the base's own
+--- `excludeSpellIDs`, which the "same" and "strip" views keep.
+local function addGroup(plan, con, label, look, role, baseIds)
     if con.conflict then return end
     local cand = con.cand
     local groupCount = #plan.groups + 1
@@ -565,7 +566,7 @@ local function addGroup(plan, con, label, look, role)
         sortDirection    = look.sortDirection,
         maxFrameCount    = look.maxFrameCount,
     }
-    group.noIds = FV.NoIds(group, role)
+    group.noIds = FV.NoIds(group, role, baseIds)
     plan.groups[groupCount] = group
 end
 
@@ -624,7 +625,7 @@ local function addShownGroups(plan, base, cats, look, hasUnion)
             -- internal name nothing draws, so it stays the locale KEY for a shipped category. Do
             -- not "fix" this into a lookup -- routing it is what would drag a player's own category
             -- name through NS.L, which is the one thing the name must never go through.
-            addGroup(plan, con, def.label, look, FV.ShownRole(def.kind))
+            addGroup(plan, con, def.label, look, FV.ShownRole(def.kind), base.cand.excludeSpellIDs)
         end
     end
 end
@@ -676,7 +677,7 @@ local function addCategoryGroups(plan, base, cats, look, unit, auraType)
     if hiddenCount == 0 then
         local con = cloneCon(base)
         if not isEmpty(cats.whitelist) then addToSet(con, "excludeSpellIDs", cats.whitelist) end
-        addGroup(plan, con, "All", look, "same")
+        addGroup(plan, con, "All", look, "same", base.cand.excludeSpellIDs)
         return
     end
 

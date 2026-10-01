@@ -21,13 +21,22 @@ local _, NS = ...
 --              include map fails every aura, typed or not (`DoesAuraPassCandidateFilters`), and
 --              Blizzard validates only that it is a table. Keeping the string keeps the group's
 --              aura type, so nothing about the group but its match changes.
---   "same"   — the R-3 single group (no category Hidden). Its spell ids only exclude the whitelist
---              and the Overrides blacklist, so with them skipped it is what it always was there.
+--   "same"   — the R-3 single group (no category Hidden): the ids view minus its whitelist exclude.
 --   "strip"  — a `token` / `flag` / `dispel` Show group. Its ids view is the base, its positive
 --              constraint, minus every earlier shown category and the whitelist; dropping the two
---              spell-id fields leaves exactly the base, the constraint and the earlier Blizzard
---              exclusions, since an earlier spell category and the whitelist exclude by id alone.
---              No dedup is lost: every earlier spell-list group is NEVER in this view.
+--              spell-id fields and putting back the BASE's own excludes leaves exactly the base, the
+--              constraint and the earlier Blizzard exclusions, since an earlier spell category and
+--              the whitelist exclude by id alone. No dedup is lost: every earlier spell-list group
+--              is NEVER in this view.
+--
+-- THE BASE'S OWN EXCLUDES STAY (SV-05). Blizzard still applies `excludeSpellIDs` to a spell whose
+-- `C_Secrets.GetSpellAuraSecrecy` is NeverSecret, on every unit (`CanApplyIdentityCandidateFilters`
+-- answers true for it first; its comment names Sated and Exhaustion). So the "same" and "strip" views
+-- carry exactly the base's `excludeSpellIDs` (the Overrides blacklist and Timeless's learned ids,
+-- `baseIds`): a blacklisted NeverSecret aura stays hidden there, as it was before the views. The
+-- whitelist's and the earlier spell categories' excludes go: the groups they dedup against are NEVER
+-- here, and a whitelist exclude would hide a whitelisted NeverSecret aura outright, its own group
+-- matching nothing. An exclude only narrows a group, so keeping one can never draw an aura twice.
 --
 -- Both views have the same group count, so `FC.StructureKey` is unchanged and switching views never
 -- rebuilds the engine container. PURE, like the compiler: tables in, tables out.
@@ -44,16 +53,22 @@ end
 
 local ID_FIELDS = { includeSpellIDs = true, excludeSpellIDs = true }
 
---- `cand` without its spell-id fields, or nil when nothing else is left.
+--- `cand` without its spell-id fields, plus a copy of `baseIds` as its `excludeSpellIDs` when that is
+--- not empty; nil when nothing is left.
 --- @return table|nil
-local function stripIds(cand)
-    if not cand then return nil end
+local function stripIds(cand, baseIds)
     local out
-    for k, v in pairs(cand) do
+    for k, v in pairs(cand or {}) do
         if not ID_FIELDS[k] then
             out = out or {}
             out[k] = v
         end
+    end
+    if baseIds and next(baseIds) then
+        local ids = {}
+        for id in pairs(baseIds) do ids[id] = true end
+        out = out or {}
+        out.excludeSpellIDs = ids
     end
     return out
 end
@@ -66,15 +81,15 @@ function FV.ShownRole(kind)
     return "strip"
 end
 
---- The no-ids view of one compiled group.
+--- The no-ids view of one compiled group. "same" and "strip" build the same table: the R-3 group
+--- has no include and no earlier category, so stripping it removes only its whitelist exclude.
 --- @param group table  the ids-view group (`filter`, `candidateFilters`)
 --- @param role string  "never" | "same" | "strip"
+--- @param baseIds table|nil  the base's own `excludeSpellIDs` (blacklist, Timeless's learned ids)
 --- @return table  { filter = string, candidateFilters = table|nil }
-function FV.NoIds(group, role)
+function FV.NoIds(group, role, baseIds)
     if role == "never" then
         return { filter = group.filter, candidateFilters = neverFilters() }
-    elseif role == "strip" then
-        return { filter = group.filter, candidateFilters = stripIds(group.candidateFilters) }
     end
-    return { filter = group.filter, candidateFilters = group.candidateFilters }
+    return { filter = group.filter, candidateFilters = stripIds(group.candidateFilters, baseIds) }
 end

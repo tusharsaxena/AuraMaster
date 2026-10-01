@@ -383,15 +383,18 @@ badge and any count quoted in the docs must agree with it.
 - categories: a user DEBUFF category alone on Show compiles the same way, and warns about hostility
 - categories: a user category shown beside a shipped one gets its own group, after it and minus its ids
 
-### test_filterviews.lua (11)
+### test_filterviews.lua (14)
 
 - views: FC.IdsMode is always for player/pet buffs, never for player/pet debuffs, dynamic elsewhere
 - views: the owner's target container compiles to seven groups, every no-ids view NEVER
 - views: a Blizzard Show group keeps its own constraint and the earlier Blizzard exclusions, and no ids
+- views: a blacklisted id stays excluded in every drawing no-ids view once a category is Hidden
+- views: Timeless's learned ids stay excluded in a stripped no-ids view
 - views: a dispel Show group's no-ids view keeps its include map and its earlier flag exclusions
 - views: the whitelist group and the catch-all are NEVER without spell ids
 - views: a spells-kind Show and an Uncategorized Show group are NEVER without spell ids
-- views: with no category Hidden the single group's no-ids view is the ids view (R-3)
+- views: with no category Hidden the single group's no-ids view is the ids view minus the whitelist (R-3)
+- views: a whitelisted NeverSecret id is not excluded by the R-3 no-ids view (player debuffs)
 - views: the NEVER view is the group's own filter string and an empty include-dispel map
 - views: each mode prints the new sentence where a category is Hidden
 - views: an Overrides list alone raises the sentence too
@@ -2097,7 +2100,7 @@ badge and any count quoted in the docs must agree with it.
 | test_schema_paths.lua | 38 |
 | test_filtercompiler.lua | 85 |
 | test_filtercompiler_categories.lua | 9 |
-| test_filterviews.lua | 11 |
+| test_filterviews.lua | 14 |
 | test_container.lua | 52 |
 | test_container_views.lua | 14 |
 | test_containermanager.lua | 54 |
@@ -2171,4 +2174,4 @@ badge and any count quoted in the docs must agree with it.
 | test_layout_cap.lua | 13 |
 | test_diagnostics_contract.lua | 9 |
 | test_lizard_sighted.lua | 8 |
-| **Total** | **1825** |
+| **Total** | **1828** |
