@@ -13,9 +13,6 @@
 -- is the table luacheck obeys. It FAILS rather than passes when it cannot look — no config, no
 -- io.popen, no git — because a gate that goes quiet when it is blind reports success.
 --
--- The last case applies the same rule to the complexity gate: no line may hide code from lizard
--- behind a length operator (see "The complexity gate stays sighted" below).
---
 -- The final case holds `read_globals` to names some authored file reads as a global (see
 -- "read_globals stays honest" below): a stale entry, worst of all a retired API, would lint clean.
 
@@ -204,17 +201,10 @@ test("lintconfig: no source file carries a bare inline luacheck ignore", functio
   end
 end)
 
--- ── The complexity gate stays sighted ────────────────────────────────────────────────────────────
--- lizard's shared tokenizer reads a `#` outside a string as the start of a C preprocessor line and
--- swallows everything after it up to the newline. In Lua `#` is the length operator, so a keyword or
--- brace after it on the same line never reaches lizard's Lua reader: an `end` there unbalances the
--- block count and every later function in the file goes unmeasured, and an `and`/`or` there
--- undercounts CCN. The `-C 15` gate is then silent because it is blind, not because it passed.
-
-local LIZARD_WORDS = {}
-for w in ("and or not then do end function if elseif else for while repeat until return local in break"):gmatch("%a+") do
-  LIZARD_WORDS[w] = true
-end
+-- ── Source-line helper ──────────────────────────────────────────────────────────────────────────
+-- The length-operator scanner that once lived here is retired: the vendored kit's
+-- test_lizard_sighted gate and the runner's sighted complexity suite (kit revision 35,
+-- automated-tests-§3) cover every lizard blind spot, `#` included.
 
 --- One source line with its string contents blanked and any trailing `--` comment removed.
 local function codeOf(line)
@@ -237,48 +227,6 @@ local function codeOf(line)
   end
   return table.concat(out)
 end
-
---- Does a length operator on this line have a keyword, or an unbalanced brace, after it? A balanced
---- `{ ... }` is swallowed whole and changes nothing; an opening or a closing brace alone does.
-local function lengthHazard(line)
-  local code = codeOf(line)
-  local at = code:find("#", 1, true)
-  if not at then return false end
-  local rest = code:sub(at + 1)
-  local _, opens = rest:gsub("{", "")
-  local _, closes = rest:gsub("}", "")
-  if opens ~= closes then return true end
-  for word in rest:gmatch("[%a_][%w_]*") do
-    if LIZARD_WORDS[word] then return true end
-  end
-  return false
-end
-
-test("lintconfig: no length operator shares its line with a keyword or brace lizard must see", function()
-  -- red under: writing `for _, id in ipairs(orphans) do order[#order + 1] = id end` back on one line in core/Database.lua
-  if not (lengthHazard("for _, x in ipairs(t) do o[#o + 1] = x end") and lengthHazard("if #t > 0 and ok then")
-      and lengthHazard("o[#o + 1] = {") and not lengthHazard("o[#o + 1] = { k = 1 }")
-      and not lengthHazard("local n = #t") and not lengthHazard('if s:find("#") then return end')
-      and not lengthHazard("o[#o + 1] = x -- then end")) then
-    fail("complexity gate: the length-operator scanner itself is wrong", 2)
-  end
-  local paths = trackedLua()
-  paths[#paths + 1] = "tests/test_lintconfig.lua"
-  local hits = {}
-  for _, path in ipairs(paths) do
-    local lineNo = 0
-    for line in io.lines(path) do
-      lineNo = lineNo + 1
-      if lengthHazard(line) then
-        hits[#hits + 1] = path .. ":" .. lineNo
-      end
-    end
-  end
-  if hits[1] then
-    fail(#hits .. " line(s) hide code from lizard behind a `#`; move what follows the length onto its own "
-      .. "line or into a local: " .. table.concat(hits, ", "), 2)
-  end
-end)
 
 -- ── read_globals stays honest ────────────────────────────────────────────────────────────────────
 -- A read_globals entry is a promise that some authored file reads that client global. An entry

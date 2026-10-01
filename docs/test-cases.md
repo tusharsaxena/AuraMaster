@@ -1989,13 +1989,12 @@ badge and any count quoted in the docs must agree with it.
 - tests/_kit is the test kit that shipped with that release
 - the automated-test runner is recorded executable (100755)
 
-### test_lintconfig.lua (6)
+### test_lintconfig.lua (5)
 
 - lintconfig: .luacheckrc sets no top-level ignore
 - lintconfig: .luacheckrc switches no warning class off wholesale
 - lintconfig: every files[...] ignore is narrowed to a file or a name
 - lintconfig: no source file carries a bare inline luacheck ignore
-- lintconfig: no length operator shares its line with a keyword or brace lizard must see
 - lintconfig: every read_globals name is referenced as a global by some authored file
 
 ### test_eol.lua (2)
@@ -2030,6 +2029,17 @@ badge and any count quoted in the docs must agree with it.
 - diagnostics contract: with logging already on, the report writes no second enable line
 - diagnostics contract: both forms run while the addon is disabled
 - diagnostics contract: no other name runs the report
+
+### test_lizard_sighted.lua (8)
+
+- lizard sighted: every hazard lizard loses a function over is neutralized
+- lizard sighted: fields, strings, comments and look-alike names come through unchanged
+- lizard sighted: a method definition is rewritten to its dot form with self
+- lizard sighted: no line is added or removed, CRLF included
+- lizard sighted: countFunctions counts the keyword, not strings, comments or longer names
+- lizard sighted: listedCounts reads the per-file table, once per file
+- lizard sighted: parity names every file whose counts differ, and only those
+- lizard sighted: lizard lists every function of a hazard fixture once it is sanitized
 
 ## Totals
 
@@ -2112,8 +2122,9 @@ badge and any count quoted in the docs must agree with it.
 | test_prose.lua | 18 |
 | test_surface_parity.lua | 7 |
 | test_vendor_sync.lua | 3 |
-| test_lintconfig.lua | 6 |
+| test_lintconfig.lua | 5 |
 | test_eol.lua | 2 |
 | test_layout_cap.lua | 13 |
 | test_diagnostics_contract.lua | 9 |
-| **Total** | **1782** |
+| test_lizard_sighted.lua | 8 |
+| **Total** | **1789** |

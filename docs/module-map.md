@@ -220,10 +220,11 @@ The suites, in the order `tests/run.lua` runs them (it is the authority on the l
 | `tests/_kit/test_prose.lua` | The US-English prose gate (localization-§5) over every tracked authored file, with this repo's waivers from `tests/prose_waivers.lua` |
 | `test_surface_parity.lua` | Each degradation stub against the live surface it stands in for |
 | `test_vendor_sync.lua` | `libs/LibKa0s/` and `tests/_kit/` against the LibKa0s tag named in `CLAUDE.md` |
-| `test_lintconfig.lua` | `.luacheckrc` carries no blanket suppression, no source file carries a bare inline luacheck ignore, and no `#` shares its line with a keyword or brace lizard must see |
+| `test_lintconfig.lua` | `.luacheckrc` carries no blanket suppression, no source file carries a bare inline luacheck ignore, and every `read_globals` name is read by some authored file |
 | `tests/_kit/test_eol.lua` | Every tracked file carries the line ending `.gitattributes` declares, and `.gitattributes` is the canonical body |
 | `tests/_kit/test_layout_cap.lua` | The layout-§1 cap census in `docs/ARCHITECTURE.md` agrees with the tree |
 | `tests/_kit/test_diagnostics_contract.lua` | The shared debug-logging-§14 diagnostics contract, run against this addon's dispatcher through `Kit.diagnostics` in `tests/run.lua`: both forms, while disabled, append, ungated, the branded markers, logging turned on for the session, and no `diag` or `dx` |
+| `tests/_kit/test_lizard_sighted.lua` | The kit's pin on the complexity suite's sanitizer (`tests/_kit/lizard_sighted.lua`): the shadow it builds for lizard, the per-file function-count parity, and that lizard sees every function of a hazard fixture once sanitized |
 
 ## Root and media
 
@@ -265,7 +266,7 @@ All vendored under `libs/`, loaded by the `# Libraries` block of `AuraMaster.toc
 | AceConfig-3.0, AceDBOptions-3.0 | The Profiles sub-page only (`settings/Profiles.lua`, options-ui-§3) |
 | LibSharedMedia-3.0 | Texture, border and font lookups through `LSM` (`modules/Style.lua:33`) |
 | LibDataBroker-1.1, LibDBIcon-1.0 | The launcher's broker object and its minimap button (`core/LauncherSetup.lua`, launcher-§1). Both are OPTIONAL: `LibKa0s-Launcher-1.0` resolves them with `LibStub(…, true)` at Register time, so a client missing either degrades rather than raises |
-| LibKa0s v1.65.0 | Fourteen modules bound by name — table below |
+| LibKa0s v1.66.0 | Fourteen modules bound by name — table below |
 
 | LibKa0s module | Setup file | Publishes |
 |---|---|---|
