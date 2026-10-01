@@ -1,0 +1,1 @@
+OK GI-AM-01 — local # scanner case, LIZARD_WORDS and lengthHazard removed cleanly (codeOf kept for read_globals), testing.md/module-map/test-cases/badge updated, no stale refs; reviewer gate 1788/0/1, luacheck 0/0, complexity pass 4683 funcs
