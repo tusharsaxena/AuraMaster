@@ -320,11 +320,11 @@ badge and any count quoted in the docs must agree with it.
 - filter: Uncategorized Hide on a debuff container reproduces the retired 'Only these categories' toggle exactly
 - filter: Uncategorized Show on a debuff container with nothing else hidden changes nothing (R-3 still applies)
 - filter: FC.IdsHonored is the CAN-EVER predicate — true wherever a spell list could ever bite
-- filter: FC.IdsAlwaysHonored is the CERTAIN predicate — true only for buffs on the player and pet
+- filter: FC.IdsMode "always" is the CERTAIN gate — only for buffs on the player and pet
 - filter: a PLAYER debuff container with a non-empty union still gives Uncategorized Show no group — fix round 3's failure through issue #11's new door
 - filter: a TARGET debuff container gives Uncategorized Show no group either — a target may be FRIENDLY
 - filter: a FRIENDLY-target buff container loses the Uncategorized Show rescue — the accepted cost, pinned
-- filter: a target debuff container still warns 'while the unit is hostile' although the gate dropped its Show group
+- filter: a target debuff container still warns about units you can assist although the gate dropped its Show group
 - filter: a TARGET debuff container's spells-kind Show still emits its group, and warns — the accepted residual, pinned
 - explain: an unlisted id is rank 3 (shown) when Uncategorized is Show — not the old rank 5
 - explain: an unlisted id is rank 4 (hidden) when Uncategorized is Hide
@@ -382,6 +382,20 @@ badge and any count quoted in the docs must agree with it.
 - categories: an empty user category shown does not take Uncategorized's catch-all down with it
 - categories: a user DEBUFF category alone on Show compiles the same way, and warns about hostility
 - categories: a user category shown beside a shipped one gets its own group, after it and minus its ids
+
+### test_filterviews.lua (11)
+
+- views: FC.IdsMode is always for player/pet buffs, never for player/pet debuffs, dynamic elsewhere
+- views: the owner's target container compiles to seven groups, every no-ids view NEVER
+- views: a Blizzard Show group keeps its own constraint and the earlier Blizzard exclusions, and no ids
+- views: a dispel Show group's no-ids view keeps its include map and its earlier flag exclusions
+- views: the whitelist group and the catch-all are NEVER without spell ids
+- views: a spells-kind Show and an Uncategorized Show group are NEVER without spell ids
+- views: with no category Hidden the single group's no-ids view is the ids view (R-3)
+- views: the NEVER view is the group's own filter string and an empty include-dispel map
+- views: each mode prints the new sentence where a category is Hidden
+- views: an Overrides list alone raises the sentence too
+- views: no sentence on a container the rule changes nothing for
 
 ### test_container.lua (52)
 
@@ -2055,6 +2069,7 @@ badge and any count quoted in the docs must agree with it.
 | test_schema_paths.lua | 38 |
 | test_filtercompiler.lua | 85 |
 | test_filtercompiler_categories.lua | 9 |
+| test_filterviews.lua | 11 |
 | test_container.lua | 52 |
 | test_containermanager.lua | 54 |
 | test_compat.lua | 29 |
@@ -2127,4 +2142,4 @@ badge and any count quoted in the docs must agree with it.
 | test_layout_cap.lua | 13 |
 | test_diagnostics_contract.lua | 9 |
 | test_lizard_sighted.lua | 8 |
-| **Total** | **1789** |
+| **Total** | **1800** |

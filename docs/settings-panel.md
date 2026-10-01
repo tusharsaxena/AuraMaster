@@ -450,7 +450,7 @@ the player's own categories of that aura type — each list's last row is still 
 own `Uncategorized`, asymmetric between the two, and since issue #11 (2026-09-20) that asymmetry is
 about the UNIT rather than the aura type: the rescuing group's only constraint is an
 `excludeSpellIDs` of the categorized union, so the compiler emits it only where
-`FC.IdsAlwaysHonored(unit, auraType)` holds — buffs on the `player` and `pet`. There Show rescues an
+`FC.IdsMode(unit, auraType)` is `"always"` — buffs on the `player` and `pet`. There Show rescues an
 unlisted aura from another category's Hide. On every debuff container, and on a `target`/`focus`
 buff container whose unit may be hostile, Show changes nothing at all and only Hide does anything —
 reproducing the retired toggle exactly.

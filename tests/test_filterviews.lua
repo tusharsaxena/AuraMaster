@@ -1,0 +1,212 @@
+-- tests/test_filterviews.lua — the two views of one compiled plan (spell-list views, V1 and V4 of
+-- docs/superpowers/specs/2026-10-02-spell-list-views-design.md): `FC.IdsMode`, each group's `noIds`
+-- view (modules/FilterViews.lua), and the reworded identity warnings.
+--
+-- Blizzard applies include/exclude spell ids only where `AuraContainerUtil.
+-- CanApplyIdentityCandidateFilters` passes. Where it does not, every group whose only distinguishing
+-- constraint is a spell list degenerates into "every aura of this type", and seven such groups draw
+-- the same aura seven times. The no-ids view is what a container sends there instead: NEVER for every
+-- group built on spell ids, and the Blizzard-category groups with their ids stripped.
+
+local T = _G.AM_TEST
+local test, assertEqual, assertTrue, assertNil = T.test, T.assertEqual, T.assertTrue, T.assertNil
+local NS = T.NS
+local FC = NS.FilterCompiler
+
+local H = dofile("tests/filtercompiler_helpers.lua")
+local setOf = H.setOf
+
+local function cfg(over)
+    local c = NS.Database.DeepCopy(NS.CONTAINER_TEMPLATE)
+    return NS.Database.Merge(c, over or {})
+end
+
+local function compile(over, ctx) return FC.Compile(cfg(over), ctx) end
+
+--- A `ctx.categories` stub over the real shipped defs, narrowed to `keys`, declaration order kept
+--- (the same narrowing tests/test_filtercompiler.lua's `only` does).
+local function only(auraType, keys)
+    local want = {}
+    for _, k in ipairs(keys) do want[k] = true end
+    local out = {}
+    for _, def in ipairs(NS.Categories.For(auraType)) do
+        if want[def.key] then out[#out + 1] = def end
+    end
+    return { For = function() return out end }
+end
+
+--- The NEVER view, rendered: the group's own filter string, and an empty include-dispel map that
+--- fails every aura, typed or not (`DoesAuraPassCandidateFilters`).
+local NEVER_CAND = "{includeDispelTypes={}}"
+
+local function isNever(group)
+    return group.noIds ~= nil and group.noIds.filter == group.filter
+        and FC.Signature(group.noIds.candidateFilters) == NEVER_CAND
+end
+
+-- ── FC.IdsMode ─────────────────────────────────────────────────────────────────────────────────
+
+test("views: FC.IdsMode is always for player/pet buffs, never for player/pet debuffs, dynamic elsewhere", function()
+    -- red under: FC.IdsMode missing (it replaces FC.IdsAlwaysHonored as the gate).
+    local expected = {
+        { "player", "HELPFUL", "always" }, { "pet", "HELPFUL", "always" },
+        { "target", "HELPFUL", "dynamic" }, { "focus", "HELPFUL", "dynamic" },
+        { "player", "HARMFUL", "never" }, { "pet", "HARMFUL", "never" },
+        { "target", "HARMFUL", "dynamic" }, { "focus", "HARMFUL", "dynamic" },
+    }
+    for _, c in ipairs(expected) do
+        assertEqual(FC.IdsMode(c[1], c[2]), c[3], c[2] .. " on " .. c[1])
+    end
+    assertNil(FC.IdsAlwaysHonored, "the old gate is gone; IdsMode == \"always\" is its one meaning")
+end)
+
+-- ── the owner's container, pinned ─────────────────────────────────────────────────────────────
+
+--- "Target Bar CD (All)": target buffs, every Blizzard category Hide, seven spell categories Show,
+--- the rest of the spell categories, Weapon enchants and Uncategorized Hide, timed, 30 s max.
+local OWNER_SHOWN = { defensives = true, activeMitigation = true, raidCDs = true, offensiveCDs = true,
+    support = true, movement = true, utility = true }
+
+local function ownerContainer()
+    local states = {}
+    for _, def in ipairs(NS.Categories.For("HELPFUL")) do
+        states[def.key] = OWNER_SHOWN[def.key] and "show" or "hide"
+    end
+    return { unit = "target", auraType = "HELPFUL",
+        filter = { categories = states, durationMode = "timed", maxDuration = 30 } }
+end
+
+test("views: the owner's target container compiles to seven groups, every no-ids view NEVER", function()
+    -- red under: Compile leaving `noIds` off its groups. Seven groups differing ONLY in their spell
+    -- ids are the 14 Brutal Slams bars on a hostile NPC; in the no-ids view none of them may draw.
+    local plan = compile(ownerContainer())
+    assertEqual(#plan.groups, 7, "one group per shown spell category, no catch-all (Uncategorized is Hidden)")
+    for i, g in ipairs(plan.groups) do
+        assertTrue(g.candidateFilters.includeSpellIDs ~= nil, "group " .. i .. " is a spell-list group")
+        assertTrue(isNever(g), "group " .. i .. " (" .. g.label .. ") is NEVER without spell ids")
+    end
+    assertEqual(FC.StructureKey(plan), "7:-", "both views have the same group count")
+end)
+
+-- ── the no-ids view of each group kind ───────────────────────────────────────────────────────
+
+test("views: a Blizzard Show group keeps its own constraint and the earlier Blizzard exclusions, and no ids", function()
+    -- red under: deriving a token/flag/dispel group's no-ids view as NEVER, or keeping its spell ids.
+    local plan = compile({ unit = "target", auraType = "HELPFUL", filter = {
+        maxDuration = 30, whitelist = { [100] = true }, blacklist = { [300] = true },
+        categories = { bigDefensive = "show", defensives = "show", castable = "show", important = "hide" },
+    } }, { categories = only("HELPFUL", { "defensives", "bigDefensive", "important", "castable" }) })
+    local byLabel = {}
+    for _, g in ipairs(plan.groups) do byLabel[g.label] = g end
+    local castable = byLabel["Castable by you"]
+    assertEqual(castable.filter, "HELPFUL|RAID|!BIG_DEFENSIVE", "the ids view: its token, minus the earlier token")
+    assertTrue(castable.candidateFilters.excludeSpellIDs ~= nil, "the ids view excludes the earlier spell list")
+    assertEqual(castable.noIds.filter, "HELPFUL|RAID|!BIG_DEFENSIVE")
+    assertEqual(setOf(castable.noIds.candidateFilters), "maxDuration",
+        "no-ids keeps the max duration and drops every spell-id constraint")
+    assertEqual(castable.noIds.candidateFilters.maxDuration, 30)
+    assertEqual(castable.candidateFilters.maxDuration, 30, "the ids view keeps it too")
+    local big = byLabel["Big defensives (Blizzard)"]
+    assertEqual(big.noIds.filter, "HELPFUL|BIG_DEFENSIVE")
+    assertEqual(setOf(big.noIds.candidateFilters), "maxDuration")
+end)
+
+test("views: a dispel Show group's no-ids view keeps its include map and its earlier flag exclusions", function()
+    -- red under: stripping a candidate field that is not a spell-id list.
+    local plan = compile({ unit = "target", auraType = "HARMFUL", filter = {
+        categories = { magic = "show", boss = "show", crowdControl = "hide" },
+    } }, { categories = only("HARMFUL", { "magic", "boss", "crowdControl" }) })
+    local magic = plan.groups[2]
+    assertEqual(magic.label, "Magic")
+    assertEqual(FC.Signature(magic.noIds.candidateFilters), FC.Signature(magic.candidateFilters),
+        "nothing to strip: the no-ids view is the ids view")
+    assertEqual(setOf(magic.noIds.candidateFilters), "includeDispelTypes,isBossAura")
+end)
+
+test("views: the whitelist group and the catch-all are NEVER without spell ids", function()
+    -- red under: the remainder (catch-all) or "Always shown" drawing where ids are not applied.
+    local plan = compile({ unit = "target", auraType = "HELPFUL", filter = {
+        whitelist = { [100] = true }, categories = { bigDefensive = "show", important = "hide" },
+    } }, { categories = only("HELPFUL", { "bigDefensive", "important" }) })
+    assertEqual(#plan.groups, 3)
+    assertEqual(plan.groups[1].label, "Always shown")
+    assertTrue(isNever(plan.groups[1]), "the whitelist is ids only")
+    assertEqual(plan.groups[3].label, "All")
+    assertTrue(isNever(plan.groups[3]), "the remainder never shows where ids are off")
+    assertTrue(not isNever(plan.groups[2]), "the Blizzard Show group still draws")
+end)
+
+test("views: a spells-kind Show and an Uncategorized Show group are NEVER without spell ids", function()
+    -- red under: an Uncategorized rescue group (player buffs, where it exists) not marked NEVER.
+    local plan = compile({ unit = "player", auraType = "HELPFUL", filter = {
+        categories = { cancelable = "hide" },
+    } }, { categories = only("HELPFUL", { "cancelable", "defensives", "uncategorized" }) })
+    assertEqual(#plan.groups, 2)
+    assertEqual(plan.groups[2].label, "Uncategorized")
+    assertTrue(isNever(plan.groups[1]), "Defensive cooldowns")
+    assertTrue(isNever(plan.groups[2]), "Uncategorized")
+end)
+
+test("views: with no category Hidden the single group's no-ids view is the ids view (R-3)", function()
+    -- red under: deriving the R-3 group as NEVER, which would blank every default container on a
+    -- hostile target.
+    local plan = compile({ unit = "target", auraType = "HELPFUL", filter = {
+        maxDuration = 20, blacklist = { [300] = true }, whitelist = { [100] = true } } })
+    assertEqual(#plan.groups, 2)
+    assertTrue(isNever(plan.groups[1]), "the whitelist group")
+    local g = plan.groups[2]
+    assertEqual(g.label, "All")
+    assertEqual(g.noIds.filter, g.filter)
+    assertEqual(FC.Signature(g.noIds.candidateFilters), FC.Signature(g.candidateFilters))
+    local bare = compile({ unit = "target" }).groups[1]
+    assertEqual(bare.noIds.filter, "HELPFUL")
+    assertNil(bare.noIds.candidateFilters, "an unconstrained group stays unconstrained")
+end)
+
+test("views: the NEVER view is the group's own filter string and an empty include-dispel map", function()
+    -- red under: NEVER built from a different filter string, or carrying the group's other fields.
+    local g = compile(ownerContainer()).groups[1]
+    assertEqual(g.noIds.filter, g.filter)
+    assertEqual(FC.Signature(g.noIds.candidateFilters), NEVER_CAND)
+    assertEqual(type(g.noIds.candidateFilters.includeDispelTypes), "table")
+    assertNil(next(g.noIds.candidateFilters.includeDispelTypes))
+end)
+
+-- ── the reworded warnings (V4) ───────────────────────────────────────────────────────────────
+
+test("views: each mode prints the new sentence where a category is Hidden", function()
+    -- red under: the old "Spell lists only apply while the unit is ..." sentences.
+    local cases = {
+        { "target", "HELPFUL", "On units you can't assist (hostile or neutral), spell categories and Overrides are not applied. Only Blizzard categories set to Show draw." },
+        { "focus", "HELPFUL", "On units you can't assist (hostile or neutral), spell categories and Overrides are not applied. Only Blizzard categories set to Show draw." },
+        { "target", "HARMFUL", "On units you can assist, spell categories and Overrides are not applied. Only Blizzard categories set to Show draw." },
+        { "player", "HARMFUL", "On your own and your pet's debuffs, spell categories and Overrides are not applied. Only Blizzard categories set to Show draw." },
+        { "pet", "HARMFUL", "On your own and your pet's debuffs, spell categories and Overrides are not applied. Only Blizzard categories set to Show draw." },
+    }
+    for _, c in ipairs(cases) do
+        local hide = (c[2] == "HELPFUL") and { important = "hide" } or { crowdControl = "hide" }
+        local plan = compile({ unit = c[1], auraType = c[2], filter = { categories = hide } })
+        assertEqual(#plan.warnings, 1, c[2] .. " on " .. c[1])
+        assertEqual(plan.warnings[1], c[3], c[2] .. " on " .. c[1])
+    end
+end)
+
+test("views: an Overrides list alone raises the sentence too", function()
+    -- red under: the warning gated on Hidden categories alone.
+    local plan = compile({ unit = "target", filter = { whitelist = { [100] = true } } })
+    assertEqual(plan.warnings[1], FC.WARN.IDS_UNASSISTABLE)
+    plan = compile({ unit = "target", auraType = "HARMFUL", filter = { blacklist = { [1] = true } } })
+    assertEqual(plan.warnings[1], FC.WARN.IDS_ASSISTABLE)
+end)
+
+test("views: no sentence on a container the rule changes nothing for", function()
+    -- red under: the old `usesSpellIds` gate, which printed for timeless's learned ids too.
+    assertEqual(#compile({ unit = "target" }).warnings, 0, "nothing hidden, no lists")
+    local timeless = compile({ unit = "target", filter = { durationMode = "timeless" } },
+        { timedSpells = { [7] = true } })
+    assertEqual(#timeless.warnings, 0, "timeless's own id exclusion is not a spell category or an Override")
+    assertEqual(#compile({ unit = "target", auraType = "HARMFUL" }).warnings, 0)
+    assertEqual(#compile({ unit = "player", auraType = "HARMFUL" }).warnings, 0)
+    assertEqual(#compile({ unit = "player", filter = { categories = { important = "hide" } } }).warnings, 0,
+        "player buffs: ids always apply")
+end)

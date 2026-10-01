@@ -365,7 +365,7 @@ end
 -- PRINTED ONLY WHERE THE RESCUE CAN HAPPEN, which since issue #11's A2 is a question about the UNIT,
 -- not about the aura type. The rescuing group carries one constraint, an `excludeSpellIDs` of the
 -- categorized union, so `modules/FilterCompiler.lua` emits it only where the engine is CERTAIN to
--- apply spell ids — `FC.IdsAlwaysHonored`, true for buffs on the player and the pet alone. Anywhere
+-- apply spell ids — `FC.IdsMode` answering "always", for buffs on the player and the pet alone. Anywhere
 -- else (every debuff container; a buff container on a `target` or `focus`, which may be hostile when
 -- the engine looks) Uncategorized Show contributes nothing, so this sentence would describe a rescue
 -- the plan does not contain and would contradict the row's own tooltip in the same glance. The old
@@ -380,7 +380,7 @@ local UNCATEGORIZED_NOTE = L["Uncategorized defaults to Show, which rescues any 
 -- for buffs on friendly units and debuffs on hostile ones", renderOverrides below). Drawn only on a
 -- debuff container that actually got a `spells`-kind row, so it appears beside the rows it is about
 -- and never on a buff tab, where the limit is the mirror one and the whitelist note already covers
--- it. The per-container orange warning above every tab (FC.WARN.IDS_HOSTILE_ONLY / IDS_OWN_DEBUFFS)
+-- it. The per-container orange warning above every tab (FC.WARN.IDS_ASSISTABLE / IDS_OWN_DEBUFFS)
 -- is the other half: it says the same thing for the container's actual unit, this says it for the
 -- rows regardless of unit.
 local SPELL_LIST_DEBUFF_NOTE = L["Hard CC and Soft CC only work on a hostile target or focus. Blizzard discards spell lists for debuffs on you, your pet or a friendly unit, so on those containers the two rows change nothing."]
@@ -503,7 +503,7 @@ local function renderCustomGrid(ctx, g, mine, cfg, auraType, hideRow)
     if auraType == "HARMFUL" and customGridHasEditableList(mine) then
         H.TextRow(ctx, SPELL_LIST_DEBUFF_NOTE)
     end
-    if FC.IdsAlwaysHonored(cfg and cfg.unit, auraType) then
+    if FC.IdsMode(cfg and cfg.unit, auraType) == "always" then
         H.TextRow(ctx, UNCATEGORIZED_NOTE)
     end
 end

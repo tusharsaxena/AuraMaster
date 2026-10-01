@@ -58,7 +58,8 @@ before `settings/General.lua`, which registers their rows after its own.
 The Settings tree's order is the TOC's own registration order: General, then Containers, then Profiles. Filters, Layout, Bars, Icons and Text are sections of the Containers page (#6) with no tree entry; they load after `settings/OptionsSetup.lua` in any order, and the rail's order is `SECTION_ORDER` there.
 
 The engine-facing core is four modules: `modules/FilterCompiler.lua` (settings → groups, pure; the
-profile's spell-category edits reach it through `FC.ProfileContext`), `modules/Container.lua` (one
+profile's spell-category edits reach it through `FC.ProfileContext`, and each group's no-ids view comes
+from `modules/FilterViews.lua`), `modules/Container.lua` (one
 engine), `modules/ContainerManager.lua` (the registry and the deferred apply, each container's apply
 guarded so one error cannot drop the rest of the pass) and `modules/Style.lua` with its three style
 files (`Style_Bars.lua`, `Style_Icons.lua` and `Style_Text.lua`, chosen per container by

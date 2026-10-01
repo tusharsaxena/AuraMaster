@@ -363,8 +363,8 @@ test("filters: a debuff container's Categories tab says Hard CC and Soft CC only
 end)
 
 -- Review fix wave item 2, re-derived by issue #11 A2: UNCATEGORIZED_NOTE ("Uncategorized defaults to
--- Show, which rescues...") describes a group the compiler emits only where `FC.IdsAlwaysHonored`
--- holds — buffs on the player and the pet. The old gate ("is this a buff container") gave the right
+-- Show, which rescues...") describes a group the compiler emits only where `FC.IdsMode` is "always",
+-- for buffs on the player and the pet. The old gate ("is this a buff container") gave the right
 -- answer for both fixtures below by coincidence; the live gate asks the UNIT, so a debuff container
 -- is silent because the engine discards its ids, not because its grid holds no list any more.
 test("filters: the Uncategorized cost note draws only where the engine is certain to honor spell ids (A2)", function()

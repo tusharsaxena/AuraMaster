@@ -106,7 +106,7 @@ cap applies **per group**, not to the container as a whole (`container.filter.ma
 exists for the aura type (batch 7 `U-1`..`U-5`; both HELPFUL and HARMFUL carry one as of fix round 3)
 and its state actually supersedes the catch-all: Hide always does, on either aura type — that row's
 Hide IS the catch-all, made controllable, reproducing the retired **"only these categories"** toggle
-exactly. Show does too, but only where `FC.IdsAlwaysHonored(unit, auraType)` holds — buffs on the
+exactly. Show does too, but only where `FC.IdsMode(unit, auraType)` is `"always"` — buffs on the
 `player` and `pet`, and nowhere else (issue #11, 2026-09-20). There the row's own group is a real
 rescue, already a strict superset of what the catch-all would draw. Everywhere else Show contributes
 NO group of its own and the catch-all runs normally, because the row's only constraint is
@@ -125,7 +125,7 @@ directly (`NS.Print`), not silently. Full detail: *Step 4 in detail*, below.
 
 ## Step 4 in detail: the filter plan
 
-`FilterCompiler.Compile` (`modules/FilterCompiler.lua:790`) turns one container into
+`FilterCompiler.Compile` (`modules/FilterCompiler.lua:783`) turns one container into
 `{ groups, enchants, warnings }`, under the five-rank priority *Filter
 priority*, above, states (`FC.ExplainSpell` answers the same question for one spell, for the panel):
 
@@ -153,8 +153,8 @@ priority*, above, states (`FC.ExplainSpell` answers the same question for one sp
   all (rank 5). The per-container "Only these categories" toggle that used to drop the catch-all is
   RETIRED (batch 7 fix round 2); an addon-defined `uncategorized` category in the Spell Categories grid (batch 7, `U-1`..`U-5`) does
   that instead — Hide always suppresses the catch-all (on either aura type, reproducing the retired
-  toggle exactly, fix round 3); Show suppresses it too, but only where `FC.IdsAlwaysHonored(unit,
-  auraType)` holds — buffs on the `player` and `pet` — because only there is the category's own group
+  toggle exactly, fix round 3); Show suppresses it too, but only where `FC.IdsMode(unit,
+  auraType)` is `"always"` — buffs on the `player` and `pet` — because only there is the category's own group
   a real rescue that already covers everything the catch-all would (a strict superset relationship).
   On every debuff container, and on a `target`/`focus` buff container whose unit may be hostile when
   the engine looks, Show contributes no group of its own at all and changes nothing, so the catch-all
@@ -181,7 +181,7 @@ priority*, above, states (`FC.ExplainSpell` answers the same question for one sp
 only when the direction moved), cap and layout can change on a live engine; hide-permanent enchants
 cannot, because a slot takes it only when added, so toggling it is a new shape. A plan of the same
 shape calls only the setters whose values moved. Candidate filters are serialized with
-`FilterCompiler.Signature` (`modules/FilterCompiler.lua:961`) and re-sent only when the two
+`FilterCompiler.Signature` (`modules/FilterCompiler.lua:954`) and re-sent only when the two
 signatures differ (`modules/Container.lua:326-334`), because the engine clears and re-gathers a
 group whenever they are set (`docs/midnight-quirks.md`). **Rebuilding.** Groups are add-only and a
 frame is never freed, so a new shape disables and hides the old engine, keeps it aside, and builds a

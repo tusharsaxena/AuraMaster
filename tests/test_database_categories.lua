@@ -621,7 +621,7 @@ test("user categories: a deleted category is gone from the grid and from the uni
     local MINE = 987654
     local key = NS.Categories.CreateUserCategory("Affixes", "HELPFUL")
     NS.SetByPath("categorySpells", { [key] = { [MINE] = true } })
-    -- `unit = "player"` is where FC.IdsAlwaysHonored is true, and a HIDDEN SHIPPED category is what
+    -- `unit = "player"` is where FC.IdsMode is "always", and a HIDDEN SHIPPED category is what
     -- keeps the Uncategorized rescue group in the plan after the user category is gone -- without it
     -- the group would vanish with the delete and the negative below would pass for the wrong reason.
     local con = NS.Database.DeepCopy(NS.CONTAINER_TEMPLATE)

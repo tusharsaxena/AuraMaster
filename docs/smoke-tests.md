@@ -914,8 +914,8 @@ buff container → timed buffs disappear out of combat once learned; a brand-new
 combat may show once. `/am forgettimed` → they reappear until relearned out of combat. Result:
 
 **FILT-30. Warnings.** Whitelist a spell on a *player debuffs* container → Filters shows the orange
-"ignored for debuffs on your own character or pet" line. On a *target buffs* container → "only apply
-while the unit is friendly". Set every category to **Hide** but *Defensive cooldowns*, then on
+"On your own and your pet's debuffs, spell categories and Overrides are not applied" line. On a
+*target buffs* container → "On units you can't assist (hostile or neutral), ...". Set every category to **Hide** but *Defensive cooldowns*, then on
 General → Spell Categories remove every *Defensive cooldowns* spell → "These filters can never match
 anything."; Restore afterward. Result:
 

@@ -46,7 +46,7 @@ local _, NS = ...
 --                  group would carry CERTAIN to be applied". Its only constraint is an
 --                  `excludeSpellIDs` of the union, and the engine discards spell ids except for buffs
 --                  on friendly units and debuffs on hostile ones — so the gate is
---                  `modules/FilterCompiler.lua`'s `FC.IdsAlwaysHonored(unit, auraType)`, TRUE ONLY for
+--                  `modules/FilterCompiler.lua`'s `FC.IdsMode(unit, auraType)`, "always" ONLY for
 --                  buffs on the player and the pet, the two units that cannot turn hostile. It is a
 --                  gate of its own, NOT the `FC.IdsHonored` the identity warning reads and not
 --                  computed from it: the warning answers the weaker "can the engine EVER honor ids
@@ -708,7 +708,7 @@ Cat.HELPFUL = {
 -- rooted") is asked of a hostile target or focus, which is exactly where the ids do bite — and every
 -- surface that can mislead says so: their own descs below, the Filters section's Categories tab, the
 -- General -> Spell Categories blurb, and the per-container orange warning
--- (`FC.WARN.IDS_HOSTILE_ONLY` / `IDS_OWN_DEBUFFS`, modules/FilterCompiler.lua).
+-- (`FC.WARN.IDS_ASSISTABLE` / `IDS_OWN_DEBUFFS`, modules/FilterCompiler.lua).
 
 local ALL_DISPELS = { Magic = true, Curse = true, Disease = true, Poison = true, Bleed = true }
 
@@ -1143,7 +1143,7 @@ Cat.HARMFUL = {
         -- discards spell ids on every debuff container there is — on the player and pet outright, on
         -- a target or focus the moment the unit is friendly. What the engine would receive is an
         -- unrestricted HARMFUL group: every debuff drawn, every other Hide on the tab defeated.
-        -- `modules/FilterCompiler.lua` gates it on `FC.IdsAlwaysHonored(unit, auraType)` — false for
+        -- `modules/FilterCompiler.lua` gates it on `FC.IdsMode(unit, auraType) == "always"` — false for
         -- all four debuff units and for a `target`/`focus` buff container too — so this stays a
         -- general rule keyed on whether ids are CERTAIN to be honored, not a debuff-only special case.
         key = "uncategorizedDebuffs", kind = "uncategorized", label = "Uncategorized",

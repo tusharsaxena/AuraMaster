@@ -26,7 +26,7 @@ local NOBODYS = 987655   -- and one nothing claims at all, the control
 
 --- A player buff container with one user category holding MINE, that category HIDDEN and everything
 --- else left at its default Show. `unit = "player"` is not incidental: it is the one unit where
---- FC.IdsAlwaysHonored is true, so the Uncategorized rescue group genuinely exists and the rescue
+--- FC.IdsMode is "always", so the Uncategorized rescue group genuinely exists and the rescue
 --- this checkpoint is about can actually happen.
 local function envWithUserCategory()
     local E = freshEnv()
@@ -266,7 +266,7 @@ test("categories: a user DEBUFF category alone on Show compiles the same way, an
     -- The engine honors debuff ids only while the unit is hostile, and `usesSpellIds` is set by the
     -- user category's own Show: the sentence has to reach a container whose only spell list is one
     -- the player made.
-    assertTrue(hasWarning(plan, "hostile"), "the identity warning fires for a user category too")
+    assertTrue(hasWarning(plan, "On units you can assist"), "the identity warning fires for a user category too")
 end)
 
 test("categories: a user category shown beside a shipped one gets its own group, after it and minus its ids", function()

@@ -4,7 +4,7 @@
 ![CurseForge Version](https://img.shields.io/curseforge/v/1698345)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-1788%2F1788_passing-green)
+![Tests](https://img.shields.io/badge/Tests-1799%2F1799_passing-green)
 
 Ka0s Aura Master lets you build your own buff and debuff displays. Each one is a container. You pick
 whose auras it shows (yours, your target's, your focus's or your pet's), whether it shows buffs,
@@ -113,7 +113,7 @@ on your own debuffs does nothing, and the Filters section warns you when that's 
 | Nothing shows at all | On General → Master controls, check that **Enable Aura Master** is ticked (`/am enable` ticks it) and that **General visibility** isn't set to *Never*, or to a combat state you're not in. Then check the container's own **Enabled** box on Containers. |
 | I only see the sample auras | Test mode is on. Type `/am test off`, or untick **Test mode** under General → Master controls. |
 | A container stays empty and its Filters section says "These filters can never match anything." | Two of your choices rule each other out, such as a spell category set to Show with every spell unticked. Loosen one of them, for example by setting the category to Hide. |
-| An orange line says my spell lists only apply to friendly or hostile units | That's the game's rule, not a fault. The spell lists on that container only work while the unit is the kind the line names. |
+| An orange line says spell categories and Overrides are not applied on some units | That's the game's rule, not a fault. Blizzard won't filter by spell there, so on the units the line names only the Blizzard categories set to Show draw. |
 | I can't drag a container | You can only drag containers attached to the screen, and not during combat. An attached container follows its target. Move it with the offsets on Layout → Anchor, or set **Attach to** back to *Screen*. |
 | A container attached to a frame is sitting somewhere else | The frame wasn't found, so the container fell back to its screen position. Check the name in **Frame name** (`/fstack` shows frame names), or pick the frame again. |
 | Blizzard's buff frame is still showing after I hid it | Blizzard's frames can't be moved during combat. The change goes through as soon as combat ends. |

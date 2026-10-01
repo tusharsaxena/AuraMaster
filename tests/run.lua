@@ -90,6 +90,7 @@ Kit.run{
         "test_schema_paths",
         "test_filtercompiler",
         "test_filtercompiler_categories",
+        "test_filterviews",
         "test_container",
         "test_containermanager",
         "test_compat",
