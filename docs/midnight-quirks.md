@@ -199,6 +199,10 @@ rebuilds the engine. `FC.IdsMode` pins buffs on the player and the pet to the id
 debuffs to the no-ids view; for a target or focus, `Compat.IdsApply` (`core/Compat.lua:330`) asks
 steps 2 to 4 above and answers false when a call raises or its answer is secret. It does not model
 step 1, so a `NeverSecret` aura claimed only by a spell category is not drawn where the view is no-ids.
+The empty-container prediction (`modules/EmptyWatch.lua`) does not model it either: where the view is
+no-ids it ignores spell ids, so a container whose only aura is a blacklisted `NeverSecret` one (a
+blacklisted Sated on a debuff container) is predicted not empty while the engine draws nothing. That
+costs only a placeholder hang on an unlocked container, and is accepted.
 `ContainerClass:ApplyView` (`modules/Container.lua:320`) sends `SetAuraGroupFilterString` and
 `SetAuraGroupCandidateFilters` only where the two views differ. Blizzard's Lua checks neither combat
 nor secrecy in either setter and both end in `UpdateAllAuras`, so the switch runs in combat. It runs at

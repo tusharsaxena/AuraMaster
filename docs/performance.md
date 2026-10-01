@@ -118,7 +118,7 @@ Declared in report order in `buckets` (`core/PerfSetup.lua:48`), each bracketed 
 `emptyPass`, outside the `unitSwap` bracket, whichever of the two swap handlers AceEvent calls first
 (it walks them in no set order). When EmptyWatch's runs first it moves the view itself, and
 `unitSwap` then finds the view already right. A view switch on a reaction change (`UNIT_FACTION` or `UNIT_FLAGS` for `target` or
-`focus`, `modules/ContainerManager.lua:771`) runs **unbracketed**: its setter calls land in no bucket,
+`focus`, `modules/ContainerManager.lua:771`, or for the player, on `CM.viewPlayerFrame`) runs **unbracketed**: its setter calls land in no bucket,
 and only the `emptyPass` it triggers is recorded, at the root. **`styleElement` is declared at the root because its callers differ**, and it
 overlaps two other buckets without saying so: a restyle runs it inside `applyContainer`, and the
 preview runs it inside `visibilityPass` or `applyContainer`. Only the calls the engine makes from its
@@ -171,7 +171,8 @@ then the combat-restricted half (Blizzard frames handed back and a visibility pa
 every engine is disabled and nothing — a combat transition, a target swap, a settings change — can
 enable one behind it, and `CM.RequestApply` arms no timer. `standUp`
 (`core/LifecycleSetup.lua:151`) re-registers the events, subscribes again, builds any container
-the addon never built while down, and re-applies every container from the settings **as they are
+the addon never built while down, moves target and focus containers to the view their unit's reaction
+picks now (before any engine is re-enabled), and re-applies every container from the settings **as they are
 then**, never a snapshot. `NS.Perf.suspended` still reads true through the whole of arm B — the
 field is now the latch's answer to `IsHeld("perf")` rather than a boolean beside it — and the hold is session-only.
 

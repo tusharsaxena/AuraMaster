@@ -497,7 +497,7 @@ local function applyDuration(base, plan, filter, auraType, timedSpells)
     local mode = filter.durationMode
     local maxDuration = tonumber(filter.maxDuration) or 0
     -- Timeless is built from learned BUFF durations (modules/TimedSpells.lua scans buffs only), and a
-    -- spell-id exclusion is not honored for debuffs on friendly units anyway: on a debuff container
+    -- spell-id exclusion is not applied to debuffs on a unit you can assist anyway: on a debuff container
     -- the mode means nothing, so it is reported and treated as "any".
     if mode == "timeless" and auraType ~= "HELPFUL" then
         warn(plan, FC.WARN.TIMELESS_BUFFS_ONLY)

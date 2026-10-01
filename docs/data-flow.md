@@ -397,8 +397,8 @@ true (batch 9 HG-1, E1 as amended by the owner on 2026-09-25). The engine cannot
 empty: its frame count is a pool that never shrinks, and its size is secret. So the prediction asks
 `C_UnitAuras` the engine's question, per compiled group: a group with no candidate filters asks
 `GetAuraSlots(unit, filter, 1)` whether any slot comes back; one with candidate filters reads each
-slot's `AuraData` and tests the spell-id lists (only where the engine honors them: buffs of a friendly
-unit, debuffs of a hostile one), the dispel types, the max duration (a permanent aura never passes)
+slot's `AuraData` and tests the spell-id lists (only where the engine applies them: buffs of a unit you can
+assist, debuffs of one you cannot), the dispel types, the max duration (a permanent aura never passes)
 and the boolean flags. Weapon enchants come from `GetWeaponEnchantInfo`, with Hide permanent applied.
 A group whose engine pool reads 0, or a unit that does not exist, needs no read. The answer is nil
 (counted as not empty) in combat, while auras are secret, on a secret or raising read, and for a flag
