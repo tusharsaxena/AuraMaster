@@ -44,13 +44,15 @@ checkpoint: the release is cut only when the release run's `manifest.json` shows
 install the missing tool and run again. The release command reads the manifest; the runner's own exit
 code is unchanged. Recording those runs is `docs/automated-tests/README.md`.
 
-**lizard and the length operator.** lizard's shared tokenizer takes a `#` outside a string as the
-start of a C preprocessor line and drops everything after it up to the newline. In Lua `#` is the
-length operator. A block keyword or an unbalanced brace after it on the same line throws off lizard's
-block count, so every later function in that file goes unmeasured and the gate stays silent without
-having looked. An `and` or `or` after it is left out of the CCN. The fifth case in
-`tests/test_lintconfig.lua` (`no length operator shares its line with a keyword or brace lizard must see`) fails any line where a keyword or an unbalanced brace follows a `#`. Move
-what follows onto its own line, or take the length into a local first.
+**The complexity suite is sighted.** lizard 1.24.0 reads Lua through a reader that is not a Lua
+reader and loses whole functions without a word: a `#` reads as a C preprocessor line, and the bare
+words `it`, `class`, `module`, `begin` and `unless` open Ruby-like blocks. The runner therefore never
+runs lizard over the tree: it measures a sanitized shadow built by the vendored
+`tests/_kit/lizard_sighted.lua`, and compares each file's `function` tokens with the functions lizard
+lists. A mismatch means lizard was blind there, and the suite is `fail` with `blindFiles` above 0 in
+the manifest (automated-tests-§3). The kit's own `test_lizard_sighted` suite pins the sanitizer.
+This repo's former length-operator scanner in `tests/test_lintconfig.lua` is retired, superseded by
+that gate.
 
 ## What the headless suite is
 
