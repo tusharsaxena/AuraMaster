@@ -310,7 +310,11 @@ while it is down (`CM.Announce` skips its sync, but still sends `CONTAINERS_CHAN
 re-renders). The stand-up calls `CM.Sync` before its visibility pass, so it builds, or revives, every
 container the registry holds at that moment and draws them in the same turn. A profile change made
 while down is remembered and passed to that sync, so a stand-up in combat parks every id the switch
-reused, exactly as `CM.Announce(true)` would have, until the deferred apply rebuilds it.
+reused, exactly as `CM.Announce(true)` would have, until the deferred apply rebuilds it. Between the
+sync and the visibility pass it moves every target and focus container to the spell-list view its
+unit picks now (`CM.ApplyViews`, SV-05): no swap or reaction event was heard while down, and the view
+switch, unlike the apply, is never held, so a stand-up in combat cannot re-enable an engine on a stale
+view.
 
 **`/am diagnostics` still answers while down, and says so** (batch 10 F8). Its header adds one plain
 line, `addon disabled: containers are not built; predictions only` after a login made while off,

@@ -144,6 +144,13 @@ local function standUp()
         -- Build (or revive) what a disabled login or a profile switch made while down never built,
         -- before the visibility pass that shows it.
         if NS.ContainerManager.Sync then NS.ContainerManager.Sync() end
+        -- The spell-list view, before the visibility pass re-enables the engines: no swap or reaction
+        -- event was heard while down, and the apply below may be held (combat, secret auras) while
+        -- the view switch never is. Quiet: EmptyWatch re-predicts on its own sync.
+        if NS.ContainerManager.ApplyViews then
+            NS.ContainerManager.ApplyViews("target", true)
+            NS.ContainerManager.ApplyViews("focus", true)
+        end
         if NS.ContainerManager.ApplyVisibility then NS.ContainerManager.ApplyVisibility() end
         -- The addon's own request: a player change held by the stand-down keeps its notice.
         if NS.ContainerManager.RequestApply then NS.ContainerManager.RequestApply(nil, true) end

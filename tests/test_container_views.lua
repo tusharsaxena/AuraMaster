@@ -363,3 +363,28 @@ test("container views: the view frame's unit events go down with the addon and c
     -- red under: CM.StartListening not re-opening the view frame on the stand-up
     assertEqual(viewRegs(mocks, NS), VIEW_REGS)
 end)
+
+test("container views: the stand-up moves the view before it re-enables, in combat too", function()
+    local NS, mocks, inst, e = targetBuffs(true)
+    assertEqual(inst.view, "ids")
+    NS.SetByPath("enabled", false)
+    -- While stood down nothing hears the swap: the new target cannot be assisted.
+    mocks.__canAssist.target = false
+    mocks.__fireEvent("PLAYER_TARGET_CHANGED")
+    assertEqual(inst.view, "ids", "no view move while stood down")
+    mocks.__lockdown, mocks.__aurasSecret = true, true
+    e.__calls = {}
+    NS.SetByPath("enabled", true)
+    assertTrue(NS.ContainerManager.MustDefer(), "the apply is held")
+    -- red under: a stand-up that re-enables the engine on the view it held at stand-down (every
+    -- spell-list group drawing every buff of a hostile target until the hold lifts)
+    assertEqual(inst.view, "noIds")
+    local never
+    for _, c in ipairs(e:__callsTo("SetAuraGroupCandidateFilters")) do
+        if NS.FilterCompiler.Signature(c[3]) == "{includeDispelTypes={}}" then never = true end
+    end
+    assertTrue(never, "the NEVER candidate filters were sent")
+    local set, enable = e:__firstCall("SetAuraGroupCandidateFilters"), e:__firstCall("SetEnabled")
+    -- red under: the views moved after the visibility pass (one draw of the new target in the old view)
+    assertTrue(set ~= nil and enable ~= nil and set < enable, "the switch precedes the re-enable")
+end)

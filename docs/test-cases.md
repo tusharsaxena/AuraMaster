@@ -455,7 +455,7 @@ badge and any count quoted in the docs must agree with it.
 - container: an engine whose frame level reads secret leaves the blocker at level 0, never raising (E)
 - container: ApplyVisibility records the hang mode for test mode, unlocked and locked; Park and Destroy reset it
 
-### test_container_views.lua (14)
+### test_container_views.lua (15)
 
 - container views: a target buff container is built on the view its unit's reaction picks
 - container views: player debuffs are always built on the no-ids view, player buffs on the ids view
@@ -471,6 +471,7 @@ badge and any count quoted in the docs must agree with it.
 - container views: UNIT_FACTION and UNIT_FLAGS on the target and focus switch the view without a swap
 - container views: a secret unit token from a unit event switches nothing and raises nothing
 - container views: the view frame's unit events go down with the addon and come back with it
+- container views: the stand-up moves the view before it re-enables, in combat too
 
 ### test_containermanager.lua (54)
 
@@ -2102,7 +2103,7 @@ badge and any count quoted in the docs must agree with it.
 | test_filtercompiler_categories.lua | 9 |
 | test_filterviews.lua | 14 |
 | test_container.lua | 52 |
-| test_container_views.lua | 14 |
+| test_container_views.lua | 15 |
 | test_containermanager.lua | 54 |
 | test_compat.lua | 31 |
 | test_secrets.lua | 6 |
@@ -2174,4 +2175,4 @@ badge and any count quoted in the docs must agree with it.
 | test_layout_cap.lua | 13 |
 | test_diagnostics_contract.lua | 9 |
 | test_lizard_sighted.lua | 8 |
-| **Total** | **1828** |
+| **Total** | **1829** |
