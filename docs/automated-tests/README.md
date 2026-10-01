@@ -53,7 +53,7 @@ There are **two checkpoints**, and a suite's answer differs between them:
 | `lint` | `luacheck .` | **gates** | **gates** |
 | `tests` | `lua tests/run.lua` | **gates** | **gates** |
 | `perf` | `lua tests/perf.lua` | does not gate — recorded | **gates** — `pass` required |
-| `complexity` | `lizard -l lua -x "./libs/*" -x "./tests/_kit/*" .` | does not gate — recorded | **gates** — `pass`, zero functions above CCN 15 |
+| `complexity` | `bash tests/_kit/run-automated-tests.sh --suite complexity` (lizard over the kit's sighted shadow) | does not gate — recorded | **gates** — `pass`, zero functions above CCN 15 |
 
 **The run and the commit.** `lint` and `tests` are the green gate (testing-§4). `perf` and
 `complexity` never fail a run and never block a commit (performance-§9, performance-§10): they are

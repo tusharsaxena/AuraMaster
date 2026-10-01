@@ -224,6 +224,7 @@ The suites, in the order `tests/run.lua` runs them (it is the authority on the l
 | `tests/_kit/test_eol.lua` | Every tracked file carries the line ending `.gitattributes` declares, and `.gitattributes` is the canonical body |
 | `tests/_kit/test_layout_cap.lua` | The layout-§1 cap census in `docs/ARCHITECTURE.md` agrees with the tree |
 | `tests/_kit/test_diagnostics_contract.lua` | The shared debug-logging-§14 diagnostics contract, run against this addon's dispatcher through `Kit.diagnostics` in `tests/run.lua`: both forms, while disabled, append, ungated, the branded markers, logging turned on for the session, and no `diag` or `dx` |
+| `tests/_kit/test_lizard_sighted.lua` | The kit's pin on the complexity suite's sanitizer (`tests/_kit/lizard_sighted.lua`): the shadow it builds for lizard, the per-file function-count parity, and that lizard sees every function of a hazard fixture once sanitized |
 
 ## Root and media
 
