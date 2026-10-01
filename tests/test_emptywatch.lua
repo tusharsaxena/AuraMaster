@@ -540,6 +540,28 @@ test("empty: a target swap EmptyWatch hears before OnUnitSwap predicts from the 
     assertTrue(inst.predictedEmpty == false, "the listed buff draws: not empty")
 end)
 
+test("empty: a target swap OnUnitSwap hears first still costs one pass, in the new unit's view", function()
+    local NS, mocks, inst = hostileSpellListTarget()
+    local passes = 0
+    local reevaluate = NS.EmptyWatch.Reevaluate
+    NS.EmptyWatch.Reevaluate = function(...)
+        passes = passes + 1
+        return reevaluate(...)
+    end
+    mocks.__canAssist.target = true
+    -- AceEvent walks its handlers with next(), so either may run first. Run OnUnitSwap by hand, then
+    -- fire the event with only EmptyWatch's handler left, as when OnUnitSwap comes first.
+    NS.addon:UnregisterEvent("PLAYER_TARGET_CHANGED")
+    NS.addon:OnUnitSwap("PLAYER_TARGET_CHANGED")
+    mocks.__fireEvent("PLAYER_TARGET_CHANGED")
+    NS.EmptyWatch.Reevaluate = reevaluate
+    assertEqual(inst.view, "ids", "OnUnitSwap moved the view")
+    -- red under: OnUnitSwap's ApplyViews telling EmptyWatch as well (a pass inside the swap, then
+    -- EmptyWatch's own swap pass: two per swap)
+    assertEqual(passes, 1, "one pass per swap, whichever handler runs first")
+    assertTrue(inst.predictedEmpty == false, "the listed buff draws: not empty")
+end)
+
 test("empty: UNIT_FLAGS flipping the view on the same target re-predicts at once", function()
     local _, mocks, inst = hostileSpellListTarget()
     assertTrue(inst.predictedEmpty == true)

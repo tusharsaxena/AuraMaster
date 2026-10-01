@@ -421,14 +421,17 @@ end
 --- list views, V2: ContainerClass:ApplyView). Combat-legal, and never held behind MustDefer. Matched on
 --- the unit the engine was last applied with, the one ApplyView resolves for. When one moved, the engine
 --- redrew in the new view, so EmptyWatch re-predicts at once (V3: the prediction agrees with the
---- engine); it gates itself on unlocked, out of combat and auras readable. Answers how many moved.
+--- engine); it gates itself on unlocked, out of combat and auras readable. `quiet` skips that re-predict:
+--- OnUnitSwap passes it, because EmptyWatch hears the same swap and always re-predicts from its own
+--- handler, so telling it here as well would run two passes for one swap whenever OnUnitSwap's handler
+--- happens to run first (AceEvent's order is unspecified). Answers how many moved.
 --- @return number
-function CM.ApplyViews(unit)
+function CM.ApplyViews(unit, quiet)
     local n = 0
     for _, inst in pairs(CM.instances) do
         if inst.unit == unit and inst:ApplyView() then n = n + 1 end
     end
-    if n > 0 and NS.EmptyWatch then NS.EmptyWatch.OnViewsMoved() end
+    if n > 0 and not quiet and NS.EmptyWatch then NS.EmptyWatch.OnViewsMoved() end
     return n
 end
 

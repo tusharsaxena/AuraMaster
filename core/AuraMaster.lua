@@ -163,7 +163,7 @@ function addon:OnUnitSwap(event)
     local unit = (event == "PLAYER_FOCUS_CHANGED") and "focus" or "target"
     local CM = NS.ContainerManager
     if CM then
-        CM.ApplyViews(unit)
+        CM.ApplyViews(unit, true)   -- quiet: EmptyWatch's own swap handler re-predicts
         CM.RefreshUnit(unit)
     end
     if t0 then Perf.Note("unitSwap", debugprofilestop() - t0) end
