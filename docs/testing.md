@@ -35,7 +35,7 @@ answer differs between them (automated-tests-§3):
 | `lint` | `luacheck .` | **gates** | **gates** |
 | `tests` | `lua tests/run.lua` | **gates** | **gates** |
 | `perf` | `lua tests/perf.lua` | does not gate — recorded | **gates** — must be `pass` |
-| `complexity` | `lizard -l lua -x "./libs/*" -x "./tests/_kit/*" .` | does not gate — recorded | **gates** — `pass` with zero functions above CCN 15 |
+| `complexity` | `bash tests/_kit/run-automated-tests.sh --suite complexity` (lizard over the kit's sighted shadow) | does not gate — recorded | **gates** — `pass` with zero functions above CCN 15 |
 
 `perf` and `complexity` never fail a run and never block a commit (performance-§9, performance-§10);
 a threshold that fails a run teaches everyone to reach for `--no-verify`. The **tag** is a separate

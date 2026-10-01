@@ -161,5 +161,6 @@ Kit.run{
         { name = "test_eol", dir = "tests/_kit/" },
         { name = "test_layout_cap", dir = "tests/_kit/" },
         { name = "test_diagnostics_contract", dir = "tests/_kit/" },
+        { name = "test_lizard_sighted", dir = "tests/_kit/" },
     },
 }
