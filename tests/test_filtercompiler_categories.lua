@@ -263,9 +263,10 @@ test("categories: a user DEBUFF category alone on Show compiles the same way, an
     assertEqual(#plan.groups, 1, "the aura type is not what decides a user category's group")
     assertEqual(plan.groups[1].filter, "HARMFUL")
     assertEqual(setOf(plan.groups[1].candidateFilters.includeSpellIDs), "118")
-    -- The engine honors debuff ids only while the unit is hostile, and `usesSpellIds` is set by the
-    -- user category's own Show: the sentence has to reach a container whose only spell list is one
-    -- the player made.
+    -- The engine honors debuff ids only while the unit is hostile. `addShownGroups` sets nothing for
+    -- the user category's own Show; `finishWarnings` prints `IDS_ASSISTABLE` because `onlyShown` Hides
+    -- every other category (#hidden > 0, spell-list views, 2026-10-02), so the sentence still reaches
+    -- a container whose only spell list is one the player made.
     assertTrue(hasWarning(plan, "On units you can assist"), "the identity warning fires for a user category too")
 end)
 

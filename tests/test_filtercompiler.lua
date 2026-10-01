@@ -662,7 +662,7 @@ test("filter: a TARGET debuff container's spells-kind Show still emits its group
     -- silent.
     assertEqual(#plan.warnings, 1, "exactly the one sentence")
     assertEqual(plan.warnings[1], FC.WARN.IDS_ASSISTABLE,
-        "the spells-kind Show alone must raise the warning, with no blacklist or whitelist in play")
+        "the Hidden crowdControl category raises the warning (#hidden > 0), with no blacklist or whitelist in play")
 end)
 
 -- ── uncategorized: ExplainSpell (fix round 1) ─────────────────────────────────────────────────
