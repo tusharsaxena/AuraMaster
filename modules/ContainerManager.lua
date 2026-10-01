@@ -419,13 +419,16 @@ end
 
 --- Switch every container on `unit` to the view of its plan that `unit`'s reaction picks now (spell-
 --- list views, V2: ContainerClass:ApplyView). Combat-legal, and never held behind MustDefer. Matched on
---- the unit the engine was last applied with, the one ApplyView resolves for. Answers how many moved.
+--- the unit the engine was last applied with, the one ApplyView resolves for. When one moved, the engine
+--- redrew in the new view, so EmptyWatch re-predicts at once (V3: the prediction agrees with the
+--- engine); it gates itself on unlocked, out of combat and auras readable. Answers how many moved.
 --- @return number
 function CM.ApplyViews(unit)
     local n = 0
     for _, inst in pairs(CM.instances) do
         if inst.unit == unit and inst:ApplyView() then n = n + 1 end
     end
+    if n > 0 and NS.EmptyWatch then NS.EmptyWatch.OnViewsMoved() end
     return n
 end
 
@@ -759,7 +762,6 @@ local function onViewEvent(_, _, unit)
     if NS.Secrets.IsSafeKey(unit) and (unit == "target" or unit == "focus") then CM.ApplyViews(unit) end
 end
 
-CM.viewFrame = CM.viewFrame or nil
 local function viewFrame()
     local f = CM.viewFrame
     if not f then

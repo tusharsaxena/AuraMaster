@@ -272,6 +272,20 @@ local function schedulePass()
     passTimer = C_Timer.NewTimer(PASS_DELAY, runPass)
 end
 
+--- Re-predict NOW, folding in a pass already due.
+local function passNow()
+    if passTimer then passTimer:Cancel() end
+    runPass()
+end
+
+--- ContainerManager moved at least one container's view (CM.ApplyViews: a swap, or a reaction change
+--- heard as UNIT_FACTION or UNIT_FLAGS). The setters redrew the engine in this same frame, so the
+--- prediction follows at once, not PASS_DELAY later: a wrong "empty" left standing would hang a
+--- follower over the parent's auras, and no UNIT_AURA need come to correct it.
+function EW.OnViewsMoved()
+    passNow()
+end
+
 --- An enchant's expiry lapsed: re-predict.
 function EW.OnExpiry()
     expiryTimer, expiryDue = nil, nil
@@ -287,9 +301,14 @@ end
 --- engine redraws for the new unit in this same frame, so a follower hung from a parent that just
 --- emptied would sit at the engine's 1x1 provisional rect for the whole delay, and jump there and
 --- back (the owner, 2026-09-26). One switch is one pass; a pass already due is folded into it.
-local function onUnitSwitch()
-    if passTimer then passTimer:Cancel() end
-    runPass()
+--- AceEvent walks its handlers in no set order, so this may run before core/AuraMaster.lua's
+--- OnUnitSwap has moved the view: it moves it first (CM.ApplyViews, a no-op for a view already right),
+--- so the prediction never reads the old unit's view. A move re-predicts through EW.OnViewsMoved.
+local function onUnitSwitch(event)
+    local CM = NS.ContainerManager
+    local unit = (event == "PLAYER_FOCUS_CHANGED") and "focus" or "target"
+    if CM and CM.ApplyViews(unit) > 0 then return end
+    passNow()
 end
 
 --- UNIT_PET and UNIT_INVENTORY_CHANGED through AceEvent, which does not filter by unit: only the

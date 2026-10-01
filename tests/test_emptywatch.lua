@@ -496,3 +496,60 @@ test("empty: a target switch folds a pass already due into its own, leaving no t
     -- red under: the switch running its pass beside the pending timer instead of canceling it
     assertEqual(mocks.__fireTimers(), 0, "the due pass was folded into the switch")
 end)
+
+-- -- the prediction follows the view the engine holds (spell-list views, V3; SV-03R) -----------
+
+--- A target buff container showing Defensive cooldowns alone (a spell category: one group, NEVER in the
+--- no-ids view), watched (unlocked), its group's pool live, while the target holds one listed buff and
+--- cannot be assisted, so the engine holds the no-ids view and the prediction is empty. Answers NS,
+--- mocks and the instance.
+local function hostileSpellListTarget()
+    local NS, mocks = fresh()
+    noEnchants(mocks)
+    mocks.__unitExists.target = true
+    mocks.__canAssist.target = false
+    withAuras(mocks, "target", {})
+    local categories = {}
+    for _, def in ipairs(NS.Categories.For("HELPFUL")) do
+        categories[def.key] = (def.key == "defensives") and "show" or "hide"
+    end
+    local CM = NS.ContainerManager
+    local id = CM.Create({ unit = "target", auraType = "HELPFUL", filter = { categories = categories } })
+    NS.SetByPath("locked", false)
+    mocks.__fireTimers(); mocks.__fireTimers()
+    local inst = CM.instances[id]
+    populate(mocks, inst)
+    local listed = next(inst.plan.groups[1].candidateFilters.includeSpellIDs)
+    withAuras(mocks, "target", { { spellId = listed, duration = 10 } })
+    mocks.__fireTimers()
+    return NS, mocks, inst
+end
+
+test("empty: a target swap EmptyWatch hears before OnUnitSwap predicts from the new unit's view", function()
+    local NS, mocks, inst = hostileSpellListTarget()
+    assertEqual(inst.view, "noIds", "hostile: the no-ids view")
+    assertTrue(inst.predictedEmpty == true, "the NEVER group draws nothing")
+    -- AceEvent walks its handlers with next(), so either may run first. Silence OnUnitSwap to make
+    -- EmptyWatch's handler the one that runs, as it does when it comes first.
+    NS.addon:UnregisterEvent("PLAYER_TARGET_CHANGED")
+    mocks.__canAssist.target = true
+    mocks.__fireEvent("PLAYER_TARGET_CHANGED")
+    -- red under: onUnitSwitch predicting from inst.view before OnUnitSwap's ApplyViews moved it (the
+    -- old target's NEVER group reads empty while the engine, about to switch, draws the listed buff)
+    assertEqual(inst.view, "ids", "EmptyWatch's handler moved the view itself")
+    assertTrue(inst.predictedEmpty == false, "the listed buff draws: not empty")
+end)
+
+test("empty: UNIT_FLAGS flipping the view on the same target re-predicts at once", function()
+    local _, mocks, inst = hostileSpellListTarget()
+    assertTrue(inst.predictedEmpty == true)
+    mocks.__canAssist.target = true
+    mocks.__fire("UNIT_FLAGS", "target")
+    assertEqual(inst.view, "ids", "a duel starting: the ids view")
+    -- red under: CM.ApplyViews never telling EmptyWatch (the prediction stays at the old view's answer
+    -- until some unrelated UNIT_AURA)
+    assertTrue(inst.predictedEmpty == false, "re-predicted inside the event, before any timer")
+    mocks.__canAssist.target = false
+    mocks.__fire("UNIT_FACTION", "target")
+    assertTrue(inst.predictedEmpty == true, "hostile again: empty again")
+end)

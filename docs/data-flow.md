@@ -20,7 +20,7 @@ engine does the reading, filtering, sorting, layout and timer animation in its o
         │    (a session row stops after the debug line: it sends nothing)
         │    (inside a bulk copy or reset the [Set] line is muted and tallied: one line per act)
         ▼
- 2  ContainerManager (CONFIG_CHANGED listener)                 modules/ContainerManager.lua:817
+ 2  ContainerManager (CONFIG_CHANGED listener)                 modules/ContainerManager.lua:819
         │  first FontPrimer.PrimeAll: a font no container drew in yet is drawn on a shown frame
         │  the row's effect:  "visibility" → ApplyVisibility now    "none" → nothing
         │  otherwise RequestApply(containerId)   nil = every container
@@ -250,7 +250,7 @@ after they were hidden; a visibility pass alone leaves them as they are.
 | `PLAYER_REGEN_DISABLED` / `ENABLED` | Visibility pass; on combat end, flush pending applies, apply the Blizzard-frame settings, and place again any frame-attached container whose frame appeared during combat |
 | `ADDON_RESTRICTION_STATE_CHANGED` | Flush pending applies — secrecy can lift outside a combat transition (a key or encounter ending) |
 | `PLAYER_TARGET_CHANGED`, `PLAYER_FOCUS_CHANGED`, `UNIT_PET` | Every container on that unit calls the engine's `UpdateAllAuras`, because the engine keeps showing the old unit's auras until told. On a target or focus swap each such container first switches to the view of its plan the new unit's reaction picks (`CM.ApplyViews`, spell-list views V2) |
-| `UNIT_FACTION`, `UNIT_FLAGS` (target, focus) | The unit's reaction may have moved without a swap: `CM.ApplyViews` switches each container on it to the view that reaction picks (`ContainerClass:ApplyView`), in combat too |
+| `UNIT_FACTION`, `UNIT_FLAGS` (target, focus) | The unit's reaction may have moved without a swap: `CM.ApplyViews` switches each container on it to the view that reaction picks (`ContainerClass:ApplyView`), in combat too. When one moved, EmptyWatch re-predicts at once (`EW.OnViewsMoved`), so the empty prediction follows the engine |
 | `ADDON_LOADED` (any) | Frame-attached containers whose frame did not exist yet are placed again |
 | `ITEM_DATA_LOAD_RESULT`, `GET_ITEM_INFO_RECEIVED` | When the item is the weapon equipped in slot 16 or 17 and the load succeeded, the weapon-enchant reset is armed 0.5 s later (`CM.OnWeaponItemData`); one timer, keeping the later deadline, so a burst flips once. The reset turns each live engine with enchant frames off and on again, so the weapon names are drawn afresh (`docs/midnight-quirks.md` → *Weapon enchants*) |
 | Profile changed, copied or reset | `NS.OnProfileChanged`: `PrepareProfile`, selection cleared, `ContainerManager.Announce` (the new profile's fonts primed, instances follow the registry, apply all, `CONTAINERS_CHANGED`), Blizzard frames, panel refresh |
