@@ -69,7 +69,7 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   to Show draw (owner, 2026-10-02). A container built only on spell categories therefore shows nothing
   on a hostile target, and a `NeverSecret` aura (Sated, Exhaustion) claimed only by a spell category is
   not drawn there either, although Blizzard would apply its id. `FilterCompiler` emits a warning per
-  container where that bites (`identityWarning`, `modules/FilterCompiler.lua:409`), rendered in orange
+  container where that bites (`identityWarning`, `modules/FilterCompiler.lua:415`), rendered in orange
   in the Filters section, and Categories and Overrides carry a NOTE (`docs/midnight-quirks.md`).
 - **On a target or focus BUFF container, Uncategorized set to Show no longer rescues an unlisted
   aura.** That row's group carries an `excludeSpellIDs` of the categorized union as its only

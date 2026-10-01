@@ -397,7 +397,7 @@ badge and any count quoted in the docs must agree with it.
 - views: a whitelisted NeverSecret id is not excluded by the R-3 no-ids view (player debuffs)
 - views: the NEVER view is the group's own filter string and an empty include-dispel map
 - views: each mode prints the new sentence where a category is Hidden
-- views: an Overrides list alone raises the sentence too
+- views: an Overrides list alone raises the Overrides-only sentence
 - views: no sentence on a container the rule changes nothing for
 
 ### test_container.lua (52)

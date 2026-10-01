@@ -252,12 +252,19 @@ test("views: each mode prints the new sentence where a category is Hidden", func
     end
 end)
 
-test("views: an Overrides list alone raises the sentence too", function()
+test("views: an Overrides list alone raises the Overrides-only sentence", function()
     -- red under: the warning gated on Hidden categories alone.
     local plan = compile({ unit = "target", filter = { whitelist = { [100] = true } } })
-    assertEqual(plan.warnings[1], FC.WARN.IDS_UNASSISTABLE)
+    -- red under: the full sentence here. With nothing Hidden the R-3 group draws every buff on a
+    -- unit you can't assist, so "Only Blizzard categories set to Show draw" would be false.
+    assertEqual(#plan.warnings, 1)
+    assertEqual(plan.warnings[1], "On units you can't assist (hostile or neutral), the Overrides lists are not applied.")
     plan = compile({ unit = "target", auraType = "HARMFUL", filter = { blacklist = { [1] = true } } })
-    assertEqual(plan.warnings[1], FC.WARN.IDS_ASSISTABLE)
+    assertEqual(plan.warnings[1], "On units you can assist, the Overrides lists are not applied.")
+    plan = compile({ unit = "player", auraType = "HARMFUL", filter = { whitelist = { [57724] = true } } })
+    assertEqual(plan.warnings[1], "On your own and your pet's debuffs, the Overrides lists are not applied.")
+    plan = compile({ unit = "target", filter = { whitelist = { [100] = true }, categories = { important = "hide" } } })
+    assertEqual(plan.warnings[1], FC.WARN.IDS_UNASSISTABLE, "a Hidden category still prints the full sentence")
 end)
 
 test("views: no sentence on a container the rule changes nothing for", function()

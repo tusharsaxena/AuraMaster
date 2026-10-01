@@ -179,6 +179,11 @@ FC.WARN = {
     IDS_OWN_DEBUFFS  = "On your own and your pet's debuffs, spell categories and Overrides are not applied. Only Blizzard categories set to Show draw.",
     IDS_UNASSISTABLE = "On units you can't assist (hostile or neutral), spell categories and Overrides are not applied. Only Blizzard categories set to Show draw.",
     IDS_ASSISTABLE   = "On units you can assist, spell categories and Overrides are not applied. Only Blizzard categories set to Show draw.",
+    -- The same three where no category is Hidden and only an Overrides list is in use: the R-3 group
+    -- still draws everything there, so the "Only Blizzard categories" sentence would be false (SV-05).
+    IDS_OWN_DEBUFFS_LISTS  = "On your own and your pet's debuffs, the Overrides lists are not applied.",
+    IDS_UNASSISTABLE_LISTS = "On units you can't assist (hostile or neutral), the Overrides lists are not applied.",
+    IDS_ASSISTABLE_LISTS   = "On units you can assist, the Overrides lists are not applied.",
 }
 
 local HUGE = math.huge
@@ -405,17 +410,18 @@ end
 --- because a player's own debuffs are discarded outright while a target's or focus's are merely
 --- conditional on which way the unit points, and a player who cannot tell those apart cannot fix
 --- either: the first is a setting that will never do anything, the second is one that will do
---- something later.
+--- something later. Answers the `FC.WARN` key's stem; `finishWarnings` picks the full sentence or
+--- its Overrides-only `_LISTS` form.
 local function identityWarning(unit, auraType)
     if not FC.IdsHonored(unit, auraType) then
         -- Only HARMFUL on player/pet reaches here: the one combination the engine refuses outright.
-        return FC.WARN.IDS_OWN_DEBUFFS
+        return "IDS_OWN_DEBUFFS"
     end
     if auraType == "HARMFUL" then
-        return FC.WARN.IDS_ASSISTABLE
+        return "IDS_ASSISTABLE"
     end
     if unit == "target" or unit == "focus" then
-        return FC.WARN.IDS_UNASSISTABLE
+        return "IDS_UNASSISTABLE"
     end
     return nil
 end
@@ -714,12 +720,13 @@ local function addCategoryGroups(plan, base, cats, look, unit, auraType)
 end
 
 --- The warnings that depend on the finished plan. The identity sentence prints only where the
---- no-ids view differs from the ids view: a category Hidden, or an Overrides list in use.
-local function finishWarnings(plan, unit, auraType, filtersByIds)
-    if filtersByIds then
-        local w = identityWarning(unit, auraType)
-        if w then
-            warn(plan, w)
+--- no-ids view differs from the ids view: a category Hidden (the full sentence), or an Overrides
+--- list in use with nothing Hidden (the `_LISTS` sentence, which names the Overrides alone).
+local function finishWarnings(plan, unit, auraType, anyHidden, listsUsed)
+    if anyHidden or listsUsed then
+        local stem = identityWarning(unit, auraType)
+        if stem then
+            warn(plan, FC.WARN[anyHidden and stem or (stem .. "_LISTS")])
         end
     end
     -- A buff container showing only Weapon enchants (schema v5) draws its enchant slots and no aura
@@ -794,7 +801,7 @@ function FC.Compile(cfg, ctx)
     -- ── Weapon enchants appended to a player buff container ─────────────────────────────────
     appendEnchants(plan, cfg, filter, ctx, auraType, Categories)
 
-    finishWarnings(plan, cfg.unit, auraType, #hidden > 0 or blacklisted or whitelisted)
+    finishWarnings(plan, cfg.unit, auraType, #hidden > 0, blacklisted or whitelisted)
     return plan
 end
 

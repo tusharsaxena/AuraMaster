@@ -185,7 +185,7 @@ and several such groups each draw the same aura: the M+ report of one NPC buff d
 hostile target (seven spell-category groups times two instances).
 
 **What this addon does.** Every compiled group carries two views (`modules/FilterViews.lua`, stamped as
-`group.noIds` by `FV.NoIds` at `modules/FilterCompiler.lua:569`): the ids view, exactly as compiled, and a no-ids
+`group.noIds` by `FV.NoIds` at `modules/FilterCompiler.lua:575`): the ids view, exactly as compiled, and a no-ids
 view in which the whitelist, every spell-category and Uncategorized Show group and the catch-all match
 nothing (`candidateFilters = { includeDispelTypes = {} }`, which fails every aura and which
 `ValidateCandidateFilters` accepts as a table), while a Blizzard Show group keeps its token, flag or
@@ -207,8 +207,9 @@ on `UNIT_FACTION` and `UNIT_FLAGS` for `target` and `focus` (`CM.ApplyViews`,
 `modules/ContainerManager.lua:429`), which catches duels, mind control and an NPC turning hostile.
 A move logs `[Filter] <container>: spell lists off (unit cannot be assisted)` or `... on ...`, and
 `/am diagnostics` prints each container's mode and view. The Filters section says so three times: the
-orange warning above every tab (`identityWarning`, `modules/FilterCompiler.lua:409`, printed only when
-the container hides a category or has an Overrides list), and a NOTE under the Spell Categories
+orange warning above every tab (`identityWarning`, `modules/FilterCompiler.lua:415`, printed only when
+the container hides a category or has an Overrides list, and naming only the Overrides lists when it
+hides nothing), and a NOTE under the Spell Categories
 heading and at the head of Overrides on every container whose mode is not "always"
 (`settings/Filters.lua`).
 

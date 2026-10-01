@@ -915,9 +915,11 @@ permanent ones go. Result:
 buff container → timed buffs disappear out of combat once learned; a brand-new timed buff cast in
 combat may show once. `/am forgettimed` → they reappear until relearned out of combat. Result:
 
-**FILT-30. Warnings.** Whitelist a spell on a *player debuffs* container → Filters shows the orange
-"On your own and your pet's debuffs, spell categories and Overrides are not applied" line. On a
-*target buffs* container → "On units you can't assist (hostile or neutral), ...". Set every category to **Hide** but *Defensive cooldowns*, then on
+**FILT-30. Warnings.** Whitelist a spell on a *player debuffs* container that hides no category →
+Filters shows the orange "On your own and your pet's debuffs, the Overrides lists are not applied."
+line; set any category to **Hide** → it becomes "On your own and your pet's debuffs, spell categories
+and Overrides are not applied. Only Blizzard categories set to Show draw." On a *target buffs*
+container → "On units you can't assist (hostile or neutral), ...". Set every category to **Hide** but *Defensive cooldowns*, then on
 General → Spell Categories remove every *Defensive cooldowns* spell → "These filters can never match
 anything."; Restore afterward. Result:
 
@@ -1040,7 +1042,9 @@ not applied."; *Target debuffs (mine)* → "NOTE: on units you can assist, …";
 container → "NOTE: on units you can't assist, …"; a *pet debuffs* container → "NOTE: on your pet's
 debuffs, …". The **Overrides** tab opens with the same sentence ending "these Overrides are not
 applied." on each of those, above **Whitelist**, and with none on *Player buffs*. The orange warning
-above every tab prints only on a container that sets a category to Hide or has an Overrides entry.
+above every tab prints only on a container that sets a category to Hide or has an Overrides entry,
+and on one that hides nothing it names only the Overrides lists (no "Only Blizzard categories set to
+Show draw").
 The README's Usage paragraph on where spell categories apply and the FAQ entry "Why does my target
 container show fewer buffs on enemies?" read the same as these notes. Result:
 
@@ -1768,7 +1772,7 @@ line, then remove its row here.
 | FILT-19 | 75, batch 5 (the tooltip half) |
 | FILT-21 | 179 and 180: the chat line's expected text corrected on 2026-09-29 (each spell named, its id in brackets) |
 | FILT-27 | 82, batch 6 |
-| FILT-30 | its warning sentences corrected on 2026-10-02 (spell-list views, SV-01) |
+| FILT-30 | its warning sentences corrected on 2026-10-02 (spell-list views, SV-01; the Overrides-only sentence, SV-05) |
 | FILT-42 | new on 2026-09-30 with the weapon-enchant name reset (SP-AMX-01) |
 | FILT-43 to FILT-48 | new on 2026-10-02 with the spell-list views (SV-04) |
 | LAYOUT-1 | 69, batch 5 |

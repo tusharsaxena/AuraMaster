@@ -755,12 +755,12 @@ test("filter: every unit/aura-type combination prints exactly the identity warni
     local expected = {
         { "player", "HELPFUL", nil },
         { "pet",    "HELPFUL", nil },
-        { "target", "HELPFUL", FC.WARN.IDS_UNASSISTABLE },
-        { "focus",  "HELPFUL", FC.WARN.IDS_UNASSISTABLE },
-        { "player", "HARMFUL", FC.WARN.IDS_OWN_DEBUFFS },
-        { "pet",    "HARMFUL", FC.WARN.IDS_OWN_DEBUFFS },
-        { "target", "HARMFUL", FC.WARN.IDS_ASSISTABLE },
-        { "focus",  "HARMFUL", FC.WARN.IDS_ASSISTABLE },
+        { "target", "HELPFUL", FC.WARN.IDS_UNASSISTABLE_LISTS },
+        { "focus",  "HELPFUL", FC.WARN.IDS_UNASSISTABLE_LISTS },
+        { "player", "HARMFUL", FC.WARN.IDS_OWN_DEBUFFS_LISTS },
+        { "pet",    "HARMFUL", FC.WARN.IDS_OWN_DEBUFFS_LISTS },
+        { "target", "HARMFUL", FC.WARN.IDS_ASSISTABLE_LISTS },
+        { "focus",  "HARMFUL", FC.WARN.IDS_ASSISTABLE_LISTS },
     }
     for _, c in ipairs(expected) do
         -- A blacklist is the smallest thing that makes a plan lean on spell ids, which is what
@@ -1042,7 +1042,7 @@ local RICH_SIGNATURES = {
     .. "filter=string:HELPFUL},sortDirection=string:normal,"
     .. "sortMethod=string:expirationOnly}},"
     .. "warnings={1=string:On units you can't assist (hostile or neutral),"
-    .. " spell categories and Overrides are not applied. Only Blizzard categories set to Show draw.}}",
+    .. " the Overrides lists are not applied.}}",
 
     -- An enchant-only buff container (schema v5): the three slots, no aura group, and no warning.
     "{enchants={hidePermanent=boolean:true,slots={1=string:mainHand,2=string:offHand,3=string:ranged}},groups={},"
