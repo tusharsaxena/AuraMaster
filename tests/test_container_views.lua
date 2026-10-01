@@ -183,6 +183,35 @@ test("container views: an update that finds the reaction changed sends the new v
     assertFalse(inst:ApplyView(), "the update already switched it")
 end)
 
+test("container views: an update that leaves the plan's view values alone still sends the view switch", function()
+    local NS, mocks, inst, e = targetBuffs(false)
+    local Sig = NS.FilterCompiler.Signature
+    local wantF, wantC = differing(NS, inst.plan)
+    assertTrue(wantC > 0, "the two views differ in candidates")
+    mocks.__canAssist.target = true
+    -- A live edit that moves neither view's values: only the reaction makes the engine's values stale.
+    NS.SetByPath("container.filter.sortDirection", "reverse", inst.id)
+    mocks.__fireTimers()
+    assertTrue(inst.engine == e, "a live-editable change")
+    assertEqual(inst.view, "ids")
+    -- red under: Update diffing the old plan in the NEW view (`sendGroupView(engine, g, view, o, view)`):
+    -- the ids values match themselves, so nothing is sent while self.view still records "ids"
+    local cands = e:__callsTo("SetAuraGroupCandidateFilters")
+    assertEqual(#cands, wantC)
+    assertEqual(#e:__callsTo("SetAuraGroupFilterString"), wantF)
+    for _, c in ipairs(cands) do
+        local g
+        for _, x in ipairs(inst.plan.groups) do if x.key == c[2] then g = x end end
+        assertEqual(Sig(c[3]), Sig(g.candidateFilters), "the ids view's candidates")
+    end
+    for _, c in ipairs(e:__callsTo("SetAuraGroupFilterString")) do
+        local g
+        for _, x in ipairs(inst.plan.groups) do if x.key == c[2] then g = x end end
+        assertEqual(c[3], g.filter, "the ids view's filter string")
+    end
+    assertFalse(inst:ApplyView(), "the update already switched it")
+end)
+
 -- ── the log ──────────────────────────────────────────────────────────────────────────────────
 
 --- Logging on, and every line of the tags in `tags` recorded as `[Tag] text`.
@@ -211,6 +240,11 @@ test("container views: a view change writes one [Filter] line, and an unchanged 
     -- red under: no [Filter] line on a view change
     assertEqual(#lines, 1, table.concat(lines, " | "))
     assertEqual(lines[1], "[Filter] " .. name .. ": spell lists on (unit can be assisted)")
+    -- A live edit with the reaction unchanged: Update calls NoteView on every apply.
+    NS.SetByPath("container.filter.maxDuration", 20, inst.id)
+    mocks.__fireTimers()
+    -- red under: NoteView logging without its `was == view` early return (a line on every live edit)
+    assertEqual(#lines, 1, table.concat(lines, " | "))
     mocks.__canAssist.target = false
     inst:ApplyView()
     assertEqual(lines[2], "[Filter] " .. name .. ": spell lists off (unit cannot be assisted)")
