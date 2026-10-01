@@ -1,4 +1,4 @@
-local _, NS = ...
+local addonName, NS = ...
 
 -- settings/OptionsSetup.lua — wires the addon into LibKa0s-Options-1.0 (options-ui-§1).
 --
@@ -133,6 +133,9 @@ end
 local descriptor = {
     parentTitle   = PARENT_TITLE,
     mainPanelName = "AuraMasterMainPanel",
+    -- The folder name (first vararg), not the MasterControls display label: LibKa0s-Options-1.0
+    -- draws every IdList help mark with this addon's vendored `info` art through it (LibKa0s#42).
+    addonName     = addonName,
 
     print = function(line) print(line) end,
     debug = function(tag, fmt, ...) NS.Debug(tag, fmt, ...) end,

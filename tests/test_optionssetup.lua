@@ -431,3 +431,65 @@ test("options: the library-absent schema is the full one minus exactly the compo
     end
     assertEqual(NS2.ValidateSchema(), 0, "the smaller schema still validates")
 end)
+
+-- ── the help-mark art (LibKa0s#42) ──────────────────────────────────────────────────────────────
+-- The Options descriptor's `addonName` is the folder name LibKa0s-Options-1.0's IdList hands
+-- LibKa0s-Media-1.0 for its `info` art (libs/LibKa0s/OptionsIdList.lua, idHelpIcon). Without it
+-- every help mark falls to the client's blue information disc. AuraMaster is the one host whose
+-- IdList entries carry help (Filters → Overrides, General → Spell Categories), so it is the one
+-- host where the change is visible. The headless kit stubs no IsAddOnLoaded, so the name is trusted
+-- here; in the client the library checks it against the loaded-addon list.
+
+local INFO_ART = [[Interface\AddOns\AuraMaster\libs\LibKa0s\media\icons\info]]
+
+--- The first help mark (the Icon recording `__helpTint`) anywhere under the widgets `ws`.
+local function firstMark(ws)
+    for _, w in ipairs(ws) do
+        if w.type == "Icon" and w.__helpTint then return w end
+        local found = firstMark(w.children or {})
+        if found then return found end
+    end
+end
+
+test("options: the descriptor names the addon's folder as addonName, from the file's first vararg", function()
+    local fh = assert(io.open("settings/OptionsSetup.lua", "r"))
+    local src = fh:read("*a")
+    fh:close()
+    -- red under: the vararg thrown away as `_`, or the descriptor without the field (LibKa0s#42)
+    assertTrue(src:find("^local addonName, NS = %.%.%.") ~= nil, "the first vararg is kept as addonName")
+    local body = src:match("local descriptor = (%b{})")
+    assertTrue(body ~= nil, "the descriptor table literal is found")
+    assertTrue(body:find("\n%s*addonName%s*=%s*addonName,") ~= nil, "the descriptor passes addonName = addonName")
+end)
+
+test("options: the info art the descriptor routes to is vendored on disk", function()
+    -- The library's loaded-addon guard cannot catch a host whose vendored copy lacks the file.
+    local fh = io.open("libs/LibKa0s/media/icons/info.tga", "rb")
+    assertTrue(fh ~= nil, "libs/LibKa0s/media/icons/info.tga exists")
+    if fh then fh:close() end
+end)
+
+test("options: a Filters Overrides help mark draws the library's info art, not the client glyph", function()
+    local NS2, m2 = fresh()
+    local P = pages(NS2, m2)
+    P.show("Filters")
+    NS2.SetByPath("container.filter.blacklist", { [900001] = true }, 1)
+    NS2.SetByPath("categorySpells", { defensives = { [900001] = true } })
+    local mark = firstMark(P.tab("filters", "overrides"))
+    assertTrue(mark ~= nil and mark.__helpLines ~= nil, "the overridden entry draws a helped mark")
+    -- red under: the descriptor without addonName (the client's InformationIcon)
+    assertEqual(mark.__helpIcon, INFO_ART)
+end)
+
+test("options: a General spell-categories help mark draws the library's info art, not the client glyph", function()
+    local H = dofile("tests/general_page_helpers.lua")
+    local NS2, _, P = H.spells()
+    local claimed = H.starterIds(NS2, "defensives")[1]
+    local key = NS2.Categories.CreateUserCategory("Immunities", "HELPFUL")
+    NS2.GeneralSpells.Select(key)
+    P.find(P.rerender("General"), "EditBox", NS2.L["Add a spell"]):__fire("OnEnterPressed", tostring(claimed))
+    local mark = H.entryMark(P.rerender("General"), claimed)
+    assertTrue(mark ~= nil and mark.__helpLines ~= nil, "the claimed entry draws a helped mark")
+    -- red under: the descriptor without addonName (the client's InformationIcon)
+    assertEqual(mark.__helpIcon, INFO_ART)
+end)

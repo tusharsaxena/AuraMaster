@@ -22,7 +22,7 @@ check's number is not reused. Checks with no recorded pass, and checks new or co
 | COMBAT-1 to COMBAT-7 | Combat and restrictions | Deferred changes, the settings lock, resets in combat, Mythic+ keys |
 | DIAG-1 to DIAG-20 | Debug, diagnostics, perf | The debug console, bulk `[Set]` lines, `/am diagnostics`, `/am perf`, the event trace, resizing the console, its copy window and the perf panel, the console's Diagnostics link, diagnostics turning logging on, the library's own lines (a slash refusal, a stand-down edge, the launcher's at-enable line) |
 | CONT-1 to CONT-25 | Containers | Create, duplicate, delete, rename, copy; handles, strips and the close mark; test mode; unit swaps; empty placeholders |
-| FILT-1 to FILT-42 | Filters and spell categories | Cast by, the category grids, Overrides, the add-a-spell box, aura ids, your own categories, weapon enchants and their names |
+| FILT-1 to FILT-45 | Filters and spell categories | Cast by, the category grids, Overrides, the add-a-spell box, aura ids, your own categories, weapon enchants and their names, the help marks' art |
 | LAYOUT-1 to LAYOUT-38 | Layout | Anchor modes, attaching, chains, growth, anchor points, seams, the name label, mouse and tooltips |
 | STYLE-1 to STYLE-30 | Bars and Icons style, fonts | Bars and Icons tabs, the spark, borders, dispel colors, pandemic, the font primer |
 | TEXT-1 to TEXT-29 | Text style | Templates and tokens, justify, the icon, dispel type word, backdrop and edge, animation, Size to fit |
@@ -992,6 +992,19 @@ counting the shown containers with an enchant on, and the name is still there. I
 blank, run `/dump C_Item.GetItemName(ItemLocation:CreateFromEquipmentSlot(16))` and note what it
 prints on this line. Result:
 
+**FILT-43. The help marks draw the library's info art.** On the buff container, blacklist a spell that
+a Show category holds, so Filters → **Overrides** marks it; and on General → **Spell Categories** add
+to your own category a spell a shipped category already holds, so the list marks it. Each mark is the
+white `info` glyph tinted by its level (gold, amber or red), not Blizzard's blue information disc, and
+no mark is a green or empty square. Result:
+
+**FILT-44. Hovering a help mark.** Hover one of those marks → it brightens, and the tooltip lists the
+help lines. Move off it → it returns to its own level's color, not to gold. Result:
+
+**FILT-45. No help-art complaint in the console.** `/am debug on`, then open Filters → Overrides and
+General → Spell Categories with those marks drawn → the console shows no `[Cfg] help art:` line.
+Result:
+
 ## Layout
 
 **LAYOUT-1. Tabs, and Anchor drawn by mode.** Layout → **[ Frame ][ Anchor ][ Growth ][ Mouse ][ Label
@@ -1717,6 +1730,7 @@ line, then remove its row here.
 | FILT-21 | 179 and 180: the chat line's expected text corrected on 2026-09-29 (each spell named, its id in brackets) |
 | FILT-27 | 82, batch 6 |
 | FILT-42 | new on 2026-09-30 with the weapon-enchant name reset (SP-AMX-01) |
+| FILT-43 to FILT-45 | new on 2026-10-02: the Options descriptor passes `addonName`, so help marks draw the library's `info` art (LibKa0s#42, CA-AM-NM) |
 | LAYOUT-1 | 69, batch 5 |
 | LAYOUT-6 | 162, smoke batch 2 (owed, as CONT-8): the outline moving across aura buttons; 42: its combat refusal corrected on 2026-09-29 to `/am pick` alone, since the panel's button is locked in combat |
 | LAYOUT-11 | 67, batch 8 (failed 2026-09-25): the **Per row** step; the rest passed as 238 |
