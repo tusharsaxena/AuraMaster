@@ -52,7 +52,7 @@ replacement: the `AuraContainer` widget (`CustomAuraContainerTemplate`), which r
 itself, gathers auras against declared groups, and creates and fills `AuraButton`s in secure code.
 `SecureAuraHeaderTemplate` is no longer available on Retail.
 
-**What this addon does.** Every container is one `AuraContainer` engine (`modules/Container.lua:251`). The addon
+**What this addon does.** Every container is one `AuraContainer` engine (`modules/Container.lua:337`). The addon
 declares groups — `AddAuraGroup(key, filterString, { candidateFilters, sortMethod, sortDirection,
 maxFrameCount, layout, initializeFrame })` — compiled from the settings by
 `modules/FilterCompiler.lua`, and dresses each button in `initializeFrame` (`modules/Style.lua`). The
@@ -139,7 +139,7 @@ addon can no longer anchor it. Another frame may only anchor **to** an aura cont
 their geometry can be secret.
 
 **What this addon does.** The engine is anchored to its container's anchor frame *before* the first
-`AddAuraGroup` (`modules/Container.lua:259-262`). Every anchor frame, and the frame picker's outline,
+`AddAuraGroup` (`modules/Container.lua:345-348`). Every anchor frame, and the frame picker's outline,
 inherits `DisableUntrustedLayoutScriptsTemplate`, so a container can attach to another container's
 engine (`modules/Anchors.lua`) and the picker can outline one. Positions are computed from settings,
 never read back off an engine frame; the anchor is sized to one element from config.
@@ -158,7 +158,7 @@ would inherit forbidden aspects: UntrustedLayoutScriptExecution". The handle's t
 **What this addon does.** A plan of the same shape (group count, enchant slots and their
 hide-permanent flag, style, growth corner —
 `FilterCompiler.StructureKey`) is applied in place, calling only the setters whose values changed;
-candidate filters are compared with `FilterCompiler.Signature` first (`modules/Container.lua:326-334`). A
+candidate filters are compared with `FilterCompiler.Signature` first (`modules/Container.lua:292-295`). A
 new shape disables, hides and retires the old engine and builds a new one (`Container:Retire`).
 
 ## Spell-id filters are honored only on one side of the friend/foe line
@@ -385,7 +385,7 @@ frames are never freed, so a rebuild per run would leak one engine frame per con
   creating a container, and tearing one down. A container that leaves the registry in combat is
   parked (engine disabled, anchor untouched) and destroyed once combat ends.
 - **Visibility in combat is the engine's `SetEnabled`**, not `Show`/`Hide` on an ancestry holding
-  aura buttons (`modules/Container.lua:485`).
+  aura buttons (`modules/Container.lua:573`).
 
 ## An unknown event name raises
 
@@ -620,7 +620,7 @@ values was secret.
 
 - **No secure template of our own.** The only protected machinery is Blizzard's aura engine. Each
   container's anchor (`AuraMasterAnchor<id>`) inherits `DisableUntrustedLayoutScriptsTemplate`,
-  Blizzard's opt-in for a frame anchored to an aura container (`modules/Container.lua:44-45`).
+  Blizzard's opt-in for a frame anchored to an aura container (`modules/Container.lua:45-46`).
 - **Nothing under an anchor may own a tooltip.** The template's restriction reaches every frame
   anchored under the anchor, the drag handle and its help mark included, and the client refuses
   `GameTooltip:SetOwner` on any of them ("Anchoring disallowed as dependent object would inherit
@@ -638,12 +638,12 @@ values was secret.
   only shows or hides, except that a handle never placed (first shown in combat) is placed once so
   it draws. The next visibility pass after combat catches both up.
 - **The engine is anchored before its first `AddAuraGroup`**; after that an addon can no longer
-  anchor it (`modules/Container.lua:259-262`).
+  anchor it (`modules/Container.lua:345-348`).
 - **No structural work while auras are secret or under combat lockdown.** `ContainerManager.MustDefer`
   (`modules/ContainerManager.lua:217`) holds every build, update and restyle; aura buttons refuse addon
   access while auras are secret.
 - **Visibility in combat goes through the engine's `SetEnabled`**, never `Show`/`Hide` on an aura
-  button's ancestry (`modules/Container.lua:485`).
+  button's ancestry (`modules/Container.lua:573`).
 - **The font primer's frame hangs from `UIParent`, not from any anchor**, so nothing it does reaches
   an aura engine's ancestry. Its one engine call, the follow-up `UpdateAllAuras`, is not protected,
   reads no aura, and skips a disabled engine, which it would clear (`modules/FontPrimer.lua`).

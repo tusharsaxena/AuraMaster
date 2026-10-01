@@ -300,6 +300,42 @@ function Compat.BlinkTextColor(threshold, blink, normal)
 end
 
 -- ---------------------------------------------------------------------------
+-- Spell-id filters (spell-list views, V2)
+-- ---------------------------------------------------------------------------
+
+--- `fn(...)`'s answer as a strict boolean, or nil when it is not knowable: the API is absent, the
+--- call raised, or the answer is secret. Checked with NS.Secrets.CanAccess BEFORE it is
+--- boolean-tested, because testing a secret boolean raises.
+--- @return boolean|nil
+local function knownBoolean(fn, ...)
+    if type(fn) ~= "function" then return nil end
+    local ok, v = pcall(fn, ...)
+    if not (ok and NS.Secrets.CanAccess(v)) then return nil end
+    return v and true or false
+end
+
+--- Whether Blizzard's aura engine applies a group's include/exclude spell ids to `auraType` auras
+--- on `unit` right now. Mirrors AuraContainerUtil.CanApplyIdentityCandidateFilters
+--- (Blizzard_AuraContainerUtil.lua, read 2026-10-02), minus its per-aura never-secret exemption,
+--- which no container-wide answer can model:
+---   HELPFUL  UnitIsPlayerControlledOrGroupMember(unit) or UnitCanAssist("player", unit, true, true)
+---   HARMFUL  not UnitCanAssist("player", unit, true, true)
+--- The two `true`s are Blizzard's: immune and uninteractable units count as assistable. Neither API
+--- is documented as answering secret, but each call is guarded anyway, and an answer that is not
+--- knowable is FALSE: the no-ids view that answer picks can under-show, never duplicate
+--- (modules/Container.lua ApplyView).
+--- @param unit string
+--- @param auraType string  "HELPFUL" | "HARMFUL"
+--- @return boolean
+function Compat.IdsApply(unit, auraType)
+    if type(unit) ~= "string" then return false end
+    local assist = knownBoolean(_G.UnitCanAssist, "player", unit, true, true)
+    if auraType == "HARMFUL" then return assist == false end
+    if knownBoolean(_G.UnitIsPlayerControlledOrGroupMember, unit) then return true end
+    return assist == true
+end
+
+-- ---------------------------------------------------------------------------
 -- Everything else
 -- ---------------------------------------------------------------------------
 

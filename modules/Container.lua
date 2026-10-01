@@ -14,7 +14,8 @@ local _, NS = ...
 --
 -- NEVER WHILE AURAS ARE SECRET. Building, updating and restyling all touch aura buttons, which the
 -- engine locks while auras are secret. modules/ContainerManager.lua holds every apply until secrecy
--- lifts; this file assumes it is only called when it is safe.
+-- lifts; this file assumes it is only called when it is safe. The one exception is ApplyView (below),
+-- which sends only two live setters Blizzard does not gate, and so runs in combat and while secret.
 
 NS.Container = NS.Container or {}
 local ContainerClass = {}
@@ -245,6 +246,91 @@ function ContainerClass:ApplyBlocker(cfg)
     NS.Style.ApplyBlockerBehavior(blocker, cfg)
 end
 
+-- ---------------------------------------------------------------------------
+-- The two views of a plan (spell-list views, V2)
+-- ---------------------------------------------------------------------------
+-- Every compiled group carries two views: the IDS view (its own filter and candidates) and the NO-IDS
+-- view (`group.noIds`, modules/FilterViews.lua), sent where Blizzard will not apply spell ids, so a
+-- spell-list group matches nothing there instead of every aura. The container keeps `self.view`
+-- ("ids" | "noIds"), the view the engine currently holds. Build and Update send the active view;
+-- ApplyView switches a live engine when the unit's reaction moves (docs/superpowers/specs/
+-- 2026-10-02-spell-list-views-design.md).
+--
+-- COMBAT-LEGAL. A switch is SetAuraGroupFilterString and SetAuraGroupCandidateFilters only:
+-- Blizzard's Lua checks neither combat nor secrecy on them, and both end in UpdateAllAuras, the call
+-- Refresh already makes on every target swap. So ApplyView never goes through ContainerManager's
+-- apply hold, which an aura-touching apply needs.
+
+local function auraTypeOf(cfg)
+    return (cfg.auraType == "HARMFUL") and "HARMFUL" or "HELPFUL"
+end
+
+--- Which view a container on `unit` sends for `auraType` auras right now: FC.IdsMode decides the
+--- player's and the pet's outright, and NS.Compat.IdsApply every other unit.
+--- @return string  "ids" | "noIds"
+function NS.Container.ResolveView(unit, auraType)
+    local mode = NS.FilterCompiler.IdsMode(unit, auraType)
+    if mode == "always" then return "ids" end
+    if mode == "never" then return "noIds" end
+    return NS.Compat.IdsApply(unit, auraType) and "ids" or "noIds"
+end
+
+--- Group `g`'s filter string and candidate filters in `view`.
+local function viewOf(g, view)
+    local v = (view == "noIds" and g.noIds) or g
+    return v.filter, v.candidateFilters
+end
+
+--- Send group `g` its `view` values where they differ from what the engine holds: `o`'s values in
+--- `oldView` (o is g itself for a view switch, the last plan's group for an update).
+local function sendGroupView(engine, g, view, o, oldView)
+    local f, c = viewOf(g, view)
+    local of, oc = viewOf(o, oldView)
+    if of ~= f then
+        callEngine(engine, "SetAuraGroupFilterString", g.key, f)
+    end
+    local Sig = NS.FilterCompiler.Signature
+    if Sig(oc) ~= Sig(c) then
+        callEngine(engine, "SetAuraGroupCandidateFilters", g.key, c or {})
+    end
+end
+
+--- Why a container is on `view`, for its [Filter] line.
+local function viewReason(view, unit, auraType)
+    if NS.FilterCompiler.IdsMode(unit, auraType) == "never" then return "your own and your pet's debuffs" end
+    local assistable = (view == "ids") == (auraType == "HELPFUL")
+    return assistable and "unit can be assisted" or "unit cannot be assisted"
+end
+
+--- Record the view the engine now holds, and say so when it moved. A container starts on the ids
+--- view, Blizzard's own default, so a build on it says nothing.
+function ContainerClass:NoteView(view, unit, auraType)
+    local was = self.view or "ids"
+    self.view, self.auraType = view, auraType
+    if was == view then return end
+    local cfg = self:Cfg()
+    NS.Debug("Filter", "%s: spell lists %s (%s)", cfg and cfg.name or ("#" .. tostring(self.id)),
+        view == "ids" and "on" or "off", viewReason(view, unit, auraType))
+end
+
+--- Switch a live engine to the view its unit's reaction picks now, sending each group only the setters
+--- whose values differ between the two views. Answers whether the view changed. Runs in combat and
+--- while auras are secret (above). The unit and aura type are the last apply's, never a pending edit's.
+--- @return boolean
+function ContainerClass:ApplyView()
+    local engine, plan = self.engine, self.plan
+    if not (engine and plan) then return false end
+    local unit, auraType = self.unit, self.auraType
+    local view = NS.Container.ResolveView(unit, auraType)
+    local was = self.view
+    if view == was then return false end
+    for _, g in ipairs(plan.groups) do
+        sendGroupView(engine, g, view, g, was)
+    end
+    self:NoteView(view, unit, auraType)
+    return true
+end
+
 function ContainerClass:Build(cfg, plan, structure)
     local Compat = NS.Compat
     local anchor = self.anchor
@@ -266,10 +352,13 @@ function ContainerClass:Build(cfg, plan, structure)
     engine:SetSize(1, 1)
 
     local init = function(frame) self:InitFrame(frame) end
+    local auraType = auraTypeOf(cfg)
+    local view = NS.Container.ResolveView(cfg.unit, auraType)
     for i, g in ipairs(plan.groups) do
-        callEngine(engine, "AddAuraGroup", g.key, g.filter, {
+        local filter, cand = viewOf(g, view)
+        callEngine(engine, "AddAuraGroup", g.key, filter, {
             initializeFrame  = init,
-            candidateFilters = g.candidateFilters,
+            candidateFilters = cand,
             sortMethod       = Compat.SortMethod(g.sortMethod),
             sortDirection    = Compat.SortDirection(g.sortDirection),
             maxFrameCount    = g.maxFrameCount,
@@ -300,6 +389,7 @@ function ContainerClass:Build(cfg, plan, structure)
     self.unit = cfg.unit
     self.enchantDir = cfg.filter and cfg.filter.sortDirection
     self.plan, self.structure = plan, structure
+    self:NoteView(view, cfg.unit, auraType)
 end
 
 --- The enchant slots on a live engine: the layout every time, the sort only when the direction moved
@@ -323,16 +413,13 @@ function ContainerClass:Update(cfg, plan)
     local Compat = NS.Compat
     local engine = self.engine
     local old = self.plan
-    local Sig = NS.FilterCompiler.Signature
+    local auraType = auraTypeOf(cfg)
+    local view = NS.Container.ResolveView(cfg.unit, auraType)
     applyFlow(engine, cfg)
     for i, g in ipairs(plan.groups) do
         local o = old.groups[i]
-        if o.filter ~= g.filter then
-            callEngine(engine, "SetAuraGroupFilterString", g.key, g.filter)
-        end
-        if Sig(o.candidateFilters) ~= Sig(g.candidateFilters) then
-            callEngine(engine, "SetAuraGroupCandidateFilters", g.key, g.candidateFilters or {})
-        end
+        -- What the engine holds is the last plan in the view it was sent in.
+        sendGroupView(engine, g, view, o, self.view)
         if o.sortMethod ~= g.sortMethod or o.sortDirection ~= g.sortDirection then
             callEngine(engine, "SetAuraGroupSortMethod", g.key, Compat.SortMethod(g.sortMethod),
                 Compat.SortDirection(g.sortDirection))
@@ -348,6 +435,7 @@ function ContainerClass:Update(cfg, plan)
         self.unit = cfg.unit
     end
     self.plan = plan
+    self:NoteView(view, cfg.unit, auraType)
     self:Restyle(cfg)
 end
 

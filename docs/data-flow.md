@@ -31,7 +31,7 @@ engine does the reading, filtering, sorting, layout and timer animation in its o
         │     yes → keep the request, print the notice naming the cause (once), return
         │     no  → for each dirty container: Container:Apply(); re-place container-attached ones
         ▼
- 4  Container:Apply                                            modules/Container.lua:385
+ 4  Container:Apply                                            modules/Container.lua:473
         │  plan = FilterCompiler.Compile(cfg, { timedSpells })  (pure)
         │  anchor scale / strata / level; Anchors.Place (screen, container or frame)
         │  structure = #groups : enchant slots (hide-permanent) : style : growth corner
@@ -182,16 +182,16 @@ only when the direction moved), cap and layout can change on a live engine; hide
 cannot, because a slot takes it only when added, so toggling it is a new shape. A plan of the same
 shape calls only the setters whose values moved. Candidate filters are serialized with
 `FilterCompiler.Signature` (`modules/FilterCompiler.lua:954`) and re-sent only when the two
-signatures differ (`modules/Container.lua:326-334`), because the engine clears and re-gathers a
+signatures differ (`modules/Container.lua:292-295`), because the engine clears and re-gathers a
 group whenever they are set (`docs/midnight-quirks.md`). **Rebuilding.** Groups are add-only and a
 frame is never freed, so a new shape disables and hides the old engine, keeps it aside, and builds a
 new one: flow layout first, then the anchor, then every `AddAuraGroup`, then the enchant slots, then
-`SetUnit` last (`modules/Container.lua:299`).
+`SetUnit` last (`modules/Container.lua:388`).
 
 ## Visibility, separate from applying
 
 Whether a container shows is a cheaper question, and one that is legal in combat:
-`Container:ShouldShow` (`modules/Container.lua:463`) answers, in order — perf suspend, profile and
+`Container:ShouldShow` (`modules/Container.lua:551`) answers, in order — perf suspend, profile and
 container `enabled`, then General visibility against `UnitAffectingCombat("player")`, which an
 unlocked container skips so one that shows only in combat can still be found and moved; it also
 answers whether the container previews, which is the session-only test mode (`NS.State.testMode`),

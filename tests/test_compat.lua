@@ -584,3 +584,66 @@ test("compat: without AuraUtil a dispel border color is DebuffTypeColor's, and n
         assertFalse(NS.Compat.SetAuraBorderColor(borderRegion(), "Curse"), "no palette on the client")
     end)
 end)
+
+-- ── spell-id filters: whether Blizzard applies them to a unit (spell-list views, V2) ───────────
+-- Blizzard's AuraContainerUtil.CanApplyIdentityCandidateFilters, minus its per-aura never-secret
+-- exemption: buffs where the unit is player-controlled or a group member, or can be assisted;
+-- debuffs where it cannot be assisted.
+
+--- The two unit APIs, answering from `assist` and `controlled` (unit -> boolean), recording the
+--- arguments UnitCanAssist was called with.
+local function reaction(assist, controlled, seen)
+    return {
+        { "UnitCanAssist", function(who, unit, immune, uninteractable)
+            if seen then seen[#seen + 1] = { who, unit, immune, uninteractable } end
+            return assist[unit]
+        end },
+        { "UnitIsPlayerControlledOrGroupMember", function(unit) return controlled[unit] end },
+    }
+end
+
+test("compat: IdsApply mirrors Blizzard's predicate for buffs and debuffs", function()
+    local seen = {}
+    with(reaction({ party1 = true, target = false, focus = true }, { party1 = true, player = true }, seen),
+        function(NS)
+            local C = NS.Compat
+            -- red under: no such wrapper
+            assertTrue(C.IdsApply("player", "HELPFUL"), "player-controlled: buffs apply")
+            assertTrue(C.IdsApply("focus", "HELPFUL"), "assistable: buffs apply")
+            -- red under: helpful answering from UnitIsPlayerControlledOrGroupMember alone
+            assertFalse(C.IdsApply("target", "HELPFUL"), "neither: buffs do not apply")
+            assertTrue(C.IdsApply("target", "HARMFUL"), "not assistable: debuffs apply")
+            -- red under: harmful answering true for a group member (it is UnitCanAssist alone)
+            assertFalse(C.IdsApply("party1", "HARMFUL"), "assistable: debuffs do not apply")
+            assertFalse(C.IdsApply("focus", "HARMFUL"))
+        end)
+    -- red under: UnitCanAssist called without Blizzard's two `true`s (immune, uninteractable)
+    assertEqual(seen[1][1], "player")
+    assertTrue(seen[1][3] == true and seen[1][4] == true, "immune and uninteractable ignored, as Blizzard does")
+end)
+
+test("compat: IdsApply is false whenever the answer is not knowable", function()
+    local function boom() error("refused") end
+    -- red under: an unguarded call (the error escapes) or a raise read as "applies"
+    with({ { "UnitCanAssist", boom }, { "UnitIsPlayerControlledOrGroupMember", boom } }, function(NS)
+        assertFalse(NS.Compat.IdsApply("target", "HELPFUL"))
+        assertFalse(NS.Compat.IdsApply("target", "HARMFUL"))
+    end)
+    -- red under: a missing API read as "cannot assist", which would answer true for debuffs
+    with({ { "UnitCanAssist", nil }, { "UnitIsPlayerControlledOrGroupMember", nil } }, function(NS)
+        assertFalse(NS.Compat.IdsApply("target", "HELPFUL"))
+        assertFalse(NS.Compat.IdsApply("target", "HARMFUL"))
+    end)
+    local SECRET = {}
+    local patch = reaction({ target = SECRET }, { target = SECRET })
+    patch[#patch + 1] = { "issecretvalue", function(v) return v == SECRET end }
+    patch[#patch + 1] = { "canaccessvalue", function(v) return v ~= SECRET end }
+    with(patch, function(NS)
+        -- red under: a secret answer boolean-tested (it raises in the client) instead of CanAccess-checked
+        assertFalse(NS.Compat.IdsApply("target", "HELPFUL"))
+        assertFalse(NS.Compat.IdsApply("target", "HARMFUL"))
+    end)
+    with(reaction({}, {}), function(NS)
+        assertFalse(NS.Compat.IdsApply(nil, "HELPFUL"), "no unit")
+    end)
+end)

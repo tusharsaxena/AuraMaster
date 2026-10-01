@@ -255,6 +255,15 @@ return function()
         return M.__playerGUID or nil
     end
 
+    -- ── unit reaction: whether Blizzard applies spell ids (NS.Compat.IdsApply) ───────────────
+    -- Settable per unit, because the view a container sends (modules/Container.lua ApplyView) turns
+    -- on it. The defaults are a client with no target or focus: the player and the pet are
+    -- player-controlled and assistable, any other unit is neither.
+    M.__canAssist = { player = true, pet = true }
+    M.__playerControlled = { player = true, pet = true }
+    M.UnitCanAssist = function(_, unit) return M.__canAssist[unit] or false end
+    M.UnitIsPlayerControlledOrGroupMember = function(unit) return M.__playerControlled[unit] or false end
+
     -- ── class colors (LibKa0s-Core's resolver reads RAID_CLASS_COLORS) ─────────────────────
     M.RAID_CLASS_COLORS = { MAGE = { r = 0.25, g = 0.78, b = 0.92 } }
 

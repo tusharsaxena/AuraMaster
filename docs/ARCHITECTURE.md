@@ -15,7 +15,7 @@ profile is seeded with four (`NS.STARTER_CONTAINERS`, `defaults/Profile.lua:283`
 auras are secret — combat, encounters, Mythic+ and PvP (`core/Secrets.lua`, `docs/midnight-quirks.md`).
 So this addon reads no aura at all. Every container is a Blizzard **AuraContainer**
 (`CreateFrame("AuraContainer", nil, anchor, "CustomAuraContainerTemplate")`,
-`modules/Container.lua:251`) that registers `UNIT_AURA` for its unit, gathers, sorts, lays out and
+`modules/Container.lua:337`) that registers `UNIT_AURA` for its unit, gathers, sorts, lays out and
 animates its buttons in Blizzard's own code. The addon's job is to **declare** what each container
 shows and **dress** each button the engine creates:
 
@@ -228,7 +228,7 @@ optional. The full table and the reasons:
 | `PLAYER_REGEN_DISABLED`, `PLAYER_REGEN_ENABLED`, `ADDON_RESTRICTION_STATE_CHANGED` | `modules/TimedSpells.lua` (AceEvent, on its own target) — while a container uses "without a duration" and the addon is not suspended | `syncAuraListen`: `PLAYER_REGEN_DISABLED` closes the readable gate by itself (it fires before combat lockdown begins); the other two re-check it, dropping or restoring `UNIT_AURA`; reopening schedules one scan |
 | AceDB `OnProfileChanged` / `OnProfileCopied` / `OnProfileReset` | `core/Database.lua:275-279` | `NS.OnProfileChanged` / `NS.OnProfileCopied` / `NS.OnProfileReset` → re-prepare the registry, trace the event once in its own words (a switch `[Profile] changed -> X`; a copy or a reset one `[Set]` line, debug-logging-§10), rebuild, re-render |
 
-Each container's own `UNIT_AURA` belongs to the engine (`SetUnit`, `modules/Container.lua:299`) and
+Each container's own `UNIT_AURA` belongs to the engine (`SetUnit`, `modules/Container.lua:388`) and
 is not addon code. The eleven `core/AuraMaster.lua` registrations are one module-level list,
 `LIFECYCLE_EVENTS`, which `RegisterLifecycleEvents` and `UnregisterLifecycleEvents` both walk, so the
 stand-down and the stand-up remove and restore the same list. With logging on, the world-entry, loading-screen, combat and
@@ -320,7 +320,7 @@ span bundle is `<date>-v<A>-v<B>/`, and the one untagged bundle is `docs/revendo
 | `perf-analysis/README.md` | Present | The performance harness is wired (`core/PerfSetup.lua`) |
 | `slash-dispatch.md` | Present | 25 commands in `NS.COMMANDS`, over the eight-or-more threshold |
 | `midnight-quirks.md` | Present | Client-version workarounds of the addon's own: 12.1 aura secrecy and the aura container engine, and the taint notes that follow from them |
-| `compat-layer.md` | Present | 22 shims in `core/Compat.lua`, over the three-or-more threshold |
+| `compat-layer.md` | Present | 23 shims in `core/Compat.lua`, over the three-or-more threshold |
 | `message-bus.md` | Not applicable | 4 messages in `NS.MSG`; the trigger is more than ten. The table lives in `## Message Bus` above |
 | `profiles.md` | Present | AceDB profiles are user-visible: the Profiles sub-page is a profile control in the options UI |
 | `debug.md` | Present | `/am diagnostics` (or `/am debug diagnostics`), the diagnostic report `modules/Diagnostics.lua` writes to the console |
