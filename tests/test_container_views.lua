@@ -86,12 +86,19 @@ end)
 test("container views: player debuffs are always built on the no-ids view, player buffs on the ids view", function()
     local NS, mocks = fresh()
     -- Blizzard never applies ids to your own debuffs and always to your own buffs, whatever the
-    -- unit APIs say: FC.IdsMode decides those two outright.
-    mocks.__canAssist.player = false
+    -- unit APIs say: FC.IdsMode decides those two outright. Both IdsApply clauses answer false for
+    -- player and pet buffs here (neither assistable nor player-controlled), so only the "always"
+    -- shortcut can put a buff container on the ids view.
+    mocks.__canAssist.player, mocks.__canAssist.pet = false, false
+    mocks.__playerControlled.player, mocks.__playerControlled.pet = false, false
+    assertFalse(NS.Compat.IdsApply("player", "HELPFUL"), "IdsApply alone would pick the no-ids view")
     local deb = NS.ContainerManager.Create({ unit = "player", auraType = "HARMFUL", filter = {
         categories = states(NS, "HARMFUL", { hardCC = true, crowdControl = true }),
     } })
     local buf = NS.ContainerManager.Create({ unit = "player", auraType = "HELPFUL", filter = {
+        categories = states(NS, "HELPFUL", { defensives = true, bigDefensive = true }),
+    } })
+    local petBuf = NS.ContainerManager.Create({ unit = "pet", auraType = "HELPFUL", filter = {
         categories = states(NS, "HELPFUL", { defensives = true, bigDefensive = true }),
     } })
     mocks.__fireTimers()
@@ -99,12 +106,16 @@ test("container views: player debuffs are always built on the no-ids view, playe
     -- red under: a "never" container answered from IdsApply (UnitCanAssist false reads "applies")
     assertEqual(CM.instances[deb].view, "noIds")
     assertBuiltOn(NS, CM.instances[deb], "noIds")
-    -- red under: an "always" container answered from IdsApply (the player is not assistable here)
+    -- red under: an "always" container answered from IdsApply (the player and the pet are neither
+    -- assistable nor player-controlled here)
     assertEqual(CM.instances[buf].view, "ids")
     assertBuiltOn(NS, CM.instances[buf], "ids")
-    mocks.__canAssist.player = true
+    assertEqual(CM.instances[petBuf].view, "ids", "the pet's buffs too")
+    mocks.__canAssist.player, mocks.__playerControlled.player = true, true
     assertFalse(CM.instances[deb]:ApplyView(), "nothing moves a never container")
+    mocks.__canAssist.player, mocks.__playerControlled.player = false, false
     assertFalse(CM.instances[buf]:ApplyView(), "nothing moves an always container")
+    assertFalse(CM.instances[petBuf]:ApplyView(), "nor the pet's")
 end)
 
 -- ── ApplyView ────────────────────────────────────────────────────────────────────────────────
