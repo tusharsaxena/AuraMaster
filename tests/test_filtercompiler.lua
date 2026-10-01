@@ -628,20 +628,14 @@ test("filter: a target debuff container still warns about units you can assist a
     assertTrue(hasWarning(own, "your pet's debuffs"), "ids are discarded here, and the plan says so")
 end)
 
-test("filter: a TARGET debuff container's spells-kind Show still emits its group, and warns — the accepted residual, pinned", function()
-    -- THE ACCEPTED RESIDUAL (issue #11, owner's ruling 2026-09-20), asserted so the behavior is
-    -- fixed by a test rather than left to drift, and so nobody "fixes" it by extending the gate
-    -- above to `spells`-kind Shows. This group's only constraint beyond the HARMFUL token is an
-    -- `includeSpellIDs` of the category's list (`includeCategory`, the `spells` branch), and on a
-    -- target the engine MAY discard exactly that — target a FRIENDLY unit and this group draws every
-    -- debuff, structurally the same degenerate shape `FC.IdsMode` now forbids the
-    -- Uncategorized row. It ships anyway: suppressing it would delete the feature's primary use case,
-    -- since Hard CC exists to answer "is my sheep on the target" and that target is hostile, which is
-    -- exactly where the ids DO bite. A filter that refuses to work in the case it was built for is
-    -- worse than one that is over-broad in a case nobody sets up. It also differs in KIND from the
-    -- Uncategorized case: that row SUPERSEDES the catch-all, so its degeneration takes the tab's only
-    -- Hide-carrying group with it, while this one sits BESIDE the others and removes nothing — the
-    -- catch-all below still carries `!CROWD_CONTROL`.
+test("filter: a TARGET debuff container's spells-kind Show emits its ids-view group, whose no-ids view is NEVER, and warns (the issue #11 residual, superseded)", function()
+    -- Issue #11 (owner, 2026-09-20) accepted this group as a RESIDUAL: its only constraint beyond the
+    -- HARMFUL token is an `includeSpellIDs` of the category's list, and on a target the engine MAY
+    -- skip exactly that, so on a FRIENDLY target it drew every debuff. The spell-list views
+    -- (2026-10-02, docs/superpowers/specs/2026-10-02-spell-list-views-design.md) supersede that
+    -- ruling. The ids view still ships the group unchanged, because Hard CC exists to answer "is my
+    -- sheep on the target", and on a hostile target the ids DO bite. Where they do not, the container
+    -- sends the no-ids view, in which this group matches nothing, so the residual cannot draw.
     local plan = compile({ auraType = "HARMFUL", unit = "target",
         filter = { categories = { crowdControl = "hide" } } },
         { categories = onlyPlus("HARMFUL", { "crowdControl", "uncategorizedDebuffs" }, HARMFUL_SPELLS_DEF) })
@@ -649,17 +643,17 @@ test("filter: a TARGET debuff container's spells-kind Show still emits its group
     assertEqual(plan.groups[1].label, "Hard CC (loss of control)", "the Show group is emitted, not suppressed")
     assertEqual(plan.groups[1].filter, "HARMFUL", "nothing but the aura-type token in the string")
     assertEqual(setOf(plan.groups[1].candidateFilters), "includeSpellIDs",
-        "the id list is its ONLY constraint — which is the residual, stated as a plan")
+        "in the ids view the id list is its only constraint")
     assertEqual(setOf(plan.groups[1].candidateFilters.includeSpellIDs), HARD_CC_IDS)
+    -- red under: the residual still accepted, i.e. a no-ids view that keeps the group drawing
+    local noIds = plan.groups[1].noIds
+    assertEqual(noIds and noIds.filter, "HARMFUL", "the no-ids view keeps the group's aura type")
+    assertEqual(FC.Signature(noIds and noIds.candidateFilters), "{includeDispelTypes={}}",
+        "and matches nothing: where ids are skipped, this group cannot degenerate")
     assertEqual(plan.groups[2].label, "All")
-    assertEqual(plan.groups[2].filter, "HARMFUL|!CROWD_CONTROL",
-        "an over-broad Show sits beside the others and removes nothing — the Hide still compiles")
-    -- And the player is told, per container, rather than left to discover it: `addShownGroups` sets
-    -- nothing for a `spells`-kind Show itself; `finishWarnings` prints `IDS_ASSISTABLE` because a
-    -- category is Hidden (spell-list views, 2026-10-02). The residual is accepted BECAUSE it is a documented, warned-about engine limitation
-    -- (docs/scope.md, "Out of reach on this client" -> "Spell-id filtering everywhere"); if this
-    -- assertion ever goes red the acceptance loses its footing, because the limitation would then be
-    -- silent.
+    assertEqual(plan.groups[2].filter, "HARMFUL|!CROWD_CONTROL", "the Hide still compiles in the ids view")
+    -- And the player is told, per container: `finishWarnings` prints `IDS_ASSISTABLE` because a
+    -- category is Hidden.
     assertEqual(#plan.warnings, 1, "exactly the one sentence")
     assertEqual(plan.warnings[1], FC.WARN.IDS_ASSISTABLE,
         "the Hidden crowdControl category raises the warning (#hidden > 0), with no blacklist or whitelist in play")

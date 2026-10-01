@@ -4,7 +4,7 @@
 ![CurseForge Version](https://img.shields.io/curseforge/v/1698345)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-1821%2F1821_passing-green)
+![Tests](https://img.shields.io/badge/Tests-1824%2F1824_passing-green)
 
 Ka0s Aura Master lets you build your own buff and debuff displays. Each one is a container. You pick
 whose auras it shows (yours, your target's, your focus's or your pet's), whether it shows buffs,
@@ -58,6 +58,15 @@ the rest.
 - **Place it**. Layout decides where the container lives: anywhere on screen, following another container as that one grows, or attached to a frame such as your unit frame or an action bar. **Pick a frame…** closes the settings so you can just click the one you want. Growth direction, spacing, scale and the optional name label are on Layout too.
 - **Make it look right**. The last entry in the list is the container's style, Bar, Icon or Text, with its textures, fonts, colors and borders. A Text container draws each aura as one line from a template such as `$spellname$[ x$stacks$][ - $remainingduration$]`, and the page lists every token it understands. General → Dispel Colors picks the color for each dispel type.
 
+Spell categories and the Overrides lists don't work everywhere, because the game only filters by
+spell in some places. On your target or focus they work for buffs while you can help that unit
+(a friend, a party member) and for debuffs while you can't (an enemy, or a neutral mob). On your
+own and your pet's buffs they always work, and on your own and your pet's debuffs they never do.
+Where they don't work, a container that hides any category shows only the auras in the categories
+you set to Show on the Blizzard Categories, Dispel Types and Who Cast It grids, and nothing else.
+Each one is shown once. A container that hides nothing shows everything as usual. The
+Categories and Overrides tabs carry a NOTE saying which units this applies to for that container.
+
 If you change something mid-fight, it waits until combat ends (or until the encounter, key or match
 is over), and chat tells you which. `/am disable` hides every container at once and `/am enable`
 brings them back.
@@ -87,8 +96,11 @@ an addon can still show your auras in the middle of a boss fight. The steps go l
 Two limits come out of this. The game has no rule for "auras without a duration", so for that filter
 Aura Master learns which of your and your pet's buffs carry a timer while you're out of combat, and
 leaves those out. A new timed buff can slip through once before it's learned. The game also only
-accepts spell-by-spell lists for buffs on friendly units and debuffs on hostile ones. A spell list
-on your own debuffs does nothing, and the Filters section warns you when that's the case.
+accepts spell-by-spell lists for buffs on units you can help and debuffs on units you can't. Where
+it won't, Aura Master switches that container's spell categories and Overrides off and keeps only
+the Blizzard categories you set to Show, so nothing is ever drawn twice. It switches back as soon
+as the unit changes sides, in combat too. The Filters section warns you when a container is
+affected.
 
 ## FAQ
 
@@ -98,7 +110,8 @@ on your own debuffs does nothing, and the Filters section warns you when that's 
 | Why doesn't my change show up in the middle of a fight? | The game locks its aura display whenever aura details are hidden from addons: in combat, during boss encounters, in Mythic+ keys and in PvP matches. Aura Master holds the change and says so in chat. If the lock outlasts combat because an encounter, key or match is still going, it says so once more. The change goes in as soon as the lock lifts. |
 | Can I track my party or raid? | Not yet. Player, target, focus and pet work today. Party members are planned, and there's a GitHub issue tracking them. |
 | Can I put a container on my unit frame? | Yes. On Layout → Anchor use **Pick a frame…** and click it, or set **Attach to** to *Named frame* and type the frame's name. If the frame belongs to an addon that hasn't loaded yet, the container waits at its screen position and moves over once the frame exists. |
-| Why does my spell list do nothing on my debuffs? | Blizzard only allows spell-by-spell filtering for buffs on friendly units and debuffs on hostile ones. Categories, dispel types and the other filters work on any unit. |
+| Why does my spell list do nothing on my debuffs? | Blizzard only allows spell-by-spell filtering for buffs on units you can help and debuffs on units you can't, so spell categories and Overrides never work on your own or your pet's debuffs. The Blizzard categories, dispel types and the other filters work on any unit. |
+| Why does my target container show fewer buffs on enemies? | The game won't filter an enemy's buffs (or a neutral mob's) by spell, so on those targets your spell categories and Overrides are switched off. If the container sets any category to Hide, it shows only the buffs in the categories you set to Show on the Blizzard Categories, Dispel Types and Who Cast It grids. A container built only from spell categories shows nothing on an enemy. That's on purpose: the alternative was the same buff drawn once for every category you'd set to Show. On a friendly target everything works as you set it. The same goes the other way for a target debuff container on a friendly target. |
 | A timed buff showed up in my "without a duration" container. Why? | That filter learns which buffs have a timer while you're out of combat. A buff you've never seen out of combat can slip through the first time; after that it's known. `/am forgettimed` clears everything it learned. |
 | How do I cancel a buff? | Right-click it in a container that shows your own buffs or weapon enchants. Untick **Right-click to cancel** on Layout → Mouse if you'd rather it didn't. |
 | Can I hide Blizzard's buff frame? | Yes, on General → Display. Your weapon enchants live in that same Blizzard frame and go with it. If you still want to see them, make sure a player buff container's **Weapon enchants** row on Filters → Categories is set to Show (the default). |

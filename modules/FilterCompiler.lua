@@ -107,9 +107,9 @@ local _, NS = ...
 -- group's `excludeSpellIDs` away and the group draws every debuff. For the `uncategorized` row, a
 -- group that is harmless on a hostile target and unconstrained on a friendly one is a group that
 -- cannot ship, so MAY-discard is treated exactly like WILL-discard. Read that as a rule about THIS
--- ROW and nothing wider: the gate does not, and deliberately must not, make a degenerate group
--- impossible in general — see THE ACCEPTED RESIDUAL below, which is exactly that shape, shipping on
--- purpose, under the same uncertainty.
+-- ROW and nothing wider: the gate does not make a degenerate group impossible in general. A shown
+-- `spells` group has the same shape and still ships; the no-ids view is what neutralizes it (SPELL-LIST
+-- VIEWS, below).
 --
 -- THIS ALSO CLOSES A LATENT BUG THAT PREDATES ISSUE #11 — verified against the tree at HEAD, not
 -- inferred: with the gate written as the union alone, a HOSTILE `target` or `focus` BUFF container
@@ -126,31 +126,19 @@ local _, NS = ...
 -- rescue was real and is genuinely lost. It is a niche rescue on one unit weighed against defeating
 -- every Hide on the tab by default on the same unit, and the niche rescue loses.
 --
--- THE ACCEPTED RESIDUAL, ruled on by the owner in the same breath (issue #11, 2026-09-20) and also
--- pinned by a test: a `spells`-kind SHOWN category still compiles to a group whose only constraint
--- beyond the base aura-type token is an `includeSpellIDs` of its list (`includeCategory`, the
--- `spells` branch), and on a `target` or `focus` the engine MAY discard exactly that. Once `hardCC`
--- ships, a TARGET debuff container with Hard CC Shown draws every debuff the moment it is FRIENDLY —
--- structurally the same degenerate shape the gate above now forbids the `uncategorized` row. This is
--- KNOWN, ACCEPTED and deliberately NOT suppressed, for three reasons:
---
---   * Suppressing it would delete the feature's primary use case. `hardCC` and `softCC` exist to
---     answer "is my sheep / my stun on the target", and in that scenario the target is HOSTILE, which
---     is precisely where the ids do bite. A filter that refuses to work in the case it was built for
---     is worse than one that is over-broad in a case nobody sets it up for.
---   * It is the engine limitation this addon already documents and already warns about, per
---     container: docs/scope.md's "Out of reach on this client" -> "Spell-id filtering everywhere",
---     and `FC.WARN.IDS_ASSISTABLE` / `IDS_UNASSISTABLE` through `identityWarning`. The warning
---     genuinely fires on this path and is not a hope: `finishWarnings` prints it for any container
---     with a category Hidden or an Overrides list. (Superseded 2026-10-02 by the no-ids view,
---     modules/FilterViews.lua: where ids are not applied this group is NEVER.)
---   * It differs from the `uncategorized` case IN KIND, not merely in degree, and that is the whole
---     reason one is closed and the other is not. An `uncategorized` Show SUPERSEDES the catch-all, so
---     when its group degenerates it has already REMOVED the one group carrying every Hidden
---     category's negations — the tab loses its Hides. An over-broad `spells` Show group sits BESIDE
---     the other groups and removes nothing: the catch-all and every other shown group compile
---     exactly as they would have, so the failure is "this one group matched more than the player
---     meant" and not "the container stopped filtering".
+-- SPELL-LIST VIEWS (2026-10-02, docs/superpowers/specs/2026-10-02-spell-list-views-design.md). This
+-- SUPERSEDES the issue #11 "accepted residual", which let a shown `spells` group (its only constraint
+-- beyond the base an `includeSpellIDs` of its list) degenerate into "every aura of this type" wherever
+-- the engine skips ids. That ruling weighed ONE over-broad group; it did not consider several. A
+-- container with seven spell categories Shown compiles to seven groups that differ only in their ids,
+-- so on a hostile target each draws the same buff: the M+ report of one NPC buff drawn 14 times. Now
+-- every group also carries a no-ids view (`group.noIds`, modules/FilterViews.lua), and the container
+-- sends that view wherever Blizzard does not apply spell ids (`FC.IdsMode`, then
+-- `NS.Compat.IdsApply` at run time; `ContainerClass:ApplyView`). In it the whitelist, every `spells`
+-- and `uncategorized` Show group and the catch-all match nothing, so only the Blizzard (token, flag,
+-- dispel) Show categories draw, each aura once. The owner's rule: where Blizzard will not apply spell
+-- ids, spell categories and the Overrides lists are not applied. `FC.WARN.IDS_*` (`identityWarning`)
+-- and the NOTE lines on Filters -> Categories and Overrides (settings/Filters.lua) say so.
 --
 -- A Hide's `excludeSpellIDs` still ships even where the engine ignores it (only the union itself is
 -- skipped there, since the gate is its one reader): an ignored exclude costs nothing, suppressing it would change no outcome, and

@@ -381,6 +381,62 @@ test("filters: the Uncategorized cost note draws only where the engine is certai
         "false on a target too — hostility is dynamic and the plan is compiled long before anyone looks")
 end)
 
+-- SV-04 (spell-list views, V4): the NOTE under the Spell Categories heading. Where Blizzard does not
+-- apply spell ids the container switches to its no-ids view, in which every spell category's group
+-- is NEVER, so the grid must say so on every container whose `FC.IdsMode` is not "always", in the
+-- words of the unit it is about, and stay silent on a buff container on the player or the pet.
+
+--- The Categories tab of container `id` after its unit is set to `unit` (left alone when nil).
+local function categoriesOn(id, unit)
+    local NS, m, P = filters()
+    if unit then NS.SetByPath("container.unit", unit, id) end
+    NS.Helpers.SelectContainer(id)
+    P.show("Filters")
+    return NS, m, P, P.tab("filters", NS.L["Categories"])
+end
+
+--- The index of the first widget whose text is `text`, or nil.
+local function indexOfText(ws, text)
+    for i, w in ipairs(ws) do
+        if w.text == text then return i end
+    end
+    return nil
+end
+
+test("filters: the Spell Categories NOTE names where spell categories are not applied, per unit (SV-04)", function()
+    local cases = {
+        { id = 2, unit = nil,      note = "NOTE: on your own debuffs, these spell categories are not applied." },
+        { id = 2, unit = "pet",    note = "NOTE: on your pet's debuffs, these spell categories are not applied." },
+        { id = 3, unit = nil,      note = "NOTE: on units you can assist, these spell categories are not applied." },
+        { id = 1, unit = "target", note = "NOTE: on units you can't assist, these spell categories are not applied." },
+        { id = 1, unit = "focus",  note = "NOTE: on units you can't assist, these spell categories are not applied." },
+    }
+    for _, c in ipairs(cases) do
+        local NS, _, _, ws = categoriesOn(c.id, c.unit)
+        local where = ("container %d on %s"):format(c.id, tostring(c.unit))
+        local at = indexOfText(ws, NS.L[c.note])
+        -- red under: no NOTE line drawn, or the wrong unit wording for this container
+        assertTrue(at ~= nil, where .. " draws: " .. c.note)
+        local heading = indexOfText(ws, NS.L["Spell Categories"])
+        local showAll = indexOfText(ws, NS.L["Show all"])
+        -- red under: the NOTE drawn anywhere but straight under the heading
+        assertTrue(heading ~= nil and heading < at, where .. ": under the Spell Categories heading")
+        local buttons
+        for i = heading, #ws do
+            if ws[i].text == NS.L["Show all"] then buttons = i break end
+        end
+        assertTrue(showAll ~= nil and buttons ~= nil and at < buttons, where .. ": above the grid's own buttons")
+    end
+end)
+
+test("filters: no Spell Categories NOTE on a buff container on the player or the pet (SV-04)", function()
+    for _, unit in ipairs({ "player", "pet" }) do
+        local _, _, P, ws = categoriesOn(1, unit)
+        -- red under: the NOTE gated on anything but FC.IdsMode ~= "always"
+        assertFalse(P.hasText(ws, "these spell categories are not applied"), unit .. " buffs: spell ids always apply")
+    end
+end)
+
 --- The lines a widget's tooltip draws when hovered, via the mocked GameTooltip's :AddLine (the
 --- idiom this suite already uses below for the Overrides tooltip).
 local function tooltipLines(m, widget)
@@ -650,6 +706,37 @@ test("filters: Overrides replaces Always / never, with a Whitelist and a Blackli
     local ws = P.tab("filters", "overrides")
     assertEqual(table.concat(headings(ws), "|"), NS.L["Whitelist"] .. "|" .. NS.L["Blacklist"])
     assertEqual(#P.all(ws, "EditBox", NS.L["Add a spell"]), 2, "an ID input per list")
+end)
+
+-- SV-04 (V3/V4): the Overrides tab is headed by the same NOTE shape. Its whitelist group and every
+-- spell-id exclusion are gone in the no-ids view, so on those units the lists do nothing.
+test("filters: the Overrides NOTE heads the tab on every container whose spell lists can be off (SV-04)", function()
+    local cases = {
+        { id = 2, unit = nil,      note = "NOTE: on your own debuffs, these Overrides are not applied." },
+        { id = 2, unit = "pet",    note = "NOTE: on your pet's debuffs, these Overrides are not applied." },
+        { id = 3, unit = nil,      note = "NOTE: on units you can assist, these Overrides are not applied." },
+        { id = 1, unit = "target", note = "NOTE: on units you can't assist, these Overrides are not applied." },
+    }
+    for _, c in ipairs(cases) do
+        local NS, _, P = filters()
+        if c.unit then NS.SetByPath("container.unit", c.unit, c.id) end
+        NS.Helpers.SelectContainer(c.id)
+        P.show("Filters")
+        local ws = P.tab("filters", "overrides")
+        local where = ("container %d on %s"):format(c.id, tostring(c.unit))
+        local at, whitelist
+        for i, w in ipairs(ws) do
+            if w.text == NS.L[c.note] and not at then at = i end
+            if w.type == "Heading" and w.text == NS.L["Whitelist"] and not whitelist then whitelist = i end
+        end
+        -- red under: no NOTE on the Overrides tab, or one drawn below the Whitelist heading
+        assertTrue(at ~= nil, where .. " draws: " .. c.note)
+        assertTrue(whitelist ~= nil and at < whitelist, where .. ": the NOTE heads the tab")
+    end
+    local _, _, P = filters()
+    local ws = P.tab("filters", "overrides")
+    -- red under: the Overrides NOTE drawn on the player's own buffs, where ids always apply
+    assertFalse(P.hasText(ws, "these Overrides are not applied"), "player buffs: no NOTE")
 end)
 
 test("filters: Overrides adds to one list at a time by id or by name, and Remove takes an id off", function()

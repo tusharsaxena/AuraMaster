@@ -119,6 +119,16 @@ category set to Show shows, categories all set to Hide hide, and an aura in no c
 `FC.ExplainSpell` answers the same question for one spell id. The rank table, how it compiles to
 aura groups and the retired `onlyShown` toggle: `docs/data-flow.md` → *Filter priority*.
 
+Every group carries two views. Where Blizzard applies spell ids to the container's unit and aura
+type, the engine holds the ids view, exactly as compiled. Where it does not (debuffs on the player or
+the pet always; buffs on a target or focus you cannot assist, and debuffs on one you can), it holds
+the no-ids view (`modules/FilterViews.lua`): spell categories, Uncategorized, the Overrides lists and
+the catch-all match nothing, and only the Blizzard categories set to Show draw, each aura once.
+`FC.IdsMode` and `NS.Compat.IdsApply` choose the view, and `ContainerClass:ApplyView` switches a live
+engine on a swap or a reaction change, in combat too. The Filters section says so in its orange
+warning and in a NOTE on Categories and Overrides. Blizzard's predicate and the switch:
+`docs/midnight-quirks.md` → *Spell-id filters apply only where Blizzard's predicate allows them*.
+
 ## Message Bus
 
 A closed bus on AceEvent messages (`core/Bus.lua`, architecture-§4). Every receiver subscribes on its

@@ -89,8 +89,10 @@ These are not declined; the game forbids them, and a request for one is answered
   require one to be at least N seconds, and an aura's duration is unreadable while auras are secret,
   so it cannot be filtered after the fact either. Requested 2026-09-14; declined with the rule.
 - **Spell-id filtering everywhere.** The engine honors include/exclude spell ids only for buffs on
-  friendly units and debuffs on hostile units. The addon warns per container
-  (`identityWarning`, `modules/FilterCompiler.lua:421`) rather than letting the filter look broken.
+  units you can assist and debuffs on units you cannot. Where it does not, the addon switches the
+  container to its no-ids view, so spell categories and the Overrides lists are not applied and only
+  the Blizzard categories set to Show draw (`docs/midnight-quirks.md`), and warns per container
+  (`identityWarning`, `modules/FilterCompiler.lua:409`) rather than letting the filter look broken.
 - **Restyling a button mid-combat.** Size, font and color changes wait until secrecy lifts
   (`CM.MustDefer`, `modules/ContainerManager.lua:217`).
 - **Fake auras inside the engine.** The engine only shows real auras, so preview elements are the

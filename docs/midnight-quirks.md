@@ -161,16 +161,51 @@ hide-permanent flag, style, growth corner —
 candidate filters are compared with `FilterCompiler.Signature` first (`modules/Container.lua:292-295`). A
 new shape disables, hides and retires the old engine and builds a new one (`Container:Retire`).
 
-## Spell-id filters are honored only on one side of the friend/foe line
+## Spell-id filters apply only where Blizzard's predicate allows them
 
-**The restriction.** The engine applies identity candidate filters (`includeSpellIDs`,
-`excludeSpellIDs`) only to buffs on friendly units and debuffs on hostile units.
+**The restriction.** A group's identity candidate filters (`includeSpellIDs`, `excludeSpellIDs`) are
+applied only where `AuraContainerUtil.CanApplyIdentityCandidateFilters(unitToken, auraData)` returns
+true (Blizzard_AuraContainerUtil.lua, read from the wow-ui-source mirror on 2026-10-02). In order:
 
-**What this addon does.** The filters still compile, because a target or focus can be either, but
-`FilterCompiler` adds a per-container warning wherever a spell-id filter is in play
-(`identityWarning`, `modules/FilterCompiler.lua:421`): ignored outright for debuffs on the player or pet, conditional on
-hostility or friendliness for target and focus. The Filters section prints them in orange. The starter
-spell lists are all buff categories for the same reason (`defaults/Categories.lua`).
+1. The aura's spell is `NeverSecret` (`C_Secrets.GetSpellAuraSecrecy(spellId) ==
+   Enum.SecrecyLevel.NeverSecret`, for example Sated and Exhaustion): applied, on any unit.
+2. A helpful aura on a unit for which `UnitIsPlayerControlledOrGroupMember(unitToken)` is true (the
+   player, the pet, a vehicle, `partyN`, `raidN` and their pets; it reads the token, so never `target`
+   or `focus`): applied.
+3. A harmful aura on a unit for which `UnitCanAssist("player", unitToken, true, true)` is true: not
+   applied.
+4. A helpful aura on a unit for which that same `UnitCanAssist` call is false: not applied.
+5. Otherwise: applied.
+
+So buffs are filtered by id on a unit you can assist and debuffs on a unit you cannot; your own and
+your pet's debuffs never are. Where the predicate fails, `DoesAuraPassCandidateFilters` skips BOTH id
+filters and still evaluates the rest of the group (dispel types, the aura flags, `maxDuration`) and
+its filter string. A group whose only real constraint is its ids then matches every aura of its type,
+and several such groups each draw the same aura: the M+ report of one NPC buff drawn 14 times on a
+hostile target (seven spell-category groups times two instances).
+
+**What this addon does.** Every compiled group carries two views (`modules/FilterViews.lua`, stamped as
+`group.noIds` by `FV.NoIds` at `modules/FilterCompiler.lua:568`): the ids view, exactly as compiled, and a no-ids
+view in which the whitelist, every spell-category and Uncategorized Show group and the catch-all match
+nothing (`candidateFilters = { includeDispelTypes = {} }`, which fails every aura and which
+`ValidateCandidateFilters` accepts as a table), while a Blizzard Show group keeps its token, flag or
+dispel constraint minus the earlier ones. Both views have the same group count, so switching never
+rebuilds the engine. `FC.IdsMode` pins buffs on the player and the pet to the ids view and their
+debuffs to the no-ids view; for a target or focus, `Compat.IdsApply` (`core/Compat.lua:330`) asks
+steps 2 to 4 above and answers false when a call raises or its answer is secret. It does not model
+step 1, so a `NeverSecret` aura claimed only by a spell category is not drawn where the view is no-ids.
+`ContainerClass:ApplyView` (`modules/Container.lua:320`) sends `SetAuraGroupFilterString` and
+`SetAuraGroupCandidateFilters` only where the two views differ. Blizzard's Lua checks neither combat
+nor secrecy in either setter and both end in `UpdateAllAuras`, so the switch runs in combat. It runs at
+every build and update, on `PLAYER_TARGET_CHANGED` and `PLAYER_FOCUS_CHANGED` before the refresh, and
+on `UNIT_FACTION` and `UNIT_FLAGS` for `target` and `focus` (`CM.ApplyViews`,
+`modules/ContainerManager.lua:429`), which catches duels, mind control and an NPC turning hostile.
+A move logs `[Filter] <container>: spell lists off (unit cannot be assisted)` or `... on ...`, and
+`/am diagnostics` prints each container's mode and view. The Filters section says so three times: the
+orange warning above every tab (`identityWarning`, `modules/FilterCompiler.lua:409`, printed only when
+the container hides a category or has an Overrides list), and a NOTE under the Spell Categories
+heading and at the head of Overrides on every container whose mode is not "always"
+(`settings/Filters.lua`).
 
 ## There is no "no duration" filter, and `maxDuration` drops permanent auras
 

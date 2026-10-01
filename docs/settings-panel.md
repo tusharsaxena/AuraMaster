@@ -491,6 +491,14 @@ of the Uncategorized cost note below — sits **Hide enchants without a duration
 the `weaponEnchants` row it governs by name (batch 7, `T-3`: the grid draws its rows atomically and
 cannot host a plain bool inline, so the tie text is what keeps it from reading as floating).
 
+Straight under the **Spell Categories** heading, above its Show all / Hide all, a container whose
+`FC.IdsMode` is not `"always"` (every debuff container, and a buff container on a target or focus)
+draws a NOTE naming where its spell categories are not applied: "your own debuffs", "your pet's
+debuffs", "units you can assist" (target and focus debuffs) or "units you can't assist" (target and
+focus buffs). The **Overrides** tab opens with the same sentence about its two lists. There the
+container draws its no-ids view and only the Blizzard categories set to Show draw (spell-list views,
+`viewNote` in `settings/Filters.lua`; `docs/midnight-quirks.md`).
+
 **Sorting**
 
 | Row | Path | Type | Applies to |

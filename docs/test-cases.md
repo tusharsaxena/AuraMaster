@@ -325,7 +325,7 @@ badge and any count quoted in the docs must agree with it.
 - filter: a TARGET debuff container gives Uncategorized Show no group either — a target may be FRIENDLY
 - filter: a FRIENDLY-target buff container loses the Uncategorized Show rescue — the accepted cost, pinned
 - filter: a target debuff container still warns about units you can assist although the gate dropped its Show group
-- filter: a TARGET debuff container's spells-kind Show still emits its group, and warns — the accepted residual, pinned
+- filter: a TARGET debuff container's spells-kind Show emits its ids-view group, whose no-ids view is NEVER, and warns (the issue #11 residual, superseded)
 - explain: an unlisted id is rank 3 (shown) when Uncategorized is Show — not the old rank 5
 - explain: an unlisted id is rank 4 (hidden) when Uncategorized is Hide
 - explain: with no Uncategorized category for the aura type at all, an unclaimed id is still rank 5
@@ -1701,7 +1701,7 @@ badge and any count quoted in the docs must agree with it.
 - containers: Defaults restores Enabled, Unit, Aura type and Style, and never the name
 - containers: the page's Defaults tooltip names the section on screen and the kept name
 
-### test_pages_filters.lua (49)
+### test_pages_filters.lua (52)
 
 - filters: Cast by writes the selected container's filter and no other
 - filters: a buff container's Categories tab offers the weapon-enchant rows; a debuff container's does not
@@ -1720,6 +1720,8 @@ badge and any count quoted in the docs must agree with it.
 - filters: the 'these are the lists' line draws wherever the grid holds an editable list — both aura types since Hard CC and Soft CC (T-2)
 - filters: a debuff container's Categories tab says Hard CC and Soft CC only work on a hostile target or focus (A3)
 - filters: the Uncategorized cost note draws only where the engine is certain to honor spell ids (A2)
+- filters: the Spell Categories NOTE names where spell categories are not applied, per unit (SV-04)
+- filters: no Spell Categories NOTE on a buff container on the player or the pet (SV-04)
 - filters: a spells-kind row's See spells link selects that category on General -> Spell Categories and lands there; a token row gets an info icon instead (F-3/N-3/N-4/N-5)
 - filters: the priority order (spec §6) is stated on the General tab, highest rank first
 - filters: the priority block is stated once — not on Categories, not on Overrides (batch 8)
@@ -1733,6 +1735,7 @@ badge and any count quoted in the docs must agree with it.
 - filters: every category row is skipRender and names its grid
 - filters: no aura type is offered a Spell lists tab; the lists live on General → Spell Categories
 - filters: Overrides replaces Always / never, with a Whitelist and a Blacklist section
+- filters: the Overrides NOTE heads the tab on every container whose spell lists can be off (SV-04)
 - filters: Overrides adds to one list at a time by id or by name, and Remove takes an id off
 - filters: the Overrides lists pack two entries to a row, row-major
 - filters: an Overrides name the game cannot find adds nothing and says why on the add line
@@ -2144,7 +2147,7 @@ badge and any count quoted in the docs must agree with it.
 | test_pages_general.lua | 35 |
 | test_pages_general_categories.lua | 32 |
 | test_pages_containers.lua | 33 |
-| test_pages_filters.lua | 49 |
+| test_pages_filters.lua | 52 |
 | test_pages_layout.lua | 47 |
 | test_pages_bars.lua | 11 |
 | test_pages_icons.lua | 5 |
@@ -2168,4 +2171,4 @@ badge and any count quoted in the docs must agree with it.
 | test_layout_cap.lua | 13 |
 | test_diagnostics_contract.lua | 9 |
 | test_lizard_sighted.lua | 8 |
-| **Total** | **1822** |
+| **Total** | **1825** |

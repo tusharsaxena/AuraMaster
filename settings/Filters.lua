@@ -385,6 +385,44 @@ local UNCATEGORIZED_NOTE = L["Uncategorized defaults to Show, which rescues any 
 -- rows regardless of unit.
 local SPELL_LIST_DEBUFF_NOTE = L["Hard CC and Soft CC only work on a hostile target or focus. Blizzard discards spell lists for debuffs on you, your pet or a friendly unit, so on those containers the two rows change nothing."]
 
+-- SV-04 (spell-list views, V4): where Blizzard does not apply spell ids, a container draws its no-ids
+-- view (modules/FilterViews.lua), in which every spell category's group, the whitelist and the
+-- catch-all are NEVER: only the Blizzard categories set to Show draw. Said at the head of the two
+-- surfaces that view switches off, on every container whose `FC.IdsMode` is not "always", in the
+-- words of the units it is about. One whole sentence per unit wording, so each is a single locale key.
+-- "always" (buffs on the player or the pet) has no entry: ids always apply there.
+local VIEW_NOTES = {
+    categories = {
+        own          = L["NOTE: on your own debuffs, these spell categories are not applied."],
+        pet          = L["NOTE: on your pet's debuffs, these spell categories are not applied."],
+        assistable   = L["NOTE: on units you can assist, these spell categories are not applied."],
+        unassistable = L["NOTE: on units you can't assist, these spell categories are not applied."],
+    },
+    overrides = {
+        own          = L["NOTE: on your own debuffs, these Overrides are not applied."],
+        pet          = L["NOTE: on your pet's debuffs, these Overrides are not applied."],
+        assistable   = L["NOTE: on units you can assist, these Overrides are not applied."],
+        unassistable = L["NOTE: on units you can't assist, these Overrides are not applied."],
+    },
+}
+
+--- The `surface` ("categories" or "overrides") NOTE for container `cfg`, or nil where spell ids
+--- always apply. "never" is the player's or the pet's debuffs; "dynamic" is a target or focus, whose
+--- buffs lose their ids on a unit you can't assist and whose debuffs lose them on one you can.
+local function viewNote(surface, cfg)
+    local unit = cfg and cfg.unit
+    local auraType = (cfg and cfg.auraType == "HARMFUL") and "HARMFUL" or "HELPFUL"
+    local mode = FC.IdsMode(unit, auraType)
+    if mode == "always" then return nil end
+    local which
+    if mode == "never" then
+        which = (unit == "pet") and "pet" or "own"
+    else
+        which = (auraType == "HARMFUL") and "assistable" or "unassistable"
+    end
+    return VIEW_NOTES[surface][which]
+end
+
 -- T-2 (batch 7, readability): "These are the lists on General -> Spell Categories..."
 -- claims the grid holds EDITABLE lists. True wherever the grid carries a `spells`-kind row or the
 -- `weaponEnchants` row, both of which own a list on General -> Spell Categories — which since issue
@@ -491,6 +529,8 @@ end
 --- grid with its extra column, hidePermanentEnchants under it and the two gated notes.
 local function renderCustomGrid(ctx, g, mine, cfg, auraType, hideRow)
     H.Section(ctx, g.heading)
+    local note = viewNote("categories", cfg)
+    if note then H.TextRow(ctx, note) end
     bulkButtons(ctx, mine, g.key)
     if customGridHasEditableList(mine) then
         H.TextRow(ctx, L["These are the lists on General -> Spell Categories, shared by every container."])
@@ -739,6 +779,8 @@ local function overrideList(ctx, cfg, key, heading, blurb)
 end
 
 local function renderOverrides(ctx, cfg)
+    local note = viewNote("overrides", cfg)
+    if note then H.TextRow(ctx, note) end
     overrideList(ctx, cfg, "whitelist", L["Whitelist"],
         L["These spells are shown whatever the categories say. Blizzard only honors this for buffs on friendly units and debuffs on hostile ones."])
     overrideList(ctx, cfg, "blacklist", L["Blacklist"],

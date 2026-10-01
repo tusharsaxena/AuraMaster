@@ -22,7 +22,7 @@ check's number is not reused. Checks with no recorded pass, and checks new or co
 | COMBAT-1 to COMBAT-7 | Combat and restrictions | Deferred changes, the settings lock, resets in combat, Mythic+ keys |
 | DIAG-1 to DIAG-20 | Debug, diagnostics, perf | The debug console, bulk `[Set]` lines, `/am diagnostics`, `/am perf`, the event trace, resizing the console, its copy window and the perf panel, the console's Diagnostics link, diagnostics turning logging on, the library's own lines (a slash refusal, a stand-down edge, the launcher's at-enable line) |
 | CONT-1 to CONT-25 | Containers | Create, duplicate, delete, rename, copy; handles, strips and the close mark; test mode; unit swaps; empty placeholders |
-| FILT-1 to FILT-42 | Filters and spell categories | Cast by, the category grids, Overrides, the add-a-spell box, aura ids, your own categories, weapon enchants and their names |
+| FILT-1 to FILT-48 | Filters and spell categories | Cast by, the category grids, Overrides, the add-a-spell box, aura ids, your own categories, weapon enchants and their names, where spell lists apply |
 | LAYOUT-1 to LAYOUT-38 | Layout | Anchor modes, attaching, chains, growth, anchor points, seams, the name label, mouse and tooltips |
 | STYLE-1 to STYLE-30 | Bars and Icons style, fonts | Bars and Icons tabs, the spark, borders, dispel colors, pandemic, the font primer |
 | TEXT-1 to TEXT-29 | Text style | Templates and tokens, justify, the icon, dispel type word, backdrop and edge, animation, Size to fit |
@@ -758,7 +758,9 @@ Spell Categories grid the line reads "These are the lists on General -> Spell Ca
 every container."; the grid holds **Hard CC (loss of control)**, **Soft CC (roots & snares)** and
 **Racials**, each with a **See spells** link, then **Uncategorized** with none (plus any debuff
 category of your own); under it a note reads "Hard CC and Soft CC only work on a hostile target or
-focus. …". Result:
+focus. …". On a *player* container, straight under the **Spell Categories** heading and above its
+**Show all** / **Hide all**, a line reads "NOTE: on your own debuffs, these spell categories are not
+applied." Result:
 
 **FILT-5. The grid cells.** Look at a lit cell (Show or Hide) → an ordinary checkbox check, the same
 shape and color as every other checkbox in the panel, no colored fill. Click the other cell on the
@@ -991,6 +993,56 @@ entrance) → the console shows `[Apply] enchants reset on N container(s) after 
 counting the shown containers with an enchant on, and the name is still there. If a name is ever
 blank, run `/dump C_Item.GetItemName(ItemLocation:CreateFromEquipmentSlot(16))` and note what it
 prints on this line. Result:
+
+FILT-43 to FILT-48 check the spell-list views (2026-10-02). Blizzard applies spell ids to buffs on a
+unit you can assist and to debuffs on a unit you cannot. Elsewhere a container that sets any category
+to Hide draws only the categories set to Show on its Blizzard Categories, Dispel Types and Who Cast It
+grids, each aura once. Turn logging on (`/am debug on`) for the checks that read `[Filter]` lines.
+
+**FILT-43. The Mythic+ repro: one bar per aura.** Make a *target buffs* bar container: every Blizzard
+category **Hide**, at least five Spell Categories **Show** (Defensive cooldowns, Offensive cooldowns,
+Healing, Support, Utility and so on), **Uncategorized** **Hide**, **Max duration** `30`. In a Mythic+
+key or a dungeon, target an enemy NPC that carries a short buff (the report was *Brutal Slams*,
+stacked twice) → no bar is drawn more than once, and on this container nothing draws at all, since
+no Blizzard category is set to Show. The console shows `[Filter] <name>: spell lists off (unit cannot
+be assisted)` when you target it. Set *Important (Blizzard)* to **Show** → the NPC's important buffs
+each draw once, and nothing else does. Result:
+
+**FILT-44. A hostile player.** In War Mode or a battleground, use a *target buffs* container with
+*Defensive cooldowns* **Show**, *Cancelable* **Hide** and *Big defensives (Blizzard)* **Show**. Target
+an enemy player who pops a big defensive → it draws once, from *Big defensives (Blizzard)*; a buff
+only in *Defensive cooldowns* does not draw; no buff draws twice. `/am diagnostics` → the container's
+line reads `spell lists: mode=dynamic view=noIds`. Result:
+
+**FILT-45. A friendly target.** Same container, target a friendly player or a party member → the
+container filters exactly as set: *Defensive cooldowns* buffs draw, *Cancelable* ones the other
+categories do not claim stay hidden, nothing draws twice. Switching from the FILT-44 target logs
+`[Filter] <name>: spell lists on (unit can be assisted)`, and `/am diagnostics` reads `view=ids`.
+Result:
+
+**FILT-46. A duel flips the view without a retarget.** Target a friendly player and keep them
+targeted. Start a duel → when it begins, the console logs `spell lists off (unit cannot be assisted)`
+for each target buff container and `spell lists on (unit cannot be assisted)` for *Target debuffs
+(mine)*, with no target change and no Lua error, in combat too; each container redraws on its own.
+When the duel ends the lines flip back. Nothing draws twice at any point. Result:
+
+**FILT-47. A player debuff container with several spell categories.** On *Player debuffs* set
+*Hard CC*, *Soft CC* and *Racials* to **Show**, *Dispellable by anyone* to **Hide**, and every other
+category to **Show**. Take a stun or root from a dungeon mob or a training partner → each debuff
+draws once, from the Blizzard Categories, Dispel Types or Who Cast It rows set to Show; the three
+spell categories add nothing and duplicate nothing. Set every Blizzard Categories, Dispel Types and
+Who Cast It row to **Hide** → the container stays empty whatever you take, since spell ids never apply
+to your own debuffs. Result:
+
+**FILT-48. The notes.** Filters → **Categories** → straight under the **Spell Categories** heading:
+*Player buffs* → no NOTE; *Player debuffs* → "NOTE: on your own debuffs, these spell categories are
+not applied."; *Target debuffs (mine)* → "NOTE: on units you can assist, …"; a *target buffs*
+container → "NOTE: on units you can't assist, …"; a *pet debuffs* container → "NOTE: on your pet's
+debuffs, …". The **Overrides** tab opens with the same sentence ending "these Overrides are not
+applied." on each of those, above **Whitelist**, and with none on *Player buffs*. The orange warning
+above every tab prints only on a container that sets a category to Hide or has an Overrides entry.
+The README's Usage paragraph on where spell categories apply and the FAQ entry "Why does my target
+container show fewer buffs on enemies?" read the same as these notes. Result:
 
 ## Layout
 
@@ -1701,7 +1753,7 @@ line, then remove its row here.
 | CONT-8 | 162, smoke batch 2 (owed: the owner verified 143 to 161 only) |
 | CONT-21 | 136 and 224: the placeholder count corrected on 2026-09-29 (one per ticked slot, three by default) |
 | FILT-2 | 80, batch 6 |
-| FILT-4 | 24: its Spell Categories grid corrected on 2026-09-29 (Hard CC, Soft CC and Racials with their See spells links, the line naming General -> Spell Categories and the hostile-unit note, since issue #11) |
+| FILT-4 | 24: its Spell Categories grid corrected on 2026-09-29 (Hard CC, Soft CC and Racials with their See spells links, the line naming General -> Spell Categories and the hostile-unit note, since issue #11); its NOTE line under the Spell Categories heading new on 2026-10-02 (spell-list views, SV-04) |
 | FILT-5 | 78 and 81, batch 6 |
 | FILT-7 | 77, batch 6; its row labels corrected on 2026-09-29 (*Dispellable by anyone*, *Boss debuffs*) |
 | FILT-8 | 83, batch 6; its row label corrected on 2026-09-29 (*From any player*) |
@@ -1716,7 +1768,9 @@ line, then remove its row here.
 | FILT-19 | 75, batch 5 (the tooltip half) |
 | FILT-21 | 179 and 180: the chat line's expected text corrected on 2026-09-29 (each spell named, its id in brackets) |
 | FILT-27 | 82, batch 6 |
+| FILT-30 | its warning sentences corrected on 2026-10-02 (spell-list views, SV-01) |
 | FILT-42 | new on 2026-09-30 with the weapon-enchant name reset (SP-AMX-01) |
+| FILT-43 to FILT-48 | new on 2026-10-02 with the spell-list views (SV-04) |
 | LAYOUT-1 | 69, batch 5 |
 | LAYOUT-6 | 162, smoke batch 2 (owed, as CONT-8): the outline moving across aura buttons; 42: its combat refusal corrected on 2026-09-29 to `/am pick` alone, since the panel's button is locked in combat |
 | LAYOUT-11 | 67, batch 8 (failed 2026-09-25): the **Per row** step; the rest passed as 238 |
