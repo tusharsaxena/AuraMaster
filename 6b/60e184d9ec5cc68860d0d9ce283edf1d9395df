@@ -1,0 +1,1 @@
+OK CA-AM-RV lua tests/run.lua 1788 passed/0 failed/1 skipped (1789); luacheck 0/0 in 151 files; diff -r lib+kit vs v1.67.0 empty; CRLF on disk; test-cases.md matches --list; no stale v1.66.0 stamps
