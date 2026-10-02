@@ -610,7 +610,7 @@ end
 --- else the pick where the drag began on the current parent while the child is still there.
 --- @return boolean
 local function refused(hit, cur, own)
-    if cur.dist and not cur.moved then
+    if not cur.moved then
         local travel = cursorTravel()
         return not (travel and travel > C.SNAP_RADIUS)
     end
@@ -633,7 +633,8 @@ end
 --- a child wider than its parent, whose rest pick is a real and different pair (the end pair, its
 --- center in the last third), can still be dropped onto it. With no rest vector (the child's anchor
 --- read secret before the lift, which then moved it by the grab's offset) no pair at all wins while
---- `cur` has a distance, until the cursor has moved more than C.SNAP_RADIUS: a gap is never more than
+--- `cur` has a distance, or has none (no rect of its parent reads), until the cursor has moved more
+--- than C.SNAP_RADIUS: a gap is never more than
 --- `cur`'s distance, so any sideways offset the lift left would otherwise re-pair a child let go there,
 --- and where its parent's block reads secret `cur`'s distance runs to that parent's strip alone, so
 --- under a block several rows deep a neighbor in snap range would otherwise take it.

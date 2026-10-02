@@ -1375,10 +1375,45 @@ test("drag: with no rest read, a neighbor in snap range takes no child until the
     pair, state = Snap.Tick()
     assertEqual(state .. " " .. pair.id, "attach 3", "30 units: the neighbor competes")
     mocks.GetCursorPosition = function() return 100, 100 end
+    local asked = 0
+    local attachByDrop = NS.AttachByDrop
+    NS.AttachByDrop = function(...) asked = asked + 1; return attachByDrop(...) end
     inst.handle:__fire("OnDragStop")
+    NS.AttachByDrop = attachByDrop
     at = NS.Database.FindContainer(2).attach
-    -- red under: the release wrote an attach to 3 nobody aimed at
+    -- red under: the release took 3 (NS.AttachByDrop called, its GC-1 ask or its write), nobody aimed at it
+    assertEqual(asked, 0, "a let-go offers 3 nothing")
     assertEqual(at.mode .. ":" .. tostring(at.container), "container:1", "a let-go snaps it back")
+end)
+
+test("drag: with no rect of its parent readable and no rest read, a neighbor takes no child until the cursor moves C.SNAP_RADIUS (A4)", function()
+    local SECRET = 41.5
+    local NS, mocks = env(3)
+    mocks.issecretvalue = function(v) return v == SECRET end
+    local CM = NS.ContainerManager
+    -- 1 hangs from a populated grandparent's engine: its engine, anchor and strip all read secret, so
+    -- the current pair has no distance; 2 hangs from 1, its anchor secret until the lift.
+    plant(CM.instances[1].engine, SECRET, 100, 100, 240)
+    plant(CM.instances[1].anchor, SECRET, 220, 20, 240)
+    plant(CM.instances[1].handle, SECRET, 242, 100, 260)
+    local at = NS.Database.FindContainer(2).attach
+    at.mode, at.container = "container", 1
+    local inst = CM.instances[2]
+    plant(inst.anchor, SECRET, 75, 60, 95)
+    recordAnchor(inst.anchor)
+    plant(CM.instances[3].engine, 73, 75, 173, 95)
+    plant(CM.instances[3].anchor, 73, 75, 173, 95)
+    plant(CM.instances[3].handle, 73, 97, 173, 115)
+    mocks.GetCursorPosition = function() return 100, 100 end
+    inst.handle:__fire("OnDragStart")
+    plant(inst.anchor, 3, 75, 63, 95)
+    local Snap = NS.Anchors.Snap
+    local pair, state = Snap.Tick()
+    -- red under: the travel gate applied only while the current pair has a distance (attach 3)
+    assertTrue(not (pair and pair.id == 3 and state == "attach"), "the cursor has not moved: 3 does not take it")
+    mocks.GetCursorPosition = function() return 130, 100 end
+    pair, state = Snap.Tick()
+    assertEqual(state .. " " .. pair.id, "attach 3", "30 units: the neighbor competes")
 end)
 
 --- Two containers as in game with 1 holding auras: its one-row engine reads secret, its anchor (the

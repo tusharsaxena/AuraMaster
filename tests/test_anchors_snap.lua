@@ -600,6 +600,21 @@ test("snap: a strip that overhangs its block on a side the parent grows toward k
     end
 end)
 
+test("snap: a block past the strip on the sides the parent does not grow toward leaves the strip's edges there (A11)", function()
+    -- A block (0,40 .. 200,180) past a strip (50,100 .. 150,120) on every side: only the growth edges
+    -- reach it, the other two stay the strip's.
+    local WANT = { ["right/down"] = "50,40,200,120", ["right/up"] = "50,100,200,180",
+        ["left/down"] = "0,40,150,120", ["left/up"] = "0,100,150,180" }
+    for _, g in ipairs(GROWTHS) do
+        local grow = g[1] .. "/" .. g[2]
+        local NS, _, inst, strip = reachEnv(g)
+        plant(inst.engine, 0, 40, 200, 180)
+        plant(strip, 50, 100, 150, 120)
+        -- red under: a union on both vertical (or both horizontal) edges, whatever the growth
+        assertEqual(edges(NS.Anchors.Snap.ParentRect(inst)), WANT[grow], grow .. ": growth edges only")
+    end
+end)
+
 test("snap: a parent's block is read with its guards and fallback, and one that does not read leaves the strip (A11)", function()
     local SECRET = 41.5
     local NS, mocks, inst, strip = reachEnv({ "right", "down" })

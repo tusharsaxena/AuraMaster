@@ -1079,7 +1079,7 @@ badge and any count quoted in the docs must agree with it.
 - width: a one-icon container too narrow for the marks and a readable label keeps its natural width
 - width: the label is worked out once per name and width, not on every pass
 
-### test_anchors_snap.lua (28)
+### test_anchors_snap.lua (29)
 
 - snap: PointAt gives each of the nine WoW points on a rect
 - snap: Nearest picks each of the twelve outside pairs, the child's point the mirror of the parent's, under two growths
@@ -1103,6 +1103,7 @@ badge and any count quoted in the docs must agree with it.
 - snap: Find measures the side on the target's strip and the dragged one's own strip (A10)
 - snap: a parent's rect is its strip, each edge on a side it grows toward out to its block's far edge (A11)
 - snap: a strip that overhangs its block on a side the parent grows toward keeps its own edge there (A11)
+- snap: a block past the strip on the sides the parent does not grow toward leaves the strip's edges there (A11)
 - snap: a parent's block is read with its guards and fallback, and one that does not read leaves the strip (A11)
 - snap: the side pick measures a parent's growth sides on its block's far edges, its other sides on its strip (A11)
 - snap: a picked side equal to Automatic stores nil for both points
@@ -1110,7 +1111,7 @@ badge and any count quoted in the docs must agree with it.
 - snap: folding reads Automatic for the target dropped on, not the container's current parent
 - snap: the radius is 24 UIParent units and the highlight is an opaque green
 
-### test_anchors_drag.lua (42)
+### test_anchors_drag.lua (43)
 
 - drag: a screen container and a container-attached one drag; a frame-attached one does not
 - drag: no drag starts in combat, and none leaves the container marked dragging
@@ -1151,6 +1152,7 @@ badge and any count quoted in the docs must agree with it.
 - drag: on a parent whose block reads secret but whose strip reads, a nudge inside the radius holds on the stored pair (A4, A11)
 - drag: under a parent read off its strip, a child whose anchor read secret at the start holds until the cursor moves C.SNAP_RADIUS (A4, A11)
 - drag: with no rest read, a neighbor in snap range takes no child until the cursor moves C.SNAP_RADIUS (A4, A11)
+- drag: with no rect of its parent readable and no rest read, a neighbor takes no child until the cursor moves C.SNAP_RADIUS (A4)
 - drag: beside a parent whose block reads secret but whose strip reads, a child re-pairs onto that side (A4, A11)
 - drag: a drop on the right side of a parent whose block reads secret but whose strip reads re-attaches there (A4, A11)
 - drag: a screen container's drag has no hold and no red (A4)
@@ -2375,8 +2377,8 @@ badge and any count quoted in the docs must agree with it.
 | test_anchors_steady.lua | 8 |
 | test_anchors_collapse.lua | 9 |
 | test_anchors_width.lua | 6 |
-| test_anchors_snap.lua | 28 |
-| test_anchors_drag.lua | 42 |
+| test_anchors_snap.lua | 29 |
+| test_anchors_drag.lua | 43 |
 | test_anchors_drop.lua | 24 |
 | test_texttemplate.lua | 26 |
 | test_style.lua | 60 |
@@ -2428,4 +2430,4 @@ badge and any count quoted in the docs must agree with it.
 | test_layout_cap.lua | 13 |
 | test_diagnostics_contract.lua | 9 |
 | test_lizard_sighted.lua | 8 |
-| **Total** | **2034** |
+| **Total** | **2036** |
