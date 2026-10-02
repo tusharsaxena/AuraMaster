@@ -200,7 +200,9 @@ group count, so switching never rebuilds the engine. A container with a category
 whose ids are not always applied also ends in one remainder group, NEVER in the ids and blizzard
 views, which is the whole every view: every aura passing the base and in no Hidden Blizzard, Dispel
 or Who Cast It category, once (`FV.AppendRemainder`;
-docs/superpowers/specs/2026-10-02-filter-situations-design.md S1). `FC.IdsMode` pins buffs on the
+docs/superpowers/specs/2026-10-02-filter-situations-design.md S1). Where the remainder cannot draw
+(both Who Cast It rows Hidden, or "Only auras without a duration" on buffs) the other groups keep
+their blizzard view, so the every view is the blizzard view (SI-06). `FC.IdsMode` pins buffs on the
 player and the pet to the ids view and their debuffs to the view their Players setting picks; for a
 target or focus, `Compat.IdsApply` (`core/Compat.lua:330`) asks steps 2 to 4 above and answers false
 when a call raises or its answer is secret, and where it is false `Compat.IsPlayerUnit`

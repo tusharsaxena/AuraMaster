@@ -400,7 +400,7 @@ badge and any count quoted in the docs must agree with it.
 - views: an Overrides list alone raises the Overrides-only sentence
 - views: no sentence on a container the rule changes nothing for
 
-### test_filterviews_situations.lua (12)
+### test_filterviews_situations.lua (13)
 
 - situations: an R-4 target buff plan ends in a remainder slot, NEVER in the ids and blizzard views
 - situations: the remainder slot exists only for R-4 on units whose ids are not always applied
@@ -408,6 +408,7 @@ badge and any count quoted in the docs must agree with it.
 - situations: a player buff plan (ids always applied) is unchanged, every reading as blizzard
 - situations: the remainder subtracts Hidden Dispel Types and one Hidden Who Cast It row
 - situations: both Who Cast It rows Hidden make the remainder NEVER in every view
+- situations: a remainder that cannot draw leaves the every view equal to the blizzard view
 - situations: 'Without a duration' makes the remainder NEVER in the every view (buffs)
 - situations: the remainder keeps the blacklist and ignores the whitelist and spell categories
 - situations: the warnings and NEVER_MATCHES ignore the remainder slot
@@ -2186,7 +2187,7 @@ badge and any count quoted in the docs must agree with it.
 | test_filtercompiler.lua | 85 |
 | test_filtercompiler_categories.lua | 9 |
 | test_filterviews.lua | 14 |
-| test_filterviews_situations.lua | 12 |
+| test_filterviews_situations.lua | 13 |
 | test_situations_settings.lua | 11 |
 | test_container.lua | 52 |
 | test_container_views.lua | 16 |
@@ -2265,4 +2266,4 @@ badge and any count quoted in the docs must agree with it.
 | test_layout_cap.lua | 13 |
 | test_diagnostics_contract.lua | 9 |
 | test_lizard_sighted.lua | 8 |
-| **Total** | **1895** |
+| **Total** | **1896** |

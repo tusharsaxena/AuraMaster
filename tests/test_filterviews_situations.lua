@@ -144,6 +144,35 @@ test("situations: both Who Cast It rows Hidden make the remainder NEVER in every
     assertTrue(isNeverIn(r, "ids") and isNeverIn(r, "blizzard") and isNeverIn(r, "every"))
 end)
 
+test("situations: a remainder that cannot draw leaves the every view equal to the blizzard view", function()
+    -- red under: every earlier group made NEVER in the every view even when the remainder is NEVER
+    -- too (SI-06): the every view then draws nothing, less than the blizzard view, on a timeless buff
+    -- container or one with both Who rows Hidden.
+    local cases = {
+        { "timeless buffs", { unit = "target", auraType = "HELPFUL", filter = { durationMode = "timeless",
+            categories = { important = "hide" } } } },
+        { "both Who rows Hidden", { unit = "target", auraType = "HARMFUL", filter = {
+            categories = { fromPlayers = "hide", fromNonPlayers = "hide" } } } },
+    }
+    for _, c in ipairs(cases) do
+        local plan = compile(c[2], { timedSpells = { [7] = true } })
+        assertTrue(isNeverIn(last(plan), "every"), c[1] .. ": the remainder is NEVER")
+        local live = 0
+        for i = 1, #plan.groups - 1 do
+            local g = plan.groups[i]
+            local bf, bc = viewOf(g, "blizzard")
+            local ef, ec = viewOf(g, "every")
+            assertEqual(ef, bf, c[1] .. ": " .. g.label)
+            assertEqual(FC.Signature(ec), FC.Signature(bc), c[1] .. ": " .. g.label)
+            assertTrue(g.views.every ~= g.views.blizzard, "a table per view, never one shared")
+            if not isNeverIn(g, "every") then live = live + 1 end
+        end
+        if c[1] == "timeless buffs" then
+            assertTrue(live > 0, c[1] .. ": the Blizzard Show groups still draw in the every view")
+        end
+    end
+end)
+
 test("situations: 'Without a duration' makes the remainder NEVER in the every view (buffs)", function()
     -- red under: an every view drawing every timed buff on a hostile target: Timeless is built from
     -- spell ids, which Blizzard drops there.
@@ -229,8 +258,14 @@ test("situations: every container of the owner's real profile keeps master's ids
     assertEqual(checked, 42, "every group master compiled for the profile")
     assertEqual(table.concat(grew, ","), "18,22,27,28,29",
         "the R-4 target containers gain the remainder; player buffs and the R-3 containers do not")
-    -- "Target Bar CC (All)" Hides both Who Cast It rows: its remainder draws nothing in any view.
+    -- "Target Bar CC (All)" Hides both Who Cast It rows: its remainder draws nothing in any view, so
+    -- its every view is its blizzard view (SI-06), never an empty container.
     assertTrue(isNeverIn(last(plans[18]), "every"), "#18: both Who rows Hidden")
+    for i = 1, #plans[18].groups - 1 do
+        local g = plans[18].groups[i]
+        assertEqual(FC.Signature(select(2, viewOf(g, "every"))), FC.Signature(select(2, viewOf(g, "blizzard"))),
+            "#18 " .. g.label .. ": every reads as blizzard")
+    end
     assertTrue(not isNeverIn(last(plans[22]), "every"), "#22: the remainder draws in the every view")
 end)
 
@@ -326,17 +361,19 @@ local function passesBase(a, filter)
 end
 
 --- What the every view must draw: an aura passing the base that is in no Blizzard-grid category set
---- to Hide; nothing at all when both Who rows are Hidden.
-local function everyExpected(a, filter, auraType)
-    if not passesBase(a, filter) then return 0 end
+--- to Hide. Where the remainder cannot draw (both Who rows Hidden, or "Without a duration" on buffs),
+--- the every view is the blizzard view (SI-06): `blizzard` is that view's count for the aura.
+local function everyExpected(a, filter, auraType, blizzard)
     local who = 0
     for _, def in ipairs(NS.Categories.For(auraType)) do
-        if filter.categories[def.key] == "hide" and BLIZZARD_GRID[def.kind] then
-            if def.field == "isFromPlayerOrPlayerPet" then who = who + 1 end
-            if inCategory(a, def) then return 0 end
-        end
+        if filter.categories[def.key] == "hide" and def.field == "isFromPlayerOrPlayerPet" then who = who + 1 end
     end
-    return (who == 2) and 0 or 1
+    if who == 2 or (auraType == "HELPFUL" and filter.durationMode == "timeless") then return blizzard end
+    if not passesBase(a, filter) then return 0 end
+    for _, def in ipairs(NS.Categories.For(auraType)) do
+        if filter.categories[def.key] == "hide" and BLIZZARD_GRID[def.kind] and inCategory(a, def) then return 0 end
+    end
+    return 1
 end
 
 local function randomFilter(r, auraType, idPool)
@@ -346,6 +383,7 @@ local function randomFilter(r, auraType, idPool)
     end
     local castBy = ({ "any", "mine", "others" })[r(3)]
     return { categories = states, castBy = castBy, maxDuration = ({ 0, 30 })[r(2)],
+        durationMode = (r(4) == 1) and "timeless" or "any",
         whitelist = (r(3) == 1) and { [idPool[r(#idPool)]] = true } or {},
         blacklist = (r(3) == 1) and { [idPool[r(#idPool)]] = true } or {} }
 end
@@ -367,7 +405,8 @@ end
 
 test("situations: no aura is drawn twice in any view, and the every view draws exactly its definition", function()
     -- red under: a remainder that overlaps a group still drawing in the every view, an every view
-    -- missing a Hidden Dispel or Who row, or a remainder drawing where it must be NEVER.
+    -- missing a Hidden Dispel or Who row, a remainder drawing where it must be NEVER, or an every view
+    -- that draws less than the blizzard view where the remainder cannot draw (SI-06).
     local r = rng(20261002)
     local units = { { "target", "HELPFUL" }, { "focus", "HELPFUL" }, { "target", "HARMFUL" },
         { "player", "HARMFUL" }, { "player", "HELPFUL" } }
@@ -384,11 +423,12 @@ test("situations: no aura is drawn twice in any view, and the every view draws e
                 local a = randomAura(r, auraType, pool)
                 local where = auraType .. " on " .. unit .. " #" .. configs
                 assertTrue(drawCount(plan, a, "ids") <= 1, where .. ": ids view draws twice")
-                assertTrue(drawCount(plan, a, "blizzard") <= 1, where .. ": blizzard view draws twice")
+                local blizzard = drawCount(plan, a, "blizzard")
+                assertTrue(blizzard <= 1, where .. ": blizzard view draws twice")
                 local every = drawCount(plan, a, "every")
                 assertTrue(every <= 1, where .. ": every view draws twice")
                 if remainder then
-                    assertEqual(every, everyExpected(a, filter, auraType), where .. ": every view coverage")
+                    assertEqual(every, everyExpected(a, filter, auraType, blizzard), where .. ": every view coverage")
                 end
                 auras = auras + 1
             end

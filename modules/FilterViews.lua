@@ -41,6 +41,8 @@ local _, NS = ...
 -- before it existed; its filter string is the same in all three, so a switch sends candidates only.
 -- It is NEVER in the every view too where it cannot mean what it says: both Who Cast It rows Hidden
 -- (a real contradiction), or "Without a duration" on buffs (built from spell ids Blizzard drops).
+-- There the other groups keep their blizzard view in the every view (SI-06), so the every view is
+-- the blizzard view and never draws less than it.
 -- An R-3 plan needs no remainder (its one group already draws every aura there), and buffs on the
 -- player and the pet always take the ids view, so neither gains one.
 --
@@ -125,17 +127,21 @@ function FV.Views(group, role, baseIds)
     return { blizzard = stripped(group, baseIds), every = stripped(group, baseIds) }
 end
 
---- Append the remainder group to `plan` and make every earlier group NEVER in the every view. `group`
---- arrives built from the remainder's constraints (the base minus each Hidden Blizzard-grid category);
---- its ids and blizzard views become NEVER, and its every view is those constraints with the spell ids
---- stripped, or NEVER when `draws` is false.
+--- Append the remainder group to `plan` and, when it draws, make every earlier group NEVER in the
+--- every view. `group` arrives built from the remainder's constraints (the base minus each Hidden
+--- Blizzard-grid category); its ids and blizzard views become NEVER, and its every view is those
+--- constraints with the spell ids stripped, or NEVER when `draws` is false. A remainder that cannot
+--- draw leaves each earlier group's every view as its blizzard view (SI-06): blanking them too would
+--- leave the every view drawing nothing, less than the blizzard view.
 --- @param plan table  the plan being compiled
 --- @param group table  the remainder, as `FC.Compile` builds any group
 --- @param draws boolean  whether the remainder draws in the every view
 --- @param baseIds table|nil  the base's own `excludeSpellIDs`
 function FV.AppendRemainder(plan, group, draws, baseIds)
-    for _, g in ipairs(plan.groups) do
-        g.views.every = never(g)
+    if draws then
+        for _, g in ipairs(plan.groups) do
+            g.views.every = never(g)
+        end
     end
     local every = draws and stripped(group, baseIds) or never(group)
     group.remainder = true

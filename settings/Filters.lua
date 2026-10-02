@@ -873,7 +873,8 @@ local SITUATIONS_HONOR = L["Every aura still honors Cast by, Max duration and th
 local SITUATIONS_ALWAYS = L["Spell lists always apply to your own and your pet's buffs."]
 -- The EFFECTIVE mode, as the compiler reads it (FilterCompiler.lua's `timeless`): "Without a
 -- duration" on a buff container. Timeless on debuffs compiles as any duration, so it says nothing.
--- The remainder's every view is NEVER there (SI-01), so the dropdowns change nothing extra.
+-- The remainder's every view is NEVER there (SI-01) and the other groups keep their blizzard view in
+-- the every view (SI-06), so both dropdown choices draw the same.
 local SITUATIONS_TIMELESS = L["Every aura draws nothing extra here: 'Without a duration' is built from spell lists."]
 
 --- The dropdowns `mode` (FC.IdsMode) calls for, from the tab's `rows`. A target or focus answers
