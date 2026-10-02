@@ -516,20 +516,23 @@ end
 --- object would inherit forbidden aspects: UntrustedLayoutScriptExecution"). ANCHOR_CURSOR depends on
 --- nothing under the anchor.
 local function tooltipSpec(container)
-    -- How to use the strip: drag it, or, attached, why a drag does nothing (beginDrag) and what it
-    -- follows, by the parent container's name or the frame's (the owner, 2026-09-26).
+    -- How to use the strip (issue #22): on the screen, drag it, or drop it on another container to
+    -- attach it there; attached to another container, by that parent's name, drag it away to detach
+    -- it or onto another to attach it there; Shift places it without attaching either way. Attached
+    -- to a named frame, by the frame's name, why a drag does nothing (beginDrag; the owner,
+    -- 2026-09-26). A container-attached one whose parent is gone reads as a screen one: a drop
+    -- attaches or detaches it all the same.
     local function howTo()
         local cfg = container:Cfg()
         local at = cfg and cfg.attach
-        local target
-        if at and at.mode == "container" then
-            local parent = NS.Database.FindContainer(tonumber(at.container))
-            target = parent and parent.name
-        elseif at and at.mode == "frame" then
-            target = at.frame
+        if at and at.mode == "frame" and at.frame and at.frame ~= "" then
+            return NS.L["Anchored to '%s', so it cannot be dragged. Right-click for settings."]:format(tostring(at.frame))
         end
-        if not (target and target ~= "") then return NS.L["Drag to move. Right-click for settings."] end
-        return NS.L["Anchored to '%s', so it cannot be dragged. Right-click for settings."]:format(tostring(target))
+        local parent = at and at.mode == "container" and NS.Database.FindContainer(tonumber(at.container))
+        if parent and parent.name and parent.name ~= "" then
+            return NS.L["Attached to '%s'. Drag it away to detach it, or onto another container to attach it there; hold Shift to place it without attaching. Right-click for settings."]:format(tostring(parent.name))
+        end
+        return NS.L["Drag to move. Drop it on another container to attach it there; hold Shift to place it without attaching. Right-click for settings."]
     end
     local function attached()
         local cfg = container:Cfg()
@@ -596,7 +599,8 @@ end
 
 --- The handle's label, in its three parts: the container's name, a warm gray
 --- (C.ATTACHED_NAME_COLOR) while it is attached to another container or a named frame, the sign that
---- it follows that and cannot be dragged on its own (beginDrag; the owner, 2026-09-26); and while test
+--- it is attached and follows that (the owner, 2026-09-26; since issue #22 a container-attached one
+--- drags too, so the gray says "attached", not "cannot be dragged"); and while test
 --- mode is on an orange TEST tag after it (feedback #8), so the placeholders on screen read as
 --- placeholders. Apart, so a strip too narrow for the whole shortens the name alone (stripLabel).
 --- @return string open, string name, string close, string tag  open and close wrap the name's color

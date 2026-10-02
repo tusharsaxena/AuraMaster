@@ -213,8 +213,9 @@ C.TEST_TAG_COLOR = "ffff8000"
 -- with. The Growth tab's inherited note reads in it. The AARRGGBB body of a "|c" escape.
 C.SECONDARY_GOLD = "ffd9b861"
 -- The strip name of a container attached to another container or a named frame: a warm gray, the
--- strip's gold with the color drained out, so at a glance it reads as not draggable on its own (the
--- owner, 2026-09-26; the dim SECONDARY_GOLD of the first cut was not muted enough).
+-- strip's gold with the color drained out, so at a glance it reads as attached (the owner,
+-- 2026-09-26; the dim SECONDARY_GOLD of the first cut was not muted enough). It once meant "cannot
+-- be dragged"; since issue #22 a container-attached one drags too, so it means attached alone.
 C.ATTACHED_NAME_COLOR = "ff8c8a84"
 
 -- Time text. Each is a SecondsFormatter setup; "blizzard" copies the engine's own, rounding up.

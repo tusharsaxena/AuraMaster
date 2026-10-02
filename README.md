@@ -4,7 +4,7 @@
 ![CurseForge Version](https://img.shields.io/curseforge/v/1698345)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-1965%2F1965_passing-green)
+![Tests](https://img.shields.io/badge/Tests-1966%2F1966_passing-green)
 
 Ka0s Aura Master lets you build your own buff and debuff displays. Each one is a container. You pick
 whose auras it shows (yours, your target's, your focus's or your pet's), whether it shows buffs,
@@ -44,8 +44,11 @@ _[Watch on YouTube](https://www.youtube.com/watch?v=lJoZiVA_SBE)_
 A fresh install gives you four containers to start from: your buffs as bars near the top right, your
 debuffs as a row of icons above them, the debuffs you've put on your target as icons just below the
 middle of the screen, and your offensive and defensive cooldowns as a line of text near the middle.
-They start locked. `/am unlock` puts a handle on each one, and you drag the ones placed on the
-screen to wherever you want them. `/am lock` puts the handles away again. Test mode (`/am test`, or the checkbox on General → Master controls) fills every
+They start locked. `/am unlock` puts a handle on each one, and you drag a container by its handle to
+wherever you want it. Drop it next to another container and it attaches there, following that one as
+it grows: a green box shows which container it will join before you let go. Drag an attached one
+away to put it back on the screen, and hold Shift while you drop to place it without attaching.
+`/am lock` puts the handles away again. Test mode (`/am test`, or the checkbox on General → Master controls) fills every
 container with sample auras, so you can see what you're building without waiting for a real buff.
 It switches itself off when combat starts.
 
@@ -55,7 +58,7 @@ the rest.
 
 - **Create a container**. Click New container, or type `/am new target debuffs icons` in chat. On General, pick whose auras it shows (yours, your target's, your focus's or your pet's), whether it shows buffs or debuffs, and whether it draws them as bars, icons or text. You can rename, duplicate or delete it there too, or copy another container's settings onto it.
 - **Choose what it shows**. Filters decides which auras make the cut: who cast them, timed or permanent, a maximum duration, and the spell categories. Each category is set to Show or Hide, and an aura in any category set to Show gets drawn. The Overrides tab holds a whitelist and a blacklist for single spells, and the whitelist always wins. General → Spell Categories is where you change which spells a category holds, or make your own. The Situations tab, last on Filters, covers the places spell lists can't reach, the kinds of zone the container shows in, and which kinds of unit it shows for. If a filter can't work where you've put it, an orange line at the top of the page says why.
-- **Place it**. Layout decides where the container lives: anywhere on screen, following another container as that one grows, or attached to a frame such as your unit frame or an action bar. **Pick a frame…** closes the settings so you can just click the one you want. Growth direction, spacing, scale and the optional name label are on Layout too.
+- **Place it**. Layout decides where the container lives: anywhere on screen, following another container as that one grows, or attached to a frame such as your unit frame or an action bar. While unlocked you can also just drop a container onto another one to attach it. **Pick a frame…** closes the settings so you can just click the one you want. Growth direction, spacing, scale and the optional name label are on Layout too.
 - **Make it look right**. The last entry in the list is the container's style, Bar, Icon or Text, with its textures, fonts, colors and borders. A Text container draws each aura as one line from a template such as `$spellname$[ x$stacks$][ - $remainingduration$]`, and the page lists every token it understands. General → Dispel Colors picks the color for each dispel type.
 
 Spell categories and the Overrides lists don't work everywhere, because the game only filters by
@@ -142,7 +145,8 @@ affected.
 | I only see the sample auras | Test mode is on. Type `/am test off`, or untick **Test mode** under General → Master controls. |
 | A container stays empty and its Filters section says "These filters can never match anything." | Two of your choices rule each other out, such as a spell category set to Show with every spell unticked. Loosen one of them, for example by setting the category to Hide. |
 | An orange line says spell categories or Overrides are not applied on some units | That's the game's rule, not a fault. Blizzard won't filter by spell there, so on the units the line names your spell categories and Overrides lists do nothing. What draws there instead is your choice on the container's Filters → Situations tab. |
-| I can't drag a container | You can only drag containers attached to the screen, and not during combat. An attached container follows its target. Move it with the offsets on Layout → Anchor, or set **Attach to** back to *Screen*. |
+| I can't drag a container | Containers on the screen or attached to another container drag while unlocked (`/am unlock`), but not during combat. One attached to a named frame follows that frame and doesn't drag: move it with the offsets on Layout → Anchor, or set **Attach to** back to *Screen*. |
+| I dropped a container and it attached itself to another one | Dropping a container close to another one attaches it there, on the side it was nearest. Hold Shift while you drop to place it without attaching, or drag it away again to put it back on the screen. |
 | A container attached to a frame is sitting somewhere else | The frame wasn't found, so the container fell back to its screen position. Check the name in **Frame name** (`/fstack` shows frame names), or pick the frame again. |
 | Blizzard's buff frame is still showing after I hid it | Blizzard's frames can't be moved during combat. The change goes through as soon as combat ends. |
 | My weapon enchants don't show | Enchants appear in a player buff container whose **Weapon enchants** row on Filters → Categories is set to Show (the default). `/am new enchants` makes a container that shows nothing else. You choose which weapon slots count under General → Spell Categories → Weapon enchants. Enchants that never expire are skipped while **Hide enchants without a duration** is on. |

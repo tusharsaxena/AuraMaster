@@ -228,10 +228,13 @@ width, so `stripOverhang` is 0. Only an element too narrow for both reserves and
 keeps the natural width, `ApplyWidth(element)`, and runs past it. Nothing on screen
 marks the point where a container attached to another joins it (batch 11 G6 removed batch 9's join
 pin); the strip's tooltip names the parent's point and the parent (`Anchors.JoinText`). While the
-container is attached to another container or a named frame, which it follows and cannot be dragged
-away from, its strip name is a warm gray (`C.ATTACHED_NAME_COLOR`) and the tooltip's first line says
-so instead of "Drag to move": "Anchored to '*parent or frame*', so it cannot be dragged" (the owner,
-2026-09-26). The strip's close mark (X) writes `container.enabled = false` through
+container is attached to another container or a named frame, its strip name is a warm gray
+(`C.ATTACHED_NAME_COLOR`, the owner, 2026-09-26): attached, not undraggable. The tooltip's first line
+says how to use the strip (`tooltipSpec`, issue #22): on the screen, "Drag to move. Drop it on another
+container to attach it there; hold Shift to place it without attaching."; attached to another
+container, "Attached to '*parent*'. Drag it away to detach it, or onto another container to attach it
+there; ..."; attached to a named frame, which a drag cannot move, "Anchored to '*frame*', so it cannot
+be dragged". A drag and its drop are in *Drag to attach* below. The strip's close mark (X) writes `container.enabled = false` through
 `NS.SetByPath`, the same write as the Enabled checkbox, so the next visibility pass hides it.
 
 ## Preview
@@ -462,8 +465,10 @@ loading makes it a target); else to the screen at `container.position`. A pendin
 is skipped under combat lockdown, so `PLAYER_REGEN_ENABLED` runs it again once combat ends. A
 container set to a container or a frame that lands on the screen instead writes one `[Anchor]` debug
 line, and so does a skipped resolve. Positions are stored, never read back off an engine frame, whose
-geometry can be secret; the only position read is the anchor's own after a drag, saved through the
-write seam against that container's id. The client never saves an anchor's position itself
+geometry can be secret; the only positions read are a dragged anchor's own (at the start, to lift an
+attached one onto UIParent, and after the drop, saved through the write seam against that
+container's id) and, while a drag is live, the rects the snap aims at, every number through
+`NS.Secrets.NumberOr` (*Drag to attach* below). The client never saves an anchor's position itself
 (`SetDontSavePosition`), so a login cannot restore one over the stored position.
 
 Attached to another container, the child joins it by two absolute points, `attach.childPoint` (its
@@ -517,3 +522,42 @@ One element's size is `Style.ElementSize`. On a Text container with Size to fit 
 `Style.Text.AutoSize` measures the widest line over the placeholders, the sample and the worst-case
 durations with the container's font, icon, gap and bounce, clamps the width, memoizes it per style
 signature and falls back to the stored size when nothing can be measured (AS-2).
+
+### Drag to attach
+
+While unlocked, a screen container or one attached to another drags by its strip (issue #22,
+`modules/Anchors_Snap.lua`); one on a named frame does not, and no drag starts in combat. The widget
+asks `beginDrag` (its `canDrag`) immediately before `StartMoving`, so on a yes `Snap.BeginDrag` can
+first hang an attached anchor from UIParent: where its left and bottom edges read, at them, so it does
+not move; where they read secret (it hangs from an engine holding auras), centered under the cursor.
+It sets `dragging`, which makes `Anchors.Place` leave the anchor where the drag has it, and starts
+the driver: one frame whose OnUpdate is armed only while a drag is live and runs `Snap.Tick` at most
+every 0.03 s. A tick finds no candidate while Shift is held or once combat has started; otherwise
+`Snap.Find` measures, for every eligible container (enabled, its anchor shown, not the dragged one, not
+one that follows it: `Anchors.WouldCycle`), the nine classified sides under that container's flow
+growth, between the dragged anchor's point and the target's relative point on the rect a follower
+would hang from (`Anchors.HangFrame`; an engine that reads secret falls back to its anchor). The
+nearest within `C.SNAP_RADIUS` (24 UIParent units) is framed by a green highlight with a marker on the
+join; both hang from UIParent, never from the target.
+
+`Snap.Drop`, the strip's OnDragStop, reads combat, Shift and the candidate again at the drop and writes
+through the seam against this container's id, never the panel's selection:
+
+1. **Combat started mid-drag:** nothing attaches. A screen container stores its position as before; an
+   attached one writes nothing and asks for a silent apply, which waits for combat to end and puts it
+   back on its parent.
+2. **A candidate and no Shift:** the whole `container.attach` section (mode container, the target,
+   the picked side's two points, each nil where it equals Automatic's, `Snap.FoldPoints`, and X/Y 0;
+   the frame mode's keys kept) goes to `NS.AttachByDrop` (`settings/Layout.lua`). It writes it, or,
+   when the chain the drop joins flows differently, shows the `AURAMASTER_ATTACH_FLOW` popup (GC-1)
+   carrying the section, whose Accept writes it and whose Cancel leaves everything as it was; until
+   then the container goes back where its stored settings put it.
+3. **Otherwise:** an attached container detaches. `Anchors.SavePosition` stores the drop position,
+   then the section is written with mode screen and X/Y 0, the target and points kept. A position that
+   reads secret is not stored, and the container goes back to its parent instead. A screen container
+   stores its position, as it always did.
+
+A whole-section write of `container.attach` sends one `CONFIG_CHANGED` whose path re-applies the
+container's followers and the container it names (`docs/schema.md`), as a write to its mode, target or
+points does. Each outcome writes an `[Anchor]` line: `drop: attach to <id> <side>`, `drop: detach`,
+`drop: moved` or `drop: held (combat)`.

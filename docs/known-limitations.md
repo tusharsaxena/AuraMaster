@@ -196,6 +196,23 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   matching reserve on the other side, so the label stays centered, and a shown name label pushes the
   strip further out by the label's height plus the gap (D6); both count in the clamp, so the push
   grows with them.
+- **A container attached to a named frame cannot be dragged** (issue #22, out of scope). It follows
+  its frame; move it with the X/Y offsets on Layout > Anchor, or set Attach to back to Screen. A
+  screen container and one attached to another container drag, out of combat only; no drag starts in
+  combat, and one under way when combat starts attaches nothing at the drop (an attached one goes back
+  to its parent once combat ends).
+- **An attached container can jump to the cursor when its drag starts** (issue #22). Before it moves,
+  `Snap.BeginDrag` hangs its anchor from UIParent where its left and bottom edges read. Hung from a
+  parent's engine that holds auras, those edges read secret, so the anchor is centered under the
+  cursor instead, a jump of at most its own size. The drop is unaffected: it attaches, or detaches at
+  wherever the anchor was let go.
+- **A container whose engine reads secret is measured by its first element while you drag onto it**
+  (issue #22). The snap aims at the frame a follower would hang from (`Anchors.HangFrame`). An engine
+  holding auras reads secret, so `Snap.TargetRect` falls back to the container's anchor, one element
+  where its first aura sits: the highlight frames that element, and the nine sides are measured on it
+  rather than on the whole block. A drop near the far end of a long populated container may find
+  nothing in range; drop near its start, or turn test mode on, where the snap aims at the whole
+  placeholder block (`Preview.Extent`, a frame of ours).
 - **In test mode, a container attached to another hangs from that container's preview extent.** A
   previewing container's engine is disabled and keeps a stale rect, so a container attached to it is
   re-placed onto a frame of ours sized to its placeholder block (`Preview.Extent`), where it sits as

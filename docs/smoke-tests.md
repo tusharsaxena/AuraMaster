@@ -24,6 +24,7 @@ check's number is not reused. Checks with no recorded pass, and checks new or co
 | CONT-1 to CONT-25 | Containers | Create, duplicate, delete, rename, copy; handles, strips and the close mark; test mode; unit swaps; empty placeholders |
 | FILT-1 to FILT-63 | Filters and spell categories | Cast by, the category grids, Overrides, the add-a-spell box, aura ids, your own categories, weapon enchants and their names, the help marks' art, where spell lists apply, the Situations tab, its zones and its Unit type gate |
 | LAYOUT-1 to LAYOUT-38 | Layout | Anchor modes, attaching, chains, growth, anchor points, seams, the name label, mouse and tooltips |
+| DRAG-1 to DRAG-11 | Layout | Drag to attach (issue #22): dropping a container on another, the highlight, the side a drop picks, Shift, loops, detaching, the growth-conflict popup, combat, a parent holding auras, frame-attached containers, the strip's tooltip |
 | STYLE-1 to STYLE-30 | Bars and Icons style, fonts | Bars and Icons tabs, the spark, borders, dispel colors, pandemic, the font primer |
 | TEXT-1 to TEXT-29 | Text style | Templates and tokens, justify, the icon, dispel type word, backdrop and edge, animation, Size to fit |
 | DEGRADED-1 | Library-absent install | The launcher libraries missing |
@@ -635,14 +636,16 @@ container it is attached to → no Lua error (none naming `Backdrop.lua`), and t
 look the same. Run this after a `/reload` and again after Profiles → Reset Profile. Result:
 
 **CONT-9. The handle's tooltip.** Hover a screen container's strip or its "?" → at the cursor, the
-name and "Drag to move. Right-click for settings.", in the usual gold. B (attached to A) and a
-container attached to a named frame show their strip name in a desaturated warm gray; hover B's strip
-or "?" → the first line reads "Anchored to '<A's name>', so it cannot be dragged. Right-click for
-settings.", never "Drag to move", and the named-frame one names its frame. With `/am test on`, the
-named-frame one's tooltip carries the gold line "Attached — set its offsets in the Layout section."
-Set B's Attach to back to Screen → the name turns gold at once and its tooltip says Drag to move; back
-to Another container → gray again. `/am test` → the orange TEST tag still follows the gray name.
-Result:
+name and "Drag to move. Drop it on another container to attach it there; hold Shift to place it
+without attaching. Right-click for settings.", in the usual gold. B (attached to A) and a container
+attached to a named frame show their strip name in a desaturated warm gray; hover B's strip or "?" →
+the first line reads "Attached to '<A's name>'. Drag it away to detach it, or onto another container
+to attach it there; hold Shift to place it without attaching. Right-click for settings.", and the
+named-frame one's reads "Anchored to '<frame name>', so it cannot be dragged. Right-click for
+settings.". With `/am test on`, the named-frame one's tooltip carries the gold line "Attached — set
+its offsets in the Layout section." Set B's Attach to back to Screen → the name turns gold at once and
+its tooltip says Drag to move; back to Another container → gray again. `/am test` → the orange TEST
+tag still follows the gray name. Result:
 
 **CONT-10. The screen edge.** `/am unlock`, drag a container that grows down flush against the top of
 the screen, `/am lock`, then `/am unlock` → the container shifts down by the strip and its gap, so the
@@ -1444,6 +1447,71 @@ cursor is over the container, padding included; off the container it works again
 **Show tooltips** text names this tradeoff, and Click-through on restores mouseover targeting
 everywhere under the container. Result:
 
+**Drag to attach** (issue #22). These use the chain from [Before you start](#before-you-start), A, B
+and C, plus two screen containers: D, Icons growing right and down, so its growth differs from the
+chain's, and E, a Text container growing down like A. Unlock first (`/am unlock`), and turn the
+debug console's logging on (`/am debug on`) to read the `[Anchor]` lines.
+
+**DRAG-1. Drop to attach, with the highlight.** Drag E by its strip toward A → while E comes within
+about 24 px of one of A's sides, a 2 px green box frames A with a small green square on the point
+where E would join; moving away hides both, and nothing else on screen changes while you drag. Drop
+E inside that range → E attaches there at once, with no popup: Layout → Anchor reads Attach to
+*Another container*, Parent container A, the two anchor points of that side (Automatic where the
+side is the default one), X and Y offsets 0. E's strip name turns gray, and moving A moves E. The log shows
+`drop: attach to <A's id> <side>`. No Lua error, no `ADDON_ACTION_BLOCKED`. Result:
+
+**DRAG-2. The nearest side.** Drag E (attached to A) to A three more times, letting go each time
+just below A, just to A's right, and just to A's left → the box marks A each time and the marker sits
+on the side you came closest to; E joins below A (*after*), on its right (*ahead*), and on its left
+(*behind*) respectively, lined up with the edge you dropped nearest (start, center or end). Layout →
+Anchor shows the matching pair each time, the default side's as Automatic. Result:
+
+**DRAG-3. Shift places without attaching.** Drag D toward A with Shift held → no box appears, even
+right on A's edge. Let Shift go while still close → the box appears; press it again → it goes. Drop on
+A's edge with Shift held → D stays on the screen where you let go, Attach to still *Screen*, and the
+log shows `drop: moved`. Result:
+
+**DRAG-4. No loops.** Drag A over B and over C (both follow A) → no box on either, and a drop there
+leaves A on the screen at the drop. Drag B over C (C follows B) → no box on C, though A may light
+up. No container ever frames the one being dragged. Result:
+
+**DRAG-5. Detach by dragging away.** Drag E well away from every container and drop it → E stays
+exactly where you let go, now on the screen: Attach to reads *Screen*, the X and Y offsets 0, and
+Layout → Anchor → Screen holds the position. Its strip name turns gold, A no longer moves it,
+and after `/reload` it is still there. The log shows `drop: detach`. Result:
+
+**DRAG-6. The growth-conflict popup, accepted.** Drop D on A's side (D grows differently from A's
+chain) → D goes back to where it was before the drag and the growth-conflict popup of LAYOUT-5 names
+D, A and what changes. **Attach** → D attaches on that side with X and Y 0 and takes A's growth. Result:
+
+**DRAG-7. The growth-conflict popup, canceled.** Detach D (drag it away), then drop it on A again →
+the popup. **Cancel** → D stays where it was before the drag, Layout → Anchor unchanged (*Screen*, its
+old position), and nothing else moved. Result:
+
+**DRAG-8. Combat starting mid-drag.** Start dragging D toward A, then let a pet or a damage-over-time
+pull you into combat before you let go → the green box disappears the moment combat starts and does
+not come back. Drop on A → D does not attach; it stays where you let go and keeps *Screen*. Repeat with
+B (attached to A): drop it far away in combat → nothing is written; B waits where you let go, and
+when combat ends it is back on A, still attached. Try to start a drag in combat → nothing moves. No Lua error, no `ADDON_ACTION_BLOCKED`; the log
+shows `drop: held (combat)`. Result:
+
+**DRAG-9. A parent holding auras.** Out of test mode, with real auras showing in A (so B hangs from
+A's live engine), start dragging B → B may jump so that its center sits under the cursor (by no more
+than its own size) and then follows the cursor smoothly; the drop attaches or detaches as in DRAG-1
+and DRAG-5. Drag E toward A while A holds several auras → the green box frames only A's first
+element, and a drop near that element attaches. Both are known limitations. No Lua error. Result:
+
+**DRAG-10. A frame-attached container still does not drag.** Attach a container to `PlayerFrame` and
+try to drag it by its strip → it does not move, its name is gray, and its tooltip reads "Anchored to
+'PlayerFrame', so it cannot be dragged. Right-click for settings.". Result:
+
+**DRAG-11. The strip's tooltip.** Hover D's strip → "Drag to move. Drop it on another container to
+attach it there; hold Shift to place it without attaching. Right-click for settings."; hover B's →
+"Attached to '<A's name>'. Drag it away to detach it, or onto another container to attach it there;
+hold Shift to place it without attaching. Right-click for settings.", then the gold "Joined to the …
+of '<A's name>'" line; the frame-attached one as DRAG-10. Rename A → B's tooltip names the new name on
+the next hover. Result:
+
 ## Bars and Icons style, fonts
 
 **STYLE-1. The Bars tabs.** On a bars container, rail → Bars → **[ General ][ Background & border ][
@@ -1872,6 +1940,7 @@ line, then remove its row here.
 | CONT-3 | 31: its in-combat steps rewritten on 2026-09-29 for `/am new`, `/am delete` and a Delete popup opened before the pull, since the panel is locked in combat |
 | CONT-5 | 205: its in-combat rename rewritten on 2026-09-29 for `/am set container.name` |
 | CONT-8 | 162, smoke batch 2 (owed: the owner verified 143 to 161 only) |
+| CONT-9 | its tooltip lines corrected on 2026-10-02 for drag to attach (issue #22): the screen line names the drop, and a container attached to another names its parent and how to detach it |
 | CONT-21 | 136 and 224: the placeholder count corrected on 2026-09-29 (one per ticked slot, three by default) |
 | FILT-2 | 80, batch 6 |
 | FILT-4 | 24: its Spell Categories grid corrected on 2026-09-29 (Hard CC, Soft CC and Racials with their See spells links, the line naming General -> Spell Categories and the hostile-unit note, since issue #11); its NOTE line under the Spell Categories heading new on 2026-10-02 (spell-list views, SV-04); the note under the grid reworded to "you can't assist" (SV-05) |
@@ -1903,6 +1972,7 @@ line, then remove its row here.
 | LAYOUT-25 | 202, batch 8 (failed 2026-09-25): the step with two chained Text containers; the rest passed as 194 |
 | LAYOUT-37 | 64 and 76, batch 5 |
 | LAYOUT-38 | 84, batch 6 |
+| DRAG-1 to DRAG-11 | new on 2026-10-02 with drag to attach (issue #22) |
 | STYLE-3 | 63, batch 5 |
 | STYLE-6 | 59a, batch 5 |
 | STYLE-9 | 61, batch 5; 163, smoke batch 2 (owed, as CONT-8); its bullet count corrected to four on 2026-09-29 |

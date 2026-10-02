@@ -362,7 +362,7 @@ NS.RegisterSchemaRows({
         -- Asks first when a stored target would change how it flows (GC-1): panel only.
         confirmWrite = confirmMode,
         values = NS.Choices(C.ATTACH_MODES, C.ATTACH_MODE_LABELS), label = L["Attach to"],
-        desc = L["The screen (drag it anywhere), another container (it follows that container as it grows), or any named frame — a unit frame, an action bar. Only the settings for your choice are shown below."],
+        desc = L["The screen (drag it anywhere), another container (it follows that container as it grows; while unlocked, drop it on one to attach it there, or drag it away to put it back on the screen), or any named frame — a unit frame, an action bar. Only the settings for your choice are shown below."],
     },
     {
         path = "container.position.point", page = PAGE, group = G_ANCHOR, subgroup = S_SCREEN, shownWhen = SCREEN_ONLY,

@@ -699,13 +699,16 @@ values was secret.
   with `StartMoving`), and the client saves a movable frame's position and restores it at login.
   `Container.New` calls `SetDontSavePosition(true)`, so the stored `container.position` is the only
   position an anchor ever has.
-- **The drag handle sits outside the anchor and never re-anchors anything.** It is our own strip,
+- **The drag handle sits outside the anchor and re-anchors nothing while it shows.** It is our own strip,
   placed against the anchor on the side the auras do not grow into; the anchor, the engine and the
   preview stay where they are. While it shows, the anchor's clamp rect is widened over it
   (`SetClampRectInsets`). Placing the strip and widening the clamp both happen only out of combat,
   because the anchor parents an aura engine: under lockdown the handle keeps its last placement and
   only shows or hides, except that a handle never placed (first shown in combat) is placed once so
-  it draws. The next visibility pass after combat catches both up.
+  it draws. The next visibility pass after combat catches both up. A drag of a container attached to
+  another is the one time its anchor is re-hung: `Snap.BeginDrag` (`modules/Anchors_Snap.lua`, issue
+  #22) hangs it from `UIParent` before it moves, out of combat only, so the move never starts from
+  the parent's geometry, which may read secret.
 - **The engine is anchored before its first `AddAuraGroup`**; after that an addon can no longer
   anchor it (`modules/Container.lua:399-402`).
 - **No structural work while auras are secret or under combat lockdown.** `ContainerManager.MustDefer`

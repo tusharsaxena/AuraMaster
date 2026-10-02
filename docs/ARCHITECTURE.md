@@ -44,13 +44,15 @@ what each LibKa0s setup file publishes: `docs/module-map.md` → *Libraries*.
 ## Module Map
 
 Five source folders in the TOC's load order — `locales/` → `core/` → `defaults/` → `modules/` →
-`settings/` (layout-§1) — 55 authored Lua files under them: one locale, 16 core, 4 defaults, 19
+`settings/` (layout-§1) — 56 authored Lua files under them: one locale, 16 core, 4 defaults, 20
 modules and 15 settings. The load-bearing positions are annotated at their TOC lines:
 `core/MediaSetup.lua` before `core/Constants.lua` (the monospace face), `core/CoreSetup.lua` before
 anything that prints, `core/PerfSetup.lua` before every module that takes `NS.Perf` as an upvalue,
 `defaults/Categories.lua` before `defaults/Profile.lua` (the template's category states) and
 `defaults/UserCategories.lua` directly after it (the `NS.Categories` upvalue),
 `modules/Anchors_Attach.lua` before `modules/Anchors.lua` (which binds `NS.AnchorsAttach` at file load),
+`modules/Anchors_Snap.lua` after both (it binds `NS.AnchorsAttach`'s pair table at file load and extends
+`Anchors` as `Anchors.Snap`),
 `settings/OptionsSetup.lua` before every page file (the composers run at file load), and
 `settings/GeneralUserCategories.lua` (read by `settings/GeneralSpells.lua` at file load), then
 `settings/GeneralSpells.lua`, then `settings/GeneralDispel.lua` (which reads its bullet constants), all
@@ -81,7 +83,16 @@ the client loads an addon font file lazily and text first drawn before the load 
 (`NS.State.testMode`, switched only by `Preview.SetTestMode`): every container shows its placeholder
 auras. Unlocking is separate: it makes containers draggable while their live auras keep drawing,
 each under its drag handle, and one predicted empty under a faint outline one element in size, so an
-empty container can still be found and dragged. The handle's close mark (X) turns that container off through the write
+empty container can still be found and dragged. A screen container or one attached to another drags
+(never one on a named frame, never in combat); dropped near another container it attaches there
+(issue #22, `modules/Anchors_Snap.lua`). The handle's `beginDrag` lifts an attached anchor onto
+`UIParent` and starts the snap driver, which every 0.03 s highlights the nearest of the nine sides of
+the nearest eligible container within `C.SNAP_RADIUS` (`Snap.Find`; never itself or one that follows
+it, `Anchors.WouldCycle`), and `Anchors.Place` leaves a dragging anchor alone. `Snap.Drop` decides
+from the drop itself: a candidate and no Shift writes the whole `container.attach` section through
+`NS.AttachByDrop` (`settings/Layout.lua`), which asks first with the GC-1 popup when the chain's flow
+would change; an attached container dropped with none (or with Shift held) detaches to the drop
+position, X/Y 0; combat started mid-drag attaches nothing. The handle's close mark (X) turns that container off through the write
 seam. A container can also show its name as a label where the handle sits, locked or unlocked;
 while unlocked the handle moves out past it (`Anchors.PlaceLabel`, batch 8 D6).
 
@@ -313,7 +324,9 @@ Units stop at player, target, focus and pet. Nothing structural happens while au
 under lockdown, so settings changes, teardown and class colors wait for it to lift. The engine bounds
 what a Text line can do, which spell-id filters it honors, and when a non-Solid border redraws. A
 handful of user-category trade-offs were accepted by the owner. A font a media addon registers
-after login is not primed until the next settings change or `/reload`. Every limitation, its cause and any
+after login is not primed until the next settings change or `/reload`. A container on a named frame
+cannot be dragged, and an attached one whose position reads secret jumps to the cursor when its drag
+starts. Every limitation, its cause and any
 ruling: `docs/known-limitations.md`.
 
 ## Documentation map

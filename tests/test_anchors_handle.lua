@@ -266,7 +266,9 @@ test("handle: the help mark carries the tooltip and right-click opens the settin
     rawset(mocks.GameTooltip, "AddLine", add)
     h.help:__fire("OnEnter")
     assertEqual(lines[1], NS.Database.FindContainer(2).name)
-    assertEqual(lines[2], NS.L["Drag to move. Right-click for settings."])
+    -- red under: the old "Drag to move. Right-click for settings." line, which never said a drop on
+    -- another container attaches it, or that Shift places it without attaching (issue #22)
+    assertEqual(lines[2], NS.L["Drag to move. Drop it on another container to attach it there; hold Shift to place it without attaching. Right-click for settings."])
     local opened = {}
     NS.OpenOptionsPage = function(key)
         local n = #opened
@@ -388,6 +390,22 @@ test("handle: an attached container's tooltip says where its offsets are set; a 
     assertEqual(lines[1], NS.L["Anchored to '%s', so it cannot be dragged. Right-click for settings."]:format("PlayerFrame"))
     -- red under: showTooltip without its attached line (the player drags and nothing moves)
     assertEqual(lines[2], NS.L["Attached — set its offsets in the Layout section."])
+end)
+
+test("handle: a container-attached tooltip whose parent is gone tells how to drop it, as a screen one's does (#22)", function()
+    local NS, mocks = fresh()
+    local inst = NS.ContainerManager.instances[1]
+    local h = recordedHandle(mocks, NS, inst)
+    local lines = {}
+    rawset(mocks.GameTooltip, "AddLine", function(_, s)
+        lines[#lines + 1] = s
+    end)
+    local at = NS.Database.FindContainer(1).attach
+    at.mode, at.container = "container", 99
+    h:__fire("OnEnter")
+    -- red under: a howTo that names whatever the stored id finds ("Attached to 'nil'"), or the old
+    -- screen line that never said a drop attaches it; beginDrag drags it, so the drop line holds
+    assertEqual(lines[1], NS.L["Drag to move. Drop it on another container to attach it there; hold Shift to place it without attaching. Right-click for settings."])
 end)
 
 test("handle: a frame-attached container, or one in combat, does not move on a drag, and a stray drag stop stores nothing", function()
