@@ -420,3 +420,24 @@ test("container views: the stand-up moves the view before it re-enables, in comb
     -- red under: the views moved after the visibility pass (one draw of the new target in the old view)
     assertTrue(set ~= nil and enable ~= nil and set < enable, "the switch precedes the re-enable")
 end)
+
+test("container views: a refused setter leaves the view stale, and the next switch resends it in full", function()
+    local _, mocks, inst, engine = targetBuffs(false)
+    assertEqual(inst.view, "blizzard")
+    local real = engine.SetAuraGroupCandidateFilters
+    engine.SetAuraGroupCandidateFilters = function() error("refused") end
+    mocks.__canAssist.target = true
+    inst:ApplyView()
+    -- red under: ApplyView recording the switch as done although the engine refused a setter (the
+    -- diagnostics would name a view the engine does not hold)
+    assertTrue(inst.viewStale == true, "a refused setter marks the view stale")
+    engine.SetAuraGroupCandidateFilters = real
+    local before = #engine:__callsTo("SetAuraGroupCandidateFilters")
+    inst:ApplyView()
+    -- red under: the retry sending only the values that differ between the views, or nothing at all
+    -- because the view already reads "ids"
+    assertEqual(#engine:__callsTo("SetAuraGroupCandidateFilters") - before, #inst.plan.groups,
+        "every group resent")
+    assertTrue(not inst.viewStale, "a clean resend clears the mark")
+    assertEqual(inst.view, "ids")
+end)

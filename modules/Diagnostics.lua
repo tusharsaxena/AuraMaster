@@ -538,8 +538,10 @@ end
 
 local function groupLine(out, x, g)
     local frames, shown = frameCounts(x, g.key)
+    -- The values of the view the engine holds (inst.view), not always the ids view.
+    local filter, cand = NS.Container.ViewOf(g, (x.inst and x.inst.view) or "ids")
     out:add("Plan", '#%s %s "%s" filter=%s cand=%s sort=%s/%s max=%s frames=%s shown=%s', x.id, g.key,
-        g.label, g.filter, candSummary(g.candidateFilters), g.sortMethod, g.sortDirection,
+        g.label, filter, candSummary(cand), g.sortMethod, g.sortDirection,
         g.maxFrameCount, frames, shown)
 end
 
@@ -553,8 +555,9 @@ local function planLines(out, x)
     -- of the plan the live engine holds now (ContainerClass:ApplyView), and the Situations setting that
     -- picked it (filter situations, S2: npcs | players | unknown, "-" on the ids view).
     local auraType = (x.c.auraType == "HARMFUL") and "HARMFUL" or "HELPFUL"
-    out:add("Plan", "#%s spell lists: mode=%s view=%s situation=%s", x.id, FC.IdsMode(x.c.unit, auraType),
-        str(x.inst.view), x.inst.situation and str(x.inst.situation) or "-")
+    out:add("Plan", "#%s spell lists: mode=%s view=%s situation=%s%s", x.id, FC.IdsMode(x.c.unit, auraType),
+        str(x.inst.view), x.inst.situation and str(x.inst.situation) or "-",
+        x.inst.viewStale and " stale=yes" or "")
     for _, g in ipairs(plan.groups or {}) do
         out:section("plan #" .. str(x.id) .. " " .. groupKey(g), groupLine, x, g)
     end

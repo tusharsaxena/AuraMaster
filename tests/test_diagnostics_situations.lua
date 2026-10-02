@@ -99,3 +99,28 @@ test("diag: an ordinary setting write keeps the situation the view was chosen fo
     assertTrue(has(lines, "[Plan] #" .. id .. " spell lists: mode=dynamic view=every situation=npcs") ~= nil,
         dump(lines))
 end)
+
+test("diag: each plan group prints the filters of the view the engine holds, and a stale view says so", function()
+    local NS, mocks = fresh()
+    mocks.__canAssist.target = false
+    local states = {}
+    for _, def in ipairs(NS.Categories.For("HELPFUL")) do
+        states[def.key] = (def.key == "defensives") and "show" or "hide"
+    end
+    local id = NS.ContainerManager.Create({ unit = "target", auraType = "HELPFUL", filter = {
+        categories = states, situations = { npcs = "blizzard", players = "blizzard" } } })
+    mocks.__fireTimers()
+    local inst = NS.ContainerManager.instances[id]
+    assertEqual(inst.view, "blizzard")
+    local lines = build(NS)
+    local g1 = has(lines, "[Plan] #" .. id .. " g1 ")
+    -- red under: groupLine printing the ids view (the Defensive cooldowns id list) while the engine
+    -- holds the blizzard view, where that group matches nothing
+    assertTrue(g1 ~= nil and g1:find("includeDispelTypes", 1, true) ~= nil, dump(lines))
+    assertTrue(g1:find("includeSpellIDs", 1, true) == nil, g1)
+    inst.viewStale = true
+    lines = build(NS)
+    -- red under: a stale view reported as if the engine held it cleanly
+    assertTrue(has(lines, "[Plan] #" .. id .. " spell lists: mode=dynamic view=blizzard situation=npcs stale=yes") ~= nil,
+        dump(lines))
+end)

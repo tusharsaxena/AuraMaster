@@ -309,18 +309,26 @@ local function viewOf(g, view)
     return v.filter, v.candidateFilters
 end
 
+--- Group `g`'s filter string and candidate filters in `view`, for the diagnostics report.
+NS.Container.ViewOf = viewOf
+
 --- Send group `g` its `view` values where they differ from what the engine holds: `o`'s values in
---- `oldView` (o is g itself for a view switch, the last plan's group for an update).
-local function sendGroupView(engine, g, view, o, oldView)
+--- `oldView` (o is g itself for a view switch, the last plan's group for an update). `force` sends
+--- both regardless, for an engine whose last send was refused (`viewStale`): what it holds then is not
+--- known. Answers whether every call the engine was sent went through.
+--- @return boolean
+local function sendGroupView(engine, g, view, o, oldView, force)
     local f, c = viewOf(g, view)
     local of, oc = viewOf(o, oldView)
-    if of ~= f then
-        callEngine(engine, "SetAuraGroupFilterString", g.key, f)
+    local ok = true
+    if force or of ~= f then
+        ok = callEngine(engine, "SetAuraGroupFilterString", g.key, f) and ok
     end
     local Sig = NS.FilterCompiler.Signature
-    if Sig(oc) ~= Sig(c) then
-        callEngine(engine, "SetAuraGroupCandidateFilters", g.key, c or {})
+    if force or Sig(oc) ~= Sig(c) then
+        ok = callEngine(engine, "SetAuraGroupCandidateFilters", g.key, c or {}) and ok
     end
+    return ok
 end
 
 local VIEW_WORDS = { blizzard = "only Blizzard categories set to Show", every = "every aura" }
@@ -360,14 +368,19 @@ function ContainerClass:ApplyView()
     if not (engine and plan) then return false end
     local unit, auraType = self.unit, self.auraType
     local view, situation = self:ResolveView(unit, auraType)
-    local was = self.view
-    if view == was then
+    local was, stale = self.view, self.viewStale
+    if view == was and not stale then
         self.situation = situation
         return false
     end
+    -- A refused setter (callEngine logs it once) leaves the view STALE: recorded as the one asked for,
+    -- so the report says which, and resent in full at the next switch, since what the engine holds
+    -- after a partial send is not known.
+    local ok = true
     for _, g in ipairs(plan.groups) do
-        sendGroupView(engine, g, view, g, was)
+        ok = sendGroupView(engine, g, view, g, was, stale) and ok
     end
+    self.viewStale = (not ok) or nil
     self:NoteView(view, unit, auraType, situation)
     return true
 end
@@ -457,10 +470,11 @@ function ContainerClass:Update(cfg, plan)
     local auraType = auraTypeOf(cfg)
     local view, situation = self:ResolveView(cfg.unit, auraType, cfg)
     applyFlow(engine, cfg)
+    local ok, stale = true, self.viewStale
     for i, g in ipairs(plan.groups) do
         local o = old.groups[i]
         -- What the engine holds is the last plan in the view it was sent in.
-        sendGroupView(engine, g, view, o, self.view)
+        ok = sendGroupView(engine, g, view, o, self.view, stale) and ok
         if o.sortMethod ~= g.sortMethod or o.sortDirection ~= g.sortDirection then
             callEngine(engine, "SetAuraGroupSortMethod", g.key, Compat.SortMethod(g.sortMethod),
                 Compat.SortDirection(g.sortDirection))
@@ -476,6 +490,7 @@ function ContainerClass:Update(cfg, plan)
         self.unit = cfg.unit
     end
     self.plan = plan
+    self.viewStale = (not ok) or nil
     self:NoteView(view, cfg.unit, auraType, situation)
     self:Restyle(cfg)
 end

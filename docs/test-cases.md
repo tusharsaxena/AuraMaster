@@ -485,7 +485,7 @@ badge and any count quoted in the docs must agree with it.
 - container: an engine whose frame level reads secret leaves the blocker at level 0, never raising (E)
 - container: ApplyVisibility records the hang mode for test mode, unlocked and locked; Park and Destroy reset it
 
-### test_container_views.lua (16)
+### test_container_views.lua (17)
 
 - container views: a target buff container is built on the view its unit's reaction picks
 - container views: player debuffs are always built on the blizzard view, player buffs on the ids view
@@ -503,6 +503,7 @@ badge and any count quoted in the docs must agree with it.
 - container views: the view frame's unit events go down with the addon and come back with it
 - container views: UNIT_FACTION and UNIT_FLAGS on the player move target and focus views
 - container views: the stand-up moves the view before it re-enables, in combat too
+- container views: a refused setter leaves the view stale, and the next switch resends it in full
 
 ### test_container_situations.lua (16)
 
@@ -1570,11 +1571,12 @@ badge and any count quoted in the docs must agree with it.
 - diag: the fonts primed line lists each refused file, size and flags after refused=
 - diag: the fonts primed list stops at MAX_IDS and flags the cap; the count stays whole
 
-### test_diagnostics_situations.lua (3)
+### test_diagnostics_situations.lua (4)
 
 - diag: each container's spell-list mode, the view its engine holds and the situation behind it
 - diag: a swap that keeps the view still names the new situation
 - diag: an ordinary setting write keeps the situation the view was chosen for
+- diag: each plan group prints the filters of the view the engine holds, and a stale view says so
 
 ### test_bulklog.lua (20)
 
@@ -2193,7 +2195,7 @@ badge and any count quoted in the docs must agree with it.
 | test_filterviews_situations.lua | 13 |
 | test_situations_settings.lua | 11 |
 | test_container.lua | 52 |
-| test_container_views.lua | 16 |
+| test_container_views.lua | 17 |
 | test_container_situations.lua | 16 |
 | test_container_zones.lua | 8 |
 | test_containermanager.lua | 54 |
@@ -2235,7 +2237,7 @@ badge and any count quoted in the docs must agree with it.
 | test_slash.lua | 34 |
 | test_slash_verbs.lua | 51 |
 | test_diagnostics.lua | 49 |
-| test_diagnostics_situations.lua | 3 |
+| test_diagnostics_situations.lua | 4 |
 | test_bulklog.lua | 20 |
 | test_debug_coverage.lua | 10 |
 | test_debug_library_lines.lua | 11 |
@@ -2269,4 +2271,4 @@ badge and any count quoted in the docs must agree with it.
 | test_layout_cap.lua | 13 |
 | test_diagnostics_contract.lua | 9 |
 | test_lizard_sighted.lua | 8 |
-| **Total** | **1899** |
+| **Total** | **1901** |
