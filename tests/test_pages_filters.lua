@@ -356,11 +356,15 @@ end)
 test("filters: a debuff container's Categories tab says its spell lists only match on a target or focus you can't assist (A3)", function()
     local _, _, P2, debuffWs = categories(2)
     -- red under: the old "Hard CC and Soft CC only work on a hostile target or focus ... change
-    -- nothing" note, which the no-ids view made false
+    -- nothing" note, which the blizzard view made false
     assertTrue(P2.hasText(debuffWs, "only match on a target or focus you can't assist"),
         "the debuff grid carries the spell-list note")
-    assertTrue(P2.hasText(debuffWs, "leaves only the Blizzard categories set to Show"),
-        "and says what a Hide does where the lists match nothing")
+    -- red under: the note promising only the Blizzard Show categories there, which the every view
+    -- (the default) made false (SI-06)
+    assertTrue(P2.hasText(debuffWs, "the Situations tab picks what draws there"),
+        "and points where the lists match nothing to the Situations tab")
+    assertFalse(P2.hasText(debuffWs, "leaves only the Blizzard categories set to Show"),
+        "and no longer promises only the Blizzard Show categories")
     local _, _, P, buffWs = categories(1)
     assertFalse(P.hasText(buffWs, "only match on a target or focus you can't assist"),
         "never on a buff container, whose spell lists are honored on friendly units instead")
@@ -386,7 +390,7 @@ test("filters: the Uncategorized cost note draws only where the engine is certai
 end)
 
 -- SV-04 (spell-list views, V4): the NOTE under the Spell Categories heading. Where Blizzard does not
--- apply spell ids the container switches to its no-ids view, in which every spell category's group
+-- apply spell ids the container switches to its blizzard view, in which every spell category's group
 -- is NEVER, so the grid must say so on every container whose `FC.IdsMode` is not "always", in the
 -- words of the unit it is about, and stay silent on a buff container on the player or the pet.
 
@@ -409,17 +413,18 @@ end
 
 test("filters: the Spell Categories NOTE names where spell categories are not applied, per unit (SV-04)", function()
     local cases = {
-        { id = 2, unit = nil,      note = "NOTE: on your own debuffs, these spell categories are not applied." },
-        { id = 2, unit = "pet",    note = "NOTE: on your pet's debuffs, these spell categories are not applied." },
-        { id = 3, unit = nil,      note = "NOTE: on units you can assist, these spell categories are not applied." },
-        { id = 1, unit = "target", note = "NOTE: on units you can't assist, these spell categories are not applied." },
-        { id = 1, unit = "focus",  note = "NOTE: on units you can't assist, these spell categories are not applied." },
+        { id = 2, unit = nil,      note = "NOTE: on your own debuffs, these spell categories are not applied (see Situations)." },
+        { id = 2, unit = "pet",    note = "NOTE: on your pet's debuffs, these spell categories are not applied (see Situations)." },
+        { id = 3, unit = nil,      note = "NOTE: on units you can assist, these spell categories are not applied (see Situations)." },
+        { id = 1, unit = "target", note = "NOTE: on units you can't assist, these spell categories are not applied (see Situations)." },
+        { id = 1, unit = "focus",  note = "NOTE: on units you can't assist, these spell categories are not applied (see Situations)." },
     }
     for _, c in ipairs(cases) do
         local NS, _, _, ws = categoriesOn(c.id, c.unit)
         local where = ("container %d on %s"):format(c.id, tostring(c.unit))
         local at = indexOfText(ws, NS.L[c.note])
-        -- red under: no NOTE line drawn, or the wrong unit wording for this container
+        -- red under: no NOTE line drawn, the wrong unit wording for this container, or the line
+        -- without its pointer to the Situations tab (SI-05)
         assertTrue(at ~= nil, where .. " draws: " .. c.note)
         local heading = indexOfText(ws, NS.L["Spell Categories"])
         local showAll = indexOfText(ws, NS.L["Show all"])
@@ -600,14 +605,15 @@ test("filters: the priority ranks read at the same size as the Overrides notes (
 end)
 
 -- BATCH 8: Overrides moved up to sit beside Categories — the two halves of one decision — and
--- Sorting, which only orders whatever survived them, is last.
-test("filters: the four tabs read General, Categories, Overrides, Sorting (batch 8)", function()
+-- Sorting, which only orders whatever survived them, follows. SI-05: Situations, which says what
+-- draws where the spell lists cannot, is the last tab, after Sorting.
+test("filters: the five tabs read General, Categories, Overrides, Sorting, Situations (batch 8, SI-05)", function()
     local NS, _, P = filters()
     local L = NS.L
     -- red under: the overrides tab appended after Sorting again (its `before` dropped), or the first
-    -- tab back at "What to show" (renamed 2026-09-20)
+    -- tab back at "What to show" (renamed 2026-09-20), or Situations anywhere but last
     assertEqual(table.concat(P.tabKeys("filters"), ","),
-        table.concat({ L["General"], L["Categories"], "overrides", L["Sorting"] }, ","))
+        table.concat({ L["General"], L["Categories"], "overrides", L["Sorting"], L["Situations"] }, ","))
     -- red under: tabs keyed globally rather than per page, which would fuse this General with the
     -- Text and Bars pages' own General tabs (the library's O.RenderTabbedSchema builds a strip
     -- out of NS.SchemaForPage(pageKey) alone, so the name is the PAGE's)
@@ -713,13 +719,13 @@ test("filters: Overrides replaces Always / never, with a Whitelist and a Blackli
 end)
 
 -- SV-04 (V3/V4): the Overrides tab is headed by the same NOTE shape. Its whitelist group and every
--- spell-id exclusion are gone in the no-ids view, so on those units the lists do nothing.
+-- spell-id exclusion are gone in the blizzard view, so on those units the lists do nothing.
 test("filters: the Overrides NOTE heads the tab on every container whose spell lists can be off (SV-04)", function()
     local cases = {
-        { id = 2, unit = nil,      note = "NOTE: on your own debuffs, these Overrides are not applied." },
-        { id = 2, unit = "pet",    note = "NOTE: on your pet's debuffs, these Overrides are not applied." },
-        { id = 3, unit = nil,      note = "NOTE: on units you can assist, these Overrides are not applied." },
-        { id = 1, unit = "target", note = "NOTE: on units you can't assist, these Overrides are not applied." },
+        { id = 2, unit = nil,      note = "NOTE: on your own debuffs, these Overrides are not applied (see Situations)." },
+        { id = 2, unit = "pet",    note = "NOTE: on your pet's debuffs, these Overrides are not applied (see Situations)." },
+        { id = 3, unit = nil,      note = "NOTE: on units you can assist, these Overrides are not applied (see Situations)." },
+        { id = 1, unit = "target", note = "NOTE: on units you can't assist, these Overrides are not applied (see Situations)." },
     }
     for _, c in ipairs(cases) do
         local NS, _, P = filters()
@@ -733,7 +739,8 @@ test("filters: the Overrides NOTE heads the tab on every container whose spell l
             if w.text == NS.L[c.note] and not at then at = i end
             if w.type == "Heading" and w.text == NS.L["Whitelist"] and not whitelist then whitelist = i end
         end
-        -- red under: no NOTE on the Overrides tab, or one drawn below the Whitelist heading
+        -- red under: no NOTE on the Overrides tab, one drawn below the Whitelist heading, or one
+        -- without its pointer to the Situations tab (SI-05)
         assertTrue(at ~= nil, where .. " draws: " .. c.note)
         assertTrue(whitelist ~= nil and at < whitelist, where .. ": the NOTE heads the tab")
     end

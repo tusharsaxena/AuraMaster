@@ -325,7 +325,7 @@ badge and any count quoted in the docs must agree with it.
 - filter: a TARGET debuff container gives Uncategorized Show no group either — a target may be FRIENDLY
 - filter: a FRIENDLY-target buff container loses the Uncategorized Show rescue — the accepted cost, pinned
 - filter: a target debuff container still warns about units you can assist although the gate dropped its Show group
-- filter: a TARGET debuff container's spells-kind Show emits its ids-view group, whose no-ids view is NEVER, and warns (the issue #11 residual, superseded)
+- filter: a TARGET debuff container's spells-kind Show emits its ids-view group, whose blizzard view is NEVER, and warns (the issue #11 residual, superseded)
 - explain: an unlisted id is rank 3 (shown) when Uncategorized is Show — not the old rank 5
 - explain: an unlisted id is rank 4 (hidden) when Uncategorized is Hide
 - explain: with no Uncategorized category for the aura type at all, an unclaimed id is still rank 5
@@ -386,19 +386,59 @@ badge and any count quoted in the docs must agree with it.
 ### test_filterviews.lua (14)
 
 - views: FC.IdsMode is always for player/pet buffs, never for player/pet debuffs, dynamic elsewhere
-- views: the owner's target container compiles to seven groups, every no-ids view NEVER
+- views: the owner's target container compiles to seven groups, every blizzard view NEVER
 - views: a Blizzard Show group keeps its own constraint and the earlier Blizzard exclusions, and no ids
-- views: a blacklisted id stays excluded in every drawing no-ids view once a category is Hidden
-- views: Timeless's learned ids stay excluded in a stripped no-ids view
-- views: a dispel Show group's no-ids view keeps its include map and its earlier flag exclusions
+- views: a blacklisted id stays excluded in every drawing blizzard view once a category is Hidden
+- views: Timeless's learned ids stay excluded in a stripped blizzard view
+- views: a dispel Show group's blizzard view keeps its include map and its earlier flag exclusions
 - views: the whitelist group and the catch-all are NEVER without spell ids
 - views: a spells-kind Show and an Uncategorized Show group are NEVER without spell ids
-- views: with no category Hidden the single group's no-ids view is the ids view minus the whitelist (R-3)
-- views: a whitelisted NeverSecret id is not excluded by the R-3 no-ids view (player debuffs)
+- views: with no category Hidden the single group's blizzard view is the ids view minus the whitelist (R-3)
+- views: a whitelisted NeverSecret id is not excluded by the R-3 blizzard view (player debuffs)
 - views: the NEVER view is the group's own filter string and an empty include-dispel map
 - views: each mode prints the new sentence where a category is Hidden
 - views: an Overrides list alone raises the Overrides-only sentence
 - views: no sentence on a container the rule changes nothing for
+
+### test_filterviews_situations.lua (13)
+
+- situations: an R-4 target buff plan ends in a remainder slot, NEVER in the ids and blizzard views
+- situations: the remainder slot exists only for R-4 on units whose ids are not always applied
+- situations: an R-3 plan's every view is its blizzard view
+- situations: a player buff plan (ids always applied) is unchanged, every reading as blizzard
+- situations: the remainder subtracts Hidden Dispel Types and one Hidden Who Cast It row
+- situations: both Who Cast It rows Hidden make the remainder NEVER in every view
+- situations: a remainder that cannot draw leaves the every view equal to the blizzard view
+- situations: 'Without a duration' makes the remainder NEVER in the every view (buffs)
+- situations: the remainder keeps the blacklist and ignores the whitelist and spell categories
+- situations: the warnings and NEVER_MATCHES ignore the remainder slot
+- situations: the owner's 'Target Bar CD (All)' draws only the remainder in the every view
+- situations: every container of the owner's real profile keeps master's ids and blizzard views
+- situations: no aura is drawn twice in any view, and the every view draws exactly its definition
+
+### test_situations_settings.lua (11)
+
+- situations settings: the template holds both situations at 'every' and all six zones on
+- situations settings: eight rows on the Filters page, situations offering the two modes, zones booleans
+- situations settings: the seam refuses a mode outside every/blizzard and a zone that is not a boolean
+- situations settings: the owner's real profile loads with both tables on every container, and a stored choice is kept
+- situations settings: Copy settings from -> Filters carries both tables
+- situations settings: a source holding a mode the rows refuse fails Copy -> Filters, and nothing is stored
+- situations settings: Duplicate carries both tables, and shares no table with the source
+- situations settings: the Filters page's Defaults restores both tables
+- situations settings: a profile reset re-seeds both tables at their defaults
+- situations settings: a zone write takes the visibility pass and queues no apply
+- situations settings: the rows are the Situations group, declared last, and drawn by the flow engine (SI-05)
+
+### test_unitfilter_settings.lua (7)
+
+- unit type settings: the template holds kind and reaction at All
+- unit type settings: two rows in the Situations group, offering their choices, taking the visibility effect
+- unit type settings: the seam refuses a choice the rows do not offer
+- unit type settings: the owner's real profile loads with All / All on every container, a stored choice kept
+- unit type settings: Copy settings from -> Filters and Duplicate carry it, Defaults restores it
+- unit type settings: a source holding a choice the rows refuse fails Copy -> Filters
+- unit type settings: a write takes the visibility pass and queues no apply
 
 ### test_container.lua (52)
 
@@ -455,10 +495,10 @@ badge and any count quoted in the docs must agree with it.
 - container: an engine whose frame level reads secret leaves the blocker at level 0, never raising (E)
 - container: ApplyVisibility records the hang mode for test mode, unlocked and locked; Park and Destroy reset it
 
-### test_container_views.lua (16)
+### test_container_views.lua (20)
 
 - container views: a target buff container is built on the view its unit's reaction picks
-- container views: player debuffs are always built on the no-ids view, player buffs on the ids view
+- container views: player debuffs are always built on the blizzard view, player buffs on the ids view
 - container views: ApplyView switches in place, sending only what differs, and nothing when unchanged
 - container views: the switch runs in combat and while auras are secret
 - container views: an in-place update compares and sends the active view's values
@@ -473,6 +513,57 @@ badge and any count quoted in the docs must agree with it.
 - container views: the view frame's unit events go down with the addon and come back with it
 - container views: UNIT_FACTION and UNIT_FLAGS on the player move target and focus views
 - container views: the stand-up moves the view before it re-enables, in combat too
+- container views: a refused setter leaves the view stale, and the next switch resends it in full
+- container views: a refused filter-string setter is resent for every group at the next switch
+- container views: an Update whose setter is refused leaves the view stale, and the next Update resends in full
+- container views: a rebuilt engine starts clean, not stale, and a same-view switch then sends nothing
+
+### test_container_situations.lua (16)
+
+- situations runtime: player and pet buffs are ids whatever the Situations settings say
+- situations runtime: a target whose ids apply is ids whatever the Situations settings say
+- situations runtime: a hostile NPC follows the NPCs setting, a hostile player the Players setting
+- situations runtime: both settings at their default draw every aura on a hostile NPC and player
+- situations runtime: player and pet debuffs follow the Players setting, never the NPCs one
+- situations runtime: an unknowable player-ness picks the stricter of the two settings
+- situations runtime: a stored value outside the two modes reads as every, the template default
+- situations runtime: Build sends the every view's values on a hostile NPC
+- situations runtime: a target swap from an NPC to a player with different settings moves the view
+- situations runtime: switching blizzard <-> every sends candidate filters only where they differ
+- situations runtime: a Situations write switches the live engine at once, in combat, with no apply held
+- situations runtime: a Situations write moves only the container it names
+- situations runtime: the stand-up re-resolves a player or pet debuff container's view, apply held
+- situations runtime: a Situations write on a container on the ids view moves nothing
+- situations runtime: the [Filter] line names the view and the situation
+- situations runtime: player debuffs' [Filter] line names your own and your pet's debuffs
+
+### test_container_zones.lua (8)
+
+- zones: a locked container is hidden in each unticked kind of place and shown in the others
+- zones: a type with no checkbox, no type and an unreadable answer are all allowed
+- zones: unlocked or in test mode, a container shows in an unticked place, so it can be found
+- zones: the zone gate sits beside General visibility, both must allow
+- zones: a place change under lockdown disables the engine and never hides the anchor
+- zones: ZONE_CHANGED_NEW_AREA and PLAYER_ENTERING_WORLD each re-run the visibility pass
+- zones: the first visibility pass after a /reload inside an unticked place already hides it
+- zones: a follower of a zone-hidden parent re-seams as it does for a visibility-hidden one
+
+### test_container_unitfilter.lua (14)
+
+- unit type: a locked target container shows only on a unit matching both choices
+- unit type: no unit, and an unknowable answer, allow
+- unit type: a hand-edited choice the rows do not offer allows
+- unit type: unlocked or in test mode, a container shows on a unit it is set against
+- unit type: the gate sits beside General visibility and the zone rule, all must allow
+- unit type: player and pet containers ignore it
+- unit type: the focus container follows the focus, not the target
+- unit type: a target swap re-evaluates it in combat, through SetEnabled, never the anchor
+- unit type: a focus swap re-evaluates focus containers
+- unit type: UNIT_FACTION and UNIT_FLAGS on the target, the focus and the player re-evaluate it
+- unit type: an event that does not move a container's answer runs no visibility pass for it
+- unit type: a full visibility pass between events keeps the moved-answer check true
+- unit type: the unit events stay on the view frames, nothing new is registered
+- unit type: a Unit type write takes effect at once, in combat too
 
 ### test_containermanager.lua (54)
 
@@ -531,7 +622,7 @@ badge and any count quoted in the docs must agree with it.
 - apply: an error in one container's Apply does not stop the others or replaceAttached
 - apply: with no client error handler the pass finishes, then the first error is raised
 
-### test_compat.lua (31)
+### test_compat.lua (37)
 
 - compat: the aura engine counts as present only with its sort enum and CreateFrame
 - compat: EnsureAuraContainer loads Blizzard_AuraContainer only when it is not loaded yet
@@ -564,6 +655,12 @@ badge and any count quoted in the docs must agree with it.
 - compat: without AuraUtil a dispel border color is DebuffTypeColor's, and nothing without either
 - compat: IdsApply mirrors Blizzard's predicate for buffs and debuffs
 - compat: IdsApply is false whenever the answer is not knowable
+- compat: IsPlayerUnit answers UnitIsPlayer as a strict boolean
+- compat: IsPlayerUnit is nil whenever the answer is not knowable
+- compat: InstanceType answers IsInInstance's second value
+- compat: InstanceType is nil whenever the answer is not knowable
+- compat: UnitReactionKind bands UnitReaction(unit, "player") into friendly, neutral and hostile
+- compat: UnitReactionKind is nil whenever the answer is not knowable
 
 ### test_secrets.lua (6)
 
@@ -592,7 +689,7 @@ badge and any count quoted in the docs must agree with it.
 
 ### test_lifecycle.lua (18)
 
-- lifecycle: the eleven lifecycle events are registered to their handlers, and nothing else is
+- lifecycle: the twelve lifecycle events are registered to their handlers, and nothing else is
 - lifecycle: a focus change refreshes the focus containers, a target change the target ones
 - lifecycle: UNIT_PET refreshes the pet containers only for the player's own pet
 - lifecycle: entering the world runs an apply held while auras were secret
@@ -603,7 +700,7 @@ badge and any count quoted in the docs must agree with it.
 - lifecycle: a reset profile gets its starters back, numbered from 1 again
 - lifecycle: a profile switch applies the new profile's Blizzard-frame settings
 - lifecycle: the degraded latch stands up and down only on an edge
-- lifecycle: one bad event name leaves the other ten registered and is recorded
+- lifecycle: one bad event name leaves the other eleven registered and is recorded
 - lifecycle: one bad event name, on a client without C_EventUtils, is caught by the probe rung
 - lifecycle: a rejection while logging is on is traced at the moment it happens
 - lifecycle: the degraded Core stub's SafeRegisterEvent records a bad name and keeps the rest
@@ -739,15 +836,15 @@ badge and any count quoted in the docs must agree with it.
 - hang: a test-mode chain locked shows no strips and keeps its own seams
 - hang: HangMode reads the recorded mode, and before any visibility pass falls back on the preview
 
-### test_emptywatch.lua (30)
+### test_emptywatch.lua (31)
 
 - empty: a token-only group holding an aura is not empty, asked with a count of one
 - empty: a token-only group with nothing to show is empty
 - empty: a unit that does not exist is empty without reading an aura
 - empty: a readable pool of 0 is empty without reading an aura
 - empty: an include id hits and misses
-- empty: spell ids are ignored on a target's buffs it cannot be assisted on, as the engine ignores them
-- empty: whether ids apply is Blizzard's predicate (NS.Compat.IdsApply), not UnitIsFriend
+- empty: spell ids are ignored where the engine holds a no-ids view, as the engine ignores them
+- empty: whether ids apply is the view the engine holds (inst.view), never a re-resolve
 - empty: the prediction reads the ACTIVE view's groups
 - empty: a max duration drops a permanent aura and one that runs longer
 - empty: dispel types include and exclude
@@ -769,6 +866,7 @@ badge and any count quoted in the docs must agree with it.
 - empty: a target switch re-predicts at once, so no follower hangs from the emptied engine in between
 - empty: a target switch folds a pass already due into its own, leaving no timer behind
 - empty: a target swap EmptyWatch hears before OnUnitSwap predicts from the new unit's view
+- empty: a hostile NPC on the every view predicts from the remainder slot
 - empty: a target swap OnUnitSwap hears first still costs one pass, in the new unit's view
 - empty: UNIT_FLAGS flipping the view on the same target re-predicts at once
 
@@ -1453,7 +1551,7 @@ badge and any count quoted in the docs must agree with it.
 - slash verbs: the disabled gate is ONE decision over the whole verb table, not a per-verb guard
 - slash verbs: /am new enchants makes a player buff container showing only Weapon enchants (feedback #6)
 
-### test_diagnostics.lua (50)
+### test_diagnostics.lua (49)
 
 - diag: /am diagnostics writes the report to the console ungated, opens it, and says so once
 - diag: /am diagnostics answers while the addon is disabled, and the state line says so
@@ -1474,7 +1572,6 @@ badge and any count quoted in the docs must agree with it.
 - diag: every container gets a line and a full filter block, lists sorted and named
 - diag: a container's non-default rows are listed, with no color escape, untouched rows absent
 - diag: a row scoped to an aura type is not listed for a container of the other type
-- diag: each container's spell-list mode and the view its engine holds
 - diag: the plan verdict reads in sync, PENDING, DRIFT or not built
 - diag: plan groups report the engine's frame and shown counts, or ? when unreadable
 - diag: shown buttons are identified by instance, then by our own regions, else id=?
@@ -1505,6 +1602,13 @@ badge and any count quoted in the docs must agree with it.
 - diag: the loading screen line shows when the world was entered and when the loading screen ended
 - diag: the fonts primed line lists each refused file, size and flags after refused=
 - diag: the fonts primed list stops at MAX_IDS and flags the cap; the count stays whole
+
+### test_diagnostics_situations.lua (4)
+
+- diag: each container's spell-list mode, the view its engine holds and the situation behind it
+- diag: a swap that keeps the view still names the new situation
+- diag: an ordinary setting write keeps the situation the view was chosen for
+- diag: each plan group prints the filters of the view the engine holds, and a stale view says so
 
 ### test_bulklog.lua (20)
 
@@ -1580,7 +1684,7 @@ badge and any count quoted in the docs must agree with it.
 - options: a Filters Overrides help mark draws the library's info art, not the client glyph
 - options: a General spell-categories help mark draws the library's info art, not the client glyph
 
-### test_options_descriptor.lua (18)
+### test_options_descriptor.lua (19)
 
 - options descriptor: a rendered widget reads the selected container and writes it through the seam
 - options descriptor: a color swatch shows the stored color and stores the picker's in the {r, g, b, a} shape
@@ -1597,6 +1701,7 @@ badge and any count quoted in the docs must agree with it.
 - options descriptor: an addon-wide tabbed page draws every tab with no container, and a bespoke tab keyed by a group takes its place
 - options descriptor: a bespoke tab with `before` is drawn ahead of the tab it names, else last
 - options descriptor: RenderWarnings draws one orange line per thing the engine will not do
+- options descriptor: the orange warnings are followed by a gap before the first section, and only when drawn
 - options descriptor: panel refreshes asked for in one frame are one refresh, on the next frame
 - options descriptor: OpenOptionsPage opens a registered page's category, a section's through Containers, and falls back to the panel otherwise
 - options descriptor: every stub composer answers an empty row list
@@ -1737,7 +1842,7 @@ badge and any count quoted in the docs must agree with it.
 - filters: the priority block is a heading, a lead-in and five separate rank lines (T-2, batch 8)
 - filters: the priority block is drawn under the General rows, not above them (batch 8)
 - filters: the priority ranks read at the same size as the Overrides notes (2026-09-20)
-- filters: the four tabs read General, Categories, Overrides, Sorting (batch 8)
+- filters: the five tabs read General, Categories, Overrides, Sorting, Situations (batch 8, SI-05)
 - filters: the retired 'Only these categories' row is gone — no such control on the Categories tab
 - filters: a grid checkbox stores show or hide for the selected container and re-syncs its line
 - filters: /am get and /am list print a category's state as Show or Hide
@@ -1764,6 +1869,20 @@ badge and any count quoted in the docs must agree with it.
 - filters: Show all / Hide all on Dispel Types and Who Cast It set exactly their own section, for this container only (B11-T10)
 - filters: Hide all on Blizzard Categories hides exactly that section, as one [Set] line and one apply (feedback #10)
 - filters: Show all on Spell Categories shows exactly that section, whatever Blizzard Categories say (feedback #10)
+
+### test_pages_situations.lua (11)
+
+- situations tab: the Filters strip reads General, Categories, Overrides, Sorting, Situations
+- situations tab: a target or focus buff container draws its unit line, On NPCs and On players, and the honor line
+- situations tab: a target debuff container names units you can assist
+- situations tab: a player or pet debuff container draws one dropdown, the players setting, relabeled
+- situations tab: a player or pet buff container says spell lists always apply, and draws no dropdown
+- situations tab: the player and pet debuff dropdown carries its own tooltip, not the On players one
+- situations tab: the timeless note keys on the effective mode, timeless buffs only
+- situations tab: Show in draws the six zone checkboxes in order, all ticked, each writing its zone
+- situations tab: On NPCs writes the npcs setting
+- situations tab: Unit type is the first section, above the spell-list section, with Unit type and Reaction on a target or focus
+- situations tab: a player or pet container says it is always your own character or pet, with no Unit type dropdowns
 
 ### test_pages_layout.lua (47)
 
@@ -1927,7 +2046,7 @@ badge and any count quoted in the docs must agree with it.
 - pool: a released placeholder is reused rather than made again, on both arms
 - pool: a re-dressed preview gets every placeholder back in the slot it held, on both arms
 
-### test_defaults.lua (30)
+### test_defaults.lua (31)
 
 - defaults: every starter container is a valid container whose every override the template knows
 - defaults: every category carries what its kind needs, and a label and description
@@ -1959,6 +2078,7 @@ badge and any count quoted in the docs must agree with it.
 - defaults: a record outside the reserved namespace cannot hijack a shipped category
 - defaults: a user category's name is shown as typed even when it is a shipped locale key
 - defaults: userCategoryOrder is reconciled the way containerOrder is
+- defaults: the RAID-token row says it means castable OR dispellable, as Blizzard defines it
 
 ### test_perf.lua (8)
 
@@ -2007,7 +2127,7 @@ badge and any count quoted in the docs must agree with it.
 
 - prose: no authored file carries a British spelling from localization-§5's published list
 - prose: the gate carries localization-§5's two lists whole, and nothing of its own
-- prose: the exclusions this repository declared suppressed 11 of 199 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (11): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, docs/spell-research/2026-09-24-logs/CORRECTIONS.md, docs/spell-research/2026-09-24-logs/CURRENT_CATEGORIES.md, docs/spell-research/2026-09-24-logs/DECISIONS.md, docs/spell-research/2026-09-24-logs/FLAGS.md, docs/spell-research/2026-09-24-logs/PROPOSED_ADDITIONS.md, docs/spell-research/2026-09-24-logs/REVIEW.md, docs/spell-research/2026-09-24-logs/SOURCES.md, docs/spell-research/2026-09-24-logs/dictionary/AURAS.md
+- prose: the exclusions this repository declared suppressed 11 of 200 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (11): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, docs/spell-research/2026-09-24-logs/CORRECTIONS.md, docs/spell-research/2026-09-24-logs/CURRENT_CATEGORIES.md, docs/spell-research/2026-09-24-logs/DECISIONS.md, docs/spell-research/2026-09-24-logs/FLAGS.md, docs/spell-research/2026-09-24-logs/PROPOSED_ADDITIONS.md, docs/spell-research/2026-09-24-logs/REVIEW.md, docs/spell-research/2026-09-24-logs/SOURCES.md, docs/spell-research/2026-09-24-logs/dictionary/AURAS.md
 - prose: no path this repository narrows the gate by is loaded by a TOC
 - prose: every path this repository narrows the gate by is one .pkgmeta keeps out of the zip
 - prose self-test: the carve-out suppresses the named generated folder, and only it
@@ -2107,10 +2227,16 @@ badge and any count quoted in the docs must agree with it.
 | test_filtercompiler.lua | 85 |
 | test_filtercompiler_categories.lua | 9 |
 | test_filterviews.lua | 14 |
+| test_filterviews_situations.lua | 13 |
+| test_situations_settings.lua | 11 |
+| test_unitfilter_settings.lua | 7 |
 | test_container.lua | 52 |
-| test_container_views.lua | 16 |
+| test_container_views.lua | 20 |
+| test_container_situations.lua | 16 |
+| test_container_zones.lua | 8 |
+| test_container_unitfilter.lua | 14 |
 | test_containermanager.lua | 54 |
-| test_compat.lua | 31 |
+| test_compat.lua | 37 |
 | test_secrets.lua | 6 |
 | test_bus.lua | 8 |
 | test_state.lua | 2 |
@@ -2120,7 +2246,7 @@ badge and any count quoted in the docs must agree with it.
 | test_anchors_seam.lua | 10 |
 | test_anchors_edges.lua | 14 |
 | test_anchors_hang.lua | 11 |
-| test_emptywatch.lua | 30 |
+| test_emptywatch.lua | 31 |
 | test_fontprimer.lua | 32 |
 | test_enchantreset.lua | 23 |
 | test_redraw.lua | 14 |
@@ -2147,16 +2273,18 @@ badge and any count quoted in the docs must agree with it.
 | test_disabled.lua | 18 |
 | test_slash.lua | 34 |
 | test_slash_verbs.lua | 51 |
-| test_diagnostics.lua | 50 |
+| test_diagnostics.lua | 49 |
+| test_diagnostics_situations.lua | 4 |
 | test_bulklog.lua | 20 |
 | test_debug_coverage.lua | 10 |
 | test_debug_library_lines.lua | 11 |
 | test_optionssetup.lua | 21 |
-| test_options_descriptor.lua | 18 |
+| test_options_descriptor.lua | 19 |
 | test_pages_general.lua | 35 |
 | test_pages_general_categories.lua | 32 |
 | test_pages_containers.lua | 33 |
 | test_pages_filters.lua | 52 |
+| test_pages_situations.lua | 11 |
 | test_pages_layout.lua | 47 |
 | test_pages_bars.lua | 11 |
 | test_pages_icons.lua | 5 |
@@ -2167,7 +2295,7 @@ badge and any count quoted in the docs must agree with it.
 | test_pages_profiles.lua | 3 |
 | test_envsetup.lua | 4 |
 | test_poolsetup.lua | 4 |
-| test_defaults.lua | 30 |
+| test_defaults.lua | 31 |
 | test_perf.lua | 8 |
 | test_debuglogsetup.lua | 9 |
 | test_locale.lua | 8 |
@@ -2180,4 +2308,4 @@ badge and any count quoted in the docs must agree with it.
 | test_layout_cap.lua | 13 |
 | test_diagnostics_contract.lua | 9 |
 | test_lizard_sighted.lua | 8 |
-| **Total** | **1834** |
+| **Total** | **1930** |

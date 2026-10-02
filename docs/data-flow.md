@@ -20,7 +20,7 @@ engine does the reading, filtering, sorting, layout and timer animation in its o
         │    (a session row stops after the debug line: it sends nothing)
         │    (inside a bulk copy or reset the [Set] line is muted and tallied: one line per act)
         ▼
- 2  ContainerManager (CONFIG_CHANGED listener)                 modules/ContainerManager.lua:837
+ 2  ContainerManager (CONFIG_CHANGED listener)                 modules/ContainerManager.lua:865
         │  first FontPrimer.PrimeAll: a font no container drew in yet is drawn on a shown frame
         │  the row's effect:  "visibility" → ApplyVisibility now    "none" → nothing
         │  otherwise RequestApply(containerId)   nil = every container
@@ -31,7 +31,7 @@ engine does the reading, filtering, sorting, layout and timer animation in its o
         │     yes → keep the request, print the notice naming the cause (once), return
         │     no  → for each dirty container: Container:Apply(); re-place container-attached ones
         ▼
- 4  Container:Apply                                            modules/Container.lua:473
+ 4  Container:Apply                                            modules/Container.lua:532
         │  plan = FilterCompiler.Compile(cfg, { timedSpells })  (pure)
         │  anchor scale / strata / level; Anchors.Place (screen, container or frame)
         │  structure = #groups : enchant slots (hide-permanent) : style : growth corner
@@ -125,7 +125,7 @@ directly (`NS.Print`), not silently. Full detail: *Step 4 in detail*, below.
 
 ## Step 4 in detail: the filter plan
 
-`FilterCompiler.Compile` (`modules/FilterCompiler.lua:781`) turns one container into
+`FilterCompiler.Compile` (`modules/FilterCompiler.lua:806`) turns one container into
 `{ groups, enchants, warnings }`, under the five-rank priority *Filter
 priority*, above, states (`FC.ExplainSpell` answers the same question for one spell, for the panel):
 
@@ -173,7 +173,10 @@ priority*, above, states (`FC.ExplainSpell` answers the same question for one sp
   ids left) is dropped; if every group drops, the plan warns that nothing can match
   (`FC.WARN.NEVER_MATCHES`).
 - **Warnings** record what the engine will silently not do: spell ids on a friendly unit's debuffs or
-  a hostile unit's buffs, a max duration in "without" mode, enchants on a non-player unit.
+  a hostile unit's buffs, a max duration in "without" mode, enchants on a non-player unit. What a
+  container draws there instead is the Filters section's last tab, **Situations** (the
+  `filter.situations` dropdowns, read by `ContainerClass:ResolveView`, never by the compile), which
+  the Categories and Overrides NOTE lines point to.
 - A player buff container appends the enchant slots after its groups, unless its `weaponEnchants`
   category row is set to Hide (`appendEnchants`).
 
@@ -181,18 +184,22 @@ priority*, above, states (`FC.ExplainSpell` answers the same question for one sp
 only when the direction moved), cap and layout can change on a live engine; hide-permanent enchants
 cannot, because a slot takes it only when added, so toggling it is a new shape. A plan of the same
 shape calls only the setters whose values moved. Candidate filters are serialized with
-`FilterCompiler.Signature` (`modules/FilterCompiler.lua:952`) and re-sent only when the two
-signatures differ (`modules/Container.lua:292-295`), because the engine clears and re-gathers a
+`FilterCompiler.Signature` (`modules/FilterCompiler.lua:978`) and re-sent only when the two
+signatures differ (`modules/Container.lua:327-330`), because the engine clears and re-gathers a
 group whenever they are set (`docs/midnight-quirks.md`). **Rebuilding.** Groups are add-only and a
 frame is never freed, so a new shape disables and hides the old engine, keeps it aside, and builds a
 new one: flow layout first, then the anchor, then every `AddAuraGroup`, then the enchant slots, then
-`SetUnit` last (`modules/Container.lua:388`).
+`SetUnit` last (`modules/Container.lua:442`).
 
 ## Visibility, separate from applying
 
 Whether a container shows is a cheaper question, and one that is legal in combat:
-`Container:ShouldShow` (`modules/Container.lua:551`) answers, in order — perf suspend, profile and
-container `enabled`, then General visibility against `UnitAffectingCombat("player")`, which an
+`Container:ShouldShow` (`modules/Container.lua:665`) answers, in order — perf suspend, profile and
+container `enabled`, then General visibility against `UnitAffectingCombat("player")` together with the
+container's Filters → Situations → Show in boxes against `NS.Compat.InstanceType()` (filter situations, S3; a
+type with no box, or unreadable, is allowed) and, on a target or focus container, its Unit type and
+Reaction against `NS.Compat.IsPlayerUnit` and `NS.Compat.UnitReactionKind` (S6; no unit, or an
+unreadable answer, is allowed), all of which an
 unlocked container skips so one that shows only in combat can still be found and moved; it also
 answers whether the container previews, which is the session-only test mode (`NS.State.testMode`),
 not the lock. `ApplyVisibility` enables or disables the **engine** (never
@@ -200,8 +207,10 @@ not the lock. `ApplyVisibility` enables or disables the **engine** (never
 clears the preview, and shows the drag handle while unlocked, with a faint outline one element in
 size unless test mode's placeholders are there. `ApplyVisibility` runs after every
 apply, on every `VISIBILITY_CHANGED` (world entry, combat start and end, a test mode switch) and whenever a row whose
-`effect` is `"visibility"` is written (the master enable, visibility, lock and alpha, and a
-container's own enable). The handle
+`effect` is `"visibility"` is written (the master enable, visibility, lock and alpha, a
+container's own enable, its six `filter.zones` rows and its two `filter.unitFilter` rows). A target
+or focus swap, and `UNIT_FACTION` / `UNIT_FLAGS` for target, focus or the player, re-run it for each
+container whose Unit type answer moved (`CM.ApplyUnitGate`). The handle
 (`Anchors.UpdateHandle`) is a strip outside the anchor, on the side the auras do not grow into (the
 before side: above the block growing down), so it covers no element. Every container's strip sits
 there, a follower's included, in its own column (batch 10 F1, `Anchors.StripPoints`). A shown name
@@ -247,11 +256,12 @@ after they were hidden; a visibility pass alone leaves them as they are.
 | `PLAYER_LOGIN` → `OnEnable` | Lifecycle events registered; `ContainerManager.Init` primes every container font (`FontPrimer.PrimeAll`, below), then builds an instance per container and applies them (a disabled login builds none: the stand-up primes and builds them); `BlizzardFrames.Apply`; the options panel category is created. Built here, not at load, so the engine's access restrictions (applied at `PLAYER_ENTERING_WORLD`) come after every button's first `initializeFrame` |
 | `PLAYER_ENTERING_WORLD` | Visibility pass; flush anything pending; `FontPrimer.OnEnterWorld` notes the time (the loading screen is still up), and arms the primer's hide and refresh itself only on a client that refused `LOADING_SCREEN_DISABLED` |
 | `LOADING_SCREEN_DISABLED` | The loading screen has ended: `FontPrimer.OnLoadingScreenEnd` runs a priming pass (a font refused under the loading screen is tried again), then arms the primer's hide and refresh when anything was primed since the last loading screen (below); and arms the weapon-enchant reset 1.75 s later, whatever the primer did (`CM.RequestEnchantReset`, SP-AMX-01) |
+| `ZONE_CHANGED_NEW_AREA` | Visibility pass: the zone gate reads the kind of place again (`NS.Compat.InstanceType()`), so a container whose Show in box is unticked there hides, through the engine's `SetEnabled`, in combat too |
 | `PLAYER_REGEN_DISABLED` / `ENABLED` | Visibility pass; on combat end, flush pending applies, apply the Blizzard-frame settings, and place again any frame-attached container whose frame appeared during combat |
 | `ADDON_RESTRICTION_STATE_CHANGED` | Flush pending applies — secrecy can lift outside a combat transition (a key or encounter ending) |
-| `PLAYER_TARGET_CHANGED`, `PLAYER_FOCUS_CHANGED`, `UNIT_PET` | Every container on that unit calls the engine's `UpdateAllAuras`, because the engine keeps showing the old unit's auras until told. On a target or focus swap each such container first switches to the view of its plan the new unit's reaction picks (`CM.ApplyViews`, spell-list views V2) |
-| `UNIT_FACTION`, `UNIT_FLAGS` (target, focus) | The unit's reaction may have moved without a swap: `CM.ApplyViews` switches each container on it to the view that reaction picks (`ContainerClass:ApplyView`), in combat too. When one moved, EmptyWatch re-predicts at once (`EW.OnViewsMoved`), so the empty prediction follows the engine |
-| `UNIT_FACTION`, `UNIT_FLAGS` (player) | The player's own side moved (mind control): `CM.ApplyViews` for both target and focus, on `CM.viewPlayerFrame`, then one `EW.OnViewsMoved` if any view moved |
+| `PLAYER_TARGET_CHANGED`, `PLAYER_FOCUS_CHANGED`, `UNIT_PET` | Every container on that unit calls the engine's `UpdateAllAuras`, because the engine keeps showing the old unit's auras until told. On a target or focus swap each such container first switches to the view of its plan the new unit's reaction picks (`CM.ApplyViews`, spell-list views V2), and after the refresh each container whose Unit type answer moved re-runs its visibility pass (`CM.ApplyUnitGate`, filter situations S6) |
+| `UNIT_FACTION`, `UNIT_FLAGS` (target, focus) | The unit's reaction may have moved without a swap: `CM.ApplyViews` switches each container on it to the view that reaction picks (`ContainerClass:ApplyView`), in combat too. When one moved, EmptyWatch re-predicts at once (`EW.OnViewsMoved`), so the empty prediction follows the engine; then each container on it whose Unit type answer moved re-runs its visibility pass (`CM.ApplyUnitGate`, filter situations S6) |
+| `UNIT_FACTION`, `UNIT_FLAGS` (player) | The player's own side moved (mind control): `CM.ApplyViews` for both target and focus, on `CM.viewPlayerFrame`, then one `EW.OnViewsMoved` if any view moved, then `CM.ApplyUnitGate` for both |
 | `ADDON_LOADED` (any) | Frame-attached containers whose frame did not exist yet are placed again |
 | `ITEM_DATA_LOAD_RESULT`, `GET_ITEM_INFO_RECEIVED` | When the item is the weapon equipped in slot 16 or 17 and the load succeeded, the weapon-enchant reset is armed 0.5 s later (`CM.OnWeaponItemData`); one timer, keeping the later deadline, so a burst flips once. The reset turns each live engine with enchant frames off and on again, so the weapon names are drawn afresh (`docs/midnight-quirks.md` → *Weapon enchants*) |
 | Profile changed, copied or reset | `NS.OnProfileChanged`: `PrepareProfile`, selection cleared, `ContainerManager.Announce` (the new profile's fonts primed, instances follow the registry, apply all, `CONTAINERS_CHANGED`), Blizzard frames, panel refresh |
@@ -273,7 +283,7 @@ player switched off. There is no `StandUp()` to call; the only route out is rele
 
 | | |
 |---|---|
-| The eleven lifecycle events | `addon:UnregisterLifecycleEvents()` — unregistered, not gated |
+| The twelve lifecycle events | `addon:UnregisterLifecycleEvents()` — unregistered, not gated |
 | `modules/TimedSpells.lua` | `TS.StandDown()`: its unit frame's `UNIT_AURA` (unregistered by hand; the frame is kept for the next stand-up), its gate events, its two bus subscriptions, and a queued scan timer, canceled |
 | `modules/EmptyWatch.lua` | `EW.Stop()`: both unit frames' registrations (unregistered by hand; the frames are kept), its AceEvent pet, inventory, target and focus events, and a queued pass or enchant-expiry timer, canceled |
 | `modules/ContainerManager.lua` | `CM.StopListening()`: its three bus subscriptions, its two view frames' `UNIT_FACTION` / `UNIT_FLAGS` (unregistered by hand; the frames are kept), the pending queue behind them, and an armed weapon-enchant reset, canceled; `CM.RequestEnchantReset` arms nothing while stood down |

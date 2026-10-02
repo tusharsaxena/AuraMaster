@@ -20,6 +20,8 @@ local LIFECYCLE = {
     ADDON_RESTRICTION_STATE_CHANGED = "OnRestrictionChanged",
     ITEM_DATA_LOAD_RESULT = "OnItemDataLoaded",
     GET_ITEM_INFO_RECEIVED = "OnItemDataLoaded",
+    -- red under: ZONE_CHANGED_NEW_AREA left out (a border crossing never re-runs the zone gate, S3)
+    ZONE_CHANGED_NEW_AREA = "OnZoneChanged",
 }
 
 --- Count Container:Apply per id, still calling through. Returns the counts table.
@@ -57,7 +59,7 @@ end
 
 -- ── events ───────────────────────────────────────────────────────────────────────────────────
 
-test("lifecycle: the eleven lifecycle events are registered to their handlers, and nothing else is", function()
+test("lifecycle: the twelve lifecycle events are registered to their handlers, and nothing else is", function()
     local NS = fresh()
     local events = NS.addon.__events
     for event in pairs(events) do
@@ -258,7 +260,7 @@ test("lifecycle: the degraded latch stands up and down only on an edge", functio
     NS2.SyncEnabled()
     assertFalse(NS2.IsStoodDown())
     assertEqual(calls.PLAYER_ENTERING_WORLD, 1, "the stand-up registered once")
-    assertEqual(#lifecycleRegs(NS2, mocks2), 11, "every lifecycle event is back")
+    assertEqual(#lifecycleRegs(NS2, mocks2), 12, "every lifecycle event is back")
 end)
 
 -- ── one bad event name (events-frames-taint-§1) ──────────────────────────────────────────────
@@ -283,7 +285,7 @@ local function badEventEnv(noEventUtils)
     end })
 end
 
---- Assert the other ten lifecycle events are held by NS.addon, BAD is recorded exactly once
+--- Assert the other eleven lifecycle events are held by NS.addon, BAD is recorded exactly once
 --- across a disable/enable cycle, and the [Init] summary names it.
 local function assertOneBadName(NS, mocks)
     local held = {}
@@ -302,7 +304,7 @@ local function assertOneBadName(NS, mocks)
     NS.DebugLog:SetEnabled(false)
 end
 
-test("lifecycle: one bad event name leaves the other ten registered and is recorded", function()
+test("lifecycle: one bad event name leaves the other eleven registered and is recorded", function()
     -- red under: bare self:RegisterEvent
     local NS, mocks = badEventEnv(false)
     assertOneBadName(NS, mocks)

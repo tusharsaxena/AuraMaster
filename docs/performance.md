@@ -69,7 +69,8 @@ manager is listening: locked too, unlike EmptyWatch, because a view must follow 
 control in combat. `UNIT_FLAGS` fires often in play (a combat flag changing is enough). Each event
 costs one walk over `CM.instances` (two for a `player` event, one per unit) and, per container on
 that unit, the `pcall`'d
-`UnitIsPlayerControlledOrGroupMember` and `UnitCanAssist` reads that resolve its view. When the view
+`UnitIsPlayerControlledOrGroupMember` and `UnitCanAssist` reads that resolve its view, and the
+`UnitIsPlayer` read that picks its Situations setting where spell ids are not applied. When the view
 holds, nothing is sent to the engine and nothing is allocated; when it moves, each group whose view
 values differ gets its setters, and EmptyWatch re-predicts (its own gates apply).
 
@@ -105,9 +106,9 @@ Declared in report order in `buckets` (`core/PerfSetup.lua:48`), each bracketed 
 
 | Bucket | Declared parent | Bracket | Why it is bracketed |
 |---|---|---|---|
-| `unitSwap` | — | `core/AuraMaster.lua:169`, `:176` | The one path driven by play: target, focus or pet changed, so every container on that unit calls the engine's `UpdateAllAuras`. On a target or focus swap the bracket first spans `CM.ApplyViews` (`modules/ContainerManager.lua:429`): each container whose view moved calls the engine's `SetAuraGroupFilterString` and `SetAuraGroupCandidateFilters` per group, each ending in its own `UpdateAllAuras`. It switches quietly: no `emptyPass` runs inside the bracket, because EmptyWatch re-predicts from its own swap handler (see that row). Whatever the engine does synchronously inside these calls lands here |
+| `unitSwap` | — | `core/AuraMaster.lua:181`, `:188` | The one path driven by play: target, focus or pet changed, so every container on that unit calls the engine's `UpdateAllAuras`. On a target or focus swap the bracket first spans `CM.ApplyViews` (`modules/ContainerManager.lua:431`): each container whose view moved calls the engine's `SetAuraGroupFilterString` and `SetAuraGroupCandidateFilters` per group, each ending in its own `UpdateAllAuras`. After the refresh it spans `CM.ApplyUnitGate` (filter situations S6): the visibility pass of each container whose Unit type answer moved, none for a container with no gate. It switches quietly: no `emptyPass` runs inside the bracket, because EmptyWatch re-predicts from its own swap handler (see that row). Whatever the engine does synchronously inside these calls lands here |
 | `applyPass` | — | `modules/ContainerManager.lua:358-366` | The coalesced pass applying pending configuration to every dirty container, plus re-placing container-attached ones |
-| `applyContainer` | `applyPass` | `modules/Container.lua:473-519` | One container: compile, place, build or update the engine, restyle, visibility. The call site passes `"applyPass"`, so the record carries observed containment |
+| `applyContainer` | `applyPass` | `modules/Container.lua:532-578` | One container: compile, place, build or update the engine, restyle, visibility. The call site passes `"applyPass"`, so the record carries observed containment |
 | `visibilityPass` | — | `modules/ContainerManager.lua:385` | The show ladder over every container, on combat transitions, world entry and the master rows |
 | `styleElement` | — | `modules/Style.lua:844-854` | Dressing one bar, icon or line of text: called by the engine's `initializeFrame` as it creates buttons, by a restyle, and by the preview |
 | `timedScan` | — | `modules/TimedSpells.lua` `scanTick` | One readable-state scan of the player's and pet's buffs, 0.5 s after their auras changed or the readable gate reopened. The addon's only aura-driven Lua path while locked; absent from a capture with no "without a duration" container |
@@ -118,7 +119,7 @@ Declared in report order in `buckets` (`core/PerfSetup.lua:48`), each bracketed 
 `emptyPass`, outside the `unitSwap` bracket, whichever of the two swap handlers AceEvent calls first
 (it walks them in no set order). When EmptyWatch's runs first it moves the view itself, and
 `unitSwap` then finds the view already right. A view switch on a reaction change (`UNIT_FACTION` or `UNIT_FLAGS` for `target` or
-`focus`, `modules/ContainerManager.lua:771`, or for the player, on `CM.viewPlayerFrame`) runs **unbracketed**: its setter calls land in no bucket,
+`focus`, `modules/ContainerManager.lua:791`, or for the player, on `CM.viewPlayerFrame`) runs **unbracketed**: its setter calls land in no bucket, and so does the Unit type gate's visibility pass the same events re-run (`CM.ApplyUnitGate`, filter situations S6),
 and only the `emptyPass` it triggers is recorded, at the root. **`styleElement` is declared at the root because its callers differ**, and it
 overlaps two other buckets without saying so: a restyle runs it inside `applyContainer`, and the
 preview runs it inside `visibilityPass` or `applyContainer`. Only the calls the engine makes from its
@@ -162,7 +163,7 @@ same way it goes down when a player unticks *Enable Aura Master* (slash-commands
 anti-pattern #85's last clause — two mechanisms that must agree about what inert means and diverge
 on the first module added after the second was written.
 
-So `standDown` (`core/LifecycleSetup.lua:116`) calls `addon:UnregisterLifecycleEvents()` — the eleven
+So `standDown` (`core/LifecycleSetup.lua:116`) calls `addon:UnregisterLifecycleEvents()` — the twelve
 events `core/AuraMaster.lua` registers — then `NS.TimedSpells.StandDown()`, which drops TimedSpells'
 own `UNIT_AURA`, its three gate events and its two bus subscriptions, `NS.EmptyWatch.Stop()`,
 `CM.StopListening()` (which also stops the font primer, `FontPrimer.Stop`), `FramePicker.Stop()`,
@@ -170,9 +171,9 @@ then the combat-restricted half (Blizzard frames handed back and a visibility pa
 `PLAYER_REGEN_ENABLED` when combat refuses it. `Container:ShouldShow` checks **the latch** as step 0, so
 every engine is disabled and nothing — a combat transition, a target swap, a settings change — can
 enable one behind it, and `CM.RequestApply` arms no timer. `standUp`
-(`core/LifecycleSetup.lua:151`) re-registers the events, subscribes again, builds any container
-the addon never built while down, moves target and focus containers to the view their unit's reaction
-picks now (before any engine is re-enabled), and re-applies every container from the settings **as they are
+(`core/LifecycleSetup.lua:152`) re-registers the events, subscribes again, builds any container
+the addon never built while down, moves target, focus, player and pet containers to the view their
+unit and Situations setting pick now (before any engine is re-enabled), and re-applies every container from the settings **as they are
 then**, never a snapshot. `NS.Perf.suspended` still reads true through the whole of arm B — the
 field is now the latch's answer to `IsHeld("perf")` rather than a boolean beside it — and the hold is session-only.
 

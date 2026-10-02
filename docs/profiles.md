@@ -27,8 +27,8 @@ entirely, performance-§5) and the session state (`debug`, the selected containe
 
 ## Switching, copying, resetting
 
-`NS.OnProfileChanged`, `NS.OnProfileReset` and `NS.OnProfileCopied` (`core/AuraMaster.lua:236`,
-`core/AuraMaster.lua:247`, `core/AuraMaster.lua:254`):
+`NS.OnProfileChanged`, `NS.OnProfileReset` and `NS.OnProfileCopied` (`core/AuraMaster.lua:248`,
+`core/AuraMaster.lua:259`, `core/AuraMaster.lua:266`):
 
 ```
 NS.OnProfileChanged() / OnProfileReset() / OnProfileCopied(source)

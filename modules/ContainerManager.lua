@@ -17,9 +17,9 @@ local _, NS = ...
 -- a learned timed spell, the startup build) waits the same way, silently.
 --
 -- NOT EVERY WRITE NEEDS AN APPLY. A row may declare `effect`: "visibility" rows (the master enable,
--- visibility, lock and alpha, a container's enable) run the combat-legal visibility pass at once;
--- "none" rows (the Blizzard-frame toggles, a container's name) did their whole effect in their own
--- onChange. A Blizzard-frame toggle that lockdown holds says so through CM.NoteDeferred, same rule.
+-- visibility, lock and alpha; a container's enable, its filter.zones and filter.unitFilter) run the combat-legal visibility
+-- pass at once; "none" rows (the Blizzard-frame toggles, a container's name) did it all in onChange, a
+-- held toggle saying so via CM.NoteDeferred (same rule); "view" rows (filter.situations) switch the view at once.
 
 NS.ContainerManager = NS.ContainerManager or {}
 local CM = NS.ContainerManager
@@ -424,14 +424,33 @@ end
 --- engine); it gates itself on unlocked, out of combat and auras readable. `quiet` skips that re-predict:
 --- OnUnitSwap passes it, because EmptyWatch hears the same swap and always re-predicts from its own
 --- handler, so telling it here as well would run two passes for one swap whenever OnUnitSwap's handler
---- happens to run first (AceEvent's order is unspecified). Answers how many moved.
+--- happens to run first (AceEvent's order is unspecified). `id` narrows it to that one container, on
+--- whatever unit (the `view` effect of a Situations write, filter situations S2), and `unit` is nil
+--- then. Answers how many moved.
 --- @return number
-function CM.ApplyViews(unit, quiet)
+function CM.ApplyViews(unit, quiet, id)
     local n = 0
-    for _, inst in pairs(CM.instances) do
-        if inst.unit == unit and inst:ApplyView() then n = n + 1 end
+    for instId, inst in pairs(CM.instances) do
+        local match = (id ~= nil and instId == id) or (id == nil and inst.unit == unit)
+        if match and inst:ApplyView() then n = n + 1 end
     end
     if n > 0 and not quiet and NS.EmptyWatch then NS.EmptyWatch.OnViewsMoved() end
+    return n
+end
+
+--- `unit` may now be someone else, or stand otherwise toward the player: re-run the visibility pass
+--- of each container on it whose Unit type gate (filter situations, S6; ContainerClass:ShouldShow)
+--- now answers otherwise than its last pass saw. Combat-legal (ApplyVisibility's SetEnabled), and a
+--- container whose answer did not move, or with no gate, costs no pass. Answers how many ran.
+--- @return number
+function CM.ApplyUnitGate(unit)
+    local n = 0
+    for _, inst in pairs(CM.instances) do
+        if inst:UnitGateMoved(unit) then
+            inst:ApplyVisibility()
+            n = n + 1
+        end
+    end
     return n
 end
 
@@ -766,16 +785,24 @@ local ev
 -- `CM.viewPlayerFrame`, built, opened and closed exactly like the first.
 local VIEW_EVENTS = { "UNIT_FACTION", "UNIT_FLAGS" }
 
---- The unit frame's one OnEvent. The payload's unit is proven a safe key before it is compared.
+--- The unit frame's one OnEvent. The payload's unit is proven a safe key before it is compared. The
+--- same reaction change can move the Unit type gate too (filter situations, S6), so its visibility
+--- pass rides the same events: nothing new is registered for it.
 local function onViewEvent(_, _, unit)
-    if NS.Secrets.IsSafeKey(unit) and (unit == "target" or unit == "focus") then CM.ApplyViews(unit) end
+    if NS.Secrets.IsSafeKey(unit) and (unit == "target" or unit == "focus") then
+        CM.ApplyViews(unit)
+        CM.ApplyUnitGate(unit)
+    end
 end
 
---- The player frame's one OnEvent: both units' views, quietly, and one re-prediction if either moved.
+--- The player frame's one OnEvent: both units' views, quietly, and one re-prediction if either moved;
+--- then both units' Unit type gates (the player's own side moves a reaction too).
 local function onPlayerViewEvent(_, _, unit)
     if not (NS.Secrets.IsSafeKey(unit) and unit == "player") then return end
     local n = CM.ApplyViews("target", true) + CM.ApplyViews("focus", true)
     if n > 0 and NS.EmptyWatch then NS.EmptyWatch.OnViewsMoved() end
+    CM.ApplyUnitGate("target")
+    CM.ApplyUnitGate("focus")
 end
 
 local function viewFrame(key, onEvent)
@@ -832,14 +859,16 @@ end
 function CM.StartListening()
     if not ev then
         ev = NS.NewBusTarget()
-        -- A setting changed: run what its row's `effect` says — the visibility pass, nothing, or (the
-        -- default) re-apply the container it belongs to, or all of them for an addon-wide row.
+        -- A setting changed: run what its row's `effect` says — the visibility pass, the view switch
+        -- (combat-legal, never held: a Situations row), nothing, or (the default) re-apply the
+        -- container it belongs to, or all of them for an addon-wide row.
         ev:RegisterMessage(NS.MSG.CONFIG_CHANGED, function(_, payload)
             local p = type(payload) == "table" and payload or {}
             local row = p.path and NS.FindSchemaRow(p.path)
             local effect = row and row.effect
             if NS.FontPrimer then NS.FontPrimer.PrimeAll() end   -- a new font, before its apply (#24)
             if effect == "visibility" then CM.ApplyVisibility()
+            elseif effect == "view" then CM.ApplyViews(nil, false, p.containerId)
             elseif effect ~= "none" then
                 CM.RequestApply(p.containerId)
                 requestFollowers(p)

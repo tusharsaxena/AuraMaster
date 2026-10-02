@@ -81,7 +81,7 @@ Example (shortened):
 [Cont] #2 "Player debuffs" unit=player HARMFUL style=icons enabled=true attach=container#1 point=TOPLEFT(auto) relPoint=BOTTOMLEFT(auto) join=after-start | engine=yes ...
 [Filt] #1 whitelist(1)=[1459 Arcane Intellect]
 [Plan] #1 plan in sync
-[Plan] #1 spell lists: mode=always view=ids
+[Plan] #1 spell lists: mode=always view=ids situation=-
 [Plan] #1 g1 "Always shown" filter=HELPFUL cand={includeSpellIDs:1} sort=expirationOnly/normal max=inf frames=3 shown=2
 [Shown] #1 g1 btn1 name="Arcane Intellect"
 [Shown] #1 predicted: 1459 Arcane Intellect -> shown (rank 1 whitelist)
@@ -95,9 +95,18 @@ Automatic or `(picked)`, and `join=`, the batch 9 side the pair is under the par
 
 Each built container's `[Plan] #N spell lists:` line says where Blizzard applies its spell ids
 (`mode=`: `always` for buffs on the player and the pet, `never` for their debuffs, `dynamic` for any
-other unit, where the unit's reaction decides, `FC.IdsMode`) and which view of the plan the engine
-holds now (`view=ids`, or `view=noIds`, where spell categories and Overrides are not applied and only
-Blizzard categories set to Show draw). See the `[Filter]` tag below for each switch.
+other unit, where the unit's reaction decides, `FC.IdsMode`), which view of the plan the engine
+holds now (`view=ids`; `view=every`, every aura once through the remainder slot; or `view=blizzard`,
+where spell categories and Overrides are not applied and only Blizzard categories set to Show draw),
+and the Situations setting that picked a no-ids view (`situation=npcs`, `players`, `unknown` when
+the unit's player-ness is not knowable and the stricter setting was taken, or `-` on the ids view).
+A trailing `stale=yes` means the engine refused one of the switch's setters (an `[Engine]` line says
+which): the view named is the one asked for, and the next switch resends every group in full. Each
+group line after it prints that view's filter string and candidate filters, not always the ids view's.
+The setting is the container's Filters → Situations tab (On NPCs, On players, or Your own and your
+pet's debuffs), and a write there moves the view at once when it changes what the container's current
+unit draws, logging one `[Filter]` line (none when the view holds).
+See the `[Filter]` tag below for each switch.
 
 ### Bar names that do not show
 
@@ -266,7 +275,8 @@ well: `apply queue: all=false` and `engine=yes` on every `[Cont]` line mean the 
 build ran; `all=true` with `mustDefer=true` means it is still waiting.
 
 Target, focus and pet swaps and `ADDON_LOADED` are left out on purpose (owner, 2026-09-29): they
-fire too often in a key to read around. So are `ITEM_DATA_LOAD_RESULT` and `GET_ITEM_INFO_RECEIVED`,
+fire too often in a key to read around. So is `ZONE_CHANGED_NEW_AREA`, a border crossing that fires on
+every zone border. So are `ITEM_DATA_LOAD_RESULT` and `GET_ITEM_INFO_RECEIVED`,
 which fire for every item the client loads. What they can start, the weapon-enchant reset, writes
 its own line when it fires: `[Apply] enchants reset on N container(s) after the loading screen` (or
 `after item data`), N counting the live containers with enchant slots it turned off and on again
@@ -316,7 +326,7 @@ on Clear through the console descriptor's `onClear`. The Launcher's state lines,
 | `Anchor` | host | `modules/Anchors.lua`, `modules/FramePicker.lua`, `settings/Layout.lua` | A container falling back to the screen, once until it lands again (or the console is cleared); the pending-frame resolve skipped under lockdown, once per fight while one waits; `resolved N pending frame target(s)`; a drag whose position read secret; `attach refused (in combat)`, `frame pick refused (in combat)` |
 | `Cfg` | library, host | LibKa0s-Options-1.0 (Options 28, OptionsIdList 3); `settings/OptionsSetup.lua` | The library's: the settings window opened, `open refused (in combat)`, and each act the combat lock refuses on an open panel, once per combat (`write <path>`, `defaults <page>`, `tab <key>`, `button <text>` … `refused (in combat)`), `register parked (in combat)` and `register flushed (combat ended)`; once per id list whose help mark falls back to the client glyph, `help art: no addonName on the Options descriptor; drawing the client glyph` or `help art: addonName "<name>" is not a loaded addon; drawing the client glyph`. The host's: a page open refused in combat (`open <page> refused (in combat)`) |
 | `Engine` | host | `modules/Container.lua` | An engine call that raised, once per distinct method and error |
-| `Filter` | host | `modules/Container.lua` | A container whose spell lists switched on or off, once per change of view; nothing when the view holds. "on" means Blizzard applies the spell ids, and the reason names the unit's assistability: a target or focus buff container logs `<container>: spell lists on (unit can be assisted)` or `... off (unit cannot be assisted)`, a target or focus debuff container `... on (unit cannot be assisted)` or `... off (unit can be assisted)`, and a player or pet debuff container `... off (your own and your pet's debuffs)` |
+| `Filter` | host | `modules/Container.lua` | A container whose spell lists switched on or off, once per change of view; nothing when the view holds. "on" means Blizzard applies the spell ids, and the reason names the unit's assistability; "off" names the view and the situation that picked it: a target or focus buff container logs `<container>: spell lists on (unit can be assisted)` or `... off, every aura (NPC; unit cannot be assisted)` (`only Blizzard categories set to Show` for the blizzard view; `player`, or `NPC or player not knowable`, for the situation), a target or focus debuff container `... on (unit cannot be assisted)` or `... off, every aura (NPC; unit can be assisted)`, and a player or pet debuff container `... off, every aura (your own and your pet's debuffs)` |
 | `Style` | host | `modules/Style.lua`, `modules/Style_Text.lua` | A binding or a guarded dress that raised, once per distinct error; a Text template refused, once per template |
 | `Fonts` | host | `modules/FontPrimer.lua` | `primed N new font(s)`; `N font(s) refused` when the refused count changes; each loading screen's end with its timing |
 | `Timed` | host | `modules/TimedSpells.lua` | A scan that learned something (`learned N timed spell(s)`); `/am forgettimed` |
@@ -324,7 +334,8 @@ on Clear through the console descriptor's `onClear`. The Launcher's state lines,
 | `Launcher` | library | LibKa0s-Launcher-1.0 (Launcher 5), through `core/LauncherSetup.lua`'s descriptor | Its state lines (`LibDataBroker-1.1 absent`, `LibDBIcon-1.0 absent`, no minimap table, `registered`) through the at-enable queue, so they land after `[Init]` the first time logging is turned on; its events at once |
 | `Perf` | host | `core/PerfSetup.lua` | A perf capture's report, written ungated because the player asked for it |
 
-Left out on purpose: target, focus and pet swaps, `ADDON_LOADED`, the item-data events (above), each
+Left out on purpose: target, focus and pet swaps, `ADDON_LOADED`, `ZONE_CHANGED_NEW_AREA` (a border
+crossing, which fires on every zone border), the item-data events (above), each
 `UNIT_AURA` pass of the empty prediction and the timed-spell scan (quiet unless a scan learns
 something), and the frame picker's `OnUpdate`. Their effects that matter write their own line.
 

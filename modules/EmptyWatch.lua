@@ -55,14 +55,14 @@ local function unitExists(unit)
     return v and true or false
 end
 
---- Whether the engine applies spell ids for this unit and aura type right now, from the same answer
---- the container picked its view from (NS.Container.ResolveView: FC.IdsMode for the player and the
---- pet, NS.Compat.IdsApply, Blizzard's own predicate, everywhere else), so the prediction agrees
---- with the engine (spell-list views, V3). Never nil: an unknowable reaction reads "not applied",
---- as it does for the view.
-local function idsApply(unit, auraType)
-    local at = (auraType == "HARMFUL") and "HARMFUL" or "HELPFUL"
-    return NS.Container.ResolveView(unit, at) == "ids"
+--- Whether the engine applies spell ids for this container right now: exactly when it holds the ids
+--- view (`inst.view`, which Build, Update and ApplyView set to what they sent; a container not yet
+--- noted is on ids, Blizzard's default), so the prediction agrees with the engine (spell-list views,
+--- V3). Never re-resolved here: the view turns on the container's own Situations settings too
+--- (filter situations, S2), and a resolver asked with partial arguments could disagree with the
+--- engine.
+local function idsApply(inst)
+    return (inst.view or "ids") == "ids"
 end
 
 --- One spell-id list against the aura: true when it passes, false when it fails, nil when unknowable.
@@ -149,10 +149,11 @@ local function groupEmpty(api, unit, filter, cand, idsOk)
     return slotsEmpty(api, unit, cand, idsOk, api.GetAuraSlots(unit, filter))
 end
 
---- Group `g`'s filter string and candidate filters in the view the engine holds: its no-ids view
---- (`g.noIds`, modules/FilterViews.lua) once ApplyView or a build put the engine on it.
+--- Group `g`'s filter string and candidate filters in the view the engine holds: its blizzard or every
+--- view (`g.views`, modules/FilterViews.lua) once ApplyView or a build put the engine on it.
 local function activeView(inst, g)
-    local v = (inst.view == "noIds" and g.noIds) or g
+    local view = inst.view
+    local v = (view ~= "ids" and g.views and g.views[view]) or g
     return v.filter, v.candidateFilters
 end
 
@@ -169,7 +170,7 @@ local function aurasEmpty(inst, plan, cfg)
     local unit = cfg.unit
     local exists = unitExists(unit)
     if exists == false then return true end
-    local api, idsOk = _G.C_UnitAuras, idsApply(unit, cfg.auraType)
+    local api, idsOk = _G.C_UnitAuras, idsApply(inst)
     local result = true
     for _, g in ipairs(plan.groups) do
         local r = true
@@ -278,8 +279,8 @@ local function passNow()
     runPass()
 end
 
---- ContainerManager moved at least one container's view (CM.ApplyViews: a swap, or a reaction change
---- heard as UNIT_FACTION or UNIT_FLAGS). The setters redrew the engine in this same frame, so the
+--- ContainerManager moved at least one container's view (CM.ApplyViews: a swap, a reaction change
+--- heard as UNIT_FACTION or UNIT_FLAGS, or a Situations write). The setters redrew the engine in this same frame, so the
 --- prediction follows at once, not PASS_DELAY later: a wrong "empty" left standing would hang a
 --- follower over the parent's auras, and no UNIT_AURA need come to correct it.
 function EW.OnViewsMoved()

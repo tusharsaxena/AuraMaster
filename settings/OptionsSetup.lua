@@ -317,6 +317,9 @@ if not lib then
     -- The one table member the ID widgets add: the hint strings a host tooltip may quote. The host
     -- keeps its own localized copy, so an empty table is the inert answer.
     Helpers.ID_NAME_HINT = {}
+    -- The gap RenderWarnings leaves under its orange lines: a zero placeholder, never a plausible
+    -- figure, since nothing is drawn without the library (RenderWarnings is a no-op above).
+    Helpers.WARNINGS_GAP = 0
     Helpers.CreateOptionsPanel = sayMissing
     Helpers.OpenOptionsPanel = sayMissing
 
@@ -458,10 +461,19 @@ end
 
 --- One orange line per thing the aura engine will silently not do for this container, above the
 --- tab's rows (modules/FilterCompiler.lua's plan warnings).
+--- The gap under the last orange line, so it does not run straight into the first section's heading
+--- (the owner's request, 2026-10-02). The same figure as the addon's other section gaps.
+Helpers.WARNINGS_GAP = 10
+
 function Helpers.RenderWarnings(ctx, cfg)
     local plan = NS.FilterCompiler.Compile(cfg, NS.FilterCompiler.ProfileContext())
-    for _, w in ipairs(plan.warnings or {}) do
+    local warnings = plan.warnings or {}
+    for _, w in ipairs(warnings) do
         Helpers.TextRow(ctx, "|cffffa040" .. L[w] .. "|r")
+    end
+    if #warnings > 0 then
+        local scroll = Helpers.EnsureScroll and Helpers.EnsureScroll(ctx)
+        if scroll then Helpers.AddSpacer(scroll, Helpers.WARNINGS_GAP) end
     end
 end
 

@@ -15,7 +15,7 @@ is a defect in this doc (documentation-§3).
 | General | Master controls · Display · Spell Categories · Dispel Colors | Turn the addon off, when containers show at all, master scale and alpha, lock (unlocked shows the drag handles), debug console, test mode (placeholder auras), the two resets; hiding Blizzard's buff and debuff frames; which spells each spell category matches, and one color per dispel type, both shared by every container |
 | Containers | a nav rail (options-ui-§13): General · Filters · Layout · the container's own style | One page per container (#6): the band's picker chooses the container, the rail chooses which part of it the tabs below show, and only the scroll moves |
 | Containers → General (rail) | General | A top-level page (`N-1`, batch 7): create, select, rename, enable, unit, aura type and style of a container, and duplicate, delete, copy settings between containers |
-| Containers → Filters (rail) | General · Categories · Overrides · Sorting | Who cast it, timed or permanent, max duration, and the five-rank priority block at the foot of the tab; the Show/Hide category grids (weapon enchants among them); the whitelist and blacklist spell lists, each entry's verdict in its "?" mark; sort order and cap (per group). Tabs vary with the aura type |
+| Containers → Filters (rail) | General · Categories · Overrides · Sorting · Situations | Who cast it, timed or permanent, max duration, and the five-rank priority block at the foot of the tab; the Show/Hide category grids (weapon enchants among them); the whitelist and blacklist spell lists, each entry's verdict in its "?" mark; sort order and cap (per group); what draws where spell lists don't apply, per NPC and per player, the kinds of zone the container shows in, and the kinds of unit (NPC or player, friendly, neutral or hostile) a target or focus container shows for. Tabs vary with the aura type |
 | Containers → Layout (rail) | Frame · Anchor · Growth · Mouse · Label | Scale, opacity, strata and frame level; where the container sits (the screen, another container or a named frame, with only what the mode reads drawn) and the frame picker; growth direction and spacing, the flow inherited from the parent while attached to a container; tooltips, cancel, click-through; the optional name label |
 | Containers → Bar (rail, a container drawn as bars) | General · Background & border · Name text · Time text · Stack text · Icon · Pandemic | The look of a container drawn as bars |
 | Containers → Icon (rail, a container drawn as icons) | Size · Border · Cooldown · Time text · Stack text · Pandemic | The look of a container drawn as icons |
@@ -408,10 +408,11 @@ Then **Duplicate** and **Delete** (asks first), and — with more than one conta
 from**: a source dropdown (every other container, by name), a "what to copy" dropdown (everything, or one of Filters, Layout, Mouse,
 Label, Bar style, Icon style, Text style) and **Copy onto this container**. Name and position are never copied.
 
-### Filters (46 rows, `settings/Filters.lua`) — a section of Containers (#6)
+### Filters (56 rows, `settings/Filters.lua`) — a section of Containers (#6)
 
 Every tab opens with the container's warnings in orange — what the engine will silently not honor
-here (`Helpers.RenderWarnings`, from `FilterCompiler.Compile`'s `warnings`).
+here (`Helpers.RenderWarnings`, from `FilterCompiler.Compile`'s `warnings`), followed by a gap of
+`Helpers.WARNINGS_GAP` (10) before the first section, drawn only when a warning is.
 
 **General** (named *What to show* until 2026-09-20)
 
@@ -495,9 +496,10 @@ Straight under the **Spell Categories** heading, above its Show all / Hide all, 
 `FC.IdsMode` is not `"always"` (every debuff container, and a buff container on a target or focus)
 draws a NOTE naming where its spell categories are not applied: "your own debuffs", "your pet's
 debuffs", "units you can assist" (target and focus debuffs) or "units you can't assist" (target and
-focus buffs). The **Overrides** tab opens with the same sentence about its two lists. There the
-container draws its no-ids view and only the Blizzard categories set to Show draw (spell-list views,
-`viewNote` in `settings/Filters.lua`; `docs/midnight-quirks.md`).
+focus buffs), ending "(see Situations)". The **Overrides** tab opens with the same sentence about its
+two lists. There the container draws the view its **Situations** setting picks: every aura once, or
+only the Blizzard categories set to Show (spell-list views and filter situations, `viewNote` in
+`settings/Filters.lua`; `docs/midnight-quirks.md`).
 
 **Sorting**
 
@@ -508,7 +510,7 @@ container draws its no-ids view and only the Blizzard categories set to Show dra
 | Max auras (0 = no limit) | `container.filter.maxAuras` | number 0–40 | buffs, debuffs; per group |
 
 **Overrides** (buff and debuff containers, the third tab since batch 8 — it sits beside Categories,
-the other half of the same decision, and Sorting is last) — bespoke: a **Whitelist** and a **Blacklist**
+the other half of the same decision, and Sorting follows, with Situations after it) — bespoke: a **Whitelist** and a **Blacklist**
 section, each the library's `IdList` in spell mode over `container.filter.whitelist` /
 `container.filter.blacklist`, adding by spell id, link or name with the same suggestions,
 candidates, refusals and tooltip as General → Spell Categories (one `candidates()` and one set of
@@ -527,6 +529,38 @@ or Cast by can still keep it off screen even where the lists and categories alon
 7 fix round 2 retired the one exception this used to carry (an "only these categories" container with
 nothing else Shown, whose whitelist entry really was the only thing keeping an aura on screen): rank 5
 can no longer be "hidden" at all once the toggle is gone, so every note stays non-definite now.
+
+**Situations** (buff and debuff containers, the last tab, after Sorting; filter situations S4,
+2026-10-02) — the group's ten rows, declared after Sorting's so the strip ends with it, drawn by a
+bespoke tab keyed by the group (`renderSituations`). Three sections:
+
+- **Unit type** (S6, the addendum; the first section, moved to the top on 2026-10-02). On a target or focus container two dropdowns:
+  **Unit type** (All, NPCs, Players; `container.filter.unitFilter.kind`) and **Reaction** (All,
+  Friendly, Neutral, Hostile; `container.filter.unitFilter.reaction`), both All by default and both
+  taking the `visibility` effect. A unit that does not match both choices hides the locked container
+  through the combat-legal visibility pass, re-run on every target or focus swap and reaction change;
+  no unit, or an answer that cannot be read, allows; unlocked or in test mode it still shows. A player
+  or pet container draws "Always your own character or pet." and no dropdown (the setting is ignored
+  there).
+- **Where spell lists don't apply.** A line in the Spell Categories NOTE's unit wording ("On units
+  you can't assist, spell lists don't apply to this container.", and the same for units you can
+  assist, your own debuffs and your pet's debuffs), then the dropdowns `FC.IdsMode` calls for: **On
+  NPCs** and **On players** on a target or focus container (`container.filter.situations.npcs` /
+  `.players`); one **Your own and your pet's debuffs** on a player or pet debuff container (the
+  players setting, drawn from a per-render copy under that label and with its own tooltip, about your
+  own or your pet's debuffs). Each offers **Every aura, once**
+  (the default) or **Only my Blizzard categories set to Show**, and takes the `view` effect: the
+  container switches view at once, in combat too. Under them: "Every aura still honors Cast by,
+  Duration, Max duration and the Blizzard, Dispel and Who Cast It rows you set to Hide; spell categories,
+  Uncategorized and Overrides do not apply there." A buff container in "Without a duration" mode
+  (the effective mode: timeless on a debuff container compiles as any duration) adds "Every aura
+  draws nothing extra here: 'Without a duration' is built from spell lists." A player or pet buff
+  container, where spell lists always apply, draws "Spell lists always apply to your own and your
+  pet's buffs." and no dropdown.
+- **Show in.** Six checkboxes, all ticked by default: Open world, Dungeons, Scenarios and delves,
+  Raids, Battlegrounds, Arenas (`container.filter.zones.none` / `.party` / `.scenario` / `.raid` /
+  `.pvp` / `.arena`). An unticked kind of place hides the locked container there, through the
+  combat-legal visibility pass; an unlocked container or one in test mode still shows anywhere.
 
 **Filter priority.** The five ranks, highest first, are stated in ONE place — the foot of the
 **General** tab (`P-1`, `P-4`), under the heading *Filter priority logic*: a lead-in in

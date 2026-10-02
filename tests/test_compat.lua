@@ -647,3 +647,123 @@ test("compat: IdsApply is false whenever the answer is not knowable", function()
         assertFalse(NS.Compat.IdsApply(nil, "HELPFUL"), "no unit")
     end)
 end)
+
+-- ── whether a unit is a player (filter situations, S2) ──────────────────────────────────────
+
+test("compat: IsPlayerUnit answers UnitIsPlayer as a strict boolean", function()
+    local seen = {}
+    local isPlayer = { target = true, focus = false }
+    with({ { "UnitIsPlayer", function(unit)
+        seen[#seen + 1] = unit
+        return isPlayer[unit]
+    end } }, function(NS)
+        -- red under: no such wrapper
+        assertEqual(NS.Compat.IsPlayerUnit("target"), true)
+        assertEqual(NS.Compat.IsPlayerUnit("focus"), false)
+        -- red under: a nil answer passed through as "unknowable" (UnitIsPlayer answers nil for no unit)
+        assertEqual(NS.Compat.IsPlayerUnit("mouseover"), false)
+    end)
+    assertEqual(seen[1], "target", "asked about the unit it was given")
+end)
+
+test("compat: IsPlayerUnit is nil whenever the answer is not knowable", function()
+    local function boom() error("refused") end
+    -- red under: an unguarded call (the error escapes)
+    with({ { "UnitIsPlayer", boom } }, function(NS)
+        assertEqual(NS.Compat.IsPlayerUnit("target"), nil)
+    end)
+    -- red under: a missing API read as "not a player" (an NPC), not as unknowable
+    with({ { "UnitIsPlayer", nil } }, function(NS)
+        assertEqual(NS.Compat.IsPlayerUnit("target"), nil)
+    end)
+    local SECRET = {}
+    with({ { "UnitIsPlayer", function() return SECRET end },
+        { "issecretvalue", function(v) return v == SECRET end },
+        { "canaccessvalue", function(v) return v ~= SECRET end } }, function(NS)
+        -- red under: a secret answer boolean-tested (it raises in the client) instead of CanAccess-checked
+        assertEqual(NS.Compat.IsPlayerUnit("target"), nil)
+    end)
+    with({}, function(NS)
+        -- red under: a non-string unit handed to the API
+        assertEqual(NS.Compat.IsPlayerUnit(nil), nil, "no unit")
+    end)
+end)
+
+-- ── the kind of place the player is in (filter situations, S3) ──────────────────────────────
+
+test("compat: InstanceType answers IsInInstance's second value", function()
+    for _, kind in ipairs({ "none", "party", "scenario", "raid", "pvp", "arena", "neighborhood" }) do
+        with({ { "IsInInstance", function() return kind ~= "none", kind end } }, function(NS)
+            -- red under: no such wrapper, or the first value (inInstance) answered
+            assertEqual(NS.Compat.InstanceType(), kind, kind)
+        end)
+    end
+end)
+
+test("compat: InstanceType is nil whenever the answer is not knowable", function()
+    -- red under: an unguarded call (the error escapes)
+    with({ { "IsInInstance", function() error("refused") end } }, function(NS)
+        assertEqual(NS.Compat.InstanceType(), nil)
+    end)
+    -- red under: a missing API answered as "none" (Open world), which an unticked Open world would hide
+    with({ { "IsInInstance", nil } }, function(NS)
+        assertEqual(NS.Compat.InstanceType(), nil)
+    end)
+    with({ { "IsInInstance", function() return false, nil end } }, function(NS)
+        assertEqual(NS.Compat.InstanceType(), nil, "no type")
+    end)
+    -- a secret string: only the CanAccess guard stops it, since it passes the string check
+    local SECRET = "party"
+    with({ { "IsInInstance", function() return true, SECRET end },
+        { "issecretvalue", function(v) return v == SECRET end },
+        { "canaccessvalue", function(v) return v ~= SECRET end } }, function(NS)
+        -- red under: the CanAccess guard dropped, so the secret type reached the zone lookup
+        assertEqual(NS.Compat.InstanceType(), nil)
+    end)
+end)
+
+-- ── the unit's reaction to the player (filter situations, S6) ───────────────────────────────
+
+test("compat: UnitReactionKind bands UnitReaction(unit, \"player\") into friendly, neutral and hostile", function()
+    local seen = {}
+    local want = { [1] = "hostile", [2] = "hostile", [3] = "hostile", [4] = "neutral",
+        [5] = "friendly", [6] = "friendly", [7] = "friendly", [8] = "friendly" }
+    for r = 1, 8 do
+        with({ { "UnitReaction", function(unit, other)
+            seen[#seen + 1] = tostring(unit) .. ">" .. tostring(other)
+            return r
+        end } }, function(NS)
+            -- red under: no such wrapper, or a band off by one (4 read as hostile or friendly)
+            assertEqual(NS.Compat.UnitReactionKind("target"), want[r], "reaction " .. r)
+        end)
+    end
+    -- red under: the arguments swapped (the player's reaction to the unit)
+    assertEqual(seen[1], "target>player", "the unit's reaction to the player")
+end)
+
+test("compat: UnitReactionKind is nil whenever the answer is not knowable", function()
+    -- red under: an unguarded call (the error escapes)
+    with({ { "UnitReaction", function() error("refused") end } }, function(NS)
+        assertEqual(NS.Compat.UnitReactionKind("target"), nil)
+    end)
+    -- red under: a missing API read as a reaction
+    with({ { "UnitReaction", nil } }, function(NS)
+        assertEqual(NS.Compat.UnitReactionKind("target"), nil)
+    end)
+    -- red under: no unit (UnitReaction answers nil) compared as a number
+    with({ { "UnitReaction", function() return nil end } }, function(NS)
+        assertEqual(NS.Compat.UnitReactionKind("target"), nil, "no unit")
+    end)
+    -- a secret number: only the CanAccess guard stops it, since it passes the number check
+    local SECRET = 2
+    with({ { "UnitReaction", function() return SECRET end },
+        { "issecretvalue", function(v) return v == SECRET end },
+        { "canaccessvalue", function(v) return v ~= SECRET end } }, function(NS)
+        -- red under: the CanAccess guard dropped, so the secret number was compared
+        assertEqual(NS.Compat.UnitReactionKind("target"), nil)
+    end)
+    with({ { "UnitReaction", function() return 1 end } }, function(NS)
+        -- red under: a non-string unit handed to the API
+        assertEqual(NS.Compat.UnitReactionKind(nil), nil, "no unit token")
+    end)
+end)

@@ -22,7 +22,7 @@ check's number is not reused. Checks with no recorded pass, and checks new or co
 | COMBAT-1 to COMBAT-7 | Combat and restrictions | Deferred changes, the settings lock, resets in combat, Mythic+ keys |
 | DIAG-1 to DIAG-20 | Debug, diagnostics, perf | The debug console, bulk `[Set]` lines, `/am diagnostics`, `/am perf`, the event trace, resizing the console, its copy window and the perf panel, the console's Diagnostics link, diagnostics turning logging on, the library's own lines (a slash refusal, a stand-down edge, the launcher's at-enable line) |
 | CONT-1 to CONT-25 | Containers | Create, duplicate, delete, rename, copy; handles, strips and the close mark; test mode; unit swaps; empty placeholders |
-| FILT-1 to FILT-52 | Filters and spell categories | Cast by, the category grids, Overrides, the add-a-spell box, aura ids, your own categories, weapon enchants and their names, the help marks' art, where spell lists apply |
+| FILT-1 to FILT-63 | Filters and spell categories | Cast by, the category grids, Overrides, the add-a-spell box, aura ids, your own categories, weapon enchants and their names, the help marks' art, where spell lists apply, the Situations tab, its zones and its Unit type gate |
 | LAYOUT-1 to LAYOUT-38 | Layout | Anchor modes, attaching, chains, growth, anchor points, seams, the name label, mouse and tooltips |
 | STYLE-1 to STYLE-30 | Bars and Icons style, fonts | Bars and Icons tabs, the spark, borders, dispel colors, pandemic, the font primer |
 | TEXT-1 to TEXT-29 | Text style | Templates and tokens, justify, the icon, dispel type word, backdrop and edge, animation, Size to fit |
@@ -918,7 +918,7 @@ combat may show once. `/am forgettimed` → they reappear until relearned out of
 **FILT-30. Warnings.** Whitelist a spell on a *player debuffs* container that hides no category →
 Filters shows the orange "On your own and your pet's debuffs, the Overrides lists are not applied."
 line; set any category to **Hide** → it becomes "On your own and your pet's debuffs, spell categories
-and Overrides are not applied. Only Blizzard categories set to Show draw." On a *target buffs*
+and Overrides are not applied. The Situations tab picks what draws there." On a *target buffs*
 container → "On units you can't assist (hostile or neutral), ...". Set every category to **Hide** but *Defensive cooldowns*, then on
 General → Spell Categories remove every *Defensive cooldowns* spell → "These filters can never match
 anything."; Restore afterward. Result:
@@ -1013,31 +1013,34 @@ FILT-46 to FILT-52 check the spell-list views (2026-10-02). Blizzard applies spe
 unit you can assist and to debuffs on a unit you cannot. Elsewhere a container that sets any category
 to Hide draws only the categories set to Show on its Blizzard Categories, Dispel Types and Who Cast It
 grids, each aura once. Turn logging on (`/am debug on`) for the checks that read `[Filter]` lines.
+Since filter situations (S2), that is the blizzard view, which a container draws there only with its
+Situations settings at "Only my Blizzard categories set to Show"; FILT-46 to FILT-52 assume both
+settings (NPCs and players) at that value, on every container they use.
 
 **FILT-46. The Mythic+ repro: one bar per aura.** Make a *target buffs* bar container: every Blizzard
 category **Hide**, at least five Spell Categories **Show** (Defensive cooldowns, Offensive cooldowns,
 Healing, Support, Utility and so on), **Uncategorized** **Hide**, **Max duration** `30`. In a Mythic+
 key or a dungeon, target an enemy NPC that carries a short buff (the report was *Brutal Slams*,
 stacked twice) → no bar is drawn more than once, and on this container nothing draws at all, since
-no Blizzard category is set to Show. The console shows `[Filter] <name>: spell lists off (unit cannot
-be assisted)` when you target it. Set *Important (Blizzard)* to **Show** → the NPC's important buffs
+no Blizzard category is set to Show. The console shows `[Filter] <name>: spell lists off, only
+Blizzard categories set to Show (NPC; unit cannot be assisted)` when you target it. Set *Important (Blizzard)* to **Show** → the NPC's important buffs
 each draw once, and nothing else does. Result:
 
 **FILT-47. A hostile player.** In War Mode or a battleground, use a *target buffs* container with
 *Defensive cooldowns* **Show**, *Cancelable* **Hide** and *Big defensives (Blizzard)* **Show**. Target
 an enemy player who pops a big defensive → it draws once, from *Big defensives (Blizzard)*; a buff
 only in *Defensive cooldowns* does not draw; no buff draws twice. `/am diagnostics` → the container's
-line reads `spell lists: mode=dynamic view=noIds`. Result:
+line reads `spell lists: mode=dynamic view=blizzard situation=players`. Result:
 
 **FILT-48. A friendly target.** Same container, target a friendly player or a party member → the
 container filters exactly as set: *Defensive cooldowns* buffs draw, *Cancelable* ones the other
 categories do not claim stay hidden, nothing draws twice. Switching from the FILT-47 target logs
-`[Filter] <name>: spell lists on (unit can be assisted)`, and `/am diagnostics` reads `view=ids`.
+`[Filter] <name>: spell lists on (unit can be assisted)`, and `/am diagnostics` reads `view=ids situation=-`.
 Result:
 
 **FILT-49. A duel flips the view without a retarget.** Target a friendly player and keep them
-targeted. Start a duel → when it begins, the console logs `spell lists off (unit cannot be assisted)`
-for each target buff container and `spell lists on (unit cannot be assisted)` for *Target debuffs
+targeted. Start a duel → when it begins, the console logs `spell lists off, only Blizzard categories
+set to Show (player; unit cannot be assisted)` for each target buff container and `spell lists on (unit cannot be assisted)` for *Target debuffs
 (mine)*, with no target change and no Lua error, in combat too; each container redraws on its own.
 When the duel ends the lines flip back. Nothing draws twice at any point. Result:
 
@@ -1051,22 +1054,116 @@ to your own debuffs. Result:
 
 **FILT-51. The notes.** Filters → **Categories** → straight under the **Spell Categories** heading:
 *Player buffs* → no NOTE; *Player debuffs* → "NOTE: on your own debuffs, these spell categories are
-not applied."; *Target debuffs (mine)* → "NOTE: on units you can assist, …"; a *target buffs*
-container → "NOTE: on units you can't assist, …"; a *pet debuffs* container → "NOTE: on your pet's
-debuffs, …". The **Overrides** tab opens with the same sentence ending "these Overrides are not
-applied." on each of those, above **Whitelist**, and with none on *Player buffs*. The orange warning
+not applied (see Situations)."; *Target debuffs (mine)* → "NOTE: on units you can assist, …"; a
+*target buffs* container → "NOTE: on units you can't assist, …"; a *pet debuffs* container → "NOTE:
+on your pet's debuffs, …". The **Overrides** tab opens with the same sentence ending "these Overrides
+are not applied (see Situations)." on each of those, above **Whitelist**, and with none on *Player
+buffs*. The orange warning
 above every tab prints only on a container that sets a category to Hide or has an Overrides entry,
-and on one that hides nothing it names only the Overrides lists (no "Only Blizzard categories set to
-Show draw").
-The README's Usage paragraph on where spell categories apply and the FAQ entry "Why does my target
-container show fewer buffs on enemies?" read the same as these notes. Result:
+and on one that hides nothing it names only the Overrides lists (no "The Situations tab picks what
+draws there.").
+The README's Usage paragraph on where spell categories apply and the FAQ entry "Why don't my
+target's buffs show on enemies?" read the same as these notes. Result:
 
 **FILT-52. Mind control flips the view on the charmer.** On a raid or dungeon boss that mind-controls
 (charms) a player, keep a *Target debuffs (mine)* container with *Hard CC*, *Soft CC* and *Racials*
 **Show** and *Dispellable by anyone* **Hide**, targeting the boss. When you are charmed, the console
-logs `spell lists off (unit can be assisted)` for that container if the charm made the boss
+logs `spell lists off, only Blizzard categories set to Show (NPC; unit can be assisted)` for that container if the charm made the boss
 assistable, with no target change and no Lua error; nothing draws twice while charmed. When the charm
 ends the line flips back to `spell lists on (unit cannot be assisted)`. Result:
+
+FILT-53 to FILT-59 check the Situations tab (filter situations, 2026-10-02), the last tab of
+Filters: what a container draws where spell lists don't apply (**Every aura, once**, the default, or
+**Only my Blizzard categories set to Show**), and the kinds of zone it shows in. Unlike FILT-46 to
+FILT-52, these start from the defaults unless a step says otherwise.
+
+**FILT-53. Mythic+ NPC buffs come back, once each.** Use the FILT-46 container as FILT-46 leaves
+it (*Important (Blizzard)* **Show**, every other Blizzard category **Hide**, five or more Spell
+Categories **Show**, **Uncategorized** **Hide**, **Max duration** `30`) with Filters → **Situations**
+→ **On NPCs** at **Every aura, once**. In a Mythic+ key or a dungeon, target an enemy NPC carrying
+short buffs (the report was *Brutal Slams*) → each buff of 30 seconds or less in no Blizzard
+category set to Hide draws exactly once, none twice (an Important one included); a cancelable or
+purgeable one stays hidden even when it is Important (in the every view a Show does not rescue a
+Hide), and a buff over 30 seconds does not draw. The console shows
+`[Filter] <name>: spell lists off, every aura (NPC; unit cannot be assisted)`, and `/am diagnostics`
+reads `view=every situation=npcs`. Set *Important (Blizzard)* from **Show** to **Hide** → the NPC's
+important buffs stop drawing and the rest still draw once. Result: pass (owner, 2026-10-02)
+
+**FILT-54. A hostile player with Players at Only Blizzard.** Use the FILT-47 container with **On
+NPCs** at **Every aura, once** and **On players** at **Only my Blizzard categories set to Show**. In
+War Mode or a battleground, target an enemy player who pops a big defensive → it draws once, from
+*Big defensives (Blizzard)* (or another Blizzard category set to Show: a purgeable or *Important*
+buff draws too); a buff only in *Defensive cooldowns* or in no Blizzard category does not draw; no
+buff draws twice; `/am diagnostics` reads `view=blizzard situation=players`. Target an enemy NPC next → its buffs that are in no Blizzard category set to
+Hide (Cancelable here) draw, once each (`view=every situation=npcs`). Result: pass (owner, 2026-10-02)
+
+**FILT-55. A friendly target is unchanged.** Same container, target a friendly player or a party
+member → it filters exactly as before filter situations: the Spell Categories set to Show draw,
+*Cancelable* buffs no other category claims stay hidden, nothing draws twice, and `/am diagnostics`
+reads `view=ids situation=-` whatever the two dropdowns say. Result: pass (owner, 2026-10-02)
+
+**FILT-56. Switching a dropdown in combat.** Select the FILT-53 container in the panel, target an
+enemy NPC and enter combat. The panel is locked in combat, so switch **On NPCs** with `/am set
+container.filter.situations.npcs blizzard` → the NPC's buffs disappear at once, not after combat,
+with no Lua error, and the console logs one `[Filter]` line naming the blizzard view. `/am set
+container.filter.situations.npcs every` → they return at once. Result: pass (owner, 2026-10-02)
+
+**FILT-57. Each zone checkbox.** On a locked container, untick one box at a time under Filters →
+**Situations** → **Show in** and visit that kind of place: Open world, a dungeon (Dungeons), a delve
+or scenario (Scenarios and delves), a raid (Raids), a battleground (Battlegrounds), an arena
+(Arenas) → the container is hidden there and shows again after you leave for a ticked kind of
+place, with no `/reload`. Unlock it inside the unticked kind of place → it shows so you can move it;
+lock it → it hides again. Tick the box back → it shows at once. Note what a delve reports (it should
+be Scenarios and delves). Result: pass (owner, 2026-10-02)
+
+**FILT-58. A /reload inside a dungeon.** Untick **Dungeons** on a locked container, enter a
+dungeon, then `/reload` inside it → after the reload the container is hidden from the first frame,
+not drawn and then hidden. Leave the dungeon → it shows. Result: pass (owner, 2026-10-02)
+
+**FILT-59. The tab and its rows.** Filters on any buff or debuff container → the tabs read General,
+Categories, Overrides, Sorting, Situations, with Situations last, and on every tab a clear gap
+separates the orange warning lines from the first section. A *target buffs* container → under
+**Unit type** (the first section), **Where spell lists don't apply** opens with "On units you can't assist, spell lists don't apply to
+this container.", then **On NPCs** and **On players**, then the line "Every aura still honors Cast
+by, Duration, Max duration and the Blizzard, Dispel and Who Cast It rows you set to Hide; …"; set
+its **Duration** to *Only auras without a duration* → a further line "Every aura draws nothing extra here: 'Without
+a duration' is built from spell lists." *Target debuffs (mine)* → "On units you can assist, …" and
+the same two dropdowns. *Player debuffs* → "On your own debuffs, …" and one dropdown, **Your own and
+your pet's debuffs**, whose tooltip names your own or your pet's debuffs (not "what a player
+shows"). *Player buffs* → "Spell lists always apply to your own and your pet's buffs."
+and no dropdown. Each then shows **Show in** and its six checkboxes, all ticked. Result: pass (owner, 2026-10-02)
+
+FILT-60 to FILT-63 check the Situations tab's first section, **Unit type** (filter situations S6,
+2026-10-02): which units a target or focus container shows for, by kind (NPCs or Players) and by
+reaction to you (Friendly, Neutral or Hostile). They start from the defaults (All / All) unless a step
+says otherwise.
+
+**FILT-60. The section.** Filters → **Situations** on *Target debuffs (mine)* → at the top, above
+**Where spell lists don't apply**, a section **Unit type** with two dropdowns, **Unit type** (All, NPCs, Players) and **Reaction**
+(All, Friendly, Neutral, Hostile), both at All. Each tooltip says an unlocked container, or one in
+test mode, still shows. On *Player buffs* and *Player debuffs*, and on a container switched to your
+pet, the section shows "Always your own character or pet." and no dropdown. Result: pass (owner, 2026-10-02)
+
+**FILT-61. Hostile NPCs only.** On a locked target container set **Unit type** NPCs and **Reaction**
+Hostile. Target an enemy mob → its auras draw. Target a friendly player, a party member, a friendly
+NPC and a neutral (yellow) mob in turn → the container shows nothing each time, label included, and
+comes back on the next enemy mob, with no `/reload` and no Lua error. Repeat the swaps in combat
+→ the same, at once. With no target → nothing to draw, no error. Unlock the container while
+targeting a friendly player → it shows so you can move it; lock it → it hides again. Set both
+dropdowns back to All → it shows on every target at once. Result: pass (owner, 2026-10-02)
+
+**FILT-62. A reaction change without a swap.** On a locked target container set **Reaction**
+Hostile, target a friendly player and start a duel with them → the container shows when the duel
+starts (they turn hostile) and hides when it ends, with no target change. Set **Unit type** Players
+and **Reaction** All instead, and with a party member targeted switch **Unit type** with `/am set
+container.filter.unitFilter.kind npc` in combat → the container hides at once, not after combat;
+`/am set container.filter.unitFilter.kind all` → it shows again. Result: pass (owner, 2026-10-02)
+
+**FILT-63. Focus, and the copy.** Make a focus buffs container with **Unit type** Players and
+**Reaction** Friendly. Focus a party member → it draws; focus an enemy mob → it hides, while a target
+container set to All keeps drawing your target. Containers → **Copy settings from** that focus
+container, section **Filters**, onto another target container → its **Unit type** section reads
+Players / Friendly. Result: pass (owner, 2026-10-02)
 
 ## Layout
 
@@ -1792,10 +1889,10 @@ line, then remove its row here.
 | FILT-19 | 75, batch 5 (the tooltip half) |
 | FILT-21 | 179 and 180: the chat line's expected text corrected on 2026-09-29 (each spell named, its id in brackets) |
 | FILT-27 | 82, batch 6 |
-| FILT-30 | its warning sentences corrected on 2026-10-02 (spell-list views, SV-01; the Overrides-only sentence, SV-05) |
+| FILT-30 | its warning sentences corrected on 2026-10-02 (spell-list views, SV-01; the Overrides-only sentence, SV-05; the full sentence points to the Situations tab, SI-06) |
 | FILT-42 | new on 2026-09-30 with the weapon-enchant name reset (SP-AMX-01) |
 | FILT-43 to FILT-45 | new on 2026-10-02: the Options descriptor passes `addonName`, so help marks draw the library's `info` art (LibKa0s#42, CA-AM-NM) |
-| FILT-46 to FILT-51 | new on 2026-10-02 with the spell-list views (SV-04) |
+| FILT-46 to FILT-51 | new on 2026-10-02 with the spell-list views (SV-04); FILT-51's NOTE sentences end "(see Situations)" since the same day (filter situations, SI-05) |
 | FILT-52 | new on 2026-10-02: the player's own reaction change (SV-05) |
 | LAYOUT-1 | 69, batch 5 |
 | LAYOUT-6 | 162, smoke batch 2 (owed, as CONT-8): the outline moving across aura buttons; 42: its combat refusal corrected on 2026-09-29 to `/am pick` alone, since the panel's button is locked in combat |

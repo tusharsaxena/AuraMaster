@@ -678,3 +678,20 @@ test("defaults: userCategoryOrder is reconciled the way containerOrder is", func
     assertEqual(table.concat(seen, ","), "userb,usera,userc",
         "declaration order follows the reconciled order")
 end)
+
+test("defaults: the RAID-token row says it means castable OR dispellable, as Blizzard defines it", function()
+    -- Blizzard's AuraUtil.AuraFilters: RAID is "helpful auras the player can apply and harmful auras the
+    -- player can dispel"; on an enemy it also flags buffs the player can remove (an Enrage a hunter can
+    -- tranquilize), so a row named for your own casts alone misled the owner (2026-10-02).
+    local def
+    for _, d in ipairs(Cat.For("HELPFUL")) do
+        if d.key == "castable" then def = d end
+    end
+    assertTrue(def ~= nil, "the castable row exists")
+    assertEqual(def.token, "RAID")
+    -- red under: the old label "Castable by you"
+    assertEqual(def.label, "Castable/Dispellable by you")
+    -- red under: the old desc "Buffs of a kind you can apply yourself."
+    assertTrue(def.desc:find("helpful auras the player can apply and harmful auras the player can dispel", 1, true) ~= nil,
+        "the tooltip quotes Blizzard's definition")
+end)

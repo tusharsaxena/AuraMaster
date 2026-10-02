@@ -322,7 +322,7 @@ end
 ---   HARMFUL  not UnitCanAssist("player", unit, true, true)
 --- The two `true`s are Blizzard's: immune and uninteractable units count as assistable. Neither API
 --- is documented as answering secret, but each call is guarded anyway, and an answer that is not
---- knowable is FALSE: the no-ids view that answer picks can under-show, never duplicate
+--- knowable is FALSE: the blizzard view that answer picks can under-show, never duplicate
 --- (modules/Container.lua ApplyView).
 --- @param unit string
 --- @param auraType string  "HELPFUL" | "HARMFUL"
@@ -333,6 +333,48 @@ function Compat.IdsApply(unit, auraType)
     if auraType == "HARMFUL" then return assist == false end
     if knownBoolean(_G.UnitIsPlayerControlledOrGroupMember, unit) then return true end
     return assist == true
+end
+
+--- Whether `unit` is a player (filter situations, S2): which Situations setting, NPCs or players, a
+--- target or focus container follows where Blizzard won't apply spell lists. UnitIsPlayer is not
+--- documented as answering secret, but the call is guarded like IdsApply's: nil when the answer is
+--- not knowable (the API is absent, the call raised, the answer is secret, or there is no unit), and
+--- the caller picks the stricter setting then (ContainerClass:ResolveView).
+--- @param unit string
+--- @return boolean|nil
+function Compat.IsPlayerUnit(unit)
+    if type(unit) ~= "string" then return nil end
+    return knownBoolean(_G.UnitIsPlayer, unit)
+end
+
+--- The kind of place the player is in (filter situations, S3): IsInInstance()'s second value,
+--- "none" in the open world, else "party", "scenario", "raid", "pvp", "arena" or a type this addon
+--- has no checkbox for. Nil when that is not knowable (the API is absent, the call raised, or the
+--- answer is secret or not a string); the zone gate allows a container then
+--- (modules/Container.lua zoneAllows).
+--- @return string|nil
+function Compat.InstanceType()
+    local fn = _G.IsInInstance
+    if type(fn) ~= "function" then return nil end
+    local ok, _, kind = pcall(fn)
+    if not (ok and NS.Secrets.CanAccess(kind)) or type(kind) ~= "string" then return nil end
+    return kind
+end
+
+--- How `unit` stands toward the player (filter situations, S6): UnitReaction(unit, "player") in three
+--- bands, 5 and above "friendly", 4 "neutral", 3 and below "hostile" (a player's reaction to another
+--- player uses the same bands). Not documented as answering secret, but guarded like IsPlayerUnit:
+--- nil when not knowable (the API is absent, the call raised, the answer is secret or not a number,
+--- or there is no unit), and the Unit type gate allows then (modules/Container.lua unitAllows).
+--- @param unit string
+--- @return string|nil
+function Compat.UnitReactionKind(unit)
+    local fn = _G.UnitReaction
+    if type(unit) ~= "string" or type(fn) ~= "function" then return nil end
+    local ok, r = pcall(fn, unit, "player")
+    if not (ok and NS.Secrets.CanAccess(r)) or type(r) ~= "number" then return nil end
+    if r >= 5 then return "friendly" end
+    return r >= 4 and "neutral" or "hostile"
 end
 
 -- ---------------------------------------------------------------------------

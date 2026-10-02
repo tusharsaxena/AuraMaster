@@ -64,13 +64,24 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   objects is refused in combat; loops are built and played at dress time and keep running, and a
   change made in combat applies with the deferred restyle (`docs/midnight-quirks.md`).
 - **Spell-id filters apply only to buffs on units you can assist and debuffs on units you cannot**
-  (Blizzard's `CanApplyIdentityCandidateFilters`). Where they do not, a container draws its no-ids
-  view: spell categories and the Overrides lists are not applied, and only the Blizzard categories set
-  to Show draw (owner, 2026-10-02). A container built only on spell categories therefore shows nothing
-  on a hostile target, and a `NeverSecret` aura (Sated, Exhaustion) claimed only by a spell category is
-  not drawn there either, although Blizzard would apply its id. `FilterCompiler` emits a warning per
-  container where that bites (`identityWarning`, `modules/FilterCompiler.lua:417`), rendered in orange
-  in the Filters section, and Categories and Overrides carry a NOTE (`docs/midnight-quirks.md`).
+  (Blizzard's `CanApplyIdentityCandidateFilters`). Where they do not, a container draws the view its
+  Situations setting picks (filter situations, 2026-10-02): every aura once (the default), honoring
+  Cast by, Duration, Max duration and the Blizzard, Dispel and Who Cast It rows set to Hide, or only the
+  Blizzard categories set to Show. Neither applies spell categories, Uncategorized or the Overrides
+  lists. With "Only Blizzard categories" a container built only on spell categories shows nothing on
+  a hostile target, and a `NeverSecret` aura (Sated, Exhaustion) claimed only by a spell category is
+  not drawn there either, although Blizzard would apply its id. "These filters can never match
+  anything" speaks for the spell-list views only: it never reads the Situations settings, so a target
+  or focus container it warns about can still draw every aura once where spell lists don't apply. `FilterCompiler` emits a warning per
+  container where that bites (`identityWarning`, `modules/FilterCompiler.lua:418`), rendered in orange
+  in the Filters section, Categories and Overrides carry a NOTE pointing to the Situations tab, and
+  that tab says what the every view cannot honor (`docs/midnight-quirks.md`).
+- **Every aura, once draws nothing extra in "Only auras without a duration" mode.** That mode is
+  built from spell ids, which Blizzard drops where spell lists don't apply, so a target or focus buff
+  container in it that hides a category gets a remainder group that matches nothing there (filter
+  situations S1), and its other groups keep their blizzard view: Every aura, once draws exactly what
+  Only my Blizzard categories set to Show draws (SI-06). Both Who Cast It rows set to Hide do the same.
+  Its Situations tab says so.
 - **On a target or focus BUFF container, Uncategorized set to Show no longer rescues an unlisted
   aura.** That row's group carries an `excludeSpellIDs` of the categorized union as its only
   constraint whenever another category is Hidden, and a target's hostility is dynamic while the plan

@@ -101,50 +101,73 @@ test("empty: an include id hits and misses", function()
     assertTrue(NS.EmptyWatch.Predict(fakeInst(PLAYER_BUFFS, plan)), "200 is not")
 end)
 
-test("empty: spell ids are ignored on a target's buffs it cannot be assisted on, as the engine ignores them", function()
+test("empty: spell ids are ignored where the engine holds a no-ids view, as the engine ignores them", function()
     local NS, mocks = fresh()
     mocks.__unitExists.target = true
     mocks.__canAssist.target = false
     withAuras(mocks, "target", { { spellId = 200 } })
     local cfg = { unit = "target", auraType = "HELPFUL" }
-    local plan = { groups = { group("HELPFUL", { includeSpellIDs = { [100] = true } }) } }
-    -- red under: ids applied everywhere (a hostile target's buff list is not honored)
-    assertFalse(NS.EmptyWatch.Predict(fakeInst(cfg, plan)), "not assistable: every buff counts")
-    mocks.__canAssist.target = true
-    assertTrue(NS.EmptyWatch.Predict(fakeInst(cfg, plan)), "assistable: the list applies")
+    local g = group("HELPFUL", { includeSpellIDs = { [100] = true } })
+    -- Both no-ids views as modules/FilterViews.lua really builds them: the stripped group, keeping the
+    -- base's own excludes (the blacklist, Timeless's learned ids). Aura 200 is on that exclude, so the
+    -- prediction turns on whether the id test runs at all.
+    local kept = { excludeSpellIDs = { [200] = true } }
+    g.views = { blizzard = { filter = "HELPFUL", candidateFilters = kept },
+                every = { filter = "HELPFUL", candidateFilters = kept } }
+    local plan = { groups = { g } }
+    local inst = fakeInst(cfg, plan)
+    for _, view in ipairs({ "blizzard", "every" }) do
+        inst.view = view
+        -- red under: ids applied in every view (a hostile target's buff list is not honored)
+        assertFalse(NS.EmptyWatch.Predict(inst), view .. ": every buff counts")
+    end
+    inst.view = "ids"
+    assertTrue(NS.EmptyWatch.Predict(inst), "the ids view: the list applies")
+    inst.view = nil
+    -- red under: a container not yet noted read as a no-ids view (it starts on ids, Blizzard's default)
+    assertTrue(NS.EmptyWatch.Predict(inst), "no view noted yet: the ids view")
 end)
 
-test("empty: whether ids apply is Blizzard's predicate (NS.Compat.IdsApply), not UnitIsFriend", function()
+test("empty: whether ids apply is the view the engine holds (inst.view), never a re-resolve", function()
+    -- Filter situations (S2): the view now turns on the container's own Situations settings, so a
+    -- resolver asked with the unit and aura type alone could disagree with the engine. EmptyWatch
+    -- reads inst.view, which ApplyView, Build and Update set to what they sent.
     local NS, mocks = fresh()
     mocks.__unitExists.target = true
-    -- A friendly unit you cannot assist (Blizzard's predicate asks UnitCanAssist, not UnitIsFriend).
-    mocks.UnitIsFriend = function() return true end
+    mocks.__canAssist.target = true   -- NS.Compat.IdsApply would answer "ids apply" for buffs
+    withAuras(mocks, "target", { { spellId = 200 } })
+    local g = group("HELPFUL", { includeSpellIDs = { [100] = true } })
+    g.views = { blizzard = { filter = "HELPFUL" }, every = { filter = "HELPFUL" } }
+    local inst = fakeInst({ unit = "target", auraType = "HELPFUL" }, { groups = { g } })
+    inst.view = "every"
+    -- red under: idsApply re-resolving from NS.Compat.IdsApply (assistable reads "ids apply", so 200
+    -- misses the list: empty)
+    assertFalse(NS.EmptyWatch.Predict(inst))
     mocks.__canAssist.target = false
-    withAuras(mocks, "target", { { spellId = 200 } })
-    local plan = { groups = { group("HELPFUL", { includeSpellIDs = { [100] = true } }) } }
-    -- red under: EmptyWatch's own UnitIsFriend reading (friendly reads "ids apply", so 200 misses: empty)
-    assertFalse(NS.EmptyWatch.Predict(fakeInst({ unit = "target", auraType = "HELPFUL" }, plan)))
-    -- Debuffs on a unit you can assist: the engine skips the ids there too.
-    mocks.UnitIsFriend = function() return false end
-    mocks.__canAssist.target = true
-    local deb = { groups = { group("HARMFUL", { includeSpellIDs = { [100] = true } }) } }
-    withAuras(mocks, "target", { { spellId = 200 } })
-    -- red under: the UnitIsFriend reading (not friendly reads "debuff ids apply", so 200 misses: empty)
-    assertFalse(NS.EmptyWatch.Predict(fakeInst({ unit = "target", auraType = "HARMFUL" }, deb)))
+    inst.view = "ids"
+    -- red under: the same re-resolve the other way (not assistable reads "ids ignored": not empty)
+    assertTrue(NS.EmptyWatch.Predict(inst))
 end)
 
 test("empty: the prediction reads the ACTIVE view's groups", function()
     local NS, mocks = fresh()
     withAuras(mocks, "player", { { spellId = 100 } })
     local g = group("HELPFUL", { includeSpellIDs = { [100] = true } })
-    g.noIds = { filter = "HELPFUL", candidateFilters = { includeDispelTypes = {} } }
+    g.views = { blizzard = { filter = "HELPFUL", candidateFilters = { includeDispelTypes = {} } },
+        every = { filter = "HELPFUL" } }
     local inst = fakeInst(PLAYER_BUFFS, { groups = { g } })
     assertFalse(NS.EmptyWatch.Predict(inst), "the ids view: 100 is on the list")
-    inst.view = "noIds"
+    inst.view = "blizzard"
     -- red under: predicting from the ids view whatever the engine holds (the NEVER group drawn as full)
-    assertTrue(NS.EmptyWatch.Predict(inst), "the no-ids view: the NEVER group matches nothing")
-    -- A no-ids view's filter string is the one asked for, too.
-    g.candidateFilters, g.noIds = nil, { filter = "HELPFUL|RAID" }
+    assertTrue(NS.EmptyWatch.Predict(inst), "the blizzard view: the NEVER group matches nothing")
+    -- red under: an activeView that knows only the blizzard view (filter situations, S1), reading the
+    -- every view's group as the ids view's
+    withAuras(mocks, "player", { { spellId = 200 } })
+    inst.view = "every"
+    assertFalse(NS.EmptyWatch.Predict(inst), "the every view: an unconstrained group draws 200")
+    -- A blizzard view's filter string is the one asked for, too.
+    inst.view = "blizzard"
+    g.candidateFilters, g.views.blizzard = nil, { filter = "HELPFUL|RAID" }
     local calls = withAuras(mocks, "player", { { spellId = 1 } })
     NS.EmptyWatch.Predict(inst)
     -- red under: the ids view's filter string sent to GetAuraSlots
@@ -500,10 +523,11 @@ end)
 -- -- the prediction follows the view the engine holds (spell-list views, V3; SV-03R) -----------
 
 --- A target buff container showing Defensive cooldowns alone (a spell category: one group, NEVER in the
---- no-ids view), watched (unlocked), its group's pool live, while the target holds one listed buff and
---- cannot be assisted, so the engine holds the no-ids view and the prediction is empty. Answers NS,
---- mocks and the instance.
-local function hostileSpellListTarget()
+--- blizzard view), watched (unlocked), its group's pool live, while the target holds one listed buff and
+--- cannot be assisted, so the engine holds the blizzard view and the prediction is empty. Answers NS,
+--- mocks and the instance. Both Situations settings are "blizzard" unless `situations` says otherwise
+--- (filter situations, S2: the default "every" draws the target's every buff through the remainder).
+local function hostileSpellListTarget(situations)
     local NS, mocks = fresh()
     noEnchants(mocks)
     mocks.__unitExists.target = true
@@ -514,7 +538,8 @@ local function hostileSpellListTarget()
         categories[def.key] = (def.key == "defensives") and "show" or "hide"
     end
     local CM = NS.ContainerManager
-    local id = CM.Create({ unit = "target", auraType = "HELPFUL", filter = { categories = categories } })
+    local id = CM.Create({ unit = "target", auraType = "HELPFUL", filter = { categories = categories,
+        situations = situations or { npcs = "blizzard", players = "blizzard" } } })
     NS.SetByPath("locked", false)
     mocks.__fireTimers(); mocks.__fireTimers()
     local inst = CM.instances[id]
@@ -527,7 +552,7 @@ end
 
 test("empty: a target swap EmptyWatch hears before OnUnitSwap predicts from the new unit's view", function()
     local NS, mocks, inst = hostileSpellListTarget()
-    assertEqual(inst.view, "noIds", "hostile: the no-ids view")
+    assertEqual(inst.view, "blizzard", "hostile: the blizzard view")
     assertTrue(inst.predictedEmpty == true, "the NEVER group draws nothing")
     -- AceEvent walks its handlers with next(), so either may run first. Silence OnUnitSwap to make
     -- EmptyWatch's handler the one that runs, as it does when it comes first.
@@ -538,6 +563,31 @@ test("empty: a target swap EmptyWatch hears before OnUnitSwap predicts from the 
     -- old target's NEVER group reads empty while the engine, about to switch, draws the listed buff)
     assertEqual(inst.view, "ids", "EmptyWatch's handler moved the view itself")
     assertTrue(inst.predictedEmpty == false, "the listed buff draws: not empty")
+end)
+
+test("empty: a hostile NPC on the every view predicts from the remainder slot", function()
+    local NS, mocks, inst = hostileSpellListTarget({ npcs = "every", players = "blizzard" })
+    -- red under: the every view never resolved at run time (the engine left on the blizzard view)
+    assertEqual(inst.view, "every")
+    withAuras(mocks, "target", { { spellId = 999999, duration = 10, isStealable = false } })
+    NS.EmptyWatch.Reevaluate()
+    -- red under: activeView reading the ids or blizzard view while the engine holds every (the listed
+    -- group's NEVER, and the remainder's NEVER there, both read empty)
+    assertTrue(inst.predictedEmpty == false, "the remainder draws an unlisted buff: not empty")
+    -- A buff only in the Hidden Stealable row: the remainder's every view excludes it (isStealable =
+    -- false), so nothing draws.
+    withAuras(mocks, "target", { { spellId = 999998, duration = 10, isStealable = true } })
+    NS.EmptyWatch.Reevaluate()
+    -- red under: the every view falling back to each group's ids view (the Defensives group, its id
+    -- list skipped where ids do not apply, would count the stealable buff and ignore the Hidden row)
+    assertTrue(inst.predictedEmpty == true, "a buff only in a Hidden Blizzard row: empty")
+    withAuras(mocks, "target", { { spellId = 999999, duration = 10, isStealable = false } })
+    NS.EmptyWatch.Reevaluate()
+    assertTrue(inst.predictedEmpty == false)
+    NS.SetByPath("container.filter.situations.npcs", "blizzard", inst.id)
+    assertEqual(inst.view, "blizzard", "the view effect moved it")
+    -- red under: the view effect not telling EmptyWatch (the prediction kept the every view's answer)
+    assertTrue(inst.predictedEmpty == true, "the blizzard view draws nothing here: empty")
 end)
 
 test("empty: a target swap OnUnitSwap hears first still costs one pass, in the new unit's view", function()

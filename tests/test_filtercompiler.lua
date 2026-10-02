@@ -19,7 +19,7 @@ end
 local function compile(over, ctx) return FC.Compile(cfg(over), ctx) end
 
 local H = dofile("tests/filtercompiler_helpers.lua")
-local setOf, hasWarning = H.setOf, H.hasWarning
+local setOf, hasWarning, categoryGroups = H.setOf, H.hasWarning, H.categoryGroups
 
 --- A `ctx.categories` stub over the REAL category defs (defaults/Categories.lua), narrowed to just
 --- `keys`, declaration order preserved. Since the filter-priority revision (docs/superpowers/specs/
@@ -150,7 +150,7 @@ end)
 test("filter: hiding a token category negates its token in the catch-all (R-5)", function()
     local plan = compile({ auraType = "HARMFUL", filter = { categories = { crowdControl = "hide" } } },
         { categories = only("HARMFUL", { "crowdControl" }) })
-    assertEqual(#plan.groups, 1, "nothing else is shown or hidden, so the catch-all is the only group")
+    assertEqual(#categoryGroups(plan), 1, "nothing else is shown or hidden, so the catch-all is the only group")
     assertEqual(plan.groups[1].filter, "HARMFUL|!CROWD_CONTROL")
 end)
 
@@ -437,7 +437,7 @@ test("filter: Uncategorized Show on a debuff container contributes no group and 
     -- draw every debuff regardless of crowdControl's Hide — the owner's complaint, reborn on debuffs.
     local plan = compile({ auraType = "HARMFUL", filter = { categories = { crowdControl = "hide" } } },
         { categories = only("HARMFUL", { "crowdControl", "uncategorizedDebuffs" }) })
-    assertEqual(#plan.groups, 1, "only the ordinary catch-all — Uncategorized contributes nothing")
+    assertEqual(#categoryGroups(plan), 1, "only the ordinary catch-all — Uncategorized contributes nothing")
     assertEqual(plan.groups[1].label, "All")
     assertEqual(plan.groups[1].filter, "HARMFUL|!CROWD_CONTROL",
         "the catch-all still excludes crowdControl, exactly as if Uncategorized did not exist")
@@ -447,7 +447,7 @@ test("filter: Uncategorized Hide on a debuff container reproduces the retired 'O
     local plan = compile({ auraType = "HARMFUL",
         filter = { categories = { crowdControl = "show", uncategorizedDebuffs = "hide" } } },
         { categories = only("HARMFUL", { "crowdControl", "uncategorizedDebuffs" }) })
-    assertEqual(#plan.groups, 1, "only the explicitly shown category — no catch-all")
+    assertEqual(#categoryGroups(plan), 1, "only the explicitly shown category — no catch-all")
     assertEqual(plan.groups[1].label, "Crowd control")
     assertEqual(plan.groups[1].filter, "HARMFUL|CROWD_CONTROL")
 end)
@@ -540,7 +540,7 @@ test("filter: a PLAYER debuff container with a non-empty union still gives Uncat
     -- shown spell category's own group, then the ordinary catch-all, still carrying the Hidden token
     -- category's negation. The catch-all's `excludeSpellIDs` is left in place deliberately — an
     -- exclude the engine ignores costs nothing, and suppressing it would change no outcome.
-    assertEqual(#plan.groups, 2)
+    assertEqual(#categoryGroups(plan), 2)
     assertEqual(plan.groups[1].label, "Hard CC (loss of control)")
     assertEqual(setOf(plan.groups[1].candidateFilters.includeSpellIDs), HARD_CC_IDS)
     assertEqual(plan.groups[2].label, "All")
@@ -568,7 +568,7 @@ test("filter: a TARGET debuff container gives Uncategorized Show no group either
     -- Same two groups as the player case: the shown spell category, then the catch-all the Show row
     -- no longer supersedes — which is exactly "as if the row were not there", the behavior fix round
     -- 3 defined for this side of the gate.
-    assertEqual(#plan.groups, 2)
+    assertEqual(#categoryGroups(plan), 2)
     assertEqual(plan.groups[1].label, "Hard CC (loss of control)")
     assertEqual(setOf(plan.groups[1].candidateFilters.includeSpellIDs), HARD_CC_IDS)
     assertEqual(plan.groups[2].label, "All")
@@ -602,7 +602,7 @@ test("filter: a FRIENDLY-target buff container loses the Uncategorized Show resc
     -- The catch-all survives instead, and it DOES carry `!CANCELABLE` — which is the cost, stated as
     -- a plan: an unlisted cancelable buff is drawn by no group here, where on the player the rescue
     -- group would have drawn it.
-    assertEqual(#plan.groups, 2)
+    assertEqual(#categoryGroups(plan), 2)
     assertEqual(plan.groups[1].label, "Defensive cooldowns")
     assertEqual(plan.groups[2].label, "All")
     assertEqual(plan.groups[2].filter, "HELPFUL|!CANCELABLE")
@@ -628,27 +628,29 @@ test("filter: a target debuff container still warns about units you can assist a
     assertTrue(hasWarning(own, "your pet's debuffs"), "ids are discarded here, and the plan says so")
 end)
 
-test("filter: a TARGET debuff container's spells-kind Show emits its ids-view group, whose no-ids view is NEVER, and warns (the issue #11 residual, superseded)", function()
+test("filter: a TARGET debuff container's spells-kind Show emits its ids-view group, whose blizzard view is NEVER, and warns (the issue #11 residual, superseded)", function()
     -- Issue #11 (owner, 2026-09-20) accepted this group as a RESIDUAL: its only constraint beyond the
     -- HARMFUL token is an `includeSpellIDs` of the category's list, and on a target the engine MAY
     -- skip exactly that, so on a FRIENDLY target it drew every debuff. The spell-list views
     -- (2026-10-02, docs/superpowers/specs/2026-10-02-spell-list-views-design.md) supersede that
     -- ruling. The ids view still ships the group unchanged, because Hard CC exists to answer "is my
     -- sheep on the target", and on a hostile target the ids DO bite. Where they do not, the container
-    -- sends the no-ids view, in which this group matches nothing, so the residual cannot draw.
+    -- sends the blizzard or every view, in which this group matches nothing, so the residual cannot
+    -- draw.
     local plan = compile({ auraType = "HARMFUL", unit = "target",
         filter = { categories = { crowdControl = "hide" } } },
         { categories = onlyPlus("HARMFUL", { "crowdControl", "uncategorizedDebuffs" }, HARMFUL_SPELLS_DEF) })
-    assertEqual(#plan.groups, 2)
+    assertEqual(#categoryGroups(plan), 2)
     assertEqual(plan.groups[1].label, "Hard CC (loss of control)", "the Show group is emitted, not suppressed")
     assertEqual(plan.groups[1].filter, "HARMFUL", "nothing but the aura-type token in the string")
     assertEqual(setOf(plan.groups[1].candidateFilters), "includeSpellIDs",
         "in the ids view the id list is its only constraint")
     assertEqual(setOf(plan.groups[1].candidateFilters.includeSpellIDs), HARD_CC_IDS)
-    -- red under: the residual still accepted, i.e. a no-ids view that keeps the group drawing
-    local noIds = plan.groups[1].noIds
-    assertEqual(noIds and noIds.filter, "HARMFUL", "the no-ids view keeps the group's aura type")
-    assertEqual(FC.Signature(noIds and noIds.candidateFilters), "{includeDispelTypes={}}",
+    -- red under: the residual still accepted, i.e. a blizzard (formerly no-ids) view that keeps the
+    -- group drawing
+    local blizzard = plan.groups[1].views and plan.groups[1].views.blizzard
+    assertEqual(blizzard and blizzard.filter, "HARMFUL", "the blizzard view keeps the group's aura type")
+    assertEqual(FC.Signature(blizzard and blizzard.candidateFilters), "{includeDispelTypes={}}",
         "and matches nothing: where ids are skipped, this group cannot degenerate")
     assertEqual(plan.groups[2].label, "All")
     assertEqual(plan.groups[2].filter, "HARMFUL|!CROWD_CONTROL", "the Hide still compiles in the ids view")
@@ -930,7 +932,7 @@ test("filter: one Hide on the real shipped category list explodes to one group p
     local helpfulPlan = compile({ filter = { categories = { defensives = "hide" } } })
     assertEqual(#helpfulPlan.groups, 17, "HELPFUL: 17 shown groups, no catch-all (Uncategorized supersedes it)")
     local harmfulPlan = compile({ auraType = "HARMFUL", filter = { categories = { crowdControl = "hide" } } })
-    assertEqual(#harmfulPlan.groups, 18, "HARMFUL: 18 shown groups, no catch-all (it self-contradicts and is dropped)")
+    assertEqual(#categoryGroups(harmfulPlan), 18, "HARMFUL: 18 shown groups, no catch-all (it self-contradicts and is dropped)")
 end)
 
 test("filter: an unknown sort method falls back to Blizzard's default", function()
@@ -962,7 +964,9 @@ end)
 -- Each signature was captured from FC.Compile as one function, before it was split into helpers. A
 -- change to the shipped categories or warnings moves these on purpose; recapture them then.
 -- Recaptured 2026-10-02 (SV-01): every group now carries its no-ids view (modules/FilterViews.lua),
--- and the identity sentence is reworded and printed wherever a category is Hidden.
+-- and the identity sentence is reworded and printed wherever a category is Hidden. Recaptured again
+-- 2026-10-02 (SI-01): the no-ids view is now `views.blizzard`, beside `views.every`, and the target
+-- debuff case gains the trailing remainder slot (filter situations, S1).
 
 -- Only token, flag and dispel categories, narrowed with `only` so a signature does not carry a
 -- whole shipped spell list — and, since the filter-priority revision, does not carry one group per
@@ -992,55 +996,73 @@ local RICH_SIGNATURES = {
     "{enchants={hidePermanent=boolean:true,slots={1=string:mainHand,2=string:offHand,3=string:ranged}},"
     .. "groups={1={candidateFilters={includeSpellIDs={100=boolean:true,200=boolean:true}},"
     .. "filter=string:HELPFUL,key=string:g1,label=string:Always shown,maxFrameCount=number:5,"
-    .. "noIds={candidateFilters={includeDispelTypes={}},filter=string:HELPFUL},sortDirection=string:reverse,"
-    .. "sortMethod=string:default},2={candidateFilters={excludeSpellIDs={100=boolean:true,200=boolean:true,"
-    .. "300=boolean:true,400=boolean:true}},filter=string:HELPFUL|!PLAYER|BIG_DEFENSIVE,key=string:g2,"
-    .. "label=string:Big defensives (Blizzard),maxFrameCount=number:5,"
-    .. "noIds={candidateFilters={excludeSpellIDs={300=boolean:true,400=boolean:true}},"
-    .. "filter=string:HELPFUL|!PLAYER|BIG_DEFENSIVE},sortDirection=string:reverse,"
-    .. "sortMethod=string:default},3={candidateFilters={excludeSpellIDs={100=boolean:true,200=boolean:true,"
-    .. "300=boolean:true,400=boolean:true}},filter=string:HELPFUL|!PLAYER|RAID|!BIG_DEFENSIVE,key=string:g3,"
-    .. "label=string:Castable by you,maxFrameCount=number:5,"
-    .. "noIds={candidateFilters={excludeSpellIDs={300=boolean:true,400=boolean:true}},"
-    .. "filter=string:HELPFUL|!PLAYER|RAID|!BIG_DEFENSIVE},sortDirection=string:reverse,"
-    .. "sortMethod=string:default},4={candidateFilters={excludeSpellIDs={100=boolean:true,200=boolean:true,"
-    .. "300=boolean:true,400=boolean:true},isStealable=boolean:false},"
+    .. "sortDirection=string:reverse,sortMethod=string:default,"
+    .. "views={blizzard={candidateFilters={includeDispelTypes={}},filter=string:HELPFUL},"
+    .. "every={candidateFilters={includeDispelTypes={}},filter=string:HELPFUL}}},"
+    .. "2={candidateFilters={excludeSpellIDs={100=boolean:true,200=boolean:true,300=boolean:true,"
+    .. "400=boolean:true}},filter=string:HELPFUL|!PLAYER|BIG_DEFENSIVE,key=string:g2,"
+    .. "label=string:Big defensives (Blizzard),maxFrameCount=number:5,sortDirection=string:reverse,"
+    .. "sortMethod=string:default,views={blizzard={candidateFilters={excludeSpellIDs={300=boolean:true,"
+    .. "400=boolean:true}},filter=string:HELPFUL|!PLAYER|BIG_DEFENSIVE},"
+    .. "every={candidateFilters={excludeSpellIDs={300=boolean:true,400=boolean:true}},"
+    .. "filter=string:HELPFUL|!PLAYER|BIG_DEFENSIVE}}},"
+    .. "3={candidateFilters={excludeSpellIDs={100=boolean:true,200=boolean:true,300=boolean:true,"
+    .. "400=boolean:true}},filter=string:HELPFUL|!PLAYER|RAID|!BIG_DEFENSIVE,key=string:g3,"
+    .. "label=string:Castable/Dispellable by you,maxFrameCount=number:5,sortDirection=string:reverse,"
+    .. "sortMethod=string:default,views={blizzard={candidateFilters={excludeSpellIDs={300=boolean:true,"
+    .. "400=boolean:true}},filter=string:HELPFUL|!PLAYER|RAID|!BIG_DEFENSIVE},"
+    .. "every={candidateFilters={excludeSpellIDs={300=boolean:true,400=boolean:true}},"
+    .. "filter=string:HELPFUL|!PLAYER|RAID|!BIG_DEFENSIVE}}},"
+    .. "4={candidateFilters={excludeSpellIDs={100=boolean:true,200=boolean:true,300=boolean:true,"
+    .. "400=boolean:true},isStealable=boolean:false},"
     .. "filter=string:HELPFUL|!PLAYER|!IMPORTANT|!BIG_DEFENSIVE|!RAID,key=string:g4,label=string:All,"
-    .. "maxFrameCount=number:5,noIds={candidateFilters={includeDispelTypes={}},"
-    .. "filter=string:HELPFUL|!PLAYER|!IMPORTANT|!BIG_DEFENSIVE|!RAID},sortDirection=string:reverse,"
-    .. "sortMethod=string:default}},"
+    .. "maxFrameCount=number:5,sortDirection=string:reverse,sortMethod=string:default,"
+    .. "views={blizzard={candidateFilters={includeDispelTypes={}},"
+    .. "filter=string:HELPFUL|!PLAYER|!IMPORTANT|!BIG_DEFENSIVE|!RAID},"
+    .. "every={candidateFilters={includeDispelTypes={}},"
+    .. "filter=string:HELPFUL|!PLAYER|!IMPORTANT|!BIG_DEFENSIVE|!RAID}}}},"
     .. "warnings={1=string:Max duration is ignored while showing only auras without a duration.}}",
 
     -- magic and boss (rank 3, shown) each get their own group; crowdControl (rank 4, hidden) only
     -- narrows the catch-all, which also excludes magic and boss so they are not drawn twice.
     "{groups={1={candidateFilters={isBossAura=boolean:true,maxDuration=number:12},"
     .. "filter=string:HARMFUL|PLAYER,key=string:g1,label=string:Boss debuffs,maxFrameCount=number:inf,"
-    .. "noIds={candidateFilters={isBossAura=boolean:true,maxDuration=number:12},"
-    .. "filter=string:HARMFUL|PLAYER},sortDirection=string:normal,sortMethod=string:expirationOnly},"
-    .. "2={candidateFilters={includeDispelTypes={Magic=boolean:true},isBossAura=boolean:false,"
-    .. "maxDuration=number:12},filter=string:HARMFUL|PLAYER,key=string:g2,label=string:Magic,"
-    .. "maxFrameCount=number:inf,noIds={candidateFilters={includeDispelTypes={Magic=boolean:true},"
-    .. "isBossAura=boolean:false,maxDuration=number:12},filter=string:HARMFUL|PLAYER},"
-    .. "sortDirection=string:normal,sortMethod=string:expirationOnly},"
+    .. "sortDirection=string:normal,sortMethod=string:expirationOnly,"
+    .. "views={blizzard={candidateFilters={isBossAura=boolean:true,maxDuration=number:12},"
+    .. "filter=string:HARMFUL|PLAYER},every={candidateFilters={includeDispelTypes={}},"
+    .. "filter=string:HARMFUL|PLAYER}}},2={candidateFilters={includeDispelTypes={Magic=boolean:true},"
+    .. "isBossAura=boolean:false,maxDuration=number:12},filter=string:HARMFUL|PLAYER,key=string:g2,"
+    .. "label=string:Magic,maxFrameCount=number:inf,sortDirection=string:normal,"
+    .. "sortMethod=string:expirationOnly,"
+    .. "views={blizzard={candidateFilters={includeDispelTypes={Magic=boolean:true},isBossAura=boolean:false,"
+    .. "maxDuration=number:12},filter=string:HARMFUL|PLAYER},"
+    .. "every={candidateFilters={includeDispelTypes={}},filter=string:HARMFUL|PLAYER}}},"
     .. "3={candidateFilters={excludeDispelTypes={Magic=boolean:true},isBossAura=boolean:false,"
     .. "maxDuration=number:12},filter=string:HARMFUL|PLAYER|!CROWD_CONTROL,key=string:g3,label=string:All,"
-    .. "maxFrameCount=number:inf,noIds={candidateFilters={includeDispelTypes={}},"
-    .. "filter=string:HARMFUL|PLAYER|!CROWD_CONTROL},sortDirection=string:normal,"
-    .. "sortMethod=string:expirationOnly}},"
+    .. "maxFrameCount=number:inf,sortDirection=string:normal,sortMethod=string:expirationOnly,"
+    .. "views={blizzard={candidateFilters={includeDispelTypes={}},"
+    .. "filter=string:HARMFUL|PLAYER|!CROWD_CONTROL},every={candidateFilters={includeDispelTypes={}},"
+    .. "filter=string:HARMFUL|PLAYER|!CROWD_CONTROL}}},4={candidateFilters={includeDispelTypes={}},"
+    .. "filter=string:HARMFUL|PLAYER|!CROWD_CONTROL,key=string:g4,label=string:Every aura,"
+    .. "maxFrameCount=number:inf,remainder=boolean:true,sortDirection=string:normal,"
+    .. "sortMethod=string:expirationOnly,views={blizzard={candidateFilters={includeDispelTypes={}},"
+    .. "filter=string:HARMFUL|PLAYER|!CROWD_CONTROL},every={candidateFilters={maxDuration=number:12},"
+    .. "filter=string:HARMFUL|PLAYER|!CROWD_CONTROL}}}},"
     .. "warnings={1=string:Only auras without a duration works for buffs only; this container shows every duration.,"
     .. "2=string:On units you can assist,"
-    .. " spell categories and Overrides are not applied. Only Blizzard categories set to Show draw.}}",
+    .. " spell categories and Overrides are not applied. The Situations tab picks what draws there.}}",
 
     -- No category is Hidden here, so R-3 still applies: bigDefensive (show) buys its own group only
     -- when something else is hiding, and nothing is — one whitelist group, one catch-all.
     "{groups={1={candidateFilters={includeSpellIDs={500=boolean:true}},filter=string:HELPFUL,"
-    .. "key=string:g1,label=string:Always shown,maxFrameCount=number:inf,"
-    .. "noIds={candidateFilters={includeDispelTypes={}},filter=string:HELPFUL},sortDirection=string:normal,"
-    .. "sortMethod=string:expirationOnly},2={candidateFilters={excludeSpellIDs={500=boolean:true},"
-    .. "maxDuration=number:inf},filter=string:HELPFUL,key=string:g2,label=string:All,"
-    .. "maxFrameCount=number:inf,noIds={candidateFilters={maxDuration=number:inf},"
-    .. "filter=string:HELPFUL},sortDirection=string:normal,"
-    .. "sortMethod=string:expirationOnly}},"
+    .. "key=string:g1,label=string:Always shown,maxFrameCount=number:inf,sortDirection=string:normal,"
+    .. "sortMethod=string:expirationOnly,views={blizzard={candidateFilters={includeDispelTypes={}},"
+    .. "filter=string:HELPFUL},every={candidateFilters={includeDispelTypes={}},filter=string:HELPFUL}}},"
+    .. "2={candidateFilters={excludeSpellIDs={500=boolean:true},maxDuration=number:inf},"
+    .. "filter=string:HELPFUL,key=string:g2,label=string:All,maxFrameCount=number:inf,"
+    .. "sortDirection=string:normal,sortMethod=string:expirationOnly,"
+    .. "views={blizzard={candidateFilters={maxDuration=number:inf},filter=string:HELPFUL},"
+    .. "every={candidateFilters={maxDuration=number:inf},filter=string:HELPFUL}}}},"
     .. "warnings={1=string:On units you can't assist (hostile or neutral),"
     .. " the Overrides lists are not applied.}}",
 
@@ -1163,7 +1185,7 @@ test("filter: a contradiction drops the catch-all without disturbing the whiteli
         whitelist = { [500] = true },
         categories = { fromPlayers = "hide", fromNonPlayers = "hide" },
     } }, { categories = only("HARMFUL", { "fromPlayers", "fromNonPlayers" }) })
-    assertEqual(#plan.groups, 1, "the contradictory catch-all is dropped")
+    assertEqual(#categoryGroups(plan), 1, "the contradictory catch-all is dropped")
     assertEqual(plan.groups[1].key, "g1")
     assertEqual(plan.groups[1].label, "Always shown")
 end)
@@ -1178,7 +1200,7 @@ test("filter: hiding two categories that contradict on the same flag leaves noth
     local plan = compile({ auraType = "HARMFUL", filter = {
         categories = { fromPlayers = "hide", fromNonPlayers = "hide" },
     } }, { categories = only("HARMFUL", { "fromPlayers", "fromNonPlayers" }) })
-    assertEqual(#plan.groups, 0, "isFromPlayerOrPlayerPet can't be both true and false")
+    assertEqual(#categoryGroups(plan), 0, "isFromPlayerOrPlayerPet can't be both true and false")
     assertTrue(hasWarning(plan, "can never match"))
 end)
 
