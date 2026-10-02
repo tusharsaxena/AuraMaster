@@ -90,7 +90,8 @@ empty container can still be found and dragged. A screen container or one attach
 outside pairs (each side's start, middle and end joined to the child's mirror point, absolute and
 independent of growth; the three on the target's before side place as a free pair) of the nearest
 eligible container within `C.SNAP_RADIUS` (`Snap.Find`; never itself or one that follows
-it, `Anchors.WouldCycle`), and `Anchors.Place` leaves a dragging anchor alone. `Snap.Drop` decides
+it, `Anchors.WouldCycle`) with a box over it, a dot on each of the two join points and a line between
+them, all in one color, and `Anchors.Place` leaves a dragging anchor alone. `Snap.Drop` decides
 from the drop itself: a candidate and no Shift writes the whole `container.attach` section through
 `NS.AttachByDrop` (`settings/Layout.lua`), which asks first with the GC-1 popup when the chain's flow
 would change; an attached container dropped with none (or with Shift held) detaches to the drop

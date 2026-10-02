@@ -59,13 +59,14 @@ local function recordAnchor(anchor)
 end
 
 --- Make every frame created under UIParent (or under one of those) a region recorder from now on, so
---- the highlight and its marker log every call they receive. Returns a restore.
+--- the highlight and its marker log every call they receive, each with its parent on `__parentFrame`.
+--- Returns a restore.
 local function recordOverlays(mocks)
     local real = mocks.CreateFrame
     mocks.CreateFrame = function(kind, name, parent, ...)
         if parent and (parent == mocks.UIParent or parent.__overlay) then
             local f = newRegion()
-            f.__overlay, f.__shown = true, true
+            f.__overlay, f.__shown, f.__parentFrame = true, true, parent
             return f
         end
         return real(kind, name, parent, ...)
@@ -282,11 +283,98 @@ test("drag: the highlight frames the target's rect in green with a marker on the
     assertTrue(m[2] == mocks.UIParent)
     -- red under: the marker on the child's point, or not placed (the join is the target's BOTTOMLEFT)
     assertEqual(m[3] .. " " .. m[4] .. "," .. m[5], "BOTTOMLEFT 0,100", "on the join")
-    assertEqual(marker:__joined("SetSize"), "6,6")
+    -- red under: the 6px marker the owner found too small (addendum A1)
+    assertEqual(marker:__joined("SetSize"), "10,10")
     plant(inst.anchor, 300, 75, 320, 95)
     Snap.Tick()
     -- red under: a highlight that stays up once the candidate leaves the radius
     assertFalse(hl:IsShown(), "out of range: hidden")
+    restore()
+end)
+
+--- The last SetPoint of dot `dot` as "POINT x,y", after checking it is centered and hung from UIParent.
+local function dotAt(mocks, dot, what)
+    local p = dot:__last("SetPoint")
+    assertTrue(p ~= nil, what .. ": placed")
+    assertEqual(p[1], "CENTER", what .. ": centered")
+    assertTrue(p[2] == mocks.UIParent, what .. ": hung from UIParent")
+    return p[3] .. " " .. p[4] .. "," .. p[5]
+end
+
+--- One end of line `line` (`which` "SetStartPoint" or "SetEndPoint") as "POINT x,y", after checking it
+--- is set against UIParent.
+local function lineEnd(mocks, line, which)
+    local p = line:__last(which)
+    assertTrue(p ~= nil, which .. " set")
+    assertTrue(p[2] == mocks.UIParent, which .. ": in UIParent units")
+    return p[1] .. " " .. p[3] .. "," .. p[4]
+end
+
+test("drag: the highlight puts a dot of the parent's size on the child's join point and a 2px line between the two (A3)", function()
+    local NS, mocks = env(2)
+    local restore = recordOverlays(mocks)
+    local CM = NS.ContainerManager
+    plant(CM.instances[1].engine, 0, 100, 100, 140)
+    local inst = CM.instances[2]
+    recordAnchor(inst.anchor)
+    inst.handle:__fire("OnDragStart")
+    local Snap = NS.Anchors.Snap
+    plant(inst.anchor, 3, 75, 23, 95)
+    local hit = Snap.Tick()
+    assertEqual(hit.point .. ">" .. hit.relPoint, "TOPLEFT>BOTTOMLEFT")
+    local hl, marker, child, line = Snap.highlight, Snap.marker, Snap.childMarker, Snap.line
+    -- red under: no child dot and no line (the highlight drew only the parent's marker)
+    assertTrue(child ~= nil and line ~= nil, "a child dot and a line are built")
+    assertEqual(dotAt(mocks, marker, "the parent's dot"), "BOTTOMLEFT 0,100", "on the target's relative point")
+    -- red under: the child dot left on the parent's point, or sized apart from the parent's
+    assertEqual(dotAt(mocks, child, "the child's dot"), "BOTTOMLEFT 3,95", "on the dragged anchor's own point")
+    assertEqual(child:__joined("SetSize"), marker:__joined("SetSize"), "the same size as the parent's")
+    assertEqual(lineEnd(mocks, line, "SetStartPoint"), "BOTTOMLEFT 0,100", "the line starts on the parent's dot")
+    assertEqual(lineEnd(mocks, line, "SetEndPoint"), "BOTTOMLEFT 3,95", "and ends on the child's")
+    assertEqual(line:__joined("SetThickness"), "2")
+    -- red under: a part painted apart from the box (one color for all of them, A3)
+    local col = NS.Constants.SNAP_COLOR
+    local want = table.concat({ col.r, col.g, col.b, col.a }, ",")
+    assertEqual(marker.dot:__joined("SetColorTexture"), want, "the parent's dot")
+    assertEqual(child.dot:__joined("SetColorTexture"), want, "the child's dot")
+    assertEqual(line:__joined("SetColorTexture"), want, "the line")
+    -- red under: a dot or the line hung apart from the highlight, or shown and hidden on its own
+    assertTrue(marker.__parentFrame == hl and child.__parentFrame == hl, "both dots are the highlight's children")
+    assertTrue(line.parent == hl, "the line is a region of the highlight")
+    for _, part in ipairs({ marker, child, line }) do
+        assertEqual(part:__count("Hide") + part:__count("SetShown"), 0, "never toggled apart from the highlight")
+    end
+    plant(inst.anchor, 3, 145, 23, 165)
+    Snap.Tick()
+    -- red under: the child dot or the line kept where the last pair had them
+    assertEqual(dotAt(mocks, child, "the child's dot, moved"), "BOTTOMLEFT 3,145", "follows the new pair")
+    assertEqual(lineEnd(mocks, line, "SetEndPoint"), "BOTTOMLEFT 3,145")
+    assertEqual(lineEnd(mocks, line, "SetStartPoint"), "BOTTOMLEFT 0,140")
+    plant(inst.anchor, 300, 75, 320, 95)
+    Snap.Tick()
+    assertFalse(hl:IsShown(), "out of range: the box, both dots and the line go with the highlight")
+    restore()
+end)
+
+test("drag: a before-side pair draws the line from the target's top to the child's bottom, as a free pair (A2, A3)", function()
+    local NS, mocks = env(2)
+    local restore = recordOverlays(mocks)
+    local CM = NS.ContainerManager
+    plant(CM.instances[1].engine, 0, 100, 100, 140)
+    local inst = CM.instances[2]
+    recordAnchor(inst.anchor)
+    inst.handle:__fire("OnDragStart")
+    local Snap = NS.Anchors.Snap
+    plant(inst.anchor, 40, 145, 60, 165)
+    local hit = Snap.Tick()
+    assertEqual(hit.point .. ">" .. hit.relPoint, "BOTTOM>TOP")
+    assertNil(hit.token, "the target grows down, so its top is its before side: free")
+    -- red under: the child dot or the line's far end on the target's point (the free pair's bottom)
+    assertTrue(Snap.highlight:IsShown())
+    assertEqual(dotAt(mocks, Snap.marker, "the parent's dot"), "BOTTOMLEFT 50,140")
+    assertEqual(dotAt(mocks, Snap.childMarker, "the child's dot"), "BOTTOMLEFT 50,145")
+    assertEqual(lineEnd(mocks, Snap.line, "SetStartPoint"), "BOTTOMLEFT 50,140")
+    assertEqual(lineEnd(mocks, Snap.line, "SetEndPoint"), "BOTTOMLEFT 50,145")
     restore()
 end)
 

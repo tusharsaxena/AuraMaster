@@ -24,7 +24,7 @@ check's number is not reused. Checks with no recorded pass, and checks new or co
 | CONT-1 to CONT-25 | Containers | Create, duplicate, delete, rename, copy; handles, strips and the close mark; test mode; unit swaps; empty placeholders |
 | FILT-1 to FILT-63 | Filters and spell categories | Cast by, the category grids, Overrides, the add-a-spell box, aura ids, your own categories, weapon enchants and their names, the help marks' art, where spell lists apply, the Situations tab, its zones and its Unit type gate |
 | LAYOUT-1 to LAYOUT-38 | Layout | Anchor modes, attaching, chains, growth, anchor points, seams, the name label, mouse and tooltips |
-| DRAG-1 to DRAG-14 | Layout | Drag to attach (issue #22): dropping a container on another, the highlight, the side a drop picks, Shift, loops, detaching, the growth-conflict popup, combat, a parent holding auras, frame-attached containers, the strip's tooltip, a drop between pulls in a key, a dropped side surviving a growth change, a drag cut short |
+| DRAG-1 to DRAG-14, DRAG-16 | Layout | Drag to attach (issue #22): dropping a container on another, the highlight, the side a drop picks, Shift, loops, detaching, the growth-conflict popup, combat, a parent holding auras, frame-attached containers, the strip's tooltip, a drop between pulls in a key, a dropped side surviving a growth change, a drag cut short, a before-side drop with the line between the two join dots |
 | STYLE-1 to STYLE-30 | Bars and Icons style, fonts | Bars and Icons tabs, the spark, borders, dispel colors, pandemic, the font primer |
 | TEXT-1 to TEXT-29 | Text style | Templates and tokens, justify, the icon, dispel type word, backdrop and edge, animation, Size to fit |
 | DEGRADED-1 | Library-absent install | The launcher libraries missing |
@@ -1453,9 +1453,9 @@ chain's, and E, a Text container growing down like A. Unlock first (`/am unlock`
 debug console's logging on (`/am debug on`) to read the `[Anchor]` lines.
 
 **DRAG-1. Drop to attach, with the highlight.** Drag E by its strip toward A → while E comes within
-about 24 px of one of A's sides, a 2 px green box frames A with a small green square on the point
-where E would join; moving away hides both, and nothing else on screen changes while you drag. Drop
-E inside that range → E attaches there at once, with no popup: Layout → Anchor reads Attach to
+about 24 px of one of A's sides, a 2 px green box frames A, a green dot sits on the point of A where E
+would join, a dot of the same size on E's own point and a 2 px green line between the two; moving away hides
+them all, and nothing else on screen changes while you drag. Drop E inside that range → E attaches there at once, with no popup: Layout → Anchor reads Attach to
 *Another container*, Parent container A, the two anchor points of that side (Automatic where the
 side is the default one), X and Y offsets 0. E's strip name turns gray, and moving A moves E. The log shows
 `drop: attach to <A's id> <E's point>><A's point> (<side>)`, the side `free` for a pair above A. No Lua error, no `ADDON_ACTION_BLOCKED`. Result:
@@ -1535,6 +1535,14 @@ while the mouse button is still held → the strip hides and, within a moment, D
 cursor and goes back to where it was before the drag; nothing is saved (`/reload` agrees), and the log
 shows `drag canceled (its strip hid)`. Unlock and drag D → it moves and attaches as normal, and a
 Layout change to D moves it at once. Result:
+
+**DRAG-16. A drop above the parent, with the line.** Drag E toward the middle of A's top edge (A grows
+down, so its top is the side its lines start from) → the green box frames A, a green dot about 10 px
+across sits on the middle of A's top edge, a dot of the same size on the middle of E's bottom edge, and
+a 2 px green line joins the two; as E moves the line and E's dot follow it, and box, dots and line show
+and hide together. Drop → E attaches with its bottom flush on A's top, placed at X/Y alone with no gap;
+Layout → Anchor shows both points picked (E's bottom on A's top), neither Automatic, and the log shows
+`drop: attach to <A's id> BOTTOM>TOP (free)`. Drag E away → box, dots and line all go at once. Result:
 
 ## Bars and Icons style, fonts
 
@@ -1996,7 +2004,8 @@ line, then remove its row here.
 | LAYOUT-25 | 202, batch 8 (failed 2026-09-25): the step with two chained Text containers; the rest passed as 194 |
 | LAYOUT-37 | 64 and 76, batch 5 |
 | LAYOUT-38 | 84, batch 6 |
-| DRAG-1 to DRAG-14 | new on 2026-10-02 with drag to attach (issue #22); DRAG-12 to DRAG-14 from its whole-branch review (DD-05) |
+| DRAG-1 to DRAG-14 | new on 2026-10-02 with drag to attach (issue #22); DRAG-12 to DRAG-14 from its whole-branch review (DD-05); DRAG-1's highlight corrected the same day for the two join dots and the line (owner feedback, DD-08) |
+| DRAG-16 | new on 2026-10-02 from the owner's smoke feedback (addendum A1, A3; DD-08): a before-side drop, the line and both dots |
 | STYLE-3 | 63, batch 5 |
 | STYLE-6 | 59a, batch 5 |
 | STYLE-9 | 61, batch 5; 163, smoke batch 2 (owed, as CONT-8); its bullet count corrected to four on 2026-09-29 |

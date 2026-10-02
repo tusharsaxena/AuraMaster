@@ -13,6 +13,7 @@
 --   * Secret geometry and Blizzard's backdrop (B2-3): a sentinel secret number, `M.__layOut` to make
 --     a frame's size read it, and BackdropTemplateMixin's arithmetic on that size.
 --   * The frame picker's cursor, buttons and focus stack.
+--   * CreateLine on every frame, a Line region of its own (the drag highlight's line).
 
 local base = dofile("tests/_kit/mock_base.lua")
 
@@ -206,6 +207,14 @@ return function()
         function f:SetAllPoints(target) self.__allPointsTo = target; return self end
         function f:SetMouseMotionEnabled(v) self.__mouseMotionOn = not not v; return self end
         function f:SetMouseClickEnabled(v) self.__mouseClickOn = not not v; return self end
+        -- A Line region (the drag highlight's, modules/Anchors_Snap.lua) is an object of its own, as
+        -- in the client: the kit's blanket answer would hand back the frame itself, so the line's Hide
+        -- would hide the highlight it belongs to. Its frame is kept on `__parent`.
+        function f:CreateLine()
+            local line = M.__stubFrame()
+            line.__parent = self
+            return line
+        end
         if frameType == "AuraContainer" then makeEngine(f) end
         if type(name) == "string" then M.__globals[name] = f end
         return f

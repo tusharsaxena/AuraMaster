@@ -1088,7 +1088,7 @@ badge and any count quoted in the docs must agree with it.
 - snap: folding reads Automatic for the target dropped on, not the container's current parent
 - snap: the radius is 24 UIParent units and the highlight is an opaque green
 
-### test_anchors_drag.lua (12)
+### test_anchors_drag.lua (14)
 
 - drag: a screen container and a container-attached one drag; a frame-attached one does not
 - drag: no drag starts in combat, and none leaves the container marked dragging
@@ -1099,6 +1099,8 @@ badge and any count quoted in the docs must agree with it.
 - drag: the driver runs only while a drag is live, at most every 0.03s, and is cleared at the drop
 - drag: Shift held, or combat started, means no candidate this tick
 - drag: the highlight frames the target's rect in green with a marker on the join, and hides with no candidate
+- drag: the highlight puts a dot of the parent's size on the child's join point and a 2px line between the two (A3)
+- drag: a before-side pair draws the line from the target's top to the child's bottom, as a free pair (A2, A3)
 - drag: the highlight hides on Shift, on combat and at the drop
 - drag: a strip hidden mid-drag ends the drag at the next tick, and the container goes back where its settings put it
 - drag: a container destroyed mid-drag ends its drag and stops the driver
@@ -2315,7 +2317,7 @@ badge and any count quoted in the docs must agree with it.
 | test_anchors_collapse.lua | 9 |
 | test_anchors_width.lua | 6 |
 | test_anchors_snap.lua | 17 |
-| test_anchors_drag.lua | 12 |
+| test_anchors_drag.lua | 14 |
 | test_anchors_drop.lua | 16 |
 | test_texttemplate.lua | 26 |
 | test_style.lua | 60 |
@@ -2367,4 +2369,4 @@ badge and any count quoted in the docs must agree with it.
 | test_layout_cap.lua | 13 |
 | test_diagnostics_contract.lua | 9 |
 | test_lizard_sighted.lua | 8 |
-| **Total** | **1977** |
+| **Total** | **1979** |

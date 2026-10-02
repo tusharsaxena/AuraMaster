@@ -265,12 +265,17 @@ end
 -- the HIGHLIGHT follows the answer. The widget's OnDragStop ends it through Snap.Drop.
 --
 -- The highlight is ours and plain: a frame under UIParent with Style.DrawEdge's four strips, never a
--- Backdrop (whose size arithmetic is the secret-geometry trap of docs/midnight-quirks.md), and its
--- marker a child of it, so one Hide takes both. It is placed by numbers already in UIParent units
--- (Snap.TargetRect), anchored to UIParent and never to the target, so nothing of ours ever hangs
--- from an engine's secret rect. Both frames are built on the first drag, so an addon nobody drags
--- (or one stood down) makes neither, and the driver's OnUpdate is cleared, not just idle, between
--- drags: an armed OnUpdate is a per-frame cost nothing on screen reports.
+-- Backdrop (whose size arithmetic is the secret-geometry trap of docs/midnight-quirks.md), over the
+-- target; a dot on each of the pair's two join points, the target's relative point and the dragged
+-- anchor's own point (the owner-feedback addendum's A1, A3); and a Line region between the two dots.
+-- The dots are child frames of the highlight and the line one of its regions, so one Show or Hide
+-- takes them all and none is ever toggled on its own. Everything is placed by numbers already in
+-- UIParent units (Snap.TargetRect, readRect), anchored to UIParent (the line's two ends too) and
+-- never to the target, so nothing of ours ever hangs from an engine's secret rect. One color paints
+-- them all (paintHighlight), so a later state can turn the whole mark another color at once. All of
+-- it is built on the first drag, so an addon nobody drags (or one stood down) makes none of it, and
+-- the driver's OnUpdate is cleared, not just idle, between drags: an armed OnUpdate is a per-frame
+-- cost nothing on screen reports.
 
 --- One [Anchor] line (debug-logging-§8), when the debug log is there.
 local function debug(fmt, ...)
@@ -279,52 +284,87 @@ end
 
 local DRIVER_PERIOD = 0.03   -- seconds between two snap reads while a drag is live
 local EDGE = 2               -- the highlight's edge, px
-local MARKER = 6             -- the join marker's side, px
+local MARKER = 10            -- each join dot's side, px (A1: 6 read too small in game)
+local LINE = 2               -- the line between the two dots, px
 local HIGHLIGHT_STRATA = "TOOLTIP"   -- over every container, whatever strata its layout picked
 
 local live        -- the live container being dragged, or nil
 local elapsed = 0 -- seconds since the driver last read the snap
 local hitRect = {} -- scratch: the highlighted target's rect
+local dragRect = {} -- scratch: the dragged anchor's rect, for the child's dot
+local painted     -- the color table the highlight was last painted in, or nil before it is built
 
---- Build the highlight and its join marker, once (Snap.highlight, Snap.marker: published for the
---- headless suite). Hidden at birth; shown only while a candidate is in range.
+--- One join dot, a `MARKER`-square child frame of highlight `hl` filled by one texture (`dot.dot`,
+--- which paintHighlight colors).
+--- @return table
+local function newDot(hl)
+    local dot = CreateFrame("Frame", nil, hl)
+    dot:SetSize(MARKER, MARKER)
+    local tex = dot:CreateTexture(nil, "OVERLAY")
+    tex:SetAllPoints(dot)
+    dot.dot = tex
+    return dot
+end
+
+--- Paint the whole highlight in color `col` ({ r, g, b, a }): the box's four strips, both dots and
+--- the line, the one place any of them is colored. A no-op when it is already in `col`, so a tick
+--- re-lays no strip.
+local function paintHighlight(col)
+    if col == painted then return end
+    painted = col
+    NS.Style.DrawEdge(Snap.highlight, EDGE, col.r, col.g, col.b, col.a)
+    Snap.marker.dot:SetColorTexture(col.r, col.g, col.b, col.a)
+    Snap.childMarker.dot:SetColorTexture(col.r, col.g, col.b, col.a)
+    Snap.line:SetColorTexture(col.r, col.g, col.b, col.a)
+end
+
+--- Build the highlight, its two join dots and the line between them, once (Snap.highlight,
+--- Snap.marker the target's dot, Snap.childMarker the dragged one's, Snap.line: published for the
+--- headless suite), painted in C.SNAP_COLOR. Hidden at birth; shown only while a pair is.
 local function buildHighlight()
     if Snap.highlight then return Snap.highlight end
-    local col = C.SNAP_COLOR
     local hl = CreateFrame("Frame", nil, UIParent)
     hl:SetFrameStrata(HIGHLIGHT_STRATA)
-    NS.Style.DrawEdge(hl, EDGE, col.r, col.g, col.b, col.a)
-    local marker = CreateFrame("Frame", nil, hl)
-    marker:SetSize(MARKER, MARKER)
-    local dot = marker:CreateTexture(nil, "OVERLAY")
-    dot:SetAllPoints(marker)
-    dot:SetColorTexture(col.r, col.g, col.b, col.a)
+    Snap.highlight, Snap.marker, Snap.childMarker = hl, newDot(hl), newDot(hl)
+    local line = hl:CreateLine(nil, "OVERLAY")
+    line:SetThickness(LINE)
+    Snap.line = line
+    paintHighlight(C.SNAP_COLOR)
     hl:Hide()
-    Snap.highlight, Snap.marker = hl, marker
     return hl
 end
 
---- Hide the highlight (and its marker with it), if it was ever built.
+--- Hide the highlight (and its dots and line with it), if it was ever built.
 local function hideHighlight()
     if Snap.highlight then Snap.highlight:Hide() end
 end
 
---- Show the highlight over the rect of the target `hit` names, its marker centered on the join
---- (the target's relative point of the picked pair), or hide it when there is no hit or the
---- target's rect no longer reads. Every number is already a plain one in UIParent units, and both
---- frames hang from UIParent (the marker through the highlight), so no offset is converted.
-local function showHighlight(hit)
+--- Center join dot `dot` on (`x`, `y`), in UIParent units.
+local function placeDot(dot, x, y)
+    dot:ClearAllPoints()
+    dot:SetPoint("CENTER", UIParent, "BOTTOMLEFT", x, y)
+end
+
+--- Show the highlight for pair `hit` of the drag of live container `dragged`: the box over the
+--- rect of the target `hit` names, the target's dot on its relative point of the pair, the dragged
+--- anchor's dot on its own point of it, and the line from the first dot to the second. Hidden when
+--- there is no hit, or when either rect no longer reads. Every number is already a plain one in
+--- UIParent units, and every part hangs from UIParent, so no offset is converted.
+local function showHighlight(hit, dragged)
     local target = hit and NS.ContainerManager.instances[hit.id]
     local rect = target and Snap.TargetRect(target, hitRect)
-    if not rect then return hideHighlight() end
+    local own = rect and readRect(dragged and dragged.anchor, dragRect)
+    if not own then return hideHighlight() end
     local hl = buildHighlight()
     hl:ClearAllPoints()
     hl:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", rect.left, rect.bottom)
     hl:SetSize(rect.right - rect.left, rect.top - rect.bottom)
-    local x, y = Snap.PointAt(rect, hit.relPoint)
-    local marker = Snap.marker
-    marker:ClearAllPoints()
-    marker:SetPoint("CENTER", UIParent, "BOTTOMLEFT", x, y)
+    local px, py = Snap.PointAt(rect, hit.relPoint)
+    local cx, cy = Snap.PointAt(own, hit.point)
+    placeDot(Snap.marker, px, py)
+    placeDot(Snap.childMarker, cx, cy)
+    Snap.line:SetStartPoint("BOTTOMLEFT", UIParent, px, py)
+    Snap.line:SetEndPoint("BOTTOMLEFT", UIParent, cx, cy)
     hl:Show()
 end
 
@@ -361,7 +401,7 @@ function Snap.Tick()
         return nil
     end
     local hit = live and not (IsShiftKeyDown() or InCombatLockdown()) and Snap.Find(live) or nil
-    showHighlight(hit)
+    showHighlight(hit, live)
     return hit
 end
 
