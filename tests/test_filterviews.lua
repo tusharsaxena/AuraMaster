@@ -244,11 +244,11 @@ end)
 test("views: each mode prints the new sentence where a category is Hidden", function()
     -- red under: the old "Spell lists only apply while the unit is ..." sentences.
     local cases = {
-        { "target", "HELPFUL", "On units you can't assist (hostile or neutral), spell categories and Overrides are not applied. Only Blizzard categories set to Show draw." },
-        { "focus", "HELPFUL", "On units you can't assist (hostile or neutral), spell categories and Overrides are not applied. Only Blizzard categories set to Show draw." },
-        { "target", "HARMFUL", "On units you can assist, spell categories and Overrides are not applied. Only Blizzard categories set to Show draw." },
-        { "player", "HARMFUL", "On your own and your pet's debuffs, spell categories and Overrides are not applied. Only Blizzard categories set to Show draw." },
-        { "pet", "HARMFUL", "On your own and your pet's debuffs, spell categories and Overrides are not applied. Only Blizzard categories set to Show draw." },
+        { "target", "HELPFUL", "On units you can't assist (hostile or neutral), spell categories and Overrides are not applied. The Situations tab picks what draws there." },
+        { "focus", "HELPFUL", "On units you can't assist (hostile or neutral), spell categories and Overrides are not applied. The Situations tab picks what draws there." },
+        { "target", "HARMFUL", "On units you can assist, spell categories and Overrides are not applied. The Situations tab picks what draws there." },
+        { "player", "HARMFUL", "On your own and your pet's debuffs, spell categories and Overrides are not applied. The Situations tab picks what draws there." },
+        { "pet", "HARMFUL", "On your own and your pet's debuffs, spell categories and Overrides are not applied. The Situations tab picks what draws there." },
     }
     for _, c in ipairs(cases) do
         local hide = (c[2] == "HELPFUL") and { important = "hide" } or { crowdControl = "hide" }
@@ -262,7 +262,7 @@ test("views: an Overrides list alone raises the Overrides-only sentence", functi
     -- red under: the warning gated on Hidden categories alone.
     local plan = compile({ unit = "target", filter = { whitelist = { [100] = true } } })
     -- red under: the full sentence here. With nothing Hidden the R-3 group draws every buff on a
-    -- unit you can't assist, so "Only Blizzard categories set to Show draw" would be false.
+    -- unit you can't assist in either view, so pointing at the Situations tab would mislead.
     assertEqual(#plan.warnings, 1)
     assertEqual(plan.warnings[1], "On units you can't assist (hostile or neutral), the Overrides lists are not applied.")
     plan = compile({ unit = "target", auraType = "HARMFUL", filter = { blacklist = { [1] = true } } })

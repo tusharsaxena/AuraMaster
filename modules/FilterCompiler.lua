@@ -178,11 +178,11 @@ FC.WARN = {
     MAX_WITH_TIMELESS = "Max duration is ignored while showing only auras without a duration.",
     NEVER_MATCHES    = "These filters can never match anything.",
     TIMELESS_BUFFS_ONLY = "Only auras without a duration works for buffs only; this container shows every duration.",
-    IDS_OWN_DEBUFFS  = "On your own and your pet's debuffs, spell categories and Overrides are not applied. Only Blizzard categories set to Show draw.",
-    IDS_UNASSISTABLE = "On units you can't assist (hostile or neutral), spell categories and Overrides are not applied. Only Blizzard categories set to Show draw.",
-    IDS_ASSISTABLE   = "On units you can assist, spell categories and Overrides are not applied. Only Blizzard categories set to Show draw.",
+    IDS_OWN_DEBUFFS  = "On your own and your pet's debuffs, spell categories and Overrides are not applied. The Situations tab picks what draws there.",
+    IDS_UNASSISTABLE = "On units you can't assist (hostile or neutral), spell categories and Overrides are not applied. The Situations tab picks what draws there.",
+    IDS_ASSISTABLE   = "On units you can assist, spell categories and Overrides are not applied. The Situations tab picks what draws there.",
     -- The same three where no category is Hidden and only an Overrides list is in use: the R-3 group
-    -- still draws everything there, so the "Only Blizzard categories" sentence would be false (SV-05).
+    -- draws everything there in either view, so pointing at the Situations tab would mislead (SV-05).
     IDS_OWN_DEBUFFS_LISTS  = "On your own and your pet's debuffs, the Overrides lists are not applied.",
     IDS_UNASSISTABLE_LISTS = "On units you can't assist (hostile or neutral), the Overrides lists are not applied.",
     IDS_ASSISTABLE_LISTS   = "On units you can assist, the Overrides lists are not applied.",

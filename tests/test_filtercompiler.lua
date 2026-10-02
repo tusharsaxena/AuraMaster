@@ -1050,7 +1050,7 @@ local RICH_SIGNATURES = {
     .. "filter=string:HARMFUL|PLAYER|!CROWD_CONTROL}}}},"
     .. "warnings={1=string:Only auras without a duration works for buffs only; this container shows every duration.,"
     .. "2=string:On units you can assist,"
-    .. " spell categories and Overrides are not applied. Only Blizzard categories set to Show draw.}}",
+    .. " spell categories and Overrides are not applied. The Situations tab picks what draws there.}}",
 
     -- No category is Hidden here, so R-3 still applies: bigDefensive (show) buys its own group only
     -- when something else is hiding, and nothing is — one whitelist group, one catch-all.

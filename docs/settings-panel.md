@@ -538,10 +538,11 @@ bespoke tab keyed by the group (`renderSituations`). Two sections:
   assist, your own debuffs and your pet's debuffs), then the dropdowns `FC.IdsMode` calls for: **On
   NPCs** and **On players** on a target or focus container (`container.filter.situations.npcs` /
   `.players`); one **Your own and your pet's debuffs** on a player or pet debuff container (the
-  players setting, drawn from a per-render copy under that label). Each offers **Every aura, once**
+  players setting, drawn from a per-render copy under that label and with its own tooltip, about your
+  own or your pet's debuffs). Each offers **Every aura, once**
   (the default) or **Only my Blizzard categories set to Show**, and takes the `view` effect: the
-  container switches view at once, in combat too. Under them: "Every aura still honors Cast by, Max
-  duration and the Blizzard, Dispel and Who Cast It rows you set to Hide; spell categories,
+  container switches view at once, in combat too. Under them: "Every aura still honors Cast by,
+  Duration, Max duration and the Blizzard, Dispel and Who Cast It rows you set to Hide; spell categories,
   Uncategorized and Overrides do not apply there." A buff container in "Without a duration" mode
   (the effective mode: timeless on a debuff container compiles as any duration) adds "Every aura
   draws nothing extra here: 'Without a duration' is built from spell lists." A player or pet buff

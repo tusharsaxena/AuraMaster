@@ -1835,13 +1835,14 @@ badge and any count quoted in the docs must agree with it.
 - filters: Hide all on Blizzard Categories hides exactly that section, as one [Set] line and one apply (feedback #10)
 - filters: Show all on Spell Categories shows exactly that section, whatever Blizzard Categories say (feedback #10)
 
-### test_pages_situations.lua (8)
+### test_pages_situations.lua (9)
 
 - situations tab: the Filters strip reads General, Categories, Overrides, Sorting, Situations
 - situations tab: a target or focus buff container draws its unit line, On NPCs and On players, and the honor line
 - situations tab: a target debuff container names units you can assist
 - situations tab: a player or pet debuff container draws one dropdown, the players setting, relabeled
 - situations tab: a player or pet buff container says spell lists always apply, and draws no dropdown
+- situations tab: the player and pet debuff dropdown carries its own tooltip, not the On players one
 - situations tab: the timeless note keys on the effective mode, timeless buffs only
 - situations tab: Show in draws the six zone checkboxes in order, all ticked, each writing its zone
 - situations tab: On NPCs writes the npcs setting
@@ -2243,7 +2244,7 @@ badge and any count quoted in the docs must agree with it.
 | test_pages_general_categories.lua | 32 |
 | test_pages_containers.lua | 33 |
 | test_pages_filters.lua | 52 |
-| test_pages_situations.lua | 8 |
+| test_pages_situations.lua | 9 |
 | test_pages_layout.lua | 47 |
 | test_pages_bars.lua | 11 |
 | test_pages_icons.lua | 5 |
@@ -2267,4 +2268,4 @@ badge and any count quoted in the docs must agree with it.
 | test_layout_cap.lua | 13 |
 | test_diagnostics_contract.lua | 9 |
 | test_lizard_sighted.lua | 8 |
-| **Total** | **1897** |
+| **Total** | **1898** |

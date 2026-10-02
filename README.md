@@ -4,7 +4,7 @@
 ![CurseForge Version](https://img.shields.io/curseforge/v/1698345)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-1896%2F1896_passing-green)
+![Tests](https://img.shields.io/badge/Tests-1897%2F1897_passing-green)
 
 Ka0s Aura Master lets you build your own buff and debuff displays. Each one is a container. You pick
 whose auras it shows (yours, your target's, your focus's or your pet's), whether it shows buffs,
@@ -63,8 +63,8 @@ spell in some places. On your target or focus they work for buffs while you can 
 (a friend, a party member) and for debuffs while you can't (an enemy, or a neutral mob). On your
 own and your pet's buffs they always work, and on your own and your pet's debuffs they never do.
 Where they don't work, the container's Situations tab decides what it shows, separately for NPCs
-and for players. **Every aura, once** (the default) shows every aura that gets past Cast by, Max
-duration and the Blizzard, Dispel and Who Cast It rows you set to Hide. **Only my Blizzard
+and for players (or, on your own and your pet's debuffs, with one choice). **Every aura, once** (the
+default) shows every aura that gets past Cast by, Duration, Max duration and the Blizzard, Dispel and Who Cast It rows you set to Hide. **Only my Blizzard
 categories set to Show** shows just those categories. Either way each aura is shown once. A
 container that hides nothing shows everything as usual. The Categories and Overrides tabs carry a
 NOTE saying which units this applies to for that container, and pointing to Situations.
@@ -117,7 +117,7 @@ affected.
 | Can I track my party or raid? | Not yet. Player, target, focus and pet work today. Party members are planned, and there's a GitHub issue tracking them. |
 | Can I put a container on my unit frame? | Yes. On Layout → Anchor use **Pick a frame…** and click it, or set **Attach to** to *Named frame* and type the frame's name. If the frame belongs to an addon that hasn't loaded yet, the container waits at its screen position and moves over once the frame exists. |
 | Why does my spell list do nothing on my debuffs? | Blizzard only allows spell-by-spell filtering for buffs on units you can help and debuffs on units you can't, so spell categories and Overrides never work on your own or your pet's debuffs. The Blizzard categories, dispel types and the other filters work on any unit. Filters → Situations → **Your own and your pet's debuffs** picks what shows instead. |
-| Why don't my target's buffs show on enemies? | The game won't filter an enemy's buffs (or a neutral mob's) by spell, so on those targets your spell categories and Overrides are switched off. Filters → Situations decides what shows there instead, with one choice for NPCs and one for players. **Every aura, once** (the default) brings back every buff that gets past Cast by, Max duration and the Blizzard rows you set to Hide, each drawn once. **Only my Blizzard categories set to Show** is stricter: a container built only from spell categories then shows nothing on an enemy. On a friendly target everything works as you set it. The same goes the other way for a target debuff container on a friendly target. |
+| Why don't my target's buffs show on enemies? | The game won't filter an enemy's buffs (or a neutral mob's) by spell, so on those targets your spell categories and Overrides are switched off. Filters → Situations decides what shows there instead, with one choice for NPCs and one for players. **Every aura, once** (the default) brings back every buff that gets past Cast by, Duration, Max duration and the Blizzard rows you set to Hide, each drawn once. **Only my Blizzard categories set to Show** is stricter: a container built only from spell categories then shows nothing on an enemy. On a friendly target everything works as you set it. The same goes the other way for a target debuff container on a friendly target. |
 | Can I hide a container in raids, or only show it in dungeons? | Yes. Filters → Situations → **Show in** has a checkbox for open world, dungeons, scenarios and delves, raids, battlegrounds and arenas. Untick the places you don't want it. It still shows while unlocked or in test mode, so you can always find it to move it. |
 | A timed buff showed up in my "without a duration" container. Why? | That filter learns which buffs have a timer while you're out of combat. A buff you've never seen out of combat can slip through the first time; after that it's known. `/am forgettimed` clears everything it learned. |
 | How do I cancel a buff? | Right-click it in a container that shows your own buffs or weapon enchants. Untick **Right-click to cancel** on Layout → Mouse if you'd rather it didn't. |
@@ -133,7 +133,7 @@ affected.
 | Nothing shows at all | On General → Master controls, check that **Enable Aura Master** is ticked (`/am enable` ticks it) and that **General visibility** isn't set to *Never*, or to a combat state you're not in. Then check the container's own **Enabled** box on Containers. |
 | I only see the sample auras | Test mode is on. Type `/am test off`, or untick **Test mode** under General → Master controls. |
 | A container stays empty and its Filters section says "These filters can never match anything." | Two of your choices rule each other out, such as a spell category set to Show with every spell unticked. Loosen one of them, for example by setting the category to Hide. |
-| An orange line says spell categories or Overrides are not applied on some units | That's the game's rule, not a fault. Blizzard won't filter by spell there, so on the units the line names your spell categories and Overrides lists do nothing. When you've set a category to Hide, only the Blizzard categories set to Show draw there. |
+| An orange line says spell categories or Overrides are not applied on some units | That's the game's rule, not a fault. Blizzard won't filter by spell there, so on the units the line names your spell categories and Overrides lists do nothing. What draws there instead is your choice on the container's Filters → Situations tab. |
 | I can't drag a container | You can only drag containers attached to the screen, and not during combat. An attached container follows its target. Move it with the offsets on Layout → Anchor, or set **Attach to** back to *Screen*. |
 | A container attached to a frame is sitting somewhere else | The frame wasn't found, so the container fell back to its screen position. Check the name in **Frame name** (`/fstack` shows frame names), or pick the frame again. |
 | Blizzard's buff frame is still showing after I hid it | Blizzard's frames can't be moved during combat. The change goes through as soon as combat ends. |

@@ -66,7 +66,7 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
 - **Spell-id filters apply only to buffs on units you can assist and debuffs on units you cannot**
   (Blizzard's `CanApplyIdentityCandidateFilters`). Where they do not, a container draws the view its
   Situations setting picks (filter situations, 2026-10-02): every aura once (the default), honoring
-  Cast by, Max duration and the Blizzard, Dispel and Who Cast It rows set to Hide, or only the
+  Cast by, Duration, Max duration and the Blizzard, Dispel and Who Cast It rows set to Hide, or only the
   Blizzard categories set to Show. Neither applies spell categories, Uncategorized or the Overrides
   lists. With "Only Blizzard categories" a container built only on spell categories shows nothing on
   a hostile target, and a `NeverSecret` aura (Sated, Exhaustion) claimed only by a spell category is

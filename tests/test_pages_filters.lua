@@ -359,8 +359,12 @@ test("filters: a debuff container's Categories tab says its spell lists only mat
     -- nothing" note, which the blizzard view made false
     assertTrue(P2.hasText(debuffWs, "only match on a target or focus you can't assist"),
         "the debuff grid carries the spell-list note")
-    assertTrue(P2.hasText(debuffWs, "leaves only the Blizzard categories set to Show"),
-        "and says what a Hide does where the lists match nothing")
+    -- red under: the note promising only the Blizzard Show categories there, which the every view
+    -- (the default) made false (SI-06)
+    assertTrue(P2.hasText(debuffWs, "the Situations tab picks what draws there"),
+        "and points where the lists match nothing to the Situations tab")
+    assertFalse(P2.hasText(debuffWs, "leaves only the Blizzard categories set to Show"),
+        "and no longer promises only the Blizzard Show categories")
     local _, _, P, buffWs = categories(1)
     assertFalse(P.hasText(buffWs, "only match on a target or focus you can't assist"),
         "never on a buff container, whose spell lists are honored on friendly units instead")

@@ -13,7 +13,7 @@ local test, assertEqual, assertTrue, assertFalse =
 local fresh = dofile("tests/fresh_env.lua")
 local pages = dofile("tests/page_helpers.lua")
 
-local HONOR = "Every aura still honors Cast by, Max duration and the Blizzard, Dispel and Who Cast It rows you set to Hide; spell categories, Uncategorized and Overrides do not apply there."
+local HONOR = "Every aura still honors Cast by, Duration, Max duration and the Blizzard, Dispel and Who Cast It rows you set to Hide; spell categories, Uncategorized and Overrides do not apply there."
 local ALWAYS = "Spell lists always apply to your own and your pet's buffs."
 local TIMELESS = "Every aura draws nothing extra here: 'Without a duration' is built from spell lists."
 local ZONES = { "Open world", "Dungeons", "Scenarios and delves", "Raids", "Battlegrounds", "Arenas" }
@@ -134,6 +134,25 @@ test("situations tab: a player or pet buff container says spell lists always app
         assertFalse(P.hasText(ws, L[TIMELESS]), unit .. ": no timeless note where ids always apply")
         -- and the zones still draw
         assertEqual(#P.all(ws, "CheckBox"), #ZONES, unit .. ": the six zone checkboxes")
+    end
+end)
+
+test("situations tab: the player and pet debuff dropdown carries its own tooltip, not the On players one", function()
+    for _, unit in ipairs({ "player", "pet" }) do
+        local descs = {}
+        local NS = situations(2, unit ~= "player" and unit or nil, function(NS)
+            local render = NS.Helpers.RenderRows
+            NS.Helpers.RenderRows = function(ctx, rows, ...)
+                for _, r in ipairs(rows or {}) do descs[r.label or "?"] = r.desc end
+                return render(ctx, rows, ...)
+            end
+        end)
+        local L = NS.L
+        -- red under: the copy keeping the players row's desc ("what a player shows")
+        assertEqual(descs[L["Your own and your pet's debuffs"]], L["Where Blizzard won't apply spell lists to your own or your pet's debuffs: every aura once, or only the Blizzard categories set to Show."], unit)
+        assertEqual(NS.FindSchemaRow("container.filter.situations.players").desc,
+            L["Where Blizzard won't apply spell lists to this container's auras, what a player shows: every aura once, or only the Blizzard categories set to Show."],
+            unit .. ": the schema row keeps its own")
     end
 end)
 

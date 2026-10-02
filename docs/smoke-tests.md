@@ -918,7 +918,7 @@ combat may show once. `/am forgettimed` → they reappear until relearned out of
 **FILT-30. Warnings.** Whitelist a spell on a *player debuffs* container that hides no category →
 Filters shows the orange "On your own and your pet's debuffs, the Overrides lists are not applied."
 line; set any category to **Hide** → it becomes "On your own and your pet's debuffs, spell categories
-and Overrides are not applied. Only Blizzard categories set to Show draw." On a *target buffs*
+and Overrides are not applied. The Situations tab picks what draws there." On a *target buffs*
 container → "On units you can't assist (hostile or neutral), ...". Set every category to **Hide** but *Defensive cooldowns*, then on
 General → Spell Categories remove every *Defensive cooldowns* spell → "These filters can never match
 anything."; Restore afterward. Result:
@@ -1060,8 +1060,8 @@ on your pet's debuffs, …". The **Overrides** tab opens with the same sentence 
 are not applied (see Situations)." on each of those, above **Whitelist**, and with none on *Player
 buffs*. The orange warning
 above every tab prints only on a container that sets a category to Hide or has an Overrides entry,
-and on one that hides nothing it names only the Overrides lists (no "Only Blizzard categories set to
-Show draw").
+and on one that hides nothing it names only the Overrides lists (no "The Situations tab picks what
+draws there.").
 The README's Usage paragraph on where spell categories apply and the FAQ entry "Why don't my
 target's buffs show on enemies?" read the same as these notes. Result:
 
@@ -1124,11 +1124,12 @@ not drawn and then hidden. Leave the dungeon → it shows. Result:
 Categories, Overrides, Sorting, Situations, with Situations last. A *target buffs* container →
 **Where spell lists don't apply** opens with "On units you can't assist, spell lists don't apply to
 this container.", then **On NPCs** and **On players**, then the line "Every aura still honors Cast
-by, Max duration and the Blizzard, Dispel and Who Cast It rows you set to Hide; …"; set its
-**Duration** to *Without a duration* → a further line "Every aura draws nothing extra here: 'Without
+by, Duration, Max duration and the Blizzard, Dispel and Who Cast It rows you set to Hide; …"; set
+its **Duration** to *Only auras without a duration* → a further line "Every aura draws nothing extra here: 'Without
 a duration' is built from spell lists." *Target debuffs (mine)* → "On units you can assist, …" and
 the same two dropdowns. *Player debuffs* → "On your own debuffs, …" and one dropdown, **Your own and
-your pet's debuffs**. *Player buffs* → "Spell lists always apply to your own and your pet's buffs."
+your pet's debuffs**, whose tooltip names your own or your pet's debuffs (not "what a player
+shows"). *Player buffs* → "Spell lists always apply to your own and your pet's buffs."
 and no dropdown. Each ends with **Show in** and its six checkboxes, all ticked. Result:
 
 ## Layout
@@ -1855,12 +1856,12 @@ line, then remove its row here.
 | FILT-19 | 75, batch 5 (the tooltip half) |
 | FILT-21 | 179 and 180: the chat line's expected text corrected on 2026-09-29 (each spell named, its id in brackets) |
 | FILT-27 | 82, batch 6 |
-| FILT-30 | its warning sentences corrected on 2026-10-02 (spell-list views, SV-01; the Overrides-only sentence, SV-05) |
+| FILT-30 | its warning sentences corrected on 2026-10-02 (spell-list views, SV-01; the Overrides-only sentence, SV-05; the full sentence points to the Situations tab, SI-06) |
 | FILT-42 | new on 2026-09-30 with the weapon-enchant name reset (SP-AMX-01) |
 | FILT-43 to FILT-45 | new on 2026-10-02: the Options descriptor passes `addonName`, so help marks draw the library's `info` art (LibKa0s#42, CA-AM-NM) |
 | FILT-46 to FILT-51 | new on 2026-10-02 with the spell-list views (SV-04); FILT-51's NOTE sentences end "(see Situations)" since the same day (filter situations, SI-05) |
 | FILT-52 | new on 2026-10-02: the player's own reaction change (SV-05) |
-| FILT-53 to FILT-59 | new on 2026-10-02 with the Situations tab and its zones (filter situations, SI-05) |
+| FILT-53 to FILT-59 | new on 2026-10-02 with the Situations tab and its zones (filter situations, SI-05); FILT-59's honor line names Duration, its Duration option is quoted as the dropdown reads, and the debuff dropdown's tooltip is checked, since the same day (SI-06) |
 | LAYOUT-1 | 69, batch 5 |
 | LAYOUT-6 | 162, smoke batch 2 (owed, as CONT-8): the outline moving across aura buttons; 42: its combat refusal corrected on 2026-09-29 to `/am pick` alone, since the panel's button is locked in combat |
 | LAYOUT-11 | 67, batch 8 (failed 2026-09-25): the **Per row** step; the rest passed as 238 |

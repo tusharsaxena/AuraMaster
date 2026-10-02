@@ -232,7 +232,7 @@ local SITUATION_ROWS = {
     { key = "npcs", label = L["On NPCs"],
       desc = L["Where Blizzard won't apply spell lists to this container's auras, what an NPC shows: every aura once, or only the Blizzard categories set to Show."] },
     { key = "players", label = L["On players"],
-      desc = L["Where Blizzard won't apply spell lists to this container's auras, what a player shows (on your own or your pet's debuffs, what you show): every aura once, or only the Blizzard categories set to Show."] },
+      desc = L["Where Blizzard won't apply spell lists to this container's auras, what a player shows: every aura once, or only the Blizzard categories set to Show."] },
 }
 
 local function situationRows()
@@ -440,8 +440,8 @@ local UNCATEGORIZED_NOTE = L["Uncategorized defaults to Show, which rescues any 
 -- A3 (issue #11): Hard CC, Soft CC and Racials are the debuff spell lists, and Blizzard honors spell
 -- ids for debuffs only on a unit you CANNOT assist (UnitCanAssist; neutral units included) — on you,
 -- your pet or an assistable unit it skips the list. Since the spell-list views (SV-05) the rows are not
--- inert there: those containers draw their blizzard view, so a Hide anywhere on the tab leaves only the
--- Blizzard categories set to Show. Said here, under the grid that offers them, in the same voice the
+-- inert there: those containers draw the view their Situations setting picks (every aura once, or the
+-- blizzard view), so the note points there (SI-06). Said here, under the grid that offers them, in the same voice the
 -- Overrides whitelist uses for the same engine limit ("Blizzard only honors this for buffs on units
 -- you can assist and debuffs on units you can't", renderOverrides below). Drawn only on a
 -- debuff container that actually got a `spells`-kind row, so it appears beside the rows it is about
@@ -449,7 +449,7 @@ local UNCATEGORIZED_NOTE = L["Uncategorized defaults to Show, which rescues any 
 -- it. The per-container orange warning above every tab (FC.WARN.IDS_ASSISTABLE / IDS_OWN_DEBUFFS)
 -- is the other half: it says the same thing for the container's actual unit, this says it for the
 -- rows regardless of unit.
-local SPELL_LIST_DEBUFF_NOTE = L["Hard CC, Soft CC and Racials only match on a target or focus you can't assist. On your own, your pet's or an assistable unit's debuffs they match nothing, and setting any category to Hide there leaves only the Blizzard categories set to Show."]
+local SPELL_LIST_DEBUFF_NOTE = L["Hard CC, Soft CC and Racials only match on a target or focus you can't assist. On your own, your pet's or an assistable unit's debuffs they match nothing, and the Situations tab picks what draws there."]
 
 -- SV-04 (spell-list views, V4): where Blizzard does not apply spell ids, a container draws its blizzard
 -- view (modules/FilterViews.lua), in which every spell category's group, the whitelist and the
@@ -868,7 +868,7 @@ end
 
 -- Under the dropdowns: what "Every aura, once" still honors, and what it cannot (Blizzard drops the
 -- spell ids there, so nothing built from them applies).
-local SITUATIONS_HONOR = L["Every aura still honors Cast by, Max duration and the Blizzard, Dispel and Who Cast It rows you set to Hide; spell categories, Uncategorized and Overrides do not apply there."]
+local SITUATIONS_HONOR = L["Every aura still honors Cast by, Duration, Max duration and the Blizzard, Dispel and Who Cast It rows you set to Hide; spell categories, Uncategorized and Overrides do not apply there."]
 -- A player or pet buff container: FC.IdsMode "always", no every view, nothing to choose.
 local SITUATIONS_ALWAYS = L["Spell lists always apply to your own and your pet's buffs."]
 -- The EFFECTIVE mode, as the compiler reads it (FilterCompiler.lua's `timeless`): "Without a
@@ -887,6 +887,7 @@ local function situationDropdowns(rows, mode)
     local copy = {}
     for k, v in pairs(players) do copy[k] = v end
     copy.label = L["Your own and your pet's debuffs"]
+    copy.desc = L["Where Blizzard won't apply spell lists to your own or your pet's debuffs: every aura once, or only the Blizzard categories set to Show."]
     return { copy }
 end
 
