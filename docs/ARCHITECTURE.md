@@ -109,6 +109,8 @@ to each other (the cursor's travel when its parent does not read), or while the 
 very pair (over its third of a long parent's side, however far from its points), the mark stays green on that pair, the parent's strip repainted, and a release snaps it back, writing nothing; past it, the
 whole mark turns red (`C.DETACH_COLOR`) and a release detaches to the drop position, X/Y 0. Another
 pair in snap range, not its current one nor the one the pick gave where it rested, and nearer than it
+by the leeway's measure (the nearer of its two points' distance and how far that has moved since the
+drag began: 0 where it rests, though on the strips those points rest a parent block apart; DD-15R)
 (never one of a parent whose block reads secret), wins over both, and Shift suppresses only that.
 The tick and the drop classify alike (`classify`); combat started mid-drag attaches nothing. The handle's close mark (X) turns that container off through the write
 seam. A container can also show its name as a label where the handle sits, locked or unlocked;

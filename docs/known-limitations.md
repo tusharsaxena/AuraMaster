@@ -210,14 +210,15 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   bar's own height. The drop is unaffected: it attaches, or detaches at
   wherever the anchor was let go. The detach leeway cannot measure such a parent either, so it holds
   while the cursor has moved less than 128 UIParent units from where the drag began (below).
-- **A container whose engine reads secret is measured by its first element while you drag onto it**
-  (issue #22). The snap aims at the frame a follower would hang from (`Anchors.HangFrame`). An engine
-  holding auras reads secret, so `Snap.TargetRect` falls back to the container's anchor, one element
-  where its first aura sits: the highlight's dots sit on that element and its strip and name label
-  (and the box, where the container has no visible strip, frames them), and the side and its third
-  are measured on them rather than on the whole block. A drop near the far end of a long populated container may find
-  nothing in range; drop near its start, or turn test mode on, where the snap aims at the whole
-  placeholder block (`Preview.Extent`, a frame of ours).
+- **A container whose engine reads secret, and whose strip does not show or read, is measured by its
+  first element while you drag onto it** (issue #22, addendum A10). The snap measures every container
+  by its one-element drag-handle strip, populated or in test mode alike (next entry but one), and the
+  strip hangs from the container's anchor, which reads where an engine holding auras does not. Only
+  when the strip is hidden or does not read does the snap fall back to `Snap.TargetRect`: the frame a
+  follower would hang from (`Anchors.HangFrame`) or, where that engine reads secret, the container's
+  anchor, one element where its first aura sits, with its name label. The dots and the box then sit
+  on that element, and a drop near the far end of a long populated container finds nothing in range;
+  drop near its start.
 - **A container wider than its parent aligns backwards by thirds** (issue #22, addendum A7). The
   pair a drop picks comes from the dragged container's center over the parent's side cut in thirds,
   so the pair picked can differ from the flush edge the child rests on. For a child more than about a
@@ -228,19 +229,33 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   either way, and picks the middle pair. Drop it with its center over the third of the pair you want,
   or set the pair on Layout > Anchor. Picked up and let go where it rests, it keeps its pair either way.
 - **The dots mark the strips, not the exact join** (issue #22, addenda A8, A10). The side, its
-  third and both dots are measured on each container's drag-handle strip (or, where the strip is
-  hidden or does not read, its block with its name label), but the drop attaches by the blocks'
-  points: `Anchors.Place` hangs the child's block on the parent's hang frame and pushes it out past the
-  strips and labels between. So the dots show which side and which pair, while the child can land a
-  little off them: across the side by the strip's thickness and the gap Place leaves, and along it
-  when the strips overhang their blocks by different amounts. An Icons container's strip often runs
-  wider than one element, by an amount that follows the length of its name, so for a middle or end
-  pair the child can land sideways of what the dots showed: by half the difference between the two
-  overhangs for the middle pair, by all of it for the end pair (a 36 px icon parent whose strip runs 64
-  past its block, under a 36 px icon child whose strip runs 44 past, lands 10 px or 20 px off). The
-  start pair, between two containers whose strips fit their blocks, lands in line with the dots. Nudge
-  it with X/Y on Layout > Anchor; joining on strips is a change to attach geometry for the owner to
-  decide.
+  third, both dots and the leeway are measured on each container's drag-handle strip (or, where the
+  strip is hidden or does not read, its block with its name label), but the drop attaches by the
+  blocks' points: `Anchors.Place` hangs the child's block on the parent's hang frame and pushes it out
+  past the strips and labels between. A strip is one element long and sits on its block's before side
+  (above a block growing down), so the dots show which side and which pair while the child can land
+  far off them:
+  - **Across the after side, a whole block off.** For a parent growing down, the after side the snap
+    measures is the bottom edge of its strip, just above the top of its block, while Place hangs the
+    child under the bottom of that block: the child lands the parent's block height (plus the strip's
+    gap) below where the dots were. To reach that side at all, drag the child's strip over the
+    parent's block, up to just under the parent's strip. Let go just past the parent's block and the
+    child's strip is out of `C.SNAP_RADIUS` (24) of the parent's whenever the block is taller than
+    about 20 px: nothing is in range, so a screen container stays where it was let go and an attached
+    one holds or detaches by the leeway.
+  - **Along a side, up to the block's length off.** A block runs past its one-element strip by the
+    rest of its elements in the direction it grows, so for a middle or end pair along that direction
+    the dot sits on the strip's middle or end and the child joins the block's, up to the block's length
+    less the strip's apart. The thirds that pick the pair are thirds of the strip, so beside a parent
+    growing down the side is only the strip's height (about 18 px) and each third about 6 px.
+  - **Overhang.** An Icons container's strip often runs wider than one element, by an amount that follows the length of its name, so for a middle or end
+    pair the child can land sideways of what the dots showed: by half the difference between the two
+    overhangs for the middle pair, by all of it for the end pair (a 36 px icon parent whose strip runs 64
+    past its block, under a 36 px icon child whose strip runs 44 past, lands 10 px or 20 px off). The
+    start pair, between two containers whose strips fit their blocks, lands in line with the dots apart
+    from the after side's block height. Nudge it with X/Y on Layout > Anchor. Joining on the strips, or
+    measuring on the blocks while drawing on the strips, is a change to attach geometry for the owner to
+    decide.
 - **In test mode, a container attached to another hangs from that container's preview extent.** A
   previewing container's engine is disabled and keeps a stale rect, so a container attached to it is
   re-placed onto a frame of ours sized to its placeholder block (`Preview.Extent`), where it sits as

@@ -1460,26 +1460,35 @@ thick, with no box drawn over A's placeholders, a green dot sits on the point of
 would join (a corner or the middle of one of its edges), a dot of the same size on E's own point of
 E's strip, and a 2 px green line between the two. A and E both grow down, so each strip sits on its
 block's top: coming from below A, A's dot is on the bottom edge of A's strip and E's dot on the top
-edge of E's strip; coming from above A (as DRAG-16), A's dot is on the top edge of A's strip and E's
-dot on the bottom edge of E's strip. Either way, never on a placeholder's corner; the drop still joins
-the blocks, so E can land a little off the dots (docs/known-limitations.md). Moving away hides
+edge of E's strip, so E's strip has to be over A's block, just under A's strip (let go just below A's
+block, E is out of range whenever that block is taller than about 20 px); coming from above A (as
+DRAG-16), A's dot is on the top edge of A's strip and E's dot on the bottom edge of E's strip. Either
+way, never on a placeholder's corner; the drop still joins the blocks, so E lands off the dots (below
+A, a whole block lower than the dots showed; docs/known-limitations.md). Moving away hides
 them all, and nothing else on screen changes while you drag. Drop E inside that range → E attaches there at once, with no popup: Layout → Anchor reads Attach to
 *Another container*, Parent container A, the two anchor points of that side (Automatic where the
 side is the default one), X and Y offsets 0. E's strip name turns gray, and moving A moves E. The log shows
 `drop: attach to <A's id> <E's point>><A's point> (<side>)`, the side `free` for a pair above A. No Lua error, no `ADDON_ACTION_BLOCKED`. Result:
 
 **DRAG-2. The side, then the third, on all four sides.** Give E the same width as A (E's General tab:
-Size to fit off, the same Width (px) as A's bars). Drag E (attached to A, A growing down) to A, letting
-go each time just below A, just above A, just to A's right and just to A's left, and on each side three
-times: with E's center over the first third of that side (its left third, or its top third beside A),
-over its middle third, and over its last third → A's strip lights up green each time, E joins flush
-outside the side it came nearest to, and the pair is the side's start, middle or end by the third E's
-center was over: centered, the MIDDLE pair (below A, E's top middle on A's bottom middle), never the
-start pair. The sides: below A (*after*, E's top on A's bottom), above A (E's bottom on A's top: the
-side A's lines start from, so a free pair, placed past A's strip and name label, with no other gap),
-on its right (*ahead*, E's left on A's right) and on its left (*behind*, E's right on A's left).
-Layout → Anchor shows the matching pair each time, the default pair (below A, its start) as Automatic
-and the others as both points picked. Result:
+Size to fit off, the same Width (px) as A's bars). The side and the third are measured on the two
+strips (addendum A10): A grows down, so its strip sits on its block's top, and every side below is a
+side of A's STRIP, as wide as A and about 18 px tall. Drag E (attached to A) by its strip to A, letting
+go each time with E's strip within about 24 px of one side of A's strip: below it (E's strip over A's
+block, its top just under A's strip; let go just below A's block and nothing is in range once that
+block is taller than about 20 px), above it (E's strip just above A's strip), and to its right and its
+left (E's strip level with A's strip, overlapping its 18 px give or take 24 px, its edge just past A's
+strip's right or left edge). On each side let go three times: with the center of E's strip over the
+first third of that side of A's strip (its left third, or beside A its top third, about 6 px of the
+18), over its middle third, and over its last third → A's strip lights up green each time, the dots on
+the two strips, and the pair is the side's start, middle or end by that third: centered, the MIDDLE
+pair (below A, E's top middle on A's bottom middle), never the start pair. The drop joins the blocks,
+not the strips (docs/known-limitations.md): below A (*after*), E's top lands on the bottom of A's block,
+a whole block lower than its strip was; above A, E's bottom on A's top (the side A's lines start from,
+so a free pair, placed past A's strip and name label, with no other gap); on its right (*ahead*, E's
+left on A's right) and on its left (*behind*, E's right on A's left), by the top, middle or bottom of
+A's block. Layout → Anchor shows the matching pair each time, the default pair (below A, its start) as
+Automatic and the others as both points picked. Result:
 
 **DRAG-3. Shift places without attaching.** Drag D toward A with Shift held → no mark appears and A's
 strip stays gold, even right on A's edge. Let Shift go while still close → A's strip turns green, with
@@ -1520,7 +1529,8 @@ follows the cursor smoothly; the drop attaches or detaches as in DRAG-1
 and DRAG-5, and a drop before the cursor has moved about 128 px snaps B back onto A (DRAG-15); while
 it holds, the mark is a single green dot on B's join point, with no box and no line, A's strip edged
 green, and both turn red past that travel. Drag E toward A while A holds several auras → A's strip
-lights up, but the dots sit on A's first element only, and a drop near that element attaches. Both are known limitations. No Lua error. Result:
+lights up and the dots sit on A's strip, as in DRAG-1 (the snap measures every container by its strip,
+populated or not, addendum A10), and a drop in range of A's strip attaches. B's jump is a known limitation. No Lua error. Result:
 
 **DRAG-10. A frame-attached container still does not drag.** Attach a container to `PlayerFrame` and
 try to drag it by its strip → it does not move, its name is gray, and its tooltip reads "Anchored to
@@ -1563,18 +1573,24 @@ green again; go past it once more and let go → E detaches where you let go (as
 detach`). Now give E the same width as A (as DRAG-2) and re-attach it below A by its default pair
 (Layout → Anchor: Automatic). Pick E up by its strip and let go without moving it → it holds and snaps
 back, Layout → Anchor still Automatic, though E's center is over A's middle third (`drop: held
-(leeway)`). Without Shift, drag E sideways along A's bottom until its center is over A's right third →
-the marks move to the end pair (E's top right on A's bottom right) in green, and a drop attaches E
-there. Re-attach E below A by its default pair again and repeat that drag with Shift held → no other
+(leeway)`). Put D on the screen just to E's right, its strip level with E's, and pick E up and let go
+again without moving it → it still holds, and D's strip never lights up. Without Shift, drag E up over
+A's block until its strip is just under A's strip (A's after side is the bottom edge of A's strip,
+addendum A10), then sideways until the center of E's strip is over the right third of A's strip → the
+marks move to the end pair (E's strip's top right on A's strip's bottom right) in green, and a drop
+attaches E there (E's top right on the bottom right of A's block). Re-attach E below A by its default pair again and repeat that drag with Shift held → no other
 pair lights up, the marks stay on E's own pair in green, and a drop snaps it back. Now make E about
 twice as wide as A and re-attach it below A by its default pair (its left edge under A's left edge, so
-its center is over A's right third). Without Shift, drag it a little left, its center still over A's
-right third, and let go → the marks move to the end pair (E's top right on A's bottom right) in green,
+its center is over A's right third). Without Shift, drag it up over A's block until its strip is just
+under A's strip, its center still over A's right third, and let go → the marks move to the end pair
+(E's top right on A's bottom right) in green,
 and the drop attaches E there, its right edge flush with A's (`drop: attach`), not a snap back. Now
 make A about 600 px wide (its General tab: Size to fit off, Width (px) 600) and E narrow, and re-attach E below A by its
-default pair. Drag E along just under A, its center still over A's left third, until its left edge is
-well past 128 px from A's left edge → the marks stay green on E's own pair (E's top left on A's bottom
-left), never red, and a drop snaps E back (`drop: held (leeway)`). Hover E's strip →
+default pair. Drag E up over A's block until its strip is just under A's strip, then along it, the
+center of E's strip still over the left third of A's strip, until its left edge is well past 128 px
+from A's left edge → the marks stay green on E's own pair (E's top left on A's bottom left), never red,
+and a drop snaps E back (`drop: held (leeway)`). Dragged along where it rests instead, its strip out of
+range of A's strip, the marks turn red once E has moved about 128 px (the leeway alone). Hover E's strip →
 its tooltip explains all this (DRAG-11). No Lua error. Result:
 
 **DRAG-16. A drop above the parent, with the line.** Drag E toward the middle of A's top (A grows
@@ -2068,7 +2084,7 @@ line, then remove its row here.
 | DRAG-1 to DRAG-14 | new on 2026-10-02 with drag to attach (issue #22); DRAG-12 to DRAG-14 from its whole-branch review (DD-05); DRAG-1's highlight corrected the same day for the two join dots and the line (owner feedback, DD-08) |
 | DRAG-15 | new on 2026-10-02 from the owner's smoke feedback (addendum A4; DD-09): the detach leeway, its snap back and the red past `C.DETACH_RADIUS`; DRAG-5, DRAG-9, DRAG-11 and CONT-9 corrected the same day for it; the step with a child twice as wide as its parent added the same day (DD-13R): the pair picked where it rests no longer blocks a drop once it has moved |
 | DRAG-16 | new on 2026-10-02 from the owner's smoke feedback (addendum A1, A3; DD-08): a before-side drop, the line and both dots |
-| DRAG-17 | new on 2026-10-02 from the owner's smoke feedback (addendum A5; DD-11): the mark edges the target's strip, not a box over its placeholders; DRAG-1 to DRAG-5, DRAG-8, DRAG-9, DRAG-15 and DRAG-16 corrected the same day for it; DRAG-1 and DRAG-17 corrected again the same evening (addendum A6; DD-12): the strip's own edge is repainted, since A5's overlay never showed in game, and DRAG-17 ends the mark every way it can end; DRAG-1, DRAG-2, DRAG-5, DRAG-9, DRAG-15, DRAG-16 and DRAG-17 corrected for the second smoke round (addendum A7 to A9; DD-13): the side first and then the third (a centered drop takes the middle pair), everything measured on what you see (block, strip and name label), and the leeway 128 px; DRAG-1's dots split by the side E comes from, and DRAG-15's step with a long parent added (DD-14): a child in snap range of its own pair holds, however far from that pair's points; DRAG-1, DRAG-15, DRAG-16 and DRAG-17 corrected for the third smoke round (addendum A10; DD-15): the dots, the line, the side and the leeway are on the strips, not the placeholders |
+| DRAG-17 | new on 2026-10-02 from the owner's smoke feedback (addendum A5; DD-11): the mark edges the target's strip, not a box over its placeholders; DRAG-1 to DRAG-5, DRAG-8, DRAG-9, DRAG-15 and DRAG-16 corrected the same day for it; DRAG-1 and DRAG-17 corrected again the same evening (addendum A6; DD-12): the strip's own edge is repainted, since A5's overlay never showed in game, and DRAG-17 ends the mark every way it can end; DRAG-1, DRAG-2, DRAG-5, DRAG-9, DRAG-15, DRAG-16 and DRAG-17 corrected for the second smoke round (addendum A7 to A9; DD-13): the side first and then the third (a centered drop takes the middle pair), everything measured on what you see (block, strip and name label), and the leeway 128 px; DRAG-1's dots split by the side E comes from, and DRAG-15's step with a long parent added (DD-14): a child in snap range of its own pair holds, however far from that pair's points; DRAG-1, DRAG-15, DRAG-16 and DRAG-17 corrected for the third smoke round (addendum A10; DD-15): the dots, the line, the side and the leeway are on the strips, not the placeholders; DRAG-1, DRAG-2, DRAG-9 and DRAG-15 corrected again from DD-15's review (DD-15R): the after side reached over the parent's block, the thirds of the strip, a populated parent's dots on its strip, and a neighbor beside a resting child never taking it |
 | STYLE-3 | 63, batch 5 |
 | STYLE-6 | 59a, batch 5 |
 | STYLE-9 | 61, batch 5; 163, smoke batch 2 (owed, as CONT-8); its bullet count corrected to four on 2026-09-29 |

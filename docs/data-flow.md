@@ -561,10 +561,13 @@ container's and a 2 px line between them, all in one color, the dots on the two 
 with no visible strip (LibKa0s-Widgets absent, or its strip hidden) gets a box over its block (and name label) instead (`Snap.box`), so a mark
 is never lost. The dots, the line and the box hang from UIParent, never from the target. A container attached to another has a
 leeway (the owner-feedback addendum's A4): a pair found that way wins only when its gap is strictly
-under the distance of the container's CURRENT pair (its stored pair in effect, `Anchors.AttachPoints`,
+under the leeway's measure of the container's CURRENT pair (its stored pair in effect, `Anchors.AttachPoints`,
 measured from its own point now to its parent's point now, on the two strips, or where a strip does not
-show or read the parent's block on `Anchors.HangFrame` with no fallback to the anchor) and it is not the pair the pick gave where the
-container rested when the drag began while the container is still there, within 2 UIParent units
+show or read the parent's block on `Anchors.HangFrame` with no fallback to the anchor): the nearer of
+that distance and how far it has moved since the drag began. On the strips those two points rest a
+whole parent block apart, so the distance alone let any neighbor's strip in snap range take a container
+picked up and let go where it sits; the measure is 0 there (DD-15R). Nor does the pair the pick gave where the
+container rested when the drag began win while the container is still there, within 2 UIParent units
 (`REST_SLACK`; a child as wide as its parent rests centered, so that pick is its middle pair, whatever
 pair it is stored by), so a container picked up and let go where it sits keeps its pair; moved further,
 that pick competes like any other pair, so a child wider than its parent, whose rest pick is the end

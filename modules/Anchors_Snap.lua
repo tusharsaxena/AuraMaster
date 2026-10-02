@@ -599,8 +599,8 @@ end
 --   3. "detach": beyond it: the whole mark red (C.DETACH_COLOR) on the current pair, a release
 --      detaches it where it was let go (D6).
 -- "Strictly nearer" is this file's reading of the addendum's "not its current pair": the hit's |gap|
--- (A7) under the current pair's distance, so a pair only as near as the current one never re-attaches
--- a container picked up and let go where it sits; nor, while it is still there (REST_SLACK), does the
+-- (A7) under the current pair's `away` (rest-invariant: on the strips, A10, its points rest a block
+-- apart), so no pair re-attaches a container let go where it sits; nor, while it is still there (REST_SLACK), does the
 -- pair the pick gave where it rested (beats). Both pairs are measured on the strips (A10). Shift suppresses step 1 only. A parent that does not
 -- read (hidden, or the frame a follower hangs from reading secret, as an engine holding auras does)
 -- has no measurable pair, so step 2 holds while the cursor has moved less than C.DETACH_RADIUS from
@@ -671,7 +671,7 @@ end
 --- `moved` at most REST_SLACK); never any pair of the current parent while `cur` has no distance (its
 --- block does not read, so the hit was measured on Snap.TargetRect's one-element fallback, which a
 --- child resting under a one-row parent is always in range of); else only a pair strictly nearer than
---- `cur`: the hit's |gap| (A7) under `cur`'s distance between its two points. The rest pick is this
+--- `cur`: the hit's |gap| (A7) under `cur`'s `away` (else its distance). The rest pick is this
 --- file's reading of A7 against A4, not the addendum's: a child as wide as its parent rests centered
 --- under it whatever pair it was stored by, so the pick there is the middle pair, as near by its gap as
 --- the stored pair's two points are apart, and nearer by any sideways drift (in game the parent's
@@ -689,7 +689,7 @@ local function beats(hit, cur)
         if hit.point == restPoint and hit.relPoint == restRel
             and cur.moved and cur.moved <= REST_SLACK then return false end
     end
-    return not (cur.dist and hit.dist >= cur.dist)
+    return hit.dist < (cur.away or cur.dist or math.huge)
 end
 
 --- Whether snap answer `hit` is current pair `cur` itself, measured (`cur.dist` reads): then the

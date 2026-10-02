@@ -893,11 +893,18 @@ test("drag: an equal-width child let go where it rests holds by its own pair, th
     -- red under: no slack (REST_SLACK 0: a pixel's twitch re-attaches it by its middle pair)
     assertEqual(state, "hold", "2 off where it rests: still held")
     assertEqual(pair.point .. ">" .. pair.relPoint, "TOPLEFT>BOTTOMLEFT", "its own pair")
-    -- 3 to the right, past the slack: the middle pair (5) is strictly nearer than its own (6.4).
+    -- 3 to the right, past the slack: its own pair's points 6.4 apart, but it has moved only 3 from
+    -- where it rests, and the middle pair (5) is no nearer than that (beats compares `away`, A10).
     plant(inst.anchor, 4, 75, 104, 95)
     pair, state = Snap.Tick()
+    -- red under: beats on the current pair's distance alone (5 < 6.4: re-attached by its middle pair)
+    assertEqual(state, "hold", "3 off: moved less than the middle pair's gap")
+    assertEqual(pair.point .. ">" .. pair.relPoint, "TOPLEFT>BOTTOMLEFT", "its own pair")
+    -- 6 to the right: moved 6, its own pair's points 8.6 apart; the middle pair (5) is strictly nearer.
+    plant(inst.anchor, 7, 75, 107, 95)
+    pair, state = Snap.Tick()
     -- red under: a slack with no bound (the middle pair could never take a child once moved)
-    assertEqual(state, "attach", "3 off: past the slack")
+    assertEqual(state, "attach", "6 off: past the slack and the gap")
     assertEqual(pair.point .. ">" .. pair.relPoint, "TOP>BOTTOM", "the middle pair")
     plant(inst.anchor, 60, 75, 160, 95)
     pair, state = Snap.Tick()
@@ -985,12 +992,40 @@ test("drag: the leeway is measured on the strips, the parent's and the child's o
     plant(inst.handle, 0, 0, 20, 18)
     plant(inst.anchor, 0, 20, 20, 40)
     assertEqual(select(2, Snap.Tick()), "hold", "124 apart by the strips")
-    -- 1's strip hidden: its block with its label, 1's BOTTOMLEFT (0,100), 82 from 2's strip.
+    -- 1's strip hidden: its block with its label, 1's BOTTOMLEFT (0,100), 122 from 2's strip.
     CM.instances[1].handle:Hide()
     plant(inst.handle, 0, -40, 20, -22)
     plant(inst.anchor, 0, -20, 20, 0)
     assertEqual(select(2, Snap.Tick()), "hold", "122 apart, 1 measured on its block")
     Snap.EndDrag(inst)
+    restore()
+end)
+
+test("drag: a child let go where it rests holds, though a neighbor's strip is nearer than its own pair's strips are apart (A4, A10)", function()
+    local NS, mocks = env(3)
+    local restore = recordOverlays(mocks)
+    local CM = NS.ContainerManager
+    plant(CM.instances[1].engine, 0, 100, 100, 240)
+    plant(CM.instances[1].handle, 0, 242, 100, 260)   -- 1's strip, above its block
+    local at = NS.Database.FindContainer(2).attach
+    at.mode, at.container = "container", 1   -- Automatic: TOPLEFT on BOTTOMLEFT
+    local inst = CM.instances[2]
+    recordAnchor(inst.anchor)
+    -- 2 at rest under 1, its strip on its block's top; 3 on the screen beside it, 10 to its right.
+    plant(inst.handle, 0, 80, 100, 98)
+    plant(inst.anchor, 0, 58, 100, 78)
+    plant(CM.instances[3].engine, 110, 58, 210, 78)
+    plant(CM.instances[3].anchor, 110, 58, 210, 78)
+    plant(CM.instances[3].handle, 110, 80, 210, 98)
+    inst.handle:__fire("OnDragStart")
+    local Snap = NS.Anchors.Snap
+    local pair, state = Snap.Tick()
+    -- red under: beats on the current pair's strip distance (1's strip BOTTOMLEFT to 2's strip
+    -- TOPLEFT, 144 apart at rest: 3's RIGHT>LEFT, 10 away, re-attaches a child nobody moved)
+    assertEqual(state, "hold", "let go where it rests")
+    assertEqual(pair.id .. " " .. pair.point .. ">" .. pair.relPoint, "1 TOPLEFT>BOTTOMLEFT", "its own pair")
+    Snap.Drop(inst)
+    assertEqual(at.mode .. " " .. tostring(at.container), "container 1", "the release writes no attach to 3")
     restore()
 end)
 
