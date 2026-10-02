@@ -762,7 +762,7 @@ badge and any count quoted in the docs must agree with it.
 - anchors: under lockdown ending test mode leaves an attached container where it is; the pass after combat moves it (L-4)
 - handle: an attached container's strip sits above every placeholder of the container it is attached to (L-4)
 
-### test_anchors_handle.lua (28)
+### test_anchors_handle.lua (29)
 
 - handle: a dark strip with a 1px gold edge, a gold label and the catalog help mark
 - handle: under a secret anchor size it builds, resizes and draws its edge without arithmetic
@@ -780,6 +780,7 @@ badge and any count quoted in the docs must agree with it.
 - handle: the strip names its container, and a container whose settings are gone hides it
 - handle: an attached container's tooltip says where its offsets are set; a screen one does not
 - handle: a container-attached tooltip whose parent is gone tells how to drop it, as a screen one's does (#22)
+- handle: a container set to a named frame with no name yet says it cannot be dragged, not how to drop it
 - handle: a frame-attached container, or one in combat, does not move on a drag, and a stray drag stop stores nothing
 - handle: the strip sits fifty levels above its anchor, over the container's elements
 - handle: a left click on the strip opens nothing; a right click opens this container's settings
@@ -2295,7 +2296,7 @@ badge and any count quoted in the docs must agree with it.
 | test_state.lua | 2 |
 | test_lifecycle.lua | 18 |
 | test_anchors.lua | 51 |
-| test_anchors_handle.lua | 28 |
+| test_anchors_handle.lua | 29 |
 | test_anchors_seam.lua | 10 |
 | test_anchors_edges.lua | 14 |
 | test_anchors_hang.lua | 11 |
@@ -2364,4 +2365,4 @@ badge and any count quoted in the docs must agree with it.
 | test_layout_cap.lua | 13 |
 | test_diagnostics_contract.lua | 9 |
 | test_lizard_sighted.lua | 8 |
-| **Total** | **1974** |
+| **Total** | **1975** |

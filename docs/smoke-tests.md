@@ -1503,7 +1503,9 @@ element, and a drop near that element attaches. Both are known limitations. No L
 
 **DRAG-10. A frame-attached container still does not drag.** Attach a container to `PlayerFrame` and
 try to drag it by its strip → it does not move, its name is gray, and its tooltip reads "Anchored to
-'PlayerFrame', so it cannot be dragged. Right-click for settings.". Result:
+'PlayerFrame', so it cannot be dragged. Right-click for settings.". Clear its Frame name → the
+tooltip reads "Set to a named frame, so it cannot be dragged. Right-click for settings.", never the
+screen line's "Drag to move". Result:
 
 **DRAG-11. The strip's tooltip.** Hover D's strip → "Drag to move. Drop it on another container to
 attach it there; hold Shift to place it without attaching. Right-click for settings."; hover B's →

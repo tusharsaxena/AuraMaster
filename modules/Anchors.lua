@@ -519,13 +519,16 @@ local function tooltipSpec(container)
     -- How to use the strip (issue #22): on the screen, drag it, or drop it on another container to
     -- attach it there; attached to another container, by that parent's name, drag it away to detach
     -- it or onto another to attach it there; Shift places it without attaching either way. Attached
-    -- to a named frame, by the frame's name, why a drag does nothing (beginDrag; the owner,
-    -- 2026-09-26). A container-attached one whose parent is gone reads as a screen one: a drop
-    -- attaches or detaches it all the same.
+    -- to a named frame, by the frame's name (or, before one is set, by saying so), why a drag does
+    -- nothing (beginDrag; the owner, 2026-09-26). A container-attached one whose parent is gone reads
+    -- as a screen one: a drop attaches or detaches it all the same.
     local function howTo()
         local cfg = container:Cfg()
         local at = cfg and cfg.attach
-        if at and at.mode == "frame" and at.frame and at.frame ~= "" then
+        if at and at.mode == "frame" then
+            if not (at.frame and at.frame ~= "") then
+                return NS.L["Set to a named frame, so it cannot be dragged. Right-click for settings."]
+            end
             return NS.L["Anchored to '%s', so it cannot be dragged. Right-click for settings."]:format(tostring(at.frame))
         end
         local parent = at and at.mode == "container" and NS.Database.FindContainer(tonumber(at.container))

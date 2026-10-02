@@ -234,7 +234,7 @@ says how to use the strip (`tooltipSpec`, issue #22): on the screen, "Drag to mo
 container to attach it there; hold Shift to place it without attaching."; attached to another
 container, "Attached to '*parent*'. Drag it away to detach it, or onto another container to attach it
 there; ..."; attached to a named frame, which a drag cannot move, "Anchored to '*frame*', so it cannot
-be dragged". A drag and its drop are in *Drag to attach* below. The strip's close mark (X) writes `container.enabled = false` through
+be dragged", or, before a frame name is set, "Set to a named frame, so it cannot be dragged". A drag and its drop are in *Drag to attach* below. The strip's close mark (X) writes `container.enabled = false` through
 `NS.SetByPath`, the same write as the Enabled checkbox, so the next visibility pass hides it.
 
 ## Preview

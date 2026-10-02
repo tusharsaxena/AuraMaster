@@ -408,6 +408,22 @@ test("handle: a container-attached tooltip whose parent is gone tells how to dro
     assertEqual(lines[1], NS.L["Drag to move. Drop it on another container to attach it there; hold Shift to place it without attaching. Right-click for settings."])
 end)
 
+test("handle: a container set to a named frame with no name yet says it cannot be dragged, not how to drop it", function()
+    local NS, mocks = fresh()
+    local inst = NS.ContainerManager.instances[1]
+    local h = recordedHandle(mocks, NS, inst)
+    local lines = {}
+    rawset(mocks.GameTooltip, "AddLine", function(_, s)
+        lines[#lines + 1] = s
+    end)
+    -- Right after Attach to is switched to Named frame: the mode is written, the name not yet.
+    local at = NS.Database.FindContainer(1).attach
+    at.mode, at.frame = "frame", ""
+    h:__fire("OnEnter")
+    -- red under: a frame branch keyed on the name (the screen line, promising a drag beginDrag refuses)
+    assertEqual(lines[1], NS.L["Set to a named frame, so it cannot be dragged. Right-click for settings."])
+end)
+
 test("handle: a frame-attached container, or one in combat, does not move on a drag, and a stray drag stop stores nothing", function()
     local NS, mocks = fresh()
     local inst = NS.ContainerManager.instances[1]
