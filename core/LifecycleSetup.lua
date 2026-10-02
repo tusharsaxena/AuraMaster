@@ -135,10 +135,11 @@ local function standUpContainers(CM)
     if CM.Sync then CM.Sync() end
     -- The spell-list view, before the visibility pass re-enables the engines: no swap or reaction
     -- event was heard while down, and the apply below may be held (combat, secret auras) while
-    -- the view switch never is. Quiet: EmptyWatch re-predicts on its own sync.
+    -- the view switch never is. Quiet: EmptyWatch re-predicts on its own sync. Player and pet debuff
+    -- containers too: their view follows the Players setting, and a Situations write made while down
+    -- reached no `view` effect (SI-06).
     if CM.ApplyViews then
-        CM.ApplyViews("target", true)
-        CM.ApplyViews("focus", true)
+        for _, unit in ipairs({ "target", "focus", "player", "pet" }) do CM.ApplyViews(unit, true) end
     end
     if CM.ApplyVisibility then CM.ApplyVisibility() end
     -- The addon's own request: a player change held by the stand-down keeps its notice.

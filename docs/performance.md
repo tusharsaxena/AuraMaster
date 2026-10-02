@@ -171,9 +171,9 @@ then the combat-restricted half (Blizzard frames handed back and a visibility pa
 `PLAYER_REGEN_ENABLED` when combat refuses it. `Container:ShouldShow` checks **the latch** as step 0, so
 every engine is disabled and nothing — a combat transition, a target swap, a settings change — can
 enable one behind it, and `CM.RequestApply` arms no timer. `standUp`
-(`core/LifecycleSetup.lua:151`) re-registers the events, subscribes again, builds any container
-the addon never built while down, moves target and focus containers to the view their unit's reaction
-picks now (before any engine is re-enabled), and re-applies every container from the settings **as they are
+(`core/LifecycleSetup.lua:152`) re-registers the events, subscribes again, builds any container
+the addon never built while down, moves target, focus, player and pet containers to the view their
+unit and Situations setting pick now (before any engine is re-enabled), and re-applies every container from the settings **as they are
 then**, never a snapshot. `NS.Perf.suspended` still reads true through the whole of arm B — the
 field is now the latch's answer to `IsHeld("perf")` rather than a boolean beside it — and the hold is session-only.
 

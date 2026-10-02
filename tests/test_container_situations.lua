@@ -215,10 +215,31 @@ test("situations runtime: a Situations write moves only the container it names",
     mocks.__fireTimers()
     local inst2 = NS.ContainerManager.instances[other]
     assertEqual(inst2.view, "every")
+    -- The other container's stored setting asks for blizzard, written past the effect, so a broadcast
+    -- ApplyView on it WOULD move it; only the container the write names may move.
+    NS.Database.FindContainer(other).filter.situations.npcs = "blizzard"
     assertTrue(NS.SetByPath("container.filter.situations.npcs", "blizzard", inst.id))
     assertEqual(inst.view, "blizzard")
-    -- red under: the view effect switching every container on the unit (the other keeps "every")
+    -- red under: the view effect switching every container on the unit (the other would re-resolve
+    -- to its stored "blizzard")
     assertEqual(inst2.view, "every")
+end)
+
+test("situations runtime: the stand-up re-resolves a player or pet debuff container's view, apply held", function()
+    for _, unit in ipairs({ "player", "pet" }) do
+        local NS, mocks, inst = container(unit, "HARMFUL")
+        assertEqual(inst.view, "every", unit)
+        NS.SetByPath("enabled", false)
+        -- Stood down: CONFIG_CHANGED is not heard, so the write reaches no view effect.
+        NS.SetByPath("container.filter.situations.players", "blizzard", inst.id)
+        assertEqual(inst.view, "every", unit .. ": no view move while stood down")
+        mocks.__lockdown, mocks.__aurasSecret = true, true
+        NS.SetByPath("enabled", true)
+        assertTrue(NS.ContainerManager.MustDefer(), "the apply is held")
+        -- red under: a stand-up that re-resolves target and focus only (the player or pet debuff
+        -- container keeps the stale every view until the held apply runs)
+        assertEqual(inst.view, "blizzard", unit)
+    end
 end)
 
 test("situations runtime: a Situations write on a container on the ids view moves nothing", function()

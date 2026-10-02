@@ -504,7 +504,7 @@ badge and any count quoted in the docs must agree with it.
 - container views: UNIT_FACTION and UNIT_FLAGS on the player move target and focus views
 - container views: the stand-up moves the view before it re-enables, in combat too
 
-### test_container_situations.lua (15)
+### test_container_situations.lua (16)
 
 - situations runtime: player and pet buffs are ids whatever the Situations settings say
 - situations runtime: a target whose ids apply is ids whatever the Situations settings say
@@ -518,6 +518,7 @@ badge and any count quoted in the docs must agree with it.
 - situations runtime: switching blizzard <-> every sends candidate filters only where they differ
 - situations runtime: a Situations write switches the live engine at once, in combat, with no apply held
 - situations runtime: a Situations write moves only the container it names
+- situations runtime: the stand-up re-resolves a player or pet debuff container's view, apply held
 - situations runtime: a Situations write on a container on the ids view moves nothing
 - situations runtime: the [Filter] line names the view and the situation
 - situations runtime: player debuffs' [Filter] line names your own and your pet's debuffs
@@ -2191,7 +2192,7 @@ badge and any count quoted in the docs must agree with it.
 | test_situations_settings.lua | 11 |
 | test_container.lua | 52 |
 | test_container_views.lua | 16 |
-| test_container_situations.lua | 15 |
+| test_container_situations.lua | 16 |
 | test_container_zones.lua | 8 |
 | test_containermanager.lua | 54 |
 | test_compat.lua | 35 |
@@ -2266,4 +2267,4 @@ badge and any count quoted in the docs must agree with it.
 | test_layout_cap.lua | 13 |
 | test_diagnostics_contract.lua | 9 |
 | test_lizard_sighted.lua | 8 |
-| **Total** | **1896** |
+| **Total** | **1897** |
