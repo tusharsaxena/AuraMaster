@@ -9,7 +9,7 @@ local _, NS = ...
 -- to UIParent and carries nothing secret.
 --
 -- A container attaches to one of three things (container.attach.mode):
---   screen     UIParent, at container.position — the only mode a drag can change;
+--   screen     UIParent, at container.position, where a drag stores its drop;
 --   container  another container's ENGINE frame, so it follows that container as it grows. The
 --              anchor inherits DisableUntrustedLayoutScriptsTemplate, Blizzard's opt-in for a frame
 --              that anchors to an aura container (whose layout scripts are forbidden to addons).
@@ -303,6 +303,10 @@ end
 --- differs from the setting when a target could not be used.
 --- @return string  "screen" | "container" | "frame"
 function Anchors.Place(container)
+    -- HOLDING THE DRAG STEADY (issue #22): while a player drags it (beginDrag set `dragging`, the
+    -- drop clears it) its points stay as the drag left them, so a visibility pass, a parent's hang
+    -- mode change (PlaceAttached) or an apply cannot yank the anchor back to its parent mid-drag.
+    if container.dragging then return container.placedAs or "screen" end
     local cfg = container:Cfg()
     local anchor = container.anchor
     if not (cfg and anchor) then return "screen" end
@@ -508,7 +512,7 @@ end
 --- object would inherit forbidden aspects: UntrustedLayoutScriptExecution"). ANCHOR_CURSOR depends on
 --- nothing under the anchor.
 local function tooltipSpec(container)
-    -- How to use the strip: drag it, or, attached, why a drag does nothing (canDrag) and what it
+    -- How to use the strip: drag it, or, attached, why a drag does nothing (beginDrag) and what it
     -- follows, by the parent container's name or the frame's (the owner, 2026-09-26).
     local function howTo()
         local cfg = container:Cfg()
@@ -571,17 +575,24 @@ local function closeTooltipSpec(container)
     }
 end
 
---- Asked by the widget at every OnDragStart. Only a screen-attached container moves by dragging; an
---- attached one follows its target, and its offsets are set in the Layout section. Never mid-combat:
---- the anchor parents an aura engine.
-local function canDrag(container)
+--- The widget's canDrag, asked at every OnDragStart immediately before it calls StartMoving
+--- (libs/LibKa0s/WidgetsDragHandle.lua, dhSetDragScripts), so it both answers the gate and, on a yes,
+--- begins the drag (issue #22, D9). A screen container drags as it always has; a container-attached
+--- one drags too, to be dropped onto another container or away from its parent
+--- (modules/Anchors_Snap.lua: Snap.BeginDrag lifts its anchor onto UIParent first, so the move never
+--- starts from its parent's geometry). A frame-attached one does not: it follows its frame, and its
+--- offsets are set in the Layout section. Never mid-combat: the anchor parents an aura engine.
+local function beginDrag(container)
     local cfg = container:Cfg()
-    return (cfg and cfg.attach and cfg.attach.mode == "screen" and not InCombatLockdown()) and true or false
+    local mode = cfg and cfg.attach and cfg.attach.mode
+    if not (mode == "screen" or mode == "container") or InCombatLockdown() then return false end
+    Anchors.Snap.BeginDrag(container)
+    return true
 end
 
 --- The handle's label, in its three parts: the container's name, a warm gray
 --- (C.ATTACHED_NAME_COLOR) while it is attached to another container or a named frame, the sign that
---- it follows that and cannot be dragged on its own (canDrag; the owner, 2026-09-26); and while test
+--- it follows that and cannot be dragged on its own (beginDrag; the owner, 2026-09-26); and while test
 --- mode is on an orange TEST tag after it (feedback #8), so the placeholders on screen read as
 --- placeholders. Apart, so a strip too narrow for the whole shortens the name alone (stripLabel).
 --- @return string open, string name, string close, string tag  open and close wrap the name's color
@@ -632,8 +643,8 @@ function Anchors.BuildHandle(container)
         closeIcon    = NS.Icon and NS.Icon("close") or nil,
         onClose      = function() disableContainer(container) end,
         closeTooltip = closeTooltipSpec(container),
-        canDrag      = function() return canDrag(container) end,
-        onDragStop   = function() Anchors.SavePosition(container) end,
+        canDrag      = function() return beginDrag(container) end,
+        onDragStop   = function() Anchors.Snap.Drop(container) end,
         onRightClick = function() openSettings(container) end,
         tooltip      = tooltipSpec(container),
         tooltipOwner = "cursor",

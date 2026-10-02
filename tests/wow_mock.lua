@@ -244,6 +244,12 @@ return function()
     M.__foci = {}
     M.GetMouseFoci = function() return M.__foci end
 
+    -- ── the drag's Shift (issue #22, D4) ────────────────────────────────────────────────────
+    -- Holding Shift suppresses the snap; modules/Anchors_Snap.lua reads it every driver tick and at
+    -- the drop. Settable, up by default.
+    M.__shift = false
+    M.IsShiftKeyDown = function() return M.__shift end
+
     -- ── the player's identity ──────────────────────────────────────────────────────────────
     -- Settable, because the one thing that reads it -- defaults/Categories.lua's user-category key
     -- seed -- is interesting precisely when two clients differ, and a test has to be able to BE two

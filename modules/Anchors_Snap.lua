@@ -22,9 +22,14 @@ local _, NS = ...
 -- THE PURE CORE (Snap.PointAt, Snap.Nearest) touches no frame, so the headless harness tests the
 -- choice directly; Snap.Candidates and Snap.Find are the frame side that feeds it.
 --
+-- THE DRAG LIFECYCLE (D3, D4, D9, D11) is at the end of the file: Snap.BeginDrag, the throttled
+-- driver and its highlight, Snap.Drop. modules/Anchors.lua's beginDrag and the handle's OnDragStop
+-- call into it.
+--
 -- LOAD-BEARING POSITION: after modules/Anchors_Attach.lua, whose pair table and flow growth this
 -- file binds from NS.AnchorsAttach at file load; after modules/Anchors.lua, which it extends
--- (Anchors.Snap) and whose HangFrame, WouldCycle and AutoPoints it calls at call time.
+-- (Anchors.Snap) and whose HangFrame, WouldCycle, AutoPoints, Place and SavePosition it calls at
+-- call time.
 
 NS.Anchors = NS.Anchors or {}
 local Anchors = NS.Anchors
@@ -203,4 +208,175 @@ function Snap.FoldPoints(cfg, targetId, point, relPoint)
     }
     local autoPoint, autoRel = Anchors.AutoPoints(probe)
     return (point ~= autoPoint) and point or nil, (relPoint ~= autoRel) and relPoint or nil
+end
+
+-- ---------------------------------------------------------------------------
+-- The drag lifecycle (D3, D4, D9, D11; "Starting a drag", "Holding the drag steady")
+-- ---------------------------------------------------------------------------
+-- A drag starts in modules/Anchors.lua's beginDrag (the widget's canDrag, asked immediately before
+-- StartMoving), which gates it (screen or container-attached, never frame, never in combat) and
+-- hands the container here: Snap.BeginDrag lifts an attached anchor onto UIParent, marks the
+-- container `dragging` (Anchors.Place leaves a dragging anchor where the drag has it) and starts
+-- the DRIVER, one plain frame whose OnUpdate runs only while a drag is live and does its work at
+-- most every DRIVER_PERIOD: Shift held or combat started means no candidate, else Snap.Find, and
+-- the HIGHLIGHT follows the answer. The widget's OnDragStop ends it through Snap.Drop.
+--
+-- The highlight is ours and plain: a frame under UIParent with Style.DrawEdge's four strips, never a
+-- Backdrop (whose size arithmetic is the secret-geometry trap of docs/midnight-quirks.md), and its
+-- marker a child of it, so one Hide takes both. It is placed by numbers already in UIParent units
+-- (Snap.TargetRect), anchored to UIParent and never to the target, so nothing of ours ever hangs
+-- from an engine's secret rect. Both frames are built on the first drag, so an addon nobody drags
+-- (or one stood down) makes neither, and the driver's OnUpdate is cleared, not just idle, between
+-- drags: an armed OnUpdate is a per-frame cost nothing on screen reports.
+
+local DRIVER_PERIOD = 0.03   -- seconds between two snap reads while a drag is live
+local EDGE = 2               -- the highlight's edge, px
+local MARKER = 6             -- the join marker's side, px
+local HIGHLIGHT_STRATA = "TOOLTIP"   -- over every container, whatever strata its layout picked
+
+local live        -- the live container being dragged, or nil
+local elapsed = 0 -- seconds since the driver last read the snap
+local hitRect = {} -- scratch: the highlighted target's rect
+
+--- Build the highlight and its join marker, once (Snap.highlight, Snap.marker: published for the
+--- headless suite). Hidden at birth; shown only while a candidate is in range.
+local function buildHighlight()
+    if Snap.highlight then return Snap.highlight end
+    local col = C.SNAP_COLOR
+    local hl = CreateFrame("Frame", nil, UIParent)
+    hl:SetFrameStrata(HIGHLIGHT_STRATA)
+    NS.Style.DrawEdge(hl, EDGE, col.r, col.g, col.b, col.a)
+    local marker = CreateFrame("Frame", nil, hl)
+    marker:SetSize(MARKER, MARKER)
+    local dot = marker:CreateTexture(nil, "OVERLAY")
+    dot:SetAllPoints(marker)
+    dot:SetColorTexture(col.r, col.g, col.b, col.a)
+    hl:Hide()
+    Snap.highlight, Snap.marker = hl, marker
+    return hl
+end
+
+--- Hide the highlight (and its marker with it), if it was ever built.
+local function hideHighlight()
+    if Snap.highlight then Snap.highlight:Hide() end
+end
+
+--- Show the highlight over the rect of the target `hit` names, its marker centered on the join
+--- (the target's relative point of the picked pair), or hide it when there is no hit or the
+--- target's rect no longer reads. Every number is already a plain one in UIParent units, and both
+--- frames hang from UIParent (the marker through the highlight), so no offset is converted.
+local function showHighlight(hit)
+    local target = hit and NS.ContainerManager.instances[hit.id]
+    local rect = target and Snap.TargetRect(target, hitRect)
+    if not rect then return hideHighlight() end
+    local hl = buildHighlight()
+    hl:ClearAllPoints()
+    hl:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", rect.left, rect.bottom)
+    hl:SetSize(rect.right - rect.left, rect.top - rect.bottom)
+    local x, y = Snap.PointAt(rect, hit.relPoint)
+    local marker = Snap.marker
+    marker:ClearAllPoints()
+    marker:SetPoint("CENTER", UIParent, "BOTTOMLEFT", x, y)
+    hl:Show()
+end
+
+--- One driver tick's work, published so the suite drives it without a clock: the candidate the
+--- live drag would snap to now (nil while Shift is held, D4, or once combat has started, D11, as well
+--- as when nothing is in range), with the highlight shown over it or hidden. Nil with no live drag.
+--- @return table|nil  Snap.Nearest's answer
+function Snap.Tick()
+    local hit = live and not (IsShiftKeyDown() or InCombatLockdown()) and Snap.Find(live) or nil
+    showHighlight(hit)
+    return hit
+end
+
+--- The driver's OnUpdate: Snap.Tick at most every DRIVER_PERIOD.
+local function onUpdate(_, dt)
+    elapsed = elapsed + (tonumber(dt) or 0)
+    if elapsed < DRIVER_PERIOD then return end
+    elapsed = 0
+    Snap.Tick()
+end
+
+--- Start the driver on live container `container` (Snap.driver: published for the suite). An
+--- OnUpdate runs only on a shown frame, so the driver is shown while it drives and hidden after.
+local function startDriver(container)
+    local driver = Snap.driver
+    if not driver then
+        driver = CreateFrame("Frame")
+        Snap.driver = driver
+    end
+    live, elapsed = container, 0
+    driver:SetScript("OnUpdate", onUpdate)
+    driver:Show()
+end
+
+--- Stop the driver, clear its OnUpdate (not idle: cleared) and hide the highlight.
+local function stopDriver()
+    live = nil
+    local driver = Snap.driver
+    if driver then
+        driver:SetScript("OnUpdate", nil)
+        driver:Hide()
+    end
+    hideHighlight()
+end
+
+--- Hang container `container`'s anchor from UIParent for the drag ("Starting a drag"), so the move
+--- starts from a rect of ours and not from its parent's, which may read secret. Where its left and
+--- bottom edges read plain, BOTTOMLEFT at them, so it does not move; where either reads secret (it
+--- hangs from an engine holding auras), its center under the cursor, which jumps it by at most its
+--- own size. Offsets are in the anchor's own units: its edges are read in them, and the cursor
+--- (screen units) is taken to them over its effective scale. Never under lockdown (beginDrag gates).
+local function lift(container)
+    local anchor = container.anchor
+    local l, b = plain(anchor:GetLeft()), plain(anchor:GetBottom())
+    anchor:ClearAllPoints()
+    if l and b then
+        anchor:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", l, b)
+        return "read"
+    end
+    local x, y = GetCursorPosition()
+    local scale = plain(anchor:GetEffectiveScale()) or plain(UIParent:GetEffectiveScale()) or 1
+    if scale <= 0 then scale = 1 end
+    anchor:SetPoint("CENTER", UIParent, "BOTTOMLEFT", (plain(x) or 0) / scale, (plain(y) or 0) / scale)
+    return "cursor"
+end
+
+--- A drag of live container `container` begins (beginDrag in modules/Anchors.lua said yes, so it is
+--- screen or container-attached and out of combat). A container-attached one is lifted onto UIParent
+--- first (lift); a screen one already hangs there. Then `dragging` holds Anchors.Place off it, and
+--- the driver starts.
+function Snap.BeginDrag(container)
+    local cfg = container:Cfg()
+    if cfg and cfg.attach and cfg.attach.mode == "container" and container.anchor then
+        local how = lift(container)
+        if NS.Debug then NS.Debug("Anchor", "container %s: drag lifts it off its parent (%s)", container.id, how) end
+    end
+    container.dragging = true
+    startDriver(container)
+end
+
+--- The drag of `container` is over, however it ends: `dragging` cleared, the driver stopped and the
+--- highlight hidden. Safe to call when no drag is live.
+function Snap.EndDrag(container)
+    container.dragging = nil
+    if live == container or live == nil then stopDriver() end
+end
+
+--- The widget's OnDragStop (after StopMovingOrSizing). Ends the drag (Snap.EndDrag), then settles
+--- the anchor: a screen container stores where it was dropped (Anchors.SavePosition, as before
+--- issue #22); a container-attached one goes back where its settings put it (Anchors.Place), out of
+--- combat, since placing beside an aura engine is never done under lockdown. A drop that reaches
+--- here with no drag of this container live (a stray stop) does nothing.
+function Snap.Drop(container)
+    if not container.dragging then return end
+    Snap.EndDrag(container)
+    local cfg = container:Cfg()
+    local mode = cfg and cfg.attach and cfg.attach.mode
+    if mode == "container" then
+        if not InCombatLockdown() then container.placedAs = Anchors.Place(container) end
+        return
+    end
+    Anchors.SavePosition(container)
 end

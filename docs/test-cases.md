@@ -779,7 +779,7 @@ badge and any count quoted in the docs must agree with it.
 - handle: with LibKa0s absent a container has no handle at all, and every pass over it is a no-op
 - handle: the strip names its container, and a container whose settings are gone hides it
 - handle: an attached container's tooltip says where its offsets are set; a screen one does not
-- handle: an attached container, or one in combat, does not move on a drag, and a stray drag stop stores nothing
+- handle: a frame-attached container, or one in combat, does not move on a drag, and a stray drag stop stores nothing
 - handle: the strip sits fifty levels above its anchor, over the container's elements
 - handle: a left click on the strip opens nothing; a right click opens this container's settings
 - handle: the width comes from a detached measuring string, never the label, which may sit on secret geometry (E)
@@ -1083,6 +1083,20 @@ badge and any count quoted in the docs must agree with it.
 - snap: a side other than Automatic's stores the absolute pair, each half folded on its own
 - snap: folding reads Automatic for the target dropped on, not the container's current parent
 - snap: the radius is 24 UIParent units and the highlight is an opaque green
+
+### test_anchors_drag.lua (11)
+
+- drag: a screen container and a container-attached one drag; a frame-attached one does not
+- drag: no drag starts in combat, and none leaves the container marked dragging
+- drag: a container-attached anchor is lifted onto UIParent where it reads, before it moves
+- drag: a container-attached anchor whose rect reads secret is centered under the cursor
+- drag: a screen container is not re-anchored at the start; it already hangs from UIParent
+- drag: Place leaves a dragging anchor where the drag has it, and answers how it was placed
+- drag: the driver runs only while a drag is live, at most every 0.03s, and is cleared at the drop
+- drag: Shift held, or combat started, means no candidate this tick
+- drag: the highlight frames the target's rect in green with a marker on the join, and hides with no candidate
+- drag: the highlight hides on Shift, on combat and at the drop
+- drag: dropping a container-attached one puts it back where its settings put it, and writes nothing
 
 ### test_texttemplate.lua (26)
 
@@ -2145,7 +2159,7 @@ badge and any count quoted in the docs must agree with it.
 
 - prose: no authored file carries a British spelling from localization-§5's published list
 - prose: the gate carries localization-§5's two lists whole, and nothing of its own
-- prose: the exclusions this repository declared suppressed 11 of 200 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (11): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, docs/spell-research/2026-09-24-logs/CORRECTIONS.md, docs/spell-research/2026-09-24-logs/CURRENT_CATEGORIES.md, docs/spell-research/2026-09-24-logs/DECISIONS.md, docs/spell-research/2026-09-24-logs/FLAGS.md, docs/spell-research/2026-09-24-logs/PROPOSED_ADDITIONS.md, docs/spell-research/2026-09-24-logs/REVIEW.md, docs/spell-research/2026-09-24-logs/SOURCES.md, docs/spell-research/2026-09-24-logs/dictionary/AURAS.md
+- prose: the exclusions this repository declared suppressed 11 of 203 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (11): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, docs/spell-research/2026-09-24-logs/CORRECTIONS.md, docs/spell-research/2026-09-24-logs/CURRENT_CATEGORIES.md, docs/spell-research/2026-09-24-logs/DECISIONS.md, docs/spell-research/2026-09-24-logs/FLAGS.md, docs/spell-research/2026-09-24-logs/PROPOSED_ADDITIONS.md, docs/spell-research/2026-09-24-logs/REVIEW.md, docs/spell-research/2026-09-24-logs/SOURCES.md, docs/spell-research/2026-09-24-logs/dictionary/AURAS.md
 - prose: no path this repository narrows the gate by is loaded by a TOC
 - prose: every path this repository narrows the gate by is one .pkgmeta keeps out of the zip
 - prose self-test: the carve-out suppresses the named generated folder, and only it
@@ -2277,6 +2291,7 @@ badge and any count quoted in the docs must agree with it.
 | test_anchors_collapse.lua | 9 |
 | test_anchors_width.lua | 6 |
 | test_anchors_snap.lua | 15 |
+| test_anchors_drag.lua | 11 |
 | test_texttemplate.lua | 26 |
 | test_style.lua | 60 |
 | test_castaura.lua | 7 |
@@ -2327,4 +2342,4 @@ badge and any count quoted in the docs must agree with it.
 | test_layout_cap.lua | 13 |
 | test_diagnostics_contract.lua | 9 |
 | test_lizard_sighted.lua | 8 |
-| **Total** | **1945** |
+| **Total** | **1956** |

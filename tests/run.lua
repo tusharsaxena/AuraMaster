@@ -123,6 +123,7 @@ Kit.run{
         "test_anchors_collapse",
         "test_anchors_width",
         "test_anchors_snap",
+        "test_anchors_drag",
         "test_texttemplate",
         "test_style",
         "test_castaura",

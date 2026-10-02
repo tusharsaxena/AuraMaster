@@ -390,7 +390,7 @@ test("handle: an attached container's tooltip says where its offsets are set; a 
     assertEqual(lines[2], NS.L["Attached — set its offsets in the Layout section."])
 end)
 
-test("handle: an attached container, or one in combat, does not move on a drag, and a stray drag stop stores nothing", function()
+test("handle: a frame-attached container, or one in combat, does not move on a drag, and a stray drag stop stores nothing", function()
     local NS, mocks = fresh()
     local inst = NS.ContainerManager.instances[1]
     local h = recordedHandle(mocks, NS, inst)
@@ -398,11 +398,14 @@ test("handle: an attached container, or one in combat, does not move on a drag, 
     rawset(inst.anchor, "StartMoving", function() moved = moved + 1 end)
     NS.NewBusTarget():RegisterMessage(NS.MSG.CONFIG_CHANGED, function() writes = writes + 1 end)
     inst.anchor.GetPoint = function() return "TOP", nil, "TOP", 1, 1 end
-    NS.Database.FindContainer(1).attach.mode = "container"
+    -- A container-attached one drags since issue #22 (tests/test_anchors_drag.lua); a frame-attached
+    -- one still follows its frame.
+    NS.Database.FindContainer(1).attach.mode = "frame"
+    NS.Database.FindContainer(1).attach.frame = "PlayerFrame"
     h:__fire("OnDragStart")
     h:__fire("OnDragStop")
-    -- red under: the drag start without its screen-mode check (an attached container is dragged off its target)
-    assertEqual(moved, 0, "attached")
+    -- red under: the drag start without its mode check (a frame-attached container is dragged off its frame)
+    assertEqual(moved, 0, "frame-attached")
     assertEqual(writes, 0, "and no position is stored for it")
     NS.Database.FindContainer(1).attach.mode = "screen"
     mocks.__lockdown = true
