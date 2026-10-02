@@ -146,3 +146,15 @@ is now the container's **strip rect** while its strip is visible and reads; othe
 as before (block, plus the label while it shows). The side, the align third, the dots, the line and the
 A4 leeway all follow. Where a drop attaches is unchanged (Place joins the blocks and pushes past the
 strips and labels); `docs/known-limitations.md` says the dots mark the strips, not the exact join.
+
+## A11. The parent's growth sides reach its block (owner's pick, option 1)
+
+After A10, the final review showed the dots and the landing disagree on the parent's growth side: a
+parent growing down is measured on its strip's bottom (its block's top), while a child attached below
+lands under its block. The owner chose option 1: the PARENT's measuring rect is its strip rect (A10),
+except that each edge on a side the parent grows toward (its vertical growth side: bottom growing down,
+top growing up; its horizontal growth side: right growing right, left growing left) is taken out to its
+block's far edge on that side (the union of strip and block, on that edge only), when the block reads.
+The dragged child's rect stays its strip (its strip is on its own before side, which a seam joins). The
+side pick, the thirds, the dots, the line and the leeway all follow. The before side's one-element jump
+and overlap (known limitations) stay as documented.

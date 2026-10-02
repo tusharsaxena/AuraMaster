@@ -61,3 +61,4 @@ Spec: `docs/superpowers/specs/2026-10-02-drag-attach-addendum-owner-feedback.md`
 | DD-13 | M5 | Side first, align by thirds; footprints for every rect; leeway 128 (A7, A8, A9); docs and smoke cases | snap, drag, drop cases green |
 | DD-14 | M5 | Review of DD-12, DD-13, verify, fixes; battery; checkpoint row; push | row in the checkpoints file; origin equals HEAD |
 | DD-15 | M6 | Measure and draw on the strip rect (A10); review; battery; checkpoint row; push | row in the checkpoints file; origin equals HEAD |
+| DD-16 | M6 | The parent's growth-side edges reach its block (A11); review; battery; checkpoint row; push | row in the checkpoints file; origin equals HEAD |
