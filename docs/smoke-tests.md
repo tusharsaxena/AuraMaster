@@ -1092,8 +1092,9 @@ important buffs stop drawing and the rest still draw once. Result:
 **FILT-54. A hostile player with Players at Only Blizzard.** Use the FILT-47 container with **On
 NPCs** at **Every aura, once** and **On players** at **Only my Blizzard categories set to Show**. In
 War Mode or a battleground, target an enemy player who pops a big defensive → it draws once, from
-*Big defensives (Blizzard)*, and nothing else draws; `/am diagnostics` reads `view=blizzard
-situation=players`. Target an enemy NPC next → its buffs that are in no Blizzard category set to
+*Big defensives (Blizzard)* (or another Blizzard category set to Show: a purgeable or *Important*
+buff draws too); a buff only in *Defensive cooldowns* or in no Blizzard category does not draw; no
+buff draws twice; `/am diagnostics` reads `view=blizzard situation=players`. Target an enemy NPC next → its buffs that are in no Blizzard category set to
 Hide (Cancelable here) draw, once each (`view=every situation=npcs`). Result:
 
 **FILT-55. A friendly target is unchanged.** Same container, target a friendly player or a party
