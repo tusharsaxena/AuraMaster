@@ -907,11 +907,15 @@ end
 --- it, so no OnDragStop will come) is stopped and ended first, so neither the anchor nor the snap
 --- driver goes on following the cursor for an instance nothing holds. Park leaves a live drag to the
 --- driver, which cancels it once combat ends, since the anchor may not be stopped under lockdown.
+--- A strip the mark of ANOTHER container's drag has repainted gets its gold back too
+--- (Snap.ReleaseStrip, the owner-feedback addendum's A6), since this instance stays dormant and may
+--- come back under its id with that same strip before the drag's next tick.
 function ContainerClass:Destroy()
     if self.dragging then
         self.anchor:StopMovingOrSizing()
         NS.Anchors.Snap.EndDrag(self)
     end
+    NS.Anchors.Snap.ReleaseStrip(self)
     self:Retire()
     NS.Preview.Hide(self)
     if self.outline then self.outline:Hide() end

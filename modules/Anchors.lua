@@ -476,6 +476,14 @@ local HANDLE_LEVEL = 50   -- how far above its anchor the strip sits: over every
 local STRIP_H   = DRAG and DRAG.HEIGHT or 18
 local STRIP_GAP = DRAG and DRAG.GAP or 2
 
+-- The strip's own edge as the widget paints it once, at build (LibKa0s-Widgets' dhBuildChrome calls
+-- the painter we hand it, `edge = NS.Style.DrawEdge` in BuildHandle, as edge(handle, 1, 1, 0.82, 0,
+-- 0.6)): 1px of gold at 0.6 alpha. The widget publishes no figure for it, so it is named here, once,
+-- for the one other painter of that edge: the drag's mark (modules/Anchors_Snap.lua), which repaints
+-- the target's strip in its own color and must give back exactly this when it leaves (the
+-- owner-feedback addendum's A6). Read-only; a change in the widget's chrome means a change here.
+Anchors.STRIP_EDGE = { size = 1, r = 1, g = 0.82, b = 0, a = 0.6 }
+
 --- Right-click (the strip or its "?"): the Containers page, with THIS container selected in its band
 --- (feedback #9). Under combat lockdown the open is refused with options-ui-§2's gray line, and the
 --- selection is left where it was: a refused click moves nothing. NS.OpenOptionsPage is the one

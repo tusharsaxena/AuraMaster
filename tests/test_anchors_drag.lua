@@ -59,14 +59,17 @@ local function recordAnchor(anchor)
 end
 
 --- Make every frame created under UIParent (or under one of those) a region recorder from now on, so
---- the highlight and its marker log every call they receive, each with its parent on `__parentFrame`.
+--- the highlight and its marker log every call they receive, each with its parent on `__parentFrame`,
+--- and each listed on `mocks.__overlays` (so a case can show none is anchored to a strip, A6).
 --- Returns a restore.
 local function recordOverlays(mocks)
     local real = mocks.CreateFrame
+    mocks.__overlays = {}
     mocks.CreateFrame = function(kind, name, parent, ...)
         if parent and (parent == mocks.UIParent or parent.__overlay) then
             local f = newRegion()
             f.__overlay, f.__shown, f.__parentFrame = true, true, parent
+            mocks.__overlays[#mocks.__overlays + 1] = f
             return f
         end
         return real(kind, name, parent, ...)
@@ -252,33 +255,63 @@ end)
 
 -- ── the highlight and the join marker (D3) ────────────────────────────────────────────────────
 
---- How many times each of `strip`'s own four edge strips (the widget's 1px gold edge, painted with
---- Style.DrawEdge on the handle) has been painted, as one "a,b,c,d" string, so a case can show the
---- mark never repaints the strip's own edge.
-local function ownEdgePaints(strip)
-    local counts = {}
-    for i, s in ipairs(BS.strips(strip)) do counts[i] = s:__count("SetColorTexture") end
-    return table.concat(counts, ",")
+--- `col` ({ r, g, b, a }) as SetColorTexture's joined arguments.
+local function rgba(col) return table.concat({ col.r, col.g, col.b, col.a }, ",") end
+
+local GOLD = "1 1,0.82,0,0.6"   -- the strip's own edge, as stripEdge reads it: 1px of the widget's gold
+
+--- How `strip`'s OWN four edge strips (the widget's edge, painted with Style.DrawEdge on the handle)
+--- were last painted, as "size r,g,b,a": GOLD is the widget's own 1px gold, "2 <color>" the mark's
+--- (A6). Strips that disagree come back each listed, so a half-repainted edge fails by name.
+--- @return string
+local function stripEdge(strip)
+    local s = BS.strips(strip)
+    if #s ~= 4 then return #s .. " strips" end
+    local function size(i, setter)
+        local last = s[i]:__last(setter)
+        return last and last[1] or "?"
+    end
+    local seen = {}
+    for i, setter in ipairs({ "SetHeight", "SetHeight", "SetWidth", "SetWidth" }) do
+        seen[i] = size(i, setter) .. " " .. (s[i]:__joined("SetColorTexture") or "?")
+    end
+    for i = 2, 4 do
+        if seen[i] ~= seen[1] then return table.concat(seen, " | ") end
+    end
+    return seen[1]
 end
 
---- Assert the mark's strip edge (Snap.stripEdge) is shown on strip `strip`: a plain child frame of the
---- highlight (never a Backdrop) hung by SetAllPoints on the strip, and set there after its last clear.
-local function assertEdgeOn(Snap, strip, what)
-    local over = Snap.stripEdge
-    assertTrue(over ~= nil and over:IsShown(), what .. ": the strip edge shows")
-    assertTrue(over.__parentFrame == Snap.highlight, what .. ": a child of the highlight")
-    assertTrue(over:__last("SetAllPoints")[1] == strip, what .. ": on the strip")
-    assertTrue(over:__lastSeq("SetAllPoints") > (over:__lastSeq("ClearAllPoints") or 0), what .. ": not cleared since")
-    assertEqual(over:__count("SetBackdrop"), 0, what .. ": no Backdrop")
+--- Assert no frame of ours (every overlay recordOverlays made) is anchored to `strip` (A6: the client
+--- voids an anchor into the restricted tree a strip hangs in, which is why A5's overlay never showed).
+local function assertNothingHungOn(mocks, strip, what)
+    for _, f in ipairs(mocks.__overlays or {}) do
+        for _, m in ipairs({ "SetAllPoints", "SetPoint" }) do
+            for _, args in ipairs(f:__calls(m)) do
+                for i = 1, args.n do
+                    assertTrue(args[i] ~= strip, what .. ": no frame of ours is anchored to the strip (" .. m .. ")")
+                end
+            end
+        end
+    end
 end
 
-test("drag: the mark edges the target's strip 2px in green, never boxes its placeholder, and hides with no candidate (A5)", function()
+--- Assert the mark is on strip `strip` in `col` (A6): the strip's OWN four edge strips repainted 2px in
+--- the mark's color, the strip the mark says it painted, and no frame of ours hung on it.
+local function assertEdgeOn(NS, mocks, strip, col, what)
+    local Snap = NS.Anchors.Snap
+    assertEqual(stripEdge(strip), "2 " .. rgba(col), what .. ": the strip's own edge, 2px in the mark's color")
+    assertTrue(Snap.MarkedStrip and Snap.MarkedStrip() == strip, what .. ": the strip the mark painted")
+    assertNil(Snap.stripEdge, what .. ": no overlay frame (A5's) is built")
+    assertNothingHungOn(mocks, strip, what)
+end
+
+test("drag: the mark repaints the target strip's own edge 2px in green, never boxes its placeholder, and gives the gold back with no candidate (A6)", function()
     local NS, mocks = env(2)
     local restore = recordOverlays(mocks)
     local CM = NS.ContainerManager
     plant(CM.instances[1].engine, 0, 100, 100, 140)
     local strip = CM.instances[1].handle
-    local before = ownEdgePaints(strip)
+    assertEqual(stripEdge(strip), GOLD, "built: the widget's own 1px gold")
     local inst = CM.instances[2]
     recordAnchor(inst.anchor)
     inst.handle:__fire("OnDragStart")
@@ -290,13 +323,9 @@ test("drag: the mark edges the target's strip 2px in green, never boxes its plac
     Snap.Tick()
     local hl, marker = Snap.highlight, Snap.marker
     assertTrue(hl ~= nil and hl:IsShown(), "shown with a candidate")
-    -- red under: the old mark (a box over the target's rect, no edge on its strip)
-    assertEdgeOn(Snap, strip, "the target's strip")
-    local col = NS.Constants.SNAP_COLOR
-    BS.assertSolid(Snap.stripEdge, 2, table.concat({ col.r, col.g, col.b, col.a }, ","), "the strip edge")
+    -- red under: A5's overlay (a frame of ours SetAllPoints on the strip, the strip's own edge left gold)
+    assertEdgeOn(NS, mocks, strip, NS.Constants.SNAP_COLOR, "the target's strip")
     assertFalse(Snap.box:IsShown(), "no box over the placeholder")
-    -- red under: the strip's own gold edge repainted in the mark's color (it must come back unchanged)
-    assertEqual(ownEdgePaints(strip), before, "the strip's own edge is never touched")
     local m = marker:__last("SetPoint")
     assertEqual(m[1], "CENTER")
     assertTrue(m[2] == mocks.UIParent)
@@ -308,14 +337,13 @@ test("drag: the mark edges the target's strip 2px in green, never boxes its plac
     Snap.Tick()
     -- red under: a highlight that stays up once the candidate leaves the radius
     assertFalse(hl:IsShown(), "out of range: hidden")
-    -- red under: an edge left hung on the old target's strip once the mark hides
-    assertFalse(Snap.stripEdge:IsShown(), "the strip edge hides")
-    assertTrue(Snap.stripEdge:__lastSeq("ClearAllPoints") > Snap.stripEdge:__lastSeq("SetAllPoints"),
-        "and is taken off the strip")
+    -- red under: a hide that leaves the strip's own edge in the mark's color
+    assertEqual(stripEdge(strip), GOLD, "the strip's own gold is back")
+    assertNil(Snap.MarkedStrip(), "and the mark holds no strip")
     restore()
 end)
 
-test("drag: the strip edge moves to the new target's strip, and leaves the old one, as the mark moves (A5)", function()
+test("drag: the repaint moves to the new target's strip, and the old one gets its gold back, as the mark moves (A6)", function()
     local NS, mocks = env(3)
     local restore = recordOverlays(mocks)
     local CM = NS.ContainerManager
@@ -325,21 +353,24 @@ test("drag: the strip edge moves to the new target's strip, and leaves the old o
     recordAnchor(inst.anchor)
     inst.handle:__fire("OnDragStart")
     local Snap = NS.Anchors.Snap
+    local green = NS.Constants.SNAP_COLOR
+    local one, three = CM.instances[1].handle, CM.instances[3].handle
     plant(inst.anchor, 0, 75, 20, 95)
     assertEqual(Snap.Tick().id, 1)
-    assertEdgeOn(Snap, CM.instances[1].handle, "on 1")
-    local sets = Snap.stripEdge:__count("SetAllPoints")
+    assertEdgeOn(NS, mocks, one, green, "on 1")
+    local paints = BS.strips(one)[1]:__count("SetColorTexture")
     Snap.Tick()
-    -- red under: the edge re-hung on the same strip every tick
-    assertEqual(Snap.stripEdge:__count("SetAllPoints"), sets, "the same target: not re-hung")
+    -- red under: the strip repainted every tick
+    assertEqual(BS.strips(one)[1]:__count("SetColorTexture"), paints, "the same target, the same color: not repainted")
     plant(inst.anchor, 200, 75, 220, 95)
     assertEqual(Snap.Tick().id, 3)
-    -- red under: the edge kept on the first target's strip
-    assertEdgeOn(Snap, CM.instances[3].handle, "on 3")
+    assertEdgeOn(NS, mocks, three, green, "on 3")
+    -- red under: the first target's strip left in the mark's color once the mark moved off it
+    assertEqual(stripEdge(one), GOLD, "1's own gold is back")
     restore()
 end)
 
-test("drag: a target with no strip, or with its strip hidden, is boxed over its rect instead (A5)", function()
+test("drag: a target with no strip, or with its strip hidden, is boxed over its rect instead (A5, A6)", function()
     local NS, mocks = env(2)
     local restore = recordOverlays(mocks)
     local CM = NS.ContainerManager
@@ -357,7 +388,8 @@ test("drag: a target with no strip, or with its strip hidden, is boxed over its 
         local box = Snap.box
         -- red under: a mark with no box when the target has no visible strip (the mark lost)
         assertTrue(box ~= nil and box:IsShown(), case .. ": the box shows")
-        assertFalse(Snap.stripEdge:IsShown(), case .. ": no strip edge")
+        assertNil(Snap.MarkedStrip(), case .. ": no strip repainted")
+        assertEqual(stripEdge(strip), GOLD, case .. ": the target's strip keeps its gold")
         local p = box:__last("SetPoint")
         assertEqual(p[1], "BOTTOMLEFT")
         assertTrue(p[2] == mocks.UIParent, case .. ": hung from UIParent, never from the target")
@@ -537,6 +569,70 @@ test("drag: a container destroyed mid-drag ends its drag and stops the driver", 
     assertNil(NS.Anchors.Snap.driver:GetScript("OnUpdate"), "the driver cleared")
 end)
 
+-- ── the strip's own gold comes back on every end path (A6) ───────────────────────────────────
+
+--- Each way a mark on container 1's strip can end, as `run(NS, mocks, inst)` with 2 (`inst`) dragged
+--- onto 1 and the mark shown on 1's strip. None ticks afterwards unless its path is a tick.
+local END_PATHS = {
+    { "the drop", function(_, _, inst) inst.handle:__fire("OnDragStop") end },
+    { "out of range", function(NS, _, inst)
+        plant(inst.anchor, 300, 75, 320, 95)
+        NS.Anchors.Snap.Tick()
+    end },
+    { "Shift (a screen drag's cancel)", function(NS, mocks)
+        mocks.__shift = true
+        NS.Anchors.Snap.Tick()
+        mocks.__shift = false
+    end },
+    { "combat, on the driver's own tick", function(NS, mocks)
+        mocks.__lockdown = true
+        NS.Anchors.Snap.driver:__fire("OnUpdate", 0.05)
+        mocks.__lockdown = false
+    end },
+    { "the dragged strip hidden mid-drag", function(NS, _, inst)
+        inst.handle:Hide()
+        NS.Anchors.Snap.Tick()
+    end },
+    { "the target's strip hidden mid-drag", function(NS)
+        NS.ContainerManager.instances[1].handle:Hide()
+        NS.Anchors.Snap.Tick()
+    end },
+    { "the dragged container destroyed", function(_, _, inst) inst:Destroy() end },
+    -- No tick follows: Destroy alone must give the gold back, since a destroyed instance is kept
+    -- dormant and comes back under its id with the same strip.
+    { "the target destroyed", function(NS) NS.ContainerManager.instances[1]:Destroy() end },
+    -- A switch keeps the instances under ids both profiles hold, so the mark stays until the apply
+    -- the switch queues has run (here it hides both strips, so the tick cancels the drag) and the driver ticks.
+    { "a profile switch", function(NS, mocks)
+        NS.db:SetProfile("Raid")
+        mocks.__fireTimers()
+        NS.Anchors.Snap.driver:__fire("OnUpdate", 0.05)
+    end },
+}
+
+test("drag: the target strip's own gold comes back on every path the mark ends by (A6)", function()
+    for _, path in ipairs(END_PATHS) do
+        local what, run = path[1], path[2]
+        local NS, mocks = env(2)
+        local restore = recordOverlays(mocks)
+        local CM = NS.ContainerManager
+        plant(CM.instances[1].engine, 0, 100, 100, 140)
+        local strip = CM.instances[1].handle
+        local inst = CM.instances[2]
+        recordAnchor(inst.anchor)
+        inst.handle:__fire("OnDragStart")
+        plant(inst.anchor, 0, 75, 20, 95)
+        NS.Anchors.Snap.Tick()
+        assertEdgeOn(NS, mocks, strip, NS.Constants.SNAP_COLOR, what .. ": marked first")
+        run(NS, mocks, inst)
+        -- red under: a path that hides the mark (or drops the target) without restoring the strip's
+        -- own edge, and for "the target destroyed" a Destroy with no Snap.ReleaseStrip call
+        assertEqual(stripEdge(strip), GOLD, what .. ": the strip's own gold is back")
+        assertNil(NS.Anchors.Snap.MarkedStrip(), what .. ": the mark holds no strip")
+        restore()
+    end
+end)
+
 -- ── the detach leeway on an attached container (A4) ───────────────────────────────────────────
 
 --- Container 2 attached to container 1 (Automatic: TOPLEFT on 1's BOTTOMLEFT, 1 growing right and
@@ -558,15 +654,15 @@ local function leewayDrag(n, restY)
     return NS, mocks, inst, NS.Anchors.Snap, restore
 end
 
---- `col` ({ r, g, b, a }) as SetColorTexture's joined arguments.
-local function rgba(col) return table.concat({ col.r, col.g, col.b, col.a }, ",") end
-
---- Assert the whole mark is painted in `col`: the edge it shows (the strip edge, or the box where the
---- target has no visible strip) with its four strips, both dots and the line.
+--- Assert the whole mark is painted in `col`: the edge it shows (the marked strip's own edge, or the box
+--- where the target has no visible strip) with its four strips, both dots and the line.
 local function assertPainted(NS, col, what)
     local Snap, want = NS.Anchors.Snap, rgba(col)
-    local edge = Snap.box:IsShown() and Snap.box or Snap.stripEdge
-    BS.assertSolid(edge, 2, want, what .. ": the edge")
+    if Snap.box:IsShown() then
+        BS.assertSolid(Snap.box, 2, want, what .. ": the box")
+    else
+        assertEqual(stripEdge(Snap.MarkedStrip()), "2 " .. want, what .. ": the strip's own edge")
+    end
     assertEqual(table.concat(Snap.marker.dot:__last("SetColorTexture"), ","), want, what .. ": the parent's dot")
     assertEqual(table.concat(Snap.childMarker.dot:__last("SetColorTexture"), ","), want, what .. ": the child's dot")
     assertEqual(table.concat(Snap.line:__last("SetColorTexture"), ","), want, what .. ": the line")
@@ -574,15 +670,16 @@ end
 
 --- Assert the mark collapsed onto the child's dot at `x`, `y` in `col`: no parent rect read, so no box
 --- and no line to show, both dots and both ends of the line on it. With `strip` (the parent's visible
---- strip) that strip is still edged and no box shows (A5); without, the box is a dot's size centered there.
+--- strip) that strip's own edge is still repainted and no box shows (A5, A6); without, the box is a
+--- dot's size centered there.
 local function assertLoneDot(NS, mocks, x, y, col, what, strip)
     local Snap, at = NS.Anchors.Snap, "BOTTOMLEFT " .. x .. "," .. y
     assertTrue(Snap.highlight:IsShown(), what .. ": the child's dot shows")
     if strip then
-        assertEdgeOn(Snap, strip, what)
+        assertEdgeOn(NS, mocks, strip, col, what)
         assertFalse(Snap.box:IsShown(), what .. ": no box")
     else
-        assertFalse(Snap.stripEdge:IsShown(), what .. ": no strip edge")
+        assertNil(Snap.MarkedStrip(), what .. ": no strip repainted")
         local p = Snap.box:__last("SetPoint")
         assertEqual(p[1] .. " " .. p[3] .. " " .. p[4] .. "," .. p[5], "CENTER " .. at, what .. ": the box on the dot")
         assertEqual(Snap.box:__joined("SetSize"), "10,10", what .. ": a dot's size")
@@ -608,7 +705,7 @@ test("drag: held within C.DETACH_RADIUS of its current pair, green on that pair;
     assertTrue(Snap.highlight:IsShown(), "the mark is shown on it")
     assertEqual(dotAt(mocks, Snap.marker, "the parent's dot"), "BOTTOMLEFT 0,100")
     -- red under: the hold drawn as a box over the parent's placeholder, its strip left plain (A5)
-    assertEdgeOn(Snap, NS.ContainerManager.instances[1].handle, "hold: the parent's strip")
+    assertEdgeOn(NS, mocks, NS.ContainerManager.instances[1].handle, C.SNAP_COLOR, "hold: the parent's strip")
     assertFalse(Snap.box:IsShown(), "hold: no box")
     assertPainted(NS, C.SNAP_COLOR, "hold")
     -- Exactly 64 from where it rested holds ("at most"); 65 does not.
@@ -622,7 +719,7 @@ test("drag: held within C.DETACH_RADIUS of its current pair, green on that pair;
     assertTrue(Snap.highlight:IsShown(), "still shown")
     -- red under: no DETACH_COLOR, or only the box repainted (the dots and the line left green)
     assertPainted(NS, C.DETACH_COLOR, "detach")
-    assertEdgeOn(Snap, NS.ContainerManager.instances[1].handle, "detach: the parent's strip, red")
+    assertEdgeOn(NS, mocks, NS.ContainerManager.instances[1].handle, C.DETACH_COLOR, "detach: the parent's strip, red")
     assertEqual(dotAt(mocks, Snap.childMarker, "the child's dot"), "BOTTOMLEFT 0,30",
         "the child's dot on its own point of the current pair")
     plant(inst.anchor, 0, 50, 20, 70)

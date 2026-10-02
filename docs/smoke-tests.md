@@ -1454,8 +1454,8 @@ chain's, and E, a Text container growing down like A. Unlock first (`/am unlock`
 debug console's logging on (`/am debug on`) to read the `[Anchor]` lines.
 
 **DRAG-1. Drop to attach, with the highlight.** Drag E by its strip toward A → while E comes within
-about 24 px of one of A's sides, A's strip (its drag handle) gets a 2 px green edge over its own gold
-one, with no box drawn over A's placeholders, a green dot sits on the point of A where E
+about 24 px of one of A's sides, A's strip (its drag handle) has its own gold edge turn green and
+2 px thick, with no box drawn over A's placeholders, a green dot sits on the point of A where E
 would join, a dot of the same size on E's own point and a 2 px green line between the two; moving away hides
 them all, and nothing else on screen changes while you drag. Drop E inside that range → E attaches there at once, with no popup: Layout → Anchor reads Attach to
 *Another container*, Parent container A, the two anchor points of that side (Automatic where the
@@ -1571,10 +1571,15 @@ Layout → Anchor shows both points picked (E's bottom on A's top), neither Auto
 and A's strip is gold again. Result:
 
 **DRAG-17. The strip lights up, not a box.** Detach E (DRAG-5), then drag it toward A, B and C in turn → each
-time only the strip of the container E would join turns green (a 2 px edge over its 1 px gold one),
-the one it left goes back to gold at once, and no box is drawn over any container's placeholders.
+time only the strip of the container E would join turns green (its own 1 px gold edge repainted 2 px
+green, never a second frame over it), the one it left goes back to its 1 px gold at once, and no box is
+drawn over any container's placeholders.
 Drag B (attached to A) away past the leeway → A's strip turns red with the dots and the line; move back
-within it and let go → B snaps back onto A and every strip is gold again. Each strip edge sits exactly on its strip, also on a container whose
+within it and let go → B snaps back onto A and every strip is gold again. Detach E again and drag it toward A
+until A's strip turns green, then end the mark each of these ways in turn: move away from A; press Shift;
+start combat; let go on A (it attaches); press a `/am lock` key, then `/am unlock` (DRAG-14) → each time A's strip is back
+to its 1 px gold at once, never left green. (A container deleted, or a profile switched, mid-drag is
+the headless suite's to cover: neither can be done while the button is held.) Each green edge sits exactly on its strip, also on a container whose
 handle runs wider than its first element. (The box over a target with no visible strip is the
 headless suite's to cover: an unlocked container always shows its strip.) No Lua error, no
 `ADDON_ACTION_BLOCKED`. Result:
@@ -2042,7 +2047,7 @@ line, then remove its row here.
 | DRAG-1 to DRAG-14 | new on 2026-10-02 with drag to attach (issue #22); DRAG-12 to DRAG-14 from its whole-branch review (DD-05); DRAG-1's highlight corrected the same day for the two join dots and the line (owner feedback, DD-08) |
 | DRAG-15 | new on 2026-10-02 from the owner's smoke feedback (addendum A4; DD-09): the detach leeway, its snap back and the red past `C.DETACH_RADIUS`; DRAG-5, DRAG-9, DRAG-11 and CONT-9 corrected the same day for it |
 | DRAG-16 | new on 2026-10-02 from the owner's smoke feedback (addendum A1, A3; DD-08): a before-side drop, the line and both dots |
-| DRAG-17 | new on 2026-10-02 from the owner's smoke feedback (addendum A5; DD-11): the mark edges the target's strip, not a box over its placeholders; DRAG-1 to DRAG-5, DRAG-8, DRAG-9, DRAG-15 and DRAG-16 corrected the same day for it |
+| DRAG-17 | new on 2026-10-02 from the owner's smoke feedback (addendum A5; DD-11): the mark edges the target's strip, not a box over its placeholders; DRAG-1 to DRAG-5, DRAG-8, DRAG-9, DRAG-15 and DRAG-16 corrected the same day for it; DRAG-1 and DRAG-17 corrected again the same evening (addendum A6; DD-12): the strip's own edge is repainted, since A5's overlay never showed in game, and DRAG-17 ends the mark every way it can end |
 | STYLE-3 | 63, batch 5 |
 | STYLE-6 | 59a, batch 5 |
 | STYLE-9 | 61, batch 5; 163, smoke batch 2 (owed, as CONT-8); its bullet count corrected to four on 2026-09-29 |

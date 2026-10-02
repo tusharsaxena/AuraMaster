@@ -1090,7 +1090,7 @@ badge and any count quoted in the docs must agree with it.
 - snap: folding reads Automatic for the target dropped on, not the container's current parent
 - snap: the radius is 24 UIParent units and the highlight is an opaque green
 
-### test_anchors_drag.lua (25)
+### test_anchors_drag.lua (26)
 
 - drag: a screen container and a container-attached one drag; a frame-attached one does not
 - drag: no drag starts in combat, and none leaves the container marked dragging
@@ -1100,14 +1100,15 @@ badge and any count quoted in the docs must agree with it.
 - drag: Place leaves a dragging anchor where the drag has it, and answers how it was placed
 - drag: the driver runs only while a drag is live, at most every 0.03s, and is cleared at the drop
 - drag: Shift held, or combat started, means no candidate this tick
-- drag: the mark edges the target's strip 2px in green, never boxes its placeholder, and hides with no candidate (A5)
-- drag: the strip edge moves to the new target's strip, and leaves the old one, as the mark moves (A5)
-- drag: a target with no strip, or with its strip hidden, is boxed over its rect instead (A5)
+- drag: the mark repaints the target strip's own edge 2px in green, never boxes its placeholder, and gives the gold back with no candidate (A6)
+- drag: the repaint moves to the new target's strip, and the old one gets its gold back, as the mark moves (A6)
+- drag: a target with no strip, or with its strip hidden, is boxed over its rect instead (A5, A6)
 - drag: the highlight puts a dot of the parent's size on the child's join point and a 2px line between the two (A3)
 - drag: a before-side pair draws the line from the target's top to the child's bottom, as a free pair (A2, A3)
 - drag: the highlight hides on Shift, on combat and at the drop
 - drag: a strip hidden mid-drag ends the drag at the next tick, and the container goes back where its settings put it
 - drag: a container destroyed mid-drag ends its drag and stops the driver
+- drag: the target strip's own gold comes back on every path the mark ends by (A6)
 - drag: held within C.DETACH_RADIUS of its current pair, green on that pair; past it, red, and green again on the way back (A4)
 - drag: the leeway runs from where the container rests, seam room and nudge included, never from the bare join (A4)
 - drag: another pair in snap range beats the hold, and Shift suppresses only that (A4)
@@ -2338,7 +2339,7 @@ badge and any count quoted in the docs must agree with it.
 | test_anchors_collapse.lua | 9 |
 | test_anchors_width.lua | 6 |
 | test_anchors_snap.lua | 17 |
-| test_anchors_drag.lua | 25 |
+| test_anchors_drag.lua | 26 |
 | test_anchors_drop.lua | 24 |
 | test_texttemplate.lua | 26 |
 | test_style.lua | 60 |
@@ -2390,4 +2391,4 @@ badge and any count quoted in the docs must agree with it.
 | test_layout_cap.lua | 13 |
 | test_diagnostics_contract.lua | 9 |
 | test_lizard_sighted.lua | 8 |
-| **Total** | **2000** |
+| **Total** | **2001** |
