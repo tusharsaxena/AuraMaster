@@ -855,6 +855,19 @@ test("drag: an equal-width child let go where it rests holds by its own pair, th
     -- red under: no exception for the pick where it rests (the middle pair, 5 < 5.1, re-attaches it)
     assertEqual(state, "hold", "let go where it rests")
     assertEqual(pair.point .. ">" .. pair.relPoint, "TOPLEFT>BOTTOMLEFT", "its own pair")
+    -- 2 to the right, a cursor's jitter (REST_SLACK): its own pair's points 5.8 apart, the middle
+    -- pair still 5 away by its gap, and still the pick where it rested.
+    plant(inst.anchor, 3, 75, 103, 95)
+    pair, state = Snap.Tick()
+    -- red under: no slack (REST_SLACK 0: a pixel's twitch re-attaches it by its middle pair)
+    assertEqual(state, "hold", "2 off where it rests: still held")
+    assertEqual(pair.point .. ">" .. pair.relPoint, "TOPLEFT>BOTTOMLEFT", "its own pair")
+    -- 3 to the right, past the slack: the middle pair (5) is strictly nearer than its own (6.4).
+    plant(inst.anchor, 4, 75, 104, 95)
+    pair, state = Snap.Tick()
+    -- red under: a slack with no bound (the middle pair could never take a child once moved)
+    assertEqual(state, "attach", "3 off: past the slack")
+    assertEqual(pair.point .. ">" .. pair.relPoint, "TOP>BOTTOM", "the middle pair")
     plant(inst.anchor, 60, 75, 160, 95)
     pair, state = Snap.Tick()
     assertEqual(state, "attach", "its center in the last third")
@@ -888,6 +901,59 @@ test("drag: a child wider than its parent, moved off where it rests, is re-attac
     -- end pair was out of reach of a drop)
     assertEqual(state, "attach", "moved off where it rests")
     assertEqual(pair.point .. ">" .. pair.relPoint, "TOPRIGHT>BOTTOMRIGHT", "the end pair")
+    Snap.EndDrag(inst)
+    restore()
+end)
+
+test("drag: a child flush under a long parent, in snap range of its own pair far from that pair's points, holds (A4, A7)", function()
+    local NS, mocks = env(2)
+    local restore = recordOverlays(mocks)
+    local CM = NS.ContainerManager
+    plant(CM.instances[1].engine, 0, 100, 600, 140)
+    local at = NS.Database.FindContainer(2).attach
+    at.mode, at.container = "container", 1   -- Automatic: TOPLEFT on BOTTOMLEFT
+    local inst = CM.instances[2]
+    recordAnchor(inst.anchor)
+    plant(inst.anchor, 0, 75, 20, 95)
+    inst.handle:__fire("OnDragStart")
+    local Snap = NS.Anchors.Snap
+    -- 150 along, still 5 under 1: its center (160) in 1's first third (0..200), so the pick is its
+    -- own pair, 5 away by its gap, while that pair's two points are 150.1 apart and 150 from where
+    -- they rested, past C.DETACH_RADIUS.
+    plant(inst.anchor, 150, 75, 170, 95)
+    local pair, state = Snap.Tick()
+    -- red under: a hit on the current pair left to the leeway (150 past it: red, a release detaches)
+    assertEqual(state, "hold", "its own pair in snap range")
+    assertEqual(pair.id .. " " .. pair.point .. ">" .. pair.relPoint, "1 TOPLEFT>BOTTOMLEFT")
+    assertPainted(NS, NS.Constants.SNAP_COLOR, "hold")
+    Snap.Drop(inst)
+    assertEqual(at.mode .. " " .. tostring(at.container), "container 1", "a release snaps it back")
+    restore()
+end)
+
+test("drag: the leeway is measured on footprints, the parent's strip and the child's own strip taken in (A4, A8)", function()
+    local NS, mocks = env(2)
+    local restore = recordOverlays(mocks)
+    local CM = NS.ContainerManager
+    plant(CM.instances[1].engine, 0, 100, 100, 140)
+    plant(CM.instances[1].handle, 0, 82, 100, 100)   -- 1's strip, under its block
+    local at = NS.Database.FindContainer(2).attach
+    at.mode, at.container = "container", 1   -- Automatic: TOPLEFT on BOTTOMLEFT
+    local inst = CM.instances[2]
+    recordAnchor(inst.anchor)
+    -- At rest (a Y nudge), 2's own strip on its block's top, 300 under 1's strip.
+    plant(inst.handle, 0, -236, 20, -218)
+    plant(inst.anchor, 0, -258, 20, -238)
+    inst.handle:__fire("OnDragStart")
+    local Snap = NS.Anchors.Snap
+    -- 175 up: the footprints' points 125 apart (the blocks' 163), 175 from where they rested.
+    plant(inst.handle, 0, -61, 20, -43)
+    plant(inst.anchor, 0, -83, 20, -63)
+    -- red under: either footprint read as its bare block (1's: 143 apart; 2's: 145): red, a release detaches
+    assertEqual(select(2, Snap.Tick()), "hold", "125 apart by the footprints")
+    plant(inst.handle, 0, -65, 20, -47)
+    plant(inst.anchor, 0, -87, 20, -67)
+    assertEqual(select(2, Snap.Tick()), "detach", "129 apart by the footprints")
     Snap.EndDrag(inst)
     restore()
 end)
@@ -991,6 +1057,7 @@ test("drag: on a parent whose block reads secret, a hit on its one-element fallb
     at.mode, at.container, at.x, at.y = "container", 1, 7, -3
     local inst = CM.instances[2]
     recordAnchor(inst.anchor)
+    mocks.GetCursorPosition = function() return 100, 100 end
     inst.handle:__fire("OnDragStart")
     -- Where it rests, nudged: its TOPLEFT 8.6 from the fallback's BOTTOMLEFT, inside C.SNAP_RADIUS.
     plant(inst.anchor, 7, 195, 27, 215)
@@ -999,6 +1066,16 @@ test("drag: on a parent whose block reads secret, a hit on its one-element fallb
     -- measured on the first element, and the drop wrote the section, losing the nudge)
     assertEqual(state, "hold", "its own parent's fallback is not another pair")
     assertEqual(pair.point .. ">" .. pair.relPoint, "TOPLEFT>BOTTOMLEFT", "shown on the current pair")
+    -- 12 to the left, its center (5) over the fallback's first third, so the hit is its own pair; the
+    -- cursor 129 units from where the drag began: the leeway's fallback decides.
+    plant(inst.anchor, -5, 195, 15, 215)
+    mocks.GetCursorPosition = function() return 229, 100 end
+    -- red under: a hit on the current pair held with no distance read (the fallback's hit counted as
+    -- the current pair, so a parent that reads secret could never be left)
+    pair, state = NS.Anchors.Snap.Tick()
+    assertEqual(state, "detach", "the cursor past the radius")
+    assertEqual(pair.point .. ">" .. pair.relPoint, "TOPLEFT>BOTTOMLEFT", "red on the current pair")
+    mocks.GetCursorPosition = function() return 100, 100 end
 end)
 
 test("drag: a screen container's drag has no hold and no red (A4)", function()

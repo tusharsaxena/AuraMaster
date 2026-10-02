@@ -337,6 +337,27 @@ test("snap: a disabled container, and one whose anchor is hidden, is never a tar
     assertEqual(ids(NS.Anchors.Snap.Candidates(CM.instances[1])), "2")
 end)
 
+test("snap: Candidates allocates nothing on a tick, though the dragged container is the last id and never a target", function()
+    local NS = env(3)
+    local CM = NS.ContainerManager
+    local last = 0
+    for id, inst in pairs(CM.instances) do
+        plant(inst.engine, 0, id * 100, 100, id * 100 + 40)
+        last = math.max(last, id)
+    end
+    local Snap, dragged = NS.Anchors.Snap, CM.instances[last]
+    assertEqual(#Snap.Candidates(dragged), last - 1, "the pool filled, every other container in it")
+    collectgarbage("collect")
+    collectgarbage("stop")
+    local before = collectgarbage("count")
+    for _ = 1, 200 do Snap.Candidates(dragged) end
+    local grew = collectgarbage("count") - before
+    collectgarbage("restart")
+    -- red under: a pool entry and its rect made before the eligibility check (two tables thrown away
+    -- per tick for the dragged container, past the pool's end)
+    assertTrue(grew < 1, "allocated " .. grew .. " KB")
+end)
+
 -- ── the target rect ───────────────────────────────────────────────────────────────────────────
 
 test("snap: the target rect is the frame a follower would hang from in its hang mode", function()

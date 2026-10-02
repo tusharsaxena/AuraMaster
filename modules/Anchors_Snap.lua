@@ -286,7 +286,9 @@ local function eligible(dragged, t)
 end
 
 -- Scratch the driver's ticks reuse (D3 runs Find every 0.03s while a drag is live): the sorted ids,
--- the answer list and the candidate tables it hands out, each candidate with its own rect table.
+-- the answer list and the candidate tables it hands out, each candidate with its own rect table. A
+-- pool entry is made only the first time its slot is reached, so an ineligible target (the dragged
+-- container itself, always) costs no table on a tick.
 local order, list, pool = {}, {}, {}
 
 --- The eligible targets for `dragged`, in id order, each { id, rect, growH, growV }: its footprint
@@ -302,10 +304,14 @@ function Snap.Candidates(dragged)
     local n = 0
     for _, id in ipairs(order) do
         local t = instances[id]
-        local cand = pool[n + 1] or { rect = {} }
+        local cand = pool[n + 1]
+        if not cand then
+            cand = { rect = {} }
+            pool[n + 1] = cand
+        end
         if eligible(dragged, t) and Snap.Footprint(t, cand.rect) then
             n = n + 1
-            pool[n], list[n] = cand, cand
+            list[n] = cand
             cand.id = id
             cand.growH, cand.growV = flowGrowth(t:Cfg())
         end
@@ -586,9 +592,11 @@ end
 --   1. "attach": a pair in snap range (Snap.Find, any target including its own parent) that is not
 --      its current pair and is STRICTLY NEARER than it (beats), Shift not held: green on that pair, a
 --      release attaches;
---   2. "hold": its current pair's two points (its own now, its parent's now) at most C.DETACH_RADIUS
---      from where they were when the drag began, or from each other: green on the current pair, a
---      release snaps it back and writes nothing;
+--   2. "hold": the snap answer IS its current pair (sameAsCurrent: A7 makes it the pick anywhere over
+--      its third of the parent's side, however far from that pair's points on a long parent), or its
+--      current pair's two points (its own now, its parent's now) at most C.DETACH_RADIUS from where
+--      they were when the drag began, or from each other: green on the current pair, a release snaps
+--      it back and writes nothing;
 --   3. "detach": beyond it: the whole mark red (C.DETACH_COLOR) on the current pair, a release
 --      detaches it where it was let go (D6).
 -- "Strictly nearer" is this file's reading of the addendum's "not its current pair": the hit's |gap|
@@ -686,6 +694,16 @@ local function beats(hit, cur)
     return not (cur.dist and hit.dist >= cur.dist)
 end
 
+--- Whether snap answer `hit` is current pair `cur` itself, measured (`cur.dist` reads): then the
+--- child is in snap range of the very pair it hangs by, so it holds whatever the leeway says. Never
+--- when `cur` has no distance: the hit was then measured on Snap.TargetRect's one-element fallback of
+--- a parent whose block does not read, which a child resting under it is always in range of.
+--- @return boolean
+local function sameAsCurrent(hit, cur)
+    return hit ~= nil and cur ~= nil and cur.dist ~= nil and hit.id == cur.id
+        and hit.point == cur.point and hit.relPoint == cur.relPoint
+end
+
 --- What releasing live container `container` now would do (the order above), and the pair the mark
 --- is shown on: "attach" and Snap.Nearest's answer, "hold" or "detach" and the current pair
 --- (scratch), or nil and nil (a screen container with nothing in range). Reads Shift, the rects and
@@ -701,6 +719,7 @@ local function classify(container)
     local cur = currentPair(container, cfg)
     if beats(hit, cur) then return "attach", hit end
     if not cur then return "detach", nil end
+    if sameAsCurrent(hit, cur) then return "hold", cur end
     return holds(cur) and "hold" or "detach", cur
 end
 

@@ -568,7 +568,11 @@ container rested when the drag began while the container is still there, within 
 pair it is stored by), so a container picked up and let go where it sits keeps its pair; moved further,
 that pick competes like any other pair, so a child wider than its parent, whose rest pick is the end
 pair, can still be dropped onto it, and never a pair of the current parent
-while that parent's block does not read (the snap measured it on the one-element fallback). Otherwise,
+while that parent's block does not read (the snap measured it on the one-element fallback). When the
+pick IS the current pair (measured, the parent's block reading), the container holds whatever the
+leeway below says: A7 makes that pair the pick anywhere over its third of the parent's side, so a child
+flush under a long parent can be in snap range of its own pair far past `C.DETACH_RADIUS` from that
+pair's two points, and it must not turn red there. Otherwise,
 while that pair's two points are at most `C.DETACH_RADIUS` (128 UIParent units, A9) from where they were
 when the drag began (read before the lift, where its settings put it: the seam gap, its strip and
 label room and its X/Y nudge already between them), or from each other, the mark stays green on the current pair (a *hold*); beyond it,

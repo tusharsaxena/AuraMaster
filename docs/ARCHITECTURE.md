@@ -105,7 +105,8 @@ from the drop itself: a candidate and no Shift writes the whole `container.attac
 `NS.AttachByDrop` (`settings/Layout.lua`), which asks first with the GC-1 popup when the chain's flow
 would change. An attached container has a leeway (the owner-feedback addendum's A4, `C.DETACH_RADIUS`,
 128 since A9): while its current pair's two points stay that close to where they rested when the drag began, or
-to each other (the cursor's travel when its parent does not read), the mark stays green on that pair, the parent's strip repainted, and a release snaps it back, writing nothing; past it, the
+to each other (the cursor's travel when its parent does not read), or while the snap's own pick is that
+very pair (over its third of a long parent's side, however far from its points), the mark stays green on that pair, the parent's strip repainted, and a release snaps it back, writing nothing; past it, the
 whole mark turns red (`C.DETACH_COLOR`) and a release detaches to the drop position, X/Y 0. Another
 pair in snap range, not its current one nor the one the pick gave where it rested, and nearer than it
 (never one of a parent whose block reads secret), wins over both, and Shift suppresses only that.
