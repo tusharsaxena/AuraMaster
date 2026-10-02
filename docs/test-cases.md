@@ -1556,7 +1556,7 @@ badge and any count quoted in the docs must agree with it.
 - library lines: the apply queue's hold trace is re-armed by a Clear (the onClear hook)
 - library lines: a screen fallback is said again after a Clear
 
-### test_optionssetup.lua (17)
+### test_optionssetup.lua (21)
 
 - options: NS.Helpers IS the library instance
 - options: General and Containers register, in TOC order; the former sub-pages do not, and Profiles opts out without AceDBOptions
@@ -1575,6 +1575,10 @@ badge and any count quoted in the docs must agree with it.
 - options: a wrapped tab strip reserves the same band and places every tab at the same y for every selection
 - options: the degraded stub completes the load — every page's rows still register
 - options: the library-absent schema is the full one minus exactly the composed rows (options-ui-§1)
+- options: the descriptor names the addon's folder as addonName, from the file's first vararg
+- options: the info art the descriptor routes to is vendored on disk
+- options: a Filters Overrides help mark draws the library's info art, not the client glyph
+- options: a General spell-categories help mark draws the library's info art, not the client glyph
 
 ### test_options_descriptor.lua (18)
 
@@ -2003,7 +2007,7 @@ badge and any count quoted in the docs must agree with it.
 
 - prose: no authored file carries a British spelling from localization-§5's published list
 - prose: the gate carries localization-§5's two lists whole, and nothing of its own
-- prose: the exclusions this repository declared suppressed 11 of 191 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (11): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, docs/spell-research/2026-09-24-logs/CORRECTIONS.md, docs/spell-research/2026-09-24-logs/CURRENT_CATEGORIES.md, docs/spell-research/2026-09-24-logs/DECISIONS.md, docs/spell-research/2026-09-24-logs/FLAGS.md, docs/spell-research/2026-09-24-logs/PROPOSED_ADDITIONS.md, docs/spell-research/2026-09-24-logs/REVIEW.md, docs/spell-research/2026-09-24-logs/SOURCES.md, docs/spell-research/2026-09-24-logs/dictionary/AURAS.md
+- prose: the exclusions this repository declared suppressed 11 of 199 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (11): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, docs/spell-research/2026-09-24-logs/CORRECTIONS.md, docs/spell-research/2026-09-24-logs/CURRENT_CATEGORIES.md, docs/spell-research/2026-09-24-logs/DECISIONS.md, docs/spell-research/2026-09-24-logs/FLAGS.md, docs/spell-research/2026-09-24-logs/PROPOSED_ADDITIONS.md, docs/spell-research/2026-09-24-logs/REVIEW.md, docs/spell-research/2026-09-24-logs/SOURCES.md, docs/spell-research/2026-09-24-logs/dictionary/AURAS.md
 - prose: no path this repository narrows the gate by is loaded by a TOC
 - prose: every path this repository narrows the gate by is one .pkgmeta keeps out of the zip
 - prose self-test: the carve-out suppresses the named generated folder, and only it
@@ -2147,7 +2151,7 @@ badge and any count quoted in the docs must agree with it.
 | test_bulklog.lua | 20 |
 | test_debug_coverage.lua | 10 |
 | test_debug_library_lines.lua | 11 |
-| test_optionssetup.lua | 17 |
+| test_optionssetup.lua | 21 |
 | test_options_descriptor.lua | 18 |
 | test_pages_general.lua | 35 |
 | test_pages_general_categories.lua | 32 |
@@ -2176,4 +2180,4 @@ badge and any count quoted in the docs must agree with it.
 | test_layout_cap.lua | 13 |
 | test_diagnostics_contract.lua | 9 |
 | test_lizard_sighted.lua | 8 |
-| **Total** | **1830** |
+| **Total** | **1834** |
