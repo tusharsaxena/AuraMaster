@@ -122,6 +122,7 @@ Kit.run{
         "test_anchors_steady",
         "test_anchors_collapse",
         "test_anchors_width",
+        "test_anchors_snap",
         "test_texttemplate",
         "test_style",
         "test_castaura",

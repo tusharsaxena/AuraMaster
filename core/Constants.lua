@@ -155,6 +155,14 @@ C.ATTACH_EDGES = {
     "behind-start", "behind-center", "behind-end",
 }
 
+-- Drag to attach (issue #22, D2, D3): a container dropped with its own point of one of the nine
+-- sides within this many UIParent units of the matching point on another container snaps on there.
+-- Distances are read in UIParent units (modules/Anchors_Snap.lua), so the radius feels the same
+-- under any container or UI scale. The highlight that marks the candidate while it is in range is
+-- drawn in this green, opaque, so it reads over any bar or icon color.
+C.SNAP_RADIUS = 24
+C.SNAP_COLOR = { r = 0.25, g = 0.90, b = 0.35, a = 1 }
+
 -- Growth.
 C.AXES = { "horizontal", "vertical" }
 C.AXIS_LABELS = { horizontal = "Rows (fill left to right first)", vertical = "Columns (fill top to bottom first)" }

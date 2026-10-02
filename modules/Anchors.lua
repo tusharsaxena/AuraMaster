@@ -136,16 +136,22 @@ function Anchors.HangMode(t)
     return t.hangMode or (t.previewShown and "preview") or "engine"
 end
 
+--- The frame a container attached to live container `t` hangs from, in its hang mode
+--- (Anchors.HangMode): its preview extent while previewing, its anchor in the slot mode, else its
+--- engine (its anchor when it has none). Published for the snap (modules/Anchors_Snap.lua, issue
+--- #22), whose target rect has to be the very frame a drop would hang the container from.
+function Anchors.HangFrame(t)
+    local mode = Anchors.HangMode(t)
+    if mode == "preview" and t.previewExtent then return t.previewExtent end
+    if mode == "slot" then return t.anchor end
+    return t.engine or t.anchor
+end
+
 --- The frame to hang from, the mode that names it and, for a container target, the live container.
 local function targetFor(container, at)
     if at.mode == "container" then
         local target = targetContainer(container, at)
-        if target then
-            local mode = Anchors.HangMode(target)
-            if mode == "preview" and target.previewExtent then return target.previewExtent, "container", target end
-            if mode == "slot" then return target.anchor, "container", target end
-            return target.engine or target.anchor, "container", target
-        end
+        if target then return Anchors.HangFrame(target), "container", target end
     elseif at.mode == "frame" then
         local f = Anchors.ResolveFrame(at.frame)
         if f then return f, "frame" end

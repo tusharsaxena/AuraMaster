@@ -1066,6 +1066,24 @@ badge and any count quoted in the docs must agree with it.
 - width: a one-icon container too narrow for the marks and a readable label keeps its natural width
 - width: the label is worked out once per name and width, not on every pass
 
+### test_anchors_snap.lua (15)
+
+- snap: PointAt gives each of the nine WoW points on a rect
+- snap: Nearest picks the side whose two points meet, for each of the nine under each growth
+- snap: Nearest answers nil past the radius, and takes a pair exactly on it
+- snap: a tie keeps the first target in the order given, and the first side in ATTACH_EDGES order
+- snap: Candidates lists every other live container in id order, with its rect and flow growth
+- snap: a follower of the dragged container, and one further down its chain, is never a target
+- snap: a disabled container, and one whose anchor is hidden, is never a target
+- snap: the target rect is the frame a follower would hang from in its hang mode
+- snap: rects are read in UIParent units
+- snap: an engine whose rect reads secret falls back to the anchor; an unreadable anchor drops the target
+- snap: Find reads the dragged anchor and answers the nearest in-range target
+- snap: a picked side equal to Automatic stores nil for both points
+- snap: a side other than Automatic's stores the absolute pair, each half folded on its own
+- snap: folding reads Automatic for the target dropped on, not the container's current parent
+- snap: the radius is 24 UIParent units and the highlight is an opaque green
+
 ### test_texttemplate.lua (26)
 
 - template: an unknown token is refused, naming it and every known token (rule 1)
@@ -2258,6 +2276,7 @@ badge and any count quoted in the docs must agree with it.
 | test_anchors_steady.lua | 8 |
 | test_anchors_collapse.lua | 9 |
 | test_anchors_width.lua | 6 |
+| test_anchors_snap.lua | 15 |
 | test_texttemplate.lua | 26 |
 | test_style.lua | 60 |
 | test_castaura.lua | 7 |
@@ -2308,4 +2327,4 @@ badge and any count quoted in the docs must agree with it.
 | test_layout_cap.lua | 13 |
 | test_diagnostics_contract.lua | 9 |
 | test_lizard_sighted.lua | 8 |
-| **Total** | **1930** |
+| **Total** | **1945** |

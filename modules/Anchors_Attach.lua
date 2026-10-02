@@ -361,3 +361,7 @@ end
 AA.EDGE_PARTS = EDGE_PARTS
 AA.ownScale = ownScale
 AA.Spec = attachSpec
+-- For modules/Anchors_Snap.lua (issue #22): the pair each token gives under each growth, and the
+-- growth a container flows by, so a drop picks its side from the same table a Place reads.
+AA.EDGE_PAIRS = EDGE_PAIRS
+AA.FlowGrowth = flowGrowth
