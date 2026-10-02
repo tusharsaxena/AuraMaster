@@ -228,26 +228,21 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   picks the end pair. A child up to a third wider than its parent has its center over the middle third
   either way, and picks the middle pair. Drop it with its center over the third of the pair you want,
   or set the pair on Layout > Anchor. Picked up and let go where it rests, it keeps its pair either way.
-- **The dots mark the strips, not the exact join** (issue #22, addenda A8, A10). The side, its
-  third, both dots and the leeway are measured on each container's drag-handle strip (or, where the
-  strip is hidden or does not read, its block with its name label), but the drop attaches by the
+- **The dots mark the strips, not always the exact join** (issue #22, addenda A8, A10, A11). The
+  side, its third, both dots and the leeway are measured on each container's drag-handle strip (or,
+  where the strip is hidden or does not read, its block with its name label), the parent's strip with
+  each edge on a side it grows toward taken out to its block's far edge (A11: the bottom growing down,
+  the top growing up, the right growing right, the left growing left). The drop attaches by the
   blocks' points: `Anchors.Place` hangs the child's block on the parent's hang frame and pushes it out
-  past the strips and labels between. A strip is one element long and sits on its block's before side
-  (above a block growing down), so the dots show which side and which pair while the child can land
-  far off them:
-  - **Across the after side, a whole block off.** For a parent growing down, the after side the snap
-    measures is the bottom edge of its strip, just above the top of its block, while Place hangs the
-    child under the bottom of that block: the child lands the parent's block height (plus the strip's
-    gap) below where the dots were. To reach that side at all, drag the child's strip over the
-    parent's block, up to just under the parent's strip. Let go just past the parent's block and the
-    child's strip is out of `C.SNAP_RADIUS` (24) of the parent's whenever the block is taller than
-    about 20 px: nothing is in range, so a screen container stays where it was let go and an attached
-    one holds or detaches by the leeway.
-  - **Along a side, up to the block's length off.** A block runs past its one-element strip by the
-    rest of its elements in the direction it grows, so for a middle or end pair along that direction
-    the dot sits on the strip's middle or end and the child joins the block's, up to the block's length
-    less the strip's apart. The thirds that pick the pair are thirds of the strip, so beside a parent
-    growing down the side is only the strip's height (about 18 px) and each third about 6 px.
+  past the strips and labels between. So across a growth side the dots sit where the child lands, and
+  a pair along that side's length is a pair of the block's. A strip is one element long and sits on
+  its block's before side (above a block growing down), so elsewhere the child can land off the dots:
+  - **Along a side the parent does not grow toward, up to a strip off.** For a parent growing down,
+    its left and right sides run from the bottom of its block to the top of its strip, so the dot of
+    a pair on the before-side end (TOPRIGHT, say) sits on the strip's corner, about 20 px (the strip
+    and its gap) above the block's, and the middle pair's half that. The end pair, on the growth side,
+    is the block's. Where the strip reads but the parent's engine reads secret, its block is its first
+    element (the entry above but one), so its growth sides reach only that element.
   - **Across the before side, one element off, and overlapping.** A drop above a parent growing down
     gives a free pair (BOTTOM to TOP, say) that Place sets on the child's ANCHOR, its first element,
     pushed past the parent's strip and label. The child's dot was on the bottom of its own strip, which
@@ -259,8 +254,7 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
     pair the child can land sideways of what the dots showed: by half the difference between the two
     overhangs for the middle pair, by all of it for the end pair (a 36 px icon parent whose strip runs 64
     past its block, under a 36 px icon child whose strip runs 44 past, lands 10 px or 20 px off). The
-    start pair, between two containers whose strips fit their blocks, lands in line with the dots apart
-    from the after side's block height. Nudge it with X/Y on Layout > Anchor. Joining on the strips, or
+    start pair, between two containers whose strips fit their blocks, lands in line with the dots. Nudge it with X/Y on Layout > Anchor. Joining on the strips, or
     measuring on the blocks while drawing on the strips, is a change to attach geometry for the owner to
     decide.
 - **In test mode, a container attached to another hangs from that container's preview extent.** A

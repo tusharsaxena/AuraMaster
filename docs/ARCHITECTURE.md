@@ -97,7 +97,9 @@ it, `Anchors.WouldCycle`), picked side first and then by alignment (the addendum
 side by the gap between the two facing edges, its span overlapping, then the start, middle or end
 pair by which third of that side the dragged container's center is over), every rect measured and
 drawn on the container's drag-handle strip while it shows and reads (A10, `Snap.Footprint`; else
-A8's footprint, its block with its name label while that shows), with a 2 px edge in the mark's color on that container's drag-handle strip
+A8's footprint, its block with its name label while that shows), the target's (and, for the detach
+leeway, the parent's) strip with each edge on a side it grows toward taken out to its block's far
+edge (A11, `Snap.ParentRect`, read in `modules/Anchors_SnapRect.lua`), with a 2 px edge in the mark's color on that container's drag-handle strip
 (the owner-feedback addendum's A5 and A6: the strip's own 1 px gold edge repainted through
 `Style.DrawEdge`, no frame of ours anchored to it, and its gold, `Anchors.STRIP_EDGE`, painted back
 when the mark leaves it, hides or its container is destroyed; a box over its rect only when it has no
@@ -112,7 +114,7 @@ very pair (over its third of a long parent's side, however far from its points),
 whole mark turns red (`C.DETACH_COLOR`) and a release detaches to the drop position, X/Y 0. Another
 pair in snap range, not its current one nor the one the pick gave where it rested, and nearer than it
 by the leeway's measure (the nearer of its two points' distance and how far that has moved since the
-drag began: 0 where it rests, though on the strips those points rest a parent block apart; DD-15R)
+drag began: 0 where it rests, though those points rest a seam, a nudge or a strip apart; DD-15R)
 (never one of a parent whose block reads secret), wins over both, and Shift suppresses only that.
 The tick and the drop classify alike (`classify`); combat started mid-drag attaches nothing. The handle's close mark (X) turns that container off through the write
 seam. The strip's tooltip, and its marks', sits beside the strip: to its right, or to its left when

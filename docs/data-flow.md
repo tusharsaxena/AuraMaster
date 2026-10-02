@@ -550,22 +550,28 @@ ties to the lower id and then the table's order. Both containers are measured on
 strips while each shows and reads (A10, `Snap.Footprint`); where a strip is hidden or does not read,
 on A8's footprint: the block (the dragged one's anchor; the target's rect a follower would hang from,
 `Anchors.HangFrame`, an engine that reads secret falling back to its anchor) with its name label taken
-in while that shows and reads. The pick is marked by a green highlight (the addendum's A5, as A6 amends it):
+in while that shows and reads. The target's strip has each edge on a side the target grows toward (its
+flow growth: the bottom growing down, the top growing up, the right growing right, the left growing
+left) taken out to its block's far edge, when that block reads (A11, `Snap.ParentRect`), since a child
+joined there lands past the block; its before-side edges stay the strip's. The rect readers live in
+`modules/Anchors_SnapRect.lua`. The pick is marked by a green highlight (the addendum's A5, as A6 amends it):
 the target's drag-handle strip has its OWN 1 px gold edge repainted 2 px in the mark's color, through
 the painter that drew it (`Style.DrawEdge` on the strip, the same four textures; no frame of ours is
 anchored to a strip, since A5's overlay hung on it never showed in game), and the widget's gold
 (`Anchors.STRIP_EDGE`) painted back the moment the mark moves to another strip or hides, on every way a
 drag ends, and from `ContainerClass:Destroy` (`Snap.ReleaseStrip`) when the strip's container is
 destroyed mid-drag, so a dormant instance never comes back green; with a 10 px dot on the target's join point, one on the dragged
-container's and a 2 px line between them, all in one color, the dots on the two strips. A target
+container's and a 2 px line between them, all in one color, the dots on the two rects (the target's
+reaching its block on its growth sides). A target
 with no visible strip (LibKa0s-Widgets absent, or its strip hidden) gets a box over its block (and name label) instead (`Snap.box`), so a mark
 is never lost. The dots, the line and the box hang from UIParent, never from the target. A container attached to another has a
 leeway (the owner-feedback addendum's A4): a pair found that way wins only when its gap is strictly
 under the leeway's measure of the container's CURRENT pair (its stored pair in effect, `Anchors.AttachPoints`,
-measured from its own point now to its parent's point now, on the two strips, or where a strip does not
-show or read the parent's block on `Anchors.HangFrame` with no fallback to the anchor): the nearer of
-that distance and how far it has moved since the drag began. On the strips those two points rest a
-whole parent block apart, so the distance alone let any neighbor's strip in snap range take a container
+measured from its own point now to its parent's point now, on its own strip and the parent's strip
+reaching its block on its growth sides (A11), or where a strip does not show or read the parent's
+block on `Anchors.HangFrame` with no fallback to the anchor, which is also the only block the parent's
+growth sides reach): the nearer of that distance and how far it has moved since the drag began. Those
+two points rest a seam, a nudge or a strip apart, so the distance alone let any neighbor's strip in snap range take a container
 picked up and let go where it sits; the measure is 0 there (DD-15R). Nor does the pair the pick gave where the
 container rested when the drag began win while the container is still there, within 2 UIParent units
 (`REST_SLACK`; a child as wide as its parent rests centered, so that pick is its middle pair, whatever

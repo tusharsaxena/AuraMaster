@@ -16,7 +16,8 @@ local _, NS = ...
 -- Which pair is SIDE FIRST, THEN ALIGN (the addendum's A7, Snap.Nearest): the nearest side within
 -- C.SNAP_RADIUS by the gap between the two containers' facing edges, then the pair whose third of
 -- that side the dragged container's center is over. Everything is measured on the two containers'
--- STRIPS (A10, below), or their block and name label where a strip is hidden or does not read (A8).
+-- STRIPS (A10), or their block and name label where a strip is hidden or does not read (A8), the
+-- parent's strip with each edge on a side it grows toward out to its block's far edge (A11).
 -- Everything is in UIParent units, so the radius feels the same under any scale.
 --
 -- WHAT IS READ, AND HOW. Two kinds of block rect: the dragged anchor's, which hangs from UIParent
@@ -26,7 +27,7 @@ local _, NS = ...
 -- back to the target's own anchor (exactly one element, its first), and a target whose anchor does
 -- not read either is simply not a candidate this tick. A strip that shows and reads, read the same
 -- guarded way, stands for its container; else the block, widened by a name label that shows and
--- reads (Snap.Footprint).
+-- reads (Snap.Footprint); a parent's strip reaches its block on its growth sides (Snap.ParentRect).
 --
 -- THE PURE CORE (Snap.PointAt, Snap.Nearest) touches no frame, so the headless harness tests the
 -- choice directly; Snap.Candidates and Snap.Find are the frame side that feeds it.
@@ -36,7 +37,8 @@ local _, NS = ...
 -- modules/Anchors.lua's beginDrag and the handle's OnDragStop call into it.
 --
 -- LOAD-BEARING POSITION: after modules/Anchors_Attach.lua, whose pair table and flow growth this
--- file binds from NS.AnchorsAttach at file load; after modules/Anchors.lua, which it extends
+-- file binds from NS.AnchorsAttach at file load; after modules/Anchors_SnapRect.lua, whose rect
+-- readers it binds from NS.AnchorsSnapRect at file load; after modules/Anchors.lua, which it extends
 -- (Anchors.Snap) and whose HangFrame, WouldCycle, AutoPoints, Place and SavePosition it calls at
 -- call time. settings/Layout.lua's NS.AttachByDrop (a drop's attach, and its GC-1 popup) loads after
 -- it and is read at call time too, at the drop.
@@ -187,86 +189,16 @@ function Snap.Nearest(childRect, candidates, radius)
 end
 
 -- ---------------------------------------------------------------------------
--- Reading rects
+-- Reading rects (modules/Anchors_SnapRect.lua)
 -- ---------------------------------------------------------------------------
+-- What every rect is, the strip, the footprint and a parent's growth sides reaching its block (the
+-- addendum's A8, A10, A11), is NS.AnchorsSnapRect's, bound here at file load and published below.
 
-local function plain(v) return NS.Secrets.NumberOr(v, nil) end
-
---- `frame`'s rect in UIParent units, written into `into` (a new table when nil), or nil when any of
---- its four edges or its effective scale does not read as a plain number: secret (an engine holding
---- auras, or a frame hung from one), or nothing yet (a frame with no points answers nil). A frame's
---- edges are in its own effective scale, so each is taken to UIParent's by the ratio of the two.
---- `into` is written only on success.
---- @return table|nil
-local function readRect(frame, into)
-    if not frame then return nil end
-    local l, b, r, t = plain(frame:GetLeft()), plain(frame:GetBottom()), plain(frame:GetRight()), plain(frame:GetTop())
-    local scale, ui = plain(frame:GetEffectiveScale()), plain(UIParent:GetEffectiveScale())
-    if not (l and b and r and t and scale and ui) or ui <= 0 then return nil end
-    local k = scale / ui
-    into = into or {}
-    into.left, into.bottom, into.right, into.top = l * k, b * k, r * k, t * k
-    return into
-end
-
---- The rect live container `target` would be snapped onto, in UIParent units, written into `into`
---- (a new table when nil): the frame a follower hangs from in its hang mode (Anchors.HangFrame:
---- preview extent, anchor in the slot mode, else engine). When that does not read plainly (an
---- engine holding auras reads secret), its anchor's rect: one element, where its first aura sits,
---- so the snap still finds the container's start. Nil when the anchor does not read either.
---- @return table|nil
-function Snap.TargetRect(target, into)
-    local frame = Anchors.HangFrame(target)
-    local rect = readRect(frame, into)
-    if not rect and frame ~= target.anchor then rect = readRect(target.anchor, into) end
-    return rect
-end
-
--- THE RECT THE SNAP READS (the addendum's A10, over A8). Every rect the snap measures or draws on, a
--- target's and the dragged container's alike, is the container's drag-handle STRIP (`container.handle`)
--- while it shows and reads: the owner's third smoke round found the dots on the placeholder's corners,
--- and the strip is what the player grabs and aims at. The side, the align third, the dots, the line,
--- the box and the leeway all go by it. Where the strip is hidden or does not read (a strip under an
--- anchor that hangs from an engine holding auras reads secret), A8's footprint stands in: the block
--- rect with the name label (`container.label`) taken in while it shows and reads. Where a drop attaches
--- is not touched (the twelve pairs, Place's seam and its rooms past the strip and label), so the dots
--- mark the strips, not the exact join (docs/known-limitations.md). Every read goes through readRect.
-
-local labelRect = {} -- scratch: a name label's rect
-
---- Live container `container`'s rect as the snap reads it, written into `into` (a new table when
---- nil): its strip's while that is visible and reads, else block rect `block(container, into)` (nil
---- passes through) grown to take in its name label while that is visible and reads.
---- @return table|nil
-local function footprint(container, into, block)
-    local strip = container.handle
-    local rect = strip and strip:IsVisible() and readRect(strip, into)
-    if rect then return rect end
-    rect = block(container, into)
-    local label = container.label
-    if rect and label and label:IsVisible() and readRect(label, labelRect) then
-        rect.left, rect.right = math.min(rect.left, labelRect.left), math.max(rect.right, labelRect.right)
-        rect.bottom, rect.top = math.min(rect.bottom, labelRect.bottom), math.max(rect.top, labelRect.top)
-    end
-    return rect
-end
-
---- What the snap reads of live container `target`, in UIParent units, into `into`: its strip, or
---- its Snap.TargetRect (the hang rect, or the one-element fallback) with its name label.
---- @return table|nil
-function Snap.Footprint(target, into)
-    return footprint(target, into, Snap.TargetRect)
-end
-
-local function anchorRect(c, into) return readRect(c.anchor, into) end
-local function hangRect(c, into) return readRect(Anchors.HangFrame(c), into) end
-
---- The dragged container's own: its strip, or its one-element anchor (the frame whose point a drop
---- joins, hung from UIParent while dragged) with its name label.
---- @return table|nil
-local function ownFootprint(container, into)
-    return footprint(container, into, anchorRect)
-end
+local SR = NS.AnchorsSnapRect
+local plain, ownFootprint = SR.Plain, SR.Own
+Snap.TargetRect = SR.TargetRect     -- the block: the hang rect, or the one-element anchor
+Snap.Footprint = SR.Footprint       -- the strip, else the block with its name label (A10, A8)
+Snap.ParentRect = SR.ParentRect     -- the footprint, a strip's growth sides out to the block (A11)
 
 -- ---------------------------------------------------------------------------
 -- Eligible targets (D5)
@@ -290,9 +222,9 @@ end
 -- container itself, always) costs no table on a tick.
 local order, list, pool = {}, {}, {}
 
---- The eligible targets for `dragged`, in id order, each { id, rect, growH, growV }: its strip or
---- footprint in UIParent units (Snap.Footprint, A10) and the growth its chain flows by. A target whose rect does
---- not read is left out. The list and its entries are SCRATCH, reused by the next call: read them,
+--- The eligible targets for `dragged`, in id order, each { id, rect, growH, growV }: the growth its
+--- chain flows by and its rect as a parent in UIParent units (Snap.ParentRect, A11, by that growth). A
+--- target whose rect does not read is left out. The list and its entries are SCRATCH, reused by the next call: read them,
 --- never keep them.
 --- @return table
 function Snap.Candidates(dragged)
@@ -308,11 +240,13 @@ function Snap.Candidates(dragged)
             cand = { rect = {} }
             pool[n + 1] = cand
         end
-        if eligible(dragged, t) and Snap.Footprint(t, cand.rect) then
-            n = n + 1
-            list[n] = cand
-            cand.id = id
+        if eligible(dragged, t) then
             cand.growH, cand.growV = flowGrowth(t:Cfg())
+            if Snap.ParentRect(t, cand.rect, cand.growH, cand.growV) then
+                n = n + 1
+                list[n] = cand
+                cand.id = id
+            end
         end
     end
     for i = #list, n + 1, -1 do list[i] = nil end
@@ -372,8 +306,8 @@ end
 -- point (the owner-feedback addendum's A1, A3), a Line region between the two dots, and the BOX, the
 -- fallback edge below. Every part is a child frame or a region of the holder, so one Show or Hide takes
 -- them all; the dots and the line are never toggled on their own, and the box only as the mark picks
--- it. They are placed by numbers already in UIParent units, on the strips (Snap.Footprint and the
--- dragged container's own, A10), and anchored to UIParent (the line's two ends too), never to a target.
+-- it. They are placed by numbers already in UIParent units, on the strips (the parent's reaching its
+-- block on its growth sides, Snap.ParentRect, A11; the dragged container's own, A10), and anchored to UIParent (the line's two ends too), never to a target.
 --
 -- WHICH CONTAINER is said by its drag-handle STRIP (A5, as A6 amends it): the TARGET's strip (for a
 -- hold or a detach, the current parent's) has its OWN edge repainted 2px in the mark's color, through
@@ -421,7 +355,7 @@ local edgedCol    -- the color table `edged` was last repainted in, or nil befor
 local GOLD = Anchors.STRIP_EDGE   -- the strip's own edge, put back when the mark leaves it (A6)
 local dragRect = {} -- scratch: the dragged container's strip or footprint, for the child's dot
 local painted     -- the color table the highlight was last painted in, or nil before it is built
-local ownRect, parentRect = {}, {} -- scratch: the dragged container's and its parent's strips or footprints, for the leeway
+local ownRect, parentRect = {}, {} -- scratch: the dragged container's and its parent's rects (A10, A11), for the leeway
 local current = {} -- scratch: an attached drag's current pair, shaped as Snap.Nearest's answer
 local startX, startY -- the cursor where the live drag began, in screen units (the leeway's fallback)
 local restX, restY   -- an attached drag's current-pair vector where it began (currentPair), or nil
@@ -559,7 +493,7 @@ end
 
 --- Show the highlight for pair `pair` of the drag of live container `dragged`, painted in `col`: the
 --- own edge of `strip` repainted (markStrip: the target's or parent's strip, A6), or with none the box over `rect`
---- (the target's or parent's strip or footprint, in UIParent units, A10); the target's dot on its relative point
+--- (the target's or parent's rect, Snap.ParentRect, in UIParent units, A11); the target's dot on its relative point
 --- of the pair, the dragged container's dot on its own point of it on its own strip, and the line
 --- from the first dot to the second. With no `rect` (a parent that is hidden or does not read, A4) the
 --- dots and the line collapse onto the dragged container's dot, and so does the box when there is no
@@ -599,9 +533,9 @@ end
 --   3. "detach": beyond it: the whole mark red (C.DETACH_COLOR) on the current pair, a release
 --      detaches it where it was let go (D6).
 -- "Strictly nearer" is this file's reading of the addendum's "not its current pair": the hit's |gap|
--- (A7) under the current pair's `away` (rest-invariant: on the strips, A10, its points rest a block
+-- (A7) under the current pair's `away` (rest-invariant: its points rest a seam, a nudge or a strip
 -- apart), so no pair re-attaches a container let go where it sits; nor, while it is still there (REST_SLACK), does the
--- pair the pick gave where it rested (beats). Both pairs are measured on the strips (A10). Shift suppresses step 1 only. A parent that does not
+-- pair the pick gave where it rested (beats). Both pairs are measured as the snap measures (A10, A11). Shift suppresses step 1 only. A parent that does not
 -- read (hidden, or the frame a follower hangs from reading secret, as an engine holding auras does)
 -- has no measurable pair, so step 2 holds while the cursor has moved less than C.DETACH_RADIUS from
 -- where the drag began. Never the one-element anchor Snap.TargetRect falls back to: the child hangs
@@ -626,8 +560,8 @@ end
 --- (scratch, Snap.Nearest's shape): the parent's id and the pair in effect (Anchors.AttachPoints,
 --- Automatic resolved), and `rect` the parent's rect the hold and the red are drawn on, nil where it
 --- is hidden or neither its strip nor its block reads. Where the parent's anchor is shown and both
---- rects read (A10: each its strip, or else A8's: the parent's block on the frame a follower hangs
---- from, Anchors.HangFrame, with no fallback, the dragged one's anchor, each with its label), `dx`,
+--- rects read (the parent's as Snap.ParentRect reads it, A11, but its block only the frame a follower
+--- hangs from, Anchors.HangFrame, with no fallback; the dragged one's its own, A10), `dx`,
 --- `dy` run from the parent's point of the pair to the dragged container's own point of it, `dist` is
 --- their length, and `away` the leeway's measure: the nearer of `dist` and `moved`, how far that vector
 --- has moved from where it was when the drag began (`restX`, `restY`), since Place never sets a child
@@ -641,7 +575,7 @@ local function currentPair(container, cfg)
     if not parent then return nil end
     current.id, current.point, current.relPoint = id, Anchors.AttachPoints(cfg)
     current.dx, current.dy, current.dist, current.away, current.moved = nil, nil, nil, nil, nil
-    local rect = parent.anchor and parent.anchor:IsShown() and footprint(parent, parentRect, hangRect)
+    local rect = parent.anchor and parent.anchor:IsShown() and SR.HungParent(parent, parentRect)
     current.rect = rect or nil
     local own = rect and ownFootprint(container, ownRect)
     if not own then return current end
@@ -742,8 +676,8 @@ local function cancelStranded(container)
     container.placedAs = Anchors.Place(container)
 end
 
---- The rect the mark for classify's answer is measured on: an "attach" target's footprint
---- (Snap.Footprint, A10), else the current pair's parent's as the leeway measured it (currentPair:
+--- The rect the mark for classify's answer is measured on: an "attach" target's as a parent
+--- (Snap.ParentRect, A11), else the current pair's parent's as the leeway measured it (currentPair:
 --- never the one-element fallback, never a hidden parent), so the parent's dot (and the box, where the
 --- parent has no visible strip) sits on what a snap back returns to. Nil when there is none.
 --- @return table|nil
@@ -751,7 +685,7 @@ local function markRect(state, pair)
     if not pair then return nil end
     if state ~= "attach" then return pair.rect end
     local target = NS.ContainerManager.instances[pair.id]
-    return target and Snap.Footprint(target, hitRect)
+    return target and Snap.ParentRect(target, hitRect)
 end
 
 --- One driver tick's work, published so the suite drives it without a clock: classify's answer for

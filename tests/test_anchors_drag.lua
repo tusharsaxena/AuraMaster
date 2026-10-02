@@ -523,34 +523,76 @@ test("drag: the dots and the line sit on the target's strip and the dragged one'
     restore()
 end)
 
-test("drag: a parent whose strip sits below its block takes the dot on the strip's corner, not the block's (A10)", function()
+test("drag: a parent growing up whose strip sits below its block takes the dot on the strip's corner, not the block's, on its before side (A10, A11)", function()
     local NS, mocks = env(2)
     local restore = recordOverlays(mocks)
     local CM = NS.ContainerManager
+    NS.Database.FindContainer(1).layout.growV = "up"
     plant(CM.instances[1].engine, 0, 100, 100, 140)
     plant(CM.instances[1].handle, 0, 82, 100, 100)   -- 1's strip, below its block (it grows up)
     local inst = CM.instances[2]
     recordAnchor(inst.anchor)
     inst.handle:__fire("OnDragStart")
     local Snap = NS.Anchors.Snap
-    -- 2 narrow, its strip 5 over 1's strip (inside 1's block) and its anchor above that.
-    plant(inst.handle, 0, 105, 20, 123)
-    plant(inst.anchor, 0, 125, 20, 145)
+    -- 2 narrow, its strip 5 under 1's strip and its anchor under that.
+    plant(inst.handle, 0, 59, 20, 77)
+    plant(inst.anchor, 0, 37, 20, 57)
     local hit = Snap.Tick()
-    -- red under: A8's footprints (the two overlap by 35 on top, so the left side, 20 off, and its pair)
     assertEqual(hit.side .. " " .. hit.point .. ">" .. hit.relPoint .. " " .. hit.dist,
-        "top BOTTOMLEFT>TOPLEFT 5", "1's strip's top, its first third")
-    -- red under: the parent's dot on the block's top-left corner (0,140), the placeholder's
-    assertEqual(dotAt(mocks, Snap.marker, "the parent's dot"), "BOTTOMLEFT 0,100", "on the strip's top-left corner")
-    assertEqual(dotAt(mocks, Snap.childMarker, "the child's dot"), "BOTTOMLEFT 0,105", "on 2's strip's corner")
-    assertEqual(lineEnd(mocks, Snap.line, "SetStartPoint"), "BOTTOMLEFT 0,100")
-    assertEqual(lineEnd(mocks, Snap.line, "SetEndPoint"), "BOTTOMLEFT 0,105")
-    -- 2's strip reading nothing: its anchor (125..145) inside 1's block, 25 over 1's strip: no side.
+        "bottom TOPLEFT>BOTTOMLEFT 5", "1's strip's bottom, its first third")
+    -- red under: the parent's dot on the block's bottom-left corner (0,100), the placeholder's
+    assertEqual(dotAt(mocks, Snap.marker, "the parent's dot"), "BOTTOMLEFT 0,82", "on the strip's bottom-left corner")
+    assertEqual(dotAt(mocks, Snap.childMarker, "the child's dot"), "BOTTOMLEFT 0,77", "on 2's strip's corner")
+    assertEqual(lineEnd(mocks, Snap.line, "SetStartPoint"), "BOTTOMLEFT 0,82")
+    assertEqual(lineEnd(mocks, Snap.line, "SetEndPoint"), "BOTTOMLEFT 0,77")
+    -- 2's strip reading nothing: its anchor (37..57), 25 under 1's strip: no side.
     rawset(inst.handle, "GetLeft", function() return nil end)
     -- red under: no fallback for an unreadable strip (its nil read taken as a rect)
     assertNil(Snap.Tick(), "the anchor alone: out of range")
     Snap.EndDrag(inst)
     restore()
+end)
+
+-- Each growth: 1's block 0,100,200,140, its strip on its before side (above it growing down, below it
+-- growing up) and lined up with the side its lines start from; 2's strip `child` on 1's growth side,
+-- 5 off the block's far edge there and centered on its middle third; the pair, and the two dots.
+local GROWTH_DOTS = {
+    { grow = { "right", "down" }, strip = { 0, 142, 120, 160 }, child = { 80, 77, 120, 95 },
+      pair = "bottom TOP>BOTTOM", parent = "100,100", own = "100,95" },
+    { grow = { "right", "up" }, strip = { 0, 82, 120, 100 }, child = { 80, 145, 120, 163 },
+      pair = "top BOTTOM>TOP", parent = "100,140", own = "100,145" },
+    { grow = { "right", "down" }, strip = { 0, 142, 120, 160 }, child = { 205, 120, 225, 140 },
+      pair = "right LEFT>RIGHT", parent = "200,130", own = "205,130" },
+    { grow = { "left", "down" }, strip = { 80, 142, 200, 160 }, child = { -25, 120, -5, 140 },
+      pair = "left RIGHT>LEFT", parent = "0,130", own = "-5,130" },
+}
+
+test("drag: the parent's dot sits on its block's far edge on the side it grows toward (A11)", function()
+    for _, case in ipairs(GROWTH_DOTS) do
+        local what = case.grow[1] .. "/" .. case.grow[2] .. " " .. case.pair
+        local NS, mocks = env(2)
+        local restore = recordOverlays(mocks)
+        local CM = NS.ContainerManager
+        local L = NS.Database.FindContainer(1).layout
+        L.growH, L.growV = case.grow[1], case.grow[2]
+        plant(CM.instances[1].engine, 0, 100, 200, 140)
+        plant(CM.instances[1].handle, unpack(case.strip))
+        local inst = CM.instances[2]
+        recordAnchor(inst.anchor)
+        inst.handle:__fire("OnDragStart")
+        local Snap = NS.Anchors.Snap
+        plant(inst.handle, unpack(case.child))
+        plant(inst.anchor, case.child[1], case.child[2] - 22, case.child[3], case.child[2] - 2)
+        local hit = Snap.Tick()
+        -- red under: A10's strip alone (its edge on that side 45 or more short of the block's: out of range)
+        assertTrue(hit ~= nil, what .. ": in range of the block's far edge")
+        assertEqual(hit.side .. " " .. hit.point .. ">" .. hit.relPoint .. " " .. hit.dist, case.pair .. " 5", what)
+        assertEqual(dotAt(mocks, Snap.marker, what), "BOTTOMLEFT " .. case.parent, what .. ": the parent's dot")
+        assertEqual(dotAt(mocks, Snap.childMarker, what), "BOTTOMLEFT " .. case.own, what .. ": the child's dot")
+        assertEqual(lineEnd(mocks, Snap.line, "SetStartPoint"), "BOTTOMLEFT " .. case.parent, what)
+        Snap.EndDrag(inst)
+        restore()
+    end
 end)
 
 test("drag: the box fallback frames the target's footprint, its name label included (A8)", function()
@@ -969,7 +1011,7 @@ test("drag: a child flush under a long parent, in snap range of its own pair far
     restore()
 end)
 
-test("drag: the leeway is measured on the strips, the parent's and the child's own (A4, A10)", function()
+test("drag: the leeway is measured on the parent's rect and the child's own strip (A4, A10, A11)", function()
     local NS, mocks = env(2)
     local restore = recordOverlays(mocks)
     local CM = NS.ContainerManager
@@ -984,14 +1026,16 @@ test("drag: the leeway is measured on the strips, the parent's and the child's o
     plant(inst.anchor, 0, -400, 20, -380)
     inst.handle:__fire("OnDragStart")
     local Snap = NS.Anchors.Snap
-    -- 380 up: 2's strip's TOPLEFT (0,-22) 164 under 1's strip's BOTTOMLEFT (0,142).
-    plant(inst.handle, 0, -40, 20, -22)
-    plant(inst.anchor, 0, -20, 20, 0)
-    -- red under: A8's footprints (2's anchor top 0 to 1's block bottom 100: 100 apart, a hold)
-    assertEqual(select(2, Snap.Tick()), "detach", "164 apart by the strips")
-    plant(inst.handle, 0, 0, 20, 18)
-    plant(inst.anchor, 0, 20, 20, 40)
-    assertEqual(select(2, Snap.Tick()), "hold", "124 apart by the strips")
+    -- 370 up: 2's strip's TOPLEFT (0,-32) 132 under 1's BOTTOMLEFT (0,100), 1's strip reaching its
+    -- block's bottom on the side it grows toward (A11).
+    plant(inst.handle, 0, -50, 20, -32)
+    plant(inst.anchor, 0, -30, 20, -10)
+    -- red under: A8's own footprint (2's anchor top -10 to 1's 100: 110 apart, a hold)
+    assertEqual(select(2, Snap.Tick()), "detach", "132 apart by 2's strip")
+    plant(inst.handle, 0, -30, 20, -12)
+    plant(inst.anchor, 0, -10, 20, 10)
+    -- red under: A10's parent strip alone (its BOTTOMLEFT 0,142: 154 apart, a detach)
+    assertEqual(select(2, Snap.Tick()), "hold", "112 apart, 1 measured on its block's bottom")
     -- 1's strip hidden: its block with its label, 1's BOTTOMLEFT (0,100), 122 from 2's strip.
     CM.instances[1].handle:Hide()
     plant(inst.handle, 0, -40, 20, -22)
@@ -1001,7 +1045,7 @@ test("drag: the leeway is measured on the strips, the parent's and the child's o
     restore()
 end)
 
-test("drag: a child let go where it rests holds, though a neighbor's strip is nearer than its own pair's strips are apart (A4, A10)", function()
+test("drag: a child let go where it rests holds, though a neighbor's strip is nearer than its own pair's points are apart (A4, A10, A11)", function()
     local NS, mocks = env(3)
     local restore = recordOverlays(mocks)
     local CM = NS.ContainerManager
@@ -1011,17 +1055,18 @@ test("drag: a child let go where it rests holds, though a neighbor's strip is ne
     at.mode, at.container = "container", 1   -- Automatic: TOPLEFT on BOTTOMLEFT
     local inst = CM.instances[2]
     recordAnchor(inst.anchor)
-    -- 2 at rest under 1, its strip on its block's top; 3 on the screen beside it, 10 to its right.
-    plant(inst.handle, 0, 80, 100, 98)
-    plant(inst.anchor, 0, 58, 100, 78)
-    plant(CM.instances[3].engine, 110, 58, 210, 78)
-    plant(CM.instances[3].anchor, 110, 58, 210, 78)
-    plant(CM.instances[3].handle, 110, 80, 210, 98)
+    -- 2 at rest under 1 with a Y nudge, its strip on its block's top, 22 under 1's block; 3 on the
+    -- screen beside it, 10 to its right.
+    plant(inst.handle, 0, 60, 100, 78)
+    plant(inst.anchor, 0, 38, 100, 58)
+    plant(CM.instances[3].engine, 110, 38, 210, 58)
+    plant(CM.instances[3].anchor, 110, 38, 210, 58)
+    plant(CM.instances[3].handle, 110, 60, 210, 78)
     inst.handle:__fire("OnDragStart")
     local Snap = NS.Anchors.Snap
     local pair, state = Snap.Tick()
-    -- red under: beats on the current pair's strip distance (1's strip BOTTOMLEFT to 2's strip
-    -- TOPLEFT, 144 apart at rest: 3's RIGHT>LEFT, 10 away, re-attaches a child nobody moved)
+    -- red under: beats on the current pair's distance (1's BOTTOMLEFT, its block's bottom, A11, to 2's
+    -- strip's TOPLEFT, 22 apart at rest: 3's pair, 10 away, re-attaches a child nobody moved)
     assertEqual(state, "hold", "let go where it rests")
     assertEqual(pair.id .. " " .. pair.point .. ">" .. pair.relPoint, "1 TOPLEFT>BOTTOMLEFT", "its own pair")
     Snap.Drop(inst)

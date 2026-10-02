@@ -529,7 +529,9 @@ test("snap: Find measures the side on the target's strip and the dragged one's o
     assertTrue(hit ~= nil, "3's strip 10 under 2")
     assertEqual(hit.id .. " " .. hit.side .. " " .. hit.point .. ">" .. hit.relPoint .. " " .. hit.dist,
         "3 top BOTTOM>TOP 10")
-    assertEqual(NS.Anchors.Snap.Candidates(CM.instances[2])[1].rect.bottom, 142, "the candidate's rect is its strip")
+    local rect = NS.Anchors.Snap.Candidates(CM.instances[2])[1].rect
+    -- red under: A10's strip alone (its bottom 142), or the block (its top 140)
+    assertEqual(edges(rect), "400,100,500,160", "the candidate's rect is its strip, its growth side out to its block (A11)")
     -- 2's own strip 10 over 3's strip, its anchor 30 under 3's block: the strips' gap, not the blocks'.
     plant(CM.instances[2].anchor, 400, 50, 500, 70)
     plant(strip2, 400, 170, 500, 188)
@@ -546,6 +548,90 @@ test("snap: Find measures the side on the target's strip and the dragged one's o
     plant(CM.instances[2].anchor, 400, 75, 500, 95)
     hit = NS.Anchors.Snap.Find(CM.instances[2])
     assertTrue(hit ~= nil and hit.side == "bottom", "the anchor 5 under 3's block, both strips out")
+end)
+
+-- ── the parent's growth sides reach its block (the addendum's A11) ─────────────────────────────
+
+-- A block wider than its strip (several columns), and a strip in from the block's before-side edge, so
+-- each edge tells where it was read: the block's far edge on a growth side, the strip's elsewhere.
+local REACH = {
+    ["right/down"] = { strip = { 10, 142, 120, 160 }, want = "10,100,200,160" },
+    ["left/down"] = { strip = { 80, 142, 190, 160 }, want = "0,100,190,160" },
+    ["right/up"] = { strip = { 10, 80, 120, 98 }, want = "10,80,200,140" },
+    ["left/up"] = { strip = { 80, 80, 190, 98 }, want = "0,80,190,140" },
+}
+
+--- Container 1 of a fresh env(2) growing `g`, its block 0,100,200,140 and its strip REACH's, shown.
+local function reachEnv(g)
+    local NS, mocks = env(2)
+    local inst = NS.ContainerManager.instances[1]
+    local L = NS.Database.FindContainer(1).layout
+    L.growH, L.growV = g[1], g[2]
+    plant(inst.engine, 0, 100, 200, 140)
+    local strip = furniture(mocks, inst)
+    plant(strip, unpack(REACH[g[1] .. "/" .. g[2]].strip))
+    strip:Show()
+    return NS, mocks, inst, strip
+end
+
+test("snap: a parent's rect is its strip, each edge on a side it grows toward out to its block's far edge (A11)", function()
+    for _, g in ipairs(GROWTHS) do
+        local grow = g[1] .. "/" .. g[2]
+        local NS, _, inst = reachEnv(g)
+        local Snap = NS.Anchors.Snap
+        -- red under: A10's strip alone, or the whole union of strip and block (the before-side edge too)
+        assertEqual(edges(Snap.ParentRect(inst)), REACH[grow].want, grow .. ": the parent's rect")
+        assertEqual(edges(Snap.Candidates(NS.ContainerManager.instances[2])[1].rect), REACH[grow].want,
+            grow .. ": the candidate's rect")
+        assertEqual(edges(Snap.Footprint(inst)), table.concat(REACH[grow].strip, ","), grow .. ": the strip itself")
+    end
+end)
+
+test("snap: a parent's block is read with its guards and fallback, and one that does not read leaves the strip (A11)", function()
+    local SECRET = 41.5
+    local NS, mocks, inst, strip = reachEnv({ "right", "down" })
+    mocks.issecretvalue = function(v) return v == SECRET end
+    local Snap = NS.Anchors.Snap
+    plant(inst.engine, 0, SECRET, 200, 140)
+    plant(inst.anchor, 0, 120, 20, 140)
+    -- red under: no guard on the block (arithmetic on a secret), or no fallback to the one element
+    assertEqual(edges(Snap.ParentRect(inst)), "10,120,120,160", "the engine secret: the one-element anchor")
+    plant(inst.anchor, 0, 120, SECRET, 140)
+    -- red under: a parent dropped when its block does not read
+    assertEqual(edges(Snap.ParentRect(inst)), "10,142,120,160", "no block: the strip")
+    strip:Hide()
+    assertNil(Snap.ParentRect(inst), "no block and no strip: nothing")
+end)
+
+--- Drop child 2 of a reachEnv as the rect `l,b,r,t` (its anchor; it has no strip) and answer the
+--- hit's "id side dist", or "none".
+local function sideOf(NS, l, b, r, t)
+    local CM = NS.ContainerManager
+    plant(CM.instances[2].anchor, l, b, r, t)
+    local hit = NS.Anchors.Snap.Find(CM.instances[2])
+    return hit and (hit.id .. " " .. hit.side .. " " .. hit.dist) or "none"
+end
+
+test("snap: the side pick measures a parent's growth sides on its block's far edges, its other sides on its strip (A11)", function()
+    -- Growing right and down: under the block's bottom (100), 5 off; over the strip's top (160), 5 off.
+    local NS = reachEnv({ "right", "down" })
+    -- red under: A10's strip (its bottom 142, 47 over the child: out of range)
+    assertEqual(sideOf(NS, 40, 75, 90, 95), "1 bottom 5", "down: under the block")
+    assertEqual(sideOf(NS, 40, 165, 90, 185), "1 top 5", "down: over the strip")
+    -- Past the block's right (200), 5 off; before the strip's left (10), 19 off (the block's left, 9).
+    -- red under: A10's strip (its right 120, 85 off: out of range)
+    assertEqual(sideOf(NS, 205, 110, 225, 130), "1 right 5", "right: past the block")
+    -- red under: the whole union of strip and block (the block's left edge, 9 off)
+    assertEqual(sideOf(NS, -29, 110, -9, 130), "1 left 19", "right: the before side on the strip")
+    -- Growing left and up: over the block's top (140), 5 off; under the strip's bottom (80), 5 off.
+    NS = reachEnv({ "left", "up" })
+    -- red under: A10's strip (its top 98, 47 under the child: out of range)
+    assertEqual(sideOf(NS, 40, 145, 90, 165), "1 top 5", "up: over the block")
+    assertEqual(sideOf(NS, 40, 55, 90, 75), "1 bottom 5", "up: under the strip")
+    -- Before the block's left (0), 5 off; past the strip's right (190), 15 off (the block's, 5).
+    -- red under: A10's strip (its left 80, 85 off: out of range)
+    assertEqual(sideOf(NS, -25, 110, -5, 130), "1 left 5", "left: past the block")
+    assertEqual(sideOf(NS, 205, 110, 225, 130), "1 right 15", "left: the before side on the strip")
 end)
 
 -- ── Automatic folding (D7) ────────────────────────────────────────────────────────────────────
