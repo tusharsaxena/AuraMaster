@@ -582,7 +582,8 @@ current pair is (`findFrom`): where its engine reads secret and its strip reads,
 alone, never the strip out to the one-element fallback the snap takes for any other target, so a
 child of a parent holding auras can still be moved to another of its sides, and a nudge under it
 re-pairs nothing (DD-16R); never a pair of the current parent where no rect of it reads but that
-fallback. When the pick IS the current pair (measured), the container holds whatever the
+fallback, nor, where the child's rest did not read before the lift (it hung from that secret engine,
+so the lift moved it by the grab's offset), before the cursor has moved past `C.SNAP_RADIUS`. When the pick IS the current pair (measured), the container holds whatever the
 leeway below says: A7 makes that pair the pick anywhere over its third of the parent's side, so a child
 flush under a long parent can be in snap range of its own pair far past `C.DETACH_RADIUS` from that
 pair's two points, and it must not turn red there. Otherwise,

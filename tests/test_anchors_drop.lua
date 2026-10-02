@@ -306,6 +306,9 @@ test("drop: re-attaching onto the chain it already follows asks nothing, however
     local popups = recordPopups(mocks)
     local chat = {}
     NS.Printf = function(fmt, ...) chat[#chat + 1] = fmt:format(...) end
+    -- Resting under 1 by Automatic, read plain before the lift (a rest vector: its pairs compete
+    -- with no cursor travel, DD-16R).
+    plant(inst.anchor, 0, 80, 20, 100)
     dragTo(inst, 105, 120, 125, 140)
     -- red under: GC-1 asked whenever the child's own flow differs (its flow does not change here)
     assertEqual(#popups, 0, "no popup")

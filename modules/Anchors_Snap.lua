@@ -535,7 +535,8 @@ end
 -- "Strictly nearer" is this file's reading of the addendum's "not its current pair": the hit's |gap|
 -- (A7) under the current pair's `away` (rest-invariant: its points rest a seam, a nudge or a strip
 -- apart), so no pair re-attaches a container let go where it sits; nor, while it is still there (REST_SLACK), does the
--- pair the pick gave where it rested (beats). Both pairs are measured as the snap measures (A10, A11),
+-- pair the pick gave where it rested (beats); with no rest vector, no pair of its parent until the
+-- cursor has moved past C.SNAP_RADIUS. Both pairs are measured as the snap measures (A10, A11),
 -- and on ONE rect of the current parent: step 1 measures that parent on the rect the current pair is
 -- measured on (findFrom), never on the one-element fallback Snap.Find would take where its block
 -- reads secret, so a child of a parent holding auras is measured on that parent's strip alone and can
@@ -618,15 +619,22 @@ end
 --- go where it sits would be re-attached by its middle pair, writing a pair nobody picked. It covers
 --- only that let-go: once the child has moved past REST_SLACK the rest pick competes like any pair, so
 --- a child wider than its parent, whose rest pick is a real and different pair (the end pair, its
---- center in the last third), can still be dropped onto it. With no rest vector it never applies.
+--- center in the last third), can still be dropped onto it. With no rest vector (the child's anchor
+--- read secret before the lift, which then moved it by the grab's offset) no pair of the current
+--- parent wins until the cursor has moved more than C.SNAP_RADIUS: a gap is never more than `cur`'s
+--- distance, so any sideways offset the lift left would otherwise re-pair a child let go there.
 --- @return boolean
 local function beats(hit, cur)
     if not (hit and cur) then return hit ~= nil end
     if hit.id == cur.id then
         if not cur.dist then return false end
         if hit.point == cur.point and hit.relPoint == cur.relPoint then return false end
-        if hit.point == restPoint and hit.relPoint == restRel
-            and cur.moved and cur.moved <= REST_SLACK then return false end
+        if not cur.moved then
+            local travel = cursorTravel()
+            if not (travel and travel > C.SNAP_RADIUS) then return false end
+        elseif hit.point == restPoint and hit.relPoint == restRel and cur.moved <= REST_SLACK then
+            return false
+        end
     end
     return hit.dist < (cur.away or cur.dist or math.huge)
 end

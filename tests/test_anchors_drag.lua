@@ -1264,6 +1264,48 @@ test("drag: on a parent whose block reads secret but whose strip reads, a nudge 
     assertNil(at.relPoint, "no pair written: still Automatic")
 end)
 
+test("drag: under a parent read off its strip, a child whose anchor read secret at the start holds until the cursor moves C.SNAP_RADIUS (A4, A11)", function()
+    local SECRET = 41.5
+    local NS, mocks = env(2)
+    mocks.issecretvalue = function(v) return v == SECRET end
+    local CM = NS.ContainerManager
+    -- In game: 1's one-row engine holds auras and reads secret; its strip reads. 2 hangs from that
+    -- engine, so its anchor reads secret too until the lift: no rest vector is noted.
+    plant(CM.instances[1].engine, SECRET, 220, 100, 240)
+    plant(CM.instances[1].anchor, 0, 220, 20, 240)
+    plant(CM.instances[1].handle, 0, 242, 20, 260)
+    local at = NS.Database.FindContainer(2).attach
+    at.mode, at.container = "container", 1   -- Automatic: TOPLEFT on BOTTOMLEFT
+    local inst = CM.instances[2]
+    plant(inst.anchor, SECRET, 195, 60, 215)
+    recordAnchor(inst.anchor)
+    mocks.GetCursorPosition = function() return 100, 100 end
+    inst.handle:__fire("OnDragStart")
+    -- The lift put its center under the cursor: 3 right of where it rested, its center over the
+    -- strip's last third.
+    plant(inst.anchor, 3, 205, 63, 225)
+    local Snap = NS.Anchors.Snap
+    local pair, state = Snap.Tick()
+    -- red under: attach 1:TOPRIGHT>BOTTOMRIGHT (with no rest vector the hit's gap beat the stored
+    -- pair's Euclidean distance, so a let-go after the lift wrote a pair nobody aimed at)
+    assertEqual(state, "hold", "the cursor has not moved")
+    assertEqual(pair.id .. ":" .. pair.point .. ">" .. pair.relPoint, "1:TOPLEFT>BOTTOMLEFT", "on the stored pair")
+    mocks.GetCursorPosition = function() return 120, 100 end
+    state = select(2, Snap.Tick())
+    assertEqual(state, "hold", "20 units: inside C.SNAP_RADIUS")
+    -- Moved on purpose, its pairs compete as any other's.
+    mocks.GetCursorPosition = function() return 130, 100 end
+    pair, state = Snap.Tick()
+    assertEqual(state, "attach", "30 units: past C.SNAP_RADIUS")
+    assertEqual(pair.id .. ":" .. pair.point .. ">" .. pair.relPoint, "1:TOPRIGHT>BOTTOMRIGHT", "the pair under it")
+    mocks.GetCursorPosition = function() return 100, 100 end
+    inst.handle:__fire("OnDragStop")
+    at = NS.Database.FindContainer(2).attach
+    assertEqual(at.mode .. ":" .. tostring(at.container), "container:1", "still on its parent")
+    assertNil(at.childPoint, "no pair written: still Automatic")
+    assertNil(at.relPoint, "no pair written: still Automatic")
+end)
+
 --- Two containers as in game with 1 holding auras: its one-row engine reads secret, its anchor (the
 --- first element) and its strip (`stripR` wide, above the anchor) plainly; 2 attached to 1 by
 --- Automatic (TOPLEFT on BOTTOMLEFT), 60 wide, resting 5 under the block, its drag begun with the

@@ -1539,9 +1539,11 @@ strip's bottom (A's block reads secret while it holds auras, so its growth side 
 B's on B's join point, and all of it turns red past that travel; the dot on B alone shows only while
 A's strip is hidden. Drag B just right of A's strip, its middle level with the strip → the dots and
 the line move to A's strip's right side and B's left side, green; drop → B re-attaches on A's right
-side (the log shows `drop: attach to 1 LEFT>RIGHT`). Below A, B is measured on A's strip
+side (the log shows `drop: attach to <A's id> LEFT>RIGHT (<side>)`). Below A, B is measured on A's strip
 alone while A's block reads secret, so another pair there is picked only within about 24 px of the
-strip's bottom; let go further down it snaps back. Drag E toward A while A holds several auras → A's strip
+strip's bottom; let go further down it snaps back. Pick B up and let it go at once, after its jump,
+without moving the mouse → it snaps back on its stored pair (no other pair of A is picked until the
+cursor has moved about 24 px). Drag E toward A while A holds several auras → A's strip
 lights up and the dots sit on A's strip, as in DRAG-1 (the snap measures every container by its strip,
 populated or not, addendum A10), except below A: A's engine reads secret while it holds auras, so its
 block is its first element, and A's bottom is that element's bottom (A11; docs/known-limitations.md).
