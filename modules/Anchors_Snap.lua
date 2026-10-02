@@ -272,7 +272,9 @@ end
 -- takes them all and none is ever toggled on its own. Everything is placed by numbers already in
 -- UIParent units (Snap.TargetRect, readRect), anchored to UIParent (the line's two ends too) and
 -- never to the target, so nothing of ours ever hangs from an engine's secret rect. One color paints
--- them all (paintHighlight), so the leeway's detach turns the whole mark red at once. All of
+-- them all (paintHighlight), so the leeway's detach turns the whole mark red at once. A hold or a
+-- detach is drawn on the rect the leeway measured (markRect); where there is none, the whole mark
+-- collapses onto the dragged anchor's dot, which then still turns red (showHighlight). All of
 -- it is built on the first drag, so an addon nobody drags (or one stood down) makes none of it, and
 -- the driver's OnUpdate is cleared, not just idle, between drags: an armed OnUpdate is a per-frame
 -- cost nothing on screen reports.
@@ -349,23 +351,30 @@ local function placeDot(dot, x, y)
     dot:SetPoint("CENTER", UIParent, "BOTTOMLEFT", x, y)
 end
 
---- Show the highlight for pair `hit` of the drag of live container `dragged`, painted in `col`: the
---- box over the rect of the target `hit` names, the target's dot on its relative point of the pair,
---- the dragged anchor's dot on its own point of it, and the line from the first dot to the second.
---- Hidden when there is no hit, or when either rect no longer reads. Every number is already a plain
---- one in UIParent units, and every part hangs from UIParent, so no offset is converted.
-local function showHighlight(hit, dragged, col)
-    local target = hit and NS.ContainerManager.instances[hit.id]
-    local rect = target and Snap.TargetRect(target, hitRect)
-    local own = rect and readRect(dragged and dragged.anchor, dragRect)
+--- Show the highlight for pair `pair` of the drag of live container `dragged`, painted in `col`: the
+--- box over `rect` (the target's or parent's, in UIParent units), the target's dot on its relative
+--- point of the pair, the dragged anchor's dot on its own point of it, and the line from the first dot
+--- to the second. With no `rect` (a parent that is hidden or does not read, A4) the whole mark
+--- collapses onto the dragged anchor's dot: the box a dot's size centered on it, the other dot and
+--- both ends of the line there too, so the hold and the red still show and nothing is toggled apart.
+--- Hidden when there is no pair, or when the dragged anchor no longer reads. Every number is already
+--- a plain one in UIParent units, and every part hangs from UIParent, so no offset is converted.
+local function showHighlight(pair, rect, dragged, col)
+    local own = pair and readRect(dragged and dragged.anchor, dragRect)
     if not own then return hideHighlight() end
     local hl = buildHighlight()
-    paintHighlight(col or C.SNAP_COLOR)
+    paintHighlight(col)
+    local cx, cy = Snap.PointAt(own, pair.point)
+    local px, py = cx, cy
     hl:ClearAllPoints()
-    hl:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", rect.left, rect.bottom)
-    hl:SetSize(rect.right - rect.left, rect.top - rect.bottom)
-    local px, py = Snap.PointAt(rect, hit.relPoint)
-    local cx, cy = Snap.PointAt(own, hit.point)
+    if rect then
+        hl:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", rect.left, rect.bottom)
+        hl:SetSize(rect.right - rect.left, rect.top - rect.bottom)
+        px, py = Snap.PointAt(rect, pair.relPoint)
+    else
+        hl:SetPoint("CENTER", UIParent, "BOTTOMLEFT", cx, cy)
+        hl:SetSize(MARKER, MARKER)
+    end
     placeDot(Snap.marker, px, py)
     placeDot(Snap.childMarker, cx, cy)
     Snap.line:SetStartPoint("BOTTOMLEFT", UIParent, px, py)
@@ -412,7 +421,8 @@ end
 
 --- The pair attached container `container` (settings `cfg`) joins its parent by, in `current`
 --- (scratch, Snap.Nearest's shape): the parent's id and the pair in effect (Anchors.AttachPoints,
---- Automatic resolved). Where the parent's anchor is shown and both rects read (the parent's on the
+--- Automatic resolved), and `rect` the parent's rect the hold and the red are drawn on, nil where it
+--- is hidden or does not read. Where the parent's anchor is shown and both rects read (the parent's on the
 --- frame a follower hangs from, Anchors.HangFrame, with no fallback), `dx`, `dy` run from the parent's
 --- point of the pair to the dragged anchor's own point of it, `dist` is their length, and `away` the
 --- leeway's measure: the nearer of `dist` and how far that vector has moved from where it was when the
@@ -428,6 +438,7 @@ local function currentPair(container, cfg)
     current.id, current.point, current.relPoint = id, Anchors.AttachPoints(cfg)
     current.dx, current.dy, current.dist, current.away = nil, nil, nil, nil
     local rect = parent.anchor and parent.anchor:IsShown() and readRect(Anchors.HangFrame(parent), parentRect)
+    current.rect = rect or nil
     local own = rect and readRect(container.anchor, ownRect)
     if not own then return current end
     local cx, cy = Snap.PointAt(own, current.point)
@@ -503,6 +514,18 @@ local function cancelStranded(container)
     container.placedAs = Anchors.Place(container)
 end
 
+--- The rect the mark for classify's answer is drawn on: an "attach" target's (Snap.TargetRect), else
+--- the current pair's parent's as the leeway measured it (currentPair: never the one-element
+--- fallback, never a hidden parent), so the box frames the block a snap back returns to. Nil when
+--- there is none.
+--- @return table|nil
+local function markRect(state, pair)
+    if not pair then return nil end
+    if state ~= "attach" then return pair.rect end
+    local target = NS.ContainerManager.instances[pair.id]
+    return target and Snap.TargetRect(target, hitRect)
+end
+
 --- One driver tick's work, published so the suite drives it without a clock: classify's answer for
 --- the live drag (A4), the highlight shown on its pair, red for "detach" and green otherwise, or
 --- hidden when there is none. Returns the pair and the state: a candidate and "attach" (on Shift a
@@ -521,7 +544,7 @@ function Snap.Tick()
         return nil
     end
     local state, pair = classify(live)
-    showHighlight(pair, live, state == "detach" and C.DETACH_COLOR or C.SNAP_COLOR)
+    showHighlight(pair, markRect(state, pair), live, state == "detach" and C.DETACH_COLOR or C.SNAP_COLOR)
     return pair, state
 end
 

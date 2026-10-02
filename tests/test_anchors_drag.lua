@@ -489,6 +489,21 @@ local function assertPainted(NS, col, what)
     assertEqual(table.concat(Snap.line:__last("SetColorTexture"), ","), want, what .. ": the line")
 end
 
+--- Assert the mark collapsed onto the child's dot at `x`, `y` in `col`: no parent rect read, so no box
+--- and no line to show, the box a dot's size centered there, both dots and both ends of the line on it.
+local function assertLoneDot(NS, mocks, x, y, col, what)
+    local Snap, at = NS.Anchors.Snap, "BOTTOMLEFT " .. x .. "," .. y
+    assertTrue(Snap.highlight:IsShown(), what .. ": the child's dot shows")
+    local p = Snap.highlight:__last("SetPoint")
+    assertEqual(p[1] .. " " .. p[3] .. " " .. p[4] .. "," .. p[5], "CENTER " .. at, what .. ": the box on the dot")
+    assertEqual(Snap.highlight:__joined("SetSize"), "10,10", what .. ": a dot's size")
+    assertEqual(dotAt(mocks, Snap.childMarker, what .. ": the child's dot"), at)
+    assertEqual(dotAt(mocks, Snap.marker, what .. ": the parent's dot"), at)
+    assertEqual(lineEnd(mocks, Snap.line, "SetStartPoint"), at, what .. ": no line")
+    assertEqual(lineEnd(mocks, Snap.line, "SetEndPoint"), at, what .. ": no line")
+    assertPainted(NS, col, what)
+end
+
 test("drag: held within C.DETACH_RADIUS of its current pair, green on that pair; past it, red, and green again on the way back (A4)", function()
     local NS, mocks, inst, Snap, restore = leewayDrag()
     local C = NS.Constants
@@ -578,6 +593,7 @@ end)
 
 test("drag: an unreadable parent holds while the cursor has moved less than C.DETACH_RADIUS, in UIParent units (A4)", function()
     local NS, mocks = env(3)
+    local restore = recordOverlays(mocks)
     local CM = NS.ContainerManager
     local at = NS.Database.FindContainer(2).attach
     at.mode, at.container = "container", 3   -- 3's engine and anchor read nothing plain
@@ -593,10 +609,42 @@ test("drag: an unreadable parent holds while the cursor has moved less than C.DE
     -- red under: no fallback (an unreadable parent detaches at once), or screen units (100 > 64)
     assertEqual(state, "hold", "50 units from the start")
     assertEqual(pair.id, 3, "the current pair's parent")
-    assertTrue(Snap.highlight == nil or not Snap.highlight:IsShown(), "nothing to draw on")
+    -- red under: nothing drawn with no parent rect (a detach then never turns anything red)
+    -- (its TOPLEFT, 300,430 at scale 1 under UIParent's 2: 150,215 in UIParent units)
+    assertLoneDot(NS, mocks, 150, 215, NS.Constants.SNAP_COLOR, "hold")
     mocks.GetCursorPosition = function() return 530, 300 end   -- 65 units
     assertEqual(select(2, Snap.Tick()), "detach", "65 units")
+    assertLoneDot(NS, mocks, 150, 215, NS.Constants.DETACH_COLOR, "detach")
     mocks.GetCursorPosition = function() return 100, 100 end
+    restore()
+end)
+
+test("drag: a hidden parent is measured by the cursor and drawn as the child's dot alone, never at its last rect (A4)", function()
+    local NS, mocks = env(2)
+    local restore = recordOverlays(mocks)
+    local CM = NS.ContainerManager
+    -- 1 hidden: a hidden frame still answers its last layout's edges, here far from the child.
+    plant(CM.instances[1].engine, 0, 400, 100, 440)
+    plant(CM.instances[1].anchor, 0, 420, 20, 440)
+    CM.instances[1].anchor:Hide()
+    local at = NS.Database.FindContainer(2).attach
+    at.mode, at.container = "container", 1
+    local inst = CM.instances[2]
+    recordAnchor(inst.anchor)
+    plant(inst.anchor, 0, 75, 20, 95)
+    mocks.GetCursorPosition = function() return 100, 100 end
+    inst.handle:__fire("OnDragStart")
+    local Snap = NS.Anchors.Snap
+    local _, state = Snap.Tick()
+    assertEqual(state, "hold", "the cursor has not moved")
+    -- red under: a hidden parent's stale rect boxed (the parent's IsShown not read for the mark)
+    assertLoneDot(NS, mocks, 0, 95, NS.Constants.SNAP_COLOR, "hold")
+    mocks.GetCursorPosition = function() return 165, 100 end   -- 65 units
+    -- red under: the hidden parent measured at its last rect (its rest vector read too: held at 0)
+    assertEqual(select(2, Snap.Tick()), "detach", "65 units of cursor travel")
+    assertLoneDot(NS, mocks, 0, 95, NS.Constants.DETACH_COLOR, "detach")
+    mocks.GetCursorPosition = function() return 100, 100 end
+    restore()
 end)
 
 test("drag: a parent whose block reads secret is measured by the cursor, never by its one-element fallback (A4)", function()
@@ -604,6 +652,7 @@ test("drag: a parent whose block reads secret is measured by the cursor, never b
     local NS, mocks = env(2)
     mocks.issecretvalue = function(v) return v == SECRET end
     local CM = NS.ContainerManager
+    local restore = recordOverlays(mocks)
     -- An engine three rows deep holding auras: its rect reads secret; its anchor, the first element, plainly.
     plant(CM.instances[1].engine, SECRET, 100, 100, 240)
     plant(CM.instances[1].anchor, 0, 220, 20, 240)
@@ -617,6 +666,10 @@ test("drag: a parent whose block reads secret is measured by the cursor, never b
     local _, state = NS.Anchors.Snap.Tick()
     -- red under: the current pair measured on Snap.TargetRect's anchor fallback (red at rest)
     assertEqual(state, "hold", "the cursor has not moved")
+    -- red under: the mark drawn on that fallback too (the box over the first element alone, not the
+    -- block it snaps back onto)
+    assertLoneDot(NS, mocks, 0, 95, NS.Constants.SNAP_COLOR, "hold")
+    restore()
 end)
 
 test("drag: on a parent whose block reads secret, a hit on its one-element fallback never takes the current parent back (A4)", function()

@@ -552,7 +552,9 @@ label room and its X/Y nudge already between them), or from each other, the mark
 the box, both dots and the line all turn red (`C.DETACH_COLOR`, a *detach*). Shift suppresses only
 the other pair. When the parent does not read (hidden, or its hang frame secret, as an engine holding
 auras is), the hold lasts while the cursor has moved less than `C.DETACH_RADIUS` from where the drag
-began; a parent with no live instance gives no hold at all. A screen container has neither. A strip hidden mid-drag (`/am lock`, a
+began, and the mark, having no parent rect to frame, collapses onto the dot on the dragged container's
+join point, green and then red (a hold or a detach is always drawn on the rect the leeway measured,
+never on the one-element fallback); a parent with no live instance gives no hold at all. A screen container has neither. A strip hidden mid-drag (`/am lock`, a
 stand-down or a disable run while the button is held) is sent no OnDragStop, so the tick itself
 cancels that drag once out of combat: the anchor stops moving, `dragging` is cleared and the
 container is placed back from its settings, with nothing written. `ContainerClass:Destroy` ends a

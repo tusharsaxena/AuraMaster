@@ -1505,7 +1505,9 @@ shows `drop: held (combat)`. Result:
 A's live engine), start dragging B → B may jump so that its center sits under the cursor (by up to the
 distance from where you grabbed its strip to its center, strip and name label included) and then
 follows the cursor smoothly; the drop attaches or detaches as in DRAG-1
-and DRAG-5, and a drop before the cursor has moved about 64 px snaps B back onto A (DRAG-15). Drag E toward A while A holds several auras → the green box frames only A's first
+and DRAG-5, and a drop before the cursor has moved about 64 px snaps B back onto A (DRAG-15); while
+it holds, the mark is a single green dot on B's join point, with no box and no line, and it turns red
+past that travel. Drag E toward A while A holds several auras → the green box frames only A's first
 element, and a drop near that element attaches. Both are known limitations. No Lua error. Result:
 
 **DRAG-10. A frame-attached container still does not drag.** Attach a container to `PlayerFrame` and
