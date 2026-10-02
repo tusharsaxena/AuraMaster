@@ -1,0 +1,1 @@
+OK DD-02: beginDrag gate+lift (plain BOTTOMLEFT / secret cursor over effective scale), Place dragging guard, throttled driver, plain DrawEdge highlight+marker; gate 1955/0, luacheck 0/0, CCN<=15, CRLF ok, mutations caught; note for DD-03: combat drop of an attached container skips Place with no regen retry
