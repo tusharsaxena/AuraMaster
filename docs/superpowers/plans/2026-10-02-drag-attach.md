@@ -45,3 +45,14 @@ Checkpoints: M1 and M2 end with the gate, a checkpoint row and a push of the bra
 3. Smoke checks are the owner's. Never mark one passed.
 4. After the owner's merge go-ahead and the merge: close #22 with a comment (the anchor-point bullet was
    batch 11 G1/G2), delete the branch (local and origin), and any stash or worktree this run made.
+
+## Addendum: owner smoke feedback (2026-10-02)
+
+Spec: `docs/superpowers/specs/2026-10-02-drag-attach-addendum-owner-feedback.md`. Same rules.
+
+| ID | Milestone | Title | Done when |
+|---|---|---|---|
+| DD-07 | M4 | Twelve outside pairs by mirror, replacing the nine-side search (A2) | snap cases green |
+| DD-08 | M4 | Bigger parent dot, the child dot and the line (A1, A3) | highlight cases green |
+| DD-09 | M4 | Detach leeway: hold green and snap back, red past `C.DETACH_RADIUS`, tooltip, docs and smoke cases (A4) | drag and drop cases green |
+| DD-10 | M4 | Review of DD-07..DD-09, verify, fixes; battery; checkpoint row; push | row in the checkpoints file; origin equals HEAD |
