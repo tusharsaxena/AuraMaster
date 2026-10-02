@@ -184,28 +184,31 @@ its filter string. A group whose only real constraint is its ids then matches ev
 and several such groups each draw the same aura: the M+ report of one NPC buff drawn 14 times on a
 hostile target (seven spell-category groups times two instances).
 
-**What this addon does.** Every compiled group carries three views (`modules/FilterViews.lua`, stamped
-as `group.views` by `FV.Views` at `modules/FilterCompiler.lua:582`): the ids view, exactly as compiled, an
-every view (filter situations), and a blizzard view (the blizzard view until filter situations) in which the whitelist, every spell-category and Uncategorized Show group and the catch-all match
-nothing (`candidateFilters = { includeDispelTypes = {} }`, which fails every aura and which
-`ValidateCandidateFilters` accepts as a table), while a Blizzard Show group keeps its token, flag or
-dispel constraint minus the earlier ones. Every group that still draws in the blizzard view (a Blizzard
-Show group, and the single group of a container that hides nothing) keeps the base's own
-`excludeSpellIDs`, the Overrides blacklist and Timeless's learned ids, and drops the whitelist's and
-the earlier spell categories' excludes (SV-05): Blizzard applies excludes to a `NeverSecret` spell on
-every unit (step 1), so a blacklisted Sated stays hidden there and a whitelisted one is not excluded
-by the group that would otherwise draw it. Every view has the same group count, so switching never
-rebuilds the engine. A container with a category Hidden on a unit whose ids are not always applied
-also ends in one remainder group, NEVER in the ids and blizzard views, which is the whole every view:
-every aura passing the base and in no Hidden Blizzard, Dispel or Who Cast It category, once
-(`FV.AppendRemainder`; docs/superpowers/specs/2026-10-02-filter-situations-design.md S1).
-`FC.IdsMode` pins buffs on the player and the pet to the ids view and their debuffs to the blizzard view; for a target or focus, `Compat.IdsApply` (`core/Compat.lua:330`) asks
-steps 2 to 4 above and answers false when a call raises or its answer is secret. It does not model
-step 1, so a `NeverSecret` aura claimed only by a spell category is not drawn in the blizzard view.
-The empty-container prediction (`modules/EmptyWatch.lua`) does not model it either: where the view is
-not ids it ignores spell ids, so a container whose only aura is a blacklisted `NeverSecret` one (a
-blacklisted Sated on a debuff container) is predicted not empty while the engine draws nothing. That
-costs only a placeholder hang on an unlocked container, and is accepted.
+**What this addon does.** Every compiled group carries three views (`modules/FilterViews.lua`,
+stamped as `group.views` by `FV.Views` at `modules/FilterCompiler.lua:582`): the ids view, exactly
+as compiled, an every view (filter situations), and a blizzard view (the no-ids view until filter
+situations) in which the whitelist, every spell-category and Uncategorized Show group and the
+catch-all match nothing (`candidateFilters = { includeDispelTypes = {} }`, which fails every aura
+and which `ValidateCandidateFilters` accepts as a table), while a Blizzard Show group keeps its
+token, flag or dispel constraint minus the earlier ones. Every group that still draws in the
+blizzard view (a Blizzard Show group, and the single group of a container that hides nothing) keeps
+the base's own `excludeSpellIDs`, the Overrides blacklist and Timeless's learned ids, and drops the
+whitelist's and the earlier spell categories' excludes (SV-05): Blizzard applies excludes to a
+`NeverSecret` spell on every unit (step 1), so a blacklisted Sated stays hidden there and a
+whitelisted one is not excluded by the group that would otherwise draw it. Every view has the same
+group count, so switching never rebuilds the engine. A container with a category Hidden on a unit
+whose ids are not always applied also ends in one remainder group, NEVER in the ids and blizzard
+views, which is the whole every view: every aura passing the base and in no Hidden Blizzard, Dispel
+or Who Cast It category, once (`FV.AppendRemainder`;
+docs/superpowers/specs/2026-10-02-filter-situations-design.md S1). `FC.IdsMode` pins buffs on the
+player and the pet to the ids view and their debuffs to the blizzard view; for a target or focus,
+`Compat.IdsApply` (`core/Compat.lua:330`) asks steps 2 to 4 above and answers false when a call
+raises or its answer is secret. It does not model step 1, so a `NeverSecret` aura claimed only by a
+spell category is not drawn in the blizzard view. The empty-container prediction
+(`modules/EmptyWatch.lua`) does not model it either: where the view is not ids, it ignores spell
+ids, so a container whose only aura is a blacklisted `NeverSecret` one (a blacklisted Sated on a
+debuff container) is predicted not empty while the engine draws nothing. That costs only a
+placeholder hang on an unlocked container, and is accepted.
 `ContainerClass:ApplyView` (`modules/Container.lua:321`) sends `SetAuraGroupFilterString` and
 `SetAuraGroupCandidateFilters` only where the two views differ. Blizzard's Lua checks neither combat
 nor secrecy in either setter and both end in `UpdateAllAuras`, so the switch runs in combat. It runs at
