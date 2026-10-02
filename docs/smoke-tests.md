@@ -1547,9 +1547,14 @@ them stay green, though E is already out of snap range. Let go there → E snaps
 it was on A, Layout → Anchor is unchanged, `/reload` agrees, and the log shows `drop: held (leeway)`.
 Drag it down again past about 64 px → box, dots and line all turn red at once; move back up → they turn
 green again; go past it once more and let go → E detaches where you let go (as DRAG-5, log `drop:
-detach`). Re-attach E below A, then with Shift held drag it so its top's middle sits just under A's
-bottom middle (a pair that would take it without Shift) → no other pair lights up, the marks stay on
-E's own pair in green, and a drop snaps it back. Hover E's strip → its tooltip explains all this
+detach`). Now give E a width 40 to 80 px less than A's (on E's General tab: Size to fit off and a smaller
+Width (px)), so that, below A, E's top-middle under A's bottom-middle is 20 to 40 px
+nearer than E's own pair and still inside the leeway. Re-attach E below A, then without Shift drag it
+so its top's middle sits just under A's bottom middle → the marks move to that middle pair in green,
+and a drop attaches E there (Layout → Anchor shows E's top on A's bottom). Re-attach E below A on its
+own pair again and repeat that drag with Shift held → no other pair lights up, the marks stay on E's
+own pair in green, and a drop snaps it back. (With E as wide as A, all three of A's bottom pairs are
+equally near, so E's own pair wins without Shift too and this step proves nothing.) Hover E's strip → its tooltip explains all this
 (DRAG-11). No Lua error. Result:
 
 **DRAG-16. A drop above the parent, with the line.** Drag E toward the middle of A's top edge (A grows
