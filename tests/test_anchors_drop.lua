@@ -24,12 +24,16 @@ local function plant(frame, l, b, r, t)
     return frame
 end
 
---- Record the anchor's points (`anchor.__placed` counts SetPoint calls) and let it read back the
---- point a drag left it at, BOTTOMLEFT of UIParent at `x`, `y`.
+--- Record the anchor's points (`anchor.__placed` counts SetPoint calls, `anchor.__points` holds the
+--- last one's arguments) and let it read back the point a drag left it at, BOTTOMLEFT of UIParent at
+--- `x`, `y`.
 local function recordAnchor(anchor, x, y)
     anchor.__placed = 0
     rawset(anchor, "ClearAllPoints", function() end)
-    rawset(anchor, "SetPoint", function(self) self.__placed = self.__placed + 1 end)
+    rawset(anchor, "SetPoint", function(self, ...)
+        self.__placed = self.__placed + 1
+        self.__points = { ... }
+    end)
     rawset(anchor, "StartMoving", function() end)
     rawset(anchor, "StopMovingOrSizing", function() end)
     rawset(anchor, "GetPoint", function() return "BOTTOMLEFT", nil, "BOTTOMLEFT", x or 40, y or 60 end)
@@ -167,6 +171,46 @@ test("drop: container.attach written whole re-applies the new parent, the contai
     table.sort(applied)
     -- red under: container.attach missing from PARENT_PATHS and FLOW_PATHS (1 and 3 never re-applied)
     assertEqual(table.concat(applied, ","), "1,2,3", "parent 1, the container, its follower 3")
+end)
+
+test("drop: a written attach places the container on its new parent at once, even while applies are held", function()
+    local NS, mocks = env()
+    sameFlow(NS, 2)
+    local CM = NS.ContainerManager
+    local inst = CM.instances[2]
+    recordAnchor(inst.anchor)
+    -- Between pulls in a key: auras secret, no lockdown, so the drag runs and every apply waits.
+    mocks.__aurasSecret = true
+    dragTo(inst, 0, 75, 20, 95)
+    mocks.__fireTimers()
+    assertEqual(NS.Database.FindContainer(2).attach.mode, "container", "the attach is written")
+    -- red under: a dropOn that leaves the placement to the apply CONFIG_CHANGED queues (held by
+    -- CM.MustDefer while auras are secret, so the anchor stays loose where it was let go)
+    assertEqual(inst.placedAs, "container", "placed as attached")
+    local p = inst.anchor.__points or {}
+    assertTrue(p[2] == CM.instances[1].engine, "hung from its new parent's engine")
+    mocks.__aurasSecret = false
+end)
+
+test("drop: an attached container dropped in combat goes back on its parent when combat ends, applies held or not", function()
+    local NS, mocks = env()
+    local CM = NS.ContainerManager
+    local at = NS.Database.FindContainer(2).attach
+    at.mode, at.container = "container", 1
+    local inst = CM.instances[2]
+    recordAnchor(inst.anchor)
+    inst.handle:__fire("OnDragStart")
+    plant(inst.anchor, 300, 410, 320, 430)
+    mocks.__lockdown = true
+    inst.handle:__fire("OnDragStop")
+    inst.anchor.__points = nil
+    mocks.__lockdown, mocks.__aurasSecret = false, true
+    NS.addon:OnCombatChanged("PLAYER_REGEN_ENABLED")
+    -- red under: only the held RequestApply (still held after combat while auras stay secret)
+    assertEqual(inst.placedAs, "container", "re-placed as attached")
+    local p = inst.anchor.__points or {}
+    assertTrue(p[2] == CM.instances[1].engine, "back on its parent's engine")
+    mocks.__aurasSecret = false
 end)
 
 -- ── growth conflicts at the drop (D8, GC-1) ───────────────────────────────────────────────────

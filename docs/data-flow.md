@@ -544,14 +544,16 @@ join; both hang from UIParent, never from the target.
 through the seam against this container's id, never the panel's selection:
 
 1. **Combat started mid-drag:** nothing attaches. A screen container stores its position as before; an
-   attached one writes nothing and asks for a silent apply, which waits for combat to end and puts it
-   back on its parent.
+   attached one writes nothing and is held: `Snap.PlaceHeld`, at `PLAYER_REGEN_ENABLED`, puts it back
+   on its parent, even while auras stay secret and ContainerManager still holds applies.
 2. **A candidate and no Shift:** the whole `container.attach` section (mode container, the target,
    the picked side's two points, each nil where it equals Automatic's, `Snap.FoldPoints`, and X/Y 0;
    the frame mode's keys kept) goes to `NS.AttachByDrop` (`settings/Layout.lua`). It writes it, or,
    when the chain the drop joins flows differently, shows the `AURAMASTER_ATTACH_FLOW` popup (GC-1)
-   carrying the section, whose Accept writes it and whose Cancel leaves everything as it was; until
-   then the container goes back where its stored settings put it.
+   carrying the section, whose Accept writes it and whose Cancel leaves everything as it was. Either
+   way the container is placed at once from its settings as they then are (`Anchors.Place`): on its
+   new parent, or back where it was until the popup is answered. It never waits for the apply, which
+   ContainerManager holds while auras are secret, as between pulls in a key.
 3. **Otherwise:** an attached container detaches. `Anchors.SavePosition` stores the drop position,
    then the section is written with mode screen and X/Y 0, the target and points kept. A position that
    reads secret is not stored, and the container goes back to its parent instead. A screen container

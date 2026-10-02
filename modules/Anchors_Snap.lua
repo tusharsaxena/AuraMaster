@@ -402,12 +402,16 @@ end
 --- writes the section, or asks first when the chain the drop joins flows differently. Whenever it
 --- did not write (it asked, or the seam refused the section), the anchor goes back where the stored
 --- settings put it, so a drop the player has yet to confirm is never left looking attached; Cancel
---- then leaves everything as it was before the drag. A written attach is placed by the apply its
---- CONFIG_CHANGED queues.
+--- then leaves everything as it was before the drag. Whatever the answer, the anchor is placed here
+--- and now, from the settings as the drop left them: the apply a written attach's CONFIG_CHANGED
+--- queues is held by ContainerManager while auras are secret as well as under lockdown
+--- (CM.MustDefer), and between pulls in a key a drag runs with no lockdown, so waiting for it would
+--- leave the anchor loose where it was let go. Place is layout only (SetPoint, SetSize), legal out of
+--- lockdown, which the drop is (Snap.Drop handles combat before this).
 local function dropOn(container, cfg, hit)
     debug("container %s: drop: attach to %s %s", container.id, hit.id, hit.token)
-    local wrote = NS.AttachByDrop and NS.AttachByDrop(container.id, attachSection(cfg, hit))
-    if wrote ~= true then container.placedAs = Anchors.Place(container) end
+    if NS.AttachByDrop then NS.AttachByDrop(container.id, attachSection(cfg, hit)) end
+    container.placedAs = Anchors.Place(container)
 end
 
 --- Detach container-attached `container` where it was dropped (D6, D10): its screen position first,
@@ -426,18 +430,43 @@ local function detach(container, cfg)
     NS.SetByPath("container.attach", section, container.id)
 end
 
+-- Containers dropped in combat while attached, [id] = true, re-placed when combat ends (Snap.PlaceHeld).
+local held = {}
+
 --- A drop after combat started mid-drag (D11): nothing attaches. A screen container stores where it
 --- was dropped, as it did before issue #22. A container-attached one is neither detached nor written:
---- its anchor parents an aura engine and may not be re-placed under lockdown, so an apply is asked
---- for (a system one, silent), which ContainerManager holds until combat ends and which places it
---- back on its parent then.
+--- its anchor parents an aura engine and may not be re-placed under lockdown, so it is HELD, and
+--- Snap.PlaceHeld puts it back on its parent at PLAYER_REGEN_ENABLED. An apply is asked for too (a
+--- system one, silent), but that alone is not enough: ContainerManager keeps holding it after combat
+--- for as long as auras stay secret (CM.MustDefer), as in a key between pulls.
 local function dropInCombat(container, attached)
     debug("container %s: drop: held (combat)", container.id)
     if attached then
+        held[container.id] = true
         NS.ContainerManager.RequestApply(container.id, true)
         return
     end
     Anchors.SavePosition(container)
+end
+
+--- Combat is over (core/AuraMaster.lua's PLAYER_REGEN_ENABLED, after the flush): every container a
+--- combat drop held goes back where its settings put it, whether or not the apply it asked for may
+--- run yet. A container gone since, or being dragged again, is only forgotten. Answers how many it
+--- placed; does nothing under lockdown (the held ones wait for the next end of combat).
+--- @return number
+function Snap.PlaceHeld()
+    if InCombatLockdown() or next(held) == nil then return 0 end
+    local n = 0
+    for id in pairs(held) do
+        held[id] = nil
+        local inst = NS.ContainerManager.instances[id]
+        if inst and not inst.dragging then
+            inst.placedAs = Anchors.Place(inst)
+            n = n + 1
+        end
+    end
+    debug("drop: %d container(s) held by combat re-placed", n)
+    return n
 end
 
 --- The widget's OnDragStop (after StopMovingOrSizing). Ends the drag (Snap.EndDrag), then:

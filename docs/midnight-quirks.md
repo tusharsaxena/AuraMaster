@@ -323,7 +323,7 @@ hides it, and clearing does not show it again.
 `UpdateAllAuras` exists for external refreshes such as target changes.
 
 **What this addon does.** `PLAYER_TARGET_CHANGED`, `PLAYER_FOCUS_CHANGED` and `UNIT_PET` (for the
-player) call `UpdateAllAuras` on every container on that unit (`core/AuraMaster.lua:170-189`).
+player) call `UpdateAllAuras` on every container on that unit (`core/AuraMaster.lua:172-191`).
 
 ## An addon font loads lazily, and the engine writes a name once (measured 2026-09-27)
 
