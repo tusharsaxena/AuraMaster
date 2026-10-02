@@ -492,8 +492,8 @@ test("container views: a rebuilt engine starts clean, not stale, and a same-view
     assertTrue(inst.engine ~= engine, "a new engine was built")
     -- red under: Build leaving the old engine's stale mark on the new one
     assertTrue(not inst.viewStale, "a fresh engine holds a known view")
-    local fresh = inst.engine
-    local before = #fresh:__callsTo("SetAuraGroupCandidateFilters")
+    local rebuilt = inst.engine
+    local before = #rebuilt:__callsTo("SetAuraGroupCandidateFilters")
     assertFalse(inst:ApplyView(), "the same view: no switch")
-    assertEqual(#fresh:__callsTo("SetAuraGroupCandidateFilters"), before, "nothing resent")
+    assertEqual(#rebuilt:__callsTo("SetAuraGroupCandidateFilters"), before, "nothing resent")
 end)
