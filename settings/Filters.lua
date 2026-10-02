@@ -197,6 +197,59 @@ NS.RegisterSchemaRows({
     },
 })
 
+-- ── Situations (S5) ───────────────────────────────────────────────────────────────────────────
+--
+-- The data behind the Situations tab: where Blizzard won't apply spell lists, what NPCs and players
+-- draw (`filter.situations`), and the instance types the container shows in (`filter.zones`). Both
+-- live under `filter` in the container template, so Copy settings from -> Filters, Duplicate, this
+-- page's Defaults and a profile reset carry them, and the load backfill stamps them into every
+-- stored container. Every row validates, so a whole-section write (a copy) refuses a bad leaf.
+--
+-- NO TAB YET. Until the Situations tab is drawn (SI-05), the rows sit in the General group with
+-- `skipRender`: in the schema, so `/am get|set|list` and Defaults reach them, but drawn nowhere. A
+-- group of their own would put an empty tab on the strip.
+--
+-- The zone rows take the combat-legal visibility pass. The situation rows take the `view` effect,
+-- which modules/ContainerManager.lua does not know yet and so treats as an ordinary apply until
+-- SI-03 wires it to the view switch.
+
+local SITUATION_OK = {}
+for _, mode in ipairs(C.SITUATION_MODES) do SITUATION_OK[mode] = true end
+
+local function validSituation(v) return SITUATION_OK[v] == true end
+local function validZone(v) return type(v) == "boolean" end
+
+local SITUATION_ROWS = {
+    { key = "npcs", label = L["On NPCs"],
+      desc = L["Where Blizzard won't apply spell lists to this container's auras, what an NPC shows: every aura once, or only the Blizzard categories set to Show."] },
+    { key = "players", label = L["On players"],
+      desc = L["Where Blizzard won't apply spell lists to this container's auras, what a player shows (on your own or your pet's debuffs, what you show): every aura once, or only the Blizzard categories set to Show."] },
+}
+
+local function situationRows()
+    local rows, values = {}, NS.Choices(C.SITUATION_MODES, C.SITUATION_MODE_LABELS)
+    for _, s in ipairs(SITUATION_ROWS) do
+        rows[#rows + 1] = {
+            path = "container.filter.situations." .. s.key, page = PAGE, group = G_SHOW,
+            skipRender = true, auraTypes = BUFFS_DEBUFFS,
+            type = "string", values = values, label = s.label, desc = s.desc,
+            validate = validSituation, effect = "view",
+        }
+    end
+    for _, zone in ipairs(C.ZONE_KEYS) do
+        rows[#rows + 1] = {
+            path = "container.filter.zones." .. zone, page = PAGE, group = G_SHOW,
+            skipRender = true, auraTypes = BUFFS_DEBUFFS,
+            type = "bool", label = L[C.ZONE_LABELS[zone]],
+            desc = L["Show this container in this kind of zone. An unlocked container, or one in test mode, still shows anywhere so you can find it."],
+            validate = validZone, effect = "visibility",
+        }
+    end
+    return rows
+end
+
+NS.RegisterSchemaRows(situationRows())
+
 -- ---------------------------------------------------------------------------
 -- The bespoke tabs
 -- ---------------------------------------------------------------------------

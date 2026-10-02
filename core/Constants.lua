@@ -102,6 +102,20 @@ C.SORT_METHOD_ENGINE = {
 C.SORT_DIRECTIONS = { "normal", "reverse" }
 C.SORT_DIRECTION_LABELS = { normal = "Normal", reverse = "Reversed" }
 
+-- Filter situations (S5): what a container draws where Blizzard won't apply spell lists, chosen per
+-- NPC and per player. "every" is one remainder group, every aura passing the base and not in a
+-- Hidden Blizzard-grid category, once; "blizzard" is only the Blizzard categories set to Show.
+C.SITUATION_MODES = { "every", "blizzard" }
+C.SITUATION_MODE_LABELS = { every = "Every aura, once", blizzard = "Only my Blizzard categories set to Show" }
+
+-- The zones a container shows in (S3): IsInInstance()'s instance types, in display order. A type
+-- not listed here (or unreadable) is allowed, since no checkbox exists to untick it.
+C.ZONE_KEYS = { "none", "party", "scenario", "raid", "pvp", "arena" }
+C.ZONE_LABELS = {
+    none = "Open world", party = "Dungeons", scenario = "Scenarios and delves",
+    raid = "Raids", pvp = "Battlegrounds", arena = "Arenas",
+}
+
 -- Temporary weapon enchant slots: our key → the engine's AuraContainerItemEnchantmentSlot member.
 C.ENCHANT_SLOTS = { "mainHand", "offHand", "ranged" }
 C.ENCHANT_SLOT_ENGINE = { mainHand = "MainHand", offHand = "OffHand", ranged = "Ranged" }

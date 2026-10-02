@@ -159,6 +159,14 @@ NS.CONTAINER_TEMPLATE = {
         sortMethod      = "expirationOnly",
         sortDirection   = "normal",
         maxAuras        = 0,    -- per group; 0 = no limit
+        -- Filter situations (S5, settings/Filters.lua's Situations rows). Where Blizzard won't
+        -- apply spell lists, what NPCs and players draw: "every" (every aura, once) or "blizzard"
+        -- (only the Blizzard categories set to Show). Under `filter`, so Copy settings from ->
+        -- Filters and the Filters page's Defaults carry them; the load backfill stamps them into
+        -- every stored container, so no schema step is needed.
+        situations      = { npcs = "every", players = "every" },
+        -- The instance types (IsInInstance()) the container shows in; all on (opt-out).
+        zones           = { none = true, party = true, scenario = true, raid = true, pvp = true, arena = true },
     },
 
     -- Where the container sits when it is attached to the screen: stored, never read back off a frame.

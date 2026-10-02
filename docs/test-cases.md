@@ -415,6 +415,20 @@ badge and any count quoted in the docs must agree with it.
 - situations: every container of the owner's real profile keeps master's ids and blizzard views
 - situations: no aura is drawn twice in any view, and the every view draws exactly its definition
 
+### test_situations_settings.lua (11)
+
+- situations settings: the template holds both situations at 'every' and all six zones on
+- situations settings: eight rows on the Filters page, situations offering the two modes, zones booleans
+- situations settings: the seam refuses a mode outside every/blizzard and a zone that is not a boolean
+- situations settings: the owner's real profile loads with both tables on every container, and a stored choice is kept
+- situations settings: Copy settings from -> Filters carries both tables
+- situations settings: a source holding a mode the rows refuse fails Copy -> Filters, and nothing is stored
+- situations settings: Duplicate carries both tables, and shares no table with the source
+- situations settings: the Filters page's Defaults restores both tables
+- situations settings: a profile reset re-seeds both tables at their defaults
+- situations settings: a zone write takes the visibility pass and queues no apply
+- situations settings: no Situations tab yet (SI-05 adds it)
+
 ### test_container.lua (52)
 
 - container: the engine is anchored before its first group and given its unit last
@@ -2022,7 +2036,7 @@ badge and any count quoted in the docs must agree with it.
 
 - prose: no authored file carries a British spelling from localization-§5's published list
 - prose: the gate carries localization-§5's two lists whole, and nothing of its own
-- prose: the exclusions this repository declared suppressed 11 of 191 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (11): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, docs/spell-research/2026-09-24-logs/CORRECTIONS.md, docs/spell-research/2026-09-24-logs/CURRENT_CATEGORIES.md, docs/spell-research/2026-09-24-logs/DECISIONS.md, docs/spell-research/2026-09-24-logs/FLAGS.md, docs/spell-research/2026-09-24-logs/PROPOSED_ADDITIONS.md, docs/spell-research/2026-09-24-logs/REVIEW.md, docs/spell-research/2026-09-24-logs/SOURCES.md, docs/spell-research/2026-09-24-logs/dictionary/AURAS.md
+- prose: the exclusions this repository declared suppressed 11 of 193 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (11): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, docs/spell-research/2026-09-24-logs/CORRECTIONS.md, docs/spell-research/2026-09-24-logs/CURRENT_CATEGORIES.md, docs/spell-research/2026-09-24-logs/DECISIONS.md, docs/spell-research/2026-09-24-logs/FLAGS.md, docs/spell-research/2026-09-24-logs/PROPOSED_ADDITIONS.md, docs/spell-research/2026-09-24-logs/REVIEW.md, docs/spell-research/2026-09-24-logs/SOURCES.md, docs/spell-research/2026-09-24-logs/dictionary/AURAS.md
 - prose: no path this repository narrows the gate by is loaded by a TOC
 - prose: every path this repository narrows the gate by is one .pkgmeta keeps out of the zip
 - prose self-test: the carve-out suppresses the named generated folder, and only it
@@ -2123,6 +2137,7 @@ badge and any count quoted in the docs must agree with it.
 | test_filtercompiler_categories.lua | 9 |
 | test_filterviews.lua | 14 |
 | test_filterviews_situations.lua | 12 |
+| test_situations_settings.lua | 11 |
 | test_container.lua | 52 |
 | test_container_views.lua | 16 |
 | test_containermanager.lua | 54 |
@@ -2196,4 +2211,4 @@ badge and any count quoted in the docs must agree with it.
 | test_layout_cap.lua | 13 |
 | test_diagnostics_contract.lua | 9 |
 | test_lizard_sighted.lua | 8 |
-| **Total** | **1846** |
+| **Total** | **1857** |
