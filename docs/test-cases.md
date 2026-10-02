@@ -430,6 +430,16 @@ badge and any count quoted in the docs must agree with it.
 - situations settings: a zone write takes the visibility pass and queues no apply
 - situations settings: the rows are the Situations group, declared last, and drawn by the flow engine (SI-05)
 
+### test_unitfilter_settings.lua (7)
+
+- unit type settings: the template holds kind and reaction at All
+- unit type settings: two rows in the Situations group, offering their choices, taking the visibility effect
+- unit type settings: the seam refuses a choice the rows do not offer
+- unit type settings: the owner's real profile loads with All / All on every container, a stored choice kept
+- unit type settings: Copy settings from -> Filters and Duplicate carry it, Defaults restores it
+- unit type settings: a source holding a choice the rows refuse fails Copy -> Filters
+- unit type settings: a write takes the visibility pass and queues no apply
+
 ### test_container.lua (52)
 
 - container: the engine is anchored before its first group and given its unit last
@@ -538,6 +548,23 @@ badge and any count quoted in the docs must agree with it.
 - zones: the first visibility pass after a /reload inside an unticked place already hides it
 - zones: a follower of a zone-hidden parent re-seams as it does for a visibility-hidden one
 
+### test_container_unitfilter.lua (14)
+
+- unit type: a locked target container shows only on a unit matching both choices
+- unit type: no unit, and an unknowable answer, allow
+- unit type: a hand-edited choice the rows do not offer allows
+- unit type: unlocked or in test mode, a container shows on a unit it is set against
+- unit type: the gate sits beside General visibility and the zone rule, all must allow
+- unit type: player and pet containers ignore it
+- unit type: the focus container follows the focus, not the target
+- unit type: a target swap re-evaluates it in combat, through SetEnabled, never the anchor
+- unit type: a focus swap re-evaluates focus containers
+- unit type: UNIT_FACTION and UNIT_FLAGS on the target, the focus and the player re-evaluate it
+- unit type: an event that does not move a container's answer runs no visibility pass for it
+- unit type: a full visibility pass between events keeps the moved-answer check true
+- unit type: the unit events stay on the view frames, nothing new is registered
+- unit type: a Unit type write takes effect at once, in combat too
+
 ### test_containermanager.lua (54)
 
 - manager: Create appends a container, names it uniquely and announces it
@@ -595,7 +622,7 @@ badge and any count quoted in the docs must agree with it.
 - apply: an error in one container's Apply does not stop the others or replaceAttached
 - apply: with no client error handler the pass finishes, then the first error is raised
 
-### test_compat.lua (35)
+### test_compat.lua (37)
 
 - compat: the aura engine counts as present only with its sort enum and CreateFrame
 - compat: EnsureAuraContainer loads Blizzard_AuraContainer only when it is not loaded yet
@@ -632,6 +659,8 @@ badge and any count quoted in the docs must agree with it.
 - compat: IsPlayerUnit is nil whenever the answer is not knowable
 - compat: InstanceType answers IsInInstance's second value
 - compat: InstanceType is nil whenever the answer is not knowable
+- compat: UnitReactionKind bands UnitReaction(unit, "player") into friendly, neutral and hostile
+- compat: UnitReactionKind is nil whenever the answer is not knowable
 
 ### test_secrets.lua (6)
 
@@ -1840,7 +1869,7 @@ badge and any count quoted in the docs must agree with it.
 - filters: Hide all on Blizzard Categories hides exactly that section, as one [Set] line and one apply (feedback #10)
 - filters: Show all on Spell Categories shows exactly that section, whatever Blizzard Categories say (feedback #10)
 
-### test_pages_situations.lua (9)
+### test_pages_situations.lua (11)
 
 - situations tab: the Filters strip reads General, Categories, Overrides, Sorting, Situations
 - situations tab: a target or focus buff container draws its unit line, On NPCs and On players, and the honor line
@@ -1851,6 +1880,8 @@ badge and any count quoted in the docs must agree with it.
 - situations tab: the timeless note keys on the effective mode, timeless buffs only
 - situations tab: Show in draws the six zone checkboxes in order, all ticked, each writing its zone
 - situations tab: On NPCs writes the npcs setting
+- situations tab: Unit type is the last section, after Show in, with Unit type and Reaction on a target or focus
+- situations tab: a player or pet container says it is always your own character or pet, with no Unit type dropdowns
 
 ### test_pages_layout.lua (47)
 
@@ -2197,12 +2228,14 @@ badge and any count quoted in the docs must agree with it.
 | test_filterviews.lua | 14 |
 | test_filterviews_situations.lua | 13 |
 | test_situations_settings.lua | 11 |
+| test_unitfilter_settings.lua | 7 |
 | test_container.lua | 52 |
 | test_container_views.lua | 20 |
 | test_container_situations.lua | 16 |
 | test_container_zones.lua | 8 |
+| test_container_unitfilter.lua | 14 |
 | test_containermanager.lua | 54 |
-| test_compat.lua | 35 |
+| test_compat.lua | 37 |
 | test_secrets.lua | 6 |
 | test_bus.lua | 8 |
 | test_state.lua | 2 |
@@ -2250,7 +2283,7 @@ badge and any count quoted in the docs must agree with it.
 | test_pages_general_categories.lua | 32 |
 | test_pages_containers.lua | 33 |
 | test_pages_filters.lua | 52 |
-| test_pages_situations.lua | 9 |
+| test_pages_situations.lua | 11 |
 | test_pages_layout.lua | 47 |
 | test_pages_bars.lua | 11 |
 | test_pages_icons.lua | 5 |
@@ -2274,4 +2307,4 @@ badge and any count quoted in the docs must agree with it.
 | test_layout_cap.lua | 13 |
 | test_diagnostics_contract.lua | 9 |
 | test_lizard_sighted.lua | 8 |
-| **Total** | **1904** |
+| **Total** | **1929** |

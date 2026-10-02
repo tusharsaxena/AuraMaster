@@ -74,6 +74,7 @@ path, never to a number restated in `modules/`.
 | `maxAuras` | `0` | per group; `0` is no limit |
 | `situations.npcs` / `.players` | `"every"` / `"every"` | `every`, `blizzard`: where Blizzard won't apply spell lists (filter situations S2), what NPCs and players draw — every aura once, or only the Blizzard categories set to Show. Validated; their rows take the `view` effect. No schema step: the load backfill stamps them into every stored container |
 | `zones.none` / `.party` / `.scenario` / `.raid` / `.pvp` / `.arena` | `true` (all six) | bool: the `IsInInstance()` instance types the container shows in (Open world, Dungeons, Scenarios and delves, Raids, Battlegrounds, Arenas; filter situations S3). Validated; their rows take the `visibility` effect |
+| `unitFilter.kind` / `.reaction` | `"all"` / `"all"` | `all`, `npc`, `player` / `all`, `friendly`, `neutral`, `hostile`: the Unit type gate (filter situations S6), which units a target or focus container shows for, by `UnitIsPlayer` and by `UnitReaction(unit, "player")` in three bands; ignored on player and pet containers. Validated; their rows take the `visibility` effect |
 
 ### `position` and `attach`
 
@@ -143,7 +144,7 @@ backfills it onto every stored container, so it needs no schema step.
 | `expiringThreshold` | `5` | `expiringColor` | `{ 1, 0.25, 0.25, 1 }` |
 | `pandemic` | `false` | `pandemicColor` | `{ 1, 0.85, 0.10, 1 }` |
 
-The profile's `dispelColors` defaults (`C.DEFAULT_DISPEL_COLORS`, `core/Constants.lua:214`): Magic `{0.20, 0.60, 1.00}`, Curse `{0.60, 0.00, 1.00}`, Disease
+The profile's `dispelColors` defaults (`C.DEFAULT_DISPEL_COLORS`, `core/Constants.lua:224`): Magic `{0.20, 0.60, 1.00}`, Curse `{0.60, 0.00, 1.00}`, Disease
 `{0.60, 0.40, 0.00}`, Poison `{0.00, 0.60, 0.00}`,
 Bleed `{0.80, 0.10, 0.10}`, all alpha 1. An aura
 with no dispel type takes the surface's own color instead (feedback #7); schema v5 clears a stored
@@ -196,7 +197,7 @@ Every Bars and Icons text element (`bars.name`, `bars.time`, `bars.stacks`, `ico
 
 ## The starter containers
 
-`NS.STARTER_CONTAINERS` (`defaults/Profile.lua:291`) seeds a brand-new profile once, each spec merged
+`NS.STARTER_CONTAINERS` (`defaults/Profile.lua:294`) seeds a brand-new profile once, each spec merged
 over the template:
 
 | Name | Unit | Type | Style | Differs from the template |
@@ -415,7 +416,8 @@ live reference to it.
 
 A row may also declare `effect`, which tells `modules/ContainerManager.lua` what a write needs beyond
 the stored value. `"visibility"` (the master `enabled`, `visibility`, `locked` and `alpha`,
-`container.enabled`, and the six `container.filter.zones.*` rows) runs the combat-legal visibility
+`container.enabled`, the six `container.filter.zones.*` rows and the two
+`container.filter.unitFilter.*` rows) runs the combat-legal visibility
 pass and queues no apply. Only the show ladder reads a container's `enabled`; `Container:Apply`
 never does. `"none"` (`hideBlizzardBuffs`,
 `hideBlizzardDebuffs`, `container.name`) queues nothing, because the row's `onChange` is its whole

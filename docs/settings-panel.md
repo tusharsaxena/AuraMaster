@@ -15,7 +15,7 @@ is a defect in this doc (documentation-§3).
 | General | Master controls · Display · Spell Categories · Dispel Colors | Turn the addon off, when containers show at all, master scale and alpha, lock (unlocked shows the drag handles), debug console, test mode (placeholder auras), the two resets; hiding Blizzard's buff and debuff frames; which spells each spell category matches, and one color per dispel type, both shared by every container |
 | Containers | a nav rail (options-ui-§13): General · Filters · Layout · the container's own style | One page per container (#6): the band's picker chooses the container, the rail chooses which part of it the tabs below show, and only the scroll moves |
 | Containers → General (rail) | General | A top-level page (`N-1`, batch 7): create, select, rename, enable, unit, aura type and style of a container, and duplicate, delete, copy settings between containers |
-| Containers → Filters (rail) | General · Categories · Overrides · Sorting · Situations | Who cast it, timed or permanent, max duration, and the five-rank priority block at the foot of the tab; the Show/Hide category grids (weapon enchants among them); the whitelist and blacklist spell lists, each entry's verdict in its "?" mark; sort order and cap (per group); what draws where spell lists don't apply, per NPC and per player, and the kinds of zone the container shows in. Tabs vary with the aura type |
+| Containers → Filters (rail) | General · Categories · Overrides · Sorting · Situations | Who cast it, timed or permanent, max duration, and the five-rank priority block at the foot of the tab; the Show/Hide category grids (weapon enchants among them); the whitelist and blacklist spell lists, each entry's verdict in its "?" mark; sort order and cap (per group); what draws where spell lists don't apply, per NPC and per player, the kinds of zone the container shows in, and the kinds of unit (NPC or player, friendly, neutral or hostile) a target or focus container shows for. Tabs vary with the aura type |
 | Containers → Layout (rail) | Frame · Anchor · Growth · Mouse · Label | Scale, opacity, strata and frame level; where the container sits (the screen, another container or a named frame, with only what the mode reads drawn) and the frame picker; growth direction and spacing, the flow inherited from the parent while attached to a container; tooltips, cancel, click-through; the optional name label |
 | Containers → Bar (rail, a container drawn as bars) | General · Background & border · Name text · Time text · Stack text · Icon · Pandemic | The look of a container drawn as bars |
 | Containers → Icon (rail, a container drawn as icons) | Size · Border · Cooldown · Time text · Stack text · Pandemic | The look of a container drawn as icons |
@@ -530,8 +530,8 @@ nothing else Shown, whose whitelist entry really was the only thing keeping an a
 can no longer be "hidden" at all once the toggle is gone, so every note stays non-definite now.
 
 **Situations** (buff and debuff containers, the last tab, after Sorting; filter situations S4,
-2026-10-02) — the group's eight rows, declared after Sorting's so the strip ends with it, drawn by a
-bespoke tab keyed by the group (`renderSituations`). Two sections:
+2026-10-02) — the group's ten rows, declared after Sorting's so the strip ends with it, drawn by a
+bespoke tab keyed by the group (`renderSituations`). Three sections:
 
 - **Where spell lists don't apply.** A line in the Spell Categories NOTE's unit wording ("On units
   you can't assist, spell lists don't apply to this container.", and the same for units you can
@@ -552,6 +552,14 @@ bespoke tab keyed by the group (`renderSituations`). Two sections:
   Raids, Battlegrounds, Arenas (`container.filter.zones.none` / `.party` / `.scenario` / `.raid` /
   `.pvp` / `.arena`). An unticked kind of place hides the locked container there, through the
   combat-legal visibility pass; an unlocked container or one in test mode still shows anywhere.
+- **Unit type** (S6, the addendum; the last section). On a target or focus container two dropdowns:
+  **Unit type** (All, NPCs, Players; `container.filter.unitFilter.kind`) and **Reaction** (All,
+  Friendly, Neutral, Hostile; `container.filter.unitFilter.reaction`), both All by default and both
+  taking the `visibility` effect. A unit that does not match both choices hides the locked container
+  through the combat-legal visibility pass, re-run on every target or focus swap and reaction change;
+  no unit, or an answer that cannot be read, allows; unlocked or in test mode it still shows. A player
+  or pet container draws "Always your own character or pet." and no dropdown (the setting is ignored
+  there).
 
 **Filter priority.** The five ranks, highest first, are stated in ONE place — the foot of the
 **General** tab (`P-1`, `P-4`), under the heading *Filter priority logic*: a lead-in in

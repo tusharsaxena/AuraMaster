@@ -3,7 +3,8 @@
 -- wording, then the dropdowns the container's FC.IdsMode calls for (On NPCs and On players on a
 -- target or focus; one "Your own and your pet's debuffs" on a player or pet debuff container; none,
 -- and a note, on a player or pet buff container), the honor line, and the timeless note. Section
--- "Show in": the six zone checkboxes. The Spell Categories and Overrides NOTE lines that point here
+-- "Show in": the six zone checkboxes. Section "Unit type" (S6, the addendum), last: Unit type and
+-- Reaction on a target or focus container, a note on a player or pet one. The Spell Categories and Overrides NOTE lines that point here
 -- are tests/test_pages_filters.lua's; the rows' data is tests/test_situations_settings.lua's.
 -- Spec: docs/superpowers/specs/2026-10-02-filter-situations-design.md S4.
 
@@ -75,12 +76,12 @@ test("situations tab: a target or focus buff container draws its unit line, On N
         local NS, P, ws = situations(1, unit)
         local L = NS.L
         -- red under: the tab drawn as a plain group (no sections), or the zone section missing
-        assertEqual(headings(ws), L["Where spell lists don't apply"] .. "|" .. L["Show in"], unit)
+        assertEqual(headings(ws), L["Where spell lists don't apply"] .. "|" .. L["Show in"] .. "|" .. L["Unit type"], unit)
         -- red under: a unit line in another wording than the Spell Categories NOTE's
         local line = at(ws, L["On units you can't assist, spell lists don't apply to this container."])
         assertTrue(line ~= nil, unit .. ": the unit line")
         -- red under: the dropdowns gated on anything but FC.IdsMode "dynamic"
-        assertEqual(dropdowns(ws), L["On NPCs"] .. "|" .. L["On players"], unit)
+        assertEqual(dropdowns(ws), L["On NPCs"] .. "|" .. L["On players"] .. "|" .. L["Unit type"] .. "|" .. L["Reaction"], unit)
         local honor = at(ws, L[HONOR])
         assertTrue(honor ~= nil and honor > at(ws, L["On players"]), unit .. ": the honor line under the dropdowns")
         assertTrue(line < at(ws, L["On NPCs"]), unit .. ": the unit line above them")
@@ -93,7 +94,7 @@ test("situations tab: a target debuff container names units you can assist", fun
     local NS, _, ws = situations(3)
     -- red under: the unit line ignoring the aura type (debuffs lose spell lists on assistable units)
     assertTrue(at(ws, NS.L["On units you can assist, spell lists don't apply to this container."]) ~= nil)
-    assertEqual(dropdowns(ws), NS.L["On NPCs"] .. "|" .. NS.L["On players"])
+    assertEqual(dropdowns(ws), NS.L["On NPCs"] .. "|" .. NS.L["On players"] .. "|" .. NS.L["Unit type"] .. "|" .. NS.L["Reaction"])
 end)
 
 test("situations tab: a player or pet debuff container draws one dropdown, the players setting, relabeled", function()
@@ -194,4 +195,53 @@ test("situations tab: On NPCs writes the npcs setting", function()
     -- red under: the dropdown drawn from a row with no path
     assertEqual(s.npcs, "blizzard")
     assertEqual(s.players, "every")
+end)
+
+-- ── Unit type (S6) ──────────────────────────────────────────────────────────────────────────
+
+local OWN = "Always your own character or pet."
+
+--- The last widget drawn that carries a text or a label (layout groups and spacers carry neither).
+local function lastWithText(ws)
+    for i = #ws, 1, -1 do
+        local w = ws[i]
+        if (w.text ~= nil and w.text ~= "") or (w.labelText ~= nil and w.labelText ~= "") then return w end
+    end
+    return nil
+end
+
+test("situations tab: Unit type is the last section, after Show in, with Unit type and Reaction on a target or focus", function()
+    for _, unit in ipairs({ "target", "focus" }) do
+        local NS, P, ws = situations(1, unit)
+        local L = NS.L
+        local heading = at(ws, L["Unit type"])
+        -- red under: no Unit type section, or one drawn before Show in
+        assertTrue(heading ~= nil and heading > at(ws, L["Arenas"]), unit .. ": after the zone checkboxes")
+        local kind = P.find(ws, "Dropdown", L["Unit type"])
+        local reaction = P.find(ws, "Dropdown", L["Reaction"])
+        assertTrue(kind ~= nil and reaction ~= nil, unit .. ": both dropdowns")
+        assertEqual(lastWithText(ws), reaction, unit .. ": Reaction is the last thing drawn on the tab")
+        assertFalse(P.hasText(ws, L[OWN]), unit .. ": no own-character note")
+        kind:__fire("OnValueChanged", "npc")
+        reaction:__fire("OnValueChanged", "hostile")
+        local f = NS.Database.FindContainer(1).filter.unitFilter
+        -- red under: the dropdowns drawn from copies that write nowhere
+        assertEqual(f.kind, "npc", unit)
+        assertEqual(f.reaction, "hostile", unit)
+    end
+end)
+
+test("situations tab: a player or pet container says it is always your own character or pet, with no Unit type dropdowns", function()
+    for _, c in ipairs({ { id = 1 }, { id = 1, unit = "pet" }, { id = 2 }, { id = 2, unit = "pet" } }) do
+        local NS, P, ws = situations(c.id, c.unit)
+        local L = NS.L
+        local where = "#" .. c.id .. " " .. tostring(c.unit or "player")
+        local heading = at(ws, L["Unit type"])
+        assertTrue(heading ~= nil, where .. ": the section heading")
+        -- red under: the dropdowns drawn where the gate is ignored (they would change nothing)
+        assertTrue(P.find(ws, "Dropdown", L["Reaction"]) == nil, where .. ": no Reaction dropdown")
+        local note = at(ws, L[OWN])
+        assertTrue(note ~= nil and note > heading, where .. ": the note under the heading")
+        assertEqual(lastWithText(ws), ws[note], where .. ": the note is the last thing drawn")
+    end
 end)

@@ -167,6 +167,9 @@ NS.CONTAINER_TEMPLATE = {
         situations      = { npcs = "every", players = "every" },
         -- The instance types (IsInInstance()) the container shows in; all on (opt-out).
         zones           = { none = true, party = true, scenario = true, raid = true, pvp = true, arena = true },
+        -- The Unit type gate (S6): a target or focus container shows only for units of this kind
+        -- ("all" | "npc" | "player") and reaction to you ("all" | "friendly" | "neutral" | "hostile").
+        unitFilter      = { kind = "all", reaction = "all" },
     },
 
     -- Where the container sits when it is attached to the screen: stored, never read back off a frame.

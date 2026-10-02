@@ -1,10 +1,10 @@
 # Compat layer
 
-`core/Compat.lua` publishes **25** shims on `NS.Compat`, counted with the command documentation-§3
+`core/Compat.lua` publishes **26** shims on `NS.Compat`, counted with the command documentation-§3
 fixes:
 
 ```sh
-grep -cE '^\s*function\s+[A-Za-z_][A-Za-z0-9_]*\.' core/Compat.lua    # 25
+grep -cE '^\s*function\s+[A-Za-z_][A-Za-z0-9_]*\.' core/Compat.lua    # 26
 ```
 
 A shim is the one entry point a feature module calls in place of a new-in-12.x, version-variant or
@@ -46,6 +46,7 @@ their library-absent arm.
 | 23 | `IdsApply(unit, auraType)` | `UnitIsPlayerControlledOrGroupMember(unit)` or `UnitCanAssist("player", unit, true, true)` for `HELPFUL`, `not UnitCanAssist(...)` for `HARMFUL` (each pcall-guarded and `NS.Secrets.CanAccess`-checked): Blizzard's `AuraContainerUtil.CanApplyIdentityCandidateFilters`, minus its per-aura never-secret exemption | `false` (an API absent, raising or answering secret, or no unit): the blizzard view can under-show, never duplicate | Whether the engine applies a group's spell ids to this unit, which picks the view of the plan a container sends (spell-list views, V2) | `modules/Container.lua` |
 | 24 | `IsPlayerUnit(unit)` | `UnitIsPlayer(unit)`, pcall-guarded and `NS.Secrets.CanAccess`-checked (not documented as answering secret) | `nil` (the API absent, raising or answering secret, or no unit): `ContainerClass:ResolveView` takes the stricter Situations setting | Whether a target or focus is a player or an NPC, which picks the Situations setting where spell ids are not applied (filter situations, S2) | `modules/Container.lua` |
 | 25 | `InstanceType()` | `IsInInstance()` second value, pcall-guarded, `NS.Secrets.CanAccess`-checked and string-checked | `nil` (the API absent, raising, answering secret, or not a string): `zoneAllows` allows the container | The kind of place the player is in, which the Situations -> Show in checkboxes gate on (filter situations, S3) | `modules/Container.lua` |
+| 26 | `UnitReactionKind(unit)` | `UnitReaction(unit, "player")` in three bands (5 and above `"friendly"`, 4 `"neutral"`, 3 and below `"hostile"`), pcall-guarded, `NS.Secrets.CanAccess`-checked and number-checked (not documented as answering secret) | `nil` (the API absent, raising, answering secret or not a number, or no unit): `unitAllows` allows the container | How a target or focus stands toward the player, which the Situations -> Unit type gate's Reaction reads (filter situations, S6) | `modules/Container.lua` |
 
 ## Rules for this file
 

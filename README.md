@@ -4,7 +4,7 @@
 ![CurseForge Version](https://img.shields.io/curseforge/v/1698345)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-1903%2F1903_passing-green)
+![Tests](https://img.shields.io/badge/Tests-1928%2F1928_passing-green)
 
 Ka0s Aura Master lets you build your own buff and debuff displays. Each one is a container. You pick
 whose auras it shows (yours, your target's, your focus's or your pet's), whether it shows buffs,
@@ -54,7 +54,7 @@ the top picks which container you're working on, and the list down the left side
 the rest.
 
 - **Create a container**. Click New container, or type `/am new target debuffs icons` in chat. On General, pick whose auras it shows (yours, your target's, your focus's or your pet's), whether it shows buffs or debuffs, and whether it draws them as bars, icons or text. You can rename, duplicate or delete it there too, or copy another container's settings onto it.
-- **Choose what it shows**. Filters decides which auras make the cut: who cast them, timed or permanent, a maximum duration, and the spell categories. Each category is set to Show or Hide, and an aura in any category set to Show gets drawn. The Overrides tab holds a whitelist and a blacklist for single spells, and the whitelist always wins. General → Spell Categories is where you change which spells a category holds, or make your own. The Situations tab, last on Filters, covers the places spell lists can't reach and the kinds of zone the container shows in. If a filter can't work where you've put it, an orange line at the top of the page says why.
+- **Choose what it shows**. Filters decides which auras make the cut: who cast them, timed or permanent, a maximum duration, and the spell categories. Each category is set to Show or Hide, and an aura in any category set to Show gets drawn. The Overrides tab holds a whitelist and a blacklist for single spells, and the whitelist always wins. General → Spell Categories is where you change which spells a category holds, or make your own. The Situations tab, last on Filters, covers the places spell lists can't reach, the kinds of zone the container shows in, and which kinds of unit it shows for. If a filter can't work where you've put it, an orange line at the top of the page says why.
 - **Place it**. Layout decides where the container lives: anywhere on screen, following another container as that one grows, or attached to a frame such as your unit frame or an action bar. **Pick a frame…** closes the settings so you can just click the one you want. Growth direction, spacing, scale and the optional name label are on Layout too.
 - **Make it look right**. The last entry in the list is the container's style, Bar, Icon or Text, with its textures, fonts, colors and borders. A Text container draws each aura as one line from a template such as `$spellname$[ x$stacks$][ - $remainingduration$]`, and the page lists every token it understands. General → Dispel Colors picks the color for each dispel type.
 
@@ -72,6 +72,13 @@ NOTE saying which units this applies to for that container, and pointing to Situ
 The same tab has **Show in**: six checkboxes for open world, dungeons, scenarios and delves, raids,
 battlegrounds and arenas, all ticked to start with. Untick one and the container stays hidden in
 that kind of place. While it's unlocked or in test mode it still shows, so you can find it.
+
+Last on the tab, **Unit type** narrows a target or focus container to the units you want: **Unit
+type** picks All, NPCs or Players, and **Reaction** picks All, Friendly, Neutral or Hostile (how that
+unit stands toward you). Both start at All. A unit that doesn't match both stays empty, so a "Hostile
+NPCs" container shows nothing on a friendly player and comes back on the next enemy mob. It follows
+the target as you change it, in combat too. Your own and your pet's containers don't have it, since
+they always show you or your pet. Unlocked or in test mode, the container still shows.
 
 If you change something mid-fight, it waits until combat ends (or until the encounter, key or match
 is over), and chat tells you which. `/am disable` hides every container at once and `/am enable`
@@ -118,6 +125,7 @@ affected.
 | Can I put a container on my unit frame? | Yes. On Layout → Anchor use **Pick a frame…** and click it, or set **Attach to** to *Named frame* and type the frame's name. If the frame belongs to an addon that hasn't loaded yet, the container waits at its screen position and moves over once the frame exists. |
 | Why does my spell list do nothing on my debuffs? | Blizzard only allows spell-by-spell filtering for buffs on units you can help and debuffs on units you can't, so spell categories and Overrides never work on your own or your pet's debuffs. The Blizzard categories, dispel types and the other filters work on any unit. Filters → Situations → **Your own and your pet's debuffs** picks what shows instead. |
 | Why don't my target's buffs show on enemies? | The game won't filter an enemy's buffs (or a neutral mob's) by spell, so on those targets your spell categories and Overrides are switched off. Filters → Situations decides what shows there instead, with one choice for NPCs and one for players. **Every aura, once** (the default) brings back every buff that gets past Cast by, Duration, Max duration and the Blizzard rows you set to Hide, each drawn once. **Only my Blizzard categories set to Show** is stricter: a container built only from spell categories then shows nothing on an enemy. On a friendly target everything works as you set it. The same goes the other way for a target debuff container on a friendly target. A Blizzard row set to Hide still hides on enemies, and **Castable/Dispellable by you** also covers enemy buffs you can dispel or remove (a hunter's Tranquilizing Shot on an Enrage, for example), so set it to Show if you want those. |
+| Can I have a target container that only shows on enemy NPCs? | Yes. Filters → Situations → **Unit type** has two dropdowns: set **Unit type** to NPCs and **Reaction** to Hostile. On any other target the container stays empty and hidden. It switches as you change targets, in combat too, and it still shows while unlocked or in test mode so you can find it. Containers on yourself or your pet don't have this setting. |
 | Can I hide a container in raids, or only show it in dungeons? | Yes. Filters → Situations → **Show in** has a checkbox for open world, dungeons, scenarios and delves, raids, battlegrounds and arenas. Untick the places you don't want it. It still shows while unlocked or in test mode, so you can always find it to move it. |
 | A timed buff showed up in my "without a duration" container. Why? | That filter learns which buffs have a timer while you're out of combat. A buff you've never seen out of combat can slip through the first time; after that it's known. `/am forgettimed` clears everything it learned. |
 | How do I cancel a buff? | Right-click it in a container that shows your own buffs or weapon enchants. Untick **Right-click to cancel** on Layout → Mouse if you'd rather it didn't. |

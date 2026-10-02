@@ -267,6 +267,11 @@ return function()
     -- container's no-ids view follows (filter situations, S2). Only the player is one by default.
     M.__isPlayer = { player = true }
     M.UnitIsPlayer = function(unit) return M.__isPlayer[unit] or false end
+    -- A unit's reaction to the player, UnitReaction(unit, "player") (NS.Compat.UnitReactionKind):
+    -- the Situations -> Unit type gate's Reaction (filter situations, S6). 1-3 hostile, 4 neutral,
+    -- 5-8 friendly; nil (no unit) unless a case sets it.
+    M.__reaction = {}
+    M.UnitReaction = function(unit) return M.__reaction[unit] end
 
     -- ── class colors (LibKa0s-Core's resolver reads RAID_CLASS_COLORS) ─────────────────────
     M.RAID_CLASS_COLORS = { MAGE = { r = 0.25, g = 0.78, b = 0.92 } }

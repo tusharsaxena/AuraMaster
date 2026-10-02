@@ -22,7 +22,7 @@ check's number is not reused. Checks with no recorded pass, and checks new or co
 | COMBAT-1 to COMBAT-7 | Combat and restrictions | Deferred changes, the settings lock, resets in combat, Mythic+ keys |
 | DIAG-1 to DIAG-20 | Debug, diagnostics, perf | The debug console, bulk `[Set]` lines, `/am diagnostics`, `/am perf`, the event trace, resizing the console, its copy window and the perf panel, the console's Diagnostics link, diagnostics turning logging on, the library's own lines (a slash refusal, a stand-down edge, the launcher's at-enable line) |
 | CONT-1 to CONT-25 | Containers | Create, duplicate, delete, rename, copy; handles, strips and the close mark; test mode; unit swaps; empty placeholders |
-| FILT-1 to FILT-59 | Filters and spell categories | Cast by, the category grids, Overrides, the add-a-spell box, aura ids, your own categories, weapon enchants and their names, the help marks' art, where spell lists apply, the Situations tab and its zones |
+| FILT-1 to FILT-63 | Filters and spell categories | Cast by, the category grids, Overrides, the add-a-spell box, aura ids, your own categories, weapon enchants and their names, the help marks' art, where spell lists apply, the Situations tab, its zones and its Unit type gate |
 | LAYOUT-1 to LAYOUT-38 | Layout | Anchor modes, attaching, chains, growth, anchor points, seams, the name label, mouse and tooltips |
 | STYLE-1 to STYLE-30 | Bars and Icons style, fonts | Bars and Icons tabs, the spark, borders, dispel colors, pandemic, the font primer |
 | TEXT-1 to TEXT-29 | Text style | Templates and tokens, justify, the icon, dispel type word, backdrop and edge, animation, Size to fit |
@@ -1130,7 +1130,40 @@ a duration' is built from spell lists." *Target debuffs (mine)* → "On units yo
 the same two dropdowns. *Player debuffs* → "On your own debuffs, …" and one dropdown, **Your own and
 your pet's debuffs**, whose tooltip names your own or your pet's debuffs (not "what a player
 shows"). *Player buffs* → "Spell lists always apply to your own and your pet's buffs."
-and no dropdown. Each ends with **Show in** and its six checkboxes, all ticked. Result:
+and no dropdown. Each then shows **Show in** and its six checkboxes, all ticked, and last **Unit
+type** (FILT-60). Result:
+
+FILT-60 to FILT-63 check the Situations tab's last section, **Unit type** (filter situations S6,
+2026-10-02): which units a target or focus container shows for, by kind (NPCs or Players) and by
+reaction to you (Friendly, Neutral or Hostile). They start from the defaults (All / All) unless a step
+says otherwise.
+
+**FILT-60. The section.** Filters → **Situations** on *Target debuffs (mine)* → after **Show in**,
+a last section **Unit type** with two dropdowns, **Unit type** (All, NPCs, Players) and **Reaction**
+(All, Friendly, Neutral, Hostile), both at All. Each tooltip says an unlocked container, or one in
+test mode, still shows. On *Player buffs* and *Player debuffs*, and on a container switched to your
+pet, the section shows "Always your own character or pet." and no dropdown. Result:
+
+**FILT-61. Hostile NPCs only.** On a locked target container set **Unit type** NPCs and **Reaction**
+Hostile. Target an enemy mob → its auras draw. Target a friendly player, a party member, a friendly
+NPC and a neutral (yellow) mob in turn → the container shows nothing each time, label included, and
+comes back on the next enemy mob, with no `/reload` and no Lua error. Repeat the swaps in combat
+→ the same, at once. With no target → nothing to draw, no error. Unlock the container while
+targeting a friendly player → it shows so you can move it; lock it → it hides again. Set both
+dropdowns back to All → it shows on every target at once. Result:
+
+**FILT-62. A reaction change without a swap.** On a locked target container set **Reaction**
+Hostile, target a friendly player and start a duel with them → the container shows when the duel
+starts (they turn hostile) and hides when it ends, with no target change. Set **Unit type** Players
+and **Reaction** All instead, and with a party member targeted switch **Unit type** with `/am set
+container.filter.unitFilter.kind npc` in combat → the container hides at once, not after combat;
+`/am set container.filter.unitFilter.kind all` → it shows again. Result:
+
+**FILT-63. Focus, and the copy.** Make a focus buffs container with **Unit type** Players and
+**Reaction** Friendly. Focus a party member → it draws; focus an enemy mob → it hides, while a target
+container set to All keeps drawing your target. Containers → **Copy settings from** that focus
+container, section **Filters**, onto another target container → its **Unit type** section reads
+Players / Friendly. Result:
 
 ## Layout
 
@@ -1861,7 +1894,8 @@ line, then remove its row here.
 | FILT-43 to FILT-45 | new on 2026-10-02: the Options descriptor passes `addonName`, so help marks draw the library's `info` art (LibKa0s#42, CA-AM-NM) |
 | FILT-46 to FILT-51 | new on 2026-10-02 with the spell-list views (SV-04); FILT-51's NOTE sentences end "(see Situations)" since the same day (filter situations, SI-05) |
 | FILT-52 | new on 2026-10-02: the player's own reaction change (SV-05) |
-| FILT-53 to FILT-59 | new on 2026-10-02 with the Situations tab and its zones (filter situations, SI-05); FILT-59's honor line names Duration, its Duration option is quoted as the dropdown reads, and the debuff dropdown's tooltip is checked, since the same day (SI-06) |
+| FILT-53 to FILT-59 | new on 2026-10-02 with the Situations tab and its zones (filter situations, SI-05); FILT-59's honor line names Duration, its Duration option is quoted as the dropdown reads, and the debuff dropdown's tooltip is checked, since the same day (SI-06); FILT-59 ends with the Unit type section since the same day (SI-10) |
+| FILT-60 to FILT-63 | new on 2026-10-02 with the Situations tab's Unit type gate (filter situations S6, SI-10) |
 | LAYOUT-1 | 69, batch 5 |
 | LAYOUT-6 | 162, smoke batch 2 (owed, as CONT-8): the outline moving across aura buttons; 42: its combat refusal corrected on 2026-09-29 to `/am pick` alone, since the panel's button is locked in combat |
 | LAYOUT-11 | 67, batch 8 (failed 2026-09-25): the **Per row** step; the rest passed as 238 |

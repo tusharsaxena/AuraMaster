@@ -361,6 +361,22 @@ function Compat.InstanceType()
     return kind
 end
 
+--- How `unit` stands toward the player (filter situations, S6): UnitReaction(unit, "player") in three
+--- bands, 5 and above "friendly", 4 "neutral", 3 and below "hostile" (a player's reaction to another
+--- player uses the same bands). Not documented as answering secret, but guarded like IsPlayerUnit:
+--- nil when not knowable (the API is absent, the call raised, the answer is secret or not a number,
+--- or there is no unit), and the Unit type gate allows then (modules/Container.lua unitAllows).
+--- @param unit string
+--- @return string|nil
+function Compat.UnitReactionKind(unit)
+    local fn = _G.UnitReaction
+    if type(unit) ~= "string" or type(fn) ~= "function" then return nil end
+    local ok, r = pcall(fn, unit, "player")
+    if not (ok and NS.Secrets.CanAccess(r)) or type(r) ~= "number" then return nil end
+    if r >= 5 then return "friendly" end
+    return r >= 4 and "neutral" or "hostile"
+end
+
 -- ---------------------------------------------------------------------------
 -- Everything else
 -- ---------------------------------------------------------------------------

@@ -602,6 +602,44 @@ local function zoneAllows(cfg)
     return zones[kind] ~= false
 end
 
+--- Whether `unit` exists: true, false, or nil when that is not knowable.
+local function unitExists(unit)
+    local ok, v = pcall(UnitExists, unit)
+    if not (ok and NS.Secrets.CanAccess(v)) then return nil end
+    return v and true or false
+end
+
+-- The Unit type choices that gate (S6); "all", or a stored value that is no choice, does not.
+local GATING_KINDS = { npc = true, player = true }
+local GATING_REACTIONS = { friendly = true, neutral = true, hostile = true }
+
+--- Whether `unit`, which exists, is of `kind` and stands `reaction` toward the player. A choice that
+--- does not gate, or an answer that is not knowable, allows.
+local function unitMatches(unit, kind, reaction)
+    if GATING_KINDS[kind] then
+        local isPlayer = NS.Compat.IsPlayerUnit(unit)
+        if isPlayer ~= nil and isPlayer ~= (kind == "player") then return false end
+    end
+    if GATING_REACTIONS[reaction] then
+        local band = NS.Compat.UnitReactionKind(unit)
+        if band ~= nil and band ~= reaction then return false end
+    end
+    return true
+end
+
+--- Whether the container's Situations -> Unit type choices let it show for its unit now (filter
+--- situations, S6). Target and focus containers only (C.UNIT_FILTER_UNITS): a player or pet one is
+--- always your own character or pet. No unit, an unknowable answer, or a stored value that is no
+--- choice allows: the container then simply has nothing to draw, or the gate cannot say.
+local function unitAllows(cfg)
+    local f = cfg.filter and cfg.filter.unitFilter
+    local unit = cfg.unit
+    if not (f and NS.Constants.UNIT_FILTER_UNITS[unit]) then return true end
+    if not (GATING_KINDS[f.kind] or GATING_REACTIONS[f.reaction]) then return true end
+    if unitExists(unit) ~= true then return true end
+    return unitMatches(unit, f.kind, f.reaction)
+end
+
 --- The show ladder, in order. STEP 0 IS THE LATCH (slash-commands-§7, core/LifecycleSetup.lua):
 --- whether the addon is running at all, for either reason it might not be -- the player switched it
 --- off, or a perf capture is measuring its suspended arm. Nothing below it can re-show a container
@@ -621,6 +659,8 @@ end
 --- a locked container hides where its Show in box is unticked, and an unlocked or test-mode one
 --- still shows so it can be found. Like visibility it reaches the engine only through ApplyLive's
 --- SetEnabled, which is combat-legal, never through the anchor.
+--- THE UNIT TYPE GATE (filter situations, S6) sits beside the zone gate under the same rule, for a
+--- target or focus container: a unit that does not match both its choices hides it while locked.
 --- @return boolean show, boolean previewing
 function ContainerClass:ShouldShow()
     if NS.IsStoodDown() or self.parked then return false, false end
@@ -628,7 +668,17 @@ function ContainerClass:ShouldShow()
     local cfg = self:Cfg()
     if not (p and cfg and cfg.enabled) then return false, false end
     local previewing = NS.State.testMode and true or false
-    return (not p.locked) or previewing or (visibilityAllows(p.visibility) and zoneAllows(cfg)), previewing
+    return (not p.locked) or previewing
+        or (visibilityAllows(p.visibility) and zoneAllows(cfg) and unitAllows(cfg)), previewing
+end
+
+--- Whether the Unit type gate's answer for this container on `unit` differs from the one its last
+--- visibility pass saw (`unitOpen`, recorded by ApplyVisibility), so a swap or a reaction change
+--- re-runs the pass only where it can move something (CM.ApplyUnitGate).
+function ContainerClass:UnitGateMoved(unit)
+    local cfg = self:Cfg()
+    if not (cfg and cfg.unit == unit and NS.Constants.UNIT_FILTER_UNITS[unit]) then return false end
+    return unitAllows(cfg) ~= self.unitOpen
 end
 
 --- The anchor's own half of a stand-down (see ApplyVisibility). Returns whether combat deferred it.
@@ -776,6 +826,8 @@ function ContainerClass:ApplyVisibility()
     local show, previewing = self:ShouldShow()
     local p = NS.db and NS.db.profile
     local cfg = self:Cfg()
+    -- What the Unit type gate answered for this pass (UnitGateMoved compares against it).
+    self.unitOpen = cfg and unitAllows(cfg) or false
     -- THE ANCHOR ITSELF, and only while the addon is stood down. A stood-down addon draws NOTHING,
     -- and an anchor left shown is a frame of ours still on screen. It is the aura engine's ancestry,
     -- though, so it must not be shown or hidden under combat lockdown (events-frames-taint-§2):

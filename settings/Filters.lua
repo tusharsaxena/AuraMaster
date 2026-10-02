@@ -21,6 +21,7 @@ local _, NS = ...
 --                                   and the timeless note
 --                   Show in         Open world, Dungeons, Scenarios and delves, Raids, Battlegrounds,
 --                                   Arenas
+--                   Unit type       Unit type [▾] Reaction [▾] (target, focus), or a note (player, pet)
 --
 -- Every row here compiles, through modules/FilterCompiler.lua, into the aura groups Blizzard's aura
 -- engine evaluates in its own code — we never read an aura while it is secret, so every filter is a
@@ -206,8 +207,8 @@ NS.RegisterSchemaRows({
 -- ── Situations (S5) ───────────────────────────────────────────────────────────────────────────
 --
 -- The data behind the Situations tab: where Blizzard won't apply spell lists, what NPCs and players
--- draw (`filter.situations`), and the instance types the container shows in (`filter.zones`). Both
--- live under `filter` in the container template, so Copy settings from -> Filters, Duplicate, this
+-- draw (`filter.situations`), the instance types the container shows in (`filter.zones`), and the
+-- units a target or focus container shows for (`filter.unitFilter`, S6). All three live under `filter` in the container template, so Copy settings from -> Filters, Duplicate, this
 -- page's Defaults and a profile reset carry them, and the load backfill stamps them into every
 -- stored container. Every row validates, so a whole-section write (a copy) refuses a bad leaf.
 --
@@ -218,7 +219,7 @@ NS.RegisterSchemaRows({
 -- known aura type has no rows in the group and no empty tab. The tab draws the rows itself
 -- (renderSituations), through the flow engine, so none carries `skipRender`.
 --
--- The zone rows take the combat-legal visibility pass. The situation rows take the `view` effect:
+-- The zone and Unit type rows take the combat-legal visibility pass. The situation rows take the `view` effect:
 -- modules/ContainerManager.lua runs CM.ApplyViews for that container at once, in combat too, never
 -- held behind the apply hold (no plan reads them, so nothing needs a re-apply; SI-03).
 
@@ -227,6 +228,14 @@ for _, mode in ipairs(C.SITUATION_MODES) do SITUATION_OK[mode] = true end
 
 local function validSituation(v) return SITUATION_OK[v] == true end
 local function validZone(v) return type(v) == "boolean" end
+
+-- The Unit type gate (S6, the addendum): two choices, each validated against its list.
+local UNIT_ROWS = {
+    { key = "kind", keys = C.UNIT_KINDS, labels = C.UNIT_KIND_LABELS, label = L["Unit type"],
+      desc = L["Show this container only for an NPC or only for a player. An unlocked container, or one in test mode, still shows so you can find it."] },
+    { key = "reaction", keys = C.UNIT_REACTIONS, labels = C.UNIT_REACTION_LABELS, label = L["Reaction"],
+      desc = L["Show this container only for a unit that is friendly, neutral or hostile to you. An unlocked container, or one in test mode, still shows so you can find it."] },
+}
 
 local SITUATION_ROWS = {
     { key = "npcs", label = L["On NPCs"],
@@ -252,6 +261,16 @@ local function situationRows()
             type = "bool", label = L[C.ZONE_LABELS[zone]],
             desc = L["Show this container in this kind of zone. An unlocked container, or one in test mode, still shows anywhere so you can find it."],
             validate = validZone, effect = "visibility",
+        }
+    end
+    for _, u in ipairs(UNIT_ROWS) do
+        local ok = {}
+        for _, k in ipairs(u.keys) do ok[k] = true end
+        rows[#rows + 1] = {
+            path = "container.filter.unitFilter." .. u.key, page = PAGE, group = G_SIT,
+            auraTypes = BUFFS_DEBUFFS,
+            type = "string", values = NS.Choices(u.keys, u.labels), label = u.label, desc = u.desc,
+            validate = function(v) return ok[v] == true end, effect = "visibility",
         }
     end
     return rows
@@ -901,8 +920,9 @@ local function zoneRows(rows)
 end
 
 --- The Situations tab, last on the strip: the unit line, the dropdowns and the two notes (or the
---- always note alone), then the six zone checkboxes. Keyed by its group, so `rows` is the group's,
---- already filtered to the container's aura type.
+--- always note alone), then the six zone checkboxes, then Unit type and Reaction (target and focus)
+--- or the own-character note. Keyed by its group, so `rows` is the group's, already filtered to the
+--- container's aura type.
 local function renderSituations(ctx, cfg, rows)
     H.Section(ctx, L["Where spell lists don't apply"])
     local which, mode = viewWhich(cfg)
@@ -918,6 +938,13 @@ local function renderSituations(ctx, cfg, rows)
     end
     H.Section(ctx, L["Show in"])
     H.RenderRows(ctx, zoneRows(rows), nil, nil, { noHeadings = true })
+    H.Section(ctx, L["Unit type"])
+    if C.UNIT_FILTER_UNITS[cfg.unit] then
+        H.RenderRows(ctx, { rowAt(rows, "container.filter.unitFilter.kind"),
+            rowAt(rows, "container.filter.unitFilter.reaction") }, nil, nil, { noHeadings = true })
+    else
+        H.TextRow(ctx, L["Always your own character or pet."])
+    end
 end
 
 NS.RegisterContainerSection(PAGE, L["Filters"], {

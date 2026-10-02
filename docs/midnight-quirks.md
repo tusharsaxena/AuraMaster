@@ -323,7 +323,7 @@ hides it, and clearing does not show it again.
 `UpdateAllAuras` exists for external refreshes such as target changes.
 
 **What this addon does.** `PLAYER_TARGET_CHANGED`, `PLAYER_FOCUS_CHANGED` and `UNIT_PET` (for the
-player) call `UpdateAllAuras` on every container on that unit (`core/AuraMaster.lua:170-186`).
+player) call `UpdateAllAuras` on every container on that unit (`core/AuraMaster.lua:170-189`).
 
 ## An addon font loads lazily, and the engine writes a name once (measured 2026-09-27)
 
@@ -444,7 +444,7 @@ frames are never freed, so a rebuild per run would leak one engine frame per con
   creating a container, and tearing one down. A container that leaves the registry in combat is
   parked (engine disabled, anchor untouched) and destroyed once combat ends.
 - **Visibility in combat is the engine's `SetEnabled`**, not `Show`/`Hide` on an ancestry holding
-  aura buttons (`modules/Container.lua:647`).
+  aura buttons (`modules/Container.lua:697`).
 
 ## An unknown event name raises
 
@@ -504,6 +504,15 @@ only the `pcall` step and no front gate, as the library's degradation note presc
   the Blizzard format is a copy of that default (one letter, one unit, the same step curve for the
   largest unit) that rounds up. The countdown's own rounding is in C++ and undocumented, so the match
   is an in-game check.
+- **`UnitReaction(unit, "player")`** answers how `unit` stands toward the player, 1 (hated) to 8
+  (exalted), and nil when there is no such unit. Blizzard's API documentation flags neither it nor
+  `UnitIsPlayer` as secret. The Situations -> Unit type gate (filter situations S6) reads it through
+  `Compat.UnitReactionKind` in three bands, 5 and above friendly, 4 neutral, 3 and below hostile
+  (a player's reaction to another player uses the same bands, so a duel opponent reads hostile), pcall-guarded
+  and `CanAccess`-checked anyway; an answer it cannot read, or no unit, lets the container show.
+  No reaction event fires on a swap, so the gate is re-read on `PLAYER_TARGET_CHANGED` /
+  `PLAYER_FOCUS_CHANGED` and on `UNIT_FACTION` / `UNIT_FLAGS` for target, focus and the player, the
+  events the view switch already hears (`CM.ApplyUnitGate`).
 - **`GetMouseFocus` was removed in 11.0** in favor of `GetMouseFoci`; the frame picker uses the first
   frame it returns (`Compat.GetMouseFocus`).
 - **Right-click cancel** is `SetCancelAuraButtons("RightButtonUp")` — one phase, so a button
@@ -703,7 +712,7 @@ values was secret.
   (`modules/ContainerManager.lua:217`) holds every build, update and restyle; aura buttons refuse addon
   access while auras are secret.
 - **Visibility in combat goes through the engine's `SetEnabled`**, never `Show`/`Hide` on an aura
-  button's ancestry (`modules/Container.lua:647`).
+  button's ancestry (`modules/Container.lua:697`).
 - **The font primer's frame hangs from `UIParent`, not from any anchor**, so nothing it does reaches
   an aura engine's ancestry. Its one engine call, the follow-up `UpdateAllAuras`, is not protected,
   reads no aura, and skips a disabled engine, which it would clear (`modules/FontPrimer.lua`).

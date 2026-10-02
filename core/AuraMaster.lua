@@ -174,6 +174,9 @@ function addon:OnUnitSwap(event)
     if CM then
         CM.ApplyViews(unit, true)   -- quiet: EmptyWatch's own swap handler re-predicts
         CM.RefreshUnit(unit)
+        -- The new unit may be another kind, or stand otherwise toward you: the Unit type gate's
+        -- visibility pass (filter situations, S6), for the containers whose answer moved only.
+        CM.ApplyUnitGate(unit)
     end
     if t0 then Perf.Note("unitSwap", debugprofilestop() - t0) end
 end

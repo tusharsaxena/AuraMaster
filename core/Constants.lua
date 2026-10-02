@@ -116,6 +116,16 @@ C.ZONE_LABELS = {
     raid = "Raids", pvp = "Battlegrounds", arena = "Arenas",
 }
 
+-- The Unit type gate (S6, the addendum): which units a target or focus container shows for. `kind`
+-- reads UnitIsPlayer, `reaction` UnitReaction(unit, "player") in three bands (NS.Compat.
+-- UnitReactionKind). "all" is no gate. Only the units in UNIT_FILTER_UNITS are gated: a player or
+-- pet container is always your own character or pet.
+C.UNIT_KINDS = { "all", "npc", "player" }
+C.UNIT_KIND_LABELS = { all = "All", npc = "NPCs", player = "Players" }
+C.UNIT_REACTIONS = { "all", "friendly", "neutral", "hostile" }
+C.UNIT_REACTION_LABELS = { all = "All", friendly = "Friendly", neutral = "Neutral", hostile = "Hostile" }
+C.UNIT_FILTER_UNITS = { target = true, focus = true }
+
 -- Temporary weapon enchant slots: our key → the engine's AuraContainerItemEnchantmentSlot member.
 C.ENCHANT_SLOTS = { "mainHand", "offHand", "ranged" }
 C.ENCHANT_SLOT_ENGINE = { mainHand = "MainHand", offHand = "OffHand", ranged = "Ranged" }
