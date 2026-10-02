@@ -104,7 +104,7 @@ test("views: a Blizzard Show group keeps its own constraint and the earlier Bliz
     } }, { categories = only("HELPFUL", { "defensives", "bigDefensive", "important", "castable" }) })
     local byLabel = {}
     for _, g in ipairs(plan.groups) do byLabel[g.label] = g end
-    local castable = byLabel["Castable by you"]
+    local castable = byLabel["Castable/Dispellable by you"]
     assertEqual(castable.filter, "HELPFUL|RAID|!BIG_DEFENSIVE", "the ids view: its token, minus the earlier token")
     assertTrue(castable.candidateFilters.excludeSpellIDs ~= nil, "the ids view excludes the earlier spell list")
     assertEqual(castable.views.blizzard.filter, "HELPFUL|RAID|!BIG_DEFENSIVE")

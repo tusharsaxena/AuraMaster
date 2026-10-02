@@ -676,8 +676,8 @@ Cat.HELPFUL = {
         desc = "Auras Blizzard flags as important, the ones enemy nameplates show.",
     },
     {
-        key = "castable", kind = "token", token = "RAID", label = "Castable by you",
-        desc = "Buffs of a kind you can apply yourself.",
+        key = "castable", kind = "token", token = "RAID", label = "Castable/Dispellable by you",
+        desc = "Blizzard's RAID filter: helpful auras the player can apply and harmful auras the player can dispel. On an enemy this includes buffs you can dispel or remove, such as an Enrage you can soothe or tranquilize.",
     },
     {
         key = "cancelable", kind = "token", token = "CANCELABLE", label = "Cancelable",

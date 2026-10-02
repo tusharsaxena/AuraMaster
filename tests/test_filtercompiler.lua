@@ -1008,7 +1008,7 @@ local RICH_SIGNATURES = {
     .. "filter=string:HELPFUL|!PLAYER|BIG_DEFENSIVE}}},"
     .. "3={candidateFilters={excludeSpellIDs={100=boolean:true,200=boolean:true,300=boolean:true,"
     .. "400=boolean:true}},filter=string:HELPFUL|!PLAYER|RAID|!BIG_DEFENSIVE,key=string:g3,"
-    .. "label=string:Castable by you,maxFrameCount=number:5,sortDirection=string:reverse,"
+    .. "label=string:Castable/Dispellable by you,maxFrameCount=number:5,sortDirection=string:reverse,"
     .. "sortMethod=string:default,views={blizzard={candidateFilters={excludeSpellIDs={300=boolean:true,"
     .. "400=boolean:true}},filter=string:HELPFUL|!PLAYER|RAID|!BIG_DEFENSIVE},"
     .. "every={candidateFilters={excludeSpellIDs={300=boolean:true,400=boolean:true}},"

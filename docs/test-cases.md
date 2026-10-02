@@ -2009,7 +2009,7 @@ badge and any count quoted in the docs must agree with it.
 - pool: a released placeholder is reused rather than made again, on both arms
 - pool: a re-dressed preview gets every placeholder back in the slot it held, on both arms
 
-### test_defaults.lua (30)
+### test_defaults.lua (31)
 
 - defaults: every starter container is a valid container whose every override the template knows
 - defaults: every category carries what its kind needs, and a label and description
@@ -2041,6 +2041,7 @@ badge and any count quoted in the docs must agree with it.
 - defaults: a record outside the reserved namespace cannot hijack a shipped category
 - defaults: a user category's name is shown as typed even when it is a shipped locale key
 - defaults: userCategoryOrder is reconciled the way containerOrder is
+- defaults: the RAID-token row says it means castable OR dispellable, as Blizzard defines it
 
 ### test_perf.lua (8)
 
@@ -2255,7 +2256,7 @@ badge and any count quoted in the docs must agree with it.
 | test_pages_profiles.lua | 3 |
 | test_envsetup.lua | 4 |
 | test_poolsetup.lua | 4 |
-| test_defaults.lua | 30 |
+| test_defaults.lua | 31 |
 | test_perf.lua | 8 |
 | test_debuglogsetup.lua | 9 |
 | test_locale.lua | 8 |
@@ -2268,4 +2269,4 @@ badge and any count quoted in the docs must agree with it.
 | test_layout_cap.lua | 13 |
 | test_diagnostics_contract.lua | 9 |
 | test_lizard_sighted.lua | 8 |
-| **Total** | **1898** |
+| **Total** | **1899** |
