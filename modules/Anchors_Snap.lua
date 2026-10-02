@@ -230,6 +230,11 @@ end
 -- (or one stood down) makes neither, and the driver's OnUpdate is cleared, not just idle, between
 -- drags: an armed OnUpdate is a per-frame cost nothing on screen reports.
 
+--- One [Anchor] line (debug-logging-§8), when the debug log is there.
+local function debug(fmt, ...)
+    if NS.Debug then NS.Debug("Anchor", fmt, ...) end
+end
+
 local DRIVER_PERIOD = 0.03   -- seconds between two snap reads while a drag is live
 local EDGE = 2               -- the highlight's edge, px
 local MARKER = 6             -- the join marker's side, px
@@ -281,11 +286,38 @@ local function showHighlight(hit)
     hl:Show()
 end
 
+--- Whether live container `container`'s drag can still end the usual way: its strip is visible. A
+--- strip hidden mid-drag (/am lock, a stand-down, a disable or a profile switch run while the button is
+--- held) is sent no OnDragStop by the client, which is why the OnHide->StopMovingOrSizing idiom
+--- exists, so without this the anchor kept following the cursor and `dragging` held Anchors.Place off
+--- it until the next drag of it.
+local function strandedDrag(container)
+    local handle = container.handle
+    return not (handle and handle:IsVisible())
+end
+
+--- Cancel the drag of `container`, whose strip hid mid-drag (strandedDrag): the anchor stops moving,
+--- the drag ends (Snap.EndDrag) and the anchor goes back where its stored settings put it. Nothing is
+--- written, since nobody dropped it: an attached one goes back on its parent, a screen one to its
+--- stored position. Out of lockdown only; the tick waits for combat to end before it calls this.
+local function cancelStranded(container)
+    debug("container %s: drag canceled (its strip hid)", container.id)
+    if container.anchor then container.anchor:StopMovingOrSizing() end
+    Snap.EndDrag(container)
+    container.placedAs = Anchors.Place(container)
+end
+
 --- One driver tick's work, published so the suite drives it without a clock: the candidate the
 --- live drag would snap to now (nil while Shift is held, D4, or once combat has started, D11, as well
 --- as when nothing is in range), with the highlight shown over it or hidden. Nil with no live drag.
+--- A drag whose strip hid is canceled here instead (cancelStranded), once out of combat.
 --- @return table|nil  Snap.Nearest's answer
 function Snap.Tick()
+    if live and strandedDrag(live) then
+        hideHighlight()
+        if not InCombatLockdown() then cancelStranded(live) end
+        return nil
+    end
     local hit = live and not (IsShiftKeyDown() or InCombatLockdown()) and Snap.Find(live) or nil
     showHighlight(hit)
     return hit
@@ -372,10 +404,6 @@ end
 -- again at the drop, never taken from the driver's last tick (a tick may be up to DRIVER_PERIOD old,
 -- and the key may have changed since). Every write goes through the seam, NS.SetByPath, on THIS
 -- container rather than the settings panel's active one, and every outcome writes one [Anchor] line.
-
-local function debug(fmt, ...)
-    if NS.Debug then NS.Debug("Anchor", fmt, ...) end
-end
 
 --- A copy of container `cfg`'s stored attach section, the start of a whole-section write: every key
 --- it holds kept (the frame mode's frame, point and relativePoint, the target and the two points a

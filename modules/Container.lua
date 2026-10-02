@@ -903,8 +903,15 @@ end
 
 --- Tear the container down for good: the engine is retired and the anchor hidden. Frames are never
 --- destroyed in WoW, so this is as far as "delete" can go. Only ever reached out of lockdown; under
---- lockdown the container is parked instead.
+--- lockdown the container is parked instead. A drag still live on it (issue #22: its strip hides with
+--- it, so no OnDragStop will come) is stopped and ended first, so neither the anchor nor the snap
+--- driver goes on following the cursor for an instance nothing holds. Park leaves a live drag to the
+--- driver, which cancels it once combat ends, since the anchor may not be stopped under lockdown.
 function ContainerClass:Destroy()
+    if self.dragging then
+        self.anchor:StopMovingOrSizing()
+        NS.Anchors.Snap.EndDrag(self)
+    end
     self:Retire()
     NS.Preview.Hide(self)
     if self.outline then self.outline:Hide() end

@@ -538,7 +538,11 @@ one that follows it: `Anchors.WouldCycle`), the nine classified sides under that
 growth, between the dragged anchor's point and the target's relative point on the rect a follower
 would hang from (`Anchors.HangFrame`; an engine that reads secret falls back to its anchor). The
 nearest within `C.SNAP_RADIUS` (24 UIParent units) is framed by a green highlight with a marker on the
-join; both hang from UIParent, never from the target.
+join; both hang from UIParent, never from the target. A strip hidden mid-drag (`/am lock`, a
+stand-down or a disable run while the button is held) is sent no OnDragStop, so the tick itself
+cancels that drag once out of combat: the anchor stops moving, `dragging` is cleared and the
+container is placed back from its settings, with nothing written. `ContainerClass:Destroy` ends a
+drag still live on the instance it tears down.
 
 `Snap.Drop`, the strip's OnDragStop, reads combat, Shift and the candidate again at the drop and writes
 through the seam against this container's id, never the panel's selection:

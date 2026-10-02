@@ -27,7 +27,8 @@ local function plant(frame, l, b, r, t, scale)
 end
 
 --- A fresh environment with at least `n` containers, all enabled, on the screen, and shown, each
---- with its handle rebuilt under the recorder (tests/handle_recorder.lua).
+--- with its handle rebuilt under the recorder (tests/handle_recorder.lua) and shown, as an unlocked
+--- profile shows it: a drag starts from a visible strip, and one whose strip hides is canceled.
 local function env(n)
     local NS, mocks = fresh()
     while #NS.Database.GetContainers() < (n or 2) do NS.ContainerManager.Create({}) end
@@ -37,7 +38,7 @@ local function env(n)
         local inst = NS.ContainerManager.instances[c.id]
         inst.anchor:Show()
         inst.hangMode = "engine"
-        HR.recordedHandle(mocks, NS, inst)
+        HR.recordedHandle(mocks, NS, inst):Show()
     end
     return NS, mocks
 end
@@ -318,4 +319,51 @@ test("drag: the highlight hides on Shift, on combat and at the drop", function()
     -- red under: a drop that leaves the highlight up
     assertFalse(hl:IsShown(), "the drop")
     restore()
+end)
+
+-- ── a drag cut short (the strip hidden, the container destroyed) ──────────────────────────────
+
+--- Record StopMovingOrSizing into the anchor's move log as "stop".
+local function recordStop(anchor)
+    rawset(anchor, "StopMovingOrSizing", function(self) self.__moves[#self.__moves + 1] = "stop" end)
+end
+
+test("drag: a strip hidden mid-drag ends the drag at the next tick, and the container goes back where its settings put it", function()
+    local NS, mocks = env(2)
+    local inst = NS.ContainerManager.instances[2]
+    local at = NS.Database.FindContainer(2).attach
+    at.mode, at.container = "container", 1
+    recordAnchor(inst.anchor)
+    recordStop(inst.anchor)
+    inst.handle:__fire("OnDragStart")
+    -- /am lock (or a stand-down) while the button is held: the client sends the hidden strip no
+    -- OnDragStop.
+    inst.handle:Hide()
+    mocks.__lockdown = true
+    local Snap = NS.Anchors.Snap
+    assertNil(Snap.Tick(), "no candidate")
+    -- red under: a cancel under lockdown (StopMovingOrSizing and Place on an anchor parenting an engine)
+    assertTrue(inst.dragging == true, "in combat it waits")
+    mocks.__lockdown = false
+    inst.anchor.__moves = {}
+    Snap.driver:__fire("OnUpdate", 0.05)
+    -- red under: nothing but OnDragStop ends a drag (dragging stuck true, Place frozen for the session)
+    assertNil(inst.dragging, "the drag is over")
+    assertEqual(inst.anchor.__moves[1], "stop", "the anchor stops following the cursor first")
+    assertEqual(inst.placedAs, "container", "re-placed on its parent")
+    assertNil(Snap.driver:GetScript("OnUpdate"), "the driver cleared")
+    assertEqual(NS.Database.FindContainer(2).attach.mode, "container", "nothing written: a cancel, not a drop")
+end)
+
+test("drag: a container destroyed mid-drag ends its drag and stops the driver", function()
+    local NS = env(2)
+    local inst = NS.ContainerManager.instances[2]
+    recordAnchor(inst.anchor)
+    recordStop(inst.anchor)
+    inst.handle:__fire("OnDragStart")
+    inst:Destroy()
+    -- red under: a Destroy that leaves the drag live (the driver ticking on a dead instance)
+    assertNil(inst.dragging, "not dragging")
+    assertTrue(table.concat(inst.anchor.__moves, ","):find("stop", 1, true) ~= nil, "stopped moving")
+    assertNil(NS.Anchors.Snap.driver:GetScript("OnUpdate"), "the driver cleared")
 end)
