@@ -332,14 +332,14 @@ end)
 test("schema: a section write refuses a non-section path, a non-table, and a value a row rejects", function()
     local NS2 = fresh()
     assertTrue(NS2.IsSection("container.position"))
-    assertFalse(NS2.IsSection("container.attach"))
+    assertFalse(NS2.IsSection("container.attach.mode"), "a row under a section is not one")
     assertFalse((NS2.SetByPath("container.bars.name", { fontSize = 20 }, 1)), "not a section")
     assertFalse((NS2.SetByPath("container.position", 5, 1)), "not a table")
     local before = NS2.Database.FindContainer(1).filter
     -- red under: writeSection skipping the carve-out normalize
     assertFalse((NS2.SetByPath("container.filter", { whitelist = "x" }, 1)), "the carve-out rejects it")
     assertTrue(NS2.Database.FindContainer(1).filter == before, "the stored section is untouched")
-    assertFalse((NS2.SetByPath("container.attach", { mode = "screen" }, 1)), "attach is not a section")
+    assertFalse((NS2.SetByPath("container.attach", { mode = "container", container = 1 }, 1)), "a section a row rejects: a loop")
 end)
 
 test("schema: a section write runs the normalize hook of every row under it, with the target id", function()

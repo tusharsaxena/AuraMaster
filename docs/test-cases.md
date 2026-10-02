@@ -269,7 +269,7 @@ badge and any count quoted in the docs must agree with it.
 - schema paths: a spell set goes to the container it names, announced as filters and logged once
 - schema paths: a spell set or a section with no container to land in is refused, naming why
 - schema paths: category edits drop an empty edit set and store a truthy edit as true
-- schema paths: exactly the six documented sections are whole-writable
+- schema paths: exactly the documented sections are whole-writable
 - schema paths: a section write fires onChange only for the leaves it changed, with the target id
 - schema paths: a row under a section that refuses its leaf refuses the whole section — CheckWrite says the same
 - schema paths: a section write backfills a copy, so the caller's table comes back as it went in
@@ -1084,7 +1084,7 @@ badge and any count quoted in the docs must agree with it.
 - snap: folding reads Automatic for the target dropped on, not the container's current parent
 - snap: the radius is 24 UIParent units and the highlight is an opaque green
 
-### test_anchors_drag.lua (11)
+### test_anchors_drag.lua (10)
 
 - drag: a screen container and a container-attached one drag; a frame-attached one does not
 - drag: no drag starts in combat, and none leaves the container marked dragging
@@ -1096,7 +1096,20 @@ badge and any count quoted in the docs must agree with it.
 - drag: Shift held, or combat started, means no candidate this tick
 - drag: the highlight frames the target's rect in green with a marker on the join, and hides with no candidate
 - drag: the highlight hides on Shift, on combat and at the drop
-- drag: dropping a container-attached one puts it back where its settings put it, and writes nothing
+
+### test_anchors_drop.lua (11)
+
+- drop: a candidate in range attaches by one whole-section write: the side's points, x and y 0, the rest kept
+- drop: on the Automatic side both points store nil (Automatic), as a fresh attach on the panel does
+- drop: container.attach written whole re-applies the new parent, the container and its followers
+- drop: a chain that flows differently asks with the attach popup, writes nothing and re-places the container
+- drop: accepting the drop's popup writes the section; canceling it leaves everything as it was
+- drop: re-attaching onto the chain it already follows asks nothing, however its own flow differs
+- drop: an attached container dropped with no candidate detaches: position, then mode screen with x and y 0
+- drop: Shift held at the drop places without attaching: a screen one moves, an attached one detaches
+- drop: an attached container whose drop position reads secret is not detached; it goes back to its parent
+- drop: combat started mid-drag attaches nothing; an attached one writes nothing and waits to be re-placed
+- drop: every outcome writes one [Anchor] line
 
 ### test_texttemplate.lua (26)
 
@@ -2159,7 +2172,7 @@ badge and any count quoted in the docs must agree with it.
 
 - prose: no authored file carries a British spelling from localization-§5's published list
 - prose: the gate carries localization-§5's two lists whole, and nothing of its own
-- prose: the exclusions this repository declared suppressed 11 of 203 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (11): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, docs/spell-research/2026-09-24-logs/CORRECTIONS.md, docs/spell-research/2026-09-24-logs/CURRENT_CATEGORIES.md, docs/spell-research/2026-09-24-logs/DECISIONS.md, docs/spell-research/2026-09-24-logs/FLAGS.md, docs/spell-research/2026-09-24-logs/PROPOSED_ADDITIONS.md, docs/spell-research/2026-09-24-logs/REVIEW.md, docs/spell-research/2026-09-24-logs/SOURCES.md, docs/spell-research/2026-09-24-logs/dictionary/AURAS.md
+- prose: the exclusions this repository declared suppressed 11 of 204 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (11): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, docs/spell-research/2026-09-24-logs/CORRECTIONS.md, docs/spell-research/2026-09-24-logs/CURRENT_CATEGORIES.md, docs/spell-research/2026-09-24-logs/DECISIONS.md, docs/spell-research/2026-09-24-logs/FLAGS.md, docs/spell-research/2026-09-24-logs/PROPOSED_ADDITIONS.md, docs/spell-research/2026-09-24-logs/REVIEW.md, docs/spell-research/2026-09-24-logs/SOURCES.md, docs/spell-research/2026-09-24-logs/dictionary/AURAS.md
 - prose: no path this repository narrows the gate by is loaded by a TOC
 - prose: every path this repository narrows the gate by is one .pkgmeta keeps out of the zip
 - prose self-test: the carve-out suppresses the named generated folder, and only it
@@ -2291,7 +2304,8 @@ badge and any count quoted in the docs must agree with it.
 | test_anchors_collapse.lua | 9 |
 | test_anchors_width.lua | 6 |
 | test_anchors_snap.lua | 15 |
-| test_anchors_drag.lua | 11 |
+| test_anchors_drag.lua | 10 |
+| test_anchors_drop.lua | 11 |
 | test_texttemplate.lua | 26 |
 | test_style.lua | 60 |
 | test_castaura.lua | 7 |
@@ -2342,4 +2356,4 @@ badge and any count quoted in the docs must agree with it.
 | test_layout_cap.lua | 13 |
 | test_diagnostics_contract.lua | 9 |
 | test_lizard_sighted.lua | 8 |
-| **Total** | **1956** |
+| **Total** | **1966** |

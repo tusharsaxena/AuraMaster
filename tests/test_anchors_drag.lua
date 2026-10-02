@@ -5,7 +5,7 @@
 -- ("Starting a drag"); Anchors.Place leaves a dragging anchor alone ("Holding the drag steady");
 -- modules/Anchors_Snap.lua's driver reads the snap at most every 0.03s while a drag is live, and its
 -- highlight and join marker show only with a candidate, hidden on Shift, combat and the drop (D3,
--- D4, D11). The drop itself (attach, detach, GC-1) is DD-03's; here a drop only ends the drag.
+-- D4, D11). What the drop does (attach, detach, GC-1) is tests/test_anchors_drop.lua's.
 -- Its own suite because tests/test_anchors.lua sits near layout-§1's 1500-line cap.
 
 local T = _G.AM_TEST
@@ -88,6 +88,8 @@ test("drag: a screen container and a container-attached one drag; a frame-attach
     -- red under: canDrag's old screen-only gate (an attached container could not be dragged at all)
     assertEqual(inst.anchor.__moves[#inst.anchor.__moves], "start", "container-attached")
     inst.handle:__fire("OnDragStop")
+    -- The drop detached it (DD-03), writing container.attach whole: read the stored table again.
+    at = NS.Database.FindContainer(2).attach
     at.mode, at.frame = "frame", "PlayerFrame"
     recordAnchor(inst.anchor)
     inst.handle:__fire("OnDragStart")
@@ -316,25 +318,4 @@ test("drag: the highlight hides on Shift, on combat and at the drop", function()
     -- red under: a drop that leaves the highlight up
     assertFalse(hl:IsShown(), "the drop")
     restore()
-end)
-
--- ── the drop, as far as DD-02 takes it ────────────────────────────────────────────────────────
-
-test("drag: dropping a container-attached one puts it back where its settings put it, and writes nothing", function()
-    local NS = env(2)
-    local inst = NS.ContainerManager.instances[2]
-    local at = NS.Database.FindContainer(2).attach
-    at.mode, at.container = "container", 1
-    plant(inst.anchor, 40, 60, 60, 80)
-    recordAnchor(inst.anchor)
-    local writes = 0
-    NS.NewBusTarget():RegisterMessage(NS.MSG.CONFIG_CHANGED, function() writes = writes + 1 end)
-    inst.handle:__fire("OnDragStart")
-    inst.anchor.GetPoint = function() return "BOTTOMLEFT", nil, "BOTTOMLEFT", 40, 60 end
-    inst.handle:__fire("OnDragStop")
-    assertNil(inst.dragging)
-    -- red under: SavePosition as the stop callback (an attached drop writes a screen position)
-    assertEqual(writes, 0, "nothing written")
-    -- red under: no re-place at the drop (the anchor stays hung from UIParent where it was dropped)
-    assertEqual(inst.placedAs, "container", "re-placed on its parent")
 end)

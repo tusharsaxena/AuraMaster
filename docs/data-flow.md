@@ -15,12 +15,12 @@ engine does the reading, filtering, sorting, layout and timer animation in its o
 
 ```
  1  a control, /am set, a Defaults button or a drag handle
-        │  NS.SetByPath(path, value[, containerId])            settings/Schema.lua:893
+        │  NS.SetByPath(path, value[, containerId])            settings/Schema.lua:894
         │    write → row.onChange → [Set] debug line → CONFIG_CHANGED { section, containerId, path }
         │    (a session row stops after the debug line: it sends nothing)
         │    (inside a bulk copy or reset the [Set] line is muted and tallied: one line per act)
         ▼
- 2  ContainerManager (CONFIG_CHANGED listener)                 modules/ContainerManager.lua:865
+ 2  ContainerManager (CONFIG_CHANGED listener)                 modules/ContainerManager.lua:866
         │  first FontPrimer.PrimeAll: a font no container drew in yet is drawn on a shown frame
         │  the row's effect:  "visibility" → ApplyVisibility now    "none" → nothing
         │  otherwise RequestApply(containerId)   nil = every container
@@ -449,7 +449,7 @@ player's forget is announced like a setting change.
 
 ## Where a container sits
 
-`Anchors.Place` (`modules/Anchors.lua:305`) sizes the anchor to one element and attaches it: to
+`Anchors.Place` (`modules/Anchors.lua:306`) sizes the anchor to one element and attaches it: to
 another container's engine frame (or its anchor, before the engine exists; or, while that container
 previews, its preview extent, because the disabled engine keeps a stale rect; or, while it is unlocked,
 not previewing and predicted empty, its one-element anchor, because an engine holding no aura is a

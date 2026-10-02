@@ -179,6 +179,7 @@ local FLOW_KEYS = { "axis", "growH", "growV" }
 -- container following the one written (Anchors.Followers; modules/ContainerManager.lua).
 local FLOW_PATHS = {
     ["container.layout"] = true,
+    ["container.attach"] = true,   -- the whole section: a drop's attach or detach (issue #22)
     ["container.layout.axis"] = true,
     ["container.layout.growH"] = true,
     ["container.layout.growV"] = true,
@@ -423,6 +424,9 @@ local function round(v) return math.floor((tonumber(v) or 0) * 10 + 0.5) / 10 en
 --- After a drag: read the anchor's point back (it is attached to UIParent and holds nothing secret)
 --- and store it through the single write seam, on THIS container rather than the settings panel's
 --- active one. One whole-section write: the position lands whole or not at all, announced once.
+--- Answers whether it was stored: a drop's detach (modules/Anchors_Snap.lua) goes on to the screen
+--- mode only when it was, or the container would land at a stale position.
+--- @return boolean|nil
 function Anchors.SavePosition(container)
     local anchor = container.anchor
     if not (anchor and anchor.GetPoint) then return end
@@ -436,7 +440,7 @@ function Anchors.SavePosition(container)
         return
     end
     if not point then return end
-    NS.SetByPath("container.position",
+    return NS.SetByPath("container.position",
         { point = point, relativePoint = relPoint or point, x = round(x), y = round(y) }, container.id)
 end
 

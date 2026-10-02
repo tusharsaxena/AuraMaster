@@ -29,7 +29,8 @@ local _, NS = ...
 -- LOAD-BEARING POSITION: after modules/Anchors_Attach.lua, whose pair table and flow growth this
 -- file binds from NS.AnchorsAttach at file load; after modules/Anchors.lua, which it extends
 -- (Anchors.Snap) and whose HangFrame, WouldCycle, AutoPoints, Place and SavePosition it calls at
--- call time.
+-- call time. settings/Layout.lua's NS.AttachByDrop (a drop's attach, and its GC-1 popup) loads after
+-- it and is read at call time too, at the drop.
 
 NS.Anchors = NS.Anchors or {}
 local Anchors = NS.Anchors
@@ -364,19 +365,97 @@ function Snap.EndDrag(container)
     if live == container or live == nil then stopDriver() end
 end
 
---- The widget's OnDragStop (after StopMovingOrSizing). Ends the drag (Snap.EndDrag), then settles
---- the anchor: a screen container stores where it was dropped (Anchors.SavePosition, as before
---- issue #22); a container-attached one goes back where its settings put it (Anchors.Place), out of
---- combat, since placing beside an aura engine is never done under lockdown. A drop that reaches
---- here with no drag of this container live (a stray stop) does nothing.
+-- ---------------------------------------------------------------------------
+-- The drop (D6, D7, D8, D10, D11; "Dropping")
+-- ---------------------------------------------------------------------------
+-- What a drop does is decided here, from the drop alone: combat, Shift and the candidate are read
+-- again at the drop, never taken from the driver's last tick (a tick may be up to DRIVER_PERIOD old,
+-- and the key may have changed since). Every write goes through the seam, NS.SetByPath, on THIS
+-- container rather than the settings panel's active one, and every outcome writes one [Anchor] line.
+
+local function debug(fmt, ...)
+    if NS.Debug then NS.Debug("Anchor", fmt, ...) end
+end
+
+--- A copy of container `cfg`'s stored attach section, the start of a whole-section write: every key
+--- it holds kept (the frame mode's frame, point and relativePoint, the target and the two points a
+--- detach leaves stored, as a mode switch on the panel leaves them), one level deep, which is all the
+--- section is.
+local function attachCopy(cfg)
+    local out = {}
+    for k, v in pairs(cfg.attach or {}) do out[k] = v end
+    return out
+end
+
+--- The section a drop on `hit` writes for container `cfg` (D7, D10): container mode on the target,
+--- the picked side's two points (each nil where it equals Automatic's, Snap.FoldPoints), and the
+--- offsets reset to 0, since the drop is the placement and an old nudge would only push it off it.
+local function attachSection(cfg, hit)
+    local section = attachCopy(cfg)
+    section.mode, section.container, section.x, section.y = "container", hit.id, 0, 0
+    section.childPoint, section.relPoint = Snap.FoldPoints(cfg, hit.id, hit.point, hit.relPoint)
+    return section
+end
+
+--- Attach live container `container` where `hit` says (D7, D8). settings/Layout.lua's
+--- NS.AttachByDrop owns the write, because the growth-conflict popup (GC-1) is that page's: it
+--- writes the section, or asks first when the chain the drop joins flows differently. Whenever it
+--- did not write (it asked, or the seam refused the section), the anchor goes back where the stored
+--- settings put it, so a drop the player has yet to confirm is never left looking attached; Cancel
+--- then leaves everything as it was before the drag. A written attach is placed by the apply its
+--- CONFIG_CHANGED queues.
+local function dropOn(container, cfg, hit)
+    debug("container %s: drop: attach to %s %s", container.id, hit.id, hit.token)
+    local wrote = NS.AttachByDrop and NS.AttachByDrop(container.id, attachSection(cfg, hit))
+    if wrote ~= true then container.placedAs = Anchors.Place(container) end
+end
+
+--- Detach container-attached `container` where it was dropped (D6, D10): its screen position first,
+--- read from the anchor as a screen drag stores it (Anchors.SavePosition; the drag hung it from
+--- UIParent), then the attach section with mode screen and x and y 0. When the position could not be
+--- stored (it read secret), it does not detach at all, since the screen mode would place it at a
+--- stale position; it goes back to its parent instead.
+local function detach(container, cfg)
+    if not Anchors.SavePosition(container) then
+        container.placedAs = Anchors.Place(container)
+        return
+    end
+    debug("container %s: drop: detach", container.id)
+    local section = attachCopy(cfg)
+    section.mode, section.x, section.y = "screen", 0, 0
+    NS.SetByPath("container.attach", section, container.id)
+end
+
+--- A drop after combat started mid-drag (D11): nothing attaches. A screen container stores where it
+--- was dropped, as it did before issue #22. A container-attached one is neither detached nor written:
+--- its anchor parents an aura engine and may not be re-placed under lockdown, so an apply is asked
+--- for (a system one, silent), which ContainerManager holds until combat ends and which places it
+--- back on its parent then.
+local function dropInCombat(container, attached)
+    debug("container %s: drop: held (combat)", container.id)
+    if attached then
+        NS.ContainerManager.RequestApply(container.id, true)
+        return
+    end
+    Anchors.SavePosition(container)
+end
+
+--- The widget's OnDragStop (after StopMovingOrSizing). Ends the drag (Snap.EndDrag), then:
+---   1. combat started mid-drag: dropInCombat (no attach, no detach);
+---   2. a candidate in range and no Shift: dropOn, the attach (or its GC-1 question);
+---   3. else a container-attached one detaches where it was dropped, and a screen one stores its
+---      position (Anchors.SavePosition), exactly as before issue #22.
+--- A drop that reaches here with no drag of this container live (a stray stop) does nothing.
 function Snap.Drop(container)
     if not container.dragging then return end
     Snap.EndDrag(container)
     local cfg = container:Cfg()
-    local mode = cfg and cfg.attach and cfg.attach.mode
-    if mode == "container" then
-        if not InCombatLockdown() then container.placedAs = Anchors.Place(container) end
-        return
-    end
+    if not cfg then return end
+    local attached = cfg.attach and cfg.attach.mode == "container"
+    if InCombatLockdown() then return dropInCombat(container, attached) end
+    local hit = not IsShiftKeyDown() and Snap.Find(container) or nil
+    if hit then return dropOn(container, cfg, hit) end
+    if attached then return detach(container, cfg) end
+    debug("container %s: drop: moved", container.id)
     Anchors.SavePosition(container)
 end

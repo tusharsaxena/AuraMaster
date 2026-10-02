@@ -649,8 +649,9 @@ local function writeCarveOut(path, value, containerId)
 end
 
 -- The sections a caller may write whole, each with the CONFIG_CHANGED section it announces as.
--- `container.attach` is deliberately absent: no caller writes it whole.
+-- `container.attach` is written whole by a drag's drop (issue #22, modules/Anchors_Snap.lua).
 local SECTIONS = {
+    ["container.attach"]   = "layout",
     ["container.filter"]   = "filters",
     ["container.layout"]   = "layout",
     ["container.behavior"] = "layout",
