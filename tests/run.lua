@@ -135,6 +135,7 @@ Kit.run{
         "test_slash",
         "test_slash_verbs",
         "test_diagnostics",
+        "test_diagnostics_situations",
         "test_bulklog",
         "test_debug_coverage",
         "test_debug_library_lines",
