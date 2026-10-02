@@ -265,20 +265,28 @@ end
 -- most every DRIVER_PERIOD: combat started means no mark, else classify (below) says what a release
 -- now would do and the HIGHLIGHT follows its answer. The widget's OnDragStop ends it through Snap.Drop.
 --
--- The highlight is ours and plain: a frame under UIParent with Style.DrawEdge's four strips, never a
--- Backdrop (whose size arithmetic is the secret-geometry trap of docs/midnight-quirks.md), over the
--- target; a dot on each of the pair's two join points, the target's relative point and the dragged
--- anchor's own point (the owner-feedback addendum's A1, A3); and a Line region between the two dots.
--- The dots are child frames of the highlight and the line one of its regions, so one Show or Hide
--- takes them all and none is ever toggled on its own. Everything is placed by numbers already in
--- UIParent units (Snap.TargetRect, readRect), anchored to UIParent (the line's two ends too) and
--- never to the target, so nothing of ours ever hangs from an engine's secret rect. One color paints
--- them all (paintHighlight), so the leeway's detach turns the whole mark red at once. A hold or a
--- detach is drawn on the rect the leeway measured (markRect); where there is none, the whole mark
--- collapses onto the dragged anchor's dot, which then still turns red (showHighlight). All of
--- it is built on the first drag, so an addon nobody drags (or one stood down) makes none of it, and
--- the driver's OnUpdate is cleared, not just idle, between drags: an armed OnUpdate is a per-frame
--- cost nothing on screen reports.
+-- The highlight is ours and plain: a holder frame under UIParent in the TOOLTIP strata, and in it a
+-- dot on each of the pair's two join points, the target's relative point and the dragged anchor's own
+-- point (the owner-feedback addendum's A1, A3), a Line region between the two dots, and the EDGE that
+-- says which container (A5): a 2px edge on the TARGET's drag-handle strip (for a hold or a detach, the
+-- current parent's), drawn over the strip's own 1px gold one by an overlay of ours (Snap.stripEdge, a
+-- plain frame hung by SetAllPoints on the strip, above it in the holder's strata whatever the strip's
+-- own strata and level), never by repainting the strip. A target with no
+-- visible strip (LibKa0s-Widgets absent, or its strip hidden) gets the BOX instead (Snap.box, over
+-- its rect), so a mark is never lost. Both edges are Style.DrawEdge's four strips, never a Backdrop
+-- (whose size arithmetic is the secret-geometry trap of docs/midnight-quirks.md), and neither reads a
+-- size: the strip edge hangs from the strip, which may sit on secret geometry, and is only ever
+-- laid out by it. Every part is a child frame or a region of the holder, so one Show or Hide takes them
+-- all; the dots and the line are never toggled on their own, and the box and the strip edge only as
+-- the mark picks one or the other. The dots, the line and the box are placed by numbers already in
+-- UIParent units (Snap.TargetRect, readRect) and anchored to UIParent (the line's two ends too),
+-- never to the target. One color paints them all (paintHighlight), so the leeway's detach turns the
+-- whole mark red at once. A hold or a detach is drawn on the rect the leeway measured (markRect);
+-- where there is none, the dots and the line collapse onto the dragged anchor's dot, which then still
+-- turns red, and the parent's strip is still edged when it has one (showHighlight). All of it is
+-- built on the first drag, so an addon nobody drags (or one stood down) makes none of it, and the
+-- driver's OnUpdate is cleared, not just idle, between drags: an armed OnUpdate is a per-frame cost
+-- nothing on screen reports.
 
 --- One [Anchor] line (debug-logging-§8), when the debug log is there.
 local function debug(fmt, ...)
@@ -286,7 +294,7 @@ local function debug(fmt, ...)
 end
 
 local DRIVER_PERIOD = 0.03   -- seconds between two snap reads while a drag is live
-local EDGE = 2               -- the highlight's edge, px
+local EDGE = 2               -- the strip edge's and the box's thickness, px (A5: over the strip's 1px)
 local MARKER = 10            -- each join dot's side, px (A1: 6 read too small in game)
 local LINE = 2               -- the line between the two dots, px
 local HIGHLIGHT_STRATA = "TOOLTIP"   -- over every container, whatever strata its layout picked
@@ -294,6 +302,7 @@ local HIGHLIGHT_STRATA = "TOOLTIP"   -- over every container, whatever strata it
 local live        -- the live container being dragged, or nil
 local elapsed = 0 -- seconds since the driver last read the snap
 local hitRect = {} -- scratch: the highlighted target's rect
+local edged       -- the strip the strip edge hangs on now, or nil while it hangs on none
 local dragRect = {} -- scratch: the dragged anchor's rect, for the child's dot
 local painted     -- the color table the highlight was last painted in, or nil before it is built
 local ownRect, parentRect = {}, {} -- scratch: the dragged anchor's and its parent's rects, for the leeway
@@ -313,26 +322,41 @@ local function newDot(hl)
     return dot
 end
 
---- Paint the whole highlight in color `col` ({ r, g, b, a }): the box's four strips, both dots and
---- the line, the one place any of them is colored. A no-op when it is already in `col`, so a tick
---- re-lays no strip.
+--- One edge frame of highlight `hl`: a plain child frame, hidden, that Style.DrawEdge paints (the
+--- box, or the strip edge). Placed only by showHighlight.
+--- @return table
+local function newEdge(hl)
+    local f = CreateFrame("Frame", nil, hl)
+    f:Hide()
+    return f
+end
+
+--- Paint the whole highlight in color `col` ({ r, g, b, a }): the strip edge's and the box's four
+--- strips, both dots and the line, the one place any of them is colored. A no-op when it is already in
+--- `col`, so a tick re-lays no strip.
 local function paintHighlight(col)
     if col == painted then return end
     painted = col
-    NS.Style.DrawEdge(Snap.highlight, EDGE, col.r, col.g, col.b, col.a)
+    NS.Style.DrawEdge(Snap.stripEdge, EDGE, col.r, col.g, col.b, col.a)
+    NS.Style.DrawEdge(Snap.box, EDGE, col.r, col.g, col.b, col.a)
     Snap.marker.dot:SetColorTexture(col.r, col.g, col.b, col.a)
     Snap.childMarker.dot:SetColorTexture(col.r, col.g, col.b, col.a)
     Snap.line:SetColorTexture(col.r, col.g, col.b, col.a)
 end
 
---- Build the highlight, its two join dots and the line between them, once (Snap.highlight,
---- Snap.marker the target's dot, Snap.childMarker the dragged one's, Snap.line: published for the
---- headless suite), painted in C.SNAP_COLOR. Hidden at birth; shown only while a pair is.
+--- Build the highlight, its two join dots, the line between them, the strip edge and the box, once
+--- (Snap.highlight the holder, Snap.marker the target's dot, Snap.childMarker the dragged one's,
+--- Snap.line, Snap.stripEdge, Snap.box: published for the headless suite), painted in C.SNAP_COLOR.
+--- The holder covers UIParent and takes no mouse (a plain frame never enables it), so it only carries
+--- its parts' visibility and strata; the TOOLTIP strata puts the strip edge over any strip, whatever
+--- strata a container's layout picked. Hidden at birth; shown only while a pair is.
 local function buildHighlight()
     if Snap.highlight then return Snap.highlight end
     local hl = CreateFrame("Frame", nil, UIParent)
     hl:SetFrameStrata(HIGHLIGHT_STRATA)
+    hl:SetAllPoints(UIParent)
     Snap.highlight, Snap.marker, Snap.childMarker = hl, newDot(hl), newDot(hl)
+    Snap.stripEdge, Snap.box = newEdge(hl), newEdge(hl)
     local line = hl:CreateLine(nil, "OVERLAY")
     line:SetThickness(LINE)
     Snap.line = line
@@ -341,9 +365,56 @@ local function buildHighlight()
     return hl
 end
 
---- Hide the highlight (and its dots and line with it), if it was ever built.
+--- Hang the strip edge on strip `strip`, or take it off whatever it hangs on (nil). Re-hung only when
+--- the strip changes, so a tick on the same target lays nothing; taken off a strip with
+--- ClearAllPoints, so no frame of ours stays anchored to a target the mark has left.
+local function edgeStrip(strip)
+    if strip == edged then return end
+    edged = strip
+    local over = Snap.stripEdge
+    over:ClearAllPoints()
+    if strip then
+        over:SetAllPoints(strip)
+        over:Show()
+    else
+        over:Hide()
+    end
+end
+
+--- Hide the highlight (and every part of it with it), if it was ever built, and take the strip edge
+--- off the strip it was on (edgeStrip).
 local function hideHighlight()
-    if Snap.highlight then Snap.highlight:Hide() end
+    if not Snap.highlight then return end
+    Snap.highlight:Hide()
+    edgeStrip(nil)
+end
+
+--- The strip the mark for `pair` edges (A5): the drag-handle strip of the container it names (the
+--- target of an "attach", the current parent of a "hold" or a "detach"), or nil when there is no
+--- pair, no such live container, no strip (LibKa0s-Widgets absent) or the strip is not visible. Only
+--- its visibility is read, never its geometry.
+--- @return table|nil
+local function markStrip(pair)
+    local target = pair and NS.ContainerManager.instances[pair.id]
+    local strip = target and target.handle
+    if strip and strip:IsVisible() then return strip end
+    return nil
+end
+
+--- Place the box, the mark's fallback edge, or hide it: hidden when `strip` is edged instead (A5);
+--- else over `rect` (UIParent units), or, with no rect, a dot's size centered on (`cx`, `cy`).
+local function placeBox(rect, strip, cx, cy)
+    local box = Snap.box
+    if strip then return box:Hide() end
+    box:ClearAllPoints()
+    if rect then
+        box:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", rect.left, rect.bottom)
+        box:SetSize(rect.right - rect.left, rect.top - rect.bottom)
+    else
+        box:SetPoint("CENTER", UIParent, "BOTTOMLEFT", cx, cy)
+        box:SetSize(MARKER, MARKER)
+    end
+    box:Show()
 end
 
 --- Center join dot `dot` on (`x`, `y`), in UIParent units.
@@ -353,29 +424,24 @@ local function placeDot(dot, x, y)
 end
 
 --- Show the highlight for pair `pair` of the drag of live container `dragged`, painted in `col`: the
---- box over `rect` (the target's or parent's, in UIParent units), the target's dot on its relative
---- point of the pair, the dragged anchor's dot on its own point of it, and the line from the first dot
---- to the second. With no `rect` (a parent that is hidden or does not read, A4) the whole mark
---- collapses onto the dragged anchor's dot: the box a dot's size centered on it, the other dot and
---- both ends of the line there too, so the hold and the red still show and nothing is toggled apart.
---- Hidden when there is no pair, or when the dragged anchor no longer reads. Every number is already
---- a plain one in UIParent units, and every part hangs from UIParent, so no offset is converted.
-local function showHighlight(pair, rect, dragged, col)
+--- edge on `strip` (markStrip: the target's or parent's strip, A5), or with none the box over `rect`
+--- (the target's or parent's, in UIParent units); the target's dot on its relative point of the pair,
+--- the dragged anchor's dot on its own point of it, and the line from the first dot to the second.
+--- With no `rect` (a parent that is hidden or does not read, A4) the dots and the line collapse onto
+--- the dragged anchor's dot, and so does the box when there is no strip either, so the hold and the
+--- red still show and nothing is toggled apart. Hidden when there is no pair, or when the dragged
+--- anchor no longer reads. Every number is already a plain one in UIParent units, and every part but
+--- the strip edge hangs from UIParent, so no offset is converted.
+local function showHighlight(pair, rect, strip, dragged, col)
     local own = pair and readRect(dragged and dragged.anchor, dragRect)
     if not own then return hideHighlight() end
     local hl = buildHighlight()
     paintHighlight(col)
     local cx, cy = Snap.PointAt(own, pair.point)
     local px, py = cx, cy
-    hl:ClearAllPoints()
-    if rect then
-        hl:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", rect.left, rect.bottom)
-        hl:SetSize(rect.right - rect.left, rect.top - rect.bottom)
-        px, py = Snap.PointAt(rect, pair.relPoint)
-    else
-        hl:SetPoint("CENTER", UIParent, "BOTTOMLEFT", cx, cy)
-        hl:SetSize(MARKER, MARKER)
-    end
+    if rect then px, py = Snap.PointAt(rect, pair.relPoint) end
+    edgeStrip(strip)
+    placeBox(rect, strip, cx, cy)
     placeDot(Snap.marker, px, py)
     placeDot(Snap.childMarker, cx, cy)
     Snap.line:SetStartPoint("BOTTOMLEFT", UIParent, px, py)
@@ -515,10 +581,10 @@ local function cancelStranded(container)
     container.placedAs = Anchors.Place(container)
 end
 
---- The rect the mark for classify's answer is drawn on: an "attach" target's (Snap.TargetRect), else
---- the current pair's parent's as the leeway measured it (currentPair: never the one-element
---- fallback, never a hidden parent), so the box frames the block a snap back returns to. Nil when
---- there is none.
+--- The rect the mark for classify's answer is measured on: an "attach" target's (Snap.TargetRect),
+--- else the current pair's parent's as the leeway measured it (currentPair: never the one-element
+--- fallback, never a hidden parent), so the parent's dot (and the box, where the parent has no
+--- visible strip) sits on the block a snap back returns to. Nil when there is none.
 --- @return table|nil
 local function markRect(state, pair)
     if not pair then return nil end
@@ -528,8 +594,8 @@ local function markRect(state, pair)
 end
 
 --- One driver tick's work, published so the suite drives it without a clock: classify's answer for
---- the live drag (A4), the highlight shown on its pair, red for "detach" and green otherwise, or
---- hidden when there is none. Returns the pair and the state: a candidate and "attach" (on Shift a
+--- the live drag (A4), the highlight shown on its pair and its container's strip (A5), red for
+--- "detach" and green otherwise, or hidden when there is none. Returns the pair and the state: a candidate and "attach" (on Shift a
 --- screen container has none, D4), an attached container's current pair and "hold" or "detach", or
 --- nil once combat has started (D11), with no live drag, or with nothing to show. A drag whose strip
 --- hid is canceled here instead (cancelStranded), once out of combat.
@@ -545,7 +611,8 @@ function Snap.Tick()
         return nil
     end
     local state, pair = classify(live)
-    showHighlight(pair, markRect(state, pair), live, state == "detach" and C.DETACH_COLOR or C.SNAP_COLOR)
+    local col = state == "detach" and C.DETACH_COLOR or C.SNAP_COLOR
+    showHighlight(pair, markRect(state, pair), markStrip(pair), live, col)
     return pair, state
 end
 

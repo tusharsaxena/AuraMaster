@@ -91,13 +91,15 @@ empty container can still be found and dragged. A screen container or one attach
 outside pairs (each side's start, middle and end joined to the child's mirror point, absolute and
 independent of growth; the three on the target's before side place as a free pair) of the nearest
 eligible container within `C.SNAP_RADIUS` (`Snap.Find`; never itself or one that follows
-it, `Anchors.WouldCycle`) with a box over it, a dot on each of the two join points and a line between
-them, all in one color, and `Anchors.Place` leaves a dragging anchor alone. `Snap.Drop` decides
+it, `Anchors.WouldCycle`) with a 2 px edge in the mark's color on that container's drag-handle strip
+(the owner-feedback addendum's A5: an overlay of ours over the strip's own 1 px gold edge, which is
+never repainted; a box over its rect only when it has no visible strip), a dot on each of the two join
+points and a line between them, all in one color, and `Anchors.Place` leaves a dragging anchor alone. `Snap.Drop` decides
 from the drop itself: a candidate and no Shift writes the whole `container.attach` section through
 `NS.AttachByDrop` (`settings/Layout.lua`), which asks first with the GC-1 popup when the chain's flow
 would change. An attached container has a leeway (the owner-feedback addendum's A4, `C.DETACH_RADIUS`,
 64): while its current pair's two points stay that close to where they rested when the drag began, or
-to each other (the cursor's travel when its parent does not read), the mark stays green on that pair and a release snaps it back, writing nothing; past it, the
+to each other (the cursor's travel when its parent does not read), the mark stays green on that pair, the parent's strip edged, and a release snaps it back, writing nothing; past it, the
 whole mark turns red (`C.DETACH_COLOR`) and a release detaches to the drop position, X/Y 0. Another
 pair in snap range, not its current one and nearer than it (never one of a parent whose block reads
 secret), wins over both, and Shift suppresses only that.

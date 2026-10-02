@@ -4,7 +4,7 @@
 ![CurseForge Version](https://img.shields.io/curseforge/v/1698345)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-1997%2F1997_passing-green)
+![Tests](https://img.shields.io/badge/Tests-1999%2F1999_passing-green)
 
 Ka0s Aura Master lets you build your own buff and debuff displays. Each one is a container. You pick
 whose auras it shows (yours, your target's, your focus's or your pet's), whether it shows buffs,
@@ -46,7 +46,7 @@ debuffs as a row of icons above them, the debuffs you've put on your target as i
 middle of the screen, and your offensive and defensive cooldowns as a line of text near the middle.
 They start locked. `/am unlock` puts a handle on each one, and you drag a container by its handle to
 wherever you want it. Drop it next to another container and it attaches there, following that one as
-it grows: a green box shows which container it will join before you let go. Drag an attached one
+it grows: that container's handle lights up with a green edge before you let go. Drag an attached one
 away to put it back on the screen: once you're far enough from where it was attached the marks turn
 red, and letting go then detaches it. Let go sooner and it snaps back. Hold Shift while you drop to
 place it without attaching.

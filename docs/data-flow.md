@@ -543,9 +543,13 @@ one that follows it: `Anchors.WouldCycle`), the twelve outside pairs (each of it
 middle and end point joined to the dragged one's point mirrored across that side, absolute and
 independent of growth; the three on its before side place as a free pair), between the dragged
 anchor's point and the target's relative point on the rect a follower would hang from (`Anchors.HangFrame`; an engine that reads secret falls back to its anchor). The
-nearest within `C.SNAP_RADIUS` (24 UIParent units) is framed by a green highlight, with a 10 px dot on the
-target's join point, one on the dragged container's and a 2 px line between them, all in one color;
-all of it hangs from UIParent, never from the target. A container attached to another has a
+nearest within `C.SNAP_RADIUS` (24 UIParent units) is marked by a green highlight (the addendum's A5):
+a 2 px edge on the target's drag-handle strip, drawn over the strip's own 1 px gold edge by an
+overlay of ours hung on the strip (`Snap.stripEdge`, which reads nothing off it and is taken off it
+when the mark moves or hides), with a 10 px dot on the target's join point, one on the dragged
+container's and a 2 px line between them, all in one color. A target with no visible strip
+(LibKa0s-Widgets absent, or its strip hidden) gets a box over its rect instead (`Snap.box`), so a mark
+is never lost. The dots, the line and the box hang from UIParent, never from the target. A container attached to another has a
 leeway (the owner-feedback addendum's A4): a pair found that way wins only when it is strictly nearer
 than the container's CURRENT pair (its stored pair in effect, `Anchors.AttachPoints`, measured from its
 own point now to its parent's point now on `Anchors.HangFrame`, with no fallback to the anchor), so a
@@ -554,11 +558,12 @@ while that parent's block does not read (the snap measured it on the one-element
 while that pair's two points are at most `C.DETACH_RADIUS` (64 UIParent units) from where they were
 when the drag began (read before the lift, where its settings put it: the seam gap, its strip and
 label room and its X/Y nudge already between them), or from each other, the mark stays green on the current pair (a *hold*); beyond it,
-the box, both dots and the line all turn red (`C.DETACH_COLOR`, a *detach*). Shift suppresses only
+the strip edge (or the box), both dots and the line all turn red (`C.DETACH_COLOR`, a *detach*). Shift suppresses only
 the other pair. When the parent does not read (hidden, or its hang frame secret, as an engine holding
 auras is), the hold lasts while the cursor has moved less than `C.DETACH_RADIUS` from where the drag
-began, and the mark, having no parent rect to frame, collapses onto the dot on the dragged container's
-join point, green and then red (a hold or a detach is always drawn on the rect the leeway measured,
+began, and the dots and the line, having no parent rect to sit on, collapse onto the dot on the dragged
+container's join point, green and then red, with the parent's strip still edged when it shows one,
+else a dot-sized box on that dot (a hold or a detach is always drawn on the rect the leeway measured,
 never on the one-element fallback); a parent with no live instance gives no hold at all. A screen container has neither. A strip hidden mid-drag (`/am lock`, a
 stand-down or a disable run while the button is held) is sent no OnDragStop, so the tick itself
 cancels that drag once out of combat: the anchor stops moving, `dragging` is cleared and the
