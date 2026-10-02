@@ -1503,7 +1503,7 @@ badge and any count quoted in the docs must agree with it.
 - slash verbs: the disabled gate is ONE decision over the whole verb table, not a per-verb guard
 - slash verbs: /am new enchants makes a player buff container showing only Weapon enchants (feedback #6)
 
-### test_diagnostics.lua (50)
+### test_diagnostics.lua (52)
 
 - diag: /am diagnostics writes the report to the console ungated, opens it, and says so once
 - diag: /am diagnostics answers while the addon is disabled, and the state line says so
@@ -1525,6 +1525,8 @@ badge and any count quoted in the docs must agree with it.
 - diag: a container's non-default rows are listed, with no color escape, untouched rows absent
 - diag: a row scoped to an aura type is not listed for a container of the other type
 - diag: each container's spell-list mode, the view its engine holds and the situation behind it
+- diag: a swap that keeps the view still names the new situation
+- diag: an ordinary setting write keeps the situation the view was chosen for
 - diag: the plan verdict reads in sync, PENDING, DRIFT or not built
 - diag: plan groups report the engine's frame and shown counts, or ? when unreadable
 - diag: shown buttons are identified by instance, then by our own regions, else id=?
@@ -2200,7 +2202,7 @@ badge and any count quoted in the docs must agree with it.
 | test_disabled.lua | 18 |
 | test_slash.lua | 34 |
 | test_slash_verbs.lua | 51 |
-| test_diagnostics.lua | 50 |
+| test_diagnostics.lua | 52 |
 | test_bulklog.lua | 20 |
 | test_debug_coverage.lua | 10 |
 | test_debug_library_lines.lua | 11 |
@@ -2233,4 +2235,4 @@ badge and any count quoted in the docs must agree with it.
 | test_layout_cap.lua | 13 |
 | test_diagnostics_contract.lua | 9 |
 | test_lizard_sighted.lua | 8 |
-| **Total** | **1875** |
+| **Total** | **1877** |

@@ -1,10 +1,10 @@
 # Compat layer
 
-`core/Compat.lua` publishes **23** shims on `NS.Compat`, counted with the command documentation-§3
+`core/Compat.lua` publishes **24** shims on `NS.Compat`, counted with the command documentation-§3
 fixes:
 
 ```sh
-grep -cE '^\s*function\s+[A-Za-z_][A-Za-z0-9_]*\.' core/Compat.lua    # 23
+grep -cE '^\s*function\s+[A-Za-z_][A-Za-z0-9_]*\.' core/Compat.lua    # 24
 ```
 
 A shim is the one entry point a feature module calls in place of a new-in-12.x, version-variant or

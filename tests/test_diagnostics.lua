@@ -399,6 +399,44 @@ test("diag: each container's spell-list mode, the view its engine holds and the 
     assertTrue(has(lines, "[Plan] #" .. id .. " spell lists: mode=dynamic view=ids situation=-") ~= nil, dump(lines))
 end)
 
+test("diag: a swap that keeps the view still names the new situation", function()
+    local NS, mocks = fresh()
+    mocks.__canAssist.target, mocks.__isPlayer.target = false, false
+    local id = NS.ContainerManager.Create({ unit = "target", auraType = "HELPFUL",
+        filter = { situations = { npcs = "every", players = "every" } } })
+    mocks.__fireTimers()
+    local inst = NS.ContainerManager.instances[id]
+    assertEqual(inst.view, "every"); assertEqual(inst.situation, "npcs")
+    mocks.__isPlayer.target = true
+    assertFalse(inst:ApplyView(), "the view did not move")
+    assertEqual(inst.view, "every")
+    -- red under: ApplyView's unchanged-view branch leaving inst.situation alone (an enemy player
+    -- reported as an NPC)
+    assertEqual(inst.situation, "players")
+    local lines = build(NS)
+    assertTrue(has(lines, "[Plan] #" .. id .. " spell lists: mode=dynamic view=every situation=players") ~= nil,
+        dump(lines))
+end)
+
+test("diag: an ordinary setting write keeps the situation the view was chosen for", function()
+    local NS, mocks = fresh()
+    mocks.__canAssist.target, mocks.__isPlayer.target = false, false
+    local id = NS.ContainerManager.Create({ unit = "target", auraType = "HELPFUL" })
+    mocks.__fireTimers()
+    local inst = NS.ContainerManager.instances[id]
+    assertEqual(inst.situation, "npcs")
+    local engine = inst.engine
+    assertTrue(NS.SetByPath("container.filter.maxDuration", 30, id))
+    mocks.__fireTimers()
+    assertTrue(inst.engine == engine, "updated in place, not rebuilt")
+    assertEqual(inst.view, "every")
+    -- red under: Container:Update passing nil for the situation to NoteView (situation=- on every)
+    assertEqual(inst.situation, "npcs")
+    local lines = build(NS)
+    assertTrue(has(lines, "[Plan] #" .. id .. " spell lists: mode=dynamic view=every situation=npcs") ~= nil,
+        dump(lines))
+end)
+
 test("diag: the plan verdict reads in sync, PENDING, DRIFT or not built", function()
     local NS, mocks = fresh()
     local lines = build(NS)
