@@ -127,7 +127,8 @@ test("situations tab: a player or pet buff container says spell lists always app
         assertTrue(P.hasText(ws, L[ALWAYS]), unit .. ": the always note")
         assertFalse(P.hasText(ws, L[HONOR]), unit .. ": no honor line")
         assertFalse(P.hasText(ws, "spell lists don't apply to this container"), unit .. ": no unit line")
-        -- red under: the timeless note keyed on the literal setting (no every view on these units)
+        -- red under: the timeless note drawn outside the where-spell-lists-don't-apply branch (no
+        -- every view on these units)
         NS.SetByPath("container.filter.durationMode", "timeless", 1)
         ws = P.rerender("Filters")
         assertFalse(P.hasText(ws, L[TIMELESS]), unit .. ": no timeless note where ids always apply")

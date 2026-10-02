@@ -43,10 +43,17 @@ test("diag: each container's spell-list mode, the view its engine holds and the 
         dump(lines))
     assertTrue(has(lines, "[Plan] #" .. buf .. " spell lists: mode=always view=ids situation=-") ~= nil,
         dump(lines))
+    -- The stored setting and the engine disagree: written past the `view` effect, so the engine
+    -- stays on every while a fresh resolve from the settings would answer blizzard.
+    NS.Database.FindContainer(id).filter.situations.npcs = "blizzard"
+    lines = build(NS)
+    -- red under: the view or situation read off the settings rather than the live instance
+    assertTrue(has(lines, "[Plan] #" .. id .. " spell lists: mode=dynamic view=every situation=npcs") ~= nil,
+        dump(lines))
     mocks.__isPlayer.target = true
     NS.SetByPath("container.filter.situations.players", "blizzard", id)
     lines = build(NS)
-    -- red under: the view or situation read off the settings rather than the live instance
+    -- red under: the view effect not moving the engine on a Situations write
     assertTrue(has(lines, "[Plan] #" .. id .. " spell lists: mode=dynamic view=blizzard situation=players") ~= nil,
         dump(lines))
     mocks.__canAssist.target = true
