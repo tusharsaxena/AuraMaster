@@ -1081,9 +1081,10 @@ FILT-52, these start from the defaults unless a step says otherwise.
 it (*Important (Blizzard)* **Show**, every other Blizzard category **Hide**, five or more Spell
 Categories **Show**, **Uncategorized** **Hide**, **Max duration** `30`) with Filters → **Situations**
 → **On NPCs** at **Every aura, once**. In a Mythic+ key or a dungeon, target an enemy NPC carrying
-short buffs (the report was *Brutal Slams*) → each buff of 30 seconds or less that is *Important* or
-in no Blizzard category set to Hide draws exactly once, none twice; a cancelable or purgeable one
-that is not *Important* stays hidden, and a buff over 30 seconds does not draw. The console shows
+short buffs (the report was *Brutal Slams*) → each buff of 30 seconds or less in no Blizzard
+category set to Hide draws exactly once, none twice (an Important one included); a cancelable or
+purgeable one stays hidden even when it is Important (in the every view a Show does not rescue a
+Hide), and a buff over 30 seconds does not draw. The console shows
 `[Filter] <name>: spell lists off, every aura (NPC; unit cannot be assisted)`, and `/am diagnostics`
 reads `view=every situation=npcs`. Set *Important (Blizzard)* from **Show** to **Hide** → the NPC's
 important buffs stop drawing and the rest still draw once. Result:
@@ -1092,8 +1093,8 @@ important buffs stop drawing and the rest still draw once. Result:
 NPCs** at **Every aura, once** and **On players** at **Only my Blizzard categories set to Show**. In
 War Mode or a battleground, target an enemy player who pops a big defensive → it draws once, from
 *Big defensives (Blizzard)*, and nothing else draws; `/am diagnostics` reads `view=blizzard
-situation=players`. Target an enemy NPC next → its buffs draw once each again (`view=every
-situation=npcs`). Result:
+situation=players`. Target an enemy NPC next → its buffs that are in no Blizzard category set to
+Hide (Cancelable here) draw, once each (`view=every situation=npcs`). Result:
 
 **FILT-55. A friendly target is unchanged.** Same container, target a friendly player or a party
 member → it filters exactly as before filter situations: the Spell Categories set to Show draw,
