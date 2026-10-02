@@ -135,6 +135,36 @@ test("snap: Candidates lists every other live container in id order, with its re
     assertEqual(list[2].growH .. "/" .. list[2].growV, "left/down", "the target's own growth")
 end)
 
+test("snap: Candidates gives id order whatever order pairs walks the instances in, so a tie keeps the lower id", function()
+    local NS, mocks = env(3)
+    local CM = NS.ContainerManager
+    -- 1 and 3 on one rect, so a drop of 2 is exactly as near to each (D2: the first in id order wins).
+    plant(CM.instances[1].engine, 0, 100, 100, 140)
+    plant(CM.instances[3].engine, 0, 100, 100, 140)
+    plant(CM.instances[2].anchor, 0, 75, 20, 95)
+    -- In game, ids left sparse by deletes sit in the table's hash part, where Lua 5.1 leaves the order
+    -- pairs walks them in unspecified; here it walks the instances backwards.
+    local instances = CM.instances
+    mocks.pairs = function(t)
+        if t ~= instances then return pairs(t) end
+        local keys = {}
+        for k in pairs(t) do keys[#keys + 1] = k end
+        table.sort(keys, function(a, b) return a > b end)
+        local i = 0
+        return function()
+            i = i + 1
+            local k = keys[i]
+            if k ~= nil then return k, t[k] end
+        end, t, nil
+    end
+    local list = ids(NS.Anchors.Snap.Candidates(CM.instances[2]))
+    local hit = NS.Anchors.Snap.Find(CM.instances[2])
+    mocks.pairs = nil
+    -- red under: Candidates without table.sort (the ids in pairs order)
+    assertEqual(list, "1,3", "id order")
+    assertEqual(hit and hit.id, 1, "the tie keeps the lower id")
+end)
+
 test("snap: a follower of the dragged container, and one further down its chain, is never a target", function()
     local NS = env(4)
     local CM = NS.ContainerManager

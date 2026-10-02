@@ -296,6 +296,29 @@ test("drop: re-attaching onto the chain it already follows asks nothing, however
     assertEqual(#chat, 0, "and no chat line: it already grew like 1")
 end)
 
+test("drop: moving along its own chain asks nothing and says nothing in chat, though the target changes", function()
+    local NS, mocks = env()
+    -- 3 and 2 both follow 1; 2's own stored flow differs from 1's, but it grows like 1 already.
+    local c3 = NS.Database.FindContainer(3).attach
+    c3.mode, c3.container = "container", 1
+    otherFlow(NS, 2)
+    local at = NS.Database.FindContainer(2).attach
+    at.mode, at.container = "container", 1
+    plant(NS.ContainerManager.instances[3].engine, 300, 100, 400, 140)
+    local inst = NS.ContainerManager.instances[2]
+    recordAnchor(inst.anchor)
+    local popups = recordPopups(mocks)
+    local chat = {}
+    NS.Printf = function(fmt, ...) chat[#chat + 1] = fmt:format(...) end
+    -- 2's TOPLEFT 5 under 3's BOTTOMLEFT: after-start on 3.
+    dragTo(inst, 300, 75, 320, 95)
+    assertEqual(#popups, 0, "no popup: the flow root stays 1")
+    assertEqual(NS.Database.FindContainer(2).attach.container, 3, "moved onto 3")
+    -- red under: confirmed = false in NS.AttachByDrop (the targetChanged chat line on a move along its
+    -- own chain: FlowChangeOnAttach compares 2's own stored flow with 1's)
+    assertEqual(#chat, 0, "no chat line")
+end)
+
 -- ── detaching (D6, D10) ───────────────────────────────────────────────────────────────────────
 
 test("drop: an attached container dropped with no candidate detaches: position, then mode screen with x and y 0", function()
