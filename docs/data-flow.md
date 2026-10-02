@@ -200,8 +200,8 @@ not the lock. `ApplyVisibility` enables or disables the **engine** (never
 clears the preview, and shows the drag handle while unlocked, with a faint outline one element in
 size unless test mode's placeholders are there. `ApplyVisibility` runs after every
 apply, on every `VISIBILITY_CHANGED` (world entry, combat start and end, a test mode switch) and whenever a row whose
-`effect` is `"visibility"` is written (the master enable, visibility, lock and alpha, and a
-container's own enable). The handle
+`effect` is `"visibility"` is written (the master enable, visibility, lock and alpha, a
+container's own enable, and its six `filter.zones` rows). The handle
 (`Anchors.UpdateHandle`) is a strip outside the anchor, on the side the auras do not grow into (the
 before side: above the block growing down), so it covers no element. Every container's strip sits
 there, a follower's included, in its own column (batch 10 F1, `Anchors.StripPoints`). A shown name

@@ -414,11 +414,15 @@ place, same table identity, because `settings/OptionsSetup.lua` and `settings/Sl
 live reference to it.
 
 A row may also declare `effect`, which tells `modules/ContainerManager.lua` what a write needs beyond
-the stored value. `"visibility"` (the master `enabled`, `visibility`, `locked` and `alpha`, and
-`container.enabled`) runs the combat-legal visibility pass and queues no apply. Only the show ladder
-reads a container's `enabled`; `Container:Apply` never does. `"none"` (`hideBlizzardBuffs`,
+the stored value. `"visibility"` (the master `enabled`, `visibility`, `locked` and `alpha`,
+`container.enabled`, and the six `container.filter.zones.*` rows) runs the combat-legal visibility
+pass and queues no apply. Only the show ladder reads a container's `enabled`; `Container:Apply`
+never does. `"none"` (`hideBlizzardBuffs`,
 `hideBlizzardDebuffs`, `container.name`) queues nothing, because the row's `onChange` is its whole
-effect. A Blizzard-frame toggle made under lockdown still waits: `BlizzardFrames.Apply` catches it
+effect. `"view"` (`container.filter.situations.npcs` and `.players`) marks a write that changes
+which blizzard view a container's groups use; for now ContainerManager gives it the default
+re-apply below, and filter situations SI-03 makes it run `CM.ApplyViews` at once, in combat too.
+A Blizzard-frame toggle made under lockdown still waits: `BlizzardFrames.Apply` catches it
 up on `PLAYER_REGEN_ENABLED`, and the row's `onChange` prints the combat deferral line through
 `ContainerManager.NoteDeferred`, under the same once-per-stretch rule a held apply follows. Absent,
 the write re-applies its container, or every container for a global row. A `sessionOnly` row

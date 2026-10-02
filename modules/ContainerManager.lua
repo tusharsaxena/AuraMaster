@@ -17,9 +17,9 @@ local _, NS = ...
 -- a learned timed spell, the startup build) waits the same way, silently.
 --
 -- NOT EVERY WRITE NEEDS AN APPLY. A row may declare `effect`: "visibility" rows (the master enable,
--- visibility, lock and alpha, a container's enable) run the combat-legal visibility pass at once;
--- "none" rows (the Blizzard-frame toggles, a container's name) did their whole effect in their own
--- onChange. A Blizzard-frame toggle that lockdown holds says so through CM.NoteDeferred, same rule.
+-- visibility, lock and alpha; a container's enable and its filter.zones) run the combat-legal visibility
+-- pass at once; "none" rows (the Blizzard-frame toggles, a container's name) did it all in onChange, a
+-- held toggle saying so via CM.NoteDeferred (same rule); "view" rows (filter.situations) get the default re-apply.
 
 NS.ContainerManager = NS.ContainerManager or {}
 local CM = NS.ContainerManager
