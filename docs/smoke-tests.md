@@ -1482,7 +1482,10 @@ strip's right or left edge). On each side let go three times: with the center of
 first third of that side of A's strip (its left third, or beside A its top third, about 6 px of the
 18), over its middle third, and over its last third → A's strip lights up green each time, the dots on
 the two strips, and the pair is the side's start, middle or end by that third: centered, the MIDDLE
-pair (below A, E's top middle on A's bottom middle), never the start pair. The drop joins the blocks,
+pair (below A, E's top middle on A's bottom middle), never the start pair. Below A, move E a few px
+sideways as well as up, its center still over the middle third: E already hangs below A by its start
+pair, and a move straight up leaves that pair's two dots exactly as far apart as the middle pair's
+gap, so the tie holds and the drop snaps back (`drop: held (leeway)`). The drop joins the blocks,
 not the strips (docs/known-limitations.md): below A (*after*), E's top lands on the bottom of A's block,
 a whole block lower than its strip was; above A, E's bottom on A's top (the side A's lines start from,
 so a free pair, placed past A's strip and name label, with no other gap); on its right (*ahead*, E's
@@ -1582,9 +1585,11 @@ attaches E there (E's top right on the bottom right of A's block). Re-attach E b
 pair lights up, the marks stay on E's own pair in green, and a drop snaps it back. Now make E about
 twice as wide as A and re-attach it below A by its default pair (its left edge under A's left edge, so
 its center is over A's right third). Without Shift, drag it up over A's block until its strip is just
-under A's strip, its center still over A's right third, and let go → the marks move to the end pair
+under A's strip and a few px left, its center still over A's right third, and let go → the marks move to the end pair
 (E's top right on A's bottom right) in green,
-and the drop attaches E there, its right edge flush with A's (`drop: attach`), not a snap back. Now
+and the drop attaches E there, its right edge flush with A's (`drop: attach`), not a snap back. Moved
+straight up instead, with no sideways move at all, the end pair's gap equals the distance between E's
+own pair's two dots, the tie holds, and the drop snaps back (`drop: held (leeway)`). Now
 make A about 600 px wide (its General tab: Size to fit off, Width (px) 600) and E narrow, and re-attach E below A by its
 default pair. Drag E up over A's block until its strip is just under A's strip, then along it, the
 center of E's strip still over the left third of A's strip, until its left edge is well past 128 px
@@ -2084,7 +2089,7 @@ line, then remove its row here.
 | DRAG-1 to DRAG-14 | new on 2026-10-02 with drag to attach (issue #22); DRAG-12 to DRAG-14 from its whole-branch review (DD-05); DRAG-1's highlight corrected the same day for the two join dots and the line (owner feedback, DD-08) |
 | DRAG-15 | new on 2026-10-02 from the owner's smoke feedback (addendum A4; DD-09): the detach leeway, its snap back and the red past `C.DETACH_RADIUS`; DRAG-5, DRAG-9, DRAG-11 and CONT-9 corrected the same day for it; the step with a child twice as wide as its parent added the same day (DD-13R): the pair picked where it rests no longer blocks a drop once it has moved |
 | DRAG-16 | new on 2026-10-02 from the owner's smoke feedback (addendum A1, A3; DD-08): a before-side drop, the line and both dots |
-| DRAG-17 | new on 2026-10-02 from the owner's smoke feedback (addendum A5; DD-11): the mark edges the target's strip, not a box over its placeholders; DRAG-1 to DRAG-5, DRAG-8, DRAG-9, DRAG-15 and DRAG-16 corrected the same day for it; DRAG-1 and DRAG-17 corrected again the same evening (addendum A6; DD-12): the strip's own edge is repainted, since A5's overlay never showed in game, and DRAG-17 ends the mark every way it can end; DRAG-1, DRAG-2, DRAG-5, DRAG-9, DRAG-15, DRAG-16 and DRAG-17 corrected for the second smoke round (addendum A7 to A9; DD-13): the side first and then the third (a centered drop takes the middle pair), everything measured on what you see (block, strip and name label), and the leeway 128 px; DRAG-1's dots split by the side E comes from, and DRAG-15's step with a long parent added (DD-14): a child in snap range of its own pair holds, however far from that pair's points; DRAG-1, DRAG-15, DRAG-16 and DRAG-17 corrected for the third smoke round (addendum A10; DD-15): the dots, the line, the side and the leeway are on the strips, not the placeholders; DRAG-1, DRAG-2, DRAG-9 and DRAG-15 corrected again from DD-15's review (DD-15R): the after side reached over the parent's block, the thirds of the strip, a populated parent's dots on its strip, and a neighbor beside a resting child never taking it |
+| DRAG-17 | new on 2026-10-02 from the owner's smoke feedback (addendum A5; DD-11): the mark edges the target's strip, not a box over its placeholders; DRAG-1 to DRAG-5, DRAG-8, DRAG-9, DRAG-15 and DRAG-16 corrected the same day for it; DRAG-1 and DRAG-17 corrected again the same evening (addendum A6; DD-12): the strip's own edge is repainted, since A5's overlay never showed in game, and DRAG-17 ends the mark every way it can end; DRAG-1, DRAG-2, DRAG-5, DRAG-9, DRAG-15, DRAG-16 and DRAG-17 corrected for the second smoke round (addendum A7 to A9; DD-13): the side first and then the third (a centered drop takes the middle pair), everything measured on what you see (block, strip and name label), and the leeway 128 px; DRAG-1's dots split by the side E comes from, and DRAG-15's step with a long parent added (DD-14): a child in snap range of its own pair holds, however far from that pair's points; DRAG-1, DRAG-15, DRAG-16 and DRAG-17 corrected for the third smoke round (addendum A10; DD-15): the dots, the line, the side and the leeway are on the strips, not the placeholders; DRAG-1, DRAG-2, DRAG-9 and DRAG-15 corrected again from DD-15's review (DD-15R): the after side reached over the parent's block, the thirds of the strip, a populated parent's dots on its strip, and a neighbor beside a resting child never taking it; DRAG-2's centered drop below A and DRAG-15's step with a wide child corrected from DD-15R's review: a few px sideways as well as up, since a move straight up ties with the pair E hangs by and holds |
 | STYLE-3 | 63, batch 5 |
 | STYLE-6 | 59a, batch 5 |
 | STYLE-9 | 61, batch 5; 163, smoke batch 2 (owed, as CONT-8); its bullet count corrected to four on 2026-09-29 |
