@@ -269,7 +269,8 @@ well: `apply queue: all=false` and `engine=yes` on every `[Cont]` line mean the 
 build ran; `all=true` with `mustDefer=true` means it is still waiting.
 
 Target, focus and pet swaps and `ADDON_LOADED` are left out on purpose (owner, 2026-09-29): they
-fire too often in a key to read around. So are `ITEM_DATA_LOAD_RESULT` and `GET_ITEM_INFO_RECEIVED`,
+fire too often in a key to read around. So is `ZONE_CHANGED_NEW_AREA`, a border crossing that fires on
+every zone border. So are `ITEM_DATA_LOAD_RESULT` and `GET_ITEM_INFO_RECEIVED`,
 which fire for every item the client loads. What they can start, the weapon-enchant reset, writes
 its own line when it fires: `[Apply] enchants reset on N container(s) after the loading screen` (or
 `after item data`), N counting the live containers with enchant slots it turned off and on again
@@ -327,7 +328,8 @@ on Clear through the console descriptor's `onClear`. The Launcher's state lines,
 | `Launcher` | library | LibKa0s-Launcher-1.0 (Launcher 5), through `core/LauncherSetup.lua`'s descriptor | Its state lines (`LibDataBroker-1.1 absent`, `LibDBIcon-1.0 absent`, no minimap table, `registered`) through the at-enable queue, so they land after `[Init]` the first time logging is turned on; its events at once |
 | `Perf` | host | `core/PerfSetup.lua` | A perf capture's report, written ungated because the player asked for it |
 
-Left out on purpose: target, focus and pet swaps, `ADDON_LOADED`, the item-data events (above), each
+Left out on purpose: target, focus and pet swaps, `ADDON_LOADED`, `ZONE_CHANGED_NEW_AREA` (a border
+crossing, which fires on every zone border), the item-data events (above), each
 `UNIT_AURA` pass of the empty prediction and the timed-spell scan (quiet unless a scan learns
 something), and the frame picker's `OnUpdate`. Their effects that matter write their own line.
 

@@ -163,7 +163,7 @@ same way it goes down when a player unticks *Enable Aura Master* (slash-commands
 anti-pattern #85's last clause — two mechanisms that must agree about what inert means and diverge
 on the first module added after the second was written.
 
-So `standDown` (`core/LifecycleSetup.lua:116`) calls `addon:UnregisterLifecycleEvents()` — the eleven
+So `standDown` (`core/LifecycleSetup.lua:116`) calls `addon:UnregisterLifecycleEvents()` — the twelve
 events `core/AuraMaster.lua` registers — then `NS.TimedSpells.StandDown()`, which drops TimedSpells'
 own `UNIT_AURA`, its three gate events and its two bus subscriptions, `NS.EmptyWatch.Stop()`,
 `CM.StopListening()` (which also stops the font primer, `FontPrimer.Stop`), `FramePicker.Stop()`,

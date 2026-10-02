@@ -47,7 +47,7 @@ naming what resolves at load (toc-file-§5); the rest are conventional and free 
 | File | Responsibility | Load position |
 |---|---|---|
 | `core/Namespace.lua` | `NS.name`, the fallback `NS.version`, the cyan `[AM]` `NS.PREFIX` | **Load-bearing**: every seam below reads these |
-| `core/Compat.lua` | The 24 client-API shims (aura engine enums, secrecy, formatters, color curves, the duration text binding, mouse focus, spell info, the dispel border color, whether the engine applies spell ids to a unit, whether a unit is a player) — `docs/compat-layer.md` | Conventional: reached at call time |
+| `core/Compat.lua` | The 25 client-API shims (aura engine enums, secrecy, formatters, color curves, the duration text binding, mouse focus, spell info, the dispel border color, whether the engine applies spell ids to a unit, whether a unit is a player, the kind of place the player is in) — `docs/compat-layer.md` | Conventional: reached at call time |
 | `core/MediaSetup.lua` | `LibKa0s-Media-1.0` seam: `NS.Icon`, `NS.MediaFont`, `Media.RegisterLSM` at file load | **Load-bearing**: before `Constants.lua`, which resolves `FONT_MONO` from `NS.MediaFont` |
 | `core/Constants.lua` | Enum-like tables and labels (units, aura types, styles, sort methods, points, dispel colors, preview auras), fallback media, `LOGO_PATH` | Read by everything after it |
 | `core/State.lua` | Session-only state: `debug`, `activeContainerId`, `testMode`; `State.SetActiveContainer` | Conventional |

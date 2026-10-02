@@ -247,12 +247,12 @@ optional. The full table and the reasons:
 | AceDB `OnProfileChanged` / `OnProfileCopied` / `OnProfileReset` | `core/Database.lua:275-279` | `NS.OnProfileChanged` / `NS.OnProfileCopied` / `NS.OnProfileReset` → re-prepare the registry, trace the event once in its own words (a switch `[Profile] changed -> X`; a copy or a reset one `[Set]` line, debug-logging-§10), rebuild, re-render |
 
 Each container's own `UNIT_AURA` belongs to the engine (`SetUnit`, `modules/Container.lua:429`) and
-is not addon code. The eleven `core/AuraMaster.lua` registrations are one module-level list,
+is not addon code. The twelve `core/AuraMaster.lua` registrations are one module-level list,
 `LIFECYCLE_EVENTS`, which `RegisterLifecycleEvents` and `UnregisterLifecycleEvents` both walk, so the
 stand-down and the stand-up remove and restore the same list. With logging on, the world-entry, loading-screen, combat and
 restriction handlers each write one `[Event]` line before acting (`traceEvent`,
-`core/AuraMaster.lua:100`; `docs/debug.md` -> *The event trace*); the unit swaps, `ADDON_LOADED` and
-the two item events do not. The weapon-enchant reset writes one `[Apply]` line when it fires.
+`core/AuraMaster.lua:100`; `docs/debug.md` -> *The event trace*); the unit swaps, `ADDON_LOADED`, the two item events and
+`ZONE_CHANGED_NEW_AREA` (a border crossing, which fires on every zone border) do not. The weapon-enchant reset writes one `[Apply]` line when it fires.
 
 The font primer (`modules/FontPrimer.lua`) registers no event of its own. It runs from
 `CM.StartListening` (the login's `CM.Init` and every stand-up, before the first build), from the
@@ -338,7 +338,7 @@ span bundle is `<date>-v<A>-v<B>/`, and the one untagged bundle is `docs/revendo
 | `perf-analysis/README.md` | Present | The performance harness is wired (`core/PerfSetup.lua`) |
 | `slash-dispatch.md` | Present | 25 commands in `NS.COMMANDS`, over the eight-or-more threshold |
 | `midnight-quirks.md` | Present | Client-version workarounds of the addon's own: 12.1 aura secrecy and the aura container engine, and the taint notes that follow from them |
-| `compat-layer.md` | Present | 24 shims in `core/Compat.lua`, over the three-or-more threshold |
+| `compat-layer.md` | Present | 25 shims in `core/Compat.lua`, over the three-or-more threshold |
 | `message-bus.md` | Not applicable | 4 messages in `NS.MSG`; the trigger is more than ten. The table lives in `## Message Bus` above |
 | `profiles.md` | Present | AceDB profiles are user-visible: the Profiles sub-page is a profile control in the options UI |
 | `debug.md` | Present | `/am diagnostics` (or `/am debug diagnostics`), the diagnostic report `modules/Diagnostics.lua` writes to the console |
