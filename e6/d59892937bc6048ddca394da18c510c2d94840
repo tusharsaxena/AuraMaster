@@ -1,0 +1,1 @@
+OK DD-01: snap core (PointAt/Nearest, eligibility via WouldCycle, guarded UIParent-unit rects with engine->anchor fallback, FoldPoints) matches spec D1/D2/D5/D7; gate 1944/0, luacheck 0/0, CCN ok, CRLF ok, mutation verified
