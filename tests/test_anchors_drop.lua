@@ -257,6 +257,28 @@ test("drop: accepting the drop's popup writes the section; canceling it leaves e
     assertEqual(at.mode .. " " .. tostring(at.container) .. " " .. at.x .. "," .. at.y, "container 1 0,0", "attached")
 end)
 
+test("drop: accepting the drop's popup after its target was deleted writes nothing and says why", function()
+    local NS, mocks = env()
+    otherFlow(NS, 2)
+    local inst = NS.ContainerManager.instances[2]
+    recordAnchor(inst.anchor)
+    local popups = recordPopups(mocks)
+    local chat = {}
+    NS.Printf = function(fmt, ...) chat[#chat + 1] = fmt:format(...) end
+    dragTo(inst, 0, 75, 20, 95)
+    assertEqual(#popups, 1, "asked")
+    -- The popup has no timeout: the player deletes the target (the panel, /am delete) meanwhile.
+    NS.ContainerManager.Delete(1)
+    mocks.__fireTimers()
+    local writes = recordWrites(NS)
+    mocks.StaticPopupDialogs.AURAMASTER_ATTACH_FLOW.OnAccept(popups[1], popups[1].data)
+    -- red under: an OnAccept that checks only combat (mode container written on a missing target,
+    -- which Place sends to a stale screen position)
+    assertEqual(#writes, 0, "nothing written")
+    assertEqual(NS.Database.FindContainer(2).attach.mode, "screen", "still on the screen")
+    assertTrue(#chat == 1 and chat[1]:find("no longer exists", 1, true) ~= nil, "one chat line says why")
+end)
+
 test("drop: re-attaching onto the chain it already follows asks nothing, however its own flow differs", function()
     local NS, mocks = env()
     otherFlow(NS, 2)

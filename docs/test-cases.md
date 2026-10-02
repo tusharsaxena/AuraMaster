@@ -1100,7 +1100,7 @@ badge and any count quoted in the docs must agree with it.
 - drag: a strip hidden mid-drag ends the drag at the next tick, and the container goes back where its settings put it
 - drag: a container destroyed mid-drag ends its drag and stops the driver
 
-### test_anchors_drop.lua (13)
+### test_anchors_drop.lua (14)
 
 - drop: a candidate in range attaches by one whole-section write: the side's points, x and y 0, the rest kept
 - drop: on the Automatic side both points store nil (Automatic), as a fresh attach on the panel does
@@ -1109,6 +1109,7 @@ badge and any count quoted in the docs must agree with it.
 - drop: an attached container dropped in combat goes back on its parent when combat ends, applies held or not
 - drop: a chain that flows differently asks with the attach popup, writes nothing and re-places the container
 - drop: accepting the drop's popup writes the section; canceling it leaves everything as it was
+- drop: accepting the drop's popup after its target was deleted writes nothing and says why
 - drop: re-attaching onto the chain it already follows asks nothing, however its own flow differs
 - drop: an attached container dropped with no candidate detaches: position, then mode screen with x and y 0
 - drop: Shift held at the drop places without attaching: a screen one moves, an attached one detaches
@@ -2310,7 +2311,7 @@ badge and any count quoted in the docs must agree with it.
 | test_anchors_width.lua | 6 |
 | test_anchors_snap.lua | 15 |
 | test_anchors_drag.lua | 12 |
-| test_anchors_drop.lua | 13 |
+| test_anchors_drop.lua | 14 |
 | test_texttemplate.lua | 26 |
 | test_style.lua | 60 |
 | test_castaura.lua | 7 |
@@ -2361,4 +2362,4 @@ badge and any count quoted in the docs must agree with it.
 | test_layout_cap.lua | 13 |
 | test_diagnostics_contract.lua | 9 |
 | test_lizard_sighted.lua | 8 |
-| **Total** | **1971** |
+| **Total** | **1972** |

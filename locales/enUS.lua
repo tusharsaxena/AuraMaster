@@ -535,6 +535,7 @@ L[" %d container(s) attached to it follow too."] = " %d container(s) attached to
 L["Attach"] = "Attach"
 L["Cancel"] = "Cancel"
 L["cannot attach a container during combat; try again when combat ends"] = "cannot attach a container during combat; try again when combat ends"
+L["cannot attach: the container to attach to no longer exists"] = "cannot attach: the container to attach to no longer exists"
 L["'%s' now grows like '%s'; its own Growth settings are kept."] = "'%s' now grows like '%s'; its own Growth settings are kept."
 L["'%s' is no longer attached to '%s' and fills and grows by its own Growth settings again."] = "'%s' is no longer attached to '%s' and fills and grows by its own Growth settings again."
 L["Its %s joins the %s of '%s'"] = "Its %s joins the %s of '%s'"

@@ -635,7 +635,8 @@ vertically), nothing is written: the rows' `confirmWrite` hands the write to the
 on the stored value. The popup reads "Attach '*child*' to '*target*'? '*child*' will fill and grow
 like '*root*' (*the changed settings*). Its own Growth settings are kept and come back if you detach
 it.", plus " *n* container(s) attached to it follow too." when others follow it. **Attach** writes
-through the seam, whose validate checks the loop again; in combat it is refused with a gray line.
+through the seam, whose validate checks the loop again; in combat, or once its target has been
+deleted while the popup was up, it is refused with a gray line.
 **Cancel** writes nothing. It asks on the Parent container row in container mode, and on Attach to when
 switching to Another container with a target already stored; a matching flow, None and every other
 write attach at once. `/am set` and the resets never ask: an attachment they make that changes the

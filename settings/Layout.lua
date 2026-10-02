@@ -128,6 +128,15 @@ local function confirmMode(v, id)
     return attachPrompt(cfg, at.container)
 end
 
+--- The target the popup's `data` would attach to: the section's target (a drop), the value itself
+--- (the Container row), or the target already stored (the Attach to row switching into container mode).
+local function popupTarget(data)
+    if type(data.value) == "table" then return tonumber(data.value.container) end
+    if data.path == "container.attach.container" then return tonumber(data.value) end
+    local cfg = NS.Database.FindContainer(data.id)
+    return cfg and cfg.attach and tonumber(cfg.attach.container)
+end
+
 StaticPopupDialogs[ATTACH_POPUP] = {
     -- The whole question is built by attachPrompt and handed in as the one argument, so a container
     -- name holding a % cannot break the format.
@@ -144,6 +153,13 @@ StaticPopupDialogs[ATTACH_POPUP] = {
             return NS.Printf("|cff808080%s|r", L["cannot attach a container during combat; try again when combat ends"])
         end
         if not data then return end
+        -- The popup has no timeout, so its target may have been deleted while it was up; the row's
+        -- validate would let a missing id through (a loop check finds no loop), and the write would
+        -- send the container to a stale screen position. Nothing is written, and the line says why.
+        if not NS.Database.FindContainer(popupTarget(data)) then
+            if NS.Debug then NS.Debug("Anchor", "attach refused (the target is gone)") end
+            return NS.Printf("|cff808080%s|r", L["cannot attach: the container to attach to no longer exists"])
+        end
         -- The row's validate checks the loop again: the chain may have changed while the popup was up.
         confirmed = true
         NS.SetByPath(data.path, data.value, data.id)
