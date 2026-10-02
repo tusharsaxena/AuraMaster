@@ -480,6 +480,22 @@ test("drop: Shift within the leeway still snaps back; another pair in range atta
     assertEqual(tostring(at.childPoint) .. ">" .. tostring(at.relPoint), "TOP>BOTTOM", "no Shift: attached by the other pair")
 end)
 
+test("drop: an attached container whose parent has no live instance detaches, with no leeway to hold it", function()
+    local NS = env()
+    local lines = recordAnchorLines(NS)
+    local at = NS.Database.FindContainer(2).attach
+    at.mode, at.container = "container", 9   -- no container 9: deleted, or never built
+    local inst = NS.ContainerManager.instances[2]
+    recordAnchor(inst.anchor, 302, 410)
+    plant(inst.anchor, 300, 410, 320, 430)
+    local writes = recordWrites(NS)
+    dragTo(inst, 302, 410, 322, 430)
+    -- red under: a hold for a parent that is not there (it could never be dragged off it)
+    assertEqual(table.concat(writes, ","), "container.position,container.attach", "detached")
+    assertEqual(NS.Database.FindContainer(2).attach.mode, "screen")
+    assertEqual(lines[#lines], "container 2: drop: detach")
+end)
+
 test("drop: with its parent unreadable, a release before the cursor travels C.DETACH_RADIUS snaps back", function()
     local NS, mocks = env()
     local at = NS.Database.FindContainer(2).attach

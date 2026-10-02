@@ -1114,7 +1114,7 @@ badge and any count quoted in the docs must agree with it.
 - drag: on a parent whose block reads secret, a hit on its one-element fallback never takes the current parent back (A4)
 - drag: a screen container's drag has no hold and no red (A4)
 
-### test_anchors_drop.lua (23)
+### test_anchors_drop.lua (24)
 
 - drop: a candidate in range attaches by one whole-section write: the side's points, x and y 0, the rest kept
 - drop: on the Automatic side both points store nil (Automatic), as a fresh attach on the panel does
@@ -1134,6 +1134,7 @@ badge and any count quoted in the docs must agree with it.
 - drop: released where it rests, a container its settings put past the radius snaps back and writes nothing
 - drop: the release is classified again, never taken from the last tick
 - drop: Shift within the leeway still snaps back; another pair in range attaches without Shift
+- drop: an attached container whose parent has no live instance detaches, with no leeway to hold it
 - drop: with its parent unreadable, a release before the cursor travels C.DETACH_RADIUS snaps back
 - drop: a one-row parent reading secret, released where it rests, snaps back and keeps its nudge
 - drop: an attached container whose drop position reads secret is not detached; it goes back to its parent
@@ -2334,7 +2335,7 @@ badge and any count quoted in the docs must agree with it.
 | test_anchors_width.lua | 6 |
 | test_anchors_snap.lua | 17 |
 | test_anchors_drag.lua | 23 |
-| test_anchors_drop.lua | 23 |
+| test_anchors_drop.lua | 24 |
 | test_texttemplate.lua | 26 |
 | test_style.lua | 60 |
 | test_castaura.lua | 7 |
@@ -2385,4 +2386,4 @@ badge and any count quoted in the docs must agree with it.
 | test_layout_cap.lua | 13 |
 | test_diagnostics_contract.lua | 9 |
 | test_lizard_sighted.lua | 8 |
-| **Total** | **1995** |
+| **Total** | **1996** |
