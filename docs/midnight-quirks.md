@@ -444,7 +444,7 @@ frames are never freed, so a rebuild per run would leak one engine frame per con
   creating a container, and tearing one down. A container that leaves the registry in combat is
   parked (engine disabled, anchor untouched) and destroyed once combat ends.
 - **Visibility in combat is the engine's `SetEnabled`**, not `Show`/`Hide` on an ancestry holding
-  aura buttons (`modules/Container.lua:644`).
+  aura buttons (`modules/Container.lua:647`).
 
 ## An unknown event name raises
 
@@ -703,7 +703,7 @@ values was secret.
   (`modules/ContainerManager.lua:217`) holds every build, update and restyle; aura buttons refuse addon
   access while auras are secret.
 - **Visibility in combat goes through the engine's `SetEnabled`**, never `Show`/`Hide` on an aura
-  button's ancestry (`modules/Container.lua:644`).
+  button's ancestry (`modules/Container.lua:647`).
 - **The font primer's frame hangs from `UIParent`, not from any anchor**, so nothing it does reaches
   an aura engine's ancestry. Its one engine call, the follow-up `UpdateAllAuras`, is not protected,
   reads no aura, and skips a disabled engine, which it would clear (`modules/FontPrimer.lua`).

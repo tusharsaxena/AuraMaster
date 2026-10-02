@@ -443,6 +443,9 @@ function ContainerClass:Build(cfg, plan, structure)
     self.unit = cfg.unit
     self.enchantDir = cfg.filter and cfg.filter.sortDirection
     self.plan, self.structure = plan, structure
+    -- A fresh engine took every group's values with AddAuraGroup: whatever the retired one was
+    -- refused, this one holds a known view.
+    self.viewStale = nil
     self:NoteView(view, cfg.unit, auraType, situation)
 end
 

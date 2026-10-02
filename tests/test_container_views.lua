@@ -441,3 +441,59 @@ test("container views: a refused setter leaves the view stale, and the next swit
     assertTrue(not inst.viewStale, "a clean resend clears the mark")
     assertEqual(inst.view, "ids")
 end)
+
+test("container views: a refused filter-string setter is resent for every group at the next switch", function()
+    local _, mocks, inst, engine = targetBuffs(false)
+    -- Both setters refused: here the two views share every filter string, so the switch itself sends
+    -- none, and only the stale retry must send them all.
+    local realF, realC = engine.SetAuraGroupFilterString, engine.SetAuraGroupCandidateFilters
+    engine.SetAuraGroupFilterString = function() error("refused") end
+    engine.SetAuraGroupCandidateFilters = function() error("refused") end
+    mocks.__canAssist.target = true
+    inst:ApplyView()
+    assertTrue(inst.viewStale == true)
+    engine.SetAuraGroupFilterString, engine.SetAuraGroupCandidateFilters = realF, realC
+    local before = #engine:__callsTo("SetAuraGroupFilterString")
+    inst:ApplyView()
+    -- red under: the retry resending a filter string only where the two views differ (none here)
+    assertEqual(#engine:__callsTo("SetAuraGroupFilterString") - before, #inst.plan.groups,
+        "every group's filter string resent")
+    assertTrue(not inst.viewStale)
+end)
+
+test("container views: an Update whose setter is refused leaves the view stale, and the next Update resends in full", function()
+    local NS, mocks, inst, engine = targetBuffs(false)
+    local real = engine.SetAuraGroupCandidateFilters
+    engine.SetAuraGroupCandidateFilters = function() error("refused") end
+    NS.SetByPath("container.filter.maxDuration", 20, inst.id)
+    mocks.__fireTimers()
+    -- red under: Update clearing (or never setting) the mark after a refused setter
+    assertTrue(inst.viewStale == true, "a refused setter during an update marks the view stale")
+    engine.SetAuraGroupCandidateFilters = real
+    local before = #engine:__callsTo("SetAuraGroupCandidateFilters")
+    NS.SetByPath("container.filter.sortDirection", "reverse", inst.id)
+    mocks.__fireTimers()
+    -- red under: Update sending only what differs while the view is stale (a sort change sends no
+    -- candidate filters at all)
+    assertEqual(#engine:__callsTo("SetAuraGroupCandidateFilters") - before, #inst.plan.groups,
+        "every group resent")
+    assertTrue(not inst.viewStale, "a clean resend clears the mark")
+end)
+
+test("container views: a rebuilt engine starts clean, not stale, and a same-view switch then sends nothing", function()
+    local NS, mocks, inst, engine = targetBuffs(false)
+    engine.SetAuraGroupCandidateFilters = function() error("refused") end
+    mocks.__canAssist.target = true
+    inst:ApplyView()
+    assertTrue(inst.viewStale == true)
+    -- Showing one more category changes the plan's structure, so the engine is retired and rebuilt.
+    NS.SetByPath("container.filter.categories.activeMitigation", "show", inst.id)
+    mocks.__fireTimers()
+    assertTrue(inst.engine ~= engine, "a new engine was built")
+    -- red under: Build leaving the old engine's stale mark on the new one
+    assertTrue(not inst.viewStale, "a fresh engine holds a known view")
+    local fresh = inst.engine
+    local before = #fresh:__callsTo("SetAuraGroupCandidateFilters")
+    assertFalse(inst:ApplyView(), "the same view: no switch")
+    assertEqual(#fresh:__callsTo("SetAuraGroupCandidateFilters"), before, "nothing resent")
+end)

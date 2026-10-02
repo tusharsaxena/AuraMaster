@@ -485,7 +485,7 @@ badge and any count quoted in the docs must agree with it.
 - container: an engine whose frame level reads secret leaves the blocker at level 0, never raising (E)
 - container: ApplyVisibility records the hang mode for test mode, unlocked and locked; Park and Destroy reset it
 
-### test_container_views.lua (17)
+### test_container_views.lua (20)
 
 - container views: a target buff container is built on the view its unit's reaction picks
 - container views: player debuffs are always built on the blizzard view, player buffs on the ids view
@@ -504,6 +504,9 @@ badge and any count quoted in the docs must agree with it.
 - container views: UNIT_FACTION and UNIT_FLAGS on the player move target and focus views
 - container views: the stand-up moves the view before it re-enables, in combat too
 - container views: a refused setter leaves the view stale, and the next switch resends it in full
+- container views: a refused filter-string setter is resent for every group at the next switch
+- container views: an Update whose setter is refused leaves the view stale, and the next Update resends in full
+- container views: a rebuilt engine starts clean, not stale, and a same-view switch then sends nothing
 
 ### test_container_situations.lua (16)
 
@@ -2195,7 +2198,7 @@ badge and any count quoted in the docs must agree with it.
 | test_filterviews_situations.lua | 13 |
 | test_situations_settings.lua | 11 |
 | test_container.lua | 52 |
-| test_container_views.lua | 17 |
+| test_container_views.lua | 20 |
 | test_container_situations.lua | 16 |
 | test_container_zones.lua | 8 |
 | test_containermanager.lua | 54 |
@@ -2271,4 +2274,4 @@ badge and any count quoted in the docs must agree with it.
 | test_layout_cap.lua | 13 |
 | test_diagnostics_contract.lua | 9 |
 | test_lizard_sighted.lua | 8 |
-| **Total** | **1901** |
+| **Total** | **1904** |
