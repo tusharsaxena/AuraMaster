@@ -70,3 +70,22 @@ writes nothing; past the radius, red, release detaches; another pair beats hold;
 unreadable-parent fallback; the tooltip line. Docs: ARCHITECTURE, known-limitations if touched,
 smoke-tests (DRAG-2 and DRAG-5 updated to the new rules, new DRAG-15 for the leeway and red, DRAG-16
 for a before-side drop and the line), test-cases, README badge.
+
+## A5. The highlight is the target's strip, not a box over its placeholder (owner, later the same day)
+
+The owner, with a screenshot of the green box framing the target's placeholder: "do the highlight on
+the actual anchor itself (change color, etc), not on the placeholder; if needed change the border
+width of the anchor when highlighting (red and/or green)", and confirmed "the strip is what I meant":
+the target's drag-handle strip. Where a drop attaches stays as it is.
+
+- The box over the target's rect is no longer drawn. Instead the TARGET's strip (for a hold or a
+  detach, the current parent's strip) shows a **2px edge in the mark's color** (green, or red past the
+  leeway) over its own 1px gold edge: an overlay of ours, a plain frame `SetAllPoints` on the strip at a
+  level above it, drawn with `Style.DrawEdge` (no Backdrop, nothing read off the strip, so a strip whose
+  geometry reads secret is fine). Removed from the old target when the mark moves or hides; the
+  strip's own edge is never changed.
+- The two dots and the line (A1, A3) stay, measured as before.
+- A target with no strip (LibKa0s-Widgets absent, or its strip hidden) falls back to the old box over
+  its rect, so a mark is never lost.
+- A hold or a detach whose parent rect is unknown keeps A4's single-dot mark; its parent's strip is
+  still colored when it has one.

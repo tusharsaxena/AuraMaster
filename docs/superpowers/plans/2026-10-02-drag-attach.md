@@ -56,3 +56,4 @@ Spec: `docs/superpowers/specs/2026-10-02-drag-attach-addendum-owner-feedback.md`
 | DD-08 | M4 | Bigger parent dot, the child dot and the line (A1, A3) | highlight cases green |
 | DD-09 | M4 | Detach leeway: hold green and snap back, red past `C.DETACH_RADIUS`, tooltip, docs and smoke cases (A4) | drag and drop cases green |
 | DD-10 | M4 | Review of DD-07..DD-09, verify, fixes; battery; checkpoint row; push | row in the checkpoints file; origin equals HEAD |
+| DD-11 | M4 | The mark colors the target's strip edge (2px, green or red) instead of a box over its placeholder (A5) | highlight cases green, independently reviewed |
