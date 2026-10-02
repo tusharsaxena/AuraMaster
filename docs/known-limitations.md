@@ -64,11 +64,15 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   objects is refused in combat; loops are built and played at dress time and keep running, and a
   change made in combat applies with the deferred restyle (`docs/midnight-quirks.md`).
 - **Spell-id filters apply only to buffs on units you can assist and debuffs on units you cannot**
-  (Blizzard's `CanApplyIdentityCandidateFilters`). Where they do not, a container draws its blizzard
-  view: spell categories and the Overrides lists are not applied, and only the Blizzard categories set
-  to Show draw (owner, 2026-10-02). A container built only on spell categories therefore shows nothing
-  on a hostile target, and a `NeverSecret` aura (Sated, Exhaustion) claimed only by a spell category is
-  not drawn there either, although Blizzard would apply its id. `FilterCompiler` emits a warning per
+  (Blizzard's `CanApplyIdentityCandidateFilters`). Where they do not, a container draws the view its
+  Situations setting picks (filter situations, 2026-10-02): every aura once (the default), honoring
+  Cast by, Max duration and the Blizzard, Dispel and Who Cast It rows set to Hide, or only the
+  Blizzard categories set to Show. Neither applies spell categories, Uncategorized or the Overrides
+  lists. With "Only Blizzard categories" a container built only on spell categories shows nothing on
+  a hostile target, and a `NeverSecret` aura (Sated, Exhaustion) claimed only by a spell category is
+  not drawn there either, although Blizzard would apply its id. "These filters can never match
+  anything" speaks for the spell-list views only: it never reads the Situations settings, so a target
+  or focus container it warns about can still draw every aura once where spell lists don't apply. `FilterCompiler` emits a warning per
   container where that bites (`identityWarning`, `modules/FilterCompiler.lua:418`), rendered in orange
   in the Filters section, and Categories and Overrides carry a NOTE (`docs/midnight-quirks.md`).
 - **On a target or focus BUFF container, Uncategorized set to Show no longer rescues an unlisted

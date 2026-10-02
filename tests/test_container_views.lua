@@ -8,12 +8,18 @@
 -- the two views differ, and it runs in combat and while auras are secret: it never goes through
 -- ContainerManager's apply hold. The wiring (SV-03): a target or focus swap switches the view before
 -- the refresh, and UNIT_FACTION / UNIT_FLAGS on ContainerManager's view frame switch it without a swap.
+--
+-- Every container here stores both Situations settings as "blizzard" (BLIZZARD_ONLY), so its no-ids
+-- view is the blizzard view these cases are about; the every view and the choice between the two are
+-- tests/test_container_situations.lua's (filter situations, S2).
 
 local T = _G.AM_TEST
 local spyConsole = dofile("tests/console_spy.lua")
 local test, assertEqual, assertTrue, assertFalse =
     T.test, T.assertEqual, T.assertTrue, T.assertFalse
 local fresh = dofile("tests/fresh_env.lua")
+
+local BLIZZARD_ONLY = { npcs = "blizzard", players = "blizzard" }
 
 --- Every category of `auraType` Hidden but the keys in `shown`.
 local function states(NS, auraType, shown)
@@ -32,6 +38,7 @@ local function targetBuffs(assistable)
     mocks.__canAssist.target = assistable
     local id = NS.ContainerManager.Create({ unit = "target", auraType = "HELPFUL", filter = {
         maxDuration = 30, categories = states(NS, "HELPFUL", { defensives = true, bigDefensive = true }),
+        situations = BLIZZARD_ONLY,
     } })
     mocks.__fireTimers()
     local inst = NS.ContainerManager.instances[id]
@@ -93,7 +100,7 @@ test("container views: player debuffs are always built on the blizzard view, pla
     mocks.__playerControlled.player, mocks.__playerControlled.pet = false, false
     assertFalse(NS.Compat.IdsApply("player", "HELPFUL"), "IdsApply alone would pick the blizzard view")
     local deb = NS.ContainerManager.Create({ unit = "player", auraType = "HARMFUL", filter = {
-        categories = states(NS, "HARMFUL", { hardCC = true, crowdControl = true }),
+        categories = states(NS, "HARMFUL", { hardCC = true, crowdControl = true }), situations = BLIZZARD_ONLY,
     } })
     local buf = NS.ContainerManager.Create({ unit = "player", auraType = "HELPFUL", filter = {
         categories = states(NS, "HELPFUL", { defensives = true, bigDefensive = true }),
@@ -259,7 +266,8 @@ test("container views: a view change writes one [Filter] line, and an unchanged 
     assertEqual(#lines, 1, table.concat(lines, " | "))
     mocks.__canAssist.target = false
     inst:ApplyView()
-    assertEqual(lines[2], "[Filter] " .. name .. ": spell lists off (unit cannot be assisted)")
+    assertEqual(lines[2], "[Filter] " .. name
+        .. ": spell lists off, only Blizzard categories set to Show (NPC; unit cannot be assisted)")
 end)
 
 test("container views: a setter the engine refuses is caught, and logged once", function()
@@ -339,7 +347,7 @@ test("container views: a secret unit token from a unit event switches nothing an
     end })
     mocks.__canAssist.target = false
     local id = NS.ContainerManager.Create({ unit = "target", auraType = "HELPFUL", filter = {
-        categories = states(NS, "HELPFUL", { defensives = true, bigDefensive = true }),
+        categories = states(NS, "HELPFUL", { defensives = true, bigDefensive = true }), situations = BLIZZARD_ONLY,
     } })
     mocks.__fireTimers()
     local inst = NS.ContainerManager.instances[id]

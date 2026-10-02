@@ -209,9 +209,9 @@ NS.RegisterSchemaRows({
 -- `skipRender`: in the schema, so `/am get|set|list` and Defaults reach them, but drawn nowhere. A
 -- group of their own would put an empty tab on the strip.
 --
--- The zone rows take the combat-legal visibility pass. The situation rows take the `view` effect,
--- which modules/ContainerManager.lua does not know yet and so treats as an ordinary apply until
--- SI-03 wires it to the view switch.
+-- The zone rows take the combat-legal visibility pass. The situation rows take the `view` effect:
+-- modules/ContainerManager.lua runs CM.ApplyViews for that container at once, in combat too, never
+-- held behind the apply hold (no plan reads them, so nothing needs a re-apply; SI-03).
 
 local SITUATION_OK = {}
 for _, mode in ipairs(C.SITUATION_MODES) do SITUATION_OK[mode] = true end

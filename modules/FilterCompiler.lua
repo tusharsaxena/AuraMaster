@@ -752,7 +752,10 @@ local function finishWarnings(plan, unit, auraType, anyHidden, listsUsed)
     end
     -- A buff container showing only Weapon enchants (schema v5) draws its enchant slots and no aura
     -- group: that is what it is for, not a filter that can never match. The remainder does not count:
-    -- it is NEVER in the ids and blizzard views.
+    -- it is NEVER in the ids and blizzard views. The warning never reads `filter.situations` (SI-03):
+    -- the view is run-time state, and Diagnostics' plan-staleness check compares Signature(plan) with a
+    -- fresh compile. It speaks for the spell-list views; the remainder can still draw in the every view.
+    -- (A warning that read the situations would report a stale plan after every Situations write.)
     local groupCount = #plan.groups
     if groupCount > 0 and plan.groups[groupCount].remainder then groupCount = groupCount - 1 end
     if groupCount == 0 and not plan.enchants then

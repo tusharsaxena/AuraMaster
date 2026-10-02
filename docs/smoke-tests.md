@@ -1013,31 +1013,34 @@ FILT-46 to FILT-52 check the spell-list views (2026-10-02). Blizzard applies spe
 unit you can assist and to debuffs on a unit you cannot. Elsewhere a container that sets any category
 to Hide draws only the categories set to Show on its Blizzard Categories, Dispel Types and Who Cast It
 grids, each aura once. Turn logging on (`/am debug on`) for the checks that read `[Filter]` lines.
+Since filter situations (S2), that is the blizzard view, which a container draws there only with its
+Situations settings at "Only my Blizzard categories set to Show"; FILT-46 to FILT-52 assume both
+settings (NPCs and players) at that value, on every container they use.
 
 **FILT-46. The Mythic+ repro: one bar per aura.** Make a *target buffs* bar container: every Blizzard
 category **Hide**, at least five Spell Categories **Show** (Defensive cooldowns, Offensive cooldowns,
 Healing, Support, Utility and so on), **Uncategorized** **Hide**, **Max duration** `30`. In a Mythic+
 key or a dungeon, target an enemy NPC that carries a short buff (the report was *Brutal Slams*,
 stacked twice) → no bar is drawn more than once, and on this container nothing draws at all, since
-no Blizzard category is set to Show. The console shows `[Filter] <name>: spell lists off (unit cannot
-be assisted)` when you target it. Set *Important (Blizzard)* to **Show** → the NPC's important buffs
+no Blizzard category is set to Show. The console shows `[Filter] <name>: spell lists off, only
+Blizzard categories set to Show (NPC; unit cannot be assisted)` when you target it. Set *Important (Blizzard)* to **Show** → the NPC's important buffs
 each draw once, and nothing else does. Result:
 
 **FILT-47. A hostile player.** In War Mode or a battleground, use a *target buffs* container with
 *Defensive cooldowns* **Show**, *Cancelable* **Hide** and *Big defensives (Blizzard)* **Show**. Target
 an enemy player who pops a big defensive → it draws once, from *Big defensives (Blizzard)*; a buff
 only in *Defensive cooldowns* does not draw; no buff draws twice. `/am diagnostics` → the container's
-line reads `spell lists: mode=dynamic view=blizzard`. Result:
+line reads `spell lists: mode=dynamic view=blizzard situation=players`. Result:
 
 **FILT-48. A friendly target.** Same container, target a friendly player or a party member → the
 container filters exactly as set: *Defensive cooldowns* buffs draw, *Cancelable* ones the other
 categories do not claim stay hidden, nothing draws twice. Switching from the FILT-47 target logs
-`[Filter] <name>: spell lists on (unit can be assisted)`, and `/am diagnostics` reads `view=ids`.
+`[Filter] <name>: spell lists on (unit can be assisted)`, and `/am diagnostics` reads `view=ids situation=-`.
 Result:
 
 **FILT-49. A duel flips the view without a retarget.** Target a friendly player and keep them
-targeted. Start a duel → when it begins, the console logs `spell lists off (unit cannot be assisted)`
-for each target buff container and `spell lists on (unit cannot be assisted)` for *Target debuffs
+targeted. Start a duel → when it begins, the console logs `spell lists off, only Blizzard categories
+set to Show (player; unit cannot be assisted)` for each target buff container and `spell lists on (unit cannot be assisted)` for *Target debuffs
 (mine)*, with no target change and no Lua error, in combat too; each container redraws on its own.
 When the duel ends the lines flip back. Nothing draws twice at any point. Result:
 
@@ -1064,7 +1067,7 @@ container show fewer buffs on enemies?" read the same as these notes. Result:
 **FILT-52. Mind control flips the view on the charmer.** On a raid or dungeon boss that mind-controls
 (charms) a player, keep a *Target debuffs (mine)* container with *Hard CC*, *Soft CC* and *Racials*
 **Show** and *Dispellable by anyone* **Hide**, targeting the boss. When you are charmed, the console
-logs `spell lists off (unit can be assisted)` for that container if the charm made the boss
+logs `spell lists off, only Blizzard categories set to Show (NPC; unit can be assisted)` for that container if the charm made the boss
 assistable, with no target change and no Lua error; nothing draws twice while charmed. When the charm
 ends the line flips back to `spell lists on (unit cannot be assisted)`. Result:
 

@@ -20,7 +20,7 @@ engine does the reading, filtering, sorting, layout and timer animation in its o
         │    (a session row stops after the debug line: it sends nothing)
         │    (inside a bulk copy or reset the [Set] line is muted and tallied: one line per act)
         ▼
- 2  ContainerManager (CONFIG_CHANGED listener)                 modules/ContainerManager.lua:837
+ 2  ContainerManager (CONFIG_CHANGED listener)                 modules/ContainerManager.lua:841
         │  first FontPrimer.PrimeAll: a font no container drew in yet is drawn on a shown frame
         │  the row's effect:  "visibility" → ApplyVisibility now    "none" → nothing
         │  otherwise RequestApply(containerId)   nil = every container
@@ -31,7 +31,7 @@ engine does the reading, filtering, sorting, layout and timer animation in its o
         │     yes → keep the request, print the notice naming the cause (once), return
         │     no  → for each dirty container: Container:Apply(); re-place container-attached ones
         ▼
- 4  Container:Apply                                            modules/Container.lua:474
+ 4  Container:Apply                                            modules/Container.lua:514
         │  plan = FilterCompiler.Compile(cfg, { timedSpells })  (pure)
         │  anchor scale / strata / level; Anchors.Place (screen, container or frame)
         │  structure = #groups : enchant slots (hide-permanent) : style : growth corner
@@ -125,7 +125,7 @@ directly (`NS.Print`), not silently. Full detail: *Step 4 in detail*, below.
 
 ## Step 4 in detail: the filter plan
 
-`FilterCompiler.Compile` (`modules/FilterCompiler.lua:803`) turns one container into
+`FilterCompiler.Compile` (`modules/FilterCompiler.lua:806`) turns one container into
 `{ groups, enchants, warnings }`, under the five-rank priority *Filter
 priority*, above, states (`FC.ExplainSpell` answers the same question for one spell, for the panel):
 
@@ -181,17 +181,17 @@ priority*, above, states (`FC.ExplainSpell` answers the same question for one sp
 only when the direction moved), cap and layout can change on a live engine; hide-permanent enchants
 cannot, because a slot takes it only when added, so toggling it is a new shape. A plan of the same
 shape calls only the setters whose values moved. Candidate filters are serialized with
-`FilterCompiler.Signature` (`modules/FilterCompiler.lua:975`) and re-sent only when the two
-signatures differ (`modules/Container.lua:293-296`), because the engine clears and re-gathers a
+`FilterCompiler.Signature` (`modules/FilterCompiler.lua:978`) and re-sent only when the two
+signatures differ (`modules/Container.lua:320-323`), because the engine clears and re-gathers a
 group whenever they are set (`docs/midnight-quirks.md`). **Rebuilding.** Groups are add-only and a
 frame is never freed, so a new shape disables and hides the old engine, keeps it aside, and builds a
 new one: flow layout first, then the anchor, then every `AddAuraGroup`, then the enchant slots, then
-`SetUnit` last (`modules/Container.lua:389`).
+`SetUnit` last (`modules/Container.lua:429`).
 
 ## Visibility, separate from applying
 
 Whether a container shows is a cheaper question, and one that is legal in combat:
-`Container:ShouldShow` (`modules/Container.lua:552`) answers, in order — perf suspend, profile and
+`Container:ShouldShow` (`modules/Container.lua:592`) answers, in order — perf suspend, profile and
 container `enabled`, then General visibility against `UnitAffectingCombat("player")`, which an
 unlocked container skips so one that shows only in combat can still be found and moved; it also
 answers whether the container previews, which is the session-only test mode (`NS.State.testMode`),

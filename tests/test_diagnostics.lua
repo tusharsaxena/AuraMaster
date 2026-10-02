@@ -371,7 +371,7 @@ test("diag: a row scoped to an aura type is not listed for a container of the ot
     assertTrue(other:find("icons.width", 1, true) == nil, other)
 end)
 
-test("diag: each container's spell-list mode and the view its engine holds", function()
+test("diag: each container's spell-list mode, the view its engine holds and the situation behind it", function()
     local NS, mocks = fresh()
     mocks.__canAssist.target = false
     local id = NS.ContainerManager.Create({ unit = "target", auraType = "HELPFUL" })
@@ -379,15 +379,24 @@ test("diag: each container's spell-list mode and the view its engine holds", fun
     local buf = NS.ContainerManager.Create({ unit = "player", auraType = "HELPFUL" })
     mocks.__fireTimers()
     local lines = build(NS)
-    -- red under: planLines without the spell-list line (spell-list views, V2)
-    assertTrue(has(lines, "[Plan] #" .. id .. " spell lists: mode=dynamic view=blizzard") ~= nil, dump(lines))
-    assertTrue(has(lines, "[Plan] #" .. deb .. " spell lists: mode=never view=blizzard") ~= nil, dump(lines))
-    assertTrue(has(lines, "[Plan] #" .. buf .. " spell lists: mode=always view=ids") ~= nil, dump(lines))
+    -- red under: planLines without the situation (filter situations, S2), or the two-way resolver
+    -- (a hostile NPC on the blizzard view whatever its NPCs setting)
+    assertTrue(has(lines, "[Plan] #" .. id .. " spell lists: mode=dynamic view=every situation=npcs") ~= nil,
+        dump(lines))
+    assertTrue(has(lines, "[Plan] #" .. deb .. " spell lists: mode=never view=every situation=players") ~= nil,
+        dump(lines))
+    assertTrue(has(lines, "[Plan] #" .. buf .. " spell lists: mode=always view=ids situation=-") ~= nil,
+        dump(lines))
+    mocks.__isPlayer.target = true
+    NS.SetByPath("container.filter.situations.players", "blizzard", id)
+    lines = build(NS)
+    -- red under: the view or situation read off the settings rather than the live instance
+    assertTrue(has(lines, "[Plan] #" .. id .. " spell lists: mode=dynamic view=blizzard situation=players") ~= nil,
+        dump(lines))
     mocks.__canAssist.target = true
     NS.ContainerManager.instances[id]:ApplyView()
     lines = build(NS)
-    -- red under: the view read off the settings rather than the live instance
-    assertTrue(has(lines, "[Plan] #" .. id .. " spell lists: mode=dynamic view=ids") ~= nil, dump(lines))
+    assertTrue(has(lines, "[Plan] #" .. id .. " spell lists: mode=dynamic view=ids situation=-") ~= nil, dump(lines))
 end)
 
 test("diag: the plan verdict reads in sync, PENDING, DRIFT or not built", function()

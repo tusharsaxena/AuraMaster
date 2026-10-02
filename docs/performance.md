@@ -69,7 +69,8 @@ manager is listening: locked too, unlike EmptyWatch, because a view must follow 
 control in combat. `UNIT_FLAGS` fires often in play (a combat flag changing is enough). Each event
 costs one walk over `CM.instances` (two for a `player` event, one per unit) and, per container on
 that unit, the `pcall`'d
-`UnitIsPlayerControlledOrGroupMember` and `UnitCanAssist` reads that resolve its view. When the view
+`UnitIsPlayerControlledOrGroupMember` and `UnitCanAssist` reads that resolve its view, and the
+`UnitIsPlayer` read that picks its Situations setting where spell ids are not applied. When the view
 holds, nothing is sent to the engine and nothing is allocated; when it moves, each group whose view
 values differ gets its setters, and EmptyWatch re-predicts (its own gates apply).
 
@@ -105,9 +106,9 @@ Declared in report order in `buckets` (`core/PerfSetup.lua:48`), each bracketed 
 
 | Bucket | Declared parent | Bracket | Why it is bracketed |
 |---|---|---|---|
-| `unitSwap` | — | `core/AuraMaster.lua:169`, `:176` | The one path driven by play: target, focus or pet changed, so every container on that unit calls the engine's `UpdateAllAuras`. On a target or focus swap the bracket first spans `CM.ApplyViews` (`modules/ContainerManager.lua:429`): each container whose view moved calls the engine's `SetAuraGroupFilterString` and `SetAuraGroupCandidateFilters` per group, each ending in its own `UpdateAllAuras`. It switches quietly: no `emptyPass` runs inside the bracket, because EmptyWatch re-predicts from its own swap handler (see that row). Whatever the engine does synchronously inside these calls lands here |
+| `unitSwap` | — | `core/AuraMaster.lua:169`, `:176` | The one path driven by play: target, focus or pet changed, so every container on that unit calls the engine's `UpdateAllAuras`. On a target or focus swap the bracket first spans `CM.ApplyViews` (`modules/ContainerManager.lua:431`): each container whose view moved calls the engine's `SetAuraGroupFilterString` and `SetAuraGroupCandidateFilters` per group, each ending in its own `UpdateAllAuras`. It switches quietly: no `emptyPass` runs inside the bracket, because EmptyWatch re-predicts from its own swap handler (see that row). Whatever the engine does synchronously inside these calls lands here |
 | `applyPass` | — | `modules/ContainerManager.lua:358-366` | The coalesced pass applying pending configuration to every dirty container, plus re-placing container-attached ones |
-| `applyContainer` | `applyPass` | `modules/Container.lua:474-520` | One container: compile, place, build or update the engine, restyle, visibility. The call site passes `"applyPass"`, so the record carries observed containment |
+| `applyContainer` | `applyPass` | `modules/Container.lua:514-560` | One container: compile, place, build or update the engine, restyle, visibility. The call site passes `"applyPass"`, so the record carries observed containment |
 | `visibilityPass` | — | `modules/ContainerManager.lua:385` | The show ladder over every container, on combat transitions, world entry and the master rows |
 | `styleElement` | — | `modules/Style.lua:844-854` | Dressing one bar, icon or line of text: called by the engine's `initializeFrame` as it creates buttons, by a restyle, and by the preview |
 | `timedScan` | — | `modules/TimedSpells.lua` `scanTick` | One readable-state scan of the player's and pet's buffs, 0.5 s after their auras changed or the readable gate reopened. The addon's only aura-driven Lua path while locked; absent from a capture with no "without a duration" container |
@@ -118,7 +119,7 @@ Declared in report order in `buckets` (`core/PerfSetup.lua:48`), each bracketed 
 `emptyPass`, outside the `unitSwap` bracket, whichever of the two swap handlers AceEvent calls first
 (it walks them in no set order). When EmptyWatch's runs first it moves the view itself, and
 `unitSwap` then finds the view already right. A view switch on a reaction change (`UNIT_FACTION` or `UNIT_FLAGS` for `target` or
-`focus`, `modules/ContainerManager.lua:771`, or for the player, on `CM.viewPlayerFrame`) runs **unbracketed**: its setter calls land in no bucket,
+`focus`, `modules/ContainerManager.lua:774`, or for the player, on `CM.viewPlayerFrame`) runs **unbracketed**: its setter calls land in no bucket,
 and only the `emptyPass` it triggers is recorded, at the root. **`styleElement` is declared at the root because its callers differ**, and it
 overlaps two other buckets without saying so: a restyle runs it inside `applyContainer`, and the
 preview runs it inside `visibilityPass` or `applyContainer`. Only the calls the engine makes from its

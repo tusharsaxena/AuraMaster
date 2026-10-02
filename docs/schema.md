@@ -420,8 +420,8 @@ pass and queues no apply. Only the show ladder reads a container's `enabled`; `C
 never does. `"none"` (`hideBlizzardBuffs`,
 `hideBlizzardDebuffs`, `container.name`) queues nothing, because the row's `onChange` is its whole
 effect. `"view"` (`container.filter.situations.npcs` and `.players`) marks a write that changes
-which blizzard view a container's groups use; for now ContainerManager gives it the default
-re-apply below, and filter situations SI-03 makes it run `CM.ApplyViews` at once, in combat too.
+which view a container's groups use where spell lists don't apply: ContainerManager runs
+`CM.ApplyViews` for that container at once, in combat too, and queues no apply (no plan reads them).
 A Blizzard-frame toggle made under lockdown still waits: `BlizzardFrames.Apply` catches it
 up on `PLAYER_REGEN_ENABLED`, and the row's `onChange` prints the combat deferral line through
 `ContainerManager.NoteDeferred`, under the same once-per-stretch rule a held apply follows. Absent,

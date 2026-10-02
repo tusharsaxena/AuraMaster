@@ -252,10 +252,11 @@ end
 -- Every compiled group carries three views: the IDS view (its own filter and candidates), and the
 -- BLIZZARD and EVERY views (`group.views`, modules/FilterViews.lua), sent where Blizzard will not apply
 -- spell ids, so a spell-list group matches nothing there instead of every aura. The container keeps
--- `self.view` ("ids" | "blizzard" | "every"), the view the engine currently holds. Build and Update
--- send the active view; ApplyView switches a live engine when the unit's reaction moves (docs/
--- superpowers/specs/2026-10-02-spell-list-views-design.md). Until the Situations setting lands
--- (SI-03) the resolver picks ids or blizzard only.
+-- `self.view` ("ids" | "blizzard" | "every"), the view the engine currently holds, and
+-- `self.situation` ("npcs" | "players" | "unknown", nil on the ids view), the setting that picked it.
+-- Build and Update send the active view; ApplyView switches a live engine when the unit's reaction
+-- or player-ness moves, or a Situations setting changes (docs/superpowers/specs/
+-- 2026-10-02-spell-list-views-design.md; 2026-10-02-filter-situations-design.md S2).
 --
 -- COMBAT-LEGAL. A switch is SetAuraGroupFilterString and SetAuraGroupCandidateFilters only:
 -- Blizzard's Lua checks neither combat nor secrecy on them, and both end in UpdateAllAuras, the call
@@ -266,14 +267,40 @@ local function auraTypeOf(cfg)
     return (cfg.auraType == "HARMFUL") and "HARMFUL" or "HELPFUL"
 end
 
---- Which view a container on `unit` sends for `auraType` auras right now: FC.IdsMode decides the
---- player's and the pet's outright, and NS.Compat.IdsApply every other unit.
---- @return string  "ids" | "blizzard"
-function NS.Container.ResolveView(unit, auraType)
+--- A stored Situations value as a view: "blizzard" is the blizzard view, anything else (the template
+--- default "every", a missing or hand-edited value) the every view.
+local function situationView(v)
+    return v == "blizzard" and "blizzard" or "every"
+end
+
+--- Which Situations setting applies on `unit` where spell lists don't: player and pet debuff
+--- containers (FC.IdsMode "never") take Players outright; a target or focus is a player or an NPC
+--- by NS.Compat.IsPlayerUnit, and "unknown" when that is not knowable.
+local function situationOf(unit, mode)
+    if mode == "never" then return "players" end
+    local isPlayer = NS.Compat.IsPlayerUnit(unit)
+    if isPlayer == nil then return "unknown" end
+    return isPlayer and "players" or "npcs"
+end
+
+--- Which view this container sends on `unit` for `auraType` auras right now, and the situation that
+--- picked it (nil on the ids view). FC.IdsMode "always" (player and pet buffs) is ids; "dynamic" is
+--- ids where NS.Compat.IdsApply says Blizzard applies spell ids; otherwise the container's own
+--- `filter.situations` setting for that situation, read from `cfg` (Build and Update pass the one
+--- they apply) or the stored settings. An unknowable side takes the stricter of the two settings:
+--- blizzard draws a subset of every, so an unsure answer can only under-show (filter situations, S2).
+--- @return string view  "ids" | "blizzard" | "every"
+--- @return string|nil situation  "npcs" | "players" | "unknown"
+function ContainerClass:ResolveView(unit, auraType, cfg)
     local mode = NS.FilterCompiler.IdsMode(unit, auraType)
     if mode == "always" then return "ids" end
-    if mode == "never" then return "blizzard" end
-    return NS.Compat.IdsApply(unit, auraType) and "ids" or "blizzard"
+    if mode == "dynamic" and NS.Compat.IdsApply(unit, auraType) then return "ids" end
+    cfg = cfg or self:Cfg()
+    local sit = cfg and cfg.filter and cfg.filter.situations or {}
+    local situation = situationOf(unit, mode)
+    if situation ~= "unknown" then return situationView(sit[situation]), situation end
+    local strict = situationView(sit.npcs) == "blizzard" or situationView(sit.players) == "blizzard"
+    return strict and "blizzard" or "every", situation
 end
 
 --- Group `g`'s filter string and candidate filters in `view` ("ids" | "blizzard" | "every").
@@ -296,39 +323,52 @@ local function sendGroupView(engine, g, view, o, oldView)
     end
 end
 
---- Why a container is on `view`, for its [Filter] line.
-local function viewReason(view, unit, auraType)
-    if NS.FilterCompiler.IdsMode(unit, auraType) == "never" then return "your own and your pet's debuffs" end
+local VIEW_WORDS = { blizzard = "only Blizzard categories set to Show", every = "every aura" }
+local SITUATION_WORDS = { npcs = "NPC", players = "player", unknown = "NPC or player not knowable" }
+
+--- Why a container is on `view`, for its [Filter] line: "spell lists on (unit can be assisted)",
+--- "spell lists off, every aura (NPC; unit cannot be assisted)", and so on.
+local function viewReason(view, situation, unit, auraType)
+    if NS.FilterCompiler.IdsMode(unit, auraType) == "never" then
+        return "off, " .. VIEW_WORDS[view] .. " (your own and your pet's debuffs)"
+    end
     local assistable = (view == "ids") == (auraType == "HELPFUL")
-    return assistable and "unit can be assisted" or "unit cannot be assisted"
+    local reason = assistable and "unit can be assisted" or "unit cannot be assisted"
+    if view == "ids" then return "on (" .. reason .. ")" end
+    return "off, " .. VIEW_WORDS[view] .. " (" .. SITUATION_WORDS[situation or "unknown"] .. "; " .. reason .. ")"
 end
 
---- Record the view the engine now holds, and say so when it moved. A container starts on the ids
---- view, Blizzard's own default, so a build on it says nothing.
-function ContainerClass:NoteView(view, unit, auraType)
+--- Record the view the engine now holds and the situation that picked it, and say so when the view
+--- moved. A container starts on the ids view, Blizzard's own default, so a build on it says nothing.
+function ContainerClass:NoteView(view, unit, auraType, situation)
     local was = self.view or "ids"
-    self.view, self.auraType = view, auraType
+    self.view, self.auraType, self.situation = view, auraType, situation
     if was == view then return end
     local cfg = self:Cfg()
-    NS.Debug("Filter", "%s: spell lists %s (%s)", cfg and cfg.name or ("#" .. tostring(self.id)),
-        view == "ids" and "on" or "off", viewReason(view, unit, auraType))
+    NS.Debug("Filter", "%s: spell lists %s", cfg and cfg.name or ("#" .. tostring(self.id)),
+        viewReason(view, situation, unit, auraType))
 end
 
---- Switch a live engine to the view its unit's reaction picks now, sending each group only the setters
---- whose values differ between the two views. Answers whether the view changed. Runs in combat and
---- while auras are secret (above). The unit and aura type are the last apply's, never a pending edit's.
+--- Switch a live engine to the view its unit and its Situations settings pick now, sending each group
+--- only the setters whose values differ between the two views. Answers whether the view changed. Runs
+--- in combat and while auras are secret (above). The unit and aura type are the last apply's, never a
+--- pending edit's; the Situations settings are read live, which is safe only because no plan reads
+--- them (FC.Compile never does), so the plan the engine holds is the one they choose a view of.
 --- @return boolean
 function ContainerClass:ApplyView()
     local engine, plan = self.engine, self.plan
     if not (engine and plan) then return false end
     local unit, auraType = self.unit, self.auraType
-    local view = NS.Container.ResolveView(unit, auraType)
+    local view, situation = self:ResolveView(unit, auraType)
     local was = self.view
-    if view == was then return false end
+    if view == was then
+        self.situation = situation
+        return false
+    end
     for _, g in ipairs(plan.groups) do
         sendGroupView(engine, g, view, g, was)
     end
-    self:NoteView(view, unit, auraType)
+    self:NoteView(view, unit, auraType, situation)
     return true
 end
 
@@ -354,7 +394,7 @@ function ContainerClass:Build(cfg, plan, structure)
 
     local init = function(frame) self:InitFrame(frame) end
     local auraType = auraTypeOf(cfg)
-    local view = NS.Container.ResolveView(cfg.unit, auraType)
+    local view, situation = self:ResolveView(cfg.unit, auraType, cfg)
     for i, g in ipairs(plan.groups) do
         local filter, cand = viewOf(g, view)
         callEngine(engine, "AddAuraGroup", g.key, filter, {
@@ -390,7 +430,7 @@ function ContainerClass:Build(cfg, plan, structure)
     self.unit = cfg.unit
     self.enchantDir = cfg.filter and cfg.filter.sortDirection
     self.plan, self.structure = plan, structure
-    self:NoteView(view, cfg.unit, auraType)
+    self:NoteView(view, cfg.unit, auraType, situation)
 end
 
 --- The enchant slots on a live engine: the layout every time, the sort only when the direction moved
@@ -415,7 +455,7 @@ function ContainerClass:Update(cfg, plan)
     local engine = self.engine
     local old = self.plan
     local auraType = auraTypeOf(cfg)
-    local view = NS.Container.ResolveView(cfg.unit, auraType)
+    local view, situation = self:ResolveView(cfg.unit, auraType, cfg)
     applyFlow(engine, cfg)
     for i, g in ipairs(plan.groups) do
         local o = old.groups[i]
@@ -436,7 +476,7 @@ function ContainerClass:Update(cfg, plan)
         self.unit = cfg.unit
     end
     self.plan = plan
-    self:NoteView(view, cfg.unit, auraType)
+    self:NoteView(view, cfg.unit, auraType, situation)
     self:Restyle(cfg)
 end
 

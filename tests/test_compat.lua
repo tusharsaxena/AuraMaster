@@ -647,3 +647,44 @@ test("compat: IdsApply is false whenever the answer is not knowable", function()
         assertFalse(NS.Compat.IdsApply(nil, "HELPFUL"), "no unit")
     end)
 end)
+
+-- ── whether a unit is a player (filter situations, S2) ──────────────────────────────────────
+
+test("compat: IsPlayerUnit answers UnitIsPlayer as a strict boolean", function()
+    local seen = {}
+    local isPlayer = { target = true, focus = false }
+    with({ { "UnitIsPlayer", function(unit)
+        seen[#seen + 1] = unit
+        return isPlayer[unit]
+    end } }, function(NS)
+        -- red under: no such wrapper
+        assertEqual(NS.Compat.IsPlayerUnit("target"), true)
+        assertEqual(NS.Compat.IsPlayerUnit("focus"), false)
+        -- red under: a nil answer passed through as "unknowable" (UnitIsPlayer answers nil for no unit)
+        assertEqual(NS.Compat.IsPlayerUnit("mouseover"), false)
+    end)
+    assertEqual(seen[1], "target", "asked about the unit it was given")
+end)
+
+test("compat: IsPlayerUnit is nil whenever the answer is not knowable", function()
+    local function boom() error("refused") end
+    -- red under: an unguarded call (the error escapes)
+    with({ { "UnitIsPlayer", boom } }, function(NS)
+        assertEqual(NS.Compat.IsPlayerUnit("target"), nil)
+    end)
+    -- red under: a missing API read as "not a player" (an NPC), not as unknowable
+    with({ { "UnitIsPlayer", nil } }, function(NS)
+        assertEqual(NS.Compat.IsPlayerUnit("target"), nil)
+    end)
+    local SECRET = {}
+    with({ { "UnitIsPlayer", function() return SECRET end },
+        { "issecretvalue", function(v) return v == SECRET end },
+        { "canaccessvalue", function(v) return v ~= SECRET end } }, function(NS)
+        -- red under: a secret answer boolean-tested (it raises in the client) instead of CanAccess-checked
+        assertEqual(NS.Compat.IsPlayerUnit("target"), nil)
+    end)
+    with({}, function(NS)
+        -- red under: a non-string unit handed to the API
+        assertEqual(NS.Compat.IsPlayerUnit(nil), nil, "no unit")
+    end)
+end)

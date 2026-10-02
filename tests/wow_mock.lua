@@ -263,6 +263,10 @@ return function()
     M.__playerControlled = { player = true, pet = true }
     M.UnitCanAssist = function(_, unit) return M.__canAssist[unit] or false end
     M.UnitIsPlayerControlledOrGroupMember = function(unit) return M.__playerControlled[unit] or false end
+    -- Whether a unit is a player (NS.Compat.IsPlayerUnit): which Situations setting a target or focus
+    -- container's no-ids view follows (filter situations, S2). Only the player is one by default.
+    M.__isPlayer = { player = true }
+    M.UnitIsPlayer = function(unit) return M.__isPlayer[unit] or false end
 
     -- ── class colors (LibKa0s-Core's resolver reads RAID_CLASS_COLORS) ─────────────────────
     M.RAID_CLASS_COLORS = { MAGE = { r = 0.25, g = 0.78, b = 0.92 } }

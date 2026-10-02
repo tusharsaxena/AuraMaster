@@ -335,6 +335,18 @@ function Compat.IdsApply(unit, auraType)
     return assist == true
 end
 
+--- Whether `unit` is a player (filter situations, S2): which Situations setting, NPCs or players, a
+--- target or focus container follows where Blizzard won't apply spell lists. UnitIsPlayer is not
+--- documented as answering secret, but the call is guarded like IdsApply's: nil when the answer is
+--- not knowable (the API is absent, the call raised, the answer is secret, or there is no unit), and
+--- the caller picks the stricter setting then (ContainerClass:ResolveView).
+--- @param unit string
+--- @return boolean|nil
+function Compat.IsPlayerUnit(unit)
+    if type(unit) ~= "string" then return nil end
+    return knownBoolean(_G.UnitIsPlayer, unit)
+end
+
 -- ---------------------------------------------------------------------------
 -- Everything else
 -- ---------------------------------------------------------------------------

@@ -95,6 +95,7 @@ Kit.run{
         "test_situations_settings",
         "test_container",
         "test_container_views",
+        "test_container_situations",
         "test_containermanager",
         "test_compat",
         "test_secrets",

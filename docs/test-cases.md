@@ -503,6 +503,24 @@ badge and any count quoted in the docs must agree with it.
 - container views: UNIT_FACTION and UNIT_FLAGS on the player move target and focus views
 - container views: the stand-up moves the view before it re-enables, in combat too
 
+### test_container_situations.lua (15)
+
+- situations runtime: player and pet buffs are ids whatever the Situations settings say
+- situations runtime: a target whose ids apply is ids whatever the Situations settings say
+- situations runtime: a hostile NPC follows the NPCs setting, a hostile player the Players setting
+- situations runtime: both settings at their default draw every aura on a hostile NPC and player
+- situations runtime: player and pet debuffs follow the Players setting, never the NPCs one
+- situations runtime: an unknowable player-ness picks the stricter of the two settings
+- situations runtime: a stored value outside the two modes reads as every, the template default
+- situations runtime: Build sends the every view's values on a hostile NPC
+- situations runtime: a target swap from an NPC to a player with different settings moves the view
+- situations runtime: switching blizzard <-> every sends candidate filters only where they differ
+- situations runtime: a Situations write switches the live engine at once, in combat, with no apply held
+- situations runtime: a Situations write moves only the container it names
+- situations runtime: a Situations write on a container on the ids view moves nothing
+- situations runtime: the [Filter] line names the view and the situation
+- situations runtime: player debuffs' [Filter] line names your own and your pet's debuffs
+
 ### test_containermanager.lua (54)
 
 - manager: Create appends a container, names it uniquely and announces it
@@ -560,7 +578,7 @@ badge and any count quoted in the docs must agree with it.
 - apply: an error in one container's Apply does not stop the others or replaceAttached
 - apply: with no client error handler the pass finishes, then the first error is raised
 
-### test_compat.lua (31)
+### test_compat.lua (33)
 
 - compat: the aura engine counts as present only with its sort enum and CreateFrame
 - compat: EnsureAuraContainer loads Blizzard_AuraContainer only when it is not loaded yet
@@ -593,6 +611,8 @@ badge and any count quoted in the docs must agree with it.
 - compat: without AuraUtil a dispel border color is DebuffTypeColor's, and nothing without either
 - compat: IdsApply mirrors Blizzard's predicate for buffs and debuffs
 - compat: IdsApply is false whenever the answer is not knowable
+- compat: IsPlayerUnit answers UnitIsPlayer as a strict boolean
+- compat: IsPlayerUnit is nil whenever the answer is not knowable
 
 ### test_secrets.lua (6)
 
@@ -768,15 +788,15 @@ badge and any count quoted in the docs must agree with it.
 - hang: a test-mode chain locked shows no strips and keeps its own seams
 - hang: HangMode reads the recorded mode, and before any visibility pass falls back on the preview
 
-### test_emptywatch.lua (30)
+### test_emptywatch.lua (31)
 
 - empty: a token-only group holding an aura is not empty, asked with a count of one
 - empty: a token-only group with nothing to show is empty
 - empty: a unit that does not exist is empty without reading an aura
 - empty: a readable pool of 0 is empty without reading an aura
 - empty: an include id hits and misses
-- empty: spell ids are ignored on a target's buffs it cannot be assisted on, as the engine ignores them
-- empty: whether ids apply is Blizzard's predicate (NS.Compat.IdsApply), not UnitIsFriend
+- empty: spell ids are ignored where the engine holds a no-ids view, as the engine ignores them
+- empty: whether ids apply is the view the engine holds (inst.view), never a re-resolve
 - empty: the prediction reads the ACTIVE view's groups
 - empty: a max duration drops a permanent aura and one that runs longer
 - empty: dispel types include and exclude
@@ -798,6 +818,7 @@ badge and any count quoted in the docs must agree with it.
 - empty: a target switch re-predicts at once, so no follower hangs from the emptied engine in between
 - empty: a target switch folds a pass already due into its own, leaving no timer behind
 - empty: a target swap EmptyWatch hears before OnUnitSwap predicts from the new unit's view
+- empty: a hostile NPC on the every view predicts from the remainder slot
 - empty: a target swap OnUnitSwap hears first still costs one pass, in the new unit's view
 - empty: UNIT_FLAGS flipping the view on the same target re-predicts at once
 
@@ -1503,7 +1524,7 @@ badge and any count quoted in the docs must agree with it.
 - diag: every container gets a line and a full filter block, lists sorted and named
 - diag: a container's non-default rows are listed, with no color escape, untouched rows absent
 - diag: a row scoped to an aura type is not listed for a container of the other type
-- diag: each container's spell-list mode and the view its engine holds
+- diag: each container's spell-list mode, the view its engine holds and the situation behind it
 - diag: the plan verdict reads in sync, PENDING, DRIFT or not built
 - diag: plan groups report the engine's frame and shown counts, or ? when unreadable
 - diag: shown buttons are identified by instance, then by our own regions, else id=?
@@ -2036,7 +2057,7 @@ badge and any count quoted in the docs must agree with it.
 
 - prose: no authored file carries a British spelling from localization-§5's published list
 - prose: the gate carries localization-§5's two lists whole, and nothing of its own
-- prose: the exclusions this repository declared suppressed 11 of 193 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (11): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, docs/spell-research/2026-09-24-logs/CORRECTIONS.md, docs/spell-research/2026-09-24-logs/CURRENT_CATEGORIES.md, docs/spell-research/2026-09-24-logs/DECISIONS.md, docs/spell-research/2026-09-24-logs/FLAGS.md, docs/spell-research/2026-09-24-logs/PROPOSED_ADDITIONS.md, docs/spell-research/2026-09-24-logs/REVIEW.md, docs/spell-research/2026-09-24-logs/SOURCES.md, docs/spell-research/2026-09-24-logs/dictionary/AURAS.md
+- prose: the exclusions this repository declared suppressed 11 of 195 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (11): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, docs/spell-research/2026-09-24-logs/CORRECTIONS.md, docs/spell-research/2026-09-24-logs/CURRENT_CATEGORIES.md, docs/spell-research/2026-09-24-logs/DECISIONS.md, docs/spell-research/2026-09-24-logs/FLAGS.md, docs/spell-research/2026-09-24-logs/PROPOSED_ADDITIONS.md, docs/spell-research/2026-09-24-logs/REVIEW.md, docs/spell-research/2026-09-24-logs/SOURCES.md, docs/spell-research/2026-09-24-logs/dictionary/AURAS.md
 - prose: no path this repository narrows the gate by is loaded by a TOC
 - prose: every path this repository narrows the gate by is one .pkgmeta keeps out of the zip
 - prose self-test: the carve-out suppresses the named generated folder, and only it
@@ -2140,8 +2161,9 @@ badge and any count quoted in the docs must agree with it.
 | test_situations_settings.lua | 11 |
 | test_container.lua | 52 |
 | test_container_views.lua | 16 |
+| test_container_situations.lua | 15 |
 | test_containermanager.lua | 54 |
-| test_compat.lua | 31 |
+| test_compat.lua | 33 |
 | test_secrets.lua | 6 |
 | test_bus.lua | 8 |
 | test_state.lua | 2 |
@@ -2151,7 +2173,7 @@ badge and any count quoted in the docs must agree with it.
 | test_anchors_seam.lua | 10 |
 | test_anchors_edges.lua | 14 |
 | test_anchors_hang.lua | 11 |
-| test_emptywatch.lua | 30 |
+| test_emptywatch.lua | 31 |
 | test_fontprimer.lua | 32 |
 | test_enchantreset.lua | 23 |
 | test_redraw.lua | 14 |
@@ -2211,4 +2233,4 @@ badge and any count quoted in the docs must agree with it.
 | test_layout_cap.lua | 13 |
 | test_diagnostics_contract.lua | 9 |
 | test_lizard_sighted.lua | 8 |
-| **Total** | **1857** |
+| **Total** | **1875** |
