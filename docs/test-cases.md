@@ -427,7 +427,7 @@ badge and any count quoted in the docs must agree with it.
 - situations settings: the Filters page's Defaults restores both tables
 - situations settings: a profile reset re-seeds both tables at their defaults
 - situations settings: a zone write takes the visibility pass and queues no apply
-- situations settings: no Situations tab yet (SI-05 adds it)
+- situations settings: the rows are the Situations group, declared last, and drawn by the flow engine (SI-05)
 
 ### test_container.lua (52)
 
@@ -1805,7 +1805,7 @@ badge and any count quoted in the docs must agree with it.
 - filters: the priority block is a heading, a lead-in and five separate rank lines (T-2, batch 8)
 - filters: the priority block is drawn under the General rows, not above them (batch 8)
 - filters: the priority ranks read at the same size as the Overrides notes (2026-09-20)
-- filters: the four tabs read General, Categories, Overrides, Sorting (batch 8)
+- filters: the five tabs read General, Categories, Overrides, Sorting, Situations (batch 8, SI-05)
 - filters: the retired 'Only these categories' row is gone — no such control on the Categories tab
 - filters: a grid checkbox stores show or hide for the selected container and re-syncs its line
 - filters: /am get and /am list print a category's state as Show or Hide
@@ -1832,6 +1832,17 @@ badge and any count quoted in the docs must agree with it.
 - filters: Show all / Hide all on Dispel Types and Who Cast It set exactly their own section, for this container only (B11-T10)
 - filters: Hide all on Blizzard Categories hides exactly that section, as one [Set] line and one apply (feedback #10)
 - filters: Show all on Spell Categories shows exactly that section, whatever Blizzard Categories say (feedback #10)
+
+### test_pages_situations.lua (8)
+
+- situations tab: the Filters strip reads General, Categories, Overrides, Sorting, Situations
+- situations tab: a target or focus buff container draws its unit line, On NPCs and On players, and the honor line
+- situations tab: a target debuff container names units you can assist
+- situations tab: a player or pet debuff container draws one dropdown, the players setting, relabeled
+- situations tab: a player or pet buff container says spell lists always apply, and draws no dropdown
+- situations tab: the timeless note keys on the effective mode, timeless buffs only
+- situations tab: Show in draws the six zone checkboxes in order, all ticked, each writing its zone
+- situations tab: On NPCs writes the npcs setting
 
 ### test_pages_layout.lua (47)
 
@@ -2075,7 +2086,7 @@ badge and any count quoted in the docs must agree with it.
 
 - prose: no authored file carries a British spelling from localization-§5's published list
 - prose: the gate carries localization-§5's two lists whole, and nothing of its own
-- prose: the exclusions this repository declared suppressed 11 of 196 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (11): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, docs/spell-research/2026-09-24-logs/CORRECTIONS.md, docs/spell-research/2026-09-24-logs/CURRENT_CATEGORIES.md, docs/spell-research/2026-09-24-logs/DECISIONS.md, docs/spell-research/2026-09-24-logs/FLAGS.md, docs/spell-research/2026-09-24-logs/PROPOSED_ADDITIONS.md, docs/spell-research/2026-09-24-logs/REVIEW.md, docs/spell-research/2026-09-24-logs/SOURCES.md, docs/spell-research/2026-09-24-logs/dictionary/AURAS.md
+- prose: the exclusions this repository declared suppressed 11 of 198 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (11): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, docs/spell-research/2026-09-24-logs/CORRECTIONS.md, docs/spell-research/2026-09-24-logs/CURRENT_CATEGORIES.md, docs/spell-research/2026-09-24-logs/DECISIONS.md, docs/spell-research/2026-09-24-logs/FLAGS.md, docs/spell-research/2026-09-24-logs/PROPOSED_ADDITIONS.md, docs/spell-research/2026-09-24-logs/REVIEW.md, docs/spell-research/2026-09-24-logs/SOURCES.md, docs/spell-research/2026-09-24-logs/dictionary/AURAS.md
 - prose: no path this repository narrows the gate by is loaded by a TOC
 - prose: every path this repository narrows the gate by is one .pkgmeta keeps out of the zip
 - prose self-test: the carve-out suppresses the named generated folder, and only it
@@ -2230,6 +2241,7 @@ badge and any count quoted in the docs must agree with it.
 | test_pages_general_categories.lua | 32 |
 | test_pages_containers.lua | 33 |
 | test_pages_filters.lua | 52 |
+| test_pages_situations.lua | 8 |
 | test_pages_layout.lua | 47 |
 | test_pages_bars.lua | 11 |
 | test_pages_icons.lua | 5 |
@@ -2253,4 +2265,4 @@ badge and any count quoted in the docs must agree with it.
 | test_layout_cap.lua | 13 |
 | test_diagnostics_contract.lua | 9 |
 | test_lizard_sighted.lua | 8 |
-| **Total** | **1887** |
+| **Total** | **1895** |

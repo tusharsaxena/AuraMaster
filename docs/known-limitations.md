@@ -74,7 +74,12 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   anything" speaks for the spell-list views only: it never reads the Situations settings, so a target
   or focus container it warns about can still draw every aura once where spell lists don't apply. `FilterCompiler` emits a warning per
   container where that bites (`identityWarning`, `modules/FilterCompiler.lua:418`), rendered in orange
-  in the Filters section, and Categories and Overrides carry a NOTE (`docs/midnight-quirks.md`).
+  in the Filters section, Categories and Overrides carry a NOTE pointing to the Situations tab, and
+  that tab says what the every view cannot honor (`docs/midnight-quirks.md`).
+- **Every aura, once draws nothing extra in "Without a duration" mode.** That mode is built from
+  spell ids, which Blizzard drops where spell lists don't apply, so a target or focus buff container
+  in it that hides a category gets a remainder group that matches nothing there (filter situations
+  S1); its Situations tab says so.
 - **On a target or focus BUFF container, Uncategorized set to Show no longer rescues an unlisted
   aura.** That row's group carries an `excludeSpellIDs` of the categorized union as its only
   constraint whenever another category is Hidden, and a target's hostility is dynamic while the plan

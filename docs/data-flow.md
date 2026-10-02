@@ -173,7 +173,10 @@ priority*, above, states (`FC.ExplainSpell` answers the same question for one sp
   ids left) is dropped; if every group drops, the plan warns that nothing can match
   (`FC.WARN.NEVER_MATCHES`).
 - **Warnings** record what the engine will silently not do: spell ids on a friendly unit's debuffs or
-  a hostile unit's buffs, a max duration in "without" mode, enchants on a non-player unit.
+  a hostile unit's buffs, a max duration in "without" mode, enchants on a non-player unit. What a
+  container draws there instead is the Filters section's last tab, **Situations** (the
+  `filter.situations` dropdowns, read by `ContainerClass:ResolveView`, never by the compile), which
+  the Categories and Overrides NOTE lines point to.
 - A player buff container appends the enchant slots after its groups, unless its `weaponEnchants`
   category row is set to Hide (`appendEnchants`).
 
@@ -193,7 +196,7 @@ new one: flow layout first, then the anchor, then every `AddAuraGroup`, then the
 Whether a container shows is a cheaper question, and one that is legal in combat:
 `Container:ShouldShow` (`modules/Container.lua:607`) answers, in order — perf suspend, profile and
 container `enabled`, then General visibility against `UnitAffectingCombat("player")` together with the
-container's Situations → Show in boxes against `NS.Compat.InstanceType()` (filter situations, S3; a
+container's Filters → Situations → Show in boxes against `NS.Compat.InstanceType()` (filter situations, S3; a
 type with no box, or unreadable, is allowed), both of which an
 unlocked container skips so one that shows only in combat can still be found and moved; it also
 answers whether the container previews, which is the session-only test mode (`NS.State.testMode`),

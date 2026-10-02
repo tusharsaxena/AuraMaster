@@ -131,7 +131,9 @@ target or focus follows Players or NPCs by `NS.Compat.IsPlayerUnit`, the stricte
 is not knowable. `FC.IdsMode`, `NS.Compat.IdsApply` and the setting choose the view
 (`ContainerClass:ResolveView`), and `ContainerClass:ApplyView` switches a live engine on a swap, a
 reaction change or a Situations write, in combat too. The Filters section says so in its orange
-warning and in a NOTE on Categories and Overrides. Blizzard's predicate and the switch:
+warning and in a NOTE on Categories and Overrides that points to its last tab, **Situations**, which
+holds the setting (the dropdowns its `FC.IdsMode` calls for) and the six zone checkboxes
+(`filter.zones`, the gate in `ContainerClass:ShouldShow`). Blizzard's predicate and the switch:
 `docs/midnight-quirks.md` → *Spell-id filters apply only where Blizzard's predicate allows them*.
 
 ## Message Bus

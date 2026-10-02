@@ -227,7 +227,7 @@ test("situations settings: a zone write takes the visibility pass and queues no 
     assertEqual(passes, 1, "one visibility pass")
 end)
 
-test("situations settings: no Situations tab yet (SI-05 adds it)", function()
+test("situations settings: the rows are the Situations group, declared last, and drawn by the flow engine (SI-05)", function()
     local NS = fresh()
     NS.State.SetActiveContainer(1)
     local groups, seen = {}, {}
@@ -237,10 +237,15 @@ test("situations settings: no Situations tab yet (SI-05 adds it)", function()
             groups[#groups + 1] = row.group
         end
     end
-    -- red under: the rows declared in a group of their own before the tab exists (an empty tab)
-    assertEqual(table.concat(groups, ","), table.concat({ NS.L["General"], NS.L["Categories"], NS.L["Sorting"] }, ","))
+    -- red under: the rows still in the General group (SI-02's interim home), or declared before Sorting
+    assertEqual(table.concat(groups, ","),
+        table.concat({ NS.L["General"], NS.L["Categories"], NS.L["Sorting"], NS.L["Situations"] }, ","))
     for _, path in ipairs({ "container.filter.situations.npcs", "container.filter.zones.raid" }) do
-        -- red under: a General row the flow engine draws on today's General tab
-        assertTrue(NS.FindSchemaRow(path).skipRender == true, path)
+        local row = NS.FindSchemaRow(path)
+        -- red under: SI-02's skipRender kept (the tab's own RenderRows would draw nothing)
+        assertTrue(row.skipRender == nil, path)
+        -- red under: the auraTypes guard dropped (a container of no known aura type would draw an
+        -- empty Situations tab)
+        assertTrue(row.auraTypes and row.auraTypes.HELPFUL and row.auraTypes.HARMFUL, path)
     end
 end)

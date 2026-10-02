@@ -146,6 +146,7 @@ Kit.run{
         "test_pages_general_categories",
         "test_pages_containers",
         "test_pages_filters",
+        "test_pages_situations",
         "test_pages_layout",
         "test_pages_bars",
         "test_pages_icons",

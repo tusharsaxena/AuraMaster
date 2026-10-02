@@ -100,6 +100,8 @@ holds now (`view=ids`; `view=every`, every aura once through the remainder slot;
 where spell categories and Overrides are not applied and only Blizzard categories set to Show draw),
 and the Situations setting that picked a no-ids view (`situation=npcs`, `players`, `unknown` when
 the unit's player-ness is not knowable and the stricter setting was taken, or `-` on the ids view).
+The setting is the container's Filters → Situations tab (On NPCs, On players, or Your own and your
+pet's debuffs), and a write there moves the view at once, logging one `[Filter]` line.
 See the `[Filter]` tag below for each switch.
 
 ### Bar names that do not show

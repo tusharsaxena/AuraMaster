@@ -47,7 +47,7 @@ end
 local STRIPS = {
     { "General",    "general",    "Master controls=Master controls | Display=Display | Spell Categories=Spell Categories | Dispel Colors=Dispel Colors" },
     { "Containers", "containers", "General=General" },
-    { "Filters",    "filters",    "General=General | Categories=Categories | overrides=Overrides | Sorting=Sorting" },
+    { "Filters",    "filters",    "General=General | Categories=Categories | overrides=Overrides | Sorting=Sorting | Situations=Situations" },
     { "Layout",     "layout",     "Frame=Frame | Anchor=Anchor | Growth=Growth | Mouse=Mouse | Label=Label" },
     { "Bars",       "bars",       "General=General | Background & border=Background & border | Name text=Name text | Time text=Time text | Stack text=Stack text | Icon=Icon | Pandemic=Pandemic" },
     { "Icons",      "icons",      "Size=Size | Border=Border | Cooldown=Cooldown | Time text=Time text | Stack text=Stack text | Pandemic=Pandemic" },
@@ -72,7 +72,7 @@ test("tabs: every page and section draws its tab keys and labels in order", func
                 end
                 P.rerender(page[1])
                 -- red under: a group tab dropped or reordered, a host tab not taking its group's place,
-                -- or Overrides not placed ahead of Sorting
+                -- or Overrides not placed ahead of Sorting, or Situations not last (SI-05)
                 assertEqual(strip(P, NS.Helpers.__pageCtx[page[2]]), page[3], page[2] .. " on container " .. id)
             end
         end
@@ -86,7 +86,7 @@ end)
 test("tabs: a container switch that takes the active tab away heals the strip to its first tab", function()
     local NS, _, P = env()
     -- An aura type this build does not know (planted: no write can store one) admits neither
-    -- Categories nor Overrides, nor the General group's buff/debuff rows.
+    -- Categories nor Overrides nor Situations, nor the General group's buff/debuff rows.
     NS.Database.FindContainer(3).auraType = "BOGUS"
     NS.Helpers.SelectContainer(1)
     P.show("Filters")
@@ -96,7 +96,8 @@ test("tabs: a container switch that takes the active tab away heals the strip to
     NS.Helpers.SelectContainer(3)
     P.show("Filters")
     -- red under: the render keeping a pointer at a tab it no longer draws (an empty page under a strip)
-    assertEqual(strip(P, ctx), "Sorting=Sorting", "the strip without Categories and Overrides")
+    -- red under: the Situations rows or tab without their auraTypes guard (an empty tab)
+    assertEqual(strip(P, ctx), "Sorting=Sorting", "the strip without Categories, Overrides and Situations")
     assertEqual(ctx.activeTab, "Sorting", "healed to the first tab drawn")
 end)
 

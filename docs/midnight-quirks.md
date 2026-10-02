@@ -220,12 +220,14 @@ on `UNIT_FACTION` and `UNIT_FLAGS` for `target`, `focus` and `player` (`CM.Apply
 `modules/ContainerManager.lua:431`), which catches duels, mind control and an NPC turning hostile.
 A Situations write switches the view the same way, at once (the rows' `view` effect). A move logs
 `[Filter] <container>: spell lists off, every aura (NPC; unit cannot be assisted)` or `... on ...`,
-and `/am diagnostics` prints each container's mode, view and situation. The Filters section says so three times: the
+and `/am diagnostics` prints each container's mode, view and situation. The Filters section says so four times: the
 orange warning above every tab (`identityWarning`, `modules/FilterCompiler.lua:418`, printed only when
 the container hides a category or has an Overrides list, and naming only the Overrides lists when it
-hides nothing), and a NOTE under the Spell Categories
-heading and at the head of Overrides on every container whose mode is not "always"
-(`settings/Filters.lua`).
+hides nothing), a NOTE under the Spell Categories
+heading and at the head of Overrides on every container whose mode is not "always", each ending
+"(see Situations)", and the Situations tab itself, which names the same units, holds the setting and
+says what the every view cannot honor there: spell categories, Uncategorized, the Overrides lists
+and "Without a duration", all built from the spell ids Blizzard drops (`settings/Filters.lua`).
 
 ## There is no "no duration" filter, and `maxDuration` drops permanent auras
 
