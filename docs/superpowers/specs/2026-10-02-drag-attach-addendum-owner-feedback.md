@@ -134,3 +134,15 @@ Where a drop attaches is unchanged (the twelve pairs, Place's seam and rooms), a
 those rooms already push past, so the dots land where the containers will touch.
 
 ### A9. `C.DETACH_RADIUS = 128` (fixes 3)
+
+## A10. The strip is the rect (third smoke round)
+
+Owner, with a screenshot (strip edge green as A6 meant; the parent's dot on the top-left corner of the
+white placeholder above its strip): "The drag handle (arrows and dots) shows on the placeholder (white
+border) rather than the anchor area (strip with gold border); make them attached to the anchor."
+
+Every rect the snap measures and draws on (A8's footprint, for the target and the dragged container)
+is now the container's **strip rect** while its strip is visible and reads; otherwise A8's footprint
+as before (block, plus the label while it shows). The side, the align third, the dots, the line and the
+A4 leeway all follow. Where a drop attaches is unchanged (Place joins the blocks and pushes past the
+strips and labels); `docs/known-limitations.md` says the dots mark the strips, not the exact join.

@@ -60,3 +60,4 @@ Spec: `docs/superpowers/specs/2026-10-02-drag-attach-addendum-owner-feedback.md`
 | DD-12 | M5 | Repaint the strip's own edge, 2px green or red, restore its gold (A6) | highlight cases green |
 | DD-13 | M5 | Side first, align by thirds; footprints for every rect; leeway 128 (A7, A8, A9); docs and smoke cases | snap, drag, drop cases green |
 | DD-14 | M5 | Review of DD-12, DD-13, verify, fixes; battery; checkpoint row; push | row in the checkpoints file; origin equals HEAD |
+| DD-15 | M6 | Measure and draw on the strip rect (A10); review; battery; checkpoint row; push | row in the checkpoints file; origin equals HEAD |
