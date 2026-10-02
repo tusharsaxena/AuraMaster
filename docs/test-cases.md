@@ -1017,7 +1017,7 @@ badge and any count quoted in the docs must agree with it.
 - column: a behind follower keeps its strip before it, lined up with the edge facing its parent, and is never pushed
 - column: a follower of a side follower spreads by its own strip, as any after follower does
 
-### test_anchors_points.lua (16)
+### test_anchors_points.lua (18)
 
 - points: a bars or icons child under a bars or icons parent defaults to after-start, under every growth
 - points: an icons or bars child under a Text parent justified CENTER is centered; LEFT or RIGHT is not
@@ -1032,6 +1032,8 @@ badge and any count quoted in the docs must agree with it.
 - points: behind is no longer refused: a child several auras wide sits on its behind pair
 - points: a free pair is placed at X/Y alone: no seam, no spread, no push
 - points: an after pair spreads by the child's furniture while unlocked; the free pair beside it does not
+- points: a before-side pair clears its parent's strip and label while each shows, in the parent's scale
+- points: a parent's strip shown or hidden re-places its followers, though its hang mode and side room stay
 - points: a free follower's strip and label sit on its own before side, lined up with H0
 - points: a write to either point, a style or a text justify re-applies the followers
 - points: AttachPoints and AttachEdge allocate nothing
@@ -2329,7 +2331,7 @@ badge and any count quoted in the docs must agree with it.
 | test_anchors_label.lua | 23 |
 | test_anchors_strip.lua | 7 |
 | test_anchors_column.lua | 19 |
-| test_anchors_points.lua | 16 |
+| test_anchors_points.lua | 18 |
 | test_anchors_steady.lua | 8 |
 | test_anchors_collapse.lua | 9 |
 | test_anchors_width.lua | 6 |
@@ -2386,4 +2388,4 @@ badge and any count quoted in the docs must agree with it.
 | test_layout_cap.lua | 13 |
 | test_diagnostics_contract.lua | 9 |
 | test_lizard_sighted.lua | 8 |
-| **Total** | **1996** |
+| **Total** | **1998** |

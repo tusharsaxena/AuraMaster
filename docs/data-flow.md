@@ -477,7 +477,12 @@ own) and `attach.relPoint` (the parent's), each Automatic while unset (`Anchors.
 vertical growth side, lined up with a Text child's justify, centered for an icons or bars child under
 a Text parent justified Center, else on the side the parent's lines start from. The pair in effect is
 classified against batch 9's nine sides under the chain's growth (`Anchors.AttachEdge`, G5); a free
-pair, one of none of them, is placed at its X/Y alone, with no seam, no spread and no push.
+pair, one of none of them, is placed at its X/Y alone, with no seam, no spread and no push, except
+the three outside pairs on the parent's before side (the child's point mirroring the parent's across
+the side its lines start from, as a drop above a parent growing down picks): those are moved out past
+the parent's strip while it shows and its name label while that shows, in the parent's scale, so the
+child never covers them (`beforeRoom`, DD-10), and `Anchors.PlaceAttached` re-places them when either
+shows or hides.
 Along the chain the gap across the seam is the child's own gap between consecutive elements in the
 direction the chain stacks, its Spacing or, when it fills rows, its Line spacing (`Anchors.SeamOffset`,
 SS-1); on a side it is the child's gap across (AP-2); the stored `attach.x` / `.y` add on top as a

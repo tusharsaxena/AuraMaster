@@ -231,7 +231,8 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   weird, it's on the user"). Only a pair that is one of batch 9's nine sides under the parent's growth
   gets the seam gap, the chain's spread for the strips and labels, and the side push
   (`Anchors.AttachEdge`); any other pair is placed at its X/Y alone, so its strip and label can overlap
-  its parent's. Picked points are absolute: flipping the chain's growth mirrors an Automatic point and
+  its parent's. The one exception is a pair that puts the child flush outside its parent's before side
+  (the side its lines start from), which is moved out past the parent's strip and label (DD-10). Picked points are absolute: flipping the chain's growth mirrors an Automatic point and
   leaves a picked one where it is.
 - **Schema v11 can move a follower that was on the old default side** (batch 11 G4). A stored
   `after-start`, which schemas v9 and v10 stamped on every attachment, becomes Automatic and takes

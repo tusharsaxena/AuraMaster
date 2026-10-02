@@ -240,6 +240,61 @@ test("points: an after pair spreads by the child's furniture while unlocked; the
     assertEqual(p[5], 0, "free: X/Y alone")
 end)
 
+test("points: a before-side pair clears its parent's strip and label while each shows, in the parent's scale", function()
+    for _, growV in ipairs({ "down", "up" }) do
+        local NS, mocks = fresh()
+        local c2 = joined(NS, "right", growV)
+        -- The child on the side its parent's lines start from, so the parent's strip and label lie between.
+        if growV == "down" then
+            c2.attach.childPoint, c2.attach.relPoint = "BOTTOMLEFT", "TOPLEFT"
+        else
+            c2.attach.childPoint, c2.attach.relPoint = "TOPLEFT", "BOTTOMLEFT"
+        end
+        c2.attach.x, c2.attach.y = 4, 1
+        local out = (growV == "down") and 1 or -1   -- away from the parent's block
+        NS.SetByPath("locked", false)
+        mocks.__fireTimers()
+        local p = placed(NS)
+        -- red under: a before-side free pair at X/Y alone (its block over the parent's strip, G5 as written)
+        assertEqual(p[5], 1 + out * ROW, growV .. ": past the parent's strip")
+        assertEqual(p[4], 4, growV .. ": nothing across")
+        NS.SetByPath("container.label.show", true, 1)
+        mocks.__fireTimers()
+        assertEqual(placed(NS)[5], 1 + out * 2 * ROW, growV .. ": past its strip and its label")
+        NS.Database.FindContainer(1).layout.scale = 2
+        -- red under: the room in the child's units (the parent's strip is in the parent's scale)
+        assertEqual(placed(NS)[5], 1 + out * 4 * ROW, growV .. ": the parent at scale 2")
+        NS.Database.FindContainer(1).layout.scale = 1
+        NS.SetByPath("container.label.show", false, 1)
+        NS.SetByPath("locked", true)
+        mocks.__fireTimers()
+        local locked = placed(NS)[5]
+        NS.SetByPath("container.label.show", true, 1)
+        mocks.__fireTimers()
+        assertEqual(placed(NS)[5] - locked, out * ROW, growV .. ": locked, the label alone")
+    end
+end)
+
+test("points: a parent's strip shown or hidden re-places its followers, though its hang mode and side room stay", function()
+    local NS = fresh()
+    local c2 = joined(NS)
+    c2.attach.childPoint, c2.attach.relPoint = "BOTTOM", "TOP"
+    local one, inst = NS.ContainerManager.instances[1], NS.ContainerManager.instances[2]
+    one.hangMode, one.stripShown, one.labelShown, one.stripOverhang = "engine", false, false, 0
+    NS.Anchors.PlaceAttached(one)
+    local rec = {}
+    rawset(inst.anchor, "SetPoint", function(_, ...) rec[#rec + 1] = { ... } end)
+    rawset(inst.anchor, "ClearAllPoints", function() end)
+    -- An unlock with auras showing: the strip shows over the engine (no overhang), the hang mode stays.
+    one.stripShown = true
+    NS.Anchors.PlaceAttached(one)
+    -- red under: PlaceAttached keyed on the hang mode and the side room alone (the strip's row unseen)
+    assertEqual(#rec, 1, "re-placed")
+    assertEqual(rec[1][5], ROW - 1, "past the strip, the engine's one-unit lead taken back")
+    NS.Anchors.PlaceAttached(one)
+    assertEqual(#rec, 1, "nothing changed: nothing re-placed")
+end)
+
 test("points: a free follower's strip and label sit on its own before side, lined up with H0", function()
     local NS = fresh()
     local c2 = joined(NS)

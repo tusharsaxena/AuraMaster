@@ -353,17 +353,18 @@ end
 
 --- Re-place every container attached to `target` once what they hang from has changed since they
 --- were last placed: its hang mode (Anchors.HangMode; test mode, lock, unlock and the empty
---- prediction: L-4, HG-1) or the room its strip and label take over a side follower's column
---- (sideRoom, batch 10 F4). Called on every visibility pass
+--- prediction: L-4, HG-1), the room its strip and label take over a side follower's column
+--- (sideRoom, batch 10 F4) or on its before side, which a before-side follower clears (furnitureRoom,
+--- Anchors_Attach.lua's beforeRoom, DD-10). Called on every visibility pass
 --- (ContainerClass:ApplyVisibility), so a pass that changes nothing re-places nothing. Layout work
 --- beside an aura engine, so never under lockdown: the last placement stands, unrecorded, and the
 --- first pass after combat catches up.
 function Anchors.PlaceAttached(target)
-    local mode, room = Anchors.HangMode(target), sideRoom(target)
-    if (target.attachedPlacedFor == mode and target.attachedPlacedRoom == room) or InCombatLockdown() then
-        return
-    end
-    target.attachedPlacedFor, target.attachedPlacedRoom = mode, room
+    local mode, room, own = Anchors.HangMode(target), sideRoom(target), furnitureRoom(target)
+    local same = target.attachedPlacedFor == mode and target.attachedPlacedRoom == room
+        and target.attachedPlacedOwn == own
+    if same or InCombatLockdown() then return end
+    target.attachedPlacedFor, target.attachedPlacedRoom, target.attachedPlacedOwn = mode, room, own
     local CM = NS.ContainerManager
     if not CM then return end
     for _, inst in pairs(CM.instances) do

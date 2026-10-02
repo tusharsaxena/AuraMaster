@@ -10,7 +10,8 @@ local _, NS = ...
 -- mirrors it across that side, so the child sits flush outside the target. Nine of them are the nine
 -- classified sides (C.ATTACH_EDGES) under any growth; the other three lie on the target's before side
 -- (the one its lines start from) and place as a FREE pair (batch 11 G5: X/Y alone, no seam, no
--- spread). The answer names the token the pair classifies as under the TARGET's flow growth, the
+-- spread), moved out past the target's own strip and label there (Anchors_Attach.lua's beforeRoom,
+-- DD-10). The answer names the token the pair classifies as under the TARGET's flow growth, the
 -- growth the dragged container inherits the moment it attaches (Anchors.FlowRoot), or nil when free.
 -- For each pair the distance is measured between the dragged anchor's own point and the target's
 -- relative point, on the rect a follower would hang from (Anchors.HangFrame); the nearest pair of the

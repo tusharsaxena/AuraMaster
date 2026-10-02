@@ -1466,7 +1466,7 @@ more times, letting go each time just below A, just above A, just to A's right a
 the box marks A each time and the marker sits on the point of A you came closest to; E joins flush
 outside that side, lined up with whichever of its start, middle or end you dropped nearest: below A
 (*after*, E's top on A's bottom), above A (E's bottom on A's top: the side A's lines start from, so a
-free pair, placed at X/Y alone with no gap), on its right (*ahead*, E's left on A's right) and on its
+free pair, placed past A's strip and name label, with no other gap), on its right (*ahead*, E's left on A's right) and on its
 left (*behind*, E's right on A's left). Layout → Anchor shows the matching pair each time, the default
 side's as Automatic and the pair above A as both points picked. Result:
 
@@ -1556,7 +1556,9 @@ E's own pair in green, and a drop snaps it back. Hover E's strip → its tooltip
 down, so its top is the side its lines start from) → the green box frames A, a green dot about 10 px
 across sits on the middle of A's top edge, a dot of the same size on the middle of E's bottom edge, and
 a 2 px green line joins the two; as E moves the line and E's dot follow it, and box, dots and line show
-and hide together. Drop → E attaches with its bottom flush on A's top, placed at X/Y alone with no gap;
+and hide together. Drop → E attaches above A, its bottom just past A's strip (and A's name label, when shown), never over
+either, with no other gap; turn A's name label on and off, and lock and unlock → E moves out and back in
+step, and A's name stays readable;
 Layout → Anchor shows both points picked (E's bottom on A's top), neither Automatic, and the log shows
 `drop: attach to <A's id> BOTTOM>TOP (free)`. Drag E away → box, dots and line all go at once. Result:
 

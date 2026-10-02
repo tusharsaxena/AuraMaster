@@ -71,7 +71,8 @@ files (`Style_Bars.lua`, `Style_Icons.lua` and `Style_Text.lua`, chosen per cont
 continues its chain root's flow (`Anchors.EffectiveLayout`) and joins it by two absolute points,
 `attach.childPoint` and `attach.relPoint`, each Automatic while unset (`Anchors.AttachPoints`,
 batch 11 G2, G3); a pair that is one of batch 9's nine sides keeps that side's seam and spread
-(`Anchors.AttachEdge`, G5), and any other is placed at its X/Y alone. A write to a
+(`Anchors.AttachEdge`, G5), and any other is placed at its X/Y alone, except that one mirrored onto the
+parent's before side is moved out past the parent's strip and label while each shows (DD-10). A write to a
 flow or attachment path re-applies its followers (`Anchors.Followers`) and its parent. While a container previews,
 the containers attached to it hang from `Preview.Extent`, a frame of ours sized to its placeholder
 block; while it is unlocked, not previewing and predicted empty (`modules/EmptyWatch.lua`, batch 9

@@ -658,7 +658,8 @@ in effect (`Anchors.AttachPoints`, batch 11 G2): each picked, or Automatic, the 
 default pair (G3), which for a bars child under a bars parent is the `after-start` pair
 (`Anchors.EdgePoints(L, "after-start")`): the child stacks below its parent (above, when growing up), on the side the
 parent's lines start from, whether the parent fills rows or columns (IA-1). A pair that is none of
-batch 9's nine sides is free: placed at X/Y alone, with no seam (G5). `container.attach.point` / `.relativePoint` are read only in `frame`
+batch 9's nine sides is free: placed at X/Y alone, with no seam (G5), moved out past the parent's strip
+and label only when it sits flush outside the parent's before side (DD-10). `container.attach.point` / `.relativePoint` are read only in `frame`
 mode. The gap across the seam is the child's own gap between consecutive elements in the direction
 the chain stacks: its Spacing when it fills columns, its Line spacing when it fills rows
 (`Anchors.SeamOffset`, SS-1), upward when the chain grows up; on a Right or Left side it is the
