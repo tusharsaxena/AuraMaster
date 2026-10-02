@@ -320,12 +320,12 @@ badge and any count quoted in the docs must agree with it.
 - filter: Uncategorized Hide on a debuff container reproduces the retired 'Only these categories' toggle exactly
 - filter: Uncategorized Show on a debuff container with nothing else hidden changes nothing (R-3 still applies)
 - filter: FC.IdsHonored is the CAN-EVER predicate — true wherever a spell list could ever bite
-- filter: FC.IdsAlwaysHonored is the CERTAIN predicate — true only for buffs on the player and pet
+- filter: FC.IdsMode "always" is the CERTAIN gate — only for buffs on the player and pet
 - filter: a PLAYER debuff container with a non-empty union still gives Uncategorized Show no group — fix round 3's failure through issue #11's new door
 - filter: a TARGET debuff container gives Uncategorized Show no group either — a target may be FRIENDLY
 - filter: a FRIENDLY-target buff container loses the Uncategorized Show rescue — the accepted cost, pinned
-- filter: a target debuff container still warns 'while the unit is hostile' although the gate dropped its Show group
-- filter: a TARGET debuff container's spells-kind Show still emits its group, and warns — the accepted residual, pinned
+- filter: a target debuff container still warns about units you can assist although the gate dropped its Show group
+- filter: a TARGET debuff container's spells-kind Show emits its ids-view group, whose no-ids view is NEVER, and warns (the issue #11 residual, superseded)
 - explain: an unlisted id is rank 3 (shown) when Uncategorized is Show — not the old rank 5
 - explain: an unlisted id is rank 4 (hidden) when Uncategorized is Hide
 - explain: with no Uncategorized category for the aura type at all, an unclaimed id is still rank 5
@@ -383,6 +383,23 @@ badge and any count quoted in the docs must agree with it.
 - categories: a user DEBUFF category alone on Show compiles the same way, and warns about hostility
 - categories: a user category shown beside a shipped one gets its own group, after it and minus its ids
 
+### test_filterviews.lua (14)
+
+- views: FC.IdsMode is always for player/pet buffs, never for player/pet debuffs, dynamic elsewhere
+- views: the owner's target container compiles to seven groups, every no-ids view NEVER
+- views: a Blizzard Show group keeps its own constraint and the earlier Blizzard exclusions, and no ids
+- views: a blacklisted id stays excluded in every drawing no-ids view once a category is Hidden
+- views: Timeless's learned ids stay excluded in a stripped no-ids view
+- views: a dispel Show group's no-ids view keeps its include map and its earlier flag exclusions
+- views: the whitelist group and the catch-all are NEVER without spell ids
+- views: a spells-kind Show and an Uncategorized Show group are NEVER without spell ids
+- views: with no category Hidden the single group's no-ids view is the ids view minus the whitelist (R-3)
+- views: a whitelisted NeverSecret id is not excluded by the R-3 no-ids view (player debuffs)
+- views: the NEVER view is the group's own filter string and an empty include-dispel map
+- views: each mode prints the new sentence where a category is Hidden
+- views: an Overrides list alone raises the Overrides-only sentence
+- views: no sentence on a container the rule changes nothing for
+
 ### test_container.lua (52)
 
 - container: the engine is anchored before its first group and given its unit last
@@ -437,6 +454,25 @@ badge and any count quoted in the docs must agree with it.
 - container: on a client without the aura engine a container is deleted without error
 - container: an engine whose frame level reads secret leaves the blocker at level 0, never raising (E)
 - container: ApplyVisibility records the hang mode for test mode, unlocked and locked; Park and Destroy reset it
+
+### test_container_views.lua (16)
+
+- container views: a target buff container is built on the view its unit's reaction picks
+- container views: player debuffs are always built on the no-ids view, player buffs on the ids view
+- container views: ApplyView switches in place, sending only what differs, and nothing when unchanged
+- container views: the switch runs in combat and while auras are secret
+- container views: an in-place update compares and sends the active view's values
+- container views: an update that finds the reaction changed sends the new view's values
+- container views: an update that leaves the plan's view values alone still sends the view switch
+- container views: a view change writes one [Filter] line, and an unchanged view none
+- container views: a setter the engine refuses is caught, and logged once
+- container views: a target swap switches the view BEFORE it refreshes the engine
+- container views: a focus swap moves focus containers only
+- container views: UNIT_FACTION and UNIT_FLAGS on the target and focus switch the view without a swap
+- container views: a secret unit token from a unit event switches nothing and raises nothing
+- container views: the view frame's unit events go down with the addon and come back with it
+- container views: UNIT_FACTION and UNIT_FLAGS on the player move target and focus views
+- container views: the stand-up moves the view before it re-enables, in combat too
 
 ### test_containermanager.lua (54)
 
@@ -495,7 +531,7 @@ badge and any count quoted in the docs must agree with it.
 - apply: an error in one container's Apply does not stop the others or replaceAttached
 - apply: with no client error handler the pass finishes, then the first error is raised
 
-### test_compat.lua (29)
+### test_compat.lua (31)
 
 - compat: the aura engine counts as present only with its sort enum and CreateFrame
 - compat: EnsureAuraContainer loads Blizzard_AuraContainer only when it is not loaded yet
@@ -526,6 +562,8 @@ badge and any count quoted in the docs must agree with it.
 - compat: without LibKa0s spell info is the major's absent answer, one nil
 - compat: a dispel border color goes through AuraUtil, as the engine's PreserveAsset style paints it (DB-1)
 - compat: without AuraUtil a dispel border color is DebuffTypeColor's, and nothing without either
+- compat: IdsApply mirrors Blizzard's predicate for buffs and debuffs
+- compat: IdsApply is false whenever the answer is not knowable
 
 ### test_secrets.lua (6)
 
@@ -701,14 +739,16 @@ badge and any count quoted in the docs must agree with it.
 - hang: a test-mode chain locked shows no strips and keeps its own seams
 - hang: HangMode reads the recorded mode, and before any visibility pass falls back on the preview
 
-### test_emptywatch.lua (25)
+### test_emptywatch.lua (30)
 
 - empty: a token-only group holding an aura is not empty, asked with a count of one
 - empty: a token-only group with nothing to show is empty
 - empty: a unit that does not exist is empty without reading an aura
 - empty: a readable pool of 0 is empty without reading an aura
 - empty: an include id hits and misses
-- empty: spell ids are ignored on a hostile target's buffs, as the engine ignores them
+- empty: spell ids are ignored on a target's buffs it cannot be assisted on, as the engine ignores them
+- empty: whether ids apply is Blizzard's predicate (NS.Compat.IdsApply), not UnitIsFriend
+- empty: the prediction reads the ACTIVE view's groups
 - empty: a max duration drops a permanent aura and one that runs longer
 - empty: dispel types include and exclude
 - empty: a flag the aura data does not carry is not knowable
@@ -728,6 +768,9 @@ badge and any count quoted in the docs must agree with it.
 - empty: the player frame filters UNIT_AURA alone; pet and inventory changes ride AceEvent
 - empty: a target switch re-predicts at once, so no follower hangs from the emptied engine in between
 - empty: a target switch folds a pass already due into its own, leaving no timer behind
+- empty: a target swap EmptyWatch hears before OnUnitSwap predicts from the new unit's view
+- empty: a target swap OnUnitSwap hears first still costs one pass, in the new unit's view
+- empty: UNIT_FLAGS flipping the view on the same target re-predicts at once
 
 ### test_fontprimer.lua (32)
 
@@ -1410,7 +1453,7 @@ badge and any count quoted in the docs must agree with it.
 - slash verbs: the disabled gate is ONE decision over the whole verb table, not a per-verb guard
 - slash verbs: /am new enchants makes a player buff container showing only Weapon enchants (feedback #6)
 
-### test_diagnostics.lua (49)
+### test_diagnostics.lua (50)
 
 - diag: /am diagnostics writes the report to the console ungated, opens it, and says so once
 - diag: /am diagnostics answers while the addon is disabled, and the state line says so
@@ -1431,6 +1474,7 @@ badge and any count quoted in the docs must agree with it.
 - diag: every container gets a line and a full filter block, lists sorted and named
 - diag: a container's non-default rows are listed, with no color escape, untouched rows absent
 - diag: a row scoped to an aura type is not listed for a container of the other type
+- diag: each container's spell-list mode and the view its engine holds
 - diag: the plan verdict reads in sync, PENDING, DRIFT or not built
 - diag: plan groups report the engine's frame and shown counts, or ? when unreadable
 - diag: shown buttons are identified by instance, then by our own regions, else id=?
@@ -1666,7 +1710,7 @@ badge and any count quoted in the docs must agree with it.
 - containers: Defaults restores Enabled, Unit, Aura type and Style, and never the name
 - containers: the page's Defaults tooltip names the section on screen and the kept name
 
-### test_pages_filters.lua (49)
+### test_pages_filters.lua (52)
 
 - filters: Cast by writes the selected container's filter and no other
 - filters: a buff container's Categories tab offers the weapon-enchant rows; a debuff container's does not
@@ -1683,8 +1727,10 @@ badge and any count quoted in the docs must agree with it.
 - filters: every grid's columns are Show and Hide, then the category (schema v3)
 - filters: the Spell Categories grid opens with a line naming where its lists live (F-2)
 - filters: the 'these are the lists' line draws wherever the grid holds an editable list — both aura types since Hard CC and Soft CC (T-2)
-- filters: a debuff container's Categories tab says Hard CC and Soft CC only work on a hostile target or focus (A3)
+- filters: a debuff container's Categories tab says its spell lists only match on a target or focus you can't assist (A3)
 - filters: the Uncategorized cost note draws only where the engine is certain to honor spell ids (A2)
+- filters: the Spell Categories NOTE names where spell categories are not applied, per unit (SV-04)
+- filters: no Spell Categories NOTE on a buff container on the player or the pet (SV-04)
 - filters: a spells-kind row's See spells link selects that category on General -> Spell Categories and lands there; a token row gets an info icon instead (F-3/N-3/N-4/N-5)
 - filters: the priority order (spec §6) is stated on the General tab, highest rank first
 - filters: the priority block is stated once — not on Categories, not on Overrides (batch 8)
@@ -1698,6 +1744,7 @@ badge and any count quoted in the docs must agree with it.
 - filters: every category row is skipRender and names its grid
 - filters: no aura type is offered a Spell lists tab; the lists live on General → Spell Categories
 - filters: Overrides replaces Always / never, with a Whitelist and a Blacklist section
+- filters: the Overrides NOTE heads the tab on every container whose spell lists can be off (SV-04)
 - filters: Overrides adds to one list at a time by id or by name, and Remove takes an id off
 - filters: the Overrides lists pack two entries to a row, row-major
 - filters: an Overrides name the game cannot find adds nothing and says why on the add line
@@ -1960,7 +2007,7 @@ badge and any count quoted in the docs must agree with it.
 
 - prose: no authored file carries a British spelling from localization-§5's published list
 - prose: the gate carries localization-§5's two lists whole, and nothing of its own
-- prose: the exclusions this repository declared suppressed 11 of 188 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (11): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, docs/spell-research/2026-09-24-logs/CORRECTIONS.md, docs/spell-research/2026-09-24-logs/CURRENT_CATEGORIES.md, docs/spell-research/2026-09-24-logs/DECISIONS.md, docs/spell-research/2026-09-24-logs/FLAGS.md, docs/spell-research/2026-09-24-logs/PROPOSED_ADDITIONS.md, docs/spell-research/2026-09-24-logs/REVIEW.md, docs/spell-research/2026-09-24-logs/SOURCES.md, docs/spell-research/2026-09-24-logs/dictionary/AURAS.md
+- prose: the exclusions this repository declared suppressed 11 of 199 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (11): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, docs/spell-research/2026-09-24-logs/CORRECTIONS.md, docs/spell-research/2026-09-24-logs/CURRENT_CATEGORIES.md, docs/spell-research/2026-09-24-logs/DECISIONS.md, docs/spell-research/2026-09-24-logs/FLAGS.md, docs/spell-research/2026-09-24-logs/PROPOSED_ADDITIONS.md, docs/spell-research/2026-09-24-logs/REVIEW.md, docs/spell-research/2026-09-24-logs/SOURCES.md, docs/spell-research/2026-09-24-logs/dictionary/AURAS.md
 - prose: no path this repository narrows the gate by is loaded by a TOC
 - prose: every path this repository narrows the gate by is one .pkgmeta keeps out of the zip
 - prose self-test: the carve-out suppresses the named generated folder, and only it
@@ -2059,9 +2106,11 @@ badge and any count quoted in the docs must agree with it.
 | test_schema_paths.lua | 38 |
 | test_filtercompiler.lua | 85 |
 | test_filtercompiler_categories.lua | 9 |
+| test_filterviews.lua | 14 |
 | test_container.lua | 52 |
+| test_container_views.lua | 16 |
 | test_containermanager.lua | 54 |
-| test_compat.lua | 29 |
+| test_compat.lua | 31 |
 | test_secrets.lua | 6 |
 | test_bus.lua | 8 |
 | test_state.lua | 2 |
@@ -2071,7 +2120,7 @@ badge and any count quoted in the docs must agree with it.
 | test_anchors_seam.lua | 10 |
 | test_anchors_edges.lua | 14 |
 | test_anchors_hang.lua | 11 |
-| test_emptywatch.lua | 25 |
+| test_emptywatch.lua | 30 |
 | test_fontprimer.lua | 32 |
 | test_enchantreset.lua | 23 |
 | test_redraw.lua | 14 |
@@ -2098,7 +2147,7 @@ badge and any count quoted in the docs must agree with it.
 | test_disabled.lua | 18 |
 | test_slash.lua | 34 |
 | test_slash_verbs.lua | 51 |
-| test_diagnostics.lua | 49 |
+| test_diagnostics.lua | 50 |
 | test_bulklog.lua | 20 |
 | test_debug_coverage.lua | 10 |
 | test_debug_library_lines.lua | 11 |
@@ -2107,7 +2156,7 @@ badge and any count quoted in the docs must agree with it.
 | test_pages_general.lua | 35 |
 | test_pages_general_categories.lua | 32 |
 | test_pages_containers.lua | 33 |
-| test_pages_filters.lua | 49 |
+| test_pages_filters.lua | 52 |
 | test_pages_layout.lua | 47 |
 | test_pages_bars.lua | 11 |
 | test_pages_icons.lua | 5 |
@@ -2131,4 +2180,4 @@ badge and any count quoted in the docs must agree with it.
 | test_layout_cap.lua | 13 |
 | test_diagnostics_contract.lua | 9 |
 | test_lizard_sighted.lua | 8 |
-| **Total** | **1793** |
+| **Total** | **1834** |

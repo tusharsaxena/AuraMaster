@@ -19,9 +19,10 @@ local _, NS = ...
 --                  asks for `not value`.
 --   dispel         a set of dispel types. Hiding it adds to `excludeDispelTypes`.
 --   spells         a curated list of spell ids. Hiding it adds to `excludeSpellIDs`. Blizzard only
---                  honors spell ids for BUFFS ON FRIENDLY UNITS and DEBUFFS ON HOSTILE ONES, so a
---                  buff category's list bites on the player, the pet and a friendly target or focus,
---                  and a debuff category's list bites on a HOSTILE target or focus and nowhere else
+--                  honors spell ids for BUFFS ON UNITS YOU CAN ASSIST and DEBUFFS ON UNITS YOU CANNOT,
+--                  so a buff category's list bites on the player, the pet and an assistable target or
+--                  focus, and a debuff category's list on a target or focus you cannot assist and
+--                  nowhere else
 --                  (issue #11 gave `Cat.HARMFUL` its first two, `hardCC` and `softCC`). The Filters
 --                  page and General -> Spell Categories say so where it matters (docs/scope.md,
 --                  "What the engine cannot do").
@@ -45,8 +46,8 @@ local _, NS = ...
 --                  group of its own is no longer "is the union empty" but "is the one constraint that
 --                  group would carry CERTAIN to be applied". Its only constraint is an
 --                  `excludeSpellIDs` of the union, and the engine discards spell ids except for buffs
---                  on friendly units and debuffs on hostile ones — so the gate is
---                  `modules/FilterCompiler.lua`'s `FC.IdsAlwaysHonored(unit, auraType)`, TRUE ONLY for
+--                  on units you can assist and debuffs on units you cannot — so the gate is
+--                  `modules/FilterCompiler.lua`'s `FC.IdsMode(unit, auraType)`, "always" ONLY for
 --                  buffs on the player and the pet, the two units that cannot turn hostile. It is a
 --                  gate of its own, NOT the `FC.IdsHonored` the identity warning reads and not
 --                  computed from it: the warning answers the weaker "can the engine EVER honor ids
@@ -703,12 +704,13 @@ Cat.HELPFUL = {
 --
 -- Every category here but the first two is something the engine can evaluate for ANY unit. `hardCC`
 -- and `softCC` are `spells`-kind (issue #11 part A) and so are not: Blizzard honors spell ids for
--- debuffs on HOSTILE units only, and discards them on the player, the pet and any friendly unit. The
--- two rows are still worth shipping — the question they answer ("is my sheep on the target", "is it
--- rooted") is asked of a hostile target or focus, which is exactly where the ids do bite — and every
+-- debuffs only on units you CANNOT assist (UnitCanAssist, so neutral units too), and discards them on
+-- the player, the pet and any unit you can assist. The rows are still worth shipping — the question
+-- they answer ("is my sheep on the target", "is it rooted") is asked of an enemy target or focus,
+-- which is exactly where the ids do bite — and every
 -- surface that can mislead says so: their own descs below, the Filters section's Categories tab, the
 -- General -> Spell Categories blurb, and the per-container orange warning
--- (`FC.WARN.IDS_HOSTILE_ONLY` / `IDS_OWN_DEBUFFS`, modules/FilterCompiler.lua).
+-- (`FC.WARN.IDS_ASSISTABLE` / `IDS_OWN_DEBUFFS`, modules/FilterCompiler.lua).
 
 local ALL_DISPELS = { Magic = true, Curse = true, Disease = true, Poison = true, Bleed = true }
 
@@ -815,7 +817,7 @@ Cat.HARMFUL = {
         --     totem's own pulse, which the pool never reaches.
         -- A player who wants any of the five adds it by id on General -> Spell Categories.
         key = "hardCC", kind = "spells", label = "Hard CC (loss of control)",
-        desc = "Stuns, incapacitates, disorients and fears, plus Cyclone, Banish and Mind Control — the unit is not in control of itself. Only works on a hostile target or focus: Blizzard discards spell lists for debuffs on you or on a friendly unit.",
+        desc = "Stuns, incapacitates, disorients and fears, plus Cyclone, Banish and Mind Control — the unit is not in control of itself. Only works on a target or focus you can't assist: Blizzard discards spell lists for debuffs on you or on a unit you can assist.",
         spells = spells({
             WARRIOR = {
                 5246,    -- Intimidating Shout
@@ -964,7 +966,7 @@ Cat.HARMFUL = {
         -- name and went to `hardCC`; the owner removed it from both rows on 2026-09-20, and `hardCC`
         -- says so.
         key = "softCC", kind = "spells", label = "Soft CC (roots & snares)",
-        desc = "Roots and snares — the unit keeps control of itself but cannot move freely. Only works on a hostile target or focus: Blizzard discards spell lists for debuffs on you or on a friendly unit.",
+        desc = "Roots and snares — the unit keeps control of itself but cannot move freely. Only works on a target or focus you can't assist: Blizzard discards spell lists for debuffs on you or on a unit you can assist.",
         spells = spells({
             WARRIOR = {
                 1715,    -- Hamstring
@@ -1067,7 +1069,7 @@ Cat.HARMFUL = {
         -- discards a debuff spell list anyway. A key of its own, not `racials`: a key names one
         -- category across both aura types (`Cat.AuraTypeOf`).
         key = "racialDebuffs", kind = "spells", label = "Racials",
-        desc = "Debuffs from racial abilities, such as War Stomp and Quaking Palm. Only works on a hostile target or focus: Blizzard discards spell lists for debuffs on you or on a friendly unit.",
+        desc = "Debuffs from racial abilities, such as War Stomp and Quaking Palm. Only works on a target or focus you can't assist: Blizzard discards spell lists for debuffs on you or on a unit you can assist.",
         spells = spells({
             ALL = {
                 20549,   -- War Stomp; Tauren
@@ -1143,7 +1145,7 @@ Cat.HARMFUL = {
         -- discards spell ids on every debuff container there is — on the player and pet outright, on
         -- a target or focus the moment the unit is friendly. What the engine would receive is an
         -- unrestricted HARMFUL group: every debuff drawn, every other Hide on the tab defeated.
-        -- `modules/FilterCompiler.lua` gates it on `FC.IdsAlwaysHonored(unit, auraType)` — false for
+        -- `modules/FilterCompiler.lua` gates it on `FC.IdsMode(unit, auraType) == "always"` — false for
         -- all four debuff units and for a `target`/`focus` buff container too — so this stays a
         -- general rule keyed on whether ids are CERTAIN to be honored, not a debuff-only special case.
         key = "uncategorizedDebuffs", kind = "uncategorized", label = "Uncategorized",

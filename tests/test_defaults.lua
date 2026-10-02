@@ -209,8 +209,8 @@ test("defaults: Hard CC and Soft CC ship as non-empty HARMFUL spell lists of pos
         assertTrue(n > 0, key .. " ships empty")
         assertTrue(Cat.IsSpellCategory(key), key .. " is not reachable through IsSpellCategory")
         assertEqual(Cat.DefaultStates()[key], "show", key .. " is not in DefaultStates at Show")
-        assertTrue(def.desc:find("hostile", 1, true) ~= nil,
-            key .. "'s desc must say the list only works on a hostile unit")
+        assertTrue(def.desc:find("you can't assist", 1, true) ~= nil,
+            key .. "'s desc must say the list only works on a unit you can't assist")
     end
     -- Canonical members, one per bucket, from the ids the research run reached directly: a list
     -- rewritten down to a stub would still satisfy every shape check above.

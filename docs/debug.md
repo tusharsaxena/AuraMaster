@@ -81,6 +81,7 @@ Example (shortened):
 [Cont] #2 "Player debuffs" unit=player HARMFUL style=icons enabled=true attach=container#1 point=TOPLEFT(auto) relPoint=BOTTOMLEFT(auto) join=after-start | engine=yes ...
 [Filt] #1 whitelist(1)=[1459 Arcane Intellect]
 [Plan] #1 plan in sync
+[Plan] #1 spell lists: mode=always view=ids
 [Plan] #1 g1 "Always shown" filter=HELPFUL cand={includeSpellIDs:1} sort=expirationOnly/normal max=inf frames=3 shown=2
 [Shown] #1 g1 btn1 name="Arcane Intellect"
 [Shown] #1 predicted: 1459 Arcane Intellect -> shown (rank 1 whitelist)
@@ -91,6 +92,12 @@ A container attached to another container prints its join after the target (batc
 points in effect, this container's (`point`) and its parent's (`relPoint`), each `(auto)` while
 Automatic or `(picked)`, and `join=`, the batch 9 side the pair is under the parent's growth
 (`after-start` and the like, `Anchors.AttachEdge`) or `free` for any other pair.
+
+Each built container's `[Plan] #N spell lists:` line says where Blizzard applies its spell ids
+(`mode=`: `always` for buffs on the player and the pet, `never` for their debuffs, `dynamic` for any
+other unit, where the unit's reaction decides, `FC.IdsMode`) and which view of the plan the engine
+holds now (`view=ids`, or `view=noIds`, where spell categories and Overrides are not applied and only
+Blizzard categories set to Show draw). See the `[Filter]` tag below for each switch.
 
 ### Bar names that do not show
 
@@ -309,6 +316,7 @@ on Clear through the console descriptor's `onClear`. The Launcher's state lines,
 | `Anchor` | host | `modules/Anchors.lua`, `modules/FramePicker.lua`, `settings/Layout.lua` | A container falling back to the screen, once until it lands again (or the console is cleared); the pending-frame resolve skipped under lockdown, once per fight while one waits; `resolved N pending frame target(s)`; a drag whose position read secret; `attach refused (in combat)`, `frame pick refused (in combat)` |
 | `Cfg` | library, host | LibKa0s-Options-1.0 (Options 28, OptionsIdList 3); `settings/OptionsSetup.lua` | The library's: the settings window opened, `open refused (in combat)`, and each act the combat lock refuses on an open panel, once per combat (`write <path>`, `defaults <page>`, `tab <key>`, `button <text>` … `refused (in combat)`), `register parked (in combat)` and `register flushed (combat ended)`; once per id list whose help mark falls back to the client glyph, `help art: no addonName on the Options descriptor; drawing the client glyph` or `help art: addonName "<name>" is not a loaded addon; drawing the client glyph`. The host's: a page open refused in combat (`open <page> refused (in combat)`) |
 | `Engine` | host | `modules/Container.lua` | An engine call that raised, once per distinct method and error |
+| `Filter` | host | `modules/Container.lua` | A container whose spell lists switched on or off, once per change of view; nothing when the view holds. "on" means Blizzard applies the spell ids, and the reason names the unit's assistability: a target or focus buff container logs `<container>: spell lists on (unit can be assisted)` or `... off (unit cannot be assisted)`, a target or focus debuff container `... on (unit cannot be assisted)` or `... off (unit can be assisted)`, and a player or pet debuff container `... off (your own and your pet's debuffs)` |
 | `Style` | host | `modules/Style.lua`, `modules/Style_Text.lua` | A binding or a guarded dress that raised, once per distinct error; a Text template refused, once per template |
 | `Fonts` | host | `modules/FontPrimer.lua` | `primed N new font(s)`; `N font(s) refused` when the refused count changes; each loading screen's end with its timing |
 | `Timed` | host | `modules/TimedSpells.lua` | A scan that learned something (`learned N timed spell(s)`); `/am forgettimed` |

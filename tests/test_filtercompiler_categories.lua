@@ -26,7 +26,7 @@ local NOBODYS = 987655   -- and one nothing claims at all, the control
 
 --- A player buff container with one user category holding MINE, that category HIDDEN and everything
 --- else left at its default Show. `unit = "player"` is not incidental: it is the one unit where
---- FC.IdsAlwaysHonored is true, so the Uncategorized rescue group genuinely exists and the rescue
+--- FC.IdsMode is "always", so the Uncategorized rescue group genuinely exists and the rescue
 --- this checkpoint is about can actually happen.
 local function envWithUserCategory()
     local E = freshEnv()
@@ -178,7 +178,7 @@ end)
 -- The report's own failure was neither: the ids. AuraMaster filters on the id of the AURA sitting on
 -- the unit, never the id of the spell that was cast (tools/spell-research/README.md, "The crux: aura
 -- ids, not cast ids"), and 115151 is Renewing Mist's CAST id -- the shipped monk healing starters
--- carry 119611 for it (defaults/Categories.lua:366), beside the same 124682 and 115175 the report
+-- carry 119611 for it (defaults/Categories.lua:367), beside the same 124682 and 115175 the report
 -- lists. A list built from a cast id draws nothing and reports nothing, which is what was seen.
 
 local OWNER_IDS = { 124682, 115151, 115175 }   -- the report's list, its Renewing Mist a CAST id
@@ -263,10 +263,11 @@ test("categories: a user DEBUFF category alone on Show compiles the same way, an
     assertEqual(#plan.groups, 1, "the aura type is not what decides a user category's group")
     assertEqual(plan.groups[1].filter, "HARMFUL")
     assertEqual(setOf(plan.groups[1].candidateFilters.includeSpellIDs), "118")
-    -- The engine honors debuff ids only while the unit is hostile, and `usesSpellIds` is set by the
-    -- user category's own Show: the sentence has to reach a container whose only spell list is one
-    -- the player made.
-    assertTrue(hasWarning(plan, "hostile"), "the identity warning fires for a user category too")
+    -- The engine honors debuff ids only while the unit is hostile. `addShownGroups` sets nothing for
+    -- the user category's own Show; `finishWarnings` prints `IDS_ASSISTABLE` because `onlyShown` Hides
+    -- every other category (#hidden > 0, spell-list views, 2026-10-02), so the sentence still reaches
+    -- a container whose only spell list is one the player made.
+    assertTrue(hasWarning(plan, "On units you can assist"), "the identity warning fires for a user category too")
 end)
 
 test("categories: a user category shown beside a shipped one gets its own group, after it and minus its ids", function()

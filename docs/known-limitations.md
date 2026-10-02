@@ -63,17 +63,21 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
 - **A Text animation cannot start, stop or change in combat.** Every call on an engine button's
   objects is refused in combat; loops are built and played at dress time and keep running, and a
   change made in combat applies with the deferred restyle (`docs/midnight-quirks.md`).
-- **Spell-id filters are honored only for buffs on friendly units and debuffs on hostile units** (the
-  engine's identity gate). `FilterCompiler` emits a warning per container where that bites
-  (`identityWarning`, `modules/FilterCompiler.lua:417`, choosing its sentence from `FC.IdsHonored`),
-  rendered in orange in the Filters section.
+- **Spell-id filters apply only to buffs on units you can assist and debuffs on units you cannot**
+  (Blizzard's `CanApplyIdentityCandidateFilters`). Where they do not, a container draws its no-ids
+  view: spell categories and the Overrides lists are not applied, and only the Blizzard categories set
+  to Show draw (owner, 2026-10-02). A container built only on spell categories therefore shows nothing
+  on a hostile target, and a `NeverSecret` aura (Sated, Exhaustion) claimed only by a spell category is
+  not drawn there either, although Blizzard would apply its id. `FilterCompiler` emits a warning per
+  container where that bites (`identityWarning`, `modules/FilterCompiler.lua:417`), rendered in orange
+  in the Filters section, and Categories and Overrides carry a NOTE (`docs/midnight-quirks.md`).
 - **On a target or focus BUFF container, Uncategorized set to Show no longer rescues an unlisted
   aura.** That row's group carries an `excludeSpellIDs` of the categorized union as its only
   constraint whenever another category is Hidden, and a target's hostility is dynamic while the plan
   is compiled once — on a hostile target the engine discards the ids and the group degenerates into
   "every buff", superseding the catch-all and defeating every Hide on the tab. The compiler
-  therefore emits the group only where the ids are CERTAIN (`FC.IdsAlwaysHonored`: buffs on the
-  player and pet), and the same gate runs in `FC.ExplainSpell` so the Filters section never claims a
+  therefore emits the group only where the ids are CERTAIN (`FC.IdsMode` is `"always"`: buffs on
+  the player and pet), and the same gate runs in `FC.ExplainSpell` so the Filters section never claims a
   rescue the plan does not contain. Accepted deliberately by the owner (issue #11, 2026-09-20):
   losing a niche rescue on one unit beats defeating every Hide by default. The debuff side answers
   false on every unit for the same reason, which is what keeps issue #11's `hardCC`/`softCC` from
@@ -84,7 +88,7 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   build; Axe Toss (89766) and Seduction (6358), on a pet skill line with ClassMask 0, which the same
   test that excludes professions and mounts throws away; and Earthbind Totem (2484) and Earthgrab
   Totem (64695), whose root auras carry no mechanic and no matching name, so Shaman ships no root at
-  all. The KNOWN GAPS comment above `hardCC` (`defaults/Categories.lua:817`) records each one and why
+  all. The KNOWN GAPS comment above `hardCC` (`defaults/Categories.lua:819`) records each one and why
   rather than papering over it. A player who
   wants any of the five adds it by id on General → Spell Categories, which is a profile-wide edit
   every container picks up.
@@ -128,7 +132,7 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   it is Hide-only in practice, exactly reproducing the retired per-container **"only these
   categories"** toggle it replaced (batch 7 fix round 2). The reason is no longer "`Cat.HARMFUL` has
   no `spells`-kind category" — it carries `hardCC` and `softCC` as of issue #11 — but that
-  `FC.IdsAlwaysHonored` is false for every debuff container: the engine discards debuff spell ids on
+  `FC.IdsMode` is never `"always"` for a debuff container: the engine discards debuff spell ids on
   the player and pet outright, and may discard them on a `target` or `focus` the moment the unit is
   friendly, so the group that Show would contribute could arrive carrying nothing at all.
 - **A change of shape rebuilds the engine.** A different group count, enchant slots appearing or

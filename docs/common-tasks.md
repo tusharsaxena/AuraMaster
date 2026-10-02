@@ -28,7 +28,7 @@ Example: a bar option.
    (issue #24).
 5. **Structural?** If the row changes which rows other pages offer, give it
    `onChange = function() NS.RequestPanelRefresh() end`. If it changes the engine's shape, add it to
-   the structure key (`FilterCompiler.StructureKey`) in `Container:Apply` (`modules/Container.lua:409-410`).
+   the structure key (`FilterCompiler.StructureKey`) in `Container:Apply` (`modules/Container.lua:497-498`).
 6. `NS.ValidateSchema` fails the load if the path does not resolve against the template. Update the
    row lists in `docs/settings-panel.md` and the defaults in `docs/schema.md`.
 
@@ -64,7 +64,7 @@ Example: a bar option.
    plus an entry in `GRIDS` when the grid is new.
 3. A `spells` category on a debuff list is honored only on a HOSTILE target or focus; the engine
    discards its ids on you or a friendly unit (the identity gate, `docs/midnight-quirks.md`). That
-   is a real place to put one — `hardCC` and `softCC` live there (`defaults/Categories.lua:817`,
+   is a real place to put one — `hardCC` and `softCC` live there (`defaults/Categories.lua:819`,
    `:966`) — but say so in the `desc`, the way those two do, so a player reading the tooltip knows
    where the list bites and where it does nothing.
 4. Add the label and desc to `locales/enUS.lua`, and a compiler case to `tests/test_filtercompiler.lua`.

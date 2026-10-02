@@ -450,7 +450,7 @@ the player's own categories of that aura type — each list's last row is still 
 own `Uncategorized`, asymmetric between the two, and since issue #11 (2026-09-20) that asymmetry is
 about the UNIT rather than the aura type: the rescuing group's only constraint is an
 `excludeSpellIDs` of the categorized union, so the compiler emits it only where
-`FC.IdsAlwaysHonored(unit, auraType)` holds — buffs on the `player` and `pet`. There Show rescues an
+`FC.IdsMode(unit, auraType)` is `"always"` — buffs on the `player` and `pet`. There Show rescues an
 unlisted aura from another category's Hide. On every debuff container, and on a `target`/`focus`
 buff container whose unit may be hostile, Show changes nothing at all and only Hide does anything —
 reproducing the retired toggle exactly.
@@ -490,6 +490,14 @@ of the Uncategorized cost note below — sits **Hide enchants without a duration
 (`container.filter.hidePermanentEnchants`, bool, buffs only), behind a one-line tie naming
 the `weaponEnchants` row it governs by name (batch 7, `T-3`: the grid draws its rows atomically and
 cannot host a plain bool inline, so the tie text is what keeps it from reading as floating).
+
+Straight under the **Spell Categories** heading, above its Show all / Hide all, a container whose
+`FC.IdsMode` is not `"always"` (every debuff container, and a buff container on a target or focus)
+draws a NOTE naming where its spell categories are not applied: "your own debuffs", "your pet's
+debuffs", "units you can assist" (target and focus debuffs) or "units you can't assist" (target and
+focus buffs). The **Overrides** tab opens with the same sentence about its two lists. There the
+container draws its no-ids view and only the Blizzard categories set to Show draw (spell-list views,
+`viewNote` in `settings/Filters.lua`; `docs/midnight-quirks.md`).
 
 **Sorting**
 

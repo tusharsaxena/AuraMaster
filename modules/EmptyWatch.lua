@@ -55,21 +55,19 @@ local function unitExists(unit)
     return v and true or false
 end
 
---- Whether the engine honors spell ids for this unit and aura type right now: only on buffs of a
---- friendly unit and debuffs of a hostile one (docs/midnight-quirks.md). Nil when not knowable.
+--- Whether the engine applies spell ids for this unit and aura type right now, from the same answer
+--- the container picked its view from (NS.Container.ResolveView: FC.IdsMode for the player and the
+--- pet, NS.Compat.IdsApply, Blizzard's own predicate, everywhere else), so the prediction agrees
+--- with the engine (spell-list views, V3). Never nil: an unknowable reaction reads "not applied",
+--- as it does for the view.
 local function idsApply(unit, auraType)
-    if unit == "player" or unit == "pet" then return NS.FilterCompiler.IdsHonored(unit, auraType) end
-    local ok, friend = pcall(UnitIsFriend, "player", unit)
-    if not (ok and NS.Secrets.CanAccess(friend)) then return nil end
-    friend = friend and true or false
-    if auraType == "HARMFUL" then return not friend end
-    return friend
+    local at = (auraType == "HARMFUL") and "HARMFUL" or "HELPFUL"
+    return NS.Container.ResolveView(unit, at) == "ids"
 end
 
 --- One spell-id list against the aura: true when it passes, false when it fails, nil when unknowable.
 local function matchIds(aura, key, set, idsOk)
-    if idsOk == false then return true end
-    if idsOk == nil then return nil end
+    if not idsOk then return true end
     local id = aura.spellId
     if not NS.Secrets.IsSafeKey(id) then return nil end
     local listed = set[id] == true
@@ -143,12 +141,19 @@ local function slotsEmpty(api, unit, cand, idsOk, token, ...)
     return true
 end
 
---- Whether group `g` holds nothing for `unit`. A token-only group asks for one slot: any slot back
---- means an aura, and no table is built. Run under pcall: a rejected filter token raises.
-local function groupEmpty(api, unit, g, idsOk)
-    local cand = g.candidateFilters
-    if not cand then return select("#", api.GetAuraSlots(unit, g.filter, 1)) <= 1 end
-    return slotsEmpty(api, unit, cand, idsOk, api.GetAuraSlots(unit, g.filter))
+--- Whether a group with `filter` and `cand` holds nothing for `unit`. A token-only group asks for
+--- one slot: any slot back means an aura, and no table is built. Run under pcall: a rejected filter
+--- token raises.
+local function groupEmpty(api, unit, filter, cand, idsOk)
+    if not cand then return select("#", api.GetAuraSlots(unit, filter, 1)) <= 1 end
+    return slotsEmpty(api, unit, cand, idsOk, api.GetAuraSlots(unit, filter))
+end
+
+--- Group `g`'s filter string and candidate filters in the view the engine holds: its no-ids view
+--- (`g.noIds`, modules/FilterViews.lua) once ApplyView or a build put the engine on it.
+local function activeView(inst, g)
+    local v = (inst.view == "noIds" and g.noIds) or g
+    return v.filter, v.candidateFilters
 end
 
 --- The engine's created-button pool for one group, when it reads as a plain number.
@@ -169,7 +174,8 @@ local function aurasEmpty(inst, plan, cfg)
     for _, g in ipairs(plan.groups) do
         local r = true
         if poolOf(inst.engine, g.key) ~= 0 then
-            local ok, v = pcall(groupEmpty, api, unit, g, idsOk)
+            local filter, cand = activeView(inst, g)
+            local ok, v = pcall(groupEmpty, api, unit, filter, cand, idsOk)
             if ok then r = v else r = nil end
             if exists == nil and r == true then r = nil end
         end
@@ -266,6 +272,20 @@ local function schedulePass()
     passTimer = C_Timer.NewTimer(PASS_DELAY, runPass)
 end
 
+--- Re-predict NOW, folding in a pass already due.
+local function passNow()
+    if passTimer then passTimer:Cancel() end
+    runPass()
+end
+
+--- ContainerManager moved at least one container's view (CM.ApplyViews: a swap, or a reaction change
+--- heard as UNIT_FACTION or UNIT_FLAGS). The setters redrew the engine in this same frame, so the
+--- prediction follows at once, not PASS_DELAY later: a wrong "empty" left standing would hang a
+--- follower over the parent's auras, and no UNIT_AURA need come to correct it.
+function EW.OnViewsMoved()
+    passNow()
+end
+
 --- An enchant's expiry lapsed: re-predict.
 function EW.OnExpiry()
     expiryTimer, expiryDue = nil, nil
@@ -281,9 +301,14 @@ end
 --- engine redraws for the new unit in this same frame, so a follower hung from a parent that just
 --- emptied would sit at the engine's 1x1 provisional rect for the whole delay, and jump there and
 --- back (the owner, 2026-09-26). One switch is one pass; a pass already due is folded into it.
-local function onUnitSwitch()
-    if passTimer then passTimer:Cancel() end
-    runPass()
+--- AceEvent walks its handlers in no set order, so this may run before core/AuraMaster.lua's
+--- OnUnitSwap has moved the view: it moves it first (CM.ApplyViews, a no-op for a view already right),
+--- so the prediction never reads the old unit's view. A move re-predicts through EW.OnViewsMoved.
+local function onUnitSwitch(event)
+    local CM = NS.ContainerManager
+    local unit = (event == "PLAYER_FOCUS_CHANGED") and "focus" or "target"
+    if CM and CM.ApplyViews(unit) > 0 then return end
+    passNow()
 end
 
 --- UNIT_PET and UNIT_INVENTORY_CHANGED through AceEvent, which does not filter by unit: only the

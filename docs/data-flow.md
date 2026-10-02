@@ -20,7 +20,7 @@ engine does the reading, filtering, sorting, layout and timer animation in its o
         │    (a session row stops after the debug line: it sends nothing)
         │    (inside a bulk copy or reset the [Set] line is muted and tallied: one line per act)
         ▼
- 2  ContainerManager (CONFIG_CHANGED listener)                 modules/ContainerManager.lua:770
+ 2  ContainerManager (CONFIG_CHANGED listener)                 modules/ContainerManager.lua:837
         │  first FontPrimer.PrimeAll: a font no container drew in yet is drawn on a shown frame
         │  the row's effect:  "visibility" → ApplyVisibility now    "none" → nothing
         │  otherwise RequestApply(containerId)   nil = every container
@@ -31,7 +31,7 @@ engine does the reading, filtering, sorting, layout and timer animation in its o
         │     yes → keep the request, print the notice naming the cause (once), return
         │     no  → for each dirty container: Container:Apply(); re-place container-attached ones
         ▼
- 4  Container:Apply                                            modules/Container.lua:385
+ 4  Container:Apply                                            modules/Container.lua:473
         │  plan = FilterCompiler.Compile(cfg, { timedSpells })  (pure)
         │  anchor scale / strata / level; Anchors.Place (screen, container or frame)
         │  structure = #groups : enchant slots (hide-permanent) : style : growth corner
@@ -106,7 +106,7 @@ cap applies **per group**, not to the container as a whole (`container.filter.ma
 exists for the aura type (batch 7 `U-1`..`U-5`; both HELPFUL and HARMFUL carry one as of fix round 3)
 and its state actually supersedes the catch-all: Hide always does, on either aura type — that row's
 Hide IS the catch-all, made controllable, reproducing the retired **"only these categories"** toggle
-exactly. Show does too, but only where `FC.IdsAlwaysHonored(unit, auraType)` holds — buffs on the
+exactly. Show does too, but only where `FC.IdsMode(unit, auraType)` is `"always"` — buffs on the
 `player` and `pet`, and nowhere else (issue #11, 2026-09-20). There the row's own group is a real
 rescue, already a strict superset of what the catch-all would draw. Everywhere else Show contributes
 NO group of its own and the catch-all runs normally, because the row's only constraint is
@@ -125,7 +125,7 @@ directly (`NS.Print`), not silently. Full detail: *Step 4 in detail*, below.
 
 ## Step 4 in detail: the filter plan
 
-`FilterCompiler.Compile` (`modules/FilterCompiler.lua:790`) turns one container into
+`FilterCompiler.Compile` (`modules/FilterCompiler.lua:781`) turns one container into
 `{ groups, enchants, warnings }`, under the five-rank priority *Filter
 priority*, above, states (`FC.ExplainSpell` answers the same question for one spell, for the panel):
 
@@ -153,8 +153,8 @@ priority*, above, states (`FC.ExplainSpell` answers the same question for one sp
   all (rank 5). The per-container "Only these categories" toggle that used to drop the catch-all is
   RETIRED (batch 7 fix round 2); an addon-defined `uncategorized` category in the Spell Categories grid (batch 7, `U-1`..`U-5`) does
   that instead — Hide always suppresses the catch-all (on either aura type, reproducing the retired
-  toggle exactly, fix round 3); Show suppresses it too, but only where `FC.IdsAlwaysHonored(unit,
-  auraType)` holds — buffs on the `player` and `pet` — because only there is the category's own group
+  toggle exactly, fix round 3); Show suppresses it too, but only where `FC.IdsMode(unit,
+  auraType)` is `"always"` — buffs on the `player` and `pet` — because only there is the category's own group
   a real rescue that already covers everything the catch-all would (a strict superset relationship).
   On every debuff container, and on a `target`/`focus` buff container whose unit may be hostile when
   the engine looks, Show contributes no group of its own at all and changes nothing, so the catch-all
@@ -181,17 +181,17 @@ priority*, above, states (`FC.ExplainSpell` answers the same question for one sp
 only when the direction moved), cap and layout can change on a live engine; hide-permanent enchants
 cannot, because a slot takes it only when added, so toggling it is a new shape. A plan of the same
 shape calls only the setters whose values moved. Candidate filters are serialized with
-`FilterCompiler.Signature` (`modules/FilterCompiler.lua:961`) and re-sent only when the two
-signatures differ (`modules/Container.lua:326-334`), because the engine clears and re-gathers a
+`FilterCompiler.Signature` (`modules/FilterCompiler.lua:952`) and re-sent only when the two
+signatures differ (`modules/Container.lua:292-295`), because the engine clears and re-gathers a
 group whenever they are set (`docs/midnight-quirks.md`). **Rebuilding.** Groups are add-only and a
 frame is never freed, so a new shape disables and hides the old engine, keeps it aside, and builds a
 new one: flow layout first, then the anchor, then every `AddAuraGroup`, then the enchant slots, then
-`SetUnit` last (`modules/Container.lua:299`).
+`SetUnit` last (`modules/Container.lua:388`).
 
 ## Visibility, separate from applying
 
 Whether a container shows is a cheaper question, and one that is legal in combat:
-`Container:ShouldShow` (`modules/Container.lua:463`) answers, in order — perf suspend, profile and
+`Container:ShouldShow` (`modules/Container.lua:551`) answers, in order — perf suspend, profile and
 container `enabled`, then General visibility against `UnitAffectingCombat("player")`, which an
 unlocked container skips so one that shows only in combat can still be found and moved; it also
 answers whether the container previews, which is the session-only test mode (`NS.State.testMode`),
@@ -249,7 +249,9 @@ after they were hidden; a visibility pass alone leaves them as they are.
 | `LOADING_SCREEN_DISABLED` | The loading screen has ended: `FontPrimer.OnLoadingScreenEnd` runs a priming pass (a font refused under the loading screen is tried again), then arms the primer's hide and refresh when anything was primed since the last loading screen (below); and arms the weapon-enchant reset 1.75 s later, whatever the primer did (`CM.RequestEnchantReset`, SP-AMX-01) |
 | `PLAYER_REGEN_DISABLED` / `ENABLED` | Visibility pass; on combat end, flush pending applies, apply the Blizzard-frame settings, and place again any frame-attached container whose frame appeared during combat |
 | `ADDON_RESTRICTION_STATE_CHANGED` | Flush pending applies — secrecy can lift outside a combat transition (a key or encounter ending) |
-| `PLAYER_TARGET_CHANGED`, `PLAYER_FOCUS_CHANGED`, `UNIT_PET` | Every container on that unit calls the engine's `UpdateAllAuras`, because the engine keeps showing the old unit's auras until told |
+| `PLAYER_TARGET_CHANGED`, `PLAYER_FOCUS_CHANGED`, `UNIT_PET` | Every container on that unit calls the engine's `UpdateAllAuras`, because the engine keeps showing the old unit's auras until told. On a target or focus swap each such container first switches to the view of its plan the new unit's reaction picks (`CM.ApplyViews`, spell-list views V2) |
+| `UNIT_FACTION`, `UNIT_FLAGS` (target, focus) | The unit's reaction may have moved without a swap: `CM.ApplyViews` switches each container on it to the view that reaction picks (`ContainerClass:ApplyView`), in combat too. When one moved, EmptyWatch re-predicts at once (`EW.OnViewsMoved`), so the empty prediction follows the engine |
+| `UNIT_FACTION`, `UNIT_FLAGS` (player) | The player's own side moved (mind control): `CM.ApplyViews` for both target and focus, on `CM.viewPlayerFrame`, then one `EW.OnViewsMoved` if any view moved |
 | `ADDON_LOADED` (any) | Frame-attached containers whose frame did not exist yet are placed again |
 | `ITEM_DATA_LOAD_RESULT`, `GET_ITEM_INFO_RECEIVED` | When the item is the weapon equipped in slot 16 or 17 and the load succeeded, the weapon-enchant reset is armed 0.5 s later (`CM.OnWeaponItemData`); one timer, keeping the later deadline, so a burst flips once. The reset turns each live engine with enchant frames off and on again, so the weapon names are drawn afresh (`docs/midnight-quirks.md` → *Weapon enchants*) |
 | Profile changed, copied or reset | `NS.OnProfileChanged`: `PrepareProfile`, selection cleared, `ContainerManager.Announce` (the new profile's fonts primed, instances follow the registry, apply all, `CONTAINERS_CHANGED`), Blizzard frames, panel refresh |
@@ -274,7 +276,7 @@ player switched off. There is no `StandUp()` to call; the only route out is rele
 | The eleven lifecycle events | `addon:UnregisterLifecycleEvents()` — unregistered, not gated |
 | `modules/TimedSpells.lua` | `TS.StandDown()`: its unit frame's `UNIT_AURA` (unregistered by hand; the frame is kept for the next stand-up), its gate events, its two bus subscriptions, and a queued scan timer, canceled |
 | `modules/EmptyWatch.lua` | `EW.Stop()`: both unit frames' registrations (unregistered by hand; the frames are kept), its AceEvent pet, inventory, target and focus events, and a queued pass or enchant-expiry timer, canceled |
-| `modules/ContainerManager.lua` | `CM.StopListening()`: its three bus subscriptions, the pending queue behind them, and an armed weapon-enchant reset, canceled; `CM.RequestEnchantReset` arms nothing while stood down |
+| `modules/ContainerManager.lua` | `CM.StopListening()`: its three bus subscriptions, its two view frames' `UNIT_FACTION` / `UNIT_FLAGS` (unregistered by hand; the frames are kept), the pending queue behind them, and an armed weapon-enchant reset, canceled; `CM.RequestEnchantReset` arms nothing while stood down |
 | The coalescing apply timer | canceled by `CM.StopListening`; `CM.RequestApply` returns immediately, so nothing re-arms |
 | `modules/FontPrimer.lua` | `FontPrimer.Stop()`, from `CM.StopListening`: the hide timer and the follow-up refresh, canceled, and the frame hidden; a stood-down addon hears no loading-screen event, so the primer stops waiting for one. The fonts it drew stay loaded, so what it primed is kept, and `PrimeAll` does nothing while stood down |
 | `modules/FramePicker.lua` | `FP.Stop()` — the overlay's `OnUpdate` cleared |
@@ -309,7 +311,11 @@ while it is down (`CM.Announce` skips its sync, but still sends `CONTAINERS_CHAN
 re-renders). The stand-up calls `CM.Sync` before its visibility pass, so it builds, or revives, every
 container the registry holds at that moment and draws them in the same turn. A profile change made
 while down is remembered and passed to that sync, so a stand-up in combat parks every id the switch
-reused, exactly as `CM.Announce(true)` would have, until the deferred apply rebuilds it.
+reused, exactly as `CM.Announce(true)` would have, until the deferred apply rebuilds it. Between the
+sync and the visibility pass it moves every target and focus container to the spell-list view its
+unit picks now (`CM.ApplyViews`, SV-05): no swap or reaction event was heard while down, and the view
+switch, unlike the apply, is never held, so a stand-up in combat cannot re-enable an engine on a stale
+view.
 
 **`/am diagnostics` still answers while down, and says so** (batch 10 F8). Its header adds one plain
 line, `addon disabled: containers are not built; predictions only` after a login made while off,
@@ -391,8 +397,8 @@ true (batch 9 HG-1, E1 as amended by the owner on 2026-09-25). The engine cannot
 empty: its frame count is a pool that never shrinks, and its size is secret. So the prediction asks
 `C_UnitAuras` the engine's question, per compiled group: a group with no candidate filters asks
 `GetAuraSlots(unit, filter, 1)` whether any slot comes back; one with candidate filters reads each
-slot's `AuraData` and tests the spell-id lists (only where the engine honors them: buffs of a friendly
-unit, debuffs of a hostile one), the dispel types, the max duration (a permanent aura never passes)
+slot's `AuraData` and tests the spell-id lists (only where the engine applies them: buffs of a unit you can
+assist, debuffs of one you cannot), the dispel types, the max duration (a permanent aura never passes)
 and the boolean flags. Weapon enchants come from `GetWeaponEnchantInfo`, with Hide permanent applied.
 A group whose engine pool reads 0, or a unit that does not exist, needs no read. The answer is nil
 (counted as not empty) in combat, while auras are secret, on a secret or raising read, and for a flag

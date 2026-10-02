@@ -155,11 +155,17 @@ end
 
 -- The engine keeps showing the OLD unit's auras after `target` or `focus` starts naming someone else
 -- until told to refresh (AuraContainerSharedMixin:UpdateAllAuras is "exposed to allow external events
--- to trigger refreshes where needed (e.g. target changes)").
+-- to trigger refreshes where needed (e.g. target changes)"). The new unit's reaction picks the view of
+-- each plan the engine holds (spell-list views, V2), so the view is switched FIRST: one refresh then
+-- draws the new unit in the right view, never the old unit's view for a frame.
 function addon:OnUnitSwap(event)
     local t0 = Perf.on and debugprofilestop()
     local unit = (event == "PLAYER_FOCUS_CHANGED") and "focus" or "target"
-    if NS.ContainerManager then NS.ContainerManager.RefreshUnit(unit) end
+    local CM = NS.ContainerManager
+    if CM then
+        CM.ApplyViews(unit, true)   -- quiet: EmptyWatch's own swap handler re-predicts
+        CM.RefreshUnit(unit)
+    end
     if t0 then Perf.Note("unitSwap", debugprofilestop() - t0) end
 end
 

@@ -87,8 +87,10 @@ defaults\Profile.lua
 # Modules
 # Conventional: a lookup over defaults/CastToAura.lua, read at add time by the two add boxes.
 modules\CastAura.lua
-# Conventional: TimedSpells and FilterCompiler resolve their peers at call time.
+# Conventional: TimedSpells resolves its peers at call time.
 modules\TimedSpells.lua
+# LOAD-BEARING: FilterViews before FilterCompiler, which takes NS.FilterViews as a file-scope upvalue.
+modules\FilterViews.lua
 modules\FilterCompiler.lua
 # LOAD-BEARING: TextTemplate before Style_Text, which takes NS.TextTemplate as a file-scope upvalue.
 modules\TextTemplate.lua

@@ -58,15 +58,16 @@ local _, NS = ...
 -- (kind `spells`) categories" — token/flag/dispel categories do not count toward being categorized.
 -- `hasUnion` is what the asymmetry turns on, and it asks TWO questions, not one:
 --
---     local hasUnion = FC.IdsAlwaysHonored(unit, auraType) and not isEmpty(union)
+--     local hasUnion = FC.IdsMode(unit, auraType) == "always" and not isEmpty(union)
 --
 -- because this row's Show has no positive constraint to offer. Its group's ONLY constraint is an
 -- `excludeSpellIDs` of that union, so the group is worth emitting only where such a filter both
--- EXISTS and is CERTAIN to be applied. `FC.IdsAlwaysHonored` is that second half: the engine applies
--- include/exclude spell ids to buffs on friendly units and debuffs on hostile ones and discards them
--- everywhere else (AuraContainerUtil.CanApplyIdentityCandidateFilters), so the only containers where
--- a plan compiled today is CERTAIN of the answer are buffs on the player and the pet — the two units
--- that cannot turn hostile. A `target` or `focus` is whichever it happens to be when the engine
+-- EXISTS and is CERTAIN to be applied. `FC.IdsMode` answering "always" is that second half: the
+-- engine applies include/exclude spell ids to buffs on a unit you can assist (or a player-controlled
+-- or group unit) and to debuffs on a unit you cannot, plus any NeverSecret spell on any unit, and
+-- discards them everywhere else (AuraContainerUtil.CanApplyIdentityCandidateFilters), so the only
+-- containers where a plan compiled today is CERTAIN of the answer are buffs on the player and the
+-- pet — the two units that cannot turn hostile. A `target` or `focus` is whichever it happens to be when the engine
 -- looks, which is not a thing the compiler can know at compile time.
 --
 -- The sibling predicate `FC.IdsHonored` answers the weaker "can the engine EVER honor ids here",
@@ -107,9 +108,9 @@ local _, NS = ...
 -- group's `excludeSpellIDs` away and the group draws every debuff. For the `uncategorized` row, a
 -- group that is harmless on a hostile target and unconstrained on a friendly one is a group that
 -- cannot ship, so MAY-discard is treated exactly like WILL-discard. Read that as a rule about THIS
--- ROW and nothing wider: the gate does not, and deliberately must not, make a degenerate group
--- impossible in general — see THE ACCEPTED RESIDUAL below, which is exactly that shape, shipping on
--- purpose, under the same uncertainty.
+-- ROW and nothing wider: the gate does not make a degenerate group impossible in general. A shown
+-- `spells` group has the same shape and still ships; the no-ids view is what neutralizes it (SPELL-LIST
+-- VIEWS, below).
 --
 -- THIS ALSO CLOSES A LATENT BUG THAT PREDATES ISSUE #11 — verified against the tree at HEAD, not
 -- inferred: with the gate written as the union alone, a HOSTILE `target` or `focus` BUFF container
@@ -126,31 +127,19 @@ local _, NS = ...
 -- rescue was real and is genuinely lost. It is a niche rescue on one unit weighed against defeating
 -- every Hide on the tab by default on the same unit, and the niche rescue loses.
 --
--- THE ACCEPTED RESIDUAL, ruled on by the owner in the same breath (issue #11, 2026-09-20) and also
--- pinned by a test: a `spells`-kind SHOWN category still compiles to a group whose only constraint
--- beyond the base aura-type token is an `includeSpellIDs` of its list (`includeCategory`, the
--- `spells` branch), and on a `target` or `focus` the engine MAY discard exactly that. Once `hardCC`
--- ships, a TARGET debuff container with Hard CC Shown draws every debuff the moment it is FRIENDLY —
--- structurally the same degenerate shape the gate above now forbids the `uncategorized` row. This is
--- KNOWN, ACCEPTED and deliberately NOT suppressed, for three reasons:
---
---   * Suppressing it would delete the feature's primary use case. `hardCC` and `softCC` exist to
---     answer "is my sheep / my stun on the target", and in that scenario the target is HOSTILE, which
---     is precisely where the ids do bite. A filter that refuses to work in the case it was built for
---     is worse than one that is over-broad in a case nobody sets it up for.
---   * It is the engine limitation this addon already documents and already warns about, per
---     container: docs/scope.md's "Out of reach on this client" -> "Spell-id filtering everywhere",
---     and `FC.WARN.IDS_HOSTILE_ONLY` / `IDS_FRIENDLY_ONLY` through `identityWarning`. The warning
---     genuinely fires on this path and is not a hope: `addShownGroups` sets `usesSpellIds` for a
---     `spells`-kind Show, and `finishWarnings` prints the sentence off that flag. So the player is
---     told "spell lists only apply while the unit is hostile" on the very container that has it.
---   * It differs from the `uncategorized` case IN KIND, not merely in degree, and that is the whole
---     reason one is closed and the other is not. An `uncategorized` Show SUPERSEDES the catch-all, so
---     when its group degenerates it has already REMOVED the one group carrying every Hidden
---     category's negations — the tab loses its Hides. An over-broad `spells` Show group sits BESIDE
---     the other groups and removes nothing: the catch-all and every other shown group compile
---     exactly as they would have, so the failure is "this one group matched more than the player
---     meant" and not "the container stopped filtering".
+-- SPELL-LIST VIEWS (2026-10-02, docs/superpowers/specs/2026-10-02-spell-list-views-design.md). This
+-- SUPERSEDES the issue #11 "accepted residual", which let a shown `spells` group (its only constraint
+-- beyond the base an `includeSpellIDs` of its list) degenerate into "every aura of this type" wherever
+-- the engine skips ids. That ruling weighed ONE over-broad group; it did not consider several. A
+-- container with seven spell categories Shown compiles to seven groups that differ only in their ids,
+-- so on a hostile target each draws the same buff: the M+ report of one NPC buff drawn 14 times. Now
+-- every group also carries a no-ids view (`group.noIds`, modules/FilterViews.lua), and the container
+-- sends that view wherever Blizzard does not apply spell ids (`FC.IdsMode`, then
+-- `NS.Compat.IdsApply` at run time; `ContainerClass:ApplyView`). In it the whitelist, every `spells`
+-- and `uncategorized` Show group and the catch-all match nothing, so only the Blizzard (token, flag,
+-- dispel) Show categories draw, each aura once. The owner's rule: where Blizzard will not apply spell
+-- ids, spell categories and the Overrides lists are not applied. `FC.WARN.IDS_*` (`identityWarning`)
+-- and the NOTE lines on Filters -> Categories and Overrides (settings/Filters.lua) say so.
 --
 -- A Hide's `excludeSpellIDs` still ships even where the engine ignores it (only the union itself is
 -- skipped there, since the gate is its one reader): an ignored exclude costs nothing, suppressing it would change no outcome, and
@@ -188,12 +177,18 @@ FC.WARN = {
     MAX_WITH_TIMELESS = "Max duration is ignored while showing only auras without a duration.",
     NEVER_MATCHES    = "These filters can never match anything.",
     TIMELESS_BUFFS_ONLY = "Only auras without a duration works for buffs only; this container shows every duration.",
-    IDS_OWN_DEBUFFS  = "Spell lists are ignored for debuffs on your own character or pet: Blizzard does not allow spell-id filtering there.",
-    IDS_HOSTILE_ONLY = "Spell lists only apply while the unit is hostile.",
-    IDS_FRIENDLY_ONLY = "Spell lists only apply while the unit is friendly.",
+    IDS_OWN_DEBUFFS  = "On your own and your pet's debuffs, spell categories and Overrides are not applied. Only Blizzard categories set to Show draw.",
+    IDS_UNASSISTABLE = "On units you can't assist (hostile or neutral), spell categories and Overrides are not applied. Only Blizzard categories set to Show draw.",
+    IDS_ASSISTABLE   = "On units you can assist, spell categories and Overrides are not applied. Only Blizzard categories set to Show draw.",
+    -- The same three where no category is Hidden and only an Overrides list is in use: the R-3 group
+    -- still draws everything there, so the "Only Blizzard categories" sentence would be false (SV-05).
+    IDS_OWN_DEBUFFS_LISTS  = "On your own and your pet's debuffs, the Overrides lists are not applied.",
+    IDS_UNASSISTABLE_LISTS = "On units you can't assist (hostile or neutral), the Overrides lists are not applied.",
+    IDS_ASSISTABLE_LISTS   = "On units you can assist, the Overrides lists are not applied.",
 }
 
 local HUGE = math.huge
+local FV = NS.FilterViews   -- LOAD-BEARING: modules/FilterViews.lua loads first (the TOC says so)
 
 -- ---------------------------------------------------------------------------
 -- A constraint set: tokens + candidate filters, with conflict detection
@@ -346,8 +341,9 @@ end
 -- ---------------------------------------------------------------------------
 
 --- Whether the engine can EVER honor include/exclude spell ids for this unit and aura type. Blizzard
---- applies them to buffs on friendly units and debuffs on hostile ones, and discards them everywhere
---- else (AuraContainerUtil.CanApplyIdentityCandidateFilters). `target` and `focus` therefore answer
+--- applies them to buffs on a unit you can assist (or a player-controlled or group unit) and to debuffs
+--- on a unit you cannot, plus any NeverSecret spell anywhere, and discards them everywhere else
+--- (AuraContainerUtil.CanApplyIdentityCandidateFilters). `target` and `focus` therefore answer
 --- TRUE for BOTH aura types: whichever the unit turns out to be, one of the two aura types bites
 --- there, and this predicate asks only whether the filter is capable of doing anything at all. Only
 --- the player and the pet are pinned: they are never hostile to you, so their DEBUFF ids are
@@ -358,8 +354,8 @@ end
 --- sentence on the Filters section: a `target` buff list is worth keeping and worth a caveat, not worth
 --- calling dead. It is the WRONG question for the compile gate, because a plan is compiled today for
 --- a unit nobody has looked at yet, and a CAN-ever that is only sometimes true is a group the engine
---- may silently strip. `FC.IdsAlwaysHonored` is that second, stricter question. The two were ONE
---- predicate when issue #11's gate was first written, and conflating them is precisely what made it
+--- may silently strip. `FC.IdsMode` answering "always" is that second, stricter question. The two
+--- were ONE predicate when issue #11's gate was first written, and conflating them is precisely what made it
 --- self-contradictory: target/HARMFUL "honored" (emitting a group the engine discards the moment the
 --- target is friendly) and target/HELPFUL "not honored" (dropping the very group Uncategorized Show
 --- exists for) — the same conditionality, opposite treatment, in one function.
@@ -373,15 +369,16 @@ function FC.IdsHonored(unit, auraType)
     return true
 end
 
---- Whether the engine UNCONDITIONALLY honors include/exclude spell ids for this unit and aura type —
---- true for buffs on the player and the pet, and false everywhere else. Every `target`/`focus` answer
---- is FALSE however plausible the common case looks, because hostility is dynamic and the plan is
---- compiled long before anyone looks at the unit; HARMFUL on player/pet is false for the blunter
---- reason that ids are never honored there at all.
+--- When the engine applies include/exclude spell ids for this unit and aura type: "always" for buffs
+--- on the player and the pet (the two units that cannot turn hostile), "never" for their debuffs
+--- (Blizzard never applies debuff ids there), and "dynamic" for a `target` or `focus`, whose answer
+--- depends on whether you can assist the unit when the engine looks, long after the plan compiled.
+--- A group's ids or no-ids view (modules/FilterViews.lua) is chosen from it at run time.
 ---
---- This is the GATE predicate. Two call sites read it and MUST stay in lockstep — `addCategoryGroups`
---- (what the plan actually contains) and the `FC.ExplainSpell` path into `explainUncategorized` (what
---- the Filters section says the plan contains). WHY IT IS THE STRICTER QUESTION: an `uncategorized` Show
+--- "always" is the GATE (it replaced `FC.IdsAlwaysHonored` on 2026-10-02, same meaning). Two call
+--- sites read it and MUST stay in lockstep — `addCategoryGroups` (what the plan actually contains)
+--- and the `FC.ExplainSpell` path into `explainUncategorized` (what the Filters section says the plan
+--- contains). WHY IT IS THE STRICTER QUESTION: an `uncategorized` Show
 --- group carries an `excludeSpellIDs` of the categorized union as its ONLY constraint beyond the base
 --- aura-type token (`includeCategory`, U-3) — there is no id list of "every other spell" to include.
 --- Wherever the engine MAY discard that exclude, the group degenerates into "every aura of this type"
@@ -390,9 +387,8 @@ end
 --- points the other cannot ship (buffs on a hostile target, debuffs on a friendly one — the two cases
 --- a compile cannot rule out). So the row may contribute a group of its own only where ids are
 --- CERTAIN. Note the scope of that "cannot ship": it is about THIS row, whose group supersedes the
---- catch-all and therefore takes the tab's Hides down with it. A `spells`-kind Show degenerates under
---- the same uncertainty and ships anyway, on purpose — the top-of-file comment's ACCEPTED RESIDUAL
---- has that ruling and why the two cases differ in kind.
+--- catch-all and therefore takes the tab's Hides down with it. A `spells`-kind Show group ships
+--- anyway: where ids are not applied, its no-ids view is NEVER (modules/FilterViews.lua).
 ---
 --- KNOWN LIMITATION, accepted deliberately by the owner (issue #11, 2026-09-20): on a FRIENDLY target
 --- or focus BUFF container, Uncategorized Show no longer rescues an unlisted buff from another
@@ -401,9 +397,12 @@ end
 --- same note, along with the latent pre-#11 bug this closes on a hostile target.
 --- @param unit string|nil  the container's unit (core/Constants.lua C.UNITS)
 --- @param auraType string  "HELPFUL" or "HARMFUL"
---- @return boolean
-function FC.IdsAlwaysHonored(unit, auraType)
-    return auraType == "HELPFUL" and (unit == "player" or unit == "pet")
+--- @return string  "always" | "never" | "dynamic"
+function FC.IdsMode(unit, auraType)
+    if unit == "player" or unit == "pet" then
+        return (auraType == "HARMFUL") and "never" or "always"
+    end
+    return "dynamic"
 end
 
 --- When a container relies on a spell-id filter the engine will not honor, say so instead of letting
@@ -413,17 +412,18 @@ end
 --- because a player's own debuffs are discarded outright while a target's or focus's are merely
 --- conditional on which way the unit points, and a player who cannot tell those apart cannot fix
 --- either: the first is a setting that will never do anything, the second is one that will do
---- something later.
+--- something later. Answers the `FC.WARN` key's stem; `finishWarnings` picks the full sentence or
+--- its Overrides-only `_LISTS` form.
 local function identityWarning(unit, auraType)
     if not FC.IdsHonored(unit, auraType) then
         -- Only HARMFUL on player/pet reaches here: the one combination the engine refuses outright.
-        return FC.WARN.IDS_OWN_DEBUFFS
+        return "IDS_OWN_DEBUFFS"
     end
     if auraType == "HARMFUL" then
-        return FC.WARN.IDS_HOSTILE_ONLY
+        return "IDS_ASSISTABLE"
     end
     if unit == "target" or unit == "focus" then
-        return FC.WARN.IDS_FRIENDLY_ONLY
+        return "IDS_UNASSISTABLE"
     end
     return nil
 end
@@ -493,13 +493,11 @@ local function baseFor(auraType, castBy)
 end
 
 --- The duration mode and the max duration, applied to the base.
---- @return boolean  whether the base now filters by spell id
 local function applyDuration(base, plan, filter, auraType, timedSpells)
-    local usesSpellIds = false
     local mode = filter.durationMode
     local maxDuration = tonumber(filter.maxDuration) or 0
     -- Timeless is built from learned BUFF durations (modules/TimedSpells.lua scans buffs only), and a
-    -- spell-id exclusion is not honored for debuffs on friendly units anyway: on a debuff container
+    -- spell-id exclusion is not applied to debuffs on a unit you can assist anyway: on a debuff container
     -- the mode means nothing, so it is reported and treated as "any".
     if mode == "timeless" and auraType ~= "HELPFUL" then
         warn(plan, FC.WARN.TIMELESS_BUFFS_ONLY)
@@ -512,7 +510,6 @@ local function applyDuration(base, plan, filter, auraType, timedSpells)
         local timed = timedSpells or {}
         if not isEmpty(timed) then
             addToSet(base, "excludeSpellIDs", timed)
-            usesSpellIds = true
         end
         if maxDuration > 0 then
             warn(plan, FC.WARN.MAX_WITH_TIMELESS)
@@ -523,13 +520,12 @@ local function applyDuration(base, plan, filter, auraType, timedSpells)
         -- The engine drops permanent auras whenever maxDuration is set, which is exactly "timed".
         base.cand.maxDuration = HUGE
     end
-    return usesSpellIds
 end
 
 --- The whitelist and the blacklist as id sets; the blacklist goes on the base. R-2: the whitelist now
 --- beats the blacklist — an id on both is removed from the BLACKLIST, not the whitelist, so rank 1
 --- (whitelist) wins over rank 2 (blacklist) rather than the old "never beats always".
---- @return table whitelist, boolean usesSpellIds
+--- @return table whitelist, boolean blacklisted
 local function applyLists(base, filter)
     local blacklist = spellSet(filter.blacklist)
     local whitelist = spellSet(filter.whitelist)
@@ -562,12 +558,14 @@ local function splitCategories(Categories, auraType, states)
     return shown, hidden
 end
 
---- One engine group for `con`, unless it is a contradiction.
-local function addGroup(plan, con, label, look)
+--- One engine group for `con`, unless it is a contradiction. `role` picks its no-ids view
+--- (modules/FilterViews.lua): "never", "same" or "strip"; `baseIds` is the base's own
+--- `excludeSpellIDs`, which the "same" and "strip" views keep.
+local function addGroup(plan, con, label, look, role, baseIds)
     if con.conflict then return end
     local cand = con.cand
     local groupCount = #plan.groups + 1
-    plan.groups[groupCount] = {
+    local group = {
         key              = "g" .. groupCount,
         label            = label,
         filter           = table.concat(con.tokens, "|"),
@@ -576,6 +574,8 @@ local function addGroup(plan, con, label, look)
         sortDirection    = look.sortDirection,
         maxFrameCount    = look.maxFrameCount,
     }
+    group.noIds = FV.NoIds(group, role, baseIds)
+    plan.groups[groupCount] = group
 end
 
 --- The whitelist group: the aura type, the ids, nothing else.
@@ -585,7 +585,7 @@ local function addWhitelistGroup(plan, auraType, whitelist, look)
     local wl = newCon()
     addToken(wl, auraType)
     addToSet(wl, "includeSpellIDs", whitelist)
-    addGroup(plan, wl, "Always shown", look)
+    addGroup(plan, wl, "Always shown", look, "never")
     return true
 end
 
@@ -602,11 +602,9 @@ end
 --- the top-of-file comment): a Hide of it is handled by suppressing the catch-all outright, not by
 --- contributing an exclusion here, and it can never be an "earlier shown category" either, since it
 --- is always declared last (U-1). Shared by `addShownGroups`' dedup and `addCatchAllGroup`.
---- @return boolean usedSpellIds
 local function excludeGuarded(con, def, edits)
-    if def.kind == "uncategorized" then return false end
+    if def.kind == "uncategorized" then return end
     excludeCategory(con, def, edits)
-    return def.kind == "spells"
 end
 
 --- One group per SHOWN category (R-4): the base plus that category's positive constraint
@@ -621,27 +619,23 @@ end
 --- top-of-file comment has the concrete proof for both paths). Skipping it here is
 --- what makes it behave as if the row did not exist in that case, catch-all included — see
 --- `addCategoryGroups`.
---- @return boolean usesSpellIds
 local function addShownGroups(plan, base, cats, look, hasUnion)
     local edits, union = cats.spellEdits, cats.union
-    local usesSpellIds = false
     for i, def in ipairs(cats.shown) do
         if not (def.kind == "uncategorized" and not hasUnion) then
             local con = cloneCon(base)
             includeCategory(con, def, edits, union)
-            if def.kind == "spells" or def.kind == "uncategorized" then usesSpellIds = true end
             for j = 1, i - 1 do
-                usesSpellIds = excludeGuarded(con, cats.shown[j], edits) or usesSpellIds
+                excludeGuarded(con, cats.shown[j], edits)
             end
             if not isEmpty(cats.whitelist) then addToSet(con, "excludeSpellIDs", cats.whitelist) end
             -- The RAW `def.label`, not `NS.Categories.LabelOf(def)`: a plan group's label is an
             -- internal name nothing draws, so it stays the locale KEY for a shipped category. Do
             -- not "fix" this into a lookup -- routing it is what would drag a player's own category
             -- name through NS.L, which is the one thing the name must never go through.
-            addGroup(plan, con, def.label, look)
+            addGroup(plan, con, def.label, look, FV.ShownRole(def.kind), base.cand.excludeSpellIDs)
         end
     end
-    return usesSpellIds
 end
 
 --- The catch-all group (R-5): the base minus every hidden AND every shown category, minus the
@@ -655,20 +649,17 @@ end
 --- genuinely can contain that kind here — `excludeGuarded`'s own no-op guard is what keeps this
 --- group correct in that case (it contributes no exclusion, exactly as a category with no id list
 --- of its own should).
---- @return boolean usesSpellIds
 local function addCatchAllGroup(plan, base, cats, look)
     local edits = cats.spellEdits
-    local usesSpellIds = false
     local con = cloneCon(base)
     for _, def in ipairs(cats.hidden) do
-        usesSpellIds = excludeGuarded(con, def, edits) or usesSpellIds
+        excludeGuarded(con, def, edits)
     end
     for _, def in ipairs(cats.shown) do
-        usesSpellIds = excludeGuarded(con, def, edits) or usesSpellIds
+        excludeGuarded(con, def, edits)
     end
     if not isEmpty(cats.whitelist) then addToSet(con, "excludeSpellIDs", cats.whitelist) end
-    addGroup(plan, con, "All", look)
-    return usesSpellIds
+    addGroup(plan, con, "All", look, "never")
 end
 
 --- The category groups (R-3, R-4, R-5). `cats` = { shown, hidden, whitelist, spellEdits, categories };
@@ -687,16 +678,15 @@ end
 ---     drop the catch-all on its own: once `uncategorized` does that correctly, the toggle had
 ---     nothing left to do.
 ---
---- `unit` and `auraType` are here for `hasUnion` alone (below, via `FC.IdsAlwaysHonored`) — no
+--- `unit` and `auraType` are here for `hasUnion` alone (below, via `FC.IdsMode`) — no
 --- group's constraints depend on them; `base` already carries the aura type as a token.
---- @return boolean usesSpellIds
 local function addCategoryGroups(plan, base, cats, look, unit, auraType)
     local hiddenCount = #cats.hidden
     if hiddenCount == 0 then
         local con = cloneCon(base)
         if not isEmpty(cats.whitelist) then addToSet(con, "excludeSpellIDs", cats.whitelist) end
-        addGroup(plan, con, "All", look)
-        return false
+        addGroup(plan, con, "All", look, "same", base.cand.excludeSpellIDs)
+        return
     end
 
     -- BOTH halves, and the first one is the one that is easy to drop. `uncategorized`'s Show group is
@@ -704,7 +694,7 @@ local function addCategoryGroups(plan, base, cats, look, unit, auraType)
     -- exactly as little as no union at all — it ships a group with no effective constraint, which
     -- draws every aura and neuters every Hide on the tab (the empty-union failure; issue #11's `hardCC`
     -- and `softCC` are what let a debuff container reach it, and a hostile-target BUFF container has
-    -- reached it since long before #11). Hence `IdsAlwaysHonored`, the CERTAIN predicate, and not the
+    -- reached it since long before #11). Hence `IdsMode` == "always", the CERTAIN answer, and not the
     -- CAN-ever `IdsHonored` the warning prints from: on a `target` the answer changes under the
     -- compiler's feet, and a group that is safe one second and unconstrained the next cannot ship.
     -- This gate governs ONLY whether an `uncategorized` row may contribute its own group and
@@ -718,27 +708,27 @@ local function addCategoryGroups(plan, base, cats, look, unit, auraType)
     -- R-3 early return above) or on a unit whose ids are not certain -- and it is every `spells`-kind
     -- category's ids copied twice over, so it grew with each list (AM-ATS-01).
     local hasUnion = false
-    if FC.IdsAlwaysHonored(unit, auraType) then
+    if FC.IdsMode(unit, auraType) == "always" then
         cats.union = categorizedUnion(cats.categories, auraType, cats.spellEdits)
         hasUnion = not isEmpty(cats.union)
     end
-    local usesSpellIds = addShownGroups(plan, base, cats, look, hasUnion)
+    addShownGroups(plan, base, cats, look, hasUnion)
 
     local supersedesCatchAll = anyKind(cats.hidden, "uncategorized")
         or (hasUnion and anyKind(cats.shown, "uncategorized"))
     if not supersedesCatchAll then
-        usesSpellIds = addCatchAllGroup(plan, base, cats, look) or usesSpellIds
+        addCatchAllGroup(plan, base, cats, look)
     end
-
-    return usesSpellIds
 end
 
---- The warnings that depend on the finished plan.
-local function finishWarnings(plan, unit, auraType, usesSpellIds)
-    if usesSpellIds then
-        local w = identityWarning(unit, auraType)
-        if w then
-            warn(plan, w)
+--- The warnings that depend on the finished plan. The identity sentence prints only where the
+--- no-ids view differs from the ids view: a category Hidden (the full sentence), or an Overrides
+--- list in use with nothing Hidden (the `_LISTS` sentence, which names the Overrides alone).
+local function finishWarnings(plan, unit, auraType, anyHidden, listsUsed)
+    if anyHidden or listsUsed then
+        local stem = identityWarning(unit, auraType)
+        if stem then
+            warn(plan, FC.WARN[anyHidden and stem or (stem .. "_LISTS")])
         end
     end
     -- A buff container showing only Weapon enchants (schema v5) draws its enchant slots and no aura
@@ -786,7 +776,8 @@ end
 ---                  categorySpells = the profile's spell-list edits (schema v2),
 ---                  enchantSlots = the profile's weapon-enchant slots (schema v3) }
 --- @return table  plan = { groups = { {key, filter, candidateFilters, sortMethod, sortDirection,
----                maxFrameCount, label} }, enchants = { slots, hidePermanent } | nil, warnings = {} }
+---                maxFrameCount, label, noIds = {filter, candidateFilters}} },
+---                enchants = { slots, hidePermanent } | nil, warnings = {} }
 function FC.Compile(cfg, ctx)
     ctx = ctx or {}
     local Categories = ctx.categories or NS.Categories
@@ -799,20 +790,20 @@ function FC.Compile(cfg, ctx)
 
     -- ── The base every group starts from ────────────────────────────────────────────────────
     local base = baseFor(auraType, filter.castBy)
-    local timedIds = applyDuration(base, plan, filter, auraType, ctx.timedSpells)
+    applyDuration(base, plan, filter, auraType, ctx.timedSpells)
     local whitelist, blacklisted = applyLists(base, filter)
 
     -- ── Categories: the whitelist group, then one per shown category, then the catch-all ────
     local shown, hidden = splitCategories(Categories, auraType, filter.categories or {})
     local whitelisted = addWhitelistGroup(plan, auraType, whitelist, look)
-    local categoryIds = addCategoryGroups(plan, base,
+    addCategoryGroups(plan, base,
         { shown = shown, hidden = hidden, whitelist = whitelist, spellEdits = ctx.categorySpells,
           categories = Categories }, look, cfg.unit, auraType)
 
     -- ── Weapon enchants appended to a player buff container ─────────────────────────────────
     appendEnchants(plan, cfg, filter, ctx, auraType, Categories)
 
-    finishWarnings(plan, cfg.unit, auraType, timedIds or blacklisted or categoryIds or whitelisted)
+    finishWarnings(plan, cfg.unit, auraType, #hidden > 0, blacklisted or whitelisted)
     return plan
 end
 
@@ -940,10 +931,10 @@ function FC.ExplainSpell(cfg, id, ctx)
 
     if isEmpty(claiming) then
         -- The same two-part `hasUnion` `addCategoryGroups` computes, for the same reason and from the
-        -- same predicate — `IdsAlwaysHonored`, the gate one, never the CAN-ever `IdsHonored`. These
+        -- same predicate — `IdsMode` == "always", the gate, never the CAN-ever `IdsHonored`. These
         -- two sites must never disagree: this one only describes the plan the other one built, and an
         -- explanation naming a rescuing group the plan does not contain is worse than no explanation.
-        local hasUnion = FC.IdsAlwaysHonored(cfg.unit, auraType)
+        local hasUnion = FC.IdsMode(cfg.unit, auraType) == "always"
             and not isEmpty(categorizedUnion(Categories, auraType, ctx.categorySpells))
         return explainUncategorized(Categories, auraType, filter, hasUnion)
     end

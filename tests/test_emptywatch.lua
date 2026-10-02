@@ -101,18 +101,54 @@ test("empty: an include id hits and misses", function()
     assertTrue(NS.EmptyWatch.Predict(fakeInst(PLAYER_BUFFS, plan)), "200 is not")
 end)
 
-test("empty: spell ids are ignored on a hostile target's buffs, as the engine ignores them", function()
+test("empty: spell ids are ignored on a target's buffs it cannot be assisted on, as the engine ignores them", function()
     local NS, mocks = fresh()
     mocks.__unitExists.target = true
-    local friendly = false
-    mocks.UnitIsFriend = function() return friendly end
+    mocks.__canAssist.target = false
     withAuras(mocks, "target", { { spellId = 200 } })
     local cfg = { unit = "target", auraType = "HELPFUL" }
     local plan = { groups = { group("HELPFUL", { includeSpellIDs = { [100] = true } }) } }
     -- red under: ids applied everywhere (a hostile target's buff list is not honored)
-    assertFalse(NS.EmptyWatch.Predict(fakeInst(cfg, plan)), "hostile: every buff counts")
-    friendly = true
-    assertTrue(NS.EmptyWatch.Predict(fakeInst(cfg, plan)), "friendly: the list applies")
+    assertFalse(NS.EmptyWatch.Predict(fakeInst(cfg, plan)), "not assistable: every buff counts")
+    mocks.__canAssist.target = true
+    assertTrue(NS.EmptyWatch.Predict(fakeInst(cfg, plan)), "assistable: the list applies")
+end)
+
+test("empty: whether ids apply is Blizzard's predicate (NS.Compat.IdsApply), not UnitIsFriend", function()
+    local NS, mocks = fresh()
+    mocks.__unitExists.target = true
+    -- A friendly unit you cannot assist (Blizzard's predicate asks UnitCanAssist, not UnitIsFriend).
+    mocks.UnitIsFriend = function() return true end
+    mocks.__canAssist.target = false
+    withAuras(mocks, "target", { { spellId = 200 } })
+    local plan = { groups = { group("HELPFUL", { includeSpellIDs = { [100] = true } }) } }
+    -- red under: EmptyWatch's own UnitIsFriend reading (friendly reads "ids apply", so 200 misses: empty)
+    assertFalse(NS.EmptyWatch.Predict(fakeInst({ unit = "target", auraType = "HELPFUL" }, plan)))
+    -- Debuffs on a unit you can assist: the engine skips the ids there too.
+    mocks.UnitIsFriend = function() return false end
+    mocks.__canAssist.target = true
+    local deb = { groups = { group("HARMFUL", { includeSpellIDs = { [100] = true } }) } }
+    withAuras(mocks, "target", { { spellId = 200 } })
+    -- red under: the UnitIsFriend reading (not friendly reads "debuff ids apply", so 200 misses: empty)
+    assertFalse(NS.EmptyWatch.Predict(fakeInst({ unit = "target", auraType = "HARMFUL" }, deb)))
+end)
+
+test("empty: the prediction reads the ACTIVE view's groups", function()
+    local NS, mocks = fresh()
+    withAuras(mocks, "player", { { spellId = 100 } })
+    local g = group("HELPFUL", { includeSpellIDs = { [100] = true } })
+    g.noIds = { filter = "HELPFUL", candidateFilters = { includeDispelTypes = {} } }
+    local inst = fakeInst(PLAYER_BUFFS, { groups = { g } })
+    assertFalse(NS.EmptyWatch.Predict(inst), "the ids view: 100 is on the list")
+    inst.view = "noIds"
+    -- red under: predicting from the ids view whatever the engine holds (the NEVER group drawn as full)
+    assertTrue(NS.EmptyWatch.Predict(inst), "the no-ids view: the NEVER group matches nothing")
+    -- A no-ids view's filter string is the one asked for, too.
+    g.candidateFilters, g.noIds = nil, { filter = "HELPFUL|RAID" }
+    local calls = withAuras(mocks, "player", { { spellId = 1 } })
+    NS.EmptyWatch.Predict(inst)
+    -- red under: the ids view's filter string sent to GetAuraSlots
+    assertEqual(calls[1][2], "HELPFUL|RAID")
 end)
 
 test("empty: a max duration drops a permanent aura and one that runs longer", function()
@@ -459,4 +495,83 @@ test("empty: a target switch folds a pass already due into its own, leaving no t
     mocks.__fireEvent("PLAYER_TARGET_CHANGED")
     -- red under: the switch running its pass beside the pending timer instead of canceling it
     assertEqual(mocks.__fireTimers(), 0, "the due pass was folded into the switch")
+end)
+
+-- -- the prediction follows the view the engine holds (spell-list views, V3; SV-03R) -----------
+
+--- A target buff container showing Defensive cooldowns alone (a spell category: one group, NEVER in the
+--- no-ids view), watched (unlocked), its group's pool live, while the target holds one listed buff and
+--- cannot be assisted, so the engine holds the no-ids view and the prediction is empty. Answers NS,
+--- mocks and the instance.
+local function hostileSpellListTarget()
+    local NS, mocks = fresh()
+    noEnchants(mocks)
+    mocks.__unitExists.target = true
+    mocks.__canAssist.target = false
+    withAuras(mocks, "target", {})
+    local categories = {}
+    for _, def in ipairs(NS.Categories.For("HELPFUL")) do
+        categories[def.key] = (def.key == "defensives") and "show" or "hide"
+    end
+    local CM = NS.ContainerManager
+    local id = CM.Create({ unit = "target", auraType = "HELPFUL", filter = { categories = categories } })
+    NS.SetByPath("locked", false)
+    mocks.__fireTimers(); mocks.__fireTimers()
+    local inst = CM.instances[id]
+    populate(mocks, inst)
+    local listed = next(inst.plan.groups[1].candidateFilters.includeSpellIDs)
+    withAuras(mocks, "target", { { spellId = listed, duration = 10 } })
+    mocks.__fireTimers()
+    return NS, mocks, inst
+end
+
+test("empty: a target swap EmptyWatch hears before OnUnitSwap predicts from the new unit's view", function()
+    local NS, mocks, inst = hostileSpellListTarget()
+    assertEqual(inst.view, "noIds", "hostile: the no-ids view")
+    assertTrue(inst.predictedEmpty == true, "the NEVER group draws nothing")
+    -- AceEvent walks its handlers with next(), so either may run first. Silence OnUnitSwap to make
+    -- EmptyWatch's handler the one that runs, as it does when it comes first.
+    NS.addon:UnregisterEvent("PLAYER_TARGET_CHANGED")
+    mocks.__canAssist.target = true
+    mocks.__fireEvent("PLAYER_TARGET_CHANGED")
+    -- red under: onUnitSwitch predicting from inst.view before OnUnitSwap's ApplyViews moved it (the
+    -- old target's NEVER group reads empty while the engine, about to switch, draws the listed buff)
+    assertEqual(inst.view, "ids", "EmptyWatch's handler moved the view itself")
+    assertTrue(inst.predictedEmpty == false, "the listed buff draws: not empty")
+end)
+
+test("empty: a target swap OnUnitSwap hears first still costs one pass, in the new unit's view", function()
+    local NS, mocks, inst = hostileSpellListTarget()
+    local passes = 0
+    local reevaluate = NS.EmptyWatch.Reevaluate
+    NS.EmptyWatch.Reevaluate = function(...)
+        passes = passes + 1
+        return reevaluate(...)
+    end
+    mocks.__canAssist.target = true
+    -- AceEvent walks its handlers with next(), so either may run first. Run OnUnitSwap by hand, then
+    -- fire the event with only EmptyWatch's handler left, as when OnUnitSwap comes first.
+    NS.addon:UnregisterEvent("PLAYER_TARGET_CHANGED")
+    NS.addon:OnUnitSwap("PLAYER_TARGET_CHANGED")
+    mocks.__fireEvent("PLAYER_TARGET_CHANGED")
+    NS.EmptyWatch.Reevaluate = reevaluate
+    assertEqual(inst.view, "ids", "OnUnitSwap moved the view")
+    -- red under: OnUnitSwap's ApplyViews telling EmptyWatch as well (a pass inside the swap, then
+    -- EmptyWatch's own swap pass: two per swap)
+    assertEqual(passes, 1, "one pass per swap, whichever handler runs first")
+    assertTrue(inst.predictedEmpty == false, "the listed buff draws: not empty")
+end)
+
+test("empty: UNIT_FLAGS flipping the view on the same target re-predicts at once", function()
+    local _, mocks, inst = hostileSpellListTarget()
+    assertTrue(inst.predictedEmpty == true)
+    mocks.__canAssist.target = true
+    mocks.__fire("UNIT_FLAGS", "target")
+    assertEqual(inst.view, "ids", "a duel starting: the ids view")
+    -- red under: CM.ApplyViews never telling EmptyWatch (the prediction stays at the old view's answer
+    -- until some unrelated UNIT_AURA)
+    assertTrue(inst.predictedEmpty == false, "re-predicted inside the event, before any timer")
+    mocks.__canAssist.target = false
+    mocks.__fire("UNIT_FACTION", "target")
+    assertTrue(inst.predictedEmpty == true, "hostile again: empty again")
 end)

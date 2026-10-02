@@ -15,7 +15,7 @@ profile is seeded with four (`NS.STARTER_CONTAINERS`, `defaults/Profile.lua:283`
 auras are secret — combat, encounters, Mythic+ and PvP (`core/Secrets.lua`, `docs/midnight-quirks.md`).
 So this addon reads no aura at all. Every container is a Blizzard **AuraContainer**
 (`CreateFrame("AuraContainer", nil, anchor, "CustomAuraContainerTemplate")`,
-`modules/Container.lua:251`) that registers `UNIT_AURA` for its unit, gathers, sorts, lays out and
+`modules/Container.lua:337`) that registers `UNIT_AURA` for its unit, gathers, sorts, lays out and
 animates its buttons in Blizzard's own code. The addon's job is to **declare** what each container
 shows and **dress** each button the engine creates:
 
@@ -58,7 +58,8 @@ before `settings/General.lua`, which registers their rows after its own.
 The Settings tree's order is the TOC's own registration order: General, then Containers, then Profiles. Filters, Layout, Bars, Icons and Text are sections of the Containers page (#6) with no tree entry; they load after `settings/OptionsSetup.lua` in any order, and the rail's order is `SECTION_ORDER` there.
 
 The engine-facing core is four modules: `modules/FilterCompiler.lua` (settings → groups, pure; the
-profile's spell-category edits reach it through `FC.ProfileContext`), `modules/Container.lua` (one
+profile's spell-category edits reach it through `FC.ProfileContext`, and each group's no-ids view comes
+from `modules/FilterViews.lua`), `modules/Container.lua` (one
 engine), `modules/ContainerManager.lua` (the registry and the deferred apply, each container's apply
 guarded so one error cannot drop the rest of the pass) and `modules/Style.lua` with its three style
 files (`Style_Bars.lua`, `Style_Icons.lua` and `Style_Text.lua`, chosen per container by
@@ -118,6 +119,16 @@ category set to Show shows, categories all set to Hide hide, and an aura in no c
 `FC.ExplainSpell` answers the same question for one spell id. The rank table, how it compiles to
 aura groups and the retired `onlyShown` toggle: `docs/data-flow.md` → *Filter priority*.
 
+Every group carries two views. Where Blizzard applies spell ids to the container's unit and aura
+type, the engine holds the ids view, exactly as compiled. Where it does not (debuffs on the player or
+the pet always; buffs on a target or focus you cannot assist, and debuffs on one you can), it holds
+the no-ids view (`modules/FilterViews.lua`): spell categories, Uncategorized, the Overrides lists and
+the catch-all match nothing, and only the Blizzard categories set to Show draw, each aura once.
+`FC.IdsMode` and `NS.Compat.IdsApply` choose the view, and `ContainerClass:ApplyView` switches a live
+engine on a swap or a reaction change, in combat too. The Filters section says so in its orange
+warning and in a NOTE on Categories and Overrides. Blizzard's predicate and the switch:
+`docs/midnight-quirks.md` → *Spell-id filters apply only where Blizzard's predicate allows them*.
+
 ## Message Bus
 
 A closed bus on AceEvent messages (`core/Bus.lua`, architecture-§4). Every receiver subscribes on its
@@ -133,8 +144,8 @@ pass on.
 | Message | Sender | Payload | Consumers |
 |---|---|---|---|
 | `Ka0s_AuraMaster_ContainersChanged` (`NS.MSG.CONTAINERS_CHANGED`) | `modules/ContainerManager.lua` — create, delete, rename, duplicate, profile change (copy-from and reset positions are settings writes, announced by `CONFIG_CHANGED`) | none | `settings/OptionsSetup.lua:402` — `NS.RequestPanelRefresh`, a coalesced panel re-render (every banner lists containers); `modules/TimedSpells.lua:204` — `TS.Sync`, which starts or stops the timed-spell scan (a container added or removed can change whether any needs it) |
-| `Ka0s_AuraMaster_ConfigChanged` (`NS.MSG.CONFIG_CHANGED`) | `settings/Schema.lua:603` — the write seam, once per write; never for a session row | `{ section, containerId, path }`; `containerId` nil for an addon-wide row, `path` the row written | `modules/ContainerManager.lua:770` — first `FontPrimer.PrimeAll` (a new font is drawn before anything is applied in it), then by the row's `effect`: `"visibility"` runs `ApplyVisibility()` at once, `"none"` queues nothing, otherwise `RequestApply(containerId)` (nil re-applies all), a write to a flow or attachment path also re-applies every container following that one (`Anchors.Followers`), and a write to a container's attach points, mode or target also re-applies the container it attaches to (`requestParents`); `modules/TimedSpells.lua:203` — `TS.Sync`, the same re-sync (a filter write can change whether any container needs the scan) |
-| `Ka0s_AuraMaster_VisibilityChanged` (`NS.MSG.VISIBILITY_CHANGED`) | `core/AuraMaster.lua` — entering the world, combat start and end; `modules/Preview.lua` — `Preview.SetTestMode`, when test mode switches on or off | none | `modules/ContainerManager.lua:782` — `ApplyVisibility()` over every container |
+| `Ka0s_AuraMaster_ConfigChanged` (`NS.MSG.CONFIG_CHANGED`) | `settings/Schema.lua:603` — the write seam, once per write; never for a session row | `{ section, containerId, path }`; `containerId` nil for an addon-wide row, `path` the row written | `modules/ContainerManager.lua:837` — first `FontPrimer.PrimeAll` (a new font is drawn before anything is applied in it), then by the row's `effect`: `"visibility"` runs `ApplyVisibility()` at once, `"none"` queues nothing, otherwise `RequestApply(containerId)` (nil re-applies all), a write to a flow or attachment path also re-applies every container following that one (`Anchors.Followers`), and a write to a container's attach points, mode or target also re-applies the container it attaches to (`requestParents`); `modules/TimedSpells.lua:203` — `TS.Sync`, the same re-sync (a filter write can change whether any container needs the scan) |
+| `Ka0s_AuraMaster_VisibilityChanged` (`NS.MSG.VISIBILITY_CHANGED`) | `core/AuraMaster.lua` — entering the world, combat start and end; `modules/Preview.lua` — `Preview.SetTestMode`, when test mode switches on or off | none | `modules/ContainerManager.lua:849` — `ApplyVisibility()` over every container |
 | `Ka0s_AuraMaster_TimedSpellsChanged` (`NS.MSG.TIMED_SPELLS_CHANGED`) | `modules/TimedSpells.lua` — a scan learned timed spells, or `/am forgettimed` emptied the set | none from a scan; `{ byPlayer = true }` from `/am forgettimed` | `modules/ContainerManager.lua` `CM.Init` — `RequestApply(nil, system)` over every container (their excluded ids moved); a scan's request is the addon's own, so a deferral of it prints no notice |
 
 Four messages, well under the more-than-ten trigger for a separate `message-bus.md`.
@@ -215,19 +226,21 @@ optional. The full table and the reasons:
 | `LOADING_SCREEN_DISABLED` | `core/AuraMaster.lua:61` | `OnLoadingScreenEnd` → `FontPrimer.OnLoadingScreenEnd` (the loading screen's real end: arms the primer's world hide and refresh), then `CM.RequestEnchantReset("world")`: the weapon-enchant reset, 1.75 s later, whatever the primer did (SP-AMX-01) |
 | `PLAYER_REGEN_DISABLED` | `core/AuraMaster.lua:62` | `OnCombatChanged` → `VISIBILITY_CHANGED` |
 | `PLAYER_REGEN_ENABLED` | `core/AuraMaster.lua:63` | `OnCombatChanged` → `VISIBILITY_CHANGED`, `FlushPending`, `ReapplyStaleClass`, `BlizzardFrames.Apply`, `Anchors.ResolvePending` (a frame that appeared during combat) |
-| `PLAYER_TARGET_CHANGED`, `PLAYER_FOCUS_CHANGED` | `core/AuraMaster.lua:64-65` | `OnUnitSwap` → `RefreshUnit` → the engine's `UpdateAllAuras` (bucket `unitSwap`); re-applies the class-colored containers of that unit when the new unit's class differs, or marks them stale, silently, while an apply must wait |
+| `PLAYER_TARGET_CHANGED`, `PLAYER_FOCUS_CHANGED` | `core/AuraMaster.lua:64-65` | `OnUnitSwap` → `CM.ApplyViews` (each container on that unit switched to the view of its plan the new unit's reaction picks, spell-list views V2) → `RefreshUnit` → the engine's `UpdateAllAuras` (bucket `unitSwap`); re-applies the class-colored containers of that unit when the new unit's class differs, or marks them stale, silently, while an apply must wait |
 | `UNIT_PET` | `core/AuraMaster.lua:66` | `OnUnitPet` (player only) → `RefreshUnit("pet")` (bucket `unitSwap`); re-applies the class-colored pet containers when the pet's class differs, or marks them stale while an apply must wait |
 | `ADDON_LOADED` | `core/AuraMaster.lua:67` | `OnAddonLoaded` → `Anchors.ResolvePending` (frame-attached containers) |
 | `ADDON_RESTRICTION_STATE_CHANGED` | `core/AuraMaster.lua:69` | `OnRestrictionChanged` → `FlushPending`, `ReapplyStaleClass` (a deferred apply runs when secrecy lifts) |
 | `ITEM_DATA_LOAD_RESULT`, `GET_ITEM_INFO_RECEIVED` | `core/AuraMaster.lua:72-73` | `OnItemDataLoaded` → `CM.OnWeaponItemData`: the item equipped in slot 16 or 17, loaded successfully, arms the weapon-enchant reset 0.5 s later. One debounced `C_Timer` serves both triggers and keeps the later deadline; when it fires, `CM.ResetEnchants` turns each live engine with enchant frames off and on again (`ContainerClass:ResetEnchants`), so the weapon names are drawn afresh (`docs/midnight-quirks.md` → *Weapon enchants*). `CM.StopListening` cancels it |
 | `UNIT_AURA` for `player` and `pet` | `modules/TimedSpells.lua` — the module's one private frame, `TS.unitFrame` (events-frames-taint-§1's carve-out: the vendored AceEvent has no `RegisterUnitEvent`), through `NS.SafeRegisterUnitEvent`; built once and reused, registered only while a container uses "without a duration", the addon is not suspended, and auras are readable (no combat lockdown, not secret), and unregistered by hand in `TS.Stop` | the frame's one `OnEvent` → `onUnitAura`: the client delivers only `player` and `pet`; the handler still proves the unit a safe key and compares it (defense in depth), then schedules a scan 0.5 s later (bucket `timedScan`). A scan that comes due after the gate closed is dropped too |
 | `UNIT_AURA` for `player` and `pet`, and for `target` and `focus` | `modules/EmptyWatch.lua` — its two private frames, `EW.unitFrames[1]` (player, pet) and `[2]` (target, focus), the same carve-out, each filtering `UNIT_AURA` and nothing else, through `NS.SafeRegisterUnitEvent`; built once and reused, each registered only while a shown container on its units is unlocked and out of test mode, the addon is not suspended, combat has not started and auras are readable, and unregistered by hand in `EW.Stop` | the frames' one `OnEvent` only marks a pass due: one pass 0.2 s later (bucket `emptyPass`) re-predicts every watched container and re-runs the visibility pass of any whose answer changed |
-| `PLAYER_TARGET_CHANGED`, `PLAYER_FOCUS_CHANGED` | `modules/EmptyWatch.lua` (AceEvent, on its own target) — while its target and focus frame is registered | the pass run at once, not 0.2 s later, folding in one already due: the engine redraws for the new unit in the same frame, so a follower hung from a parent that just emptied would otherwise sit on the engine's 1x1 rect for the delay |
+| `PLAYER_TARGET_CHANGED`, `PLAYER_FOCUS_CHANGED` | `modules/EmptyWatch.lua` (AceEvent, on its own target) — while its target and focus frame is registered | `CM.ApplyViews(unit)` first (AceEvent runs this and `OnUnitSwap` in no set order, so the prediction never reads the old unit's view; a no-op when the view is already right), then the pass run at once, not 0.2 s later, folding in one already due: the engine redraws for the new unit in the same frame, so a follower hung from a parent that just emptied would otherwise sit on the engine's 1x1 rect for the delay |
 | `UNIT_PET`, `UNIT_INVENTORY_CHANGED` | `modules/EmptyWatch.lua` (AceEvent, on its own target) — while its player and pet frame is registered | the same pass marked due, for the `player` unit only |
+| `UNIT_FACTION`, `UNIT_FLAGS` for `target` and `focus` | `modules/ContainerManager.lua:793` — the module's one private frame, `CM.viewFrame` (the same carve-out), through `NS.SafeRegisterUnitEvent`; built once, hidden and reused, opened by `CM.StartListening` and unregistered by hand in `CM.StopListening` | `onViewEvent`: proves the unit a safe key, then `CM.ApplyViews(unit)`: a reaction change without a swap (a duel, mind control, an NPC turning hostile) switches the view; the two setters redraw, so no refresh follows. Combat-legal, never held. When a view moved, `EW.OnViewsMoved` re-predicts at once (gated on unlocked, out of combat and auras readable), so the empty prediction follows the engine |
+| `UNIT_FACTION`, `UNIT_FLAGS` for `player` | `modules/ContainerManager.lua` — a second private frame, `CM.viewPlayerFrame`, built, opened and closed with `CM.viewFrame` (`RegisterUnitEvent` takes two units, and a second call replaces the first) | `onPlayerViewEvent`: proves the unit a safe key, then `CM.ApplyViews` for `target` and for `focus`, quietly, and one `EW.OnViewsMoved` if either moved: the player's own side changing (mind control) moves whether a target or focus can be assisted with no event for that unit (SV-05) |
 | `PLAYER_REGEN_DISABLED`, `PLAYER_REGEN_ENABLED`, `ADDON_RESTRICTION_STATE_CHANGED` | `modules/TimedSpells.lua` (AceEvent, on its own target) — while a container uses "without a duration" and the addon is not suspended | `syncAuraListen`: `PLAYER_REGEN_DISABLED` closes the readable gate by itself (it fires before combat lockdown begins); the other two re-check it, dropping or restoring `UNIT_AURA`; reopening schedules one scan |
 | AceDB `OnProfileChanged` / `OnProfileCopied` / `OnProfileReset` | `core/Database.lua:275-279` | `NS.OnProfileChanged` / `NS.OnProfileCopied` / `NS.OnProfileReset` → re-prepare the registry, trace the event once in its own words (a switch `[Profile] changed -> X`; a copy or a reset one `[Set]` line, debug-logging-§10), rebuild, re-render |
 
-Each container's own `UNIT_AURA` belongs to the engine (`SetUnit`, `modules/Container.lua:299`) and
+Each container's own `UNIT_AURA` belongs to the engine (`SetUnit`, `modules/Container.lua:388`) and
 is not addon code. The eleven `core/AuraMaster.lua` registrations are one module-level list,
 `LIFECYCLE_EVENTS`, which `RegisterLifecycleEvents` and `UnregisterLifecycleEvents` both walk, so the
 stand-down and the stand-up remove and restore the same list. With logging on, the world-entry, loading-screen, combat and
@@ -250,7 +263,7 @@ the time for the report's gap line, and arms them itself only on a client that r
 
 **Every registration goes through one helper** (events-frames-taint-§1): `NS.SafeRegisterEvent`, which
 is `LibKa0s-Core-1.0`'s `SafeRegisterEvent`, published by `core/CoreSetup.lua`. That covers every row
-above and the stand-down's pending `PLAYER_REGEN_ENABLED`, except the unit frames' `UNIT_AURA` (TimedSpells' one, EmptyWatch's two), which
+above and the stand-down's pending `PLAYER_REGEN_ENABLED`, except the unit frames' `UNIT_AURA` (TimedSpells' one, EmptyWatch's two) and ContainerManager's two `UNIT_FACTION` / `UNIT_FLAGS` frames, which
 go through its unit-event twin, `NS.SafeRegisterUnitEvent`. A name the client does not know costs only
 itself: the rest of the block still registers, and the name is appended once to `NS.RejectedEvents`.
 Where a player sees it: the `[Init]` line that `/am debug` writes adds `rejected events: A, B` when
@@ -319,7 +332,7 @@ span bundle is `<date>-v<A>-v<B>/`, and the one untagged bundle is `docs/revendo
 | `perf-analysis/README.md` | Present | The performance harness is wired (`core/PerfSetup.lua`) |
 | `slash-dispatch.md` | Present | 25 commands in `NS.COMMANDS`, over the eight-or-more threshold |
 | `midnight-quirks.md` | Present | Client-version workarounds of the addon's own: 12.1 aura secrecy and the aura container engine, and the taint notes that follow from them |
-| `compat-layer.md` | Present | 22 shims in `core/Compat.lua`, over the three-or-more threshold |
+| `compat-layer.md` | Present | 23 shims in `core/Compat.lua`, over the three-or-more threshold |
 | `message-bus.md` | Not applicable | 4 messages in `NS.MSG`; the trigger is more than ten. The table lives in `## Message Bus` above |
 | `profiles.md` | Present | AceDB profiles are user-visible: the Profiles sub-page is a profile control in the options UI |
 | `debug.md` | Present | `/am diagnostics` (or `/am debug diagnostics`), the diagnostic report `modules/Diagnostics.lua` writes to the console |

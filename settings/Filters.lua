@@ -7,11 +7,13 @@ local _, NS = ...
 --     General       the rows, then the priority block (spec §6) at the foot of the tab
 --     Categories    Blizzard Categories   [Show all][Hide all], then Show · Hide · Category, plus an
 --                                         info icon (N-5)
---                   Spell Categories      [Show all][Hide all], the same grid, plus a `See spells`
+--                   Spell Categories      NOTE (containers whose FC.IdsMode is not "always"), then
+--                                         [Show all][Hide all], the same grid, plus a `See spells`
 --                                         link; hidePermanentEnchants beneath it (buffs), and the
---                                         hostile-unit note beneath it (debuffs)
+--                                         spell-list note beneath it (debuffs)
 --                   Dispel Types · Who Cast It  (debuffs) [Show all][Hide all], the same grid
---     Overrides     Whitelist  [Add a spell ____________][ Add ]  <icon> Name (id)  [Remove]
+--     Overrides     NOTE (the same containers), then
+--                   Whitelist  [Add a spell ____________][ Add ]  <icon> Name (id)  [Remove]
 --                   Blacklist  the same
 --
 -- Every row here compiles, through modules/FilterCompiler.lua, into the aura groups Blizzard's aura
@@ -365,25 +367,65 @@ end
 -- PRINTED ONLY WHERE THE RESCUE CAN HAPPEN, which since issue #11's A2 is a question about the UNIT,
 -- not about the aura type. The rescuing group carries one constraint, an `excludeSpellIDs` of the
 -- categorized union, so `modules/FilterCompiler.lua` emits it only where the engine is CERTAIN to
--- apply spell ids — `FC.IdsAlwaysHonored`, true for buffs on the player and the pet alone. Anywhere
--- else (every debuff container; a buff container on a `target` or `focus`, which may be hostile when
--- the engine looks) Uncategorized Show contributes nothing, so this sentence would describe a rescue
+-- apply spell ids — `FC.IdsMode` answering "always", for buffs on the player and the pet alone. Anywhere
+-- else (every debuff container; a buff container on a `target` or `focus`, which may be one you
+-- cannot assist when the engine looks) Uncategorized Show contributes nothing, so this sentence would describe a rescue
 -- the plan does not contain and would contradict the row's own tooltip in the same glance. The old
 -- gate was `customGridHasEditableList`, i.e. "is this a buff container", which was the right answer
 -- for the wrong reason and stopped being either once `Cat.HARMFUL` gained spell lists.
 local UNCATEGORIZED_NOTE = L["Uncategorized defaults to Show, which rescues any aura not on the lists above from a Hidden Blizzard category (rank 3 beats rank 4). To actually hide a Blizzard category's auras, set BOTH it and Uncategorized to Hide."]
 
--- A3 (issue #11): Hard CC and Soft CC are the first debuff spell lists, and Blizzard honors spell ids
--- for debuffs on HOSTILE units only — on you, your pet or a friendly unit the engine throws the list
--- away and the two rows do nothing at all. Said here, under the grid that offers them, in the same
--- voice the Overrides whitelist already uses for the same engine limit ("Blizzard only honors this
--- for buffs on friendly units and debuffs on hostile ones", renderOverrides below). Drawn only on a
+-- A3 (issue #11): Hard CC, Soft CC and Racials are the debuff spell lists, and Blizzard honors spell
+-- ids for debuffs only on a unit you CANNOT assist (UnitCanAssist; neutral units included) — on you,
+-- your pet or an assistable unit it skips the list. Since the spell-list views (SV-05) the rows are not
+-- inert there: those containers draw their no-ids view, so a Hide anywhere on the tab leaves only the
+-- Blizzard categories set to Show. Said here, under the grid that offers them, in the same voice the
+-- Overrides whitelist uses for the same engine limit ("Blizzard only honors this for buffs on units
+-- you can assist and debuffs on units you can't", renderOverrides below). Drawn only on a
 -- debuff container that actually got a `spells`-kind row, so it appears beside the rows it is about
 -- and never on a buff tab, where the limit is the mirror one and the whitelist note already covers
--- it. The per-container orange warning above every tab (FC.WARN.IDS_HOSTILE_ONLY / IDS_OWN_DEBUFFS)
+-- it. The per-container orange warning above every tab (FC.WARN.IDS_ASSISTABLE / IDS_OWN_DEBUFFS)
 -- is the other half: it says the same thing for the container's actual unit, this says it for the
 -- rows regardless of unit.
-local SPELL_LIST_DEBUFF_NOTE = L["Hard CC and Soft CC only work on a hostile target or focus. Blizzard discards spell lists for debuffs on you, your pet or a friendly unit, so on those containers the two rows change nothing."]
+local SPELL_LIST_DEBUFF_NOTE = L["Hard CC, Soft CC and Racials only match on a target or focus you can't assist. On your own, your pet's or an assistable unit's debuffs they match nothing, and setting any category to Hide there leaves only the Blizzard categories set to Show."]
+
+-- SV-04 (spell-list views, V4): where Blizzard does not apply spell ids, a container draws its no-ids
+-- view (modules/FilterViews.lua), in which every spell category's group, the whitelist and the
+-- catch-all are NEVER: only the Blizzard categories set to Show draw. Said at the head of the two
+-- surfaces that view switches off, on every container whose `FC.IdsMode` is not "always", in the
+-- words of the units it is about. One whole sentence per unit wording, so each is a single locale key.
+-- "always" (buffs on the player or the pet) has no entry: ids always apply there.
+local VIEW_NOTES = {
+    categories = {
+        own          = L["NOTE: on your own debuffs, these spell categories are not applied."],
+        pet          = L["NOTE: on your pet's debuffs, these spell categories are not applied."],
+        assistable   = L["NOTE: on units you can assist, these spell categories are not applied."],
+        unassistable = L["NOTE: on units you can't assist, these spell categories are not applied."],
+    },
+    overrides = {
+        own          = L["NOTE: on your own debuffs, these Overrides are not applied."],
+        pet          = L["NOTE: on your pet's debuffs, these Overrides are not applied."],
+        assistable   = L["NOTE: on units you can assist, these Overrides are not applied."],
+        unassistable = L["NOTE: on units you can't assist, these Overrides are not applied."],
+    },
+}
+
+--- The `surface` ("categories" or "overrides") NOTE for container `cfg`, or nil where spell ids
+--- always apply. "never" is the player's or the pet's debuffs; "dynamic" is a target or focus, whose
+--- buffs lose their ids on a unit you can't assist and whose debuffs lose them on one you can.
+local function viewNote(surface, cfg)
+    local unit = cfg and cfg.unit
+    local auraType = (cfg and cfg.auraType == "HARMFUL") and "HARMFUL" or "HELPFUL"
+    local mode = FC.IdsMode(unit, auraType)
+    if mode == "always" then return nil end
+    local which
+    if mode == "never" then
+        which = (unit == "pet") and "pet" or "own"
+    else
+        which = (auraType == "HARMFUL") and "assistable" or "unassistable"
+    end
+    return VIEW_NOTES[surface][which]
+end
 
 -- T-2 (batch 7, readability): "These are the lists on General -> Spell Categories..."
 -- claims the grid holds EDITABLE lists. True wherever the grid carries a `spells`-kind row or the
@@ -491,6 +533,8 @@ end
 --- grid with its extra column, hidePermanentEnchants under it and the two gated notes.
 local function renderCustomGrid(ctx, g, mine, cfg, auraType, hideRow)
     H.Section(ctx, g.heading)
+    local note = viewNote("categories", cfg)
+    if note then H.TextRow(ctx, note) end
     bulkButtons(ctx, mine, g.key)
     if customGridHasEditableList(mine) then
         H.TextRow(ctx, L["These are the lists on General -> Spell Categories, shared by every container."])
@@ -503,7 +547,7 @@ local function renderCustomGrid(ctx, g, mine, cfg, auraType, hideRow)
     if auraType == "HARMFUL" and customGridHasEditableList(mine) then
         H.TextRow(ctx, SPELL_LIST_DEBUFF_NOTE)
     end
-    if FC.IdsAlwaysHonored(cfg and cfg.unit, auraType) then
+    if FC.IdsMode(cfg and cfg.unit, auraType) == "always" then
         H.TextRow(ctx, UNCATEGORIZED_NOTE)
     end
 end
@@ -739,8 +783,10 @@ local function overrideList(ctx, cfg, key, heading, blurb)
 end
 
 local function renderOverrides(ctx, cfg)
+    local note = viewNote("overrides", cfg)
+    if note then H.TextRow(ctx, note) end
     overrideList(ctx, cfg, "whitelist", L["Whitelist"],
-        L["These spells are shown whatever the categories say. Blizzard only honors this for buffs on friendly units and debuffs on hostile ones."])
+        L["These spells are shown whatever the categories say. Blizzard only honors this for buffs on units you can assist and debuffs on units you can't."])
     overrideList(ctx, cfg, "blacklist", L["Blacklist"],
         L["These spells are never shown in this container, unless the whitelist also names them — the whitelist wins."])
 end

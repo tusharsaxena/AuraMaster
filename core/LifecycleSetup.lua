@@ -128,6 +128,23 @@ local function standDown()
     end
 end
 
+--- The container half of the stand-up, in order: build, move the views, show, then apply.
+local function standUpContainers(CM)
+    -- Build (or revive) what a disabled login or a profile switch made while down never built,
+    -- before the visibility pass that shows it.
+    if CM.Sync then CM.Sync() end
+    -- The spell-list view, before the visibility pass re-enables the engines: no swap or reaction
+    -- event was heard while down, and the apply below may be held (combat, secret auras) while
+    -- the view switch never is. Quiet: EmptyWatch re-predicts on its own sync.
+    if CM.ApplyViews then
+        CM.ApplyViews("target", true)
+        CM.ApplyViews("focus", true)
+    end
+    if CM.ApplyVisibility then CM.ApplyVisibility() end
+    -- The addon's own request: a player change held by the stand-down keeps its notice.
+    if CM.RequestApply then CM.RequestApply(nil, true) end
+end
+
 --- NON-EMPTY -> EMPTY: the addon comes back, rebuilt from the settings AS THEY ARE NOW rather than
 --- from a snapshot taken on the way down (performance-§6). A setting changed while the addon was off
 --- is what the player expects to see when it comes back on.
@@ -140,14 +157,7 @@ local function standUp()
     -- A combat edge missed while down (its events were unregistered) is settled from the state now.
     if NS.EmptyWatch and NS.EmptyWatch.SetCombat then NS.EmptyWatch.SetCombat(InCombatLockdown()) end
     if NS.BlizzardFrames and NS.BlizzardFrames.Apply then NS.BlizzardFrames.Apply() end
-    if NS.ContainerManager then
-        -- Build (or revive) what a disabled login or a profile switch made while down never built,
-        -- before the visibility pass that shows it.
-        if NS.ContainerManager.Sync then NS.ContainerManager.Sync() end
-        if NS.ContainerManager.ApplyVisibility then NS.ContainerManager.ApplyVisibility() end
-        -- The addon's own request: a player change held by the stand-down keeps its notice.
-        if NS.ContainerManager.RequestApply then NS.ContainerManager.RequestApply(nil, true) end
-    end
+    if NS.ContainerManager then standUpContainers(NS.ContainerManager) end
 end
 
 -- ---------------------------------------------------------------------------

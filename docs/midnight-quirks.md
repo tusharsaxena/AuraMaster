@@ -52,7 +52,7 @@ replacement: the `AuraContainer` widget (`CustomAuraContainerTemplate`), which r
 itself, gathers auras against declared groups, and creates and fills `AuraButton`s in secure code.
 `SecureAuraHeaderTemplate` is no longer available on Retail.
 
-**What this addon does.** Every container is one `AuraContainer` engine (`modules/Container.lua:251`). The addon
+**What this addon does.** Every container is one `AuraContainer` engine (`modules/Container.lua:337`). The addon
 declares groups — `AddAuraGroup(key, filterString, { candidateFilters, sortMethod, sortDirection,
 maxFrameCount, layout, initializeFrame })` — compiled from the settings by
 `modules/FilterCompiler.lua`, and dresses each button in `initializeFrame` (`modules/Style.lua`). The
@@ -139,7 +139,7 @@ addon can no longer anchor it. Another frame may only anchor **to** an aura cont
 their geometry can be secret.
 
 **What this addon does.** The engine is anchored to its container's anchor frame *before* the first
-`AddAuraGroup` (`modules/Container.lua:259-262`). Every anchor frame, and the frame picker's outline,
+`AddAuraGroup` (`modules/Container.lua:345-348`). Every anchor frame, and the frame picker's outline,
 inherits `DisableUntrustedLayoutScriptsTemplate`, so a container can attach to another container's
 engine (`modules/Anchors.lua`) and the picker can outline one. Positions are computed from settings,
 never read back off an engine frame; the anchor is sized to one element from config.
@@ -158,19 +158,64 @@ would inherit forbidden aspects: UntrustedLayoutScriptExecution". The handle's t
 **What this addon does.** A plan of the same shape (group count, enchant slots and their
 hide-permanent flag, style, growth corner —
 `FilterCompiler.StructureKey`) is applied in place, calling only the setters whose values changed;
-candidate filters are compared with `FilterCompiler.Signature` first (`modules/Container.lua:326-334`). A
+candidate filters are compared with `FilterCompiler.Signature` first (`modules/Container.lua:292-295`). A
 new shape disables, hides and retires the old engine and builds a new one (`Container:Retire`).
 
-## Spell-id filters are honored only on one side of the friend/foe line
+## Spell-id filters apply only where Blizzard's predicate allows them
 
-**The restriction.** The engine applies identity candidate filters (`includeSpellIDs`,
-`excludeSpellIDs`) only to buffs on friendly units and debuffs on hostile units.
+**The restriction.** A group's identity candidate filters (`includeSpellIDs`, `excludeSpellIDs`) are
+applied only where `AuraContainerUtil.CanApplyIdentityCandidateFilters(unitToken, auraData)` returns
+true (Blizzard_AuraContainerUtil.lua, read from the wow-ui-source mirror on 2026-10-02). In order:
 
-**What this addon does.** The filters still compile, because a target or focus can be either, but
-`FilterCompiler` adds a per-container warning wherever a spell-id filter is in play
-(`identityWarning`, `modules/FilterCompiler.lua:417`): ignored outright for debuffs on the player or pet, conditional on
-hostility or friendliness for target and focus. The Filters section prints them in orange. The starter
-spell lists are all buff categories for the same reason (`defaults/Categories.lua`).
+1. The aura's spell is `NeverSecret` (`C_Secrets.GetSpellAuraSecrecy(spellId) ==
+   Enum.SecrecyLevel.NeverSecret`, for example Sated and Exhaustion): applied, on any unit.
+2. A helpful aura on a unit for which `UnitIsPlayerControlledOrGroupMember(unitToken)` is true (the
+   player, the pet, a vehicle, `partyN`, `raidN` and their pets; it reads the token, so never `target`
+   or `focus`): applied.
+3. A harmful aura on a unit for which `UnitCanAssist("player", unitToken, true, true)` is true: not
+   applied.
+4. A helpful aura on a unit for which that same `UnitCanAssist` call is false: not applied.
+5. Otherwise: applied.
+
+So buffs are filtered by id on a unit you can assist and debuffs on a unit you cannot; your own and
+your pet's debuffs never are. Where the predicate fails, `DoesAuraPassCandidateFilters` skips BOTH id
+filters and still evaluates the rest of the group (dispel types, the aura flags, `maxDuration`) and
+its filter string. A group whose only real constraint is its ids then matches every aura of its type,
+and several such groups each draw the same aura: the M+ report of one NPC buff drawn 14 times on a
+hostile target (seven spell-category groups times two instances).
+
+**What this addon does.** Every compiled group carries two views (`modules/FilterViews.lua`, stamped as
+`group.noIds` by `FV.NoIds` at `modules/FilterCompiler.lua:577`): the ids view, exactly as compiled, and a no-ids
+view in which the whitelist, every spell-category and Uncategorized Show group and the catch-all match
+nothing (`candidateFilters = { includeDispelTypes = {} }`, which fails every aura and which
+`ValidateCandidateFilters` accepts as a table), while a Blizzard Show group keeps its token, flag or
+dispel constraint minus the earlier ones. Every group that still draws in the no-ids view (a Blizzard
+Show group, and the single group of a container that hides nothing) keeps the base's own
+`excludeSpellIDs`, the Overrides blacklist and Timeless's learned ids, and drops the whitelist's and
+the earlier spell categories' excludes (SV-05): Blizzard applies excludes to a `NeverSecret` spell on
+every unit (step 1), so a blacklisted Sated stays hidden there and a whitelisted one is not excluded
+by the group that would otherwise draw it. Both views have the same group count, so switching never
+rebuilds the engine. `FC.IdsMode` pins buffs on the player and the pet to the ids view and their
+debuffs to the no-ids view; for a target or focus, `Compat.IdsApply` (`core/Compat.lua:330`) asks
+steps 2 to 4 above and answers false when a call raises or its answer is secret. It does not model
+step 1, so a `NeverSecret` aura claimed only by a spell category is not drawn where the view is no-ids.
+The empty-container prediction (`modules/EmptyWatch.lua`) does not model it either: where the view is
+no-ids it ignores spell ids, so a container whose only aura is a blacklisted `NeverSecret` one (a
+blacklisted Sated on a debuff container) is predicted not empty while the engine draws nothing. That
+costs only a placeholder hang on an unlocked container, and is accepted.
+`ContainerClass:ApplyView` (`modules/Container.lua:320`) sends `SetAuraGroupFilterString` and
+`SetAuraGroupCandidateFilters` only where the two views differ. Blizzard's Lua checks neither combat
+nor secrecy in either setter and both end in `UpdateAllAuras`, so the switch runs in combat. It runs at
+every build and update, on `PLAYER_TARGET_CHANGED` and `PLAYER_FOCUS_CHANGED` before the refresh, and
+on `UNIT_FACTION` and `UNIT_FLAGS` for `target`, `focus` and `player` (`CM.ApplyViews`,
+`modules/ContainerManager.lua:429`), which catches duels, mind control and an NPC turning hostile.
+A move logs `[Filter] <container>: spell lists off (unit cannot be assisted)` or `... on ...`, and
+`/am diagnostics` prints each container's mode and view. The Filters section says so three times: the
+orange warning above every tab (`identityWarning`, `modules/FilterCompiler.lua:417`, printed only when
+the container hides a category or has an Overrides list, and naming only the Overrides lists when it
+hides nothing), and a NOTE under the Spell Categories
+heading and at the head of Overrides on every container whose mode is not "always"
+(`settings/Filters.lua`).
 
 ## There is no "no duration" filter, and `maxDuration` drops permanent auras
 
@@ -264,7 +309,7 @@ hides it, and clearing does not show it again.
 `UpdateAllAuras` exists for external refreshes such as target changes.
 
 **What this addon does.** `PLAYER_TARGET_CHANGED`, `PLAYER_FOCUS_CHANGED` and `UNIT_PET` (for the
-player) call `UpdateAllAuras` on every container on that unit (`core/AuraMaster.lua:159-171`).
+player) call `UpdateAllAuras` on every container on that unit (`core/AuraMaster.lua:161-177`).
 
 ## An addon font loads lazily, and the engine writes a name once (measured 2026-09-27)
 
@@ -385,7 +430,7 @@ frames are never freed, so a rebuild per run would leak one engine frame per con
   creating a container, and tearing one down. A container that leaves the registry in combat is
   parked (engine disabled, anchor untouched) and destroyed once combat ends.
 - **Visibility in combat is the engine's `SetEnabled`**, not `Show`/`Hide` on an ancestry holding
-  aura buttons (`modules/Container.lua:485`).
+  aura buttons (`modules/Container.lua:573`).
 
 ## An unknown event name raises
 
@@ -399,7 +444,8 @@ so the failure is latent: it would only show up once a patch retires one of them
 `NS.SafeRegisterUnitEvent`. That covers the eleven lifecycle events (`LIFECYCLE_EVENTS` in
 `core/AuraMaster.lua`), the timed-spell gate and its unit frame's `UNIT_AURA`
 (`modules/TimedSpells.lua`), the empty-container prediction's two unit frames and their swap events
-(`modules/EmptyWatch.lua`), and the stand-down's pending `PLAYER_REGEN_ENABLED`
+(`modules/EmptyWatch.lua`), the container manager's view frame's `UNIT_FACTION` and `UNIT_FLAGS` for
+`target` and `focus` (`modules/ContainerManager.lua`), and the stand-down's pending `PLAYER_REGEN_ENABLED`
 (`core/LifecycleSetup.lua`). A refused name is recorded once in `NS.RejectedEvents`. The `[Init]`
 line adds `rejected events: …` when that list is not empty, and a name refused while logging is on
 is traced right away, as `[Init] event <NAME> rejected by this client`.
@@ -620,7 +666,7 @@ values was secret.
 
 - **No secure template of our own.** The only protected machinery is Blizzard's aura engine. Each
   container's anchor (`AuraMasterAnchor<id>`) inherits `DisableUntrustedLayoutScriptsTemplate`,
-  Blizzard's opt-in for a frame anchored to an aura container (`modules/Container.lua:44-45`).
+  Blizzard's opt-in for a frame anchored to an aura container (`modules/Container.lua:45-46`).
 - **Nothing under an anchor may own a tooltip.** The template's restriction reaches every frame
   anchored under the anchor, the drag handle and its help mark included, and the client refuses
   `GameTooltip:SetOwner` on any of them ("Anchoring disallowed as dependent object would inherit
@@ -638,12 +684,12 @@ values was secret.
   only shows or hides, except that a handle never placed (first shown in combat) is placed once so
   it draws. The next visibility pass after combat catches both up.
 - **The engine is anchored before its first `AddAuraGroup`**; after that an addon can no longer
-  anchor it (`modules/Container.lua:259-262`).
+  anchor it (`modules/Container.lua:345-348`).
 - **No structural work while auras are secret or under combat lockdown.** `ContainerManager.MustDefer`
   (`modules/ContainerManager.lua:217`) holds every build, update and restyle; aura buttons refuse addon
   access while auras are secret.
 - **Visibility in combat goes through the engine's `SetEnabled`**, never `Show`/`Hide` on an aura
-  button's ancestry (`modules/Container.lua:485`).
+  button's ancestry (`modules/Container.lua:573`).
 - **The font primer's frame hangs from `UIParent`, not from any anchor**, so nothing it does reaches
   an aura engine's ancestry. Its one engine call, the follow-up `UpdateAllAuras`, is not protected,
   reads no aura, and skips a disabled engine, which it would clear (`modules/FontPrimer.lua`).
