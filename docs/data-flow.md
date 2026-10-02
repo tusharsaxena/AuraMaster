@@ -577,9 +577,12 @@ container rested when the drag began win while the container is still there, wit
 (`REST_SLACK`; a child as wide as its parent rests centered, so that pick is its middle pair, whatever
 pair it is stored by), so a container picked up and let go where it sits keeps its pair; moved further,
 that pick competes like any other pair, so a child wider than its parent, whose rest pick is the end
-pair, can still be dropped onto it, and never a pair of the current parent
-while that parent's block does not read (the snap measured it on the one-element fallback). When the
-pick IS the current pair (measured, the parent's block reading), the container holds whatever the
+pair, can still be dropped onto it. The current parent is measured, for the pick, on the same rect its
+current pair is (`findFrom`): where its engine reads secret and its strip reads, that is its strip
+alone, never the strip out to the one-element fallback the snap takes for any other target, so a
+child of a parent holding auras can still be moved to another of its sides, and a nudge under it
+re-pairs nothing (DD-16R); never a pair of the current parent where no rect of it reads but that
+fallback. When the pick IS the current pair (measured), the container holds whatever the
 leeway below says: A7 makes that pair the pick anywhere over its third of the parent's side, so a child
 flush under a long parent can be in snap range of its own pair far past `C.DETACH_RADIUS` from that
 pair's two points, and it must not turn red there. Otherwise,

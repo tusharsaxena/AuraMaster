@@ -242,7 +242,11 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
     a pair on the before-side end (TOPRIGHT, say) sits on the strip's corner, about 20 px (the strip
     and its gap) above the block's, and the middle pair's half that. The end pair, on the growth side,
     is the block's. Where the strip reads but the parent's engine reads secret, its block is its first
-    element (the entry above but one), so its growth sides reach only that element.
+    element (the entry above but one), so its growth sides reach only that element. A child dragged
+    off such a parent, its own, is measured on the parent's strip alone (the first element is not
+    where it hangs), so below that parent another pair is picked only within about 24 px of the
+    strip's bottom, and let go further down it snaps back; its other sides re-pair as usual. Set the
+    pair on Layout > Anchor, or drag it in test mode.
   - **Across the before side, one element off, and overlapping.** A drop above a parent growing down
     gives a free pair (BOTTOM to TOP, say) that Place sets on the child's ANCHOR, its first element,
     pushed past the parent's strip and label. The child's dot was on the bottom of its own strip, which

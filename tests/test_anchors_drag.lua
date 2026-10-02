@@ -1264,6 +1264,65 @@ test("drag: on a parent whose block reads secret but whose strip reads, a nudge 
     assertNil(at.relPoint, "no pair written: still Automatic")
 end)
 
+--- Two containers as in game with 1 holding auras: its one-row engine reads secret, its anchor (the
+--- first element) and its strip (`stripR` wide, above the anchor) plainly; 2 attached to 1 by
+--- Automatic (TOPLEFT on BOTTOMLEFT), 60 wide, resting 5 under the block, its drag begun with the
+--- overlays recorded. Returns NS, mocks, 2's instance and the overlays' restore.
+local function secretParentDrag(stripR)
+    local SECRET = 41.5
+    local NS, mocks = env(2)
+    mocks.issecretvalue = function(v) return v == SECRET end
+    local CM = NS.ContainerManager
+    local restore = recordOverlays(mocks)
+    plant(CM.instances[1].engine, SECRET, 220, 100, 240)
+    plant(CM.instances[1].anchor, 0, 220, 20, 240)
+    plant(CM.instances[1].handle, 0, 242, stripR, 260)
+    local at = NS.Database.FindContainer(2).attach
+    at.mode, at.container = "container", 1
+    local inst = CM.instances[2]
+    plant(inst.anchor, 0, 195, 60, 215)
+    recordAnchor(inst.anchor)
+    mocks.GetCursorPosition = function() return 100, 100 end
+    inst.handle:__fire("OnDragStart")
+    return NS, mocks, inst, restore
+end
+
+test("drag: beside a parent whose block reads secret but whose strip reads, a child re-pairs onto that side (A4, A11)", function()
+    local NS, mocks, inst, restore = secretParentDrag(20)
+    local Snap = NS.Anchors.Snap
+    -- 4 right of 1's strip, its center over the strip's middle third: the pair is LEFT on RIGHT.
+    plant(inst.anchor, 24, 238, 84, 258)
+    local pair, state = Snap.Tick()
+    -- red under: hold 1:TOPLEFT>BOTTOMLEFT (DD-16R refused every pair of a parent whose block reads
+    -- secret, so a child could not be moved to another side of a parent holding auras)
+    assertEqual(state, "attach", "a nearer pair of its own parent")
+    assertEqual(pair.id .. ":" .. pair.point .. ">" .. pair.relPoint, "1:LEFT>RIGHT", "the side it is beside")
+    -- The parent's dot on the strip the pair was measured on, not on the first element's fallback.
+    assertEqual(dotAt(mocks, Snap.marker, "the parent's dot"), "BOTTOMLEFT 20,251")
+    inst.handle:__fire("OnDragStop")
+    local at = NS.Database.FindContainer(2).attach
+    assertEqual(at.mode .. ":" .. tostring(at.container), "container:1", "still on its parent")
+    assertEqual(tostring(at.childPoint) .. ">" .. tostring(at.relPoint), "LEFT>RIGHT", "the new pair written")
+    restore()
+end)
+
+test("drag: a drop on the right side of a parent whose block reads secret but whose strip reads re-attaches there (A4, A11)", function()
+    local NS, mocks, inst, restore = secretParentDrag(200)
+    -- 5 right of a 200-wide strip, its center over the strip's top third: TOPLEFT on TOPRIGHT, its
+    -- stored pair's points far past C.DETACH_RADIUS.
+    plant(inst.anchor, 205, 250, 225, 270)
+    local pair, state = NS.Anchors.Snap.Tick()
+    -- red under: detach 1:TOPLEFT>BOTTOMLEFT, and the release sent it to the screen
+    assertEqual(state, "attach", "its own parent's right side")
+    assertEqual(pair.id .. ":" .. pair.point .. ">" .. pair.relPoint, "1:TOPLEFT>TOPRIGHT", "the right side's top pair")
+    assertEqual(dotAt(mocks, NS.Anchors.Snap.marker, "the parent's dot"), "BOTTOMLEFT 200,260")
+    inst.handle:__fire("OnDragStop")
+    local at = NS.Database.FindContainer(2).attach
+    assertEqual(at.mode .. ":" .. tostring(at.container), "container:1", "re-attached to its parent")
+    assertEqual(tostring(at.childPoint) .. ">" .. tostring(at.relPoint), "TOPLEFT>TOPRIGHT", "on its right side")
+    restore()
+end)
+
 test("drag: a screen container's drag has no hold and no red (A4)", function()
     local NS = env(2)
     local CM = NS.ContainerManager

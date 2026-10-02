@@ -1109,7 +1109,7 @@ badge and any count quoted in the docs must agree with it.
 - snap: folding reads Automatic for the target dropped on, not the container's current parent
 - snap: the radius is 24 UIParent units and the highlight is an opaque green
 
-### test_anchors_drag.lua (37)
+### test_anchors_drag.lua (39)
 
 - drag: a screen container and a container-attached one drag; a frame-attached one does not
 - drag: no drag starts in combat, and none leaves the container marked dragging
@@ -1147,6 +1147,8 @@ badge and any count quoted in the docs must agree with it.
 - drag: a parent whose block reads secret but whose strip reads holds on its strip, two dots and a line (A4, A11; DRAG-9)
 - drag: on a parent whose block reads secret, a hit on its one-element fallback never takes the current parent back (A4)
 - drag: on a parent whose block reads secret but whose strip reads, a nudge inside the radius holds on the stored pair (A4, A11)
+- drag: beside a parent whose block reads secret but whose strip reads, a child re-pairs onto that side (A4, A11)
+- drag: a drop on the right side of a parent whose block reads secret but whose strip reads re-attaches there (A4, A11)
 - drag: a screen container's drag has no hold and no red (A4)
 
 ### test_anchors_drop.lua (24)
@@ -2370,7 +2372,7 @@ badge and any count quoted in the docs must agree with it.
 | test_anchors_collapse.lua | 9 |
 | test_anchors_width.lua | 6 |
 | test_anchors_snap.lua | 27 |
-| test_anchors_drag.lua | 37 |
+| test_anchors_drag.lua | 39 |
 | test_anchors_drop.lua | 24 |
 | test_texttemplate.lua | 26 |
 | test_style.lua | 60 |
@@ -2422,4 +2424,4 @@ badge and any count quoted in the docs must agree with it.
 | test_layout_cap.lua | 13 |
 | test_diagnostics_contract.lua | 9 |
 | test_lizard_sighted.lua | 8 |
-| **Total** | **2028** |
+| **Total** | **2030** |
