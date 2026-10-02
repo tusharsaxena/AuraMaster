@@ -509,6 +509,9 @@ the lists are not schema rows, so the section's Defaults leaves them alone. Each
 **"?" help mark** between its X and its name (LibKa0s v1.51.0's `O.IdList` `entry.help`, `K-3`;
 it was a full-width `note` under the name until 2026-09-22, which cost such an entry its place in
 the two-column grid — the library gives a noted entry a row of its own whatever the column count).
+The mark draws the library's vendored `info` art (`libs/LibKa0s/media/icons/info`), not the client's
+blue `InformationIcon` disc, because `settings/OptionsSetup.lua` hands the Options descriptor
+`addonName` (LibKa0s v1.67.0, LibKa0s#42); General → Spell Categories' marks draw the same art.
 Hovering it gives the entry's name and the sentence, built from
 `FC.ExplainSpell` sparingly: it fires only when a category genuinely disagrees with the list's
 verdict, or the id sits on both lists, and never claims what the aura will finally do — a duration cap
