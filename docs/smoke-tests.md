@@ -635,9 +635,10 @@ white box at the corner the flow starts from. Change a container's Width and gro
 container it is attached to → no Lua error (none naming `Backdrop.lua`), and the outline and handle
 look the same. Run this after a `/reload` and again after Profiles → Reset Profile. Result:
 
-**CONT-9. The handle's tooltip.** Hover a screen container's strip or its "?" → at the cursor, the
-name and "Drag to move. Drop it on another container to attach it there; hold Shift to place it
-without attaching. Right-click for settings.", in the usual gold. B (attached to A) and a container
+**CONT-9. The handle's tooltip.** Hover a screen container's strip or its "?" → beside the strip
+(its top level with the strip's top, a few px to the strip's right, or to its left when the strip is
+near the screen's right edge, as DRAG-11), the name and "Drag to move. Drop it on another container to
+attach it there; hold Shift to place it without attaching. Right-click for settings.", in the usual gold. B (attached to A) and a container
 attached to a named frame show their strip name in a desaturated warm gray; hover B's strip or "?" →
 the first line reads "Attached to '<A's name>'. Drag it away and let go once the marks turn red to
 detach it; let go sooner and it snaps back. Drop it on another container to attach it there; hold
@@ -2059,7 +2060,7 @@ line, then remove its row here.
 | CONT-3 | 31: its in-combat steps rewritten on 2026-09-29 for `/am new`, `/am delete` and a Delete popup opened before the pull, since the panel is locked in combat |
 | CONT-5 | 205: its in-combat rename rewritten on 2026-09-29 for `/am set container.name` |
 | CONT-8 | 162, smoke batch 2 (owed: the owner verified 143 to 161 only) |
-| CONT-9 | its tooltip lines corrected on 2026-10-02 for drag to attach (issue #22): the screen line names the drop, and a container attached to another names its parent and how to detach it |
+| CONT-9 | its tooltip lines corrected on 2026-10-02 for drag to attach (issue #22): the screen line names the drop, and a container attached to another names its parent and how to detach it; its placement corrected the same day for `tooltipPlace` (TP-AM-01): beside the strip, flipping left near the screen's right edge, no longer at the cursor |
 | CONT-21 | 136 and 224: the placeholder count corrected on 2026-09-29 (one per ticked slot, three by default) |
 | FILT-2 | 80, batch 6 |
 | FILT-4 | 24: its Spell Categories grid corrected on 2026-09-29 (Hard CC, Soft CC and Racials with their See spells links, the line naming General -> Spell Categories and the hostile-unit note, since issue #11); its NOTE line under the Spell Categories heading new on 2026-10-02 (spell-list views, SV-04); the note under the grid reworded to "you can't assist" (SV-05) |

@@ -33,5 +33,14 @@ Run through `ka0s-bounded` from the repo root.
 | Gate | Headless tests | Lint | Complexity |
 |---|---|---|---|
 | After the copy and the provenance roll (v1.68.0) | 2015 passed / 0 failed / 1 skipped (2016) | 0 / 0 in 167 files | `lizard -C 15 -w`: no warnings |
+| After adopting `tooltipPlace` (second `TP-AM-01` commit, `cfcf0df`) | 2021 passed / 0 failed / 1 skipped (2022) | 0 / 0 in 169 files | `lizard -C 15 -w`: no warnings |
 
-`docs/test-cases.md` regenerated with no change; the README badge stays at 2015/2015.
+After the copy, `docs/test-cases.md` regenerated with no change and the README badge stayed at
+2015/2015. The adoption added the `test_anchors_tooltip.lua` cases; `docs/test-cases.md` was
+regenerated and the badge moved to 2021/2021.
+
+## Bundle shape
+
+No `03_DECISIONS.md` and no `04_EXECUTION_PLAN.md`. The decision and the plan both live in the
+cross-repo bundle `Ka0sAddonsCommonTasks/docs/2026-10-02-LIBKA0S_TOOLTIP_PLACE/00_PLAN.md` (item
+`TP-AM-01`), which scoped the one candidate before the copy (`02_CANDIDATES.md`).
