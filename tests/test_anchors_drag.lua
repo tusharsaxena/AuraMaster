@@ -1229,6 +1229,41 @@ test("drag: on a parent whose block reads secret, a hit on its one-element fallb
     mocks.GetCursorPosition = function() return 100, 100 end
 end)
 
+test("drag: on a parent whose block reads secret but whose strip reads, a nudge inside the radius holds on the stored pair (A4, A11)", function()
+    local SECRET = 41.5
+    local NS, mocks = env(2)
+    mocks.issecretvalue = function(v) return v == SECRET end
+    local CM = NS.ContainerManager
+    -- In game: a one-row engine holding auras reads secret, its anchor (the first element) and the
+    -- strip hung from that anchor read plainly.
+    plant(CM.instances[1].engine, SECRET, 220, 100, 240)
+    plant(CM.instances[1].anchor, 0, 220, 20, 240)
+    plant(CM.instances[1].handle, 0, 242, 20, 260)
+    local at = NS.Database.FindContainer(2).attach
+    at.mode, at.container = "container", 1   -- Automatic: TOPLEFT on BOTTOMLEFT
+    local inst = CM.instances[2]
+    plant(inst.anchor, 0, 195, 60, 215)       -- 60 wide, resting 5 under the block
+    recordAnchor(inst.anchor)
+    mocks.GetCursorPosition = function() return 100, 100 end
+    inst.handle:__fire("OnDragStart")
+    local Snap = NS.Anchors.Snap
+    for _, dx in ipairs({ -10, 10, 20 }) do
+        plant(inst.anchor, dx, 195, 60 + dx, 215)
+        local pair, state = Snap.Tick()
+        -- red under: the hit measured on the strip-and-first-element rect beat the stored pair, whose
+        -- distance read off the strip alone ("attach TOPRIGHT>BOTTOMRIGHT", "BOTTOMLEFT>BOTTOMRIGHT")
+        assertEqual(state, "hold", "nudged " .. dx .. ": well inside C.DETACH_RADIUS")
+        assertEqual(pair.id .. ":" .. pair.point .. ">" .. pair.relPoint, "1:TOPLEFT>BOTTOMLEFT",
+            "nudged " .. dx .. ": on the stored pair")
+    end
+    inst.handle:__fire("OnDragStop")
+    at = NS.Database.FindContainer(2).attach
+    -- red under: the release wrote the far pair nobody picked
+    assertEqual(at.mode .. ":" .. tostring(at.container), "container:1", "still on its parent")
+    assertNil(at.childPoint, "no pair written: still Automatic")
+    assertNil(at.relPoint, "no pair written: still Automatic")
+end)
+
 test("drag: a screen container's drag has no hold and no red (A4)", function()
     local NS = env(2)
     local CM = NS.ContainerManager

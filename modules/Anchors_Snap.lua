@@ -540,7 +540,8 @@ end
 -- has no measurable pair, so step 2 holds while the cursor has moved less than C.DETACH_RADIUS from
 -- where the drag began. Never the one-element anchor Snap.TargetRect falls back to: the child hangs
 -- from the whole block, so a parent several rows deep would measure it far past the radius at rest,
--- and step 1 takes no pair of such a parent either, since Snap.Find measured it on that fallback. A
+-- and step 1 takes no pair of such a parent either, since Snap.Find measured it on that fallback,
+-- not even where its strip reads and the current pair measures off the strip (`reached` false). A
 -- parent with no live instance at all leaves nothing to hold on: such a container detaches as before.
 -- A screen container has no current pair: step 1 or nothing, exactly as before A4.
 
@@ -567,7 +568,9 @@ end
 --- has moved from where it was when the drag began (`restX`, `restY`), since Place never sets a child
 --- on its bare join (the seam gap, its strip and label room and its X/Y nudge, all in its own scale,
 --- lie between). All of them in UIParent units, and nil where they do not read (`away` and `moved`
---- also with no rest vector). Nil when the parent has no live instance.
+--- also with no rest vector). `reached`: whether `rect` takes in the parent's block, false when it is
+--- its strip alone (the block reads secret), where Snap.Find measured the parent out to the
+--- one-element fallback instead. Nil when the parent has no live instance.
 --- @return table|nil
 local function currentPair(container, cfg)
     local id = tonumber(cfg.attach.container)
@@ -575,8 +578,9 @@ local function currentPair(container, cfg)
     if not parent then return nil end
     current.id, current.point, current.relPoint = id, Anchors.AttachPoints(cfg)
     current.dx, current.dy, current.dist, current.away, current.moved = nil, nil, nil, nil, nil
-    local rect = parent.anchor and parent.anchor:IsShown() and SR.HungParent(parent, parentRect)
-    current.rect = rect or nil
+    local rect, reached
+    if parent.anchor and parent.anchor:IsShown() then rect, reached = SR.HungParent(parent, parentRect) end
+    current.rect, current.reached = rect, reached == true
     local own = rect and ownFootprint(container, ownRect)
     if not own then return current end
     local cx, cy = Snap.PointAt(own, current.point)
@@ -602,9 +606,10 @@ end
 --- Whether snap answer `hit` takes the container from current pair `cur` (step 1): with no current
 --- pair, any hit; never `cur` itself; never the pair the pick gave on the current parent where the
 --- drag began (`restPoint`, `restRel`, Snap.BeginDrag) while the child is still where it rests (`cur`'s
---- `moved` at most REST_SLACK); never any pair of the current parent while `cur` has no distance (its
---- block does not read, so the hit was measured on Snap.TargetRect's one-element fallback, which a
---- child resting under a one-row parent is always in range of); else only a pair strictly nearer than
+--- `moved` at most REST_SLACK); never any pair of the current parent while `cur` has no distance or
+--- its rect did not reach the block (`reached` false: the block does not read, so the hit was measured
+--- on Snap.TargetRect's one-element fallback, which a child resting under a one-row parent is always in
+--- range of, and `cur` on the strip alone, so the two do not compare); else only a pair strictly nearer than
 --- `cur`: the hit's |gap| (A7) under `cur`'s `away` (else its distance). The rest pick is this
 --- file's reading of A7 against A4, not the addendum's: a child as wide as its parent rests centered
 --- under it whatever pair it was stored by, so the pick there is the middle pair, as near by its gap as
@@ -618,7 +623,7 @@ end
 local function beats(hit, cur)
     if not (hit and cur) then return hit ~= nil end
     if hit.id == cur.id then
-        if not cur.dist then return false end
+        if not (cur.dist and cur.reached) then return false end
         if hit.point == cur.point and hit.relPoint == cur.relPoint then return false end
         if hit.point == restPoint and hit.relPoint == restRel
             and cur.moved and cur.moved <= REST_SLACK then return false end
@@ -626,13 +631,14 @@ local function beats(hit, cur)
     return hit.dist < (cur.away or cur.dist or math.huge)
 end
 
---- Whether snap answer `hit` is current pair `cur` itself, measured (`cur.dist` reads): then the
---- child is in snap range of the very pair it hangs by, so it holds whatever the leeway says. Never
---- when `cur` has no distance: the hit was then measured on Snap.TargetRect's one-element fallback of
---- a parent whose block does not read, which a child resting under it is always in range of.
+--- Whether snap answer `hit` is current pair `cur` itself, measured (`cur.dist` reads, on a rect that
+--- reached the block): then the child is in snap range of the very pair it hangs by, so it holds
+--- whatever the leeway says. Never when `cur` has no distance or did not reach the block: the hit was
+--- then measured on Snap.TargetRect's one-element fallback of a parent whose block does not read,
+--- which a child resting under it is always in range of.
 --- @return boolean
 local function sameAsCurrent(hit, cur)
-    return hit ~= nil and cur ~= nil and cur.dist ~= nil and hit.id == cur.id
+    return hit ~= nil and cur ~= nil and cur.dist ~= nil and cur.reached and hit.id == cur.id
         and hit.point == cur.point and hit.relPoint == cur.relPoint
 end
 

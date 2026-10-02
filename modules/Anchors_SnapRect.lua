@@ -110,17 +110,21 @@ end
 
 --- Parent `container`'s rect (A11) into `into`, its block read by `block`: its strip with its growth
 --- sides out to that block's far edges when the strip shows and reads, else its footprint (the block
---- and its label, which take in the block whole).
---- @return table|nil
+--- and its label, which take in the block whole). Second, whether the block read (the rect reaches
+--- it): false for a strip alone, whose block does not read.
+--- @return table|nil rect, boolean reached
 local function parentRect(container, into, block, growH, growV)
     local rect = stripRect(container, into)
-    if not rect then return blockFootprint(container, into, block) end
+    if not rect then
+        rect = blockFootprint(container, into, block)
+        return rect, rect ~= nil
+    end
     local b = block(container, blockRect)
     if b then
         if not growH then growH, growV = growthOf(container) end
         reach(rect, b, growH, growV)
     end
-    return rect
+    return rect, b ~= nil
 end
 
 --- What the snap reads of live container `target`, in UIParent units, into `into`: its strip, or its
@@ -139,8 +143,10 @@ function SR.ParentRect(target, into, growH, growV)
 end
 
 --- Live container `parent` as the parent a hold returns to (A4, A11), into `into`: as SR.ParentRect,
---- but its block only the frame a follower hangs from, never the one-element fallback.
---- @return table|nil
+--- but its block only the frame a follower hangs from, never the one-element fallback. Second,
+--- whether that block read: false when the rect is its strip alone (an engine holding auras reads
+--- secret), which SR.ParentRect measures out to the fallback instead, so the two then differ.
+--- @return table|nil rect, boolean reached
 function SR.HungParent(parent, into)
     return parentRect(parent, into, hangRect)
 end

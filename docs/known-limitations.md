@@ -237,7 +237,7 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   past the strips and labels between. So across a growth side the dots sit where the child lands, and
   a pair along that side's length is a pair of the block's. A strip is one element long and sits on
   its block's before side (above a block growing down), so elsewhere the child can land off the dots:
-  - **Along a side the parent does not grow toward, up to a strip off.** For a parent growing down,
+  - **Along a side, at its before-side end, up to a strip off.** For a parent growing down,
     its left and right sides run from the bottom of its block to the top of its strip, so the dot of
     a pair on the before-side end (TOPRIGHT, say) sits on the strip's corner, about 20 px (the strip
     and its gap) above the block's, and the middle pair's half that. The end pair, on the growth side,

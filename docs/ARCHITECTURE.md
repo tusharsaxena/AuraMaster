@@ -44,7 +44,7 @@ what each LibKa0s setup file publishes: `docs/module-map.md` → *Libraries*.
 ## Module Map
 
 Five source folders in the TOC's load order — `locales/` → `core/` → `defaults/` → `modules/` →
-`settings/` (layout-§1) — 57 authored Lua files under them: one locale, 16 core, 4 defaults, 21
+`settings/` (layout-§1) — 58 authored Lua files under them: one locale, 16 core, 4 defaults, 22
 modules and 15 settings. The load-bearing positions are annotated at their TOC lines:
 `core/MediaSetup.lua` before `core/Constants.lua` (the monospace face), `core/CoreSetup.lua` before
 anything that prints, `core/PerfSetup.lua` before every module that takes `NS.Perf` as an upvalue,
@@ -53,8 +53,10 @@ anything that prints, `core/PerfSetup.lua` before every module that takes `NS.Pe
 `modules/Anchors_Attach.lua` before `modules/Anchors.lua` (which binds `NS.AnchorsAttach` at file load),
 `modules/Anchors_Tooltip.lua` before `modules/Anchors.lua` (which binds `NS.AnchorsTooltip.Place` at file
 load as the strip's `tooltipPlace`),
-`modules/Anchors_Snap.lua` after both (it binds `NS.AnchorsAttach`'s pair table at file load and extends
-`Anchors` as `Anchors.Snap`),
+`modules/Anchors_SnapRect.lua` after `modules/Anchors_Attach.lua` (it binds `FlowGrowth` at file load) and
+before `modules/Anchors_Snap.lua`,
+`modules/Anchors_Snap.lua` after all three (it binds `NS.AnchorsAttach`'s pair table and
+`NS.AnchorsSnapRect` at file load and extends `Anchors` as `Anchors.Snap`),
 `settings/OptionsSetup.lua` before every page file (the composers run at file load), and
 `settings/GeneralUserCategories.lua` (read by `settings/GeneralSpells.lua` at file load), then
 `settings/GeneralSpells.lua`, then `settings/GeneralDispel.lua` (which reads its bullet constants), all
