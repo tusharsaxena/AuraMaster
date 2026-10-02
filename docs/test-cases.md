@@ -1684,7 +1684,7 @@ badge and any count quoted in the docs must agree with it.
 - options: a Filters Overrides help mark draws the library's info art, not the client glyph
 - options: a General spell-categories help mark draws the library's info art, not the client glyph
 
-### test_options_descriptor.lua (18)
+### test_options_descriptor.lua (19)
 
 - options descriptor: a rendered widget reads the selected container and writes it through the seam
 - options descriptor: a color swatch shows the stored color and stores the picker's in the {r, g, b, a} shape
@@ -1701,6 +1701,7 @@ badge and any count quoted in the docs must agree with it.
 - options descriptor: an addon-wide tabbed page draws every tab with no container, and a bespoke tab keyed by a group takes its place
 - options descriptor: a bespoke tab with `before` is drawn ahead of the tab it names, else last
 - options descriptor: RenderWarnings draws one orange line per thing the engine will not do
+- options descriptor: the orange warnings are followed by a gap before the first section, and only when drawn
 - options descriptor: panel refreshes asked for in one frame are one refresh, on the next frame
 - options descriptor: OpenOptionsPage opens a registered page's category, a section's through Containers, and falls back to the panel otherwise
 - options descriptor: every stub composer answers an empty row list
@@ -1880,7 +1881,7 @@ badge and any count quoted in the docs must agree with it.
 - situations tab: the timeless note keys on the effective mode, timeless buffs only
 - situations tab: Show in draws the six zone checkboxes in order, all ticked, each writing its zone
 - situations tab: On NPCs writes the npcs setting
-- situations tab: Unit type is the last section, after Show in, with Unit type and Reaction on a target or focus
+- situations tab: Unit type is the first section, above the spell-list section, with Unit type and Reaction on a target or focus
 - situations tab: a player or pet container says it is always your own character or pet, with no Unit type dropdowns
 
 ### test_pages_layout.lua (47)
@@ -2278,7 +2279,7 @@ badge and any count quoted in the docs must agree with it.
 | test_debug_coverage.lua | 10 |
 | test_debug_library_lines.lua | 11 |
 | test_optionssetup.lua | 21 |
-| test_options_descriptor.lua | 18 |
+| test_options_descriptor.lua | 19 |
 | test_pages_general.lua | 35 |
 | test_pages_general_categories.lua | 32 |
 | test_pages_containers.lua | 33 |
@@ -2307,4 +2308,4 @@ badge and any count quoted in the docs must agree with it.
 | test_layout_cap.lua | 13 |
 | test_diagnostics_contract.lua | 9 |
 | test_lizard_sighted.lua | 8 |
-| **Total** | **1929** |
+| **Total** | **1930** |

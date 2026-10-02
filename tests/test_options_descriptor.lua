@@ -393,6 +393,23 @@ test("options descriptor: RenderWarnings draws one orange line per thing the eng
     assertEqual(table.concat(rows, "|"), "|cffffa040" .. NS2.FilterCompiler.WARN.TIMELESS_BUFFS_ONLY .. "|r")
 end)
 
+test("options descriptor: the orange warnings are followed by a gap before the first section, and only when drawn", function()
+    local NS2 = fresh()
+    assertTrue(NS2.Helpers.SelectSection("bars"), "bars is on the rail"); NS2.Helpers.__pageCtx.containers.panel:__fire("OnShow")
+    local ctx = NS2.Helpers.__pageCtx.bars
+    local log = {}
+    NS2.Helpers.TextRow = function() log[#log + 1] = "text" end
+    NS2.Helpers.AddSpacer = function(_, h) log[#log + 1] = "gap" .. tostring(h) end
+    local CM, Database = NS2.ContainerManager, NS2.Database
+    NS2.Helpers.RenderWarnings(ctx, Database.FindContainer(CM.Create({ auraType = "HARMFUL", unit = "player" })))
+    -- red under: a gap drawn under no warning (every tab would shift down)
+    assertEqual(table.concat(log, ","), "", "no warning, no gap")
+    NS2.Helpers.RenderWarnings(ctx, Database.FindContainer(CM.Create({ auraType = "HARMFUL", unit = "player",
+        filter = { durationMode = "timeless" } })))
+    -- red under: the warnings running straight into the first section (the owner's screenshot, 2026-10-02)
+    assertEqual(table.concat(log, ","), "text,gap" .. NS2.Helpers.WARNINGS_GAP, "one gap after the last warning")
+end)
+
 -- ── refresh and open ──────────────────────────────────────────────────────────────────────────
 
 test("options descriptor: panel refreshes asked for in one frame are one refresh, on the next frame", function()

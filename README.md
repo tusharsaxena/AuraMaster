@@ -4,7 +4,7 @@
 ![CurseForge Version](https://img.shields.io/curseforge/v/1698345)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-1928%2F1928_passing-green)
+![Tests](https://img.shields.io/badge/Tests-1929%2F1929_passing-green)
 
 Ka0s Aura Master lets you build your own buff and debuff displays. Each one is a container. You pick
 whose auras it shows (yours, your target's, your focus's or your pet's), whether it shows buffs,
@@ -73,7 +73,7 @@ The same tab has **Show in**: six checkboxes for open world, dungeons, scenarios
 battlegrounds and arenas, all ticked to start with. Untick one and the container stays hidden in
 that kind of place. While it's unlocked or in test mode it still shows, so you can find it.
 
-Last on the tab, **Unit type** narrows a target or focus container to the units you want: **Unit
+First on the tab, **Unit type** narrows a target or focus container to the units you want: **Unit
 type** picks All, NPCs or Players, and **Reaction** picks All, Friendly, Neutral or Hostile (how that
 unit stands toward you). Both start at All. A unit that doesn't match both stays empty, so a "Hostile
 NPCs" container shows nothing on a friendly player and comes back on the next enemy mob. It follows

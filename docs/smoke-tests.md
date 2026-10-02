@@ -1121,8 +1121,9 @@ dungeon, then `/reload` inside it → after the reload the container is hidden f
 not drawn and then hidden. Leave the dungeon → it shows. Result:
 
 **FILT-59. The tab and its rows.** Filters on any buff or debuff container → the tabs read General,
-Categories, Overrides, Sorting, Situations, with Situations last. A *target buffs* container →
-**Where spell lists don't apply** opens with "On units you can't assist, spell lists don't apply to
+Categories, Overrides, Sorting, Situations, with Situations last, and on every tab a clear gap
+separates the orange warning lines from the first section. A *target buffs* container → under
+**Unit type** (the first section), **Where spell lists don't apply** opens with "On units you can't assist, spell lists don't apply to
 this container.", then **On NPCs** and **On players**, then the line "Every aura still honors Cast
 by, Duration, Max duration and the Blizzard, Dispel and Who Cast It rows you set to Hide; …"; set
 its **Duration** to *Only auras without a duration* → a further line "Every aura draws nothing extra here: 'Without
@@ -1133,13 +1134,13 @@ shows"). *Player buffs* → "Spell lists always apply to your own and your pet's
 and no dropdown. Each then shows **Show in** and its six checkboxes, all ticked, and last **Unit
 type** (FILT-60). Result:
 
-FILT-60 to FILT-63 check the Situations tab's last section, **Unit type** (filter situations S6,
+FILT-60 to FILT-63 check the Situations tab's first section, **Unit type** (filter situations S6,
 2026-10-02): which units a target or focus container shows for, by kind (NPCs or Players) and by
 reaction to you (Friendly, Neutral or Hostile). They start from the defaults (All / All) unless a step
 says otherwise.
 
-**FILT-60. The section.** Filters → **Situations** on *Target debuffs (mine)* → after **Show in**,
-a last section **Unit type** with two dropdowns, **Unit type** (All, NPCs, Players) and **Reaction**
+**FILT-60. The section.** Filters → **Situations** on *Target debuffs (mine)* → at the top, above
+**Where spell lists don't apply**, a section **Unit type** with two dropdowns, **Unit type** (All, NPCs, Players) and **Reaction**
 (All, Friendly, Neutral, Hostile), both at All. Each tooltip says an unlocked container, or one in
 test mode, still shows. On *Player buffs* and *Player debuffs*, and on a container switched to your
 pet, the section shows "Always your own character or pet." and no dropdown. Result:

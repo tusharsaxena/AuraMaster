@@ -411,7 +411,8 @@ Label, Bar style, Icon style, Text style) and **Copy onto this container**. Name
 ### Filters (46 rows, `settings/Filters.lua`) — a section of Containers (#6)
 
 Every tab opens with the container's warnings in orange — what the engine will silently not honor
-here (`Helpers.RenderWarnings`, from `FilterCompiler.Compile`'s `warnings`).
+here (`Helpers.RenderWarnings`, from `FilterCompiler.Compile`'s `warnings`), followed by a gap of
+`Helpers.WARNINGS_GAP` (10) before the first section, drawn only when a warning is.
 
 **General** (named *What to show* until 2026-09-20)
 
@@ -552,7 +553,7 @@ bespoke tab keyed by the group (`renderSituations`). Three sections:
   Raids, Battlegrounds, Arenas (`container.filter.zones.none` / `.party` / `.scenario` / `.raid` /
   `.pvp` / `.arena`). An unticked kind of place hides the locked container there, through the
   combat-legal visibility pass; an unlocked container or one in test mode still shows anywhere.
-- **Unit type** (S6, the addendum; the last section). On a target or focus container two dropdowns:
+- **Unit type** (S6, the addendum; the first section, moved to the top on 2026-10-02). On a target or focus container two dropdowns:
   **Unit type** (All, NPCs, Players; `container.filter.unitFilter.kind`) and **Reaction** (All,
   Friendly, Neutral, Hostile; `container.filter.unitFilter.reaction`), both All by default and both
   taking the `visibility` effect. A unit that does not match both choices hides the locked container

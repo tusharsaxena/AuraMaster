@@ -15,13 +15,13 @@ local _, NS = ...
 --     Overrides     NOTE (the same containers), then
 --                   Whitelist  [Add a spell ____________][ Add ]  <icon> Name (id)  [Remove]
 --                   Blacklist  the same
---     Situations    Where spell lists don't apply   the unit line, then On NPCs [▾] On players [▾]
+--     Situations    Unit type       Unit type [▾] Reaction [▾] (target, focus), or a note (player, pet)
+--                   Where spell lists don't apply   the unit line, then On NPCs [▾] On players [▾]
 --                                   (target, focus), Your own and your pet's debuffs [▾] (player and
 --                                   pet debuffs) or a note (player and pet buffs), the honor line,
 --                                   and the timeless note
 --                   Show in         Open world, Dungeons, Scenarios and delves, Raids, Battlegrounds,
 --                                   Arenas
---                   Unit type       Unit type [▾] Reaction [▾] (target, focus), or a note (player, pet)
 --
 -- Every row here compiles, through modules/FilterCompiler.lua, into the aura groups Blizzard's aura
 -- engine evaluates in its own code — we never read an aura while it is secret, so every filter is a
@@ -919,11 +919,18 @@ local function zoneRows(rows)
     return out
 end
 
---- The Situations tab, last on the strip: the unit line, the dropdowns and the two notes (or the
---- always note alone), then the six zone checkboxes, then Unit type and Reaction (target and focus)
---- or the own-character note. Keyed by its group, so `rows` is the group's, already filtered to the
---- container's aura type.
+--- The Situations tab, last on the strip: Unit type and Reaction first (target and focus) or the
+--- own-character note (the owner moved the section to the top, 2026-10-02), then the unit line, the
+--- dropdowns and the two notes (or the always note alone), then the six zone checkboxes. Keyed by its
+--- group, so `rows` is the group's, already filtered to the container's aura type.
 local function renderSituations(ctx, cfg, rows)
+    H.Section(ctx, L["Unit type"])
+    if C.UNIT_FILTER_UNITS[cfg.unit] then
+        H.RenderRows(ctx, { rowAt(rows, "container.filter.unitFilter.kind"),
+            rowAt(rows, "container.filter.unitFilter.reaction") }, nil, nil, { noHeadings = true })
+    else
+        H.TextRow(ctx, L["Always your own character or pet."])
+    end
     H.Section(ctx, L["Where spell lists don't apply"])
     local which, mode = viewWhich(cfg)
     if which then
@@ -938,13 +945,6 @@ local function renderSituations(ctx, cfg, rows)
     end
     H.Section(ctx, L["Show in"])
     H.RenderRows(ctx, zoneRows(rows), nil, nil, { noHeadings = true })
-    H.Section(ctx, L["Unit type"])
-    if C.UNIT_FILTER_UNITS[cfg.unit] then
-        H.RenderRows(ctx, { rowAt(rows, "container.filter.unitFilter.kind"),
-            rowAt(rows, "container.filter.unitFilter.reaction") }, nil, nil, { noHeadings = true })
-    else
-        H.TextRow(ctx, L["Always your own character or pet."])
-    end
 end
 
 NS.RegisterContainerSection(PAGE, L["Filters"], {
