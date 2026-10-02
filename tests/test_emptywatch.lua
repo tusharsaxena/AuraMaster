@@ -108,8 +108,12 @@ test("empty: spell ids are ignored where the engine holds a no-ids view, as the 
     withAuras(mocks, "target", { { spellId = 200 } })
     local cfg = { unit = "target", auraType = "HELPFUL" }
     local g = group("HELPFUL", { includeSpellIDs = { [100] = true } })
-    -- Both no-ids views as the stripped group itself, so only the id test can tell them apart.
-    g.views = { blizzard = { filter = "HELPFUL" }, every = { filter = "HELPFUL" } }
+    -- Both no-ids views as modules/FilterViews.lua really builds them: the stripped group, keeping the
+    -- base's own excludes (the blacklist, Timeless's learned ids). Aura 200 is on that exclude, so the
+    -- prediction turns on whether the id test runs at all.
+    local kept = { excludeSpellIDs = { [200] = true } }
+    g.views = { blizzard = { filter = "HELPFUL", candidateFilters = kept },
+                every = { filter = "HELPFUL", candidateFilters = kept } }
     local plan = { groups = { g } }
     local inst = fakeInst(cfg, plan)
     for _, view in ipairs({ "blizzard", "every" }) do
@@ -570,6 +574,16 @@ test("empty: a hostile NPC on the every view predicts from the remainder slot", 
     -- red under: activeView reading the ids or blizzard view while the engine holds every (the listed
     -- group's NEVER, and the remainder's NEVER there, both read empty)
     assertTrue(inst.predictedEmpty == false, "the remainder draws an unlisted buff: not empty")
+    -- A buff only in the Hidden Stealable row: the remainder's every view excludes it (isStealable =
+    -- false), so nothing draws.
+    withAuras(mocks, "target", { { spellId = 999998, duration = 10, isStealable = true } })
+    NS.EmptyWatch.Reevaluate()
+    -- red under: the every view falling back to each group's ids view (the Defensives group, its id
+    -- list skipped where ids do not apply, would count the stealable buff and ignore the Hidden row)
+    assertTrue(inst.predictedEmpty == true, "a buff only in a Hidden Blizzard row: empty")
+    withAuras(mocks, "target", { { spellId = 999999, duration = 10, isStealable = false } })
+    NS.EmptyWatch.Reevaluate()
+    assertTrue(inst.predictedEmpty == false)
     NS.SetByPath("container.filter.situations.npcs", "blizzard", inst.id)
     assertEqual(inst.view, "blizzard", "the view effect moved it")
     -- red under: the view effect not telling EmptyWatch (the prediction kept the every view's answer)
