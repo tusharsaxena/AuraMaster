@@ -1077,14 +1077,16 @@ Filters: what a container draws where spell lists don't apply (**Every aura, onc
 **Only my Blizzard categories set to Show**), and the kinds of zone it shows in. Unlike FILT-46 to
 FILT-52, these start from the defaults unless a step says otherwise.
 
-**FILT-53. Mythic+ NPC buffs come back, once each.** Use the FILT-46 container (every Blizzard
-category **Hide**, five or more Spell Categories **Show**, **Uncategorized** **Hide**, **Max
-duration** `30`) with Filters → **Situations** → **On NPCs** at **Every aura, once**. In a Mythic+
-key or a dungeon, target an enemy NPC carrying short buffs (the report was *Brutal Slams*) → each
-buff of 30 seconds or less draws exactly once, none twice, and a buff over 30 seconds does not draw.
-The console shows `[Filter] <name>: spell lists off, every aura (NPC; unit cannot be assisted)`, and
-`/am diagnostics` reads `view=every situation=npcs`. Set *Important (Blizzard)* to **Hide** → that
-category's buffs stop drawing and the rest still draw once. Result:
+**FILT-53. Mythic+ NPC buffs come back, once each.** Use the FILT-46 container as FILT-46 leaves
+it (*Important (Blizzard)* **Show**, every other Blizzard category **Hide**, five or more Spell
+Categories **Show**, **Uncategorized** **Hide**, **Max duration** `30`) with Filters → **Situations**
+→ **On NPCs** at **Every aura, once**. In a Mythic+ key or a dungeon, target an enemy NPC carrying
+short buffs (the report was *Brutal Slams*) → each buff of 30 seconds or less that is *Important* or
+in no Blizzard category set to Hide draws exactly once, none twice; a cancelable or purgeable one
+that is not *Important* stays hidden, and a buff over 30 seconds does not draw. The console shows
+`[Filter] <name>: spell lists off, every aura (NPC; unit cannot be assisted)`, and `/am diagnostics`
+reads `view=every situation=npcs`. Set *Important (Blizzard)* from **Show** to **Hide** → the NPC's
+important buffs stop drawing and the rest still draw once. Result:
 
 **FILT-54. A hostile player with Players at Only Blizzard.** Use the FILT-47 container with **On
 NPCs** at **Every aura, once** and **On players** at **Only my Blizzard categories set to Show**. In

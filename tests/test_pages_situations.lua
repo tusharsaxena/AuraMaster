@@ -62,7 +62,8 @@ test("situations tab: the Filters strip reads General, Categories, Overrides, So
         local L = NS.L
         NS.Helpers.SelectContainer(id)
         P.show("Filters")
-        -- red under: the Situations rows declared before Sorting's, or the tab carrying a `before`
+        -- red under: the Situations rows declared before Sorting's (a `before` on the tab does not
+        -- move it: collectTabs gives a group-keyed tab its group's slot)
         assertEqual(table.concat(P.tabKeys("filters"), ","),
             table.concat({ L["General"], L["Categories"], "overrides", L["Sorting"], L["Situations"] }, ","),
             "container " .. id)
