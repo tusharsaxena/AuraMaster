@@ -96,7 +96,7 @@ Automatic or `(picked)`, and `join=`, the batch 9 side the pair is under the par
 Each built container's `[Plan] #N spell lists:` line says where Blizzard applies its spell ids
 (`mode=`: `always` for buffs on the player and the pet, `never` for their debuffs, `dynamic` for any
 other unit, where the unit's reaction decides, `FC.IdsMode`) and which view of the plan the engine
-holds now (`view=ids`, or `view=noIds`, where spell categories and Overrides are not applied and only
+holds now (`view=ids`, or `view=blizzard`, where spell categories and Overrides are not applied and only
 Blizzard categories set to Show draw). See the `[Filter]` tag below for each switch.
 
 ### Bar names that do not show

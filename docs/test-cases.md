@@ -325,7 +325,7 @@ badge and any count quoted in the docs must agree with it.
 - filter: a TARGET debuff container gives Uncategorized Show no group either — a target may be FRIENDLY
 - filter: a FRIENDLY-target buff container loses the Uncategorized Show rescue — the accepted cost, pinned
 - filter: a target debuff container still warns about units you can assist although the gate dropped its Show group
-- filter: a TARGET debuff container's spells-kind Show emits its ids-view group, whose no-ids view is NEVER, and warns (the issue #11 residual, superseded)
+- filter: a TARGET debuff container's spells-kind Show emits its ids-view group, whose blizzard view is NEVER, and warns (the issue #11 residual, superseded)
 - explain: an unlisted id is rank 3 (shown) when Uncategorized is Show — not the old rank 5
 - explain: an unlisted id is rank 4 (hidden) when Uncategorized is Hide
 - explain: with no Uncategorized category for the aura type at all, an unclaimed id is still rank 5
@@ -386,19 +386,34 @@ badge and any count quoted in the docs must agree with it.
 ### test_filterviews.lua (14)
 
 - views: FC.IdsMode is always for player/pet buffs, never for player/pet debuffs, dynamic elsewhere
-- views: the owner's target container compiles to seven groups, every no-ids view NEVER
+- views: the owner's target container compiles to seven groups, every blizzard view NEVER
 - views: a Blizzard Show group keeps its own constraint and the earlier Blizzard exclusions, and no ids
-- views: a blacklisted id stays excluded in every drawing no-ids view once a category is Hidden
-- views: Timeless's learned ids stay excluded in a stripped no-ids view
-- views: a dispel Show group's no-ids view keeps its include map and its earlier flag exclusions
+- views: a blacklisted id stays excluded in every drawing blizzard view once a category is Hidden
+- views: Timeless's learned ids stay excluded in a stripped blizzard view
+- views: a dispel Show group's blizzard view keeps its include map and its earlier flag exclusions
 - views: the whitelist group and the catch-all are NEVER without spell ids
 - views: a spells-kind Show and an Uncategorized Show group are NEVER without spell ids
-- views: with no category Hidden the single group's no-ids view is the ids view minus the whitelist (R-3)
-- views: a whitelisted NeverSecret id is not excluded by the R-3 no-ids view (player debuffs)
+- views: with no category Hidden the single group's blizzard view is the ids view minus the whitelist (R-3)
+- views: a whitelisted NeverSecret id is not excluded by the R-3 blizzard view (player debuffs)
 - views: the NEVER view is the group's own filter string and an empty include-dispel map
 - views: each mode prints the new sentence where a category is Hidden
 - views: an Overrides list alone raises the Overrides-only sentence
 - views: no sentence on a container the rule changes nothing for
+
+### test_filterviews_situations.lua (12)
+
+- situations: an R-4 target buff plan ends in a remainder slot, NEVER in the ids and blizzard views
+- situations: the remainder slot exists only for R-4 on units whose ids are not always applied
+- situations: an R-3 plan's every view is its blizzard view
+- situations: a player buff plan (ids always applied) is unchanged, every reading as blizzard
+- situations: the remainder subtracts Hidden Dispel Types and one Hidden Who Cast It row
+- situations: both Who Cast It rows Hidden make the remainder NEVER in every view
+- situations: 'Without a duration' makes the remainder NEVER in the every view (buffs)
+- situations: the remainder keeps the blacklist and ignores the whitelist and spell categories
+- situations: the warnings and NEVER_MATCHES ignore the remainder slot
+- situations: the owner's 'Target Bar CD (All)' draws only the remainder in the every view
+- situations: every container of the owner's real profile keeps master's ids and blizzard views
+- situations: no aura is drawn twice in any view, and the every view draws exactly its definition
 
 ### test_container.lua (52)
 
@@ -458,7 +473,7 @@ badge and any count quoted in the docs must agree with it.
 ### test_container_views.lua (16)
 
 - container views: a target buff container is built on the view its unit's reaction picks
-- container views: player debuffs are always built on the no-ids view, player buffs on the ids view
+- container views: player debuffs are always built on the blizzard view, player buffs on the ids view
 - container views: ApplyView switches in place, sending only what differs, and nothing when unchanged
 - container views: the switch runs in combat and while auras are secret
 - container views: an in-place update compares and sends the active view's values
@@ -2007,7 +2022,7 @@ badge and any count quoted in the docs must agree with it.
 
 - prose: no authored file carries a British spelling from localization-§5's published list
 - prose: the gate carries localization-§5's two lists whole, and nothing of its own
-- prose: the exclusions this repository declared suppressed 11 of 199 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (11): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, docs/spell-research/2026-09-24-logs/CORRECTIONS.md, docs/spell-research/2026-09-24-logs/CURRENT_CATEGORIES.md, docs/spell-research/2026-09-24-logs/DECISIONS.md, docs/spell-research/2026-09-24-logs/FLAGS.md, docs/spell-research/2026-09-24-logs/PROPOSED_ADDITIONS.md, docs/spell-research/2026-09-24-logs/REVIEW.md, docs/spell-research/2026-09-24-logs/SOURCES.md, docs/spell-research/2026-09-24-logs/dictionary/AURAS.md
+- prose: the exclusions this repository declared suppressed 11 of 191 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (11): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, docs/spell-research/2026-09-24-logs/CORRECTIONS.md, docs/spell-research/2026-09-24-logs/CURRENT_CATEGORIES.md, docs/spell-research/2026-09-24-logs/DECISIONS.md, docs/spell-research/2026-09-24-logs/FLAGS.md, docs/spell-research/2026-09-24-logs/PROPOSED_ADDITIONS.md, docs/spell-research/2026-09-24-logs/REVIEW.md, docs/spell-research/2026-09-24-logs/SOURCES.md, docs/spell-research/2026-09-24-logs/dictionary/AURAS.md
 - prose: no path this repository narrows the gate by is loaded by a TOC
 - prose: every path this repository narrows the gate by is one .pkgmeta keeps out of the zip
 - prose self-test: the carve-out suppresses the named generated folder, and only it
@@ -2107,6 +2122,7 @@ badge and any count quoted in the docs must agree with it.
 | test_filtercompiler.lua | 85 |
 | test_filtercompiler_categories.lua | 9 |
 | test_filterviews.lua | 14 |
+| test_filterviews_situations.lua | 12 |
 | test_container.lua | 52 |
 | test_container_views.lua | 16 |
 | test_containermanager.lua | 54 |
@@ -2180,4 +2196,4 @@ badge and any count quoted in the docs must agree with it.
 | test_layout_cap.lua | 13 |
 | test_diagnostics_contract.lua | 9 |
 | test_lizard_sighted.lua | 8 |
-| **Total** | **1834** |
+| **Total** | **1846** |

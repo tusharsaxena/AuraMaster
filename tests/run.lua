@@ -91,6 +91,7 @@ Kit.run{
         "test_filtercompiler",
         "test_filtercompiler_categories",
         "test_filterviews",
+        "test_filterviews_situations",
         "test_container",
         "test_container_views",
         "test_containermanager",

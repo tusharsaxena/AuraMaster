@@ -339,4 +339,4 @@
    "COMPILER's ShouldShow and the zone pass do not say how followers attached to a zone-hidden parent re-seam (ApplyHang / PlaceAttached run in the visibility pass in combat). Only ZONES adds tests for it."
   ]
  }
-}
+}

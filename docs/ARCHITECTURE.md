@@ -15,7 +15,7 @@ profile is seeded with four (`NS.STARTER_CONTAINERS`, `defaults/Profile.lua:283`
 auras are secret — combat, encounters, Mythic+ and PvP (`core/Secrets.lua`, `docs/midnight-quirks.md`).
 So this addon reads no aura at all. Every container is a Blizzard **AuraContainer**
 (`CreateFrame("AuraContainer", nil, anchor, "CustomAuraContainerTemplate")`,
-`modules/Container.lua:337`) that registers `UNIT_AURA` for its unit, gathers, sorts, lays out and
+`modules/Container.lua:338`) that registers `UNIT_AURA` for its unit, gathers, sorts, lays out and
 animates its buttons in Blizzard's own code. The addon's job is to **declare** what each container
 shows and **dress** each button the engine creates:
 
@@ -58,7 +58,7 @@ before `settings/General.lua`, which registers their rows after its own.
 The Settings tree's order is the TOC's own registration order: General, then Containers, then Profiles. Filters, Layout, Bars, Icons and Text are sections of the Containers page (#6) with no tree entry; they load after `settings/OptionsSetup.lua` in any order, and the rail's order is `SECTION_ORDER` there.
 
 The engine-facing core is four modules: `modules/FilterCompiler.lua` (settings → groups, pure; the
-profile's spell-category edits reach it through `FC.ProfileContext`, and each group's no-ids view comes
+profile's spell-category edits reach it through `FC.ProfileContext`, and each group's blizzard view comes
 from `modules/FilterViews.lua`), `modules/Container.lua` (one
 engine), `modules/ContainerManager.lua` (the registry and the deferred apply, each container's apply
 guarded so one error cannot drop the rest of the pass) and `modules/Style.lua` with its three style
@@ -119,10 +119,10 @@ category set to Show shows, categories all set to Hide hide, and an aura in no c
 `FC.ExplainSpell` answers the same question for one spell id. The rank table, how it compiles to
 aura groups and the retired `onlyShown` toggle: `docs/data-flow.md` → *Filter priority*.
 
-Every group carries two views. Where Blizzard applies spell ids to the container's unit and aura
-type, the engine holds the ids view, exactly as compiled. Where it does not (debuffs on the player or
+Every group carries three views: ids, blizzard and every (`group.views`). Where Blizzard applies
+spell ids to the container's unit and aura type, the engine holds the ids view, exactly as compiled. Where it does not (debuffs on the player or
 the pet always; buffs on a target or focus you cannot assist, and debuffs on one you can), it holds
-the no-ids view (`modules/FilterViews.lua`): spell categories, Uncategorized, the Overrides lists and
+the blizzard view (`modules/FilterViews.lua`): spell categories, Uncategorized, the Overrides lists and
 the catch-all match nothing, and only the Blizzard categories set to Show draw, each aura once.
 `FC.IdsMode` and `NS.Compat.IdsApply` choose the view, and `ContainerClass:ApplyView` switches a live
 engine on a swap or a reaction change, in combat too. The Filters section says so in its orange
@@ -240,7 +240,7 @@ optional. The full table and the reasons:
 | `PLAYER_REGEN_DISABLED`, `PLAYER_REGEN_ENABLED`, `ADDON_RESTRICTION_STATE_CHANGED` | `modules/TimedSpells.lua` (AceEvent, on its own target) — while a container uses "without a duration" and the addon is not suspended | `syncAuraListen`: `PLAYER_REGEN_DISABLED` closes the readable gate by itself (it fires before combat lockdown begins); the other two re-check it, dropping or restoring `UNIT_AURA`; reopening schedules one scan |
 | AceDB `OnProfileChanged` / `OnProfileCopied` / `OnProfileReset` | `core/Database.lua:275-279` | `NS.OnProfileChanged` / `NS.OnProfileCopied` / `NS.OnProfileReset` → re-prepare the registry, trace the event once in its own words (a switch `[Profile] changed -> X`; a copy or a reset one `[Set]` line, debug-logging-§10), rebuild, re-render |
 
-Each container's own `UNIT_AURA` belongs to the engine (`SetUnit`, `modules/Container.lua:388`) and
+Each container's own `UNIT_AURA` belongs to the engine (`SetUnit`, `modules/Container.lua:389`) and
 is not addon code. The eleven `core/AuraMaster.lua` registrations are one module-level list,
 `LIFECYCLE_EVENTS`, which `RegisterLifecycleEvents` and `UnregisterLifecycleEvents` both walk, so the
 stand-down and the stand-up remove and restore the same list. With logging on, the world-entry, loading-screen, combat and

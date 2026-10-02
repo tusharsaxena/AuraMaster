@@ -260,7 +260,7 @@ test("categories: a user DEBUFF category alone on Show compiles the same way, an
     local con = onlyShown(E, userContainer(E, "target", "HARMFUL"), key)
 
     local plan = E.FilterCompiler.Compile(con, E.FilterCompiler.ProfileContext())
-    assertEqual(#plan.groups, 1, "the aura type is not what decides a user category's group")
+    assertEqual(#H.categoryGroups(plan), 1, "the aura type is not what decides a user category's group")
     assertEqual(plan.groups[1].filter, "HARMFUL")
     assertEqual(setOf(plan.groups[1].candidateFilters.includeSpellIDs), "118")
     -- The engine honors debuff ids only while the unit is hostile. `addShownGroups` sets nothing for

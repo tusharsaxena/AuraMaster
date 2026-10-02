@@ -322,7 +322,7 @@ end
 ---   HARMFUL  not UnitCanAssist("player", unit, true, true)
 --- The two `true`s are Blizzard's: immune and uninteractable units count as assistable. Neither API
 --- is documented as answering secret, but each call is guarded anyway, and an answer that is not
---- knowable is FALSE: the no-ids view that answer picks can under-show, never duplicate
+--- knowable is FALSE: the blizzard view that answer picks can under-show, never duplicate
 --- (modules/Container.lua ApplyView).
 --- @param unit string
 --- @param auraType string  "HELPFUL" | "HARMFUL"

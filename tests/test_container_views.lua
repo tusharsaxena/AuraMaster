@@ -3,7 +3,7 @@
 -- and Build and Update on the ACTIVE view.
 --
 -- Where Blizzard will not apply spell ids (NS.Compat.IdsApply), a container sends each group's
--- no-ids view (modules/FilterViews.lua) instead of the ids view, so spell-list groups match nothing
+-- blizzard view (modules/FilterViews.lua) instead of the ids view, so spell-list groups match nothing
 -- rather than all becoming the same group. The switch is two live setters per group, sent only where
 -- the two views differ, and it runs in combat and while auras are secret: it never goes through
 -- ContainerManager's apply hold. The wiring (SV-03): a target or focus swap switches the view before
@@ -26,7 +26,7 @@ end
 
 --- A target buff container showing one spell category (Defensive cooldowns) and one Blizzard
 --- category (Big defensives), everything else Hidden, 30 s max: one NEVER group and one stripped
---- group in the no-ids view. Answers NS, mocks, the instance and its engine.
+--- group in the blizzard view. Answers NS, mocks, the instance and its engine.
 local function targetBuffs(assistable)
     local NS, mocks = fresh()
     mocks.__canAssist.target = assistable
@@ -40,8 +40,8 @@ end
 
 --- The `view` values of group `g`: its filter string and candidate filters.
 local function valuesOf(g, view)
-    if view == "noIds" then return g.noIds.filter, g.noIds.candidateFilters end
-    return g.filter, g.candidateFilters
+    local v = (view ~= "ids" and g.views[view]) or g
+    return v.filter, v.candidateFilters
 end
 
 --- How many groups of `plan` differ between the two views in filter string, and in candidates.
@@ -50,7 +50,7 @@ local function differing(NS, plan)
     local filters, cands = 0, 0
     for _, g in ipairs(plan.groups) do
         local f1, c1 = valuesOf(g, "ids")
-        local f2, c2 = valuesOf(g, "noIds")
+        local f2, c2 = valuesOf(g, "blizzard")
         if f1 ~= f2 then filters = filters + 1 end
         if Sig(c1) ~= Sig(c2) then cands = cands + 1 end
     end
@@ -74,16 +74,16 @@ end
 test("container views: a target buff container is built on the view its unit's reaction picks", function()
     local NS, _, inst = targetBuffs(false)
     -- red under: Build sending the ids view whatever the unit (the 14 Brutal Slams bars)
-    assertEqual(inst.view, "noIds")
-    assertEqual(#inst.plan.groups, 2, "one spell-list group, one Blizzard group")
-    assertBuiltOn(NS, inst, "noIds")
+    assertEqual(inst.view, "blizzard")
+    assertEqual(#inst.plan.groups, 3, "one spell-list group, one Blizzard group, the remainder")
+    assertBuiltOn(NS, inst, "blizzard")
     local NS2, _, inst2 = targetBuffs(true)
-    -- red under: Build sending the no-ids view unconditionally
+    -- red under: Build sending the blizzard view unconditionally
     assertEqual(inst2.view, "ids")
     assertBuiltOn(NS2, inst2, "ids")
 end)
 
-test("container views: player debuffs are always built on the no-ids view, player buffs on the ids view", function()
+test("container views: player debuffs are always built on the blizzard view, player buffs on the ids view", function()
     local NS, mocks = fresh()
     -- Blizzard never applies ids to your own debuffs and always to your own buffs, whatever the
     -- unit APIs say: FC.IdsMode decides those two outright. Both IdsApply clauses answer false for
@@ -91,7 +91,7 @@ test("container views: player debuffs are always built on the no-ids view, playe
     -- shortcut can put a buff container on the ids view.
     mocks.__canAssist.player, mocks.__canAssist.pet = false, false
     mocks.__playerControlled.player, mocks.__playerControlled.pet = false, false
-    assertFalse(NS.Compat.IdsApply("player", "HELPFUL"), "IdsApply alone would pick the no-ids view")
+    assertFalse(NS.Compat.IdsApply("player", "HELPFUL"), "IdsApply alone would pick the blizzard view")
     local deb = NS.ContainerManager.Create({ unit = "player", auraType = "HARMFUL", filter = {
         categories = states(NS, "HARMFUL", { hardCC = true, crowdControl = true }),
     } })
@@ -104,8 +104,8 @@ test("container views: player debuffs are always built on the no-ids view, playe
     mocks.__fireTimers()
     local CM = NS.ContainerManager
     -- red under: a "never" container answered from IdsApply (UnitCanAssist false reads "applies")
-    assertEqual(CM.instances[deb].view, "noIds")
-    assertBuiltOn(NS, CM.instances[deb], "noIds")
+    assertEqual(CM.instances[deb].view, "blizzard")
+    assertBuiltOn(NS, CM.instances[deb], "blizzard")
     -- red under: an "always" container answered from IdsApply (the player and the pet are neither
     -- assistable nor player-controlled here)
     assertEqual(CM.instances[buf].view, "ids")
@@ -146,7 +146,7 @@ test("container views: ApplyView switches in place, sending only what differs, a
     assertEqual(#e:__callsTo("SetAuraGroupCandidateFilters"), wantC)
     mocks.__canAssist.target = false
     assertTrue(inst:ApplyView())
-    assertEqual(inst.view, "noIds")
+    assertEqual(inst.view, "blizzard")
     assertEqual(#e:__callsTo("SetAuraGroupCandidateFilters"), 2 * wantC)
 end)
 
@@ -171,12 +171,12 @@ test("container views: an in-place update compares and sends the active view's v
     assertTrue(inst.engine == e, "a live-editable change")
     local cands = e:__callsTo("SetAuraGroupCandidateFilters")
     -- red under: Update diffing the ids view (the spell-list group's ids candidates carry the max
-    -- duration; its NEVER no-ids candidates do not, so only the Blizzard group is re-sent)
+    -- duration; its NEVER blizzard candidates do not, so only the Blizzard group is re-sent)
     assertEqual(#cands, 1)
     assertEqual(cands[1][2], inst.plan.groups[2].key)
-    assertEqual(Sig(cands[1][3]), Sig(inst.plan.groups[2].noIds.candidateFilters))
+    assertEqual(Sig(cands[1][3]), Sig(inst.plan.groups[2].views.blizzard.candidateFilters))
     assertEqual(cands[1][3].maxDuration, 20)
-    assertEqual(inst.view, "noIds")
+    assertEqual(inst.view, "blizzard")
 end)
 
 test("container views: an update that finds the reaction changed sends the new view's values", function()
@@ -310,7 +310,7 @@ test("container views: a focus swap moves focus containers only", function()
     mocks.__canAssist.target = true
     mocks.__fireEvent("PLAYER_FOCUS_CHANGED")
     -- red under: OnUnitSwap applying the view on every container, whatever its unit
-    assertEqual(inst.view, "noIds", "the target container waits for its own swap")
+    assertEqual(inst.view, "blizzard", "the target container waits for its own swap")
 end)
 
 test("container views: UNIT_FACTION and UNIT_FLAGS on the target and focus switch the view without a swap", function()
@@ -320,7 +320,7 @@ test("container views: UNIT_FACTION and UNIT_FLAGS on the target and focus switc
     mocks.__canAssist.target = true
     mocks.__fire("UNIT_FLAGS", "focus")
     -- red under: the handler ignoring its unit (a focus flag change switching a target container)
-    assertEqual(inst.view, "noIds")
+    assertEqual(inst.view, "blizzard")
     e.__calls = {}
     mocks.__fire("UNIT_FLAGS", "target")
     -- red under: UNIT_FLAGS not wired to ApplyView (a duel starting mid-target)
@@ -329,7 +329,7 @@ test("container views: UNIT_FACTION and UNIT_FLAGS on the target and focus switc
     mocks.__canAssist.target = false
     mocks.__fire("UNIT_FACTION", "target")
     -- red under: UNIT_FACTION not wired (an NPC turning hostile)
-    assertEqual(inst.view, "noIds")
+    assertEqual(inst.view, "blizzard")
 end)
 
 test("container views: a secret unit token from a unit event switches nothing and raises nothing", function()
@@ -343,12 +343,12 @@ test("container views: a secret unit token from a unit event switches nothing an
     } })
     mocks.__fireTimers()
     local inst = NS.ContainerManager.instances[id]
-    assertEqual(inst.view, "noIds")
+    assertEqual(inst.view, "blizzard")
     mocks.__canAssist.target = true
     secretUnit = true
     -- red under: the unit compared before NS.Secrets.IsSafeKey proves it a safe key
     mocks.__fire("UNIT_FLAGS", "target")
-    assertEqual(inst.view, "noIds")
+    assertEqual(inst.view, "blizzard")
     secretUnit = false
     mocks.__fire("UNIT_FLAGS", "target")
     assertEqual(inst.view, "ids", "a readable token still switches")
@@ -383,7 +383,7 @@ test("container views: UNIT_FACTION and UNIT_FLAGS on the player move target and
     assertEqual(moved, 1, "EmptyWatch re-predicts once")
     mocks.__canAssist.target = false
     mocks.__fire("UNIT_FACTION", "player")
-    assertEqual(inst.view, "noIds")
+    assertEqual(inst.view, "blizzard")
     mocks.__fire("UNIT_FACTION", "player")
     assertEqual(moved, 2, "nothing moved, no re-prediction")
 end)
@@ -402,7 +402,7 @@ test("container views: the stand-up moves the view before it re-enables, in comb
     assertTrue(NS.ContainerManager.MustDefer(), "the apply is held")
     -- red under: a stand-up that re-enables the engine on the view it held at stand-down (every
     -- spell-list group drawing every buff of a hostile target until the hold lifts)
-    assertEqual(inst.view, "noIds")
+    assertEqual(inst.view, "blizzard")
     local never
     for _, c in ipairs(e:__callsTo("SetAuraGroupCandidateFilters")) do
         if NS.FilterCompiler.Signature(c[3]) == "{includeDispelTypes={}}" then never = true end

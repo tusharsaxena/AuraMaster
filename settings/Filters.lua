@@ -378,7 +378,7 @@ local UNCATEGORIZED_NOTE = L["Uncategorized defaults to Show, which rescues any 
 -- A3 (issue #11): Hard CC, Soft CC and Racials are the debuff spell lists, and Blizzard honors spell
 -- ids for debuffs only on a unit you CANNOT assist (UnitCanAssist; neutral units included) — on you,
 -- your pet or an assistable unit it skips the list. Since the spell-list views (SV-05) the rows are not
--- inert there: those containers draw their no-ids view, so a Hide anywhere on the tab leaves only the
+-- inert there: those containers draw their blizzard view, so a Hide anywhere on the tab leaves only the
 -- Blizzard categories set to Show. Said here, under the grid that offers them, in the same voice the
 -- Overrides whitelist uses for the same engine limit ("Blizzard only honors this for buffs on units
 -- you can assist and debuffs on units you can't", renderOverrides below). Drawn only on a
@@ -389,7 +389,7 @@ local UNCATEGORIZED_NOTE = L["Uncategorized defaults to Show, which rescues any 
 -- rows regardless of unit.
 local SPELL_LIST_DEBUFF_NOTE = L["Hard CC, Soft CC and Racials only match on a target or focus you can't assist. On your own, your pet's or an assistable unit's debuffs they match nothing, and setting any category to Hide there leaves only the Blizzard categories set to Show."]
 
--- SV-04 (spell-list views, V4): where Blizzard does not apply spell ids, a container draws its no-ids
+-- SV-04 (spell-list views, V4): where Blizzard does not apply spell ids, a container draws its blizzard
 -- view (modules/FilterViews.lua), in which every spell category's group, the whitelist and the
 -- catch-all are NEVER: only the Blizzard categories set to Show draw. Said at the head of the two
 -- surfaces that view switches off, on every container whose `FC.IdsMode` is not "always", in the

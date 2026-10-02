@@ -380,8 +380,8 @@ test("diag: each container's spell-list mode and the view its engine holds", fun
     mocks.__fireTimers()
     local lines = build(NS)
     -- red under: planLines without the spell-list line (spell-list views, V2)
-    assertTrue(has(lines, "[Plan] #" .. id .. " spell lists: mode=dynamic view=noIds") ~= nil, dump(lines))
-    assertTrue(has(lines, "[Plan] #" .. deb .. " spell lists: mode=never view=noIds") ~= nil, dump(lines))
+    assertTrue(has(lines, "[Plan] #" .. id .. " spell lists: mode=dynamic view=blizzard") ~= nil, dump(lines))
+    assertTrue(has(lines, "[Plan] #" .. deb .. " spell lists: mode=never view=blizzard") ~= nil, dump(lines))
     assertTrue(has(lines, "[Plan] #" .. buf .. " spell lists: mode=always view=ids") ~= nil, dump(lines))
     mocks.__canAssist.target = true
     NS.ContainerManager.instances[id]:ApplyView()

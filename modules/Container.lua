@@ -247,14 +247,15 @@ function ContainerClass:ApplyBlocker(cfg)
 end
 
 -- ---------------------------------------------------------------------------
--- The two views of a plan (spell-list views, V2)
+-- The views of a plan (spell-list views, V2; filter situations, S1)
 -- ---------------------------------------------------------------------------
--- Every compiled group carries two views: the IDS view (its own filter and candidates) and the NO-IDS
--- view (`group.noIds`, modules/FilterViews.lua), sent where Blizzard will not apply spell ids, so a
--- spell-list group matches nothing there instead of every aura. The container keeps `self.view`
--- ("ids" | "noIds"), the view the engine currently holds. Build and Update send the active view;
--- ApplyView switches a live engine when the unit's reaction moves (docs/superpowers/specs/
--- 2026-10-02-spell-list-views-design.md).
+-- Every compiled group carries three views: the IDS view (its own filter and candidates), and the
+-- BLIZZARD and EVERY views (`group.views`, modules/FilterViews.lua), sent where Blizzard will not apply
+-- spell ids, so a spell-list group matches nothing there instead of every aura. The container keeps
+-- `self.view` ("ids" | "blizzard" | "every"), the view the engine currently holds. Build and Update
+-- send the active view; ApplyView switches a live engine when the unit's reaction moves (docs/
+-- superpowers/specs/2026-10-02-spell-list-views-design.md). Until the Situations setting lands
+-- (SI-03) the resolver picks ids or blizzard only.
 --
 -- COMBAT-LEGAL. A switch is SetAuraGroupFilterString and SetAuraGroupCandidateFilters only:
 -- Blizzard's Lua checks neither combat nor secrecy on them, and both end in UpdateAllAuras, the call
@@ -267,17 +268,17 @@ end
 
 --- Which view a container on `unit` sends for `auraType` auras right now: FC.IdsMode decides the
 --- player's and the pet's outright, and NS.Compat.IdsApply every other unit.
---- @return string  "ids" | "noIds"
+--- @return string  "ids" | "blizzard"
 function NS.Container.ResolveView(unit, auraType)
     local mode = NS.FilterCompiler.IdsMode(unit, auraType)
     if mode == "always" then return "ids" end
-    if mode == "never" then return "noIds" end
-    return NS.Compat.IdsApply(unit, auraType) and "ids" or "noIds"
+    if mode == "never" then return "blizzard" end
+    return NS.Compat.IdsApply(unit, auraType) and "ids" or "blizzard"
 end
 
---- Group `g`'s filter string and candidate filters in `view`.
+--- Group `g`'s filter string and candidate filters in `view` ("ids" | "blizzard" | "every").
 local function viewOf(g, view)
-    local v = (view == "noIds" and g.noIds) or g
+    local v = (view ~= "ids" and g.views and g.views[view]) or g
     return v.filter, v.candidateFilters
 end
 

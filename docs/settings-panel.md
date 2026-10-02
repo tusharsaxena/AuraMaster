@@ -496,7 +496,7 @@ Straight under the **Spell Categories** heading, above its Show all / Hide all, 
 draws a NOTE naming where its spell categories are not applied: "your own debuffs", "your pet's
 debuffs", "units you can assist" (target and focus debuffs) or "units you can't assist" (target and
 focus buffs). The **Overrides** tab opens with the same sentence about its two lists. There the
-container draws its no-ids view and only the Blizzard categories set to Show draw (spell-list views,
+container draws its blizzard view and only the Blizzard categories set to Show draw (spell-list views,
 `viewNote` in `settings/Filters.lua`; `docs/midnight-quirks.md`).
 
 **Sorting**

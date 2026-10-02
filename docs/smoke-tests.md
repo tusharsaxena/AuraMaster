@@ -1027,7 +1027,7 @@ each draw once, and nothing else does. Result:
 *Defensive cooldowns* **Show**, *Cancelable* **Hide** and *Big defensives (Blizzard)* **Show**. Target
 an enemy player who pops a big defensive → it draws once, from *Big defensives (Blizzard)*; a buff
 only in *Defensive cooldowns* does not draw; no buff draws twice. `/am diagnostics` → the container's
-line reads `spell lists: mode=dynamic view=noIds`. Result:
+line reads `spell lists: mode=dynamic view=blizzard`. Result:
 
 **FILT-48. A friendly target.** Same container, target a friendly player or a party member → the
 container filters exactly as set: *Defensive cooldowns* buffs draw, *Cancelable* ones the other

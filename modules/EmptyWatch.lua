@@ -149,10 +149,11 @@ local function groupEmpty(api, unit, filter, cand, idsOk)
     return slotsEmpty(api, unit, cand, idsOk, api.GetAuraSlots(unit, filter))
 end
 
---- Group `g`'s filter string and candidate filters in the view the engine holds: its no-ids view
---- (`g.noIds`, modules/FilterViews.lua) once ApplyView or a build put the engine on it.
+--- Group `g`'s filter string and candidate filters in the view the engine holds: its blizzard or every
+--- view (`g.views`, modules/FilterViews.lua) once ApplyView or a build put the engine on it.
 local function activeView(inst, g)
-    local v = (inst.view == "noIds" and g.noIds) or g
+    local view = inst.view
+    local v = (view ~= "ids" and g.views and g.views[view]) or g
     return v.filter, v.candidateFilters
 end
 

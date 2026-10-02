@@ -137,14 +137,21 @@ test("empty: the prediction reads the ACTIVE view's groups", function()
     local NS, mocks = fresh()
     withAuras(mocks, "player", { { spellId = 100 } })
     local g = group("HELPFUL", { includeSpellIDs = { [100] = true } })
-    g.noIds = { filter = "HELPFUL", candidateFilters = { includeDispelTypes = {} } }
+    g.views = { blizzard = { filter = "HELPFUL", candidateFilters = { includeDispelTypes = {} } },
+        every = { filter = "HELPFUL" } }
     local inst = fakeInst(PLAYER_BUFFS, { groups = { g } })
     assertFalse(NS.EmptyWatch.Predict(inst), "the ids view: 100 is on the list")
-    inst.view = "noIds"
+    inst.view = "blizzard"
     -- red under: predicting from the ids view whatever the engine holds (the NEVER group drawn as full)
-    assertTrue(NS.EmptyWatch.Predict(inst), "the no-ids view: the NEVER group matches nothing")
-    -- A no-ids view's filter string is the one asked for, too.
-    g.candidateFilters, g.noIds = nil, { filter = "HELPFUL|RAID" }
+    assertTrue(NS.EmptyWatch.Predict(inst), "the blizzard view: the NEVER group matches nothing")
+    -- red under: an activeView that knows only the blizzard view (filter situations, S1), reading the
+    -- every view's group as the ids view's
+    withAuras(mocks, "player", { { spellId = 200 } })
+    inst.view = "every"
+    assertFalse(NS.EmptyWatch.Predict(inst), "the every view: an unconstrained group draws 200")
+    -- A blizzard view's filter string is the one asked for, too.
+    inst.view = "blizzard"
+    g.candidateFilters, g.views.blizzard = nil, { filter = "HELPFUL|RAID" }
     local calls = withAuras(mocks, "player", { { spellId = 1 } })
     NS.EmptyWatch.Predict(inst)
     -- red under: the ids view's filter string sent to GetAuraSlots
@@ -500,8 +507,8 @@ end)
 -- -- the prediction follows the view the engine holds (spell-list views, V3; SV-03R) -----------
 
 --- A target buff container showing Defensive cooldowns alone (a spell category: one group, NEVER in the
---- no-ids view), watched (unlocked), its group's pool live, while the target holds one listed buff and
---- cannot be assisted, so the engine holds the no-ids view and the prediction is empty. Answers NS,
+--- blizzard view), watched (unlocked), its group's pool live, while the target holds one listed buff and
+--- cannot be assisted, so the engine holds the blizzard view and the prediction is empty. Answers NS,
 --- mocks and the instance.
 local function hostileSpellListTarget()
     local NS, mocks = fresh()
@@ -527,7 +534,7 @@ end
 
 test("empty: a target swap EmptyWatch hears before OnUnitSwap predicts from the new unit's view", function()
     local NS, mocks, inst = hostileSpellListTarget()
-    assertEqual(inst.view, "noIds", "hostile: the no-ids view")
+    assertEqual(inst.view, "blizzard", "hostile: the blizzard view")
     assertTrue(inst.predictedEmpty == true, "the NEVER group draws nothing")
     -- AceEvent walks its handlers with next(), so either may run first. Silence OnUnitSwap to make
     -- EmptyWatch's handler the one that runs, as it does when it comes first.

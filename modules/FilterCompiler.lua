@@ -109,7 +109,7 @@ local _, NS = ...
 -- group that is harmless on a hostile target and unconstrained on a friendly one is a group that
 -- cannot ship, so MAY-discard is treated exactly like WILL-discard. Read that as a rule about THIS
 -- ROW and nothing wider: the gate does not make a degenerate group impossible in general. A shown
--- `spells` group has the same shape and still ships; the no-ids view is what neutralizes it (SPELL-LIST
+-- `spells` group has the same shape and still ships; the blizzard view is what neutralizes it (SPELL-LIST
 -- VIEWS, below).
 --
 -- THIS ALSO CLOSES A LATENT BUG THAT PREDATES ISSUE #11 — verified against the tree at HEAD, not
@@ -133,13 +133,14 @@ local _, NS = ...
 -- the engine skips ids. That ruling weighed ONE over-broad group; it did not consider several. A
 -- container with seven spell categories Shown compiles to seven groups that differ only in their ids,
 -- so on a hostile target each draws the same buff: the M+ report of one NPC buff drawn 14 times. Now
--- every group also carries a no-ids view (`group.noIds`, modules/FilterViews.lua), and the container
--- sends that view wherever Blizzard does not apply spell ids (`FC.IdsMode`, then
--- `NS.Compat.IdsApply` at run time; `ContainerClass:ApplyView`). In it the whitelist, every `spells`
--- and `uncategorized` Show group and the catch-all match nothing, so only the Blizzard (token, flag,
--- dispel) Show categories draw, each aura once. The owner's rule: where Blizzard will not apply spell
--- ids, spell categories and the Overrides lists are not applied. `FC.WARN.IDS_*` (`identityWarning`)
--- and the NOTE lines on Filters -> Categories and Overrides (settings/Filters.lua) say so.
+-- every group also carries a blizzard and an every view (`group.views`, modules/FilterViews.lua), and
+-- the container sends one wherever Blizzard does not apply spell ids (`FC.IdsMode`, then
+-- `NS.Compat.IdsApply` at run time; `ContainerClass:ApplyView`). In the blizzard view the whitelist,
+-- every `spells` and `uncategorized` Show group and the catch-all match nothing, so only the Blizzard
+-- (token, flag, dispel) Show categories draw, each aura once; the every view draws through one
+-- trailing remainder group (filter situations, S1). The owner's rule: where Blizzard will not apply
+-- spell ids, spell categories and the Overrides lists are not applied. `FC.WARN.IDS_*`
+-- (`identityWarning`) and the NOTE lines on Filters -> Categories and Overrides say so.
 --
 -- A Hide's `excludeSpellIDs` still ships even where the engine ignores it (only the union itself is
 -- skipped there, since the gate is its one reader): an ignored exclude costs nothing, suppressing it would change no outcome, and
@@ -373,7 +374,7 @@ end
 --- on the player and the pet (the two units that cannot turn hostile), "never" for their debuffs
 --- (Blizzard never applies debuff ids there), and "dynamic" for a `target` or `focus`, whose answer
 --- depends on whether you can assist the unit when the engine looks, long after the plan compiled.
---- A group's ids or no-ids view (modules/FilterViews.lua) is chosen from it at run time.
+--- A group's ids, blizzard or every view (modules/FilterViews.lua) is chosen from it at run time.
 ---
 --- "always" is the GATE (it replaced `FC.IdsAlwaysHonored` on 2026-10-02, same meaning). Two call
 --- sites read it and MUST stay in lockstep — `addCategoryGroups` (what the plan actually contains)
@@ -388,7 +389,7 @@ end
 --- a compile cannot rule out). So the row may contribute a group of its own only where ids are
 --- CERTAIN. Note the scope of that "cannot ship": it is about THIS row, whose group supersedes the
 --- catch-all and therefore takes the tab's Hides down with it. A `spells`-kind Show group ships
---- anyway: where ids are not applied, its no-ids view is NEVER (modules/FilterViews.lua).
+--- anyway: where ids are not applied, its blizzard and every views are NEVER (modules/FilterViews.lua).
 ---
 --- KNOWN LIMITATION, accepted deliberately by the owner (issue #11, 2026-09-20): on a FRIENDLY target
 --- or focus BUFF container, Uncategorized Show no longer rescues an unlisted buff from another
@@ -558,15 +559,11 @@ local function splitCategories(Categories, auraType, states)
     return shown, hidden
 end
 
---- One engine group for `con`, unless it is a contradiction. `role` picks its no-ids view
---- (modules/FilterViews.lua): "never", "same" or "strip"; `baseIds` is the base's own
---- `excludeSpellIDs`, which the "same" and "strip" views keep.
-local function addGroup(plan, con, label, look, role, baseIds)
-    if con.conflict then return end
+--- The engine group `con` compiles to, as the plan's next group (not yet added).
+local function newGroup(plan, con, label, look)
     local cand = con.cand
-    local groupCount = #plan.groups + 1
-    local group = {
-        key              = "g" .. groupCount,
+    return {
+        key              = "g" .. (#plan.groups + 1),
         label            = label,
         filter           = table.concat(con.tokens, "|"),
         candidateFilters = next(cand) and cand or nil,
@@ -574,8 +571,16 @@ local function addGroup(plan, con, label, look, role, baseIds)
         sortDirection    = look.sortDirection,
         maxFrameCount    = look.maxFrameCount,
     }
-    group.noIds = FV.NoIds(group, role, baseIds)
-    plan.groups[groupCount] = group
+end
+
+--- One engine group for `con`, unless it is a contradiction. `role` picks its blizzard and every
+--- views (modules/FilterViews.lua): "never", "same" or "strip"; `baseIds` is the base's own
+--- `excludeSpellIDs`, which the "same" and "strip" views keep.
+local function addGroup(plan, con, label, look, role, baseIds)
+    if con.conflict then return end
+    local group = newGroup(plan, con, label, look)
+    group.views = FV.Views(group, role, baseIds)
+    plan.groups[#plan.groups + 1] = group
 end
 
 --- The whitelist group: the aura type, the ids, nothing else.
@@ -662,6 +667,19 @@ local function addCatchAllGroup(plan, base, cats, look)
     addGroup(plan, con, "All", look, "never")
 end
 
+--- The remainder (filter situations, S1; `FV.AppendRemainder`): the base minus every Hidden Blizzard,
+--- Dispel or Who Cast It category, drawn only in the every view. Both Who rows Hidden (a conflict)
+--- and Timeless buffs (`cats.timeless`, built from spell ids) leave it NEVER there, but present.
+local function addRemainderGroup(plan, base, cats, look)
+    local con = cloneCon(base)
+    for _, def in ipairs(cats.hidden) do
+        if FV.BLIZZARD_GRID[def.kind] then excludeCategory(con, def, cats.spellEdits) end
+    end
+    local draws = not (con.conflict or cats.timeless)
+    local group = newGroup(plan, con.conflict and base or con, "Every aura", look)
+    FV.AppendRemainder(plan, group, draws, base.cand.excludeSpellIDs)
+end
+
 --- The category groups (R-3, R-4, R-5). `cats` = { shown, hidden, whitelist, spellEdits, categories };
 --- `cats.union` is filled in below, only where the `hasUnion` gate can use it.
 --- Every group excludes the whitelist (it has its own group and must not be drawn twice); the
@@ -678,7 +696,7 @@ end
 ---     drop the catch-all on its own: once `uncategorized` does that correctly, the toggle had
 ---     nothing left to do.
 ---
---- `unit` and `auraType` are here for `hasUnion` alone (below, via `FC.IdsMode`) — no
+--- `unit` and `auraType` are here for `hasUnion` and the remainder slot (both via `FC.IdsMode`) — no
 --- group's constraints depend on them; `base` already carries the aura type as a token.
 local function addCategoryGroups(plan, base, cats, look, unit, auraType)
     local hiddenCount = #cats.hidden
@@ -719,10 +737,11 @@ local function addCategoryGroups(plan, base, cats, look, unit, auraType)
     if not supersedesCatchAll then
         addCatchAllGroup(plan, base, cats, look)
     end
+    if FC.IdsMode(unit, auraType) ~= "always" then addRemainderGroup(plan, base, cats, look) end
 end
 
 --- The warnings that depend on the finished plan. The identity sentence prints only where the
---- no-ids view differs from the ids view: a category Hidden (the full sentence), or an Overrides
+--- blizzard view differs from the ids view: a category Hidden (the full sentence), or an Overrides
 --- list in use with nothing Hidden (the `_LISTS` sentence, which names the Overrides alone).
 local function finishWarnings(plan, unit, auraType, anyHidden, listsUsed)
     if anyHidden or listsUsed then
@@ -732,8 +751,10 @@ local function finishWarnings(plan, unit, auraType, anyHidden, listsUsed)
         end
     end
     -- A buff container showing only Weapon enchants (schema v5) draws its enchant slots and no aura
-    -- group: that is what it is for, not a filter that can never match.
+    -- group: that is what it is for, not a filter that can never match. The remainder does not count:
+    -- it is NEVER in the ids and blizzard views.
     local groupCount = #plan.groups
+    if groupCount > 0 and plan.groups[groupCount].remainder then groupCount = groupCount - 1 end
     if groupCount == 0 and not plan.enchants then
         warn(plan, FC.WARN.NEVER_MATCHES)
     end
@@ -776,7 +797,8 @@ end
 ---                  categorySpells = the profile's spell-list edits (schema v2),
 ---                  enchantSlots = the profile's weapon-enchant slots (schema v3) }
 --- @return table  plan = { groups = { {key, filter, candidateFilters, sortMethod, sortDirection,
----                maxFrameCount, label, noIds = {filter, candidateFilters}} },
+---                maxFrameCount, label, views = {blizzard = {filter, candidateFilters}, every = {...}},
+---                remainder = true|nil} },
 ---                enchants = { slots, hidePermanent } | nil, warnings = {} }
 function FC.Compile(cfg, ctx)
     ctx = ctx or {}
@@ -798,7 +820,8 @@ function FC.Compile(cfg, ctx)
     local whitelisted = addWhitelistGroup(plan, auraType, whitelist, look)
     addCategoryGroups(plan, base,
         { shown = shown, hidden = hidden, whitelist = whitelist, spellEdits = ctx.categorySpells,
-          categories = Categories }, look, cfg.unit, auraType)
+          categories = Categories, timeless = auraType == "HELPFUL" and filter.durationMode == "timeless" },
+        look, cfg.unit, auraType)
 
     -- ── Weapon enchants appended to a player buff container ─────────────────────────────────
     appendEnchants(plan, cfg, filter, ctx, auraType, Categories)

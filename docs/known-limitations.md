@@ -64,12 +64,12 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   objects is refused in combat; loops are built and played at dress time and keep running, and a
   change made in combat applies with the deferred restyle (`docs/midnight-quirks.md`).
 - **Spell-id filters apply only to buffs on units you can assist and debuffs on units you cannot**
-  (Blizzard's `CanApplyIdentityCandidateFilters`). Where they do not, a container draws its no-ids
+  (Blizzard's `CanApplyIdentityCandidateFilters`). Where they do not, a container draws its blizzard
   view: spell categories and the Overrides lists are not applied, and only the Blizzard categories set
   to Show draw (owner, 2026-10-02). A container built only on spell categories therefore shows nothing
   on a hostile target, and a `NeverSecret` aura (Sated, Exhaustion) claimed only by a spell category is
   not drawn there either, although Blizzard would apply its id. `FilterCompiler` emits a warning per
-  container where that bites (`identityWarning`, `modules/FilterCompiler.lua:417`), rendered in orange
+  container where that bites (`identityWarning`, `modules/FilterCompiler.lua:418`), rendered in orange
   in the Filters section, and Categories and Overrides carry a NOTE (`docs/midnight-quirks.md`).
 - **On a target or focus BUFF container, Uncategorized set to Show no longer rescues an unlisted
   aura.** That row's group carries an `excludeSpellIDs` of the categorized union as its only
