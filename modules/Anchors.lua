@@ -455,7 +455,7 @@ end
 -- the anchor is exactly one element in size and the first element sits on it: a handle covering the
 -- anchor covered the first bar or icon. Nothing moves to make room for it — the anchor, the engine
 -- (which may never be re-anchored once it holds groups) and the preview stay where they are.
--- The strip is LibKa0s-Widgets-1.0's (libs/LibKa0s/WidgetsDragHandle.lua, minor 3): the fill, the
+-- The strip is LibKa0s-Widgets-1.0's (libs/LibKa0s/WidgetsDragHandle.lua, minor 4): the fill, the
 -- edge, the label, the help and close marks with their own art fallbacks, the tooltips, the drag
 -- scripts and the width arithmetic are the library's; what the X DOES (disableContainer) is ours. ConsumableMaster drew the same strip
 -- over its macro bar, which is why the widget exists. Resolved at file load like every other library
@@ -463,6 +463,8 @@ end
 -- Anchors.UpdateHandle and Container:Park already tolerate.
 local KW   = LibStub and LibStub("LibKa0s-Widgets-1.0", true)
 local DRAG = KW and KW.DRAG_HANDLE
+-- Where the strip's tooltip sits (modules/Anchors_Tooltip.lua, loaded first): beside the strip.
+local placeTooltip = NS.AnchorsTooltip.Place
 
 -- The strip's height, the gap it leaves and what it keeps clear each side of its label are the
 -- widget's numbers (`lib.DRAG_HANDLE`), read through DRAG rather than copied back here: a copy is a
@@ -518,12 +520,13 @@ end
 --- through the `{ entry, r, g, b }` shape, so it stays the color it is today instead of taking the
 --- body band's white.
 ---
---- OWNED BY UIParent AT THE CURSOR (`tooltipOwner = "cursor"`), never by the hovered frame. The
---- anchor inherits DisableUntrustedLayoutScriptsTemplate (modules/Container.lua), and that
---- restriction reaches every frame anchored under it: the strip and the mark. GameTooltip does not
---- inherit the template, so the client refuses SetOwner on either ("Anchoring disallowed as dependent
---- object would inherit forbidden aspects: UntrustedLayoutScriptExecution"). ANCHOR_CURSOR depends on
---- nothing under the anchor.
+--- PLACED BESIDE THE STRIP (`tooltipPlace`, modules/Anchors_Tooltip.lua), owned by UIParent and
+--- anchored to UIParent alone, never by or to the hovered frame. The anchor inherits
+--- DisableUntrustedLayoutScriptsTemplate (modules/Container.lua), and that restriction reaches every
+--- frame anchored under it: the strip and the marks. GameTooltip does not inherit the template, so the
+--- client refuses SetOwner on either ("Anchoring disallowed as dependent object would inherit
+--- forbidden aspects: UntrustedLayoutScriptExecution"). Where the strip's rect does not read, the
+--- widget falls back to `tooltipOwner = "cursor"`: ANCHOR_CURSOR depends on nothing under the anchor.
 local function tooltipSpec(container)
     -- How to use the strip (issue #22): on the screen, drag it, or drop it on another container to
     -- attach it there; attached to another container, by that parent's name, drag it away until the
@@ -581,8 +584,8 @@ local function disableContainer(container)
 end
 
 --- The close mark's own tooltip: the container's name (a function, read on every hover, so a rename
---- shows through) and what the click does. Cursor-owned like the strip's, through the same
---- `tooltipOwner` (see tooltipSpec).
+--- shows through) and what the click does. Placed beside the strip like the strip's, through the
+--- same `tooltipPlace` and `tooltipOwner` (see tooltipSpec).
 local function closeTooltipSpec(container)
     return {
         title = function()
@@ -668,6 +671,7 @@ function Anchors.BuildHandle(container)
         onDragStop   = function() Anchors.Snap.Drop(container) end,
         onRightClick = function() openSettings(container) end,
         tooltip      = tooltipSpec(container),
+        tooltipPlace = placeTooltip,
         tooltipOwner = "cursor",
         edge         = NS.Style.DrawEdge,
         number       = NS.Secrets.NumberOr,

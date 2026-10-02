@@ -281,10 +281,12 @@ test("handle: the help mark carries the tooltip and right-click opens the settin
     assertEqual(NS.State.activeContainerId, 2)
 end)
 
-test("handle: the tooltip follows the cursor, owned by UIParent, never anchored to the strip or the mark", function()
+test("handle: a strip whose rect does not read shows the tooltip at the cursor, owned by UIParent, never by the strip or the mark", function()
     -- Every anchor inherits DisableUntrustedLayoutScriptsTemplate, so the strip and its help mark sit in
     -- a restricted layout chain, and the client refuses GameTooltip:SetOwner on either: "Anchoring
     -- disallowed as dependent object would inherit forbidden aspects: UntrustedLayoutScriptExecution".
+    -- The tooltip is placed beside the strip (tests/test_anchors_tooltip.lua); here the mock's strip
+    -- answers no rect, so the placement declines and the widget falls back to the cursor.
     -- red under: showTooltip owning the tooltip by the hovered frame (the old SetOwner(owner, "ANCHOR_TOP")).
     local NS, mocks = fresh()
     local inst = NS.ContainerManager.instances[2]
@@ -295,10 +297,11 @@ test("handle: the tooltip follows the cursor, owned by UIParent, never anchored 
     end)
     h:__fire("OnEnter")
     h.help:__fire("OnEnter")
-    assertEqual(#owners, 2, "the strip and the help mark both show the tooltip")
+    assertEqual(#owners, 4, "the strip and the help mark both show the tooltip, each placed then re-owned")
     for i, o in ipairs(owners) do
-        assertTrue(o.owner == mocks.UIParent, "hover " .. i .. " is owned by UIParent")
-        assertEqual(o.anchor, "ANCHOR_CURSOR", "hover " .. i .. " follows the cursor")
+        assertTrue(o.owner == mocks.UIParent, "owner " .. i .. " is UIParent")
+        assertEqual(o.anchor, i % 2 == 1 and "ANCHOR_NONE" or "ANCHOR_CURSOR",
+            "owner " .. i .. ": the placement's, then the cursor fallback")
     end
 end)
 
@@ -380,6 +383,9 @@ test("handle: an attached container's tooltip says where its offsets are set; a 
     rawset(mocks.GameTooltip, "AddLine", function(_, s)
         lines[#lines + 1] = s
     end)
+    -- Each draw starts with an owner: the mock's strip answers no rect, so the placement declines
+    -- and the widget draws again at the cursor. The lines read are the last draw's.
+    rawset(mocks.GameTooltip, "SetOwner", function() lines = {} end)
     h:__fire("OnEnter")
     assertEqual(#lines, 1, "a screen container: how to drag, nothing more")
     NS.Database.FindContainer(1).attach.mode = "frame"

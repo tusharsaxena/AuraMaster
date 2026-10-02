@@ -1547,7 +1547,10 @@ attach it there; hold Shift to place it without attaching. Right-click for setti
 and it snaps back. Drop it on another container to attach it there; hold Shift to drop it without
 attaching. Right-click for settings.", then the gold "Joined to the …
 of '<A's name>'" line; the frame-attached one as DRAG-10. Rename A → B's tooltip names the new name on
-the next hover. Result:
+the next hover. Each tooltip, the strip's and its X's and "?"'s alike, sits beside the strip, its top
+level with the strip's top, a few px to the right of the strip, not at the cursor; drag D until its
+strip is near the right edge of the screen → its tooltip sits to the strip's left instead, and is never
+cut off by the screen's edge. No Lua error. Result:
 
 **DRAG-12. A drop between pulls in a key.** In a Mythic+ key, out of combat between pulls (auras are
 secret there with no combat lockdown), drop E on A's side → E attaches and sits on that side of A at
@@ -2088,7 +2091,7 @@ line, then remove its row here.
 | LAYOUT-25 | 202, batch 8 (failed 2026-09-25): the step with two chained Text containers; the rest passed as 194 |
 | LAYOUT-37 | 64 and 76, batch 5 |
 | LAYOUT-38 | 84, batch 6 |
-| DRAG-1 to DRAG-14 | new on 2026-10-02 with drag to attach (issue #22); DRAG-12 to DRAG-14 from its whole-branch review (DD-05); DRAG-1's highlight corrected the same day for the two join dots and the line (owner feedback, DD-08) |
+| DRAG-1 to DRAG-14 | new on 2026-10-02 with drag to attach (issue #22); DRAG-12 to DRAG-14 from its whole-branch review (DD-05); DRAG-1's highlight corrected the same day for the two join dots and the line (owner feedback, DD-08); DRAG-11's tooltip placement added the same day (owner feedback, LibKa0s v1.68.0's `tooltipPlace`, TP-AM-01): beside the strip, flipped left near the screen's right edge |
 | DRAG-15 | new on 2026-10-02 from the owner's smoke feedback (addendum A4; DD-09): the detach leeway, its snap back and the red past `C.DETACH_RADIUS`; DRAG-5, DRAG-9, DRAG-11 and CONT-9 corrected the same day for it; the step with a child twice as wide as its parent added the same day (DD-13R): the pair picked where it rests no longer blocks a drop once it has moved |
 | DRAG-16 | new on 2026-10-02 from the owner's smoke feedback (addendum A1, A3; DD-08): a before-side drop, the line and both dots |
 | DRAG-17 | new on 2026-10-02 from the owner's smoke feedback (addendum A5; DD-11): the mark edges the target's strip, not a box over its placeholders; DRAG-1 to DRAG-5, DRAG-8, DRAG-9, DRAG-15 and DRAG-16 corrected the same day for it; DRAG-1 and DRAG-17 corrected again the same evening (addendum A6; DD-12): the strip's own edge is repainted, since A5's overlay never showed in game, and DRAG-17 ends the mark every way it can end; DRAG-1, DRAG-2, DRAG-5, DRAG-9, DRAG-15, DRAG-16 and DRAG-17 corrected for the second smoke round (addendum A7 to A9; DD-13): the side first and then the third (a centered drop takes the middle pair), everything measured on what you see (block, strip and name label), and the leeway 128 px; DRAG-1's dots split by the side E comes from, and DRAG-15's step with a long parent added (DD-14): a child in snap range of its own pair holds, however far from that pair's points; DRAG-1, DRAG-15, DRAG-16 and DRAG-17 corrected for the third smoke round (addendum A10; DD-15): the dots, the line, the side and the leeway are on the strips, not the placeholders; DRAG-1, DRAG-2, DRAG-9 and DRAG-15 corrected again from DD-15's review (DD-15R): the after side reached over the parent's block, the thirds of the strip, a populated parent's dots on its strip, and a neighbor beside a resting child never taking it; DRAG-2's centered drop below A and DRAG-15's step with a wide child corrected from DD-15R's review: a few px sideways as well as up, since a move straight up ties with the pair E hangs by and holds |

@@ -773,7 +773,7 @@ badge and any count quoted in the docs must agree with it.
 - handle: a handle first shown under lockdown is placed once; the anchor's clamp still waits
 - handle: a visibility pass that changes nothing re-sets no clamp insets
 - handle: the help mark carries the tooltip and right-click opens the settings on this container
-- handle: the tooltip follows the cursor, owned by UIParent, never anchored to the strip or the mark
+- handle: a strip whose rect does not read shows the tooltip at the cursor, owned by UIParent, never by the strip or the mark
 - handle: a left-drag that starts on the help mark moves the container as one on the strip does
 - handle: with no media catalog the help mark falls back to Blizzard's information icon
 - handle: with LibKa0s absent a container has no handle at all, and every pass over it is a no-op
@@ -793,6 +793,15 @@ badge and any count quoted in the docs must agree with it.
 - handle: a right-click on the ? opens the Containers page with this container selected in its band (feedback #9)
 - handle: under combat lockdown the right-click is refused in gray and selects nothing (feedback #9)
 - handle: an attached container's name is a desaturated gray, to the screen it keeps the plain color (owner, 2026-09-26)
+
+### test_anchors_tooltip.lua (6)
+
+- tooltip: it sits a gap right of the strip, its TOPLEFT on the strip's TOPRIGHT, anchored to UIParent
+- tooltip: near the right edge it flips to the strip's left, its TOPRIGHT a gap left of the strip
+- tooltip: a strip rect that reads secret or not at all falls back to the cursor, placing nothing
+- tooltip: the strip's rect is converted into the tooltip's own units through both scales
+- tooltip: a help or close mark places by the strip it belongs to, not by itself
+- tooltip: the strip, its help mark and its close mark show it beside the strip, owned by UIParent with no anchor
 
 ### test_anchors_seam.lua (10)
 
@@ -2338,6 +2347,7 @@ badge and any count quoted in the docs must agree with it.
 | test_lifecycle.lua | 18 |
 | test_anchors.lua | 51 |
 | test_anchors_handle.lua | 29 |
+| test_anchors_tooltip.lua | 6 |
 | test_anchors_seam.lua | 10 |
 | test_anchors_edges.lua | 14 |
 | test_anchors_hang.lua | 11 |
@@ -2406,4 +2416,4 @@ badge and any count quoted in the docs must agree with it.
 | test_layout_cap.lua | 13 |
 | test_diagnostics_contract.lua | 9 |
 | test_lizard_sighted.lua | 8 |
-| **Total** | **2016** |
+| **Total** | **2022** |

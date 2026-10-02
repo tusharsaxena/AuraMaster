@@ -44,13 +44,15 @@ what each LibKa0s setup file publishes: `docs/module-map.md` → *Libraries*.
 ## Module Map
 
 Five source folders in the TOC's load order — `locales/` → `core/` → `defaults/` → `modules/` →
-`settings/` (layout-§1) — 56 authored Lua files under them: one locale, 16 core, 4 defaults, 20
+`settings/` (layout-§1) — 57 authored Lua files under them: one locale, 16 core, 4 defaults, 21
 modules and 15 settings. The load-bearing positions are annotated at their TOC lines:
 `core/MediaSetup.lua` before `core/Constants.lua` (the monospace face), `core/CoreSetup.lua` before
 anything that prints, `core/PerfSetup.lua` before every module that takes `NS.Perf` as an upvalue,
 `defaults/Categories.lua` before `defaults/Profile.lua` (the template's category states) and
 `defaults/UserCategories.lua` directly after it (the `NS.Categories` upvalue),
 `modules/Anchors_Attach.lua` before `modules/Anchors.lua` (which binds `NS.AnchorsAttach` at file load),
+`modules/Anchors_Tooltip.lua` before `modules/Anchors.lua` (which binds `NS.AnchorsTooltip.Place` at file
+load as the strip's `tooltipPlace`),
 `modules/Anchors_Snap.lua` after both (it binds `NS.AnchorsAttach`'s pair table at file load and extends
 `Anchors` as `Anchors.Snap`),
 `settings/OptionsSetup.lua` before every page file (the composers run at file load), and
@@ -113,7 +115,11 @@ by the leeway's measure (the nearer of its two points' distance and how far that
 drag began: 0 where it rests, though on the strips those points rest a parent block apart; DD-15R)
 (never one of a parent whose block reads secret), wins over both, and Shift suppresses only that.
 The tick and the drop classify alike (`classify`); combat started mid-drag attaches nothing. The handle's close mark (X) turns that container off through the write
-seam. A container can also show its name as a label where the handle sits, locked or unlocked;
+seam. The strip's tooltip, and its marks', sits beside the strip: to its right, or to its left when
+the strip is too close to the right edge of the screen for it to fit (`modules/Anchors_Tooltip.lua`,
+LibKa0s-Widgets' `tooltipPlace`). It is anchored to `UIParent` alone, from the strip's rect read through
+`NS.Secrets` and converted through both effective scales, because nothing may anchor into the
+anchor's restricted tree; where that rect reads secret it follows the cursor. A container can also show its name as a label where the handle sits, locked or unlocked;
 while unlocked the handle moves out past it (`Anchors.PlaceLabel`, batch 8 D6).
 
 Every non-vendored file, its responsibility and the full load order: `docs/module-map.md`.

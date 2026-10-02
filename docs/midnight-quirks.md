@@ -148,7 +148,9 @@ never read back off an engine frame; the anchor is sized to one element from con
 anchor chain. `GameTooltip` does not inherit the template, so `GameTooltip:SetOwner` on the drag handle
 or its help mark, both anchored under the anchor, raises "Anchoring disallowed as dependent object
 would inherit forbidden aspects: UntrustedLayoutScriptExecution". The handle's tooltip is owned by
-`UIParent` with `ANCHOR_CURSOR` instead, so it depends on nothing under the anchor.
+`UIParent` instead, so it depends on nothing under the anchor: placed beside the strip from the strip's
+rect, read and anchored to `UIParent` alone (`modules/Anchors_Tooltip.lua`), or with `ANCHOR_CURSOR`
+where that rect reads secret.
 
 ## Groups are add-only, and some setters reset a group
 
@@ -694,7 +696,8 @@ values was secret.
   anchored under the anchor, the drag handle and its help mark included, and the client refuses
   `GameTooltip:SetOwner` on any of them ("Anchoring disallowed as dependent object would inherit
   forbidden aspects: UntrustedLayoutScriptExecution"). The handle's tooltip is therefore owned by
-  `UIParent` and follows the cursor (`modules/Anchors.lua`, `showTooltip`).
+  `UIParent` and anchored to `UIParent` beside the strip (`modules/Anchors_Tooltip.lua`), or follows
+  the cursor where the strip's rect reads secret.
 - **Anchors stay out of the client's layout cache.** An anchor is movable (a handle drag moves it
   with `StartMoving`), and the client saves a movable frame's position and restores it at login.
   `Container.New` calls `SetDontSavePosition(true)`, so the stored `container.position` is the only
