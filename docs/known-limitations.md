@@ -248,6 +248,13 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
     the dot sits on the strip's middle or end and the child joins the block's, up to the block's length
     less the strip's apart. The thirds that pick the pair are thirds of the strip, so beside a parent
     growing down the side is only the strip's height (about 18 px) and each third about 6 px.
+  - **Across the before side, one element off, and overlapping.** A drop above a parent growing down
+    gives a free pair (BOTTOM to TOP, say) that Place sets on the child's ANCHOR, its first element,
+    pushed past the parent's strip and label. The child's dot was on the bottom of its own strip, which
+    sits above that first element, so on the drop the child moves up by about one element plus the
+    strip gap. A follower flows like its chain root (L-6), so above a parent growing down it grows
+    down too, and its further elements land over the parent: the before side suits a container that
+    shows one aura at a time.
   - **Overhang.** An Icons container's strip often runs wider than one element, by an amount that follows the length of its name, so for a middle or end
     pair the child can land sideways of what the dots showed: by half the difference between the two
     overhangs for the middle pair, by all of it for the end pair (a 36 px icon parent whose strip runs 64

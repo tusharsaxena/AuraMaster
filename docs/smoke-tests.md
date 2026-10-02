@@ -1571,7 +1571,7 @@ at first the edge on A's strip, the dot on A's join point of A's strip, the dot 
 strip and the line between
 them stay green, though E is already out of snap range. Let go there → E snaps straight back to where
 it was on A, Layout → Anchor is unchanged, `/reload` agrees, and the log shows `drop: held (leeway)`.
-Drag it down again until the two dots are past about 128 px apart (strip to strip) → strip edge, dots and line all turn red at once; move back up → they turn
+Drag it down again until E has moved about 128 px from where it rested (the dots are then A's block height plus that apart, strip to strip) → strip edge, dots and line all turn red at once; move back up → they turn
 green again; go past it once more and let go → E detaches where you let go (as DRAG-5, log `drop:
 detach`). Now give E the same width as A (as DRAG-2) and re-attach it below A by its default pair
 (Layout → Anchor: Automatic). Pick E up by its strip and let go without moving it → it holds and snaps
@@ -1604,8 +1604,10 @@ edge once E's strip is within about 24 px of the top edge of A's strip (not of A
 and not of E's placeholders), a green dot about 10 px across sits on the middle of the top edge of A's
 strip, a dot of the same size on the middle of the bottom edge of E's strip, and
 a 2 px green line joins the two; as E moves the line and E's dot follow it, and strip edge, dots and line
-show and hide together. Drop → E attaches above A, its bottom just past A's strip (and A's name label, when shown), never over
-either, with no other gap; turn A's name label on and off, and lock and unlock → E moves out and back in
+show and hide together. Drop → E attaches above A, its first element's bottom just past A's strip (and A's name label, when shown),
+with no other gap; E jumps up by about one element plus the strip gap from where the dots were (its
+strip sits above its first element), and with more than one aura E's further elements grow down over A
+(known limitation); turn A's name label on and off, and lock and unlock → E moves out and back in
 step, and A's name stays readable;
 Layout → Anchor shows both points picked (E's bottom on A's top), neither Automatic, and the log shows
 `drop: attach to <A's id> BOTTOM>TOP (free)`. Drag E away → strip edge, dots and line all go at once,
