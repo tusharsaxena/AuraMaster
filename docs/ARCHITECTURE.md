@@ -44,7 +44,7 @@ what each LibKa0s setup file publishes: `docs/module-map.md` → *Libraries*.
 ## Module Map
 
 Five source folders in the TOC's load order — `locales/` → `core/` → `defaults/` → `modules/` →
-`settings/` (layout-§1) — 54 authored Lua files under them: one locale, 16 core, 4 defaults, 18
+`settings/` (layout-§1) — 55 authored Lua files under them: one locale, 16 core, 4 defaults, 19
 modules and 15 settings. The load-bearing positions are annotated at their TOC lines:
 `core/MediaSetup.lua` before `core/Constants.lua` (the monospace face), `core/CoreSetup.lua` before
 anything that prints, `core/PerfSetup.lua` before every module that takes `NS.Perf` as an upvalue,
@@ -132,10 +132,10 @@ is not knowable. `FC.IdsMode`, `NS.Compat.IdsApply` and the setting choose the v
 (`ContainerClass:ResolveView`), and `ContainerClass:ApplyView` switches a live engine on a swap, a
 reaction change or a Situations write, in combat too. The Filters section says so in its orange
 warning and in a NOTE on Categories and Overrides that points to its last tab, **Situations**, which
-holds the setting (the dropdowns its `FC.IdsMode` calls for), the six zone checkboxes
-(`filter.zones`, the gate in `ContainerClass:ShouldShow`), and on a target or focus container the
-Unit type gate beside it (`filter.unitFilter`: NPCs or players by `NS.Compat.IsPlayerUnit`, friendly,
-neutral or hostile by `NS.Compat.UnitReactionKind`; filter situations S6). Blizzard's predicate and the switch:
+holds, first, on a target or focus container the Unit type gate (`filter.unitFilter`: NPCs or players
+by `NS.Compat.IsPlayerUnit`, friendly, neutral or hostile by `NS.Compat.UnitReactionKind`; filter
+situations S6), then the setting (the dropdowns its `FC.IdsMode` calls for) and the six zone
+checkboxes (`filter.zones`, the gate in `ContainerClass:ShouldShow`). Blizzard's predicate and the switch:
 `docs/midnight-quirks.md` → *Spell-id filters apply only where Blizzard's predicate allows them*.
 
 ## Message Bus

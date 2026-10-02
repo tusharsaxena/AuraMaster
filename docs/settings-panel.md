@@ -408,7 +408,7 @@ Then **Duplicate** and **Delete** (asks first), and — with more than one conta
 from**: a source dropdown (every other container, by name), a "what to copy" dropdown (everything, or one of Filters, Layout, Mouse,
 Label, Bar style, Icon style, Text style) and **Copy onto this container**. Name and position are never copied.
 
-### Filters (46 rows, `settings/Filters.lua`) — a section of Containers (#6)
+### Filters (56 rows, `settings/Filters.lua`) — a section of Containers (#6)
 
 Every tab opens with the container's warnings in orange — what the engine will silently not honor
 here (`Helpers.RenderWarnings`, from `FilterCompiler.Compile`'s `warnings`), followed by a gap of
@@ -534,6 +534,14 @@ can no longer be "hidden" at all once the toggle is gone, so every note stays no
 2026-10-02) — the group's ten rows, declared after Sorting's so the strip ends with it, drawn by a
 bespoke tab keyed by the group (`renderSituations`). Three sections:
 
+- **Unit type** (S6, the addendum; the first section, moved to the top on 2026-10-02). On a target or focus container two dropdowns:
+  **Unit type** (All, NPCs, Players; `container.filter.unitFilter.kind`) and **Reaction** (All,
+  Friendly, Neutral, Hostile; `container.filter.unitFilter.reaction`), both All by default and both
+  taking the `visibility` effect. A unit that does not match both choices hides the locked container
+  through the combat-legal visibility pass, re-run on every target or focus swap and reaction change;
+  no unit, or an answer that cannot be read, allows; unlocked or in test mode it still shows. A player
+  or pet container draws "Always your own character or pet." and no dropdown (the setting is ignored
+  there).
 - **Where spell lists don't apply.** A line in the Spell Categories NOTE's unit wording ("On units
   you can't assist, spell lists don't apply to this container.", and the same for units you can
   assist, your own debuffs and your pet's debuffs), then the dropdowns `FC.IdsMode` calls for: **On
@@ -553,14 +561,6 @@ bespoke tab keyed by the group (`renderSituations`). Three sections:
   Raids, Battlegrounds, Arenas (`container.filter.zones.none` / `.party` / `.scenario` / `.raid` /
   `.pvp` / `.arena`). An unticked kind of place hides the locked container there, through the
   combat-legal visibility pass; an unlocked container or one in test mode still shows anywhere.
-- **Unit type** (S6, the addendum; the first section, moved to the top on 2026-10-02). On a target or focus container two dropdowns:
-  **Unit type** (All, NPCs, Players; `container.filter.unitFilter.kind`) and **Reaction** (All,
-  Friendly, Neutral, Hostile; `container.filter.unitFilter.reaction`), both All by default and both
-  taking the `visibility` effect. A unit that does not match both choices hides the locked container
-  through the combat-legal visibility pass, re-run on every target or focus swap and reaction change;
-  no unit, or an answer that cannot be read, allows; unlocked or in test mode it still shows. A player
-  or pet container draws "Always your own character or pet." and no dropdown (the setting is ignored
-  there).
 
 **Filter priority.** The five ranks, highest first, are stated in ONE place — the foot of the
 **General** tab (`P-1`, `P-4`), under the heading *Filter priority logic*: a lead-in in

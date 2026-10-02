@@ -1087,7 +1087,7 @@ purgeable one stays hidden even when it is Important (in the every view a Show d
 Hide), and a buff over 30 seconds does not draw. The console shows
 `[Filter] <name>: spell lists off, every aura (NPC; unit cannot be assisted)`, and `/am diagnostics`
 reads `view=every situation=npcs`. Set *Important (Blizzard)* from **Show** to **Hide** → the NPC's
-important buffs stop drawing and the rest still draw once. Result:
+important buffs stop drawing and the rest still draw once. Result: pass (owner, 2026-10-02)
 
 **FILT-54. A hostile player with Players at Only Blizzard.** Use the FILT-47 container with **On
 NPCs** at **Every aura, once** and **On players** at **Only my Blizzard categories set to Show**. In
@@ -1095,18 +1095,18 @@ War Mode or a battleground, target an enemy player who pops a big defensive → 
 *Big defensives (Blizzard)* (or another Blizzard category set to Show: a purgeable or *Important*
 buff draws too); a buff only in *Defensive cooldowns* or in no Blizzard category does not draw; no
 buff draws twice; `/am diagnostics` reads `view=blizzard situation=players`. Target an enemy NPC next → its buffs that are in no Blizzard category set to
-Hide (Cancelable here) draw, once each (`view=every situation=npcs`). Result:
+Hide (Cancelable here) draw, once each (`view=every situation=npcs`). Result: pass (owner, 2026-10-02)
 
 **FILT-55. A friendly target is unchanged.** Same container, target a friendly player or a party
 member → it filters exactly as before filter situations: the Spell Categories set to Show draw,
 *Cancelable* buffs no other category claims stay hidden, nothing draws twice, and `/am diagnostics`
-reads `view=ids situation=-` whatever the two dropdowns say. Result:
+reads `view=ids situation=-` whatever the two dropdowns say. Result: pass (owner, 2026-10-02)
 
 **FILT-56. Switching a dropdown in combat.** Select the FILT-53 container in the panel, target an
 enemy NPC and enter combat. The panel is locked in combat, so switch **On NPCs** with `/am set
 container.filter.situations.npcs blizzard` → the NPC's buffs disappear at once, not after combat,
 with no Lua error, and the console logs one `[Filter]` line naming the blizzard view. `/am set
-container.filter.situations.npcs every` → they return at once. Result:
+container.filter.situations.npcs every` → they return at once. Result: pass (owner, 2026-10-02)
 
 **FILT-57. Each zone checkbox.** On a locked container, untick one box at a time under Filters →
 **Situations** → **Show in** and visit that kind of place: Open world, a dungeon (Dungeons), a delve
@@ -1114,11 +1114,11 @@ or scenario (Scenarios and delves), a raid (Raids), a battleground (Battleground
 (Arenas) → the container is hidden there and shows again after you leave for a ticked kind of
 place, with no `/reload`. Unlock it inside the unticked kind of place → it shows so you can move it;
 lock it → it hides again. Tick the box back → it shows at once. Note what a delve reports (it should
-be Scenarios and delves). Result:
+be Scenarios and delves). Result: pass (owner, 2026-10-02)
 
 **FILT-58. A /reload inside a dungeon.** Untick **Dungeons** on a locked container, enter a
 dungeon, then `/reload` inside it → after the reload the container is hidden from the first frame,
-not drawn and then hidden. Leave the dungeon → it shows. Result:
+not drawn and then hidden. Leave the dungeon → it shows. Result: pass (owner, 2026-10-02)
 
 **FILT-59. The tab and its rows.** Filters on any buff or debuff container → the tabs read General,
 Categories, Overrides, Sorting, Situations, with Situations last, and on every tab a clear gap
@@ -1131,8 +1131,7 @@ a duration' is built from spell lists." *Target debuffs (mine)* → "On units yo
 the same two dropdowns. *Player debuffs* → "On your own debuffs, …" and one dropdown, **Your own and
 your pet's debuffs**, whose tooltip names your own or your pet's debuffs (not "what a player
 shows"). *Player buffs* → "Spell lists always apply to your own and your pet's buffs."
-and no dropdown. Each then shows **Show in** and its six checkboxes, all ticked, and last **Unit
-type** (FILT-60). Result:
+and no dropdown. Each then shows **Show in** and its six checkboxes, all ticked. Result: pass (owner, 2026-10-02)
 
 FILT-60 to FILT-63 check the Situations tab's first section, **Unit type** (filter situations S6,
 2026-10-02): which units a target or focus container shows for, by kind (NPCs or Players) and by
@@ -1143,7 +1142,7 @@ says otherwise.
 **Where spell lists don't apply**, a section **Unit type** with two dropdowns, **Unit type** (All, NPCs, Players) and **Reaction**
 (All, Friendly, Neutral, Hostile), both at All. Each tooltip says an unlocked container, or one in
 test mode, still shows. On *Player buffs* and *Player debuffs*, and on a container switched to your
-pet, the section shows "Always your own character or pet." and no dropdown. Result:
+pet, the section shows "Always your own character or pet." and no dropdown. Result: pass (owner, 2026-10-02)
 
 **FILT-61. Hostile NPCs only.** On a locked target container set **Unit type** NPCs and **Reaction**
 Hostile. Target an enemy mob → its auras draw. Target a friendly player, a party member, a friendly
@@ -1151,20 +1150,20 @@ NPC and a neutral (yellow) mob in turn → the container shows nothing each time
 comes back on the next enemy mob, with no `/reload` and no Lua error. Repeat the swaps in combat
 → the same, at once. With no target → nothing to draw, no error. Unlock the container while
 targeting a friendly player → it shows so you can move it; lock it → it hides again. Set both
-dropdowns back to All → it shows on every target at once. Result:
+dropdowns back to All → it shows on every target at once. Result: pass (owner, 2026-10-02)
 
 **FILT-62. A reaction change without a swap.** On a locked target container set **Reaction**
 Hostile, target a friendly player and start a duel with them → the container shows when the duel
 starts (they turn hostile) and hides when it ends, with no target change. Set **Unit type** Players
 and **Reaction** All instead, and with a party member targeted switch **Unit type** with `/am set
 container.filter.unitFilter.kind npc` in combat → the container hides at once, not after combat;
-`/am set container.filter.unitFilter.kind all` → it shows again. Result:
+`/am set container.filter.unitFilter.kind all` → it shows again. Result: pass (owner, 2026-10-02)
 
 **FILT-63. Focus, and the copy.** Make a focus buffs container with **Unit type** Players and
 **Reaction** Friendly. Focus a party member → it draws; focus an enemy mob → it hides, while a target
 container set to All keeps drawing your target. Containers → **Copy settings from** that focus
 container, section **Filters**, onto another target container → its **Unit type** section reads
-Players / Friendly. Result:
+Players / Friendly. Result: pass (owner, 2026-10-02)
 
 ## Layout
 
@@ -1895,8 +1894,6 @@ line, then remove its row here.
 | FILT-43 to FILT-45 | new on 2026-10-02: the Options descriptor passes `addonName`, so help marks draw the library's `info` art (LibKa0s#42, CA-AM-NM) |
 | FILT-46 to FILT-51 | new on 2026-10-02 with the spell-list views (SV-04); FILT-51's NOTE sentences end "(see Situations)" since the same day (filter situations, SI-05) |
 | FILT-52 | new on 2026-10-02: the player's own reaction change (SV-05) |
-| FILT-53 to FILT-59 | new on 2026-10-02 with the Situations tab and its zones (filter situations, SI-05); FILT-59's honor line names Duration, its Duration option is quoted as the dropdown reads, and the debuff dropdown's tooltip is checked, since the same day (SI-06); FILT-59 ends with the Unit type section since the same day (SI-10) |
-| FILT-60 to FILT-63 | new on 2026-10-02 with the Situations tab's Unit type gate (filter situations S6, SI-10) |
 | LAYOUT-1 | 69, batch 5 |
 | LAYOUT-6 | 162, smoke batch 2 (owed, as CONT-8): the outline moving across aura buttons; 42: its combat refusal corrected on 2026-09-29 to `/am pick` alone, since the panel's button is locked in combat |
 | LAYOUT-11 | 67, batch 8 (failed 2026-09-25): the **Per row** step; the rest passed as 238 |
