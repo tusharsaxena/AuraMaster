@@ -89,3 +89,48 @@ the target's drag-handle strip. Where a drop attaches stays as it is.
   its rect, so a mark is never lost.
 - A hold or a detach whose parent rect is unknown keeps A4's single-dot mark; its parent's strip is
   still colored when it has one.
+
+## A6-A9. Second smoke round (owner, the same evening)
+
+Owner: "1. There is no highlight around the anchor (the strip with gold border). 2. It's still not
+possible to anchor top of parent to bottom of child; it always picks top-left, bottom-right etc. 3. The
+64px distance is way too little, make it 128px. 4. Anchor point indicators still anchor around the
+placeholder area rather than the anchor (the strip) area." Screenshots: the parent's strip unedged;
+the dots on the one-element placeholder's corners, the strip below them unmarked.
+
+### A6. The strip's OWN edge is repainted (fixes 1; replaces A5's overlay)
+
+Most likely cause, not provable headless: A5's overlay was a frame of ours under UIParent anchored
+with SetAllPoints to the strip, which hangs under the container's anchor; the client refuses or voids
+anchors from outside into that restricted tree (the same rule that makes GameTooltip refuse SetOwner on
+the strip, `tooltipSpec`). So no frame of ours is anchored to a strip any more. Instead the mark
+repaints the strip's own edge through the painter that drew it (`NS.Style.DrawEdge(strip, 2, r, g,
+b, 1)`, the same four textures, which live on the strip), and restores the widget's own gold
+(`DrawEdge(strip, 1, 1, 0.82, 0, 0.6)`, named once as constants beside the other strip numbers) when the
+mark leaves that strip or hides, on every end path (drop, cancel, combat, a strip hidden mid-drag,
+Destroy of either container, profile switch). A target with no visible strip keeps the box fallback.
+
+### A7. Side first, then align by thirds (fixes 2)
+
+Equal-width containers made the three pairs of a side exactly equidistant, and ties kept the start
+pair, so the middle pair could never win. The pick is now:
+1. **side**: for each of the parent's four sides, the gap between the child's facing edge and that
+   side (bottom: parent.bottom - child.top; top: child.bottom - parent.top; right: child.left -
+   parent.right; left: parent.left - child.right), eligible when `|gap| <= C.SNAP_RADIUS` and the
+   child's span along that side overlaps the parent's span widened by `C.SNAP_RADIUS`;
+2. **align**: the child's center along that side, over the parent's edge cut in thirds: first third
+   the start pair (LEFT, or TOP for a left or right side), middle third the middle pair, last third the
+   end pair; then the mirrored child point (A2's table);
+3. **rank** across sides and targets by `|gap|`, ties by target id then A2's table order; the answer's
+   `dist` is `|gap|` (what A4's "strictly nearer" compares).
+
+### A8. Measured and drawn on what you see (fixes 4)
+
+Every rect the snap reads, for the target and for the dragged child, is the container's VISIBLE
+FOOTPRINT: the union of its block rect (the hang rect as before, with its fallbacks) and, while each is
+shown, its strip and its name label, each read through the secret guards and simply left out when it
+does not read. Dots, line, box fallback, the side and align pick and the A4 leeway all use footprints.
+Where a drop attaches is unchanged (the twelve pairs, Place's seam and rooms), and the footprint is what
+those rooms already push past, so the dots land where the containers will touch.
+
+### A9. `C.DETACH_RADIUS = 128` (fixes 3)
