@@ -218,6 +218,13 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   are measured on them rather than on the whole block. A drop near the far end of a long populated container may find
   nothing in range; drop near its start, or turn test mode on, where the snap aims at the whole
   placeholder block (`Preview.Extent`, a frame of ours).
+- **A container wider than its parent aligns backwards by thirds** (issue #22, addendum A7). The
+  pair a drop picks comes from the dragged container's center over the parent's side cut in thirds.
+  For a child wider than its parent the center sits past the parent's middle on the far side of the
+  edge it lines up with: placed by the end pair (right edges flush), its center is over the parent's
+  first third, so letting go there picks the start pair, and placed by the start pair (left edges
+  flush) it picks the end pair. Drop it with its center over the third of the pair you want, or set
+  the pair on Layout > Anchor. Picked up and let go where it rests, it keeps its pair either way.
 - **In test mode, a container attached to another hangs from that container's preview extent.** A
   previewing container's engine is disabled and keeps a stale rect, so a container attached to it is
   re-placed onto a frame of ours sized to its placeholder block (`Preview.Extent`), where it sits as

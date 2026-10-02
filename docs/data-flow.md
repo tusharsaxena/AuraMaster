@@ -563,9 +563,11 @@ leeway (the owner-feedback addendum's A4): a pair found that way wins only when 
 under the distance of the container's CURRENT pair (its stored pair in effect, `Anchors.AttachPoints`,
 measured from its own point now to its parent's point now, on the two footprints, the parent's block on
 `Anchors.HangFrame` with no fallback to the anchor) and it is not the pair the pick gave where the
-container rested when the drag began (a child as wide as its parent rests centered, so that pick is
-its middle pair, whatever pair it is stored by), so a container picked up and let go where it sits
-keeps its pair, and never a pair of the current parent
+container rested when the drag began while the container is still there, within 2 UIParent units
+(`REST_SLACK`; a child as wide as its parent rests centered, so that pick is its middle pair, whatever
+pair it is stored by), so a container picked up and let go where it sits keeps its pair; moved further,
+that pick competes like any other pair, so a child wider than its parent, whose rest pick is the end
+pair, can still be dropped onto it, and never a pair of the current parent
 while that parent's block does not read (the snap measured it on the one-element fallback). Otherwise,
 while that pair's two points are at most `C.DETACH_RADIUS` (128 UIParent units, A9) from where they were
 when the drag began (read before the lift, where its settings put it: the seam gap, its strip and

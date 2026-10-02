@@ -1096,7 +1096,7 @@ badge and any count quoted in the docs must agree with it.
 - snap: folding reads Automatic for the target dropped on, not the container's current parent
 - snap: the radius is 24 UIParent units and the highlight is an opaque green
 
-### test_anchors_drag.lua (29)
+### test_anchors_drag.lua (30)
 
 - drag: a screen container and a container-attached one drag; a frame-attached one does not
 - drag: no drag starts in combat, and none leaves the container marked dragging
@@ -1122,6 +1122,7 @@ badge and any count quoted in the docs must agree with it.
 - drag: another pair in snap range beats the hold, and Shift suppresses only that (A4)
 - drag: a pair no nearer than its current one does not take it, so a child let go where it sits holds (A4)
 - drag: an equal-width child let go where it rests holds by its own pair, though its center is in the middle third; moved into another third, that pair takes it (A4, A7)
+- drag: a child wider than its parent, moved off where it rests, is re-attached by the end pair its rest pick named (A4, A7)
 - drag: an unreadable parent holds while the cursor has moved less than C.DETACH_RADIUS, in UIParent units (A4)
 - drag: a hidden parent is measured by the cursor and drawn as the child's dot alone, never at its last rect (A4)
 - drag: a parent whose block reads secret is measured by the cursor, never by its one-element fallback (A4)
@@ -2348,7 +2349,7 @@ badge and any count quoted in the docs must agree with it.
 | test_anchors_collapse.lua | 9 |
 | test_anchors_width.lua | 6 |
 | test_anchors_snap.lua | 23 |
-| test_anchors_drag.lua | 29 |
+| test_anchors_drag.lua | 30 |
 | test_anchors_drop.lua | 24 |
 | test_texttemplate.lua | 26 |
 | test_style.lua | 60 |
@@ -2400,4 +2401,4 @@ badge and any count quoted in the docs must agree with it.
 | test_layout_cap.lua | 13 |
 | test_diagnostics_contract.lua | 9 |
 | test_lizard_sighted.lua | 8 |
-| **Total** | **2010** |
+| **Total** | **2011** |

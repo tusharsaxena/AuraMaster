@@ -421,6 +421,7 @@ local current = {} -- scratch: an attached drag's current pair, shaped as Snap.N
 local startX, startY -- the cursor where the live drag began, in screen units (the leeway's fallback)
 local restX, restY   -- an attached drag's current-pair vector where it began (currentPair), or nil
 local restPoint, restRel -- the pair Snap.Nearest picked on the parent where the drag began, or nil
+local REST_SLACK = 2 -- how far, UIParent units, a child may drift from where it rests and still be let go there (beats)
 local restCand, restList = { rect = parentRect }, {} -- scratch: the parent as Snap.Nearest's one candidate
 restList[1] = restCand
 
@@ -592,8 +593,8 @@ end
 --      detaches it where it was let go (D6).
 -- "Strictly nearer" is this file's reading of the addendum's "not its current pair": the hit's |gap|
 -- (A7) under the current pair's distance, so a pair only as near as the current one never re-attaches
--- a container picked up and let go where it sits; nor does the pair the pick gave where it rested
--- (beats). Both pairs are measured on the footprints (A8). Shift suppresses step 1 only. A parent that does not
+-- a container picked up and let go where it sits; nor, while it is still there (REST_SLACK), does the
+-- pair the pick gave where it rested (beats). Both pairs are measured on the footprints (A8). Shift suppresses step 1 only. A parent that does not
 -- read (hidden, or the frame a follower hangs from reading secret, as an engine holding auras does)
 -- has no measurable pair, so step 2 holds while the cursor has moved less than C.DETACH_RADIUS from
 -- where the drag began. Never the one-element anchor Snap.TargetRect falls back to: the child hangs
@@ -621,10 +622,10 @@ end
 --- read (A8: the parent's on the frame a follower hangs from, Anchors.HangFrame, with no fallback,
 --- and the dragged container's own, each with its strip and label), `dx`, `dy` run from the parent's
 --- point of the pair to the dragged container's own point of it, `dist` is their length, and `away` the
---- leeway's measure: the nearer of `dist` and how far that vector has moved from where it was when the
---- drag began (`restX`, `restY`), since Place never sets a child on its bare join (the seam gap, its
+--- leeway's measure: the nearer of `dist` and `moved`, how far that vector has moved from where it was
+--- when the drag began (`restX`, `restY`), since Place never sets a child on its bare join (the seam gap, its
 --- strip and label room and its X/Y nudge, all in its own scale, lie between). All of them in UIParent
---- units, and nil where they do not read (`away` also with no rest vector). Nil when the parent has
+--- units, and nil where they do not read (`away` and `moved` also with no rest vector). Nil when the parent has
 --- no live instance.
 --- @return table|nil
 local function currentPair(container, cfg)
@@ -632,7 +633,7 @@ local function currentPair(container, cfg)
     local parent = id and NS.ContainerManager.instances[id]
     if not parent then return nil end
     current.id, current.point, current.relPoint = id, Anchors.AttachPoints(cfg)
-    current.dx, current.dy, current.dist, current.away = nil, nil, nil, nil
+    current.dx, current.dy, current.dist, current.away, current.moved = nil, nil, nil, nil, nil
     local rect = parent.anchor and parent.anchor:IsShown()
         and widen(parent, readRect(Anchors.HangFrame(parent), parentRect))
     current.rect = rect or nil
@@ -644,7 +645,8 @@ local function currentPair(container, cfg)
     current.dx, current.dy, current.dist = dx, dy, math.sqrt(dx * dx + dy * dy)
     if restX then
         local mx, my = dx - restX, dy - restY
-        current.away = math.min(current.dist, math.sqrt(mx * mx + my * my))
+        current.moved = math.sqrt(mx * mx + my * my)
+        current.away = math.min(current.dist, current.moved)
     end
     return current
 end
@@ -659,23 +661,27 @@ end
 
 --- Whether snap answer `hit` takes the container from current pair `cur` (step 1): with no current
 --- pair, any hit; never `cur` itself; never the pair the pick gave on the current parent where the
---- drag began (`restPoint`, `restRel`, Snap.BeginDrag); never any pair of the current parent while
---- `cur` has no distance (its block does not read, so the hit was measured on Snap.TargetRect's
---- one-element fallback, which a child resting under a one-row parent is always in range of); else
---- only a pair strictly nearer than `cur`: the hit's |gap| (A7) under `cur`'s distance between its two
---- points. The rest pick is this file's reading of A7 against A4: a child as wide as its parent rests
---- centered under it whatever pair it was stored by, so the pick there is the middle pair, as near by
---- its gap as the stored pair's two points are apart, and nearer by any sideways drift (in game the
---- parent's engine lead alone is one unit). Without it, a child stored by its start pair (Automatic's)
---- and let go where it sits would be re-attached by its middle pair, writing a pair nobody picked;
---- with it, a pick that changes (the child moved into another third, or to another side) still takes it.
+--- drag began (`restPoint`, `restRel`, Snap.BeginDrag) while the child is still where it rests (`cur`'s
+--- `moved` at most REST_SLACK); never any pair of the current parent while `cur` has no distance (its
+--- block does not read, so the hit was measured on Snap.TargetRect's one-element fallback, which a
+--- child resting under a one-row parent is always in range of); else only a pair strictly nearer than
+--- `cur`: the hit's |gap| (A7) under `cur`'s distance between its two points. The rest pick is this
+--- file's reading of A7 against A4, not the addendum's: a child as wide as its parent rests centered
+--- under it whatever pair it was stored by, so the pick there is the middle pair, as near by its gap as
+--- the stored pair's two points are apart, and nearer by any sideways drift (in game the parent's
+--- engine lead alone is one unit). Without it, a child stored by its start pair (Automatic's) and let
+--- go where it sits would be re-attached by its middle pair, writing a pair nobody picked. It covers
+--- only that let-go: once the child has moved past REST_SLACK the rest pick competes like any pair, so
+--- a child wider than its parent, whose rest pick is a real and different pair (the end pair, its
+--- center in the last third), can still be dropped onto it. With no rest vector it never applies.
 --- @return boolean
 local function beats(hit, cur)
     if not (hit and cur) then return hit ~= nil end
     if hit.id == cur.id then
         if not cur.dist then return false end
         if hit.point == cur.point and hit.relPoint == cur.relPoint then return false end
-        if hit.point == restPoint and hit.relPoint == restRel then return false end
+        if hit.point == restPoint and hit.relPoint == restRel
+            and cur.moved and cur.moved <= REST_SLACK then return false end
     end
     return not (cur.dist and hit.dist >= cur.dist)
 end

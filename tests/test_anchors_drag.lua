@@ -865,6 +865,33 @@ test("drag: an equal-width child let go where it rests holds by its own pair, th
     restore()
 end)
 
+test("drag: a child wider than its parent, moved off where it rests, is re-attached by the end pair its rest pick named (A4, A7)", function()
+    local NS, mocks = env(2)
+    local restore = recordOverlays(mocks)
+    local CM = NS.ContainerManager
+    plant(CM.instances[1].engine, 0, 100, 100, 140)
+    local at = NS.Database.FindContainer(2).attach
+    at.mode, at.container = "container", 1   -- Automatic: TOPLEFT on BOTTOMLEFT
+    local inst = CM.instances[2]
+    recordAnchor(inst.anchor)
+    -- 200 wide and 5 under 1: its center (100) is in the last third, so the pick where it rests is
+    -- the end pair, TOPRIGHT on BOTTOMRIGHT, though it is stored by the start pair.
+    plant(inst.anchor, 0, 75, 200, 95)
+    inst.handle:__fire("OnDragStart")
+    local Snap = NS.Anchors.Snap
+    assertEqual(select(2, Snap.Tick()), "hold", "let go where it rests: its own pair")
+    -- 10 to the left, its center (90) still in the last third: the end pair is 5 away by its gap,
+    -- its own pair's two points 11.2 apart.
+    plant(inst.anchor, -10, 75, 190, 95)
+    local pair, state = Snap.Tick()
+    -- red under: the rest pick never re-attaching, however far the child has moved (it held, so the
+    -- end pair was out of reach of a drop)
+    assertEqual(state, "attach", "moved off where it rests")
+    assertEqual(pair.point .. ">" .. pair.relPoint, "TOPRIGHT>BOTTOMRIGHT", "the end pair")
+    Snap.EndDrag(inst)
+    restore()
+end)
+
 test("drag: an unreadable parent holds while the cursor has moved less than C.DETACH_RADIUS, in UIParent units (A4)", function()
     local NS, mocks = env(3)
     local restore = recordOverlays(mocks)
