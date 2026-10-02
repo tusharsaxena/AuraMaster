@@ -545,8 +545,10 @@ leeway (the owner-feedback addendum's A4): a pair found that way wins only when 
 than the container's CURRENT pair (its stored pair in effect, `Anchors.AttachPoints`, measured from its
 own point now to its parent's point now on `Anchors.HangFrame`, with no fallback to the anchor), so a
 container picked up and let go where it sits keeps its pair, and never a pair of the current parent
-while that parent's block does not read (the snap measured it on the one-element fallback). Otherwise, while that distance is at most
-`C.DETACH_RADIUS` (64 UIParent units), the mark stays green on the current pair (a *hold*); beyond it,
+while that parent's block does not read (the snap measured it on the one-element fallback). Otherwise,
+while that pair's two points are at most `C.DETACH_RADIUS` (64 UIParent units) from where they were
+when the drag began (read before the lift, where its settings put it: the seam gap, its strip and
+label room and its X/Y nudge already between them), or from each other, the mark stays green on the current pair (a *hold*); beyond it,
 the box, both dots and the line all turn red (`C.DETACH_COLOR`, a *detach*). Shift suppresses only
 the other pair. When the parent does not read (hidden, or its hang frame secret, as an engine holding
 auras is), the hold lasts while the cursor has moved less than `C.DETACH_RADIUS` from where the drag

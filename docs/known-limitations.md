@@ -210,13 +210,6 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   bar's own height. The drop is unaffected: it attaches, or detaches at
   wherever the anchor was let go. The detach leeway cannot measure such a parent either, so it holds
   while the cursor has moved less than 64 UIParent units from where the drag began (below).
-- **The detach leeway is measured from where the container's own point is, not from where it rested**
-  (issue #22, addendum A4). An attached container dragged holds (green, and a release snaps it back)
-  while its own point of its pair is at most `C.DETACH_RADIUS` (64 UIParent units) from its parent's.
-  At rest that distance already includes the seam gap, the room for its own strip and name label, and
-  its X and Y offsets, so a container nudged more than 64 units off its parent shows red the moment the
-  drag starts, and any release detaches it. When the parent does not read (hidden, or holding auras,
-  whose block reads secret), the cursor's travel since the drag began stands in for that distance.
 - **A container whose engine reads secret is measured by its first element while you drag onto it**
   (issue #22). The snap aims at the frame a follower would hang from (`Anchors.HangFrame`). An engine
   holding auras reads secret, so `Snap.TargetRect` falls back to the container's anchor, one element

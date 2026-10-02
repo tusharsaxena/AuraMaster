@@ -296,6 +296,7 @@ local painted     -- the color table the highlight was last painted in, or nil b
 local ownRect, parentRect = {}, {} -- scratch: the dragged anchor's and its parent's rects, for the leeway
 local current = {} -- scratch: an attached drag's current pair, shaped as Snap.Nearest's answer
 local startX, startY -- the cursor where the live drag began, in screen units (the leeway's fallback)
+local restX, restY   -- an attached drag's current-pair vector where it began (currentPair), or nil
 
 --- One join dot, a `MARKER`-square child frame of highlight `hl` filled by one texture (`dot.dot`,
 --- which paintHighlight colors).
@@ -380,8 +381,9 @@ end
 --   1. "attach": a pair in snap range (Snap.Find, any target including its own parent) that is not
 --      its current pair and is STRICTLY NEARER than it (beats), Shift not held: green on that pair, a
 --      release attaches;
---   2. "hold": its current pair's two points (its own now, its parent's now) at most
---      C.DETACH_RADIUS apart: green on the current pair, a release snaps it back and writes nothing;
+--   2. "hold": its current pair's two points (its own now, its parent's now) at most C.DETACH_RADIUS
+--      from where they were when the drag began, or from each other: green on the current pair, a
+--      release snaps it back and writes nothing;
 --   3. "detach": beyond it: the whole mark red (C.DETACH_COLOR) on the current pair, a release
 --      detaches it where it was let go (D6).
 -- "Strictly nearer" is this file's reading of the addendum's "not its current pair": a pair only as
@@ -410,31 +412,39 @@ end
 
 --- The pair attached container `container` (settings `cfg`) joins its parent by, in `current`
 --- (scratch, Snap.Nearest's shape): the parent's id and the pair in effect (Anchors.AttachPoints,
---- Automatic resolved), with `dist` the distance in UIParent units between the dragged anchor's own
---- point of it and the parent's point of it on the frame a follower hangs from (Anchors.HangFrame,
---- with no fallback), or nil when either does not read or the parent's anchor is hidden. Nil when the
---- parent has no live instance.
+--- Automatic resolved). Where the parent's anchor is shown and both rects read (the parent's on the
+--- frame a follower hangs from, Anchors.HangFrame, with no fallback), `dx`, `dy` run from the parent's
+--- point of the pair to the dragged anchor's own point of it, `dist` is their length, and `away` the
+--- leeway's measure: the nearer of `dist` and how far that vector has moved from where it was when the
+--- drag began (`restX`, `restY`), since Place never sets a child on its bare join (the seam gap, its
+--- strip and label room and its X/Y nudge, all in its own scale, lie between). All of them in UIParent
+--- units, and nil where they do not read (`away` also with no rest vector). Nil when the parent has
+--- no live instance.
 --- @return table|nil
 local function currentPair(container, cfg)
     local id = tonumber(cfg.attach.container)
     local parent = id and NS.ContainerManager.instances[id]
     if not parent then return nil end
     current.id, current.point, current.relPoint = id, Anchors.AttachPoints(cfg)
-    current.dist = nil
+    current.dx, current.dy, current.dist, current.away = nil, nil, nil, nil
     local rect = parent.anchor and parent.anchor:IsShown() and readRect(Anchors.HangFrame(parent), parentRect)
     local own = rect and readRect(container.anchor, ownRect)
-    if own then
-        local cx, cy = Snap.PointAt(own, current.point)
-        local px, py = Snap.PointAt(rect, current.relPoint)
-        current.dist = math.sqrt((cx - px) * (cx - px) + (cy - py) * (cy - py))
+    if not own then return current end
+    local cx, cy = Snap.PointAt(own, current.point)
+    local px, py = Snap.PointAt(rect, current.relPoint)
+    local dx, dy = cx - px, cy - py
+    current.dx, current.dy, current.dist = dx, dy, math.sqrt(dx * dx + dy * dy)
+    if restX then
+        local mx, my = dx - restX, dy - restY
+        current.away = math.min(current.dist, math.sqrt(mx * mx + my * my))
     end
     return current
 end
 
---- Whether current pair `cur` (currentPair) is within the leeway: its two points at most
---- C.DETACH_RADIUS apart, or, when they do not read, the cursor less than that from where the drag began.
+--- Whether current pair `cur` (currentPair) is within the leeway: `away` at most C.DETACH_RADIUS, or,
+--- when that does not read, the cursor less than that from where the drag began.
 local function holds(cur)
-    if cur.dist then return cur.dist <= C.DETACH_RADIUS end
+    if cur.away then return cur.away <= C.DETACH_RADIUS end
     local travel = cursorTravel()
     return travel ~= nil and travel < C.DETACH_RADIUS
 end
@@ -572,11 +582,15 @@ end
 
 --- A drag of live container `container` begins (beginDrag in modules/Anchors.lua said yes, so it is
 --- screen or container-attached and out of combat). A container-attached one is lifted onto UIParent
---- first (lift); a screen one already hangs there. Then `dragging` holds Anchors.Place off it, and
---- the driver starts, with the cursor's position noted for the leeway's fallback (classify).
+--- first (lift), its current pair's vector read beforehand, where its settings put it, as the leeway's
+--- rest (currentPair); a screen one already hangs there. Then `dragging` holds Anchors.Place off it,
+--- and the driver starts, with the cursor's position noted for the leeway's fallback (classify).
 function Snap.BeginDrag(container)
     local cfg = container:Cfg()
+    restX, restY = nil, nil
     if cfg and cfg.attach and cfg.attach.mode == "container" and container.anchor then
+        local rest = currentPair(container, cfg)
+        if rest then restX, restY = rest.dx, rest.dy end
         local how = lift(container)
         if NS.Debug then NS.Debug("Anchor", "container %s: drag lifts it off its parent (%s)", container.id, how) end
     end

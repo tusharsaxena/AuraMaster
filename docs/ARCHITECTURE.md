@@ -95,8 +95,8 @@ them, all in one color, and `Anchors.Place` leaves a dragging anchor alone. `Sna
 from the drop itself: a candidate and no Shift writes the whole `container.attach` section through
 `NS.AttachByDrop` (`settings/Layout.lua`), which asks first with the GC-1 popup when the chain's flow
 would change. An attached container has a leeway (the owner-feedback addendum's A4, `C.DETACH_RADIUS`,
-64): while its current pair's two points stay that close (the cursor's travel when its parent does not
-read), the mark stays green on that pair and a release snaps it back, writing nothing; past it, the
+64): while its current pair's two points stay that close to where they rested when the drag began, or
+to each other (the cursor's travel when its parent does not read), the mark stays green on that pair and a release snaps it back, writing nothing; past it, the
 whole mark turns red (`C.DETACH_COLOR`) and a release detaches to the drop position, X/Y 0. Another
 pair in snap range, not its current one and nearer than it (never one of a parent whose block reads
 secret), wins over both, and Shift suppresses only that.

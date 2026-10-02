@@ -344,6 +344,7 @@ test("drop: an attached container dropped with no candidate detaches: position, 
     at.mode, at.container, at.x, at.y, at.relPoint = "container", 1, 4, 5, "TOPRIGHT"
     local inst = NS.ContainerManager.instances[2]
     recordAnchor(inst.anchor, 300.24, 410)
+    plant(inst.anchor, 104, 125, 124, 145)   -- at rest: its TOPLEFT on 1's TOPRIGHT, nudged 4, 5
     local writes = recordWrites(NS)
     dragTo(inst, 300, 410, 320, 430)
     local cfg = NS.Database.FindContainer(2)
@@ -374,6 +375,7 @@ test("drop: Shift held at the drop places without attaching: a screen one moves,
     cfg.attach.mode, cfg.attach.container = "container", 3
     -- 3 planted far from 1, so the drop is past the leeway of 2's pair on 3 (A4).
     plant(NS.ContainerManager.instances[3].engine, 300, 100, 400, 140)
+    plant(inst.anchor, 300, 75, 320, 95)   -- at rest, 5 under 3's BOTTOMLEFT
     inst.handle:__fire("OnDragStart")
     plant(inst.anchor, 0, 75, 20, 95)
     mocks.__shift = true
@@ -393,7 +395,8 @@ test("drop: let go within the leeway, an attached container snaps back onto its 
     local inst = CM.instances[2]
     recordAnchor(inst.anchor)
     local writes = recordWrites(NS)
-    -- 2's TOPLEFT 30 under 1's BOTTOMLEFT: no pair in snap range, inside C.DETACH_RADIUS.
+    plant(inst.anchor, 0, 75, 20, 95)   -- at rest, 5 under 1's BOTTOMLEFT
+    -- 2's TOPLEFT 30 under 1's BOTTOMLEFT, 25 from its rest: no pair in snap range, inside C.DETACH_RADIUS.
     dragTo(inst, 0, 50, 20, 70)
     -- red under: the old drop (no candidate: an attached container detached where it was let go)
     assertEqual(#writes, 0, "nothing written")
@@ -411,13 +414,30 @@ test("drop: let go past the leeway, an attached container detaches where it was 
     local at = NS.Database.FindContainer(2).attach
     at.mode, at.container = "container", 1
     local inst = NS.ContainerManager.instances[2]
-    recordAnchor(inst.anchor, 0, 15)
+    recordAnchor(inst.anchor, 0, 10)
+    plant(inst.anchor, 0, 75, 20, 95)   -- at rest, 5 under 1's BOTTOMLEFT
     local writes = recordWrites(NS)
-    -- 65 under 1's BOTTOMLEFT: one past the radius.
-    dragTo(inst, 0, 15, 20, 35)
+    -- 65 below its rest (70 under 1's BOTTOMLEFT): one past the radius.
+    dragTo(inst, 0, 10, 20, 30)
     -- red under: a hold with no bound, or a bound read exclusive of 65
     assertEqual(table.concat(writes, ","), "container.position,container.attach", "detached")
     assertEqual(NS.Database.FindContainer(2).attach.mode, "screen")
+end)
+
+test("drop: released where it rests, a container its settings put past the radius snaps back and writes nothing", function()
+    local NS = env()
+    local at = NS.Database.FindContainer(2).attach
+    at.mode, at.container, at.y = "container", 1, -70
+    local inst = NS.ContainerManager.instances[2]
+    recordAnchor(inst.anchor)
+    local writes = recordWrites(NS)
+    -- Its seam gap and Y nudge put its TOPLEFT 75 under 1's BOTTOMLEFT.
+    plant(inst.anchor, 0, 5, 20, 25)
+    dragTo(inst, 2, 5, 22, 25)
+    -- red under: the leeway measured on the bare join (75 > 64: a pick-up and release detached it)
+    assertEqual(#writes, 0, "nothing written")
+    assertEqual(NS.Database.FindContainer(2).attach.mode, "container", "still attached")
+    assertEqual(inst.placedAs, "container", "placed back on its parent")
 end)
 
 test("drop: the release is classified again, never taken from the last tick", function()
@@ -427,6 +447,7 @@ test("drop: the release is classified again, never taken from the last tick", fu
     local inst = NS.ContainerManager.instances[2]
     recordAnchor(inst.anchor, 300, 410)
     inst.handle:Show()   -- a tick cancels the drag of a strip that is not visible
+    plant(inst.anchor, 0, 75, 20, 95)   -- at rest, 5 under 1's BOTTOMLEFT
     inst.handle:__fire("OnDragStart")
     plant(inst.anchor, 0, 50, 20, 70)
     assertEqual(select(2, NS.Anchors.Snap.Tick()), "hold", "the last tick held")

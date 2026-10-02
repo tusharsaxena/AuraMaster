@@ -459,9 +459,10 @@ end)
 -- ── the detach leeway on an attached container (A4) ───────────────────────────────────────────
 
 --- Container 2 attached to container 1 (Automatic: TOPLEFT on 1's BOTTOMLEFT, 1 growing right and
---- down), 1's engine planted at 0,100 .. 100,140, the overlays recorded and 2's drag started.
+--- down), 1's engine planted at 0,100 .. 100,140, 2 resting where its settings put it, `restY`
+--- under 1's BOTTOMLEFT (5 when nil), the overlays recorded and 2's drag started.
 --- Returns NS, mocks, 2's instance, Snap and the overlays' restore.
-local function leewayDrag(n)
+local function leewayDrag(n, restY)
     local NS, mocks = env(n or 2)
     local restore = recordOverlays(mocks)
     local CM = NS.ContainerManager
@@ -470,6 +471,8 @@ local function leewayDrag(n)
     at.mode, at.container = "container", 1
     local inst = CM.instances[2]
     recordAnchor(inst.anchor)
+    local top = 100 - (restY or 5)
+    plant(inst.anchor, 0, top - 20, 20, top)
     inst.handle:__fire("OnDragStart")
     return NS, mocks, inst, NS.Anchors.Snap, restore
 end
@@ -491,7 +494,7 @@ test("drag: held within C.DETACH_RADIUS of its current pair, green on that pair;
     local C = NS.Constants
     -- red under: no DETACH_RADIUS (the addendum's 64 UIParent units)
     assertEqual(C.DETACH_RADIUS, 64)
-    -- 2's TOPLEFT 30 under 1's BOTTOMLEFT: out of snap range, inside the leeway.
+    -- 2's TOPLEFT 30 under 1's BOTTOMLEFT, 25 from where it rested: out of snap range, inside the leeway.
     plant(inst.anchor, 0, 50, 20, 70)
     local pair, state = Snap.Tick()
     -- red under: the old tick (no candidate in range: nothing shown, a release detaches)
@@ -500,10 +503,10 @@ test("drag: held within C.DETACH_RADIUS of its current pair, green on that pair;
     assertTrue(Snap.highlight:IsShown(), "the mark is shown on it")
     assertEqual(dotAt(mocks, Snap.marker, "the parent's dot"), "BOTTOMLEFT 0,100")
     assertPainted(NS, C.SNAP_COLOR, "hold")
-    -- Exactly 64 away holds ("at most"); 65 does not.
-    plant(inst.anchor, 0, 16, 20, 36)
+    -- Exactly 64 from where it rested holds ("at most"); 65 does not.
+    plant(inst.anchor, 0, 11, 20, 31)
     assertEqual(select(2, Snap.Tick()), "hold", "64: still held")
-    plant(inst.anchor, 0, 15, 20, 35)
+    plant(inst.anchor, 0, 10, 20, 30)
     pair, state = Snap.Tick()
     -- red under: a hold with no bound (an attached container could never be detached)
     assertEqual(state, "detach", "65: past the radius")
@@ -511,12 +514,30 @@ test("drag: held within C.DETACH_RADIUS of its current pair, green on that pair;
     assertTrue(Snap.highlight:IsShown(), "still shown")
     -- red under: no DETACH_COLOR, or only the box repainted (the dots and the line left green)
     assertPainted(NS, C.DETACH_COLOR, "detach")
-    assertEqual(dotAt(mocks, Snap.childMarker, "the child's dot"), "BOTTOMLEFT 0,35",
+    assertEqual(dotAt(mocks, Snap.childMarker, "the child's dot"), "BOTTOMLEFT 0,30",
         "the child's dot on its own point of the current pair")
     plant(inst.anchor, 0, 50, 20, 70)
     Snap.Tick()
     -- red under: a paint that never goes back to green once red
     assertPainted(NS, C.SNAP_COLOR, "back within the leeway")
+    restore()
+end)
+
+test("drag: the leeway runs from where the container rests, seam room and nudge included, never from the bare join (A4)", function()
+    -- Its seam gap, strip and label room and a Y nudge put it 75 under 1's BOTTOMLEFT at rest.
+    local NS, _, inst, Snap, restore = leewayDrag(2, 75)
+    local pair, state = Snap.Tick()
+    -- red under: the bare join measured (75 > 64: red the moment the drag starts, a release detaches)
+    assertEqual(state, "hold", "at rest")
+    assertEqual(pair.point .. ">" .. pair.relPoint, "TOPLEFT>BOTTOMLEFT", "on its current pair")
+    plant(inst.anchor, 0, -59, 20, -39)
+    assertEqual(select(2, Snap.Tick()), "hold", "64 further down: still held")
+    plant(inst.anchor, 0, -60, 20, -40)
+    assertEqual(select(2, Snap.Tick()), "detach", "65 further down")
+    -- red under: a distance from the rest point alone (it would only grow, moving toward the parent)
+    plant(inst.anchor, 0, 80, 20, 100)
+    assertEqual(select(2, Snap.Tick()), "hold", "75 up, flush on its parent: its own pair, held")
+    NS.Anchors.Snap.EndDrag(inst)
     restore()
 end)
 
