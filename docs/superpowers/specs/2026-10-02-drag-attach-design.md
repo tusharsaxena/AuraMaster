@@ -121,3 +121,20 @@ regenerated, README test badge.
 ## Out of scope
 
 Dragging frame-attached containers; snapping to non-AuraMaster frames; picking a free pair by drop.
+
+## Review corrections (DD-05)
+
+The whole-branch review found these; the text above is left as decided, and these supersede it.
+
+- **D7, the fold.** A drop picks a whole side, so its pair is folded whole: both points nil when the
+  pair equals Automatic's, else both absolute. Folding each half on its own stored mixed pairs (ahead-start
+  under right/down as `nil > TOPRIGHT`) that resolve to a degenerate pair once the parent's growth or a
+  Text parent's justify changes Automatic (`TOPRIGHT > TOPRIGHT` under Grow Left). The panel's dropdowns
+  still set one point each.
+- **D8 and D11, the placement after a drop.** A drop places the container itself (`Anchors.Place`)
+  whatever `NS.AttachByDrop` answers, and an attached container dropped in combat is re-placed at
+  `PLAYER_REGEN_ENABLED` (`Snap.PlaceHeld`): ContainerManager holds applies while auras are secret as
+  well as under lockdown (`CM.MustDefer`), so the apply a write queues cannot be relied on in a key.
+- **A drag cut short.** A strip hidden mid-drag gets no OnDragStop, so the driver's tick cancels that
+  drag once out of combat (stop moving, end the drag, place from the settings, nothing written), and
+  `ContainerClass:Destroy` ends a drag still live.

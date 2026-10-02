@@ -3,8 +3,8 @@
 -- nearest of the nine classified sides (C.ATTACH_EDGES) under the target's flow growth, within
 -- C.SNAP_RADIUS (D1, D2); its eligibility keeps a container off itself, off anything that follows it
 -- and off a disabled or hidden one (D5); its rect read goes through the secrets guard and falls back
--- from an unreadable engine to the target's anchor; and its folding stores each half of the picked
--- pair nil where it equals what Automatic would give (D7).
+-- from an unreadable engine to the target's anchor; and its folding stores the picked pair nil, nil
+-- only when the whole of it is what Automatic would give, else both points absolute (D7).
 -- Its own suite because tests/test_anchors.lua sits near layout-§1's 1500-line cap.
 
 local T = _G.AM_TEST
@@ -251,20 +251,24 @@ test("snap: a picked side equal to Automatic stores nil for both points", functi
     end
 end)
 
-test("snap: a side other than Automatic's stores the absolute pair, each half folded on its own", function()
+test("snap: a side other than Automatic's stores the whole absolute pair, even one sharing a point with it", function()
     local NS = env(2)
     NS.Database.FindContainer(1).style = "bars"
     local c2 = NS.Database.FindContainer(2)
     c2.style = "bars"
     local Snap = NS.Anchors.Snap
-    -- Growing right/down Automatic is after-start, TOPLEFT > BOTTOMLEFT.
+    -- Growing right/down Automatic is after-start, TOPLEFT > BOTTOMLEFT. A drop picks a whole side, so
+    -- half of it left Automatic would follow the parent's growth alone: under Grow Left, Automatic
+    -- turns TOPRIGHT > BOTTOMRIGHT and a stored nil > TOPRIGHT would resolve to TOPRIGHT > TOPRIGHT,
+    -- the child on top of the parent's first element.
     local cp, rp = Snap.FoldPoints(c2, 1, "BOTTOMRIGHT", "BOTTOMLEFT")
-    -- red under: a fold that stores the whole pair or nothing
-    assertEqual(tostring(cp) .. ">" .. tostring(rp), "BOTTOMRIGHT>nil", "behind-end: the relative half is Automatic's")
+    -- red under: the per-half fold (BOTTOMRIGHT>nil, a mixed pair the player never picked)
+    assertEqual(tostring(cp) .. ">" .. tostring(rp), "BOTTOMRIGHT>BOTTOMLEFT", "behind-end: shares the relative half")
     cp, rp = Snap.FoldPoints(c2, 1, "TOPLEFT", "TOPRIGHT")
-    assertEqual(tostring(cp) .. ">" .. tostring(rp), "nil>TOPRIGHT", "ahead-start: the child half is Automatic's")
+    -- red under: the per-half fold (nil>TOPRIGHT)
+    assertEqual(tostring(cp) .. ">" .. tostring(rp), "TOPLEFT>TOPRIGHT", "ahead-start: shares the child half")
     cp, rp = Snap.FoldPoints(c2, 1, "TOPRIGHT", "TOPLEFT")
-    assertEqual(tostring(cp) .. ">" .. tostring(rp), "TOPRIGHT>TOPLEFT", "behind-start: neither")
+    assertEqual(tostring(cp) .. ">" .. tostring(rp), "TOPRIGHT>TOPLEFT", "behind-start: shares neither")
 end)
 
 test("snap: folding reads Automatic for the target dropped on, not the container's current parent", function()

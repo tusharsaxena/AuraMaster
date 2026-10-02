@@ -551,8 +551,9 @@ through the seam against this container's id, never the panel's selection:
    attached one writes nothing and is held: `Snap.PlaceHeld`, at `PLAYER_REGEN_ENABLED`, puts it back
    on its parent, even while auras stay secret and ContainerManager still holds applies.
 2. **A candidate and no Shift:** the whole `container.attach` section (mode container, the target,
-   the picked side's two points, each nil where it equals Automatic's, `Snap.FoldPoints`, and X/Y 0;
-   the frame mode's keys kept) goes to `NS.AttachByDrop` (`settings/Layout.lua`). It writes it, or,
+   the picked side's two points, both nil when the side is Automatic's and both absolute otherwise,
+   `Snap.FoldPoints`, and X/Y 0; the frame mode's keys kept) goes to `NS.AttachByDrop`
+   (`settings/Layout.lua`). It writes it, or,
    when the chain the drop joins flows differently, shows the `AURAMASTER_ATTACH_FLOW` popup (GC-1)
    carrying the section, whose Accept writes it and whose Cancel leaves everything as it was. Either
    way the container is placed at once from its settings as they then are (`Anchors.Place`): on its

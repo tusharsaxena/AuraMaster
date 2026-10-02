@@ -195,12 +195,16 @@ end
 -- ---------------------------------------------------------------------------
 
 --- The `attach.childPoint` and `attach.relPoint` to store for container `cfg` dropped on container
---- `targetId` by the pair `point`/`relPoint`: each nil (Automatic) where it equals the matching half
---- of Automatic's pair for that child on that target (Anchors.AutoPoints, G3), else the absolute
---- point. So a drop on the default side stores the same Automatic pair a fresh attach on the panel
---- does, and keeps following the parent's growth and justify as they change. Automatic is read for
---- the container AS IF attached to `targetId` (a probe carrying its id, style, text and layout),
---- since its stored attach still names wherever it was before the drop; `cfg` is not touched.
+--- `targetId` by the pair `point`/`relPoint`: both nil (Automatic) when the WHOLE pair is Automatic's
+--- for that child on that target (Anchors.AutoPoints, G3), else both points absolute. So a drop on the
+--- default side stores the same Automatic pair a fresh attach on the panel does, and keeps following
+--- the parent's growth and justify as they change, while a drop on any other side keeps that side.
+--- Never one half of each: a drop picks a whole side, and a pair half Automatic follows the growth with
+--- one point only (ahead-start under right/down, TOPLEFT > TOPRIGHT, stored as nil > TOPRIGHT, would
+--- resolve to TOPRIGHT > TOPRIGHT under Grow Left: the child on top of the parent's first element).
+--- The panel's two dropdowns still set one point each. Automatic is read for the container AS IF
+--- attached to `targetId` (a probe carrying its id, style, text and layout), since its stored attach
+--- still names wherever it was before the drop; `cfg` is not touched.
 --- @return string|nil childPoint, string|nil relPoint
 function Snap.FoldPoints(cfg, targetId, point, relPoint)
     local probe = {
@@ -208,7 +212,8 @@ function Snap.FoldPoints(cfg, targetId, point, relPoint)
         attach = { mode = "container", container = targetId },
     }
     local autoPoint, autoRel = Anchors.AutoPoints(probe)
-    return (point ~= autoPoint) and point or nil, (relPoint ~= autoRel) and relPoint or nil
+    if point == autoPoint and relPoint == autoRel then return nil, nil end
+    return point, relPoint
 end
 
 -- ---------------------------------------------------------------------------
@@ -416,7 +421,7 @@ local function attachCopy(cfg)
 end
 
 --- The section a drop on `hit` writes for container `cfg` (D7, D10): container mode on the target,
---- the picked side's two points (each nil where it equals Automatic's, Snap.FoldPoints), and the
+--- the picked side's two points (both nil when the side is Automatic's, Snap.FoldPoints), and the
 --- offsets reset to 0, since the drop is the placement and an old nudge would only push it off it.
 local function attachSection(cfg, hit)
     local section = attachCopy(cfg)

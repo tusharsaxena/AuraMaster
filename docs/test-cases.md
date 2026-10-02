@@ -1081,7 +1081,7 @@ badge and any count quoted in the docs must agree with it.
 - snap: an engine whose rect reads secret falls back to the anchor; an unreadable anchor drops the target
 - snap: Find reads the dragged anchor and answers the nearest in-range target
 - snap: a picked side equal to Automatic stores nil for both points
-- snap: a side other than Automatic's stores the absolute pair, each half folded on its own
+- snap: a side other than Automatic's stores the whole absolute pair, even one sharing a point with it
 - snap: folding reads Automatic for the target dropped on, not the container's current parent
 - snap: the radius is 24 UIParent units and the highlight is an opaque green
 
