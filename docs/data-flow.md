@@ -534,9 +534,10 @@ It sets `dragging`, which makes `Anchors.Place` leave the anchor where the drag 
 the driver: one frame whose OnUpdate is armed only while a drag is live and runs `Snap.Tick` at most
 every 0.03 s. A tick finds no candidate while Shift is held or once combat has started; otherwise
 `Snap.Find` measures, for every eligible container (enabled, its anchor shown, not the dragged one, not
-one that follows it: `Anchors.WouldCycle`), the nine classified sides under that container's flow
-growth, between the dragged anchor's point and the target's relative point on the rect a follower
-would hang from (`Anchors.HangFrame`; an engine that reads secret falls back to its anchor). The
+one that follows it: `Anchors.WouldCycle`), the twelve outside pairs (each of its sides' start,
+middle and end point joined to the dragged one's point mirrored across that side, absolute and
+independent of growth; the three on its before side place as a free pair), between the dragged
+anchor's point and the target's relative point on the rect a follower would hang from (`Anchors.HangFrame`; an engine that reads secret falls back to its anchor). The
 nearest within `C.SNAP_RADIUS` (24 UIParent units) is framed by a green highlight with a marker on the
 join; both hang from UIParent, never from the target. A strip hidden mid-drag (`/am lock`, a
 stand-down or a disable run while the button is held) is sent no OnDragStop, so the tick itself

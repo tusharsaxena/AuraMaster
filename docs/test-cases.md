@@ -1068,12 +1068,13 @@ badge and any count quoted in the docs must agree with it.
 - width: a one-icon container too narrow for the marks and a readable label keeps its natural width
 - width: the label is worked out once per name and width, not on every pass
 
-### test_anchors_snap.lua (16)
+### test_anchors_snap.lua (17)
 
 - snap: PointAt gives each of the nine WoW points on a rect
-- snap: Nearest picks the side whose two points meet, for each of the nine under each growth
+- snap: Nearest picks each of the twelve outside pairs, the child's point the mirror of the parent's, under two growths
+- snap: Nearest picks the pair of each of the nine sides under each growth, and names its token
 - snap: Nearest answers nil past the radius, and takes a pair exactly on it
-- snap: a tie keeps the first target in the order given, and the first side in ATTACH_EDGES order
+- snap: a tie keeps the first target in the order given, and the first pair in the A2 table's order
 - snap: Candidates lists every other live container in id order, with its rect and flow growth
 - snap: Candidates gives id order whatever order pairs walks the instances in, so a tie keeps the lower id
 - snap: a follower of the dragged container, and one further down its chain, is never a target
@@ -1102,10 +1103,11 @@ badge and any count quoted in the docs must agree with it.
 - drag: a strip hidden mid-drag ends the drag at the next tick, and the container goes back where its settings put it
 - drag: a container destroyed mid-drag ends its drag and stops the driver
 
-### test_anchors_drop.lua (15)
+### test_anchors_drop.lua (16)
 
 - drop: a candidate in range attaches by one whole-section write: the side's points, x and y 0, the rest kept
 - drop: on the Automatic side both points store nil (Automatic), as a fresh attach on the panel does
+- drop: on the parent's before side the absolute pair is stored, and it places as a free pair (A2)
 - drop: container.attach written whole re-applies the new parent, the container and its followers
 - drop: a written attach places the container on its new parent at once, even while applies are held
 - drop: an attached container dropped in combat goes back on its parent when combat ends, applies held or not
@@ -2312,9 +2314,9 @@ badge and any count quoted in the docs must agree with it.
 | test_anchors_steady.lua | 8 |
 | test_anchors_collapse.lua | 9 |
 | test_anchors_width.lua | 6 |
-| test_anchors_snap.lua | 16 |
+| test_anchors_snap.lua | 17 |
 | test_anchors_drag.lua | 12 |
-| test_anchors_drop.lua | 15 |
+| test_anchors_drop.lua | 16 |
 | test_texttemplate.lua | 26 |
 | test_style.lua | 60 |
 | test_castaura.lua | 7 |
@@ -2365,4 +2367,4 @@ badge and any count quoted in the docs must agree with it.
 | test_layout_cap.lua | 13 |
 | test_diagnostics_contract.lua | 9 |
 | test_lizard_sighted.lua | 8 |
-| **Total** | **1975** |
+| **Total** | **1977** |

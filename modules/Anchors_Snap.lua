@@ -4,13 +4,18 @@ local _, NS = ...
 -- onto if it were dropped now, and by which pair of points. Its own file, so modules/Anchors.lua
 -- (which places the anchor and owns the drag handle) stays well under layout-§1's cap.
 --
--- THE MODEL (the design's D1, D2, D5, D7). A drop never picks a free pair: it picks one of the nine
--- classified sides (C.ATTACH_EDGES), read under the TARGET's flow growth, since that is the growth the
--- dragged container inherits the moment it attaches (Anchors.FlowRoot) and so the growth its points
--- are classified under from then on. For each side the distance is measured between the dragged
--- anchor's own point of the pair and the target's relative point of it, on the rect a follower would
--- hang from (Anchors.HangFrame); the nearest side of the nearest target wins when it is within
--- C.SNAP_RADIUS. Everything is in UIParent units, so the radius feels the same under any scale.
+-- THE MODEL (the design's D2, D5, D7, as the owner-feedback addendum's A2 amends D1). A drop picks one
+-- of the TWELVE OUTSIDE PAIRS (OUTSIDE below), absolute and independent of growth: each of the
+-- target's four sides, its start, middle and end point, joined to the dragged container's point that
+-- mirrors it across that side, so the child sits flush outside the target. Nine of them are the nine
+-- classified sides (C.ATTACH_EDGES) under any growth; the other three lie on the target's before side
+-- (the one its lines start from) and place as a FREE pair (batch 11 G5: X/Y alone, no seam, no
+-- spread). The answer names the token the pair classifies as under the TARGET's flow growth, the
+-- growth the dragged container inherits the moment it attaches (Anchors.FlowRoot), or nil when free.
+-- For each pair the distance is measured between the dragged anchor's own point and the target's
+-- relative point, on the rect a follower would hang from (Anchors.HangFrame); the nearest pair of the
+-- nearest target wins when it is within C.SNAP_RADIUS. Everything is in UIParent units, so the radius
+-- feels the same under any scale.
 --
 -- WHAT IS READ, AND HOW. Two kinds of rect: the dragged anchor's, which hangs from UIParent while it
 -- is dragged and holds nothing secret, and each target's hang frame, which may be an ENGINE holding
@@ -37,7 +42,8 @@ local Anchors = NS.Anchors
 local C = NS.Constants
 
 -- From modules/Anchors_Attach.lua, at file load: EDGE_PAIRS[growH][growV][token] = { point,
--- relativePoint }, the very table a Place classifies by, and the growth a container flows by.
+-- relativePoint }, the very table a Place classifies by (read once, below, into PAIR_TOKEN), and the
+-- growth a container flows by.
 local AA = NS.AnchorsAttach
 local EDGE_PAIRS, flowGrowth = AA.EDGE_PAIRS, AA.FlowGrowth
 
@@ -65,37 +71,68 @@ function Snap.PointAt(rect, point)
     return rect.left + (rect.right - rect.left) * fx, rect.bottom + (rect.top - rect.bottom) * fy
 end
 
---- The pair table for a growth, normalized as NS.Container.Growth normalizes it ("right" unless
---- "left", "down" unless "up"), so a candidate built by hand can never miss a row.
-local function pairsFor(growH, growV)
-    return EDGE_PAIRS[(growH == "left") and "left" or "right"][(growV == "up") and "up" or "down"]
+-- The twelve outside pairs (A2), in tie order: { side, the target's relative point, the child's
+-- point }, the child's point the target's mirrored across that side (bottom and top swap TOP and
+-- BOTTOM, right and left swap LEFT and RIGHT), so a child joined by one sits flush outside the target.
+local OUTSIDE = {
+    { "bottom", "BOTTOMLEFT", "TOPLEFT" }, { "bottom", "BOTTOM", "TOP" }, { "bottom", "BOTTOMRIGHT", "TOPRIGHT" },
+    { "top", "TOPLEFT", "BOTTOMLEFT" }, { "top", "TOP", "BOTTOM" }, { "top", "TOPRIGHT", "BOTTOMRIGHT" },
+    { "right", "TOPRIGHT", "TOPLEFT" }, { "right", "RIGHT", "LEFT" }, { "right", "BOTTOMRIGHT", "BOTTOMLEFT" },
+    { "left", "TOPLEFT", "TOPRIGHT" }, { "left", "LEFT", "RIGHT" }, { "left", "BOTTOMLEFT", "BOTTOMRIGHT" },
+}
+
+-- PAIR_TOKEN[growH][growV][point][relPoint] = the token that pair is under that growth, read off
+-- EDGE_PAIRS once, so naming the answer's token builds no string. A pair with no row is free.
+local PAIR_TOKEN = {}
+for growH, byV in pairs(EDGE_PAIRS) do
+    PAIR_TOKEN[growH] = {}
+    for growV, sides in pairs(byV) do
+        local back = {}
+        for token, pair in pairs(sides) do
+            back[pair[1]] = back[pair[1]] or {}
+            back[pair[1]][pair[2]] = token
+        end
+        PAIR_TOKEN[growH][growV] = back
+    end
 end
 
---- The nearest side of the nearest candidate (D1, D2). `childRect` is the dragged anchor's rect and
---- each of `candidates` is { id, rect, growH, growV }, the target's hang rect and the growth its
---- chain flows by, all rects { left, bottom, right, top } in one unit (UIParent's, from
+--- The token pair `point`/`relPoint` classifies as under a growth, normalized as NS.Container.Growth
+--- normalizes it ("right" unless "left", "down" unless "up", so a candidate built by hand can never
+--- miss a row), or nil when it is none of the nine (free, G5).
+--- @return string|nil
+local function tokenFor(growH, growV, point, relPoint)
+    local row = PAIR_TOKEN[(growH == "left") and "left" or "right"][(growV == "up") and "up" or "down"][point]
+    return row and row[relPoint]
+end
+
+--- The nearest outside pair of the nearest candidate (A2, D2). `childRect` is the dragged anchor's
+--- rect and each of `candidates` is { id, rect, growH, growV }, the target's hang rect and the growth
+--- its chain flows by, all rects { left, bottom, right, top } in one unit (UIParent's, from
 --- Snap.Candidates). For every candidate, in the order given (Snap.Candidates gives id order), and
---- every side in C.ATTACH_EDGES order, the distance runs from the child's point of the side's pair
---- to the target's relative point of it. Only a strictly nearer side replaces the best so far, so a
---- tie keeps the first target and the first side. Within `radius` (inclusive) the answer is
---- { id, token, point, relPoint, dist }, else nil. Squared distances while scanning, one sqrt for
---- the answer; allocates only the answer.
+--- every pair in OUTSIDE order, the distance runs from the child's point of the pair to the target's
+--- relative point of it; growth plays no part in the choice. Only a strictly nearer pair replaces the
+--- best so far, so a tie keeps the first target and the first pair. Within `radius` (inclusive) the
+--- answer is { id, side, point, relPoint, token, dist }: `side` the target's side ("bottom", "top",
+--- "right" or "left") and `token` the one of the nine the pair is under the target's growth, nil for
+--- a free one (its before side). Else nil. Squared distances while scanning, one sqrt for the answer;
+--- allocates only the answer.
 --- @return table|nil
 function Snap.Nearest(childRect, candidates, radius)
-    local bestD, bestCand, bestToken
+    local bestD, bestCand, bestRow
     for _, cand in ipairs(candidates) do
-        local sides = pairsFor(cand.growH, cand.growV)
-        for _, token in ipairs(C.ATTACH_EDGES) do
-            local pair = sides[token]
-            local cx, cy = Snap.PointAt(childRect, pair[1])
-            local tx, ty = Snap.PointAt(cand.rect, pair[2])
+        for _, row in ipairs(OUTSIDE) do
+            local cx, cy = Snap.PointAt(childRect, row[3])
+            local tx, ty = Snap.PointAt(cand.rect, row[2])
             local d = (cx - tx) * (cx - tx) + (cy - ty) * (cy - ty)
-            if bestD == nil or d < bestD then bestD, bestCand, bestToken = d, cand, token end
+            if bestD == nil or d < bestD then bestD, bestCand, bestRow = d, cand, row end
         end
     end
     if bestD == nil or bestD > radius * radius then return nil end
-    local pair = pairsFor(bestCand.growH, bestCand.growV)[bestToken]
-    return { id = bestCand.id, token = bestToken, point = pair[1], relPoint = pair[2], dist = math.sqrt(bestD) }
+    local point, relPoint = bestRow[3], bestRow[2]
+    return {
+        id = bestCand.id, side = bestRow[1], point = point, relPoint = relPoint,
+        token = tokenFor(bestCand.growH, bestCand.growV, point, relPoint), dist = math.sqrt(bestD),
+    }
 end
 
 -- ---------------------------------------------------------------------------
@@ -423,7 +460,7 @@ local function attachCopy(cfg)
 end
 
 --- The section a drop on `hit` writes for container `cfg` (D7, D10): container mode on the target,
---- the picked side's two points (both nil when the side is Automatic's, Snap.FoldPoints), and the
+--- the picked pair's two points (both nil when the pair is Automatic's, Snap.FoldPoints), and the
 --- offsets reset to 0, since the drop is the placement and an old nudge would only push it off it.
 local function attachSection(cfg, hit)
     local section = attachCopy(cfg)
@@ -444,7 +481,8 @@ end
 --- leave the anchor loose where it was let go. Place is layout only (SetPoint, SetSize), legal out of
 --- lockdown, which the drop is (Snap.Drop handles combat before this).
 local function dropOn(container, cfg, hit)
-    debug("container %s: drop: attach to %s %s", container.id, hit.id, hit.token)
+    debug("container %s: drop: attach to %s %s>%s (%s)", container.id, hit.id, hit.point, hit.relPoint,
+        hit.token or "free")
     if NS.AttachByDrop then NS.AttachByDrop(container.id, attachSection(cfg, hit)) end
     container.placedAs = Anchors.Place(container)
 end

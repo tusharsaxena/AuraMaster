@@ -86,8 +86,10 @@ each under its drag handle, and one predicted empty under a faint outline one el
 empty container can still be found and dragged. A screen container or one attached to another drags
 (never one on a named frame, never in combat); dropped near another container it attaches there
 (issue #22, `modules/Anchors_Snap.lua`). The handle's `beginDrag` lifts an attached anchor onto
-`UIParent` and starts the snap driver, which every 0.03 s highlights the nearest of the nine sides of
-the nearest eligible container within `C.SNAP_RADIUS` (`Snap.Find`; never itself or one that follows
+`UIParent` and starts the snap driver, which every 0.03 s highlights the nearest of the twelve
+outside pairs (each side's start, middle and end joined to the child's mirror point, absolute and
+independent of growth; the three on the target's before side place as a free pair) of the nearest
+eligible container within `C.SNAP_RADIUS` (`Snap.Find`; never itself or one that follows
 it, `Anchors.WouldCycle`), and `Anchors.Place` leaves a dragging anchor alone. `Snap.Drop` decides
 from the drop itself: a candidate and no Shift writes the whole `container.attach` section through
 `NS.AttachByDrop` (`settings/Layout.lua`), which asks first with the GC-1 popup when the chain's flow

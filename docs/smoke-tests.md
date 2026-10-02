@@ -1458,13 +1458,16 @@ where E would join; moving away hides both, and nothing else on screen changes w
 E inside that range → E attaches there at once, with no popup: Layout → Anchor reads Attach to
 *Another container*, Parent container A, the two anchor points of that side (Automatic where the
 side is the default one), X and Y offsets 0. E's strip name turns gray, and moving A moves E. The log shows
-`drop: attach to <A's id> <side>`. No Lua error, no `ADDON_ACTION_BLOCKED`. Result:
+`drop: attach to <A's id> <E's point>><A's point> (<side>)`, the side `free` for a pair above A. No Lua error, no `ADDON_ACTION_BLOCKED`. Result:
 
-**DRAG-2. The nearest side.** Drag E (attached to A) to A three more times, letting go each time
-just below A, just to A's right, and just to A's left → the box marks A each time and the marker sits
-on the side you came closest to; E joins below A (*after*), on its right (*ahead*), and on its left
-(*behind*) respectively, lined up with the edge you dropped nearest (start, center or end). Layout →
-Anchor shows the matching pair each time, the default side's as Automatic. Result:
+**DRAG-2. The nearest pair, on all four sides.** Drag E (attached to A, A growing down) to A four
+more times, letting go each time just below A, just above A, just to A's right and just to A's left →
+the box marks A each time and the marker sits on the point of A you came closest to; E joins flush
+outside that side, lined up with whichever of its start, middle or end you dropped nearest: below A
+(*after*, E's top on A's bottom), above A (E's bottom on A's top: the side A's lines start from, so a
+free pair, placed at X/Y alone with no gap), on its right (*ahead*, E's left on A's right) and on its
+left (*behind*, E's right on A's left). Layout → Anchor shows the matching pair each time, the default
+side's as Automatic and the pair above A as both points picked. Result:
 
 **DRAG-3. Shift places without attaching.** Drag D toward A with Shift held → no box appears, even
 right on A's edge. Let Shift go while still close → the box appears; press it again → it goes. Drop on

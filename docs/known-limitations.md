@@ -212,7 +212,7 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
 - **A container whose engine reads secret is measured by its first element while you drag onto it**
   (issue #22). The snap aims at the frame a follower would hang from (`Anchors.HangFrame`). An engine
   holding auras reads secret, so `Snap.TargetRect` falls back to the container's anchor, one element
-  where its first aura sits: the highlight frames that element, and the nine sides are measured on it
+  where its first aura sits: the highlight frames that element, and the twelve outside pairs are measured on it
   rather than on the whole block. A drop near the far end of a long populated container may find
   nothing in range; drop near its start, or turn test mode on, where the snap aims at the whole
   placeholder block (`Preview.Extent`, a frame of ours).

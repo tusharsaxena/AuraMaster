@@ -1,7 +1,8 @@
 -- tests/test_anchors_snap.lua - issue #22, the snap core (DD-01): what a container dropped near
 -- another snaps to. modules/Anchors_Snap.lua's pure core (Snap.PointAt, Snap.Nearest) picks the
--- nearest of the nine classified sides (C.ATTACH_EDGES) under the target's flow growth, within
--- C.SNAP_RADIUS (D1, D2); its eligibility keeps a container off itself, off anything that follows it
+-- nearest of the twelve outside pairs (the addendum's A2: each side's start, middle and end joined to
+-- the child's mirror point, absolute and independent of growth), within C.SNAP_RADIUS (D2), and names
+-- the side token it classifies as under the target's flow growth, nil for a free one; its eligibility keeps a container off itself, off anything that follows it
 -- and off a disabled or hidden one (D5); its rect read goes through the secrets guard and falls back
 -- from an unreadable engine to the target's anchor; and its folding stores the picked pair nil, nil
 -- only when the whole of it is what Automatic would give, else both points absolute (D7).
@@ -64,7 +65,57 @@ test("snap: PointAt gives each of the nine WoW points on a rect", function()
     end
 end)
 
-test("snap: Nearest picks the side whose two points meet, for each of the nine under each growth", function()
+-- The addendum's A2 table, written out here rather than read from the module: the parent's side,
+-- then each of its three points joined to the child's point that mirrors it across that side.
+local OUTSIDE = {
+    { "bottom", "BOTTOMLEFT", "TOPLEFT" }, { "bottom", "BOTTOM", "TOP" }, { "bottom", "BOTTOMRIGHT", "TOPRIGHT" },
+    { "top", "TOPLEFT", "BOTTOMLEFT" }, { "top", "TOP", "BOTTOM" }, { "top", "TOPRIGHT", "BOTTOMRIGHT" },
+    { "right", "TOPRIGHT", "TOPLEFT" }, { "right", "RIGHT", "LEFT" }, { "right", "BOTTOMRIGHT", "BOTTOMLEFT" },
+    { "left", "TOPLEFT", "TOPRIGHT" }, { "left", "LEFT", "RIGHT" }, { "left", "BOTTOMLEFT", "BOTTOMRIGHT" },
+}
+
+--- The token pair `point`/`rel` is one of the nine as under growth `growH`/`growV`, or nil (free).
+local function tokenOf(NS, growH, growV, point, rel)
+    for _, token in ipairs(NS.Constants.ATTACH_EDGES) do
+        local p, r = NS.Anchors.EdgePoints({ growH = growH, growV = growV }, token)
+        if p == point and r == rel then return token end
+    end
+    return nil
+end
+
+test("snap: Nearest picks each of the twelve outside pairs, the child's point the mirror of the parent's, under two growths", function()
+    local NS = fresh()
+    local Snap = NS.Anchors.Snap
+    local target = rectOf(0, 0, 100, 40)
+    local free = { ["right/down"] = "top", ["left/up"] = "bottom" }
+    for _, g in ipairs({ { "right", "down" }, { "left", "up" } }) do
+        local grow = g[1] .. "/" .. g[2]
+        for _, row in ipairs(OUTSIDE) do
+            local side, rel, point = row[1], row[2], row[3]
+            local what = side .. " " .. point .. ">" .. rel .. " " .. grow
+            -- Flush on the join, the child sits outside the parent: they share no area.
+            local tx, ty = Snap.PointAt(target, rel)
+            local fx, fy = Snap.PointAt(rectOf(0, 0, 20, 20), point)
+            local l, b = tx - fx, ty - fy
+            local overlapW = math.min(l + 20, 100) - math.max(l, 0)
+            local overlapH = math.min(b + 20, 40) - math.max(b, 0)
+            assertTrue(overlapW <= 0 or overlapH <= 0, what .. ": outside")
+            -- 2 right and 1 up of the join.
+            local hit = Snap.Nearest(rectOf(l + 2, b + 1, l + 22, b + 21),
+                { { id = 7, rect = target, growH = g[1], growV = g[2] } }, 24)
+            -- red under: the nine growth-relative sides only (the parent's before side is never offered)
+            assertTrue(hit ~= nil, what)
+            assertEqual(hit.side .. " " .. hit.point .. ">" .. hit.relPoint, side .. " " .. point .. ">" .. rel, what)
+            assertTrue(math.abs(hit.dist - math.sqrt(5)) < 1e-9, what .. " dist")
+            -- The before side is free (G5); every other side is one of the nine under the target's growth.
+            local want = tokenOf(NS, g[1], g[2], point, rel)
+            assertEqual(tostring(hit.token), tostring(want), what .. " token")
+            assertEqual(want == nil, side == free[grow], what .. ": free only on the before side")
+        end
+    end
+end)
+
+test("snap: Nearest picks the pair of each of the nine sides under each growth, and names its token", function()
     local NS = fresh()
     local Snap = NS.Anchors.Snap
     local target = rectOf(0, 0, 100, 40)
@@ -78,7 +129,7 @@ test("snap: Nearest picks the side whose two points meet, for each of the nine u
             local hit = Snap.Nearest(rectOf(l, b, l + 20, b + 20),
                 { { id = 7, rect = target, growH = g[1], growV = g[2] } }, 24)
             local what = token .. " " .. g[1] .. "/" .. g[2]
-            -- red under: the pairs read under the dragged container's own growth, or a fixed one
+            -- red under: the token classified under the dragged container's own growth, or a fixed one
             assertTrue(hit ~= nil, what)
             assertEqual(hit.token, token, what)
             assertEqual(hit.point .. ">" .. hit.relPoint, point .. ">" .. rel, what)
@@ -102,7 +153,7 @@ test("snap: Nearest answers nil past the radius, and takes a pair exactly on it"
     assertNil(Snap.Nearest(under(1), {}, 24), "no candidates")
 end)
 
-test("snap: a tie keeps the first target in the order given, and the first side in ATTACH_EDGES order", function()
+test("snap: a tie keeps the first target in the order given, and the first pair in the A2 table's order", function()
     local NS = fresh()
     local Snap = NS.Anchors.Snap
     local same = rectOf(0, 100, 100, 140)
@@ -114,11 +165,19 @@ test("snap: a tie keeps the first target in the order given, and the first side 
     -- red under: a <= comparison while scanning (the last of equals wins)
     assertEqual(hit.id, 2, "first target")
     -- A point-sized target and a zero-width child: TOPLEFT, TOP and TOPRIGHT are one point, so
-    -- after-start, after-center, after-end and ahead-start all meet at distance 0.
+    -- the three bottom pairs and the right side's start all meet at distance 0.
     hit = Snap.Nearest(rectOf(50, 30, 50, 50),
         { { id = 4, rect = rectOf(50, 50, 50, 50), growH = "right", growV = "down" } }, 24)
-    assertEqual(hit.token, "after-start", "first side")
+    assertEqual(hit.side .. " " .. hit.point .. ">" .. hit.relPoint, "bottom TOPLEFT>BOTTOMLEFT", "first pair")
+    assertEqual(hit.token, "after-start")
     assertEqual(hit.dist, 0)
+    -- Every point of both one point: all twelve meet. Growing up, the bottom is the before side.
+    hit = Snap.Nearest(rectOf(50, 50, 50, 50),
+        { { id = 4, rect = rectOf(50, 50, 50, 50), growH = "right", growV = "up" } }, 24)
+    -- red under: the nine sides in ATTACH_EDGES order (after-start growing up: BOTTOMLEFT>TOPLEFT)
+    assertEqual(hit.side .. " " .. hit.point .. ">" .. hit.relPoint, "bottom TOPLEFT>BOTTOMLEFT",
+        "the table's first pair, whatever the growth")
+    assertNil(hit.token, "a before-side pair is free")
 end)
 
 -- ── eligibility (D5) ──────────────────────────────────────────────────────────────────────────
@@ -256,6 +315,13 @@ test("snap: Find reads the dragged anchor and answers the nearest in-range targe
     local hit = NS.Anchors.Snap.Find(CM.instances[2])
     assertTrue(hit ~= nil)
     assertEqual(hit.id .. " " .. hit.token, "3 after-start")
+    -- 2's BOTTOMLEFT 5 above 3's TOPLEFT: 3's top, its before side growing down, a free pair.
+    plant(CM.instances[2].anchor, 400, 145, 420, 165)
+    hit = NS.Anchors.Snap.Find(CM.instances[2])
+    -- red under: the nine growth-relative sides only
+    assertTrue(hit ~= nil, "the before side")
+    assertEqual(hit.id .. " " .. hit.side .. " " .. hit.point .. ">" .. hit.relPoint, "3 top BOTTOMLEFT>TOPLEFT")
+    assertNil(hit.token, "free")
     plant(CM.instances[2].anchor, 250, 75, 270, 95)
     assertNil(NS.Anchors.Snap.Find(CM.instances[2]), "nothing within the radius")
     rawset(CM.instances[2].anchor, "GetLeft", nil)

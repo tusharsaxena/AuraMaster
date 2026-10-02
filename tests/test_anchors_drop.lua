@@ -153,6 +153,23 @@ test("drop: on the Automatic side both points store nil (Automatic), as a fresh 
     assertNil(at.relPoint, "relPoint Automatic")
 end)
 
+test("drop: on the parent's before side the absolute pair is stored, and it places as a free pair (A2)", function()
+    local NS = env()
+    sameFlow(NS, 2)
+    local lines = recordAnchorLines(NS)
+    local inst = NS.ContainerManager.instances[2]
+    recordAnchor(inst.anchor)
+    -- 2's BOTTOMLEFT 5 above 1's TOPLEFT: 1's top, the side its lines start from growing down.
+    dragTo(inst, 0, 145, 20, 165)
+    local cfg = NS.Database.FindContainer(2)
+    -- red under: the nine growth-relative sides only (nothing in range: a screen drop, "moved")
+    assertEqual(cfg.attach.mode .. " " .. tostring(cfg.attach.container), "container 1", "attached to 1")
+    assertEqual(tostring(cfg.attach.childPoint) .. ">" .. tostring(cfg.attach.relPoint), "BOTTOMLEFT>TOPLEFT",
+        "the absolute pair, not Automatic")
+    assertNil(NS.Anchors.AttachEdge(cfg), "none of the nine: free (G5)")
+    assertEqual(lines[#lines], "container 2: drop: attach to 1 BOTTOMLEFT>TOPLEFT (free)")
+end)
+
 test("drop: container.attach written whole re-applies the new parent, the container and its followers", function()
     local NS, mocks = env()
     sameFlow(NS, 2)
@@ -430,7 +447,8 @@ test("drop: every outcome writes one [Anchor] line", function()
     -- red under: a silent drop (debug-logging-§8: the log must say what the drop did)
     assertEqual(last(), "container 2: drop: moved")
     dragTo(inst, 0, 75, 20, 95)
-    assertEqual(last(), "container 2: drop: attach to 1 after-start")
+    -- red under: the line naming the token alone (a free pair would read "nil")
+    assertEqual(last(), "container 2: drop: attach to 1 TOPLEFT>BOTTOMLEFT (after-start)")
     dragTo(inst, 300, 410, 320, 430)
     assertEqual(last(), "container 2: drop: detach")
     inst.handle:__fire("OnDragStart")
