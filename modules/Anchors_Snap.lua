@@ -363,8 +363,10 @@ end
 --- Hang container `container`'s anchor from UIParent for the drag ("Starting a drag"), so the move
 --- starts from a rect of ours and not from its parent's, which may read secret. Where its left and
 --- bottom edges read plain, BOTTOMLEFT at them, so it does not move; where either reads secret (it
---- hangs from an engine holding auras), its center under the cursor, which jumps it by at most its
---- own size. Offsets are in the anchor's own units: its edges are read in them, and the cursor
+--- hangs from an engine holding auras), its center under the cursor. The cursor is on the strip,
+--- which sits outside the block (past a shown name label, and wider than a narrow element), so the
+--- jump is up to the distance from the grab to the anchor's center, more than its own size on a
+--- short bar. Offsets are in the anchor's own units: its edges are read in them, and the cursor
 --- (screen units) is taken to them over its effective scale. Never under lockdown (beginDrag gates).
 local function lift(container)
     local anchor = container.anchor

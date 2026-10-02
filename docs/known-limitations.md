@@ -204,7 +204,10 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
 - **An attached container can jump to the cursor when its drag starts** (issue #22). Before it moves,
   `Snap.BeginDrag` hangs its anchor from UIParent where its left and bottom edges read. Hung from a
   parent's engine that holds auras, those edges read secret, so the anchor is centered under the
-  cursor instead, a jump of at most its own size. The drop is unaffected: it attaches, or detaches at
+  cursor instead. The cursor is on the strip, which sits outside the block (past a shown name label,
+  and wider than a narrow element), so the jump is up to the distance from where you grabbed the strip
+  to the anchor's center: on a 16 px bar about 28 px, or 48 px with the label shown, more than the
+  bar's own height. The drop is unaffected: it attaches, or detaches at
   wherever the anchor was let go.
 - **A container whose engine reads secret is measured by its first element while you drag onto it**
   (issue #22). The snap aims at the frame a follower would hang from (`Anchors.HangFrame`). An engine

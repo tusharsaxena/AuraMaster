@@ -24,7 +24,7 @@ check's number is not reused. Checks with no recorded pass, and checks new or co
 | CONT-1 to CONT-25 | Containers | Create, duplicate, delete, rename, copy; handles, strips and the close mark; test mode; unit swaps; empty placeholders |
 | FILT-1 to FILT-63 | Filters and spell categories | Cast by, the category grids, Overrides, the add-a-spell box, aura ids, your own categories, weapon enchants and their names, the help marks' art, where spell lists apply, the Situations tab, its zones and its Unit type gate |
 | LAYOUT-1 to LAYOUT-38 | Layout | Anchor modes, attaching, chains, growth, anchor points, seams, the name label, mouse and tooltips |
-| DRAG-1 to DRAG-11 | Layout | Drag to attach (issue #22): dropping a container on another, the highlight, the side a drop picks, Shift, loops, detaching, the growth-conflict popup, combat, a parent holding auras, frame-attached containers, the strip's tooltip |
+| DRAG-1 to DRAG-14 | Layout | Drag to attach (issue #22): dropping a container on another, the highlight, the side a drop picks, Shift, loops, detaching, the growth-conflict popup, combat, a parent holding auras, frame-attached containers, the strip's tooltip, a drop between pulls in a key, a dropped side surviving a growth change, a drag cut short |
 | STYLE-1 to STYLE-30 | Bars and Icons style, fonts | Bars and Icons tabs, the spark, borders, dispel colors, pandemic, the font primer |
 | TEXT-1 to TEXT-29 | Text style | Templates and tokens, justify, the icon, dispel type word, backdrop and edge, animation, Size to fit |
 | DEGRADED-1 | Library-absent install | The launcher libraries missing |
@@ -1471,9 +1471,10 @@ right on A's edge. Let Shift go while still close → the box appears; press it 
 A's edge with Shift held → D stays on the screen where you let go, Attach to still *Screen*, and the
 log shows `drop: moved`. Result:
 
-**DRAG-4. No loops.** Drag A over B and over C (both follow A) → no box on either, and a drop there
-leaves A on the screen at the drop. Drag B over C (C follows B) → no box on C, though A may light
-up. No container ever frames the one being dragged. Result:
+**DRAG-4. No loops.** Drag A slowly around the screen → B and C travel with it, sitting right against
+it, and neither is ever framed by the green box; drop A → it stays on the screen where you let go (log
+`drop: moved`). Likewise drag B → C travels with it and never lights up, though A may; drop B back on
+the side of A it came from. No container ever frames the one being dragged. Result:
 
 **DRAG-5. Detach by dragging away.** Drag E well away from every container and drop it → E stays
 exactly where you let go, now on the screen: Attach to reads *Screen*, the X and Y offsets 0, and
@@ -1496,8 +1497,9 @@ when combat ends it is back on A, still attached. Try to start a drag in combat 
 shows `drop: held (combat)`. Result:
 
 **DRAG-9. A parent holding auras.** Out of test mode, with real auras showing in A (so B hangs from
-A's live engine), start dragging B → B may jump so that its center sits under the cursor (by no more
-than its own size) and then follows the cursor smoothly; the drop attaches or detaches as in DRAG-1
+A's live engine), start dragging B → B may jump so that its center sits under the cursor (by up to the
+distance from where you grabbed its strip to its center, strip and name label included) and then
+follows the cursor smoothly; the drop attaches or detaches as in DRAG-1
 and DRAG-5. Drag E toward A while A holds several auras → the green box frames only A's first
 element, and a drop near that element attaches. Both are known limitations. No Lua error. Result:
 
@@ -1513,6 +1515,23 @@ attach it there; hold Shift to place it without attaching. Right-click for setti
 hold Shift to place it without attaching. Right-click for settings.", then the gold "Joined to the …
 of '<A's name>'" line; the frame-attached one as DRAG-10. Rename A → B's tooltip names the new name on
 the next hover. Result:
+
+**DRAG-12. A drop between pulls in a key.** In a Mythic+ key, out of combat between pulls (auras are
+secret there with no combat lockdown), drop E on A's side → E attaches and sits on that side of A at
+once; it is never left loose where you let go while Layout → Anchor already says *Another container*.
+Drag B (attached to A) in combat in the key and drop it far away → when that pull ends B is back on A,
+though the key keeps auras secret. No Lua error, no `ADDON_ACTION_BLOCKED`. Result:
+
+**DRAG-13. A dropped side survives a growth change.** Drop E just to the right of A (*ahead*, start),
+so it joins A's top-right → Layout → Anchor shows both anchor points, neither Automatic. Set A's Grow
+horizontally to Left → E stays beside A and does not land on top of A's first element. Drop E just
+below A (the default side) → both points read Automatic. Result:
+
+**DRAG-14. A drag cut short.** Bind `/am lock` to a key (a macro), start dragging D and press the key
+while the mouse button is still held → the strip hides and, within a moment, D stops following the
+cursor and goes back to where it was before the drag; nothing is saved (`/reload` agrees), and the log
+shows `drag canceled (its strip hid)`. Unlock and drag D → it moves and attaches as normal, and a
+Layout change to D moves it at once. Result:
 
 ## Bars and Icons style, fonts
 
@@ -1974,7 +1993,7 @@ line, then remove its row here.
 | LAYOUT-25 | 202, batch 8 (failed 2026-09-25): the step with two chained Text containers; the rest passed as 194 |
 | LAYOUT-37 | 64 and 76, batch 5 |
 | LAYOUT-38 | 84, batch 6 |
-| DRAG-1 to DRAG-11 | new on 2026-10-02 with drag to attach (issue #22) |
+| DRAG-1 to DRAG-14 | new on 2026-10-02 with drag to attach (issue #22); DRAG-12 to DRAG-14 from its whole-branch review (DD-05) |
 | STYLE-3 | 63, batch 5 |
 | STYLE-6 | 59a, batch 5 |
 | STYLE-9 | 61, batch 5; 163, smoke batch 2 (owed, as CONT-8); its bullet count corrected to four on 2026-09-29 |

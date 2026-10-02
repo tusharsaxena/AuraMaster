@@ -138,3 +138,9 @@ The whole-branch review found these; the text above is left as decided, and thes
 - **A drag cut short.** A strip hidden mid-drag gets no OnDragStop, so the driver's tick cancels that
   drag once out of combat (stop moving, end the drag, place from the settings, nothing written), and
   `ContainerClass:Destroy` ends a drag still live.
+- **Starting a drag, the cursor fallback.** "It jumps by at most its own size" is wrong: the player
+  grabs the strip, which sits outside the block (`STRIP_GAP` and `STRIP_H` past it, further past a shown
+  name label, and wider than a narrow element), so centering the anchor under the cursor moves it by up
+  to the distance from the grab to its center (about 28 px on a 16 px bar, 48 px with the label).
+- **Smoke DRAG-4.** "Drag A over B and over C" cannot be done: followers travel with their leader. The
+  check is now that while A (or B) is dragged, its followers, which sit right against it, never light up.
