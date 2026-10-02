@@ -208,8 +208,8 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   and wider than a narrow element), so the jump is up to the distance from where you grabbed the strip
   to the anchor's center: on a 16 px bar about 28 px, or 48 px with the label shown, more than the
   bar's own height. The drop is unaffected: it attaches, or detaches at
-  wherever the anchor was let go. Its rest does not read either, so no other pair of that parent is
-  picked until the cursor has moved more than 24 UIParent units (`C.SNAP_RADIUS`, DD-16R): a let-go
+  wherever the anchor was let go. Its rest does not read either, so no other pair, of that parent or of
+  a container beside it, is picked until the cursor has moved more than 24 UIParent units (`C.SNAP_RADIUS`, DD-16R): a let-go
   right after the jump snaps back on its stored pair rather than re-pairing by the jump's offset. The detach leeway cannot measure such a parent either, so it holds
   while the cursor has moved less than 128 UIParent units from where the drag began (below).
 - **A container whose engine reads secret, and whose strip does not show or read, is measured by its

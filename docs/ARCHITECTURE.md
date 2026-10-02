@@ -119,7 +119,8 @@ by the leeway's measure (the nearer of its two points' distance and how far that
 drag began: 0 where it rests, though those points rest a seam, a nudge or a strip apart; DD-15R)
 (the current parent measured on the rect its current pair is, `findFrom`: its strip alone where its
 block reads secret; never one of it where no rect of it reads but the one-element fallback, nor, when
-its rest did not read before the lift, before the cursor has moved past `C.SNAP_RADIUS`; DD-16R), wins over both, and Shift suppresses only that.
+its rest did not read before the lift, before the cursor has moved past `C.SNAP_RADIUS`, nor then any other
+container's either; DD-16R), wins over both, and Shift suppresses only that.
 The tick and the drop classify alike (`classify`); combat started mid-drag attaches nothing. The handle's close mark (X) turns that container off through the write
 seam. The strip's tooltip, and its marks', sits beside the strip: to its right, or to its left when
 the strip is too close to the right edge of the screen for it to fit (`modules/Anchors_Tooltip.lua`,

@@ -330,7 +330,9 @@ test("drop: moving along its own chain asks nothing and says nothing in chat, th
     local popups = recordPopups(mocks)
     local chat = {}
     NS.Printf = function(fmt, ...) chat[#chat + 1] = fmt:format(...) end
-    -- 2's TOPLEFT 5 under 3's BOTTOMLEFT: after-start on 3.
+    -- Resting under 1 by Automatic, read plain before the lift (a rest vector: a pair competes with
+    -- no cursor travel, DD-16R). 2's TOPLEFT 5 under 3's BOTTOMLEFT: after-start on 3.
+    plant(inst.anchor, 0, 80, 20, 100)
     dragTo(inst, 300, 75, 320, 95)
     assertEqual(#popups, 0, "no popup: the flow root stays 1")
     assertEqual(NS.Database.FindContainer(2).attach.container, 3, "moved onto 3")

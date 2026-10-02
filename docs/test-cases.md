@@ -1079,7 +1079,7 @@ badge and any count quoted in the docs must agree with it.
 - width: a one-icon container too narrow for the marks and a readable label keeps its natural width
 - width: the label is worked out once per name and width, not on every pass
 
-### test_anchors_snap.lua (27)
+### test_anchors_snap.lua (28)
 
 - snap: PointAt gives each of the nine WoW points on a rect
 - snap: Nearest picks each of the twelve outside pairs, the child's point the mirror of the parent's, under two growths
@@ -1102,6 +1102,7 @@ badge and any count quoted in the docs must agree with it.
 - snap: a strip that is hidden or does not read falls back to the block with its name label (A8, A10)
 - snap: Find measures the side on the target's strip and the dragged one's own strip (A10)
 - snap: a parent's rect is its strip, each edge on a side it grows toward out to its block's far edge (A11)
+- snap: a strip that overhangs its block on a side the parent grows toward keeps its own edge there (A11)
 - snap: a parent's block is read with its guards and fallback, and one that does not read leaves the strip (A11)
 - snap: the side pick measures a parent's growth sides on its block's far edges, its other sides on its strip (A11)
 - snap: a picked side equal to Automatic stores nil for both points
@@ -1109,7 +1110,7 @@ badge and any count quoted in the docs must agree with it.
 - snap: folding reads Automatic for the target dropped on, not the container's current parent
 - snap: the radius is 24 UIParent units and the highlight is an opaque green
 
-### test_anchors_drag.lua (40)
+### test_anchors_drag.lua (42)
 
 - drag: a screen container and a container-attached one drag; a frame-attached one does not
 - drag: no drag starts in combat, and none leaves the container marked dragging
@@ -1137,6 +1138,7 @@ badge and any count quoted in the docs must agree with it.
 - drag: another pair in snap range beats the hold, and Shift suppresses only that (A4)
 - drag: a pair no nearer than its current one does not take it, so a child let go where it sits holds (A4)
 - drag: an equal-width child let go where it rests holds by its own pair, though its center is in the middle third; moved into another third, that pair takes it (A4, A7)
+- drag: a child resting a unit under its parent, nudged within REST_SLACK, is not re-attached by the pick where it rests (A4, A7)
 - drag: a child wider than its parent, moved off where it rests, is re-attached by the end pair its rest pick named (A4, A7)
 - drag: a child flush under a long parent, in snap range of its own pair far from that pair's points, holds (A4, A7)
 - drag: the leeway is measured on the parent's rect and the child's own strip (A4, A10, A11)
@@ -1148,6 +1150,7 @@ badge and any count quoted in the docs must agree with it.
 - drag: on a parent whose block reads secret, a hit on its one-element fallback never takes the current parent back (A4)
 - drag: on a parent whose block reads secret but whose strip reads, a nudge inside the radius holds on the stored pair (A4, A11)
 - drag: under a parent read off its strip, a child whose anchor read secret at the start holds until the cursor moves C.SNAP_RADIUS (A4, A11)
+- drag: with no rest read, a neighbor in snap range takes no child until the cursor moves C.SNAP_RADIUS (A4, A11)
 - drag: beside a parent whose block reads secret but whose strip reads, a child re-pairs onto that side (A4, A11)
 - drag: a drop on the right side of a parent whose block reads secret but whose strip reads re-attaches there (A4, A11)
 - drag: a screen container's drag has no hold and no red (A4)
@@ -2372,8 +2375,8 @@ badge and any count quoted in the docs must agree with it.
 | test_anchors_steady.lua | 8 |
 | test_anchors_collapse.lua | 9 |
 | test_anchors_width.lua | 6 |
-| test_anchors_snap.lua | 27 |
-| test_anchors_drag.lua | 40 |
+| test_anchors_snap.lua | 28 |
+| test_anchors_drag.lua | 42 |
 | test_anchors_drop.lua | 24 |
 | test_texttemplate.lua | 26 |
 | test_style.lua | 60 |
@@ -2425,4 +2428,4 @@ badge and any count quoted in the docs must agree with it.
 | test_layout_cap.lua | 13 |
 | test_diagnostics_contract.lua | 9 |
 | test_lizard_sighted.lua | 8 |
-| **Total** | **2031** |
+| **Total** | **2034** |

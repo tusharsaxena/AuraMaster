@@ -925,14 +925,16 @@ test("drag: an equal-width child let go where it rests holds by its own pair, th
     inst.handle:__fire("OnDragStart")
     local Snap = NS.Anchors.Snap
     local pair, state = Snap.Tick()
-    -- red under: no exception for the pick where it rests (the middle pair, 5 < 5.1, re-attaches it)
+    -- red under: beats on the current pair's distance, not `away` (0 at rest: the middle pair, 5 < 5.1,
+    -- re-attaches it)
     assertEqual(state, "hold", "let go where it rests")
     assertEqual(pair.point .. ">" .. pair.relPoint, "TOPLEFT>BOTTOMLEFT", "its own pair")
     -- 2 to the right, a cursor's jitter (REST_SLACK): its own pair's points 5.8 apart, the middle
     -- pair still 5 away by its gap, and still the pick where it rested.
     plant(inst.anchor, 3, 75, 103, 95)
     pair, state = Snap.Tick()
-    -- red under: no slack (REST_SLACK 0: a pixel's twitch re-attaches it by its middle pair)
+    -- red under: beats on the current pair's distance, not `away` (2 here: the middle pair, 5 < 5.8,
+    -- re-attaches it)
     assertEqual(state, "hold", "2 off where it rests: still held")
     assertEqual(pair.point .. ">" .. pair.relPoint, "TOPLEFT>BOTTOMLEFT", "its own pair")
     -- 3 to the right, past the slack: its own pair's points 6.4 apart, but it has moved only 3 from
@@ -954,6 +956,38 @@ test("drag: an equal-width child let go where it rests holds by its own pair, th
     assertEqual(pair.point .. ">" .. pair.relPoint, "TOPRIGHT>BOTTOMRIGHT")
     plant(inst.anchor, 1, 75, 101, 95)
     assertEqual(select(2, Snap.Tick()), "hold", "back where it rests")
+    Snap.EndDrag(inst)
+    restore()
+end)
+
+test("drag: a child resting a unit under its parent, nudged within REST_SLACK, is not re-attached by the pick where it rests (A4, A7)", function()
+    local NS, mocks = env(2)
+    local restore = recordOverlays(mocks)
+    local CM = NS.ContainerManager
+    plant(CM.instances[1].engine, 0, 100, 100, 140)
+    local at = NS.Database.FindContainer(2).attach
+    at.mode, at.container = "container", 1   -- Automatic: TOPLEFT on BOTTOMLEFT
+    local inst = CM.instances[2]
+    recordAnchor(inst.anchor)
+    -- At rest, as wide as 1 and 1 under it, 1 to the right: its center in the middle third, so the
+    -- pick where it rests is the middle pair, 1 away by its gap.
+    plant(inst.anchor, 1, 79, 101, 99)
+    inst.handle:__fire("OnDragStart")
+    local Snap = NS.Anchors.Snap
+    assertEqual(select(2, Snap.Tick()), "hold", "let go where it rests")
+    -- 2 to the right (REST_SLACK): moved 2, its own pair's points 3.2 apart, so `away` is 2 and the
+    -- middle pair's gap (1) is under it; only the rest pick keeps it.
+    plant(inst.anchor, 3, 79, 103, 99)
+    local pair, state = Snap.Tick()
+    -- red under: no exception for the pick where it rests (attach TOP>BOTTOM, 1 < 2)
+    assertEqual(state, "hold", "2 off where it rests: still held")
+    assertEqual(pair.point .. ">" .. pair.relPoint, "TOPLEFT>BOTTOMLEFT", "its own pair")
+    -- 3 to the right, past the slack: `away` 3, and the middle pair (1) takes it.
+    plant(inst.anchor, 4, 79, 104, 99)
+    pair, state = Snap.Tick()
+    -- red under: a slack with no bound (the rest pick could never take a child once moved)
+    assertEqual(state, "attach", "3 off: past the slack")
+    assertEqual(pair.point .. ">" .. pair.relPoint, "TOP>BOTTOM", "the middle pair")
     Snap.EndDrag(inst)
     restore()
 end)
@@ -1293,6 +1327,9 @@ test("drag: under a parent read off its strip, a child whose anchor read secret 
     mocks.GetCursorPosition = function() return 120, 100 end
     state = select(2, Snap.Tick())
     assertEqual(state, "hold", "20 units: inside C.SNAP_RADIUS")
+    mocks.GetCursorPosition = function() return 124, 100 end
+    -- red under: a gate at C.SNAP_RADIUS inclusive (travel >= 24: attach 1:TOPRIGHT>BOTTOMRIGHT)
+    assertEqual(select(2, Snap.Tick()), "hold", "exactly C.SNAP_RADIUS: still held")
     -- Moved on purpose, its pairs compete as any other's.
     mocks.GetCursorPosition = function() return 130, 100 end
     pair, state = Snap.Tick()
@@ -1304,6 +1341,44 @@ test("drag: under a parent read off its strip, a child whose anchor read secret 
     assertEqual(at.mode .. ":" .. tostring(at.container), "container:1", "still on its parent")
     assertNil(at.childPoint, "no pair written: still Automatic")
     assertNil(at.relPoint, "no pair written: still Automatic")
+end)
+
+test("drag: with no rest read, a neighbor in snap range takes no child until the cursor moves C.SNAP_RADIUS (A4, A11)", function()
+    local SECRET = 41.5
+    local NS, mocks = env(3)
+    mocks.issecretvalue = function(v) return v == SECRET end
+    local CM = NS.ContainerManager
+    -- 1 several rows deep holding auras: its engine reads secret, its first element and its strip
+    -- plainly. 2 hangs from that engine, so its anchor reads secret until the lift: no rest vector.
+    plant(CM.instances[1].engine, SECRET, 100, 100, 240)
+    plant(CM.instances[1].anchor, 0, 220, 20, 240)
+    plant(CM.instances[1].handle, 0, 242, 100, 260)
+    local at = NS.Database.FindContainer(2).attach
+    at.mode, at.container = "container", 1   -- Automatic: TOPLEFT on BOTTOMLEFT
+    local inst = CM.instances[2]
+    plant(inst.anchor, SECRET, 75, 60, 95)
+    recordAnchor(inst.anchor)
+    -- 3 on the screen, 10 right of where the lift leaves 2.
+    plant(CM.instances[3].engine, 73, 75, 173, 95)
+    plant(CM.instances[3].anchor, 73, 75, 173, 95)
+    plant(CM.instances[3].handle, 73, 97, 173, 115)
+    mocks.GetCursorPosition = function() return 100, 100 end
+    inst.handle:__fire("OnDragStart")
+    plant(inst.anchor, 3, 75, 63, 95)
+    local Snap = NS.Anchors.Snap
+    local pair, state = Snap.Tick()
+    -- red under: the travel gate on the current parent's hits alone (attach 3, 10 off, beat 1's
+    -- stored pair, measured to 1's strip 147 above)
+    assertEqual(state, "hold", "the cursor has not moved")
+    assertEqual(pair.id .. ":" .. pair.point .. ">" .. pair.relPoint, "1:TOPLEFT>BOTTOMLEFT", "on the stored pair")
+    mocks.GetCursorPosition = function() return 130, 100 end
+    pair, state = Snap.Tick()
+    assertEqual(state .. " " .. pair.id, "attach 3", "30 units: the neighbor competes")
+    mocks.GetCursorPosition = function() return 100, 100 end
+    inst.handle:__fire("OnDragStop")
+    at = NS.Database.FindContainer(2).attach
+    -- red under: the release wrote an attach to 3 nobody aimed at
+    assertEqual(at.mode .. ":" .. tostring(at.container), "container:1", "a let-go snaps it back")
 end)
 
 --- Two containers as in game with 1 holding auras: its one-row engine reads secret, its anchor (the

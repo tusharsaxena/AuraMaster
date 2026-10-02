@@ -587,6 +587,19 @@ test("snap: a parent's rect is its strip, each edge on a side it grows toward ou
     end
 end)
 
+test("snap: a strip that overhangs its block on a side the parent grows toward keeps its own edge there (A11)", function()
+    -- A one-element block (50,100 .. 100,140) inside a strip planted past it on every side (as a
+    -- stripLabel's natural width is past a lone element): the union, on each growth edge, is the strip's.
+    for _, g in ipairs(GROWTHS) do
+        local grow = g[1] .. "/" .. g[2]
+        local NS, _, inst, strip = reachEnv(g)
+        plant(inst.engine, 50, 100, 100, 140)
+        plant(strip, 0, 90, 190, 160)
+        -- red under: a growth edge taken to the block's alone (left 50 or right 100, bottom 100 or top 140)
+        assertEqual(edges(NS.Anchors.Snap.ParentRect(inst)), "0,90,190,160", grow .. ": the strip's edges kept")
+    end
+end)
+
 test("snap: a parent's block is read with its guards and fallback, and one that does not read leaves the strip (A11)", function()
     local SECRET = 41.5
     local NS, mocks, inst, strip = reachEnv({ "right", "down" })
