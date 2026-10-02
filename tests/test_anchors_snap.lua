@@ -4,7 +4,8 @@
 -- mirror point, absolute and independent of growth) side first, by the gap within C.SNAP_RADIUS (D2),
 -- then by the third of that side the child's center is over (A7), and names the side token it
 -- classifies as under the target's flow growth, nil for a free one; every rect is a container's
--- visible footprint, block, strip and name label (A8); its eligibility keeps a container off itself, off anything that follows it
+-- drag-handle strip while that shows and reads (A10), else its block with its name label (A8); its
+-- eligibility keeps a container off itself, off anything that follows it
 -- and off a disabled or hidden one (D5); its rect read goes through the secrets guard and falls back
 -- from an unreadable engine to the target's anchor; and its folding stores the picked pair nil, nil
 -- only when the whole of it is what Automatic would give, else both points absolute (D7).
@@ -440,7 +441,7 @@ test("snap: Find reads the dragged anchor and answers the nearest in-range targe
     assertNil(NS.Anchors.Snap.Find(CM.instances[2]), "the dragged anchor unreadable")
 end)
 
--- ── the visible footprint (the addendum's A8) ─────────────────────────────────────────────────
+-- ── the rect the snap reads: the strip, else the visible footprint (the addendum's A10, A8) ────
 
 --- Give live container `inst` a strip and a name label of plain mock frames where it has none (the
 --- snap suite builds neither), both hidden. Returns the strip and the label.
@@ -454,16 +455,12 @@ end
 
 local function edges(r) return r.left .. "," .. r.bottom .. "," .. r.right .. "," .. r.top end
 
-test("snap: a target's footprint is its block with its strip while that shows, on each growth (A8)", function()
+test("snap: a target's rect is its strip's while that shows and reads, on each growth (A10)", function()
     -- Where the strip sits on each growth (Anchors.StripPoints): above the block growing down, below it
     -- growing up, lined up with the side the lines start from and running on past the other.
     local STRIP = {
         ["right/down"] = { 0, 142, 120, 160 }, ["left/down"] = { -20, 142, 100, 160 },
         ["right/up"] = { 0, 80, 120, 98 }, ["left/up"] = { -20, 80, 100, 98 },
-    }
-    local WANT = {
-        ["right/down"] = "0,100,120,160", ["left/down"] = "-20,100,100,160",
-        ["right/up"] = "0,80,120,140", ["left/up"] = "-20,80,100,140",
     }
     for _, g in ipairs(GROWTHS) do
         local grow = g[1] .. "/" .. g[2]
@@ -477,13 +474,13 @@ test("snap: a target's footprint is its block with its strip while that shows, o
         local Snap = NS.Anchors.Snap
         assertEqual(edges(Snap.Footprint(inst)), "0,100,100,140", grow .. ": the strip hidden, the block alone")
         strip:Show()
-        -- red under: no Snap.Footprint, or one that reads the block alone (the dots on the placeholder)
-        assertEqual(edges(Snap.Footprint(inst)), WANT[grow], grow .. ": the strip shown")
+        -- red under: A8's footprint, the block and the strip together (the dots on the placeholder's corners)
+        assertEqual(edges(Snap.Footprint(inst)), table.concat(STRIP[grow], ","), grow .. ": the strip shown")
         assertEqual(edges(Snap.TargetRect(inst)), "0,100,100,140", grow .. ": the block rect is unchanged")
     end
 end)
 
-test("snap: a target's footprint takes its name label in while that shows, and leaves out a strip or label that does not read (A8)", function()
+test("snap: a strip that is hidden or does not read falls back to the block with its name label (A8, A10)", function()
     local SECRET = 41.5
     local NS, mocks = env(2)
     mocks.issecretvalue = function(v) return v == SECRET end
@@ -494,26 +491,29 @@ test("snap: a target's footprint takes its name label in while that shows, and l
     plant(strip, 0, 162, 120, 180)
     label:Show()
     local Snap = NS.Anchors.Snap
-    -- red under: a footprint without the label (the strip outermost, the label between it and the block)
-    assertEqual(edges(Snap.Footprint(inst)), "0,100,100,160", "the label")
+    -- red under: a fallback without the label (the label between the strip and the block)
+    assertEqual(edges(Snap.Footprint(inst)), "0,100,100,160", "the strip hidden: the block and the label")
     strip:Show()
-    assertEqual(edges(Snap.Footprint(inst)), "0,100,120,180", "the label and the strip")
+    -- red under: A8's footprint, block, label and strip (0,100,120,180)
+    assertEqual(edges(Snap.Footprint(inst)), "0,162,120,180", "the strip shown: the strip alone")
     plant(strip, 0, 162, SECRET, 180)
     -- red under: no guard on the strip's rect (arithmetic on a secret), or a target dropped for it
-    assertEqual(edges(Snap.Footprint(inst)), "0,100,100,160", "a strip reading secret is left out")
+    assertEqual(edges(Snap.Footprint(inst)), "0,100,100,160", "a strip reading secret: the block and the label")
     plant(label, SECRET, 142, 100, 160)
     assertEqual(edges(Snap.Footprint(inst)), "0,100,100,140", "and a label reading secret: the block")
-    -- A block that does not read at all, the anchor neither: no footprint, whatever the strip reads.
+    -- A block that does not read at all, the anchor neither: the strip still answers while it reads.
     plant(strip, 0, 162, 120, 180)
     rawset(inst.engine, "GetLeft", nil)
     rawset(inst.anchor, "GetLeft", nil)
-    assertNil(Snap.Footprint(inst), "no block, no footprint")
-    -- The one-element fallback still takes the strip in.
+    -- red under: A8, where no block meant no footprint whatever the strip read
+    assertEqual(edges(Snap.Footprint(inst)), "0,162,120,180", "no block: the strip")
+    strip:Hide()
+    assertNil(Snap.Footprint(inst), "no block and no strip: nothing")
     plant(inst.anchor, 0, 120, 20, 140)
-    assertEqual(edges(Snap.Footprint(inst)), "0,120,120,180", "the fallback and the strip")
+    assertEqual(edges(Snap.Footprint(inst)), "0,120,20,140", "the one-element fallback")
 end)
 
-test("snap: Find measures the target's footprint and the dragged one's, strips included (A8)", function()
+test("snap: Find measures the side on the target's strip and the dragged one's own strip (A10)", function()
     local NS, mocks = env(3)
     local CM = NS.ContainerManager
     plant(CM.instances[3].engine, 400, 100, 500, 140)
@@ -529,16 +529,23 @@ test("snap: Find measures the target's footprint and the dragged one's, strips i
     assertTrue(hit ~= nil, "3's strip 10 under 2")
     assertEqual(hit.id .. " " .. hit.side .. " " .. hit.point .. ">" .. hit.relPoint .. " " .. hit.dist,
         "3 top BOTTOM>TOP 10")
-    -- 2 30 under 3's block, its own strip 10 under it: the bottom side, measured from 2's strip.
+    assertEqual(NS.Anchors.Snap.Candidates(CM.instances[2])[1].rect.bottom, 142, "the candidate's rect is its strip")
+    -- 2's own strip 10 over 3's strip, its anchor 30 under 3's block: the strips' gap, not the blocks'.
     plant(CM.instances[2].anchor, 400, 50, 500, 70)
-    plant(strip2, 400, 72, 500, 90)
-    assertNil(NS.Anchors.Snap.Find(CM.instances[2]), "2's strip hidden: 30 apart")
+    plant(strip2, 400, 170, 500, 188)
     strip2:Show()
     hit = NS.Anchors.Snap.Find(CM.instances[2])
-    -- red under: the dragged anchor's rect alone
-    assertTrue(hit ~= nil, "2's strip 10 under 3")
-    assertEqual(hit.side .. " " .. hit.point .. ">" .. hit.relPoint .. " " .. hit.dist, "bottom TOP>BOTTOM 10")
-    assertEqual(NS.Anchors.Snap.Candidates(CM.instances[2])[1].rect.top, 160, "the candidate's rect is its footprint")
+    -- red under: A8's footprints (2's strip and anchor, 50..188, over 3's 100..160: no side in range)
+    assertTrue(hit ~= nil, "2's strip 10 over 3's")
+    assertEqual(hit.side .. " " .. hit.point .. ">" .. hit.relPoint .. " " .. hit.dist, "top BOTTOM>TOP 10")
+    -- 2's strip reading nothing: its anchor, 30 under 3's block and 72 under its strip, out of range.
+    rawset(strip2, "GetLeft", function() return nil end)
+    -- red under: no fallback (the dragged strip's nil read taken as a rect)
+    assertNil(NS.Anchors.Snap.Find(CM.instances[2]), "the anchor alone: out of range")
+    strip3:Hide()
+    plant(CM.instances[2].anchor, 400, 75, 500, 95)
+    hit = NS.Anchors.Snap.Find(CM.instances[2])
+    assertTrue(hit ~= nil and hit.side == "bottom", "the anchor 5 under 3's block, both strips out")
 end)
 
 -- ── Automatic folding (D7) ────────────────────────────────────────────────────────────────────

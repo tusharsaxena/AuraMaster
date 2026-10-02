@@ -166,7 +166,7 @@ C.SNAP_COLOR = { r = 0.25, g = 0.90, b = 0.35, a = 1 }
 -- The detach leeway (issue #22, the owner-feedback addendum's A4): while a container attached to another
 -- is dragged, it holds (green on its current pair, and a release snaps it back, writing nothing) while
 -- its own point of that pair is at most this many UIParent units from where it rested, or from its
--- parent's, both measured on the two containers' visible footprints (A8); past it, the whole mark (the
+-- parent's, both measured on the two containers' strips (A10); past it, the whole mark (the
 -- parent's strip edge, both dots and the line) turns this red and a release detaches it. Wider than
 -- C.SNAP_RADIUS, so a grab that barely moves never detaches by accident; 128 since the second smoke
 -- round (A9: the first 64 was "way too little").

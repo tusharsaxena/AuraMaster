@@ -1089,15 +1089,15 @@ badge and any count quoted in the docs must agree with it.
 - snap: rects are read in UIParent units
 - snap: an engine whose rect reads secret falls back to the anchor; an unreadable anchor drops the target
 - snap: Find reads the dragged anchor and answers the nearest in-range target
-- snap: a target's footprint is its block with its strip while that shows, on each growth (A8)
-- snap: a target's footprint takes its name label in while that shows, and leaves out a strip or label that does not read (A8)
-- snap: Find measures the target's footprint and the dragged one's, strips included (A8)
+- snap: a target's rect is its strip's while that shows and reads, on each growth (A10)
+- snap: a strip that is hidden or does not read falls back to the block with its name label (A8, A10)
+- snap: Find measures the side on the target's strip and the dragged one's own strip (A10)
 - snap: a picked side equal to Automatic stores nil for both points
 - snap: a side other than Automatic's stores the whole absolute pair, even one sharing a point with it
 - snap: folding reads Automatic for the target dropped on, not the container's current parent
 - snap: the radius is 24 UIParent units and the highlight is an opaque green
 
-### test_anchors_drag.lua (32)
+### test_anchors_drag.lua (33)
 
 - drag: a screen container and a container-attached one drag; a frame-attached one does not
 - drag: no drag starts in combat, and none leaves the container marked dragging
@@ -1112,7 +1112,8 @@ badge and any count quoted in the docs must agree with it.
 - drag: a target with no strip, or with its strip hidden, is boxed over its rect instead (A5, A6)
 - drag: the highlight puts a dot of the parent's size on the child's join point and a 2px line between the two (A3)
 - drag: a before-side pair draws the line from the target's top to the child's bottom, as a free pair (A2, A3)
-- drag: the dots and the line sit on the target's strip and the dragged one's own strip, never on their placeholders (A8)
+- drag: the dots and the line sit on the target's strip and the dragged one's own strip, never on their placeholders (A8, A10)
+- drag: a parent whose strip sits below its block takes the dot on the strip's corner, not the block's (A10)
 - drag: the box fallback frames the target's footprint, its name label included (A8)
 - drag: the highlight hides on Shift, on combat and at the drop
 - drag: a strip hidden mid-drag ends the drag at the next tick, and the container goes back where its settings put it
@@ -1125,7 +1126,7 @@ badge and any count quoted in the docs must agree with it.
 - drag: an equal-width child let go where it rests holds by its own pair, though its center is in the middle third; moved into another third, that pair takes it (A4, A7)
 - drag: a child wider than its parent, moved off where it rests, is re-attached by the end pair its rest pick named (A4, A7)
 - drag: a child flush under a long parent, in snap range of its own pair far from that pair's points, holds (A4, A7)
-- drag: the leeway is measured on footprints, the parent's strip and the child's own strip taken in (A4, A8)
+- drag: the leeway is measured on the strips, the parent's and the child's own (A4, A10)
 - drag: an unreadable parent holds while the cursor has moved less than C.DETACH_RADIUS, in UIParent units (A4)
 - drag: a hidden parent is measured by the cursor and drawn as the child's dot alone, never at its last rect (A4)
 - drag: a parent whose block reads secret is measured by the cursor, never by its one-element fallback (A4)
@@ -2352,7 +2353,7 @@ badge and any count quoted in the docs must agree with it.
 | test_anchors_collapse.lua | 9 |
 | test_anchors_width.lua | 6 |
 | test_anchors_snap.lua | 24 |
-| test_anchors_drag.lua | 32 |
+| test_anchors_drag.lua | 33 |
 | test_anchors_drop.lua | 24 |
 | test_texttemplate.lua | 26 |
 | test_style.lua | 60 |
@@ -2404,4 +2405,4 @@ badge and any count quoted in the docs must agree with it.
 | test_layout_cap.lua | 13 |
 | test_diagnostics_contract.lua | 9 |
 | test_lizard_sighted.lua | 8 |
-| **Total** | **2014** |
+| **Total** | **2015** |

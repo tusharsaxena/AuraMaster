@@ -227,17 +227,20 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   picks the end pair. A child up to a third wider than its parent has its center over the middle third
   either way, and picks the middle pair. Drop it with its center over the third of the pair you want,
   or set the pair on Layout > Anchor. Picked up and let go where it rests, it keeps its pair either way.
-- **The dots show where the footprints touch, the drop joins the blocks** (issue #22, addendum A8).
-  The side, its third and both dots are measured on each container's footprint (its block with its
-  strip and name label), but the drop attaches by the blocks' points: `Anchors.Place` hangs the child's
-  block on the parent's hang frame. The two agree when both footprints overhang their blocks by the
-  same amount along that side. An Icons container's strip often runs wider than one element, by an
-  amount that follows the length of its name, so for a middle or end pair the child can land sideways
-  of what the dots showed: by half the difference between the two overhangs for the middle pair, by
-  all of it for the end pair (a 36 px icon parent whose strip runs 64 past its block, under a 36 px
-  icon child whose strip runs 44 past, lands 10 px or 20 px off). The start pair, and any pair between
-  two containers whose strips fit their blocks, lands where the dots showed. Nudge it with X/Y on
-  Layout > Anchor; joining on footprints is a change to attach geometry for the owner to decide.
+- **The dots mark the strips, not the exact join** (issue #22, addenda A8, A10). The side, its
+  third and both dots are measured on each container's drag-handle strip (or, where the strip is
+  hidden or does not read, its block with its name label), but the drop attaches by the blocks'
+  points: `Anchors.Place` hangs the child's block on the parent's hang frame and pushes it out past the
+  strips and labels between. So the dots show which side and which pair, while the child can land a
+  little off them: across the side by the strip's thickness and the gap Place leaves, and along it
+  when the strips overhang their blocks by different amounts. An Icons container's strip often runs
+  wider than one element, by an amount that follows the length of its name, so for a middle or end
+  pair the child can land sideways of what the dots showed: by half the difference between the two
+  overhangs for the middle pair, by all of it for the end pair (a 36 px icon parent whose strip runs 64
+  past its block, under a 36 px icon child whose strip runs 44 past, lands 10 px or 20 px off). The
+  start pair, between two containers whose strips fit their blocks, lands in line with the dots. Nudge
+  it with X/Y on Layout > Anchor; joining on strips is a change to attach geometry for the owner to
+  decide.
 - **In test mode, a container attached to another hangs from that container's preview extent.** A
   previewing container's engine is disabled and keeps a stale rect, so a container attached to it is
   re-placed onto a frame of ours sized to its placeholder block (`Preview.Extent`), where it sits as

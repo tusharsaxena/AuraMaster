@@ -16,17 +16,17 @@ local _, NS = ...
 -- Which pair is SIDE FIRST, THEN ALIGN (the addendum's A7, Snap.Nearest): the nearest side within
 -- C.SNAP_RADIUS by the gap between the two containers' facing edges, then the pair whose third of
 -- that side the dragged container's center is over. Everything is measured on the two containers'
--- VISIBLE FOOTPRINTS (A8, below): block, strip and name label. Everything is in UIParent units, so
--- the radius feels the same under any scale.
+-- STRIPS (A10, below), or their block and name label where a strip is hidden or does not read (A8).
+-- Everything is in UIParent units, so the radius feels the same under any scale.
 --
 -- WHAT IS READ, AND HOW. Two kinds of block rect: the dragged anchor's, which hangs from UIParent
 -- while it is dragged and holds nothing secret, and each target's hang frame (Anchors.HangFrame),
 -- which may be an ENGINE holding auras, whose geometry reads secret (core/Secrets.lua). Every number
 -- goes through Secrets.NumberOr before any arithmetic; an engine that does not read plainly falls
 -- back to the target's own anchor (exactly one element, its first), and a target whose anchor does
--- not read either is simply not a candidate this tick. Each block is then widened by the strip and
--- the name label that show beside it, each read the same guarded way and left out when it does not
--- read (Snap.Footprint).
+-- not read either is simply not a candidate this tick. A strip that shows and reads, read the same
+-- guarded way, stands for its container; else the block, widened by a name label that shows and
+-- reads (Snap.Footprint).
 --
 -- THE PURE CORE (Snap.PointAt, Snap.Nearest) touches no frame, so the headless harness tests the
 -- choice directly; Snap.Candidates and Snap.Find are the frame side that feeds it.
@@ -155,7 +155,7 @@ end
 --- The pair a drop of child rect `childRect` would join one of `candidates` by: SIDE FIRST, THEN
 --- ALIGN (the addendum's A7, which replaced A2's nearest pair of points: equal-width containers made
 --- a side's three pairs exactly as near, and the tie kept the start pair, so a middle pair never won).
---- Each of `candidates` is { id, rect, growH, growV }, the target's footprint and the growth its chain
+--- Each of `candidates` is { id, rect, growH, growV }, the target's rect (A10) and the growth its chain
 --- flows by, all rects { left, bottom, right, top } in one unit (UIParent's, from Snap.Candidates).
 --- For every candidate in the order given (Snap.Candidates gives id order) and each of its four sides
 --- in OUTSIDE's order: 1. the side is eligible when the child's facing edge is within `radius` of it
@@ -222,51 +222,50 @@ function Snap.TargetRect(target, into)
     return rect
 end
 
--- THE VISIBLE FOOTPRINT (the addendum's A8). Every rect the snap measures or draws on, a target's and
--- the dragged container's alike, is what the player sees of the container: its block rect and, while
--- each shows, its drag-handle strip (`container.handle`) and its name label (`container.label`),
--- which sit outside the block on its before side (modules/Anchors.lua's StripPoints). A5's smoke
--- round found the dots on a one-element placeholder's corners with the strip below them unmarked;
--- measured on the footprint, the side, the align third, the dots, the line, the box and the leeway
--- all go by what is on screen. Where a drop attaches is not touched (the twelve pairs, Place's seam
--- and its rooms), and those rooms already push a follower out past exactly this furniture, so the
--- dots land where the two containers will touch. Each part is read through readRect (the secrets
--- guard) and simply left out when it does not read: a strip under an anchor that hangs from an
--- engine holding auras reads secret, and its block still counts.
+-- THE RECT THE SNAP READS (the addendum's A10, over A8). Every rect the snap measures or draws on, a
+-- target's and the dragged container's alike, is the container's drag-handle STRIP (`container.handle`)
+-- while it shows and reads: the owner's third smoke round found the dots on the placeholder's corners,
+-- and the strip is what the player grabs and aims at. The side, the align third, the dots, the line,
+-- the box and the leeway all go by it. Where the strip is hidden or does not read (a strip under an
+-- anchor that hangs from an engine holding auras reads secret), A8's footprint stands in: the block
+-- rect with the name label (`container.label`) taken in while it shows and reads. Where a drop attaches
+-- is not touched (the twelve pairs, Place's seam and its rooms past the strip and label), so the dots
+-- mark the strips, not the exact join (docs/known-limitations.md). Every read goes through readRect.
 
-local partRect = {} -- scratch: one strip's or label's rect
+local labelRect = {} -- scratch: a name label's rect
 
---- Grow `rect` to take in `frame`'s rect, when `frame` is there, visible, and reads plainly.
-local function takeIn(rect, frame)
-    if not (frame and frame:IsVisible() and readRect(frame, partRect)) then return end
-    rect.left, rect.right = math.min(rect.left, partRect.left), math.max(rect.right, partRect.right)
-    rect.bottom, rect.top = math.min(rect.bottom, partRect.bottom), math.max(rect.top, partRect.top)
-end
-
---- Block rect `rect` of live container `container` (nil passes through), grown to its footprint: its
---- strip and its name label taken in while each shows and reads.
+--- Live container `container`'s rect as the snap reads it, written into `into` (a new table when
+--- nil): its strip's while that is visible and reads, else block rect `block(container, into)` (nil
+--- passes through) grown to take in its name label while that is visible and reads.
 --- @return table|nil
-local function widen(container, rect)
-    if rect then
-        takeIn(rect, container.handle)
-        takeIn(rect, container.label)
+local function footprint(container, into, block)
+    local strip = container.handle
+    local rect = strip and strip:IsVisible() and readRect(strip, into)
+    if rect then return rect end
+    rect = block(container, into)
+    local label = container.label
+    if rect and label and label:IsVisible() and readRect(label, labelRect) then
+        rect.left, rect.right = math.min(rect.left, labelRect.left), math.max(rect.right, labelRect.right)
+        rect.bottom, rect.top = math.min(rect.bottom, labelRect.bottom), math.max(rect.top, labelRect.top)
     end
     return rect
 end
 
---- The visible footprint of live container `target`, in UIParent units, written into `into` (a new
---- table when nil): its Snap.TargetRect (the hang rect, or the one-element fallback) with its strip
---- and its name label taken in. Nil when the block does not read at all, whatever the strip reads.
+--- What the snap reads of live container `target`, in UIParent units, into `into`: its strip, or
+--- its Snap.TargetRect (the hang rect, or the one-element fallback) with its name label.
 --- @return table|nil
 function Snap.Footprint(target, into)
-    return widen(target, Snap.TargetRect(target, into))
+    return footprint(target, into, Snap.TargetRect)
 end
 
---- The dragged container's own footprint, written into `into`: its one-element anchor (the frame
---- whose point a drop joins, hung from UIParent while dragged) with its strip and its name label.
+local function anchorRect(c, into) return readRect(c.anchor, into) end
+local function hangRect(c, into) return readRect(Anchors.HangFrame(c), into) end
+
+--- The dragged container's own: its strip, or its one-element anchor (the frame whose point a drop
+--- joins, hung from UIParent while dragged) with its name label.
 --- @return table|nil
 local function ownFootprint(container, into)
-    return widen(container, readRect(container and container.anchor, into))
+    return footprint(container, into, anchorRect)
 end
 
 -- ---------------------------------------------------------------------------
@@ -291,8 +290,8 @@ end
 -- container itself, always) costs no table on a tick.
 local order, list, pool = {}, {}, {}
 
---- The eligible targets for `dragged`, in id order, each { id, rect, growH, growV }: its footprint
---- in UIParent units (Snap.Footprint, A8) and the growth its chain flows by. A target whose rect does
+--- The eligible targets for `dragged`, in id order, each { id, rect, growH, growV }: its strip or
+--- footprint in UIParent units (Snap.Footprint, A10) and the growth its chain flows by. A target whose rect does
 --- not read is left out. The list and its entries are SCRATCH, reused by the next call: read them,
 --- never keep them.
 --- @return table
@@ -323,8 +322,8 @@ end
 local childRect = {}
 
 --- What dropping live container `dragged` now would snap it onto (Snap.Nearest's answer for its own
---- footprint over Snap.Candidates, within C.SNAP_RADIUS), or nil: nothing in range, or its own
---- anchor does not read plainly (it hangs from UIParent while dragged, so it should).
+--- strip or footprint over Snap.Candidates, within C.SNAP_RADIUS), or nil: nothing in range, or its own
+--- strip and anchor do not read plainly (it hangs from UIParent while dragged, so it should).
 --- @return table|nil
 function Snap.Find(dragged)
     if not ownFootprint(dragged, childRect) then return nil end
@@ -373,8 +372,8 @@ end
 -- point (the owner-feedback addendum's A1, A3), a Line region between the two dots, and the BOX, the
 -- fallback edge below. Every part is a child frame or a region of the holder, so one Show or Hide takes
 -- them all; the dots and the line are never toggled on their own, and the box only as the mark picks
--- it. They are placed by numbers already in UIParent units, on the footprints (Snap.Footprint and the
--- dragged container's own, A8), and anchored to UIParent (the line's two ends too), never to a target.
+-- it. They are placed by numbers already in UIParent units, on the strips (Snap.Footprint and the
+-- dragged container's own, A10), and anchored to UIParent (the line's two ends too), never to a target.
 --
 -- WHICH CONTAINER is said by its drag-handle STRIP (A5, as A6 amends it): the TARGET's strip (for a
 -- hold or a detach, the current parent's) has its OWN edge repainted 2px in the mark's color, through
@@ -420,9 +419,9 @@ local hitRect = {} -- scratch: the highlighted target's rect
 local edged       -- the strip whose own edge the mark has repainted, or nil while it has none
 local edgedCol    -- the color table `edged` was last repainted in, or nil before its first repaint
 local GOLD = Anchors.STRIP_EDGE   -- the strip's own edge, put back when the mark leaves it (A6)
-local dragRect = {} -- scratch: the dragged container's footprint, for the child's dot
+local dragRect = {} -- scratch: the dragged container's strip or footprint, for the child's dot
 local painted     -- the color table the highlight was last painted in, or nil before it is built
-local ownRect, parentRect = {}, {} -- scratch: the dragged container's and its parent's footprints, for the leeway
+local ownRect, parentRect = {}, {} -- scratch: the dragged container's and its parent's strips or footprints, for the leeway
 local current = {} -- scratch: an attached drag's current pair, shaped as Snap.Nearest's answer
 local startX, startY -- the cursor where the live drag began, in screen units (the leeway's fallback)
 local restX, restY   -- an attached drag's current-pair vector where it began (currentPair), or nil
@@ -560,8 +559,8 @@ end
 
 --- Show the highlight for pair `pair` of the drag of live container `dragged`, painted in `col`: the
 --- own edge of `strip` repainted (markStrip: the target's or parent's strip, A6), or with none the box over `rect`
---- (the target's or parent's footprint, in UIParent units, A8); the target's dot on its relative point
---- of the pair, the dragged container's dot on its own point of it on its own footprint, and the line
+--- (the target's or parent's strip or footprint, in UIParent units, A10); the target's dot on its relative point
+--- of the pair, the dragged container's dot on its own point of it on its own strip, and the line
 --- from the first dot to the second. With no `rect` (a parent that is hidden or does not read, A4) the
 --- dots and the line collapse onto the dragged container's dot, and so does the box when there is no
 --- strip either, so the hold and the red still show and nothing is toggled apart. Hidden when there is
@@ -602,7 +601,7 @@ end
 -- "Strictly nearer" is this file's reading of the addendum's "not its current pair": the hit's |gap|
 -- (A7) under the current pair's distance, so a pair only as near as the current one never re-attaches
 -- a container picked up and let go where it sits; nor, while it is still there (REST_SLACK), does the
--- pair the pick gave where it rested (beats). Both pairs are measured on the footprints (A8). Shift suppresses step 1 only. A parent that does not
+-- pair the pick gave where it rested (beats). Both pairs are measured on the strips (A10). Shift suppresses step 1 only. A parent that does not
 -- read (hidden, or the frame a follower hangs from reading secret, as an engine holding auras does)
 -- has no measurable pair, so step 2 holds while the cursor has moved less than C.DETACH_RADIUS from
 -- where the drag began. Never the one-element anchor Snap.TargetRect falls back to: the child hangs
@@ -625,16 +624,16 @@ end
 
 --- The pair attached container `container` (settings `cfg`) joins its parent by, in `current`
 --- (scratch, Snap.Nearest's shape): the parent's id and the pair in effect (Anchors.AttachPoints,
---- Automatic resolved), and `rect` the parent's footprint the hold and the red are drawn on, nil where
---- it is hidden or its block does not read. Where the parent's anchor is shown and both footprints
---- read (A8: the parent's on the frame a follower hangs from, Anchors.HangFrame, with no fallback,
---- and the dragged container's own, each with its strip and label), `dx`, `dy` run from the parent's
---- point of the pair to the dragged container's own point of it, `dist` is their length, and `away` the
---- leeway's measure: the nearer of `dist` and `moved`, how far that vector has moved from where it was
---- when the drag began (`restX`, `restY`), since Place never sets a child on its bare join (the seam gap, its
---- strip and label room and its X/Y nudge, all in its own scale, lie between). All of them in UIParent
---- units, and nil where they do not read (`away` and `moved` also with no rest vector). Nil when the parent has
---- no live instance.
+--- Automatic resolved), and `rect` the parent's rect the hold and the red are drawn on, nil where it
+--- is hidden or neither its strip nor its block reads. Where the parent's anchor is shown and both
+--- rects read (A10: each its strip, or else A8's: the parent's block on the frame a follower hangs
+--- from, Anchors.HangFrame, with no fallback, the dragged one's anchor, each with its label), `dx`,
+--- `dy` run from the parent's point of the pair to the dragged container's own point of it, `dist` is
+--- their length, and `away` the leeway's measure: the nearer of `dist` and `moved`, how far that vector
+--- has moved from where it was when the drag began (`restX`, `restY`), since Place never sets a child
+--- on its bare join (the seam gap, its strip and label room and its X/Y nudge, all in its own scale,
+--- lie between). All of them in UIParent units, and nil where they do not read (`away` and `moved`
+--- also with no rest vector). Nil when the parent has no live instance.
 --- @return table|nil
 local function currentPair(container, cfg)
     local id = tonumber(cfg.attach.container)
@@ -642,8 +641,7 @@ local function currentPair(container, cfg)
     if not parent then return nil end
     current.id, current.point, current.relPoint = id, Anchors.AttachPoints(cfg)
     current.dx, current.dy, current.dist, current.away, current.moved = nil, nil, nil, nil, nil
-    local rect = parent.anchor and parent.anchor:IsShown()
-        and widen(parent, readRect(Anchors.HangFrame(parent), parentRect))
+    local rect = parent.anchor and parent.anchor:IsShown() and footprint(parent, parentRect, hangRect)
     current.rect = rect or nil
     local own = rect and ownFootprint(container, ownRect)
     if not own then return current end
@@ -745,7 +743,7 @@ local function cancelStranded(container)
 end
 
 --- The rect the mark for classify's answer is measured on: an "attach" target's footprint
---- (Snap.Footprint, A8), else the current pair's parent's as the leeway measured it (currentPair:
+--- (Snap.Footprint, A10), else the current pair's parent's as the leeway measured it (currentPair:
 --- never the one-element fallback, never a hidden parent), so the parent's dot (and the box, where the
 --- parent has no visible strip) sits on what a snap back returns to. Nil when there is none.
 --- @return table|nil

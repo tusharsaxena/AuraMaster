@@ -491,7 +491,7 @@ test("drag: a before-side pair draws the line from the target's top to the child
     restore()
 end)
 
-test("drag: the dots and the line sit on the target's strip and the dragged one's own strip, never on their placeholders (A8)", function()
+test("drag: the dots and the line sit on the target's strip and the dragged one's own strip, never on their placeholders (A8, A10)", function()
     local NS, mocks = env(2)
     local restore = recordOverlays(mocks)
     local CM = NS.ContainerManager
@@ -509,7 +509,8 @@ test("drag: the dots and the line sit on the target's strip and the dragged one'
     assertEqual(hit.side .. " " .. hit.point .. ">" .. hit.relPoint, "top BOTTOM>TOP", "centered: the middle pair")
     assertEqual(dotAt(mocks, Snap.marker, "the parent's dot"), "BOTTOMLEFT 50,160", "on the strip's top edge")
     assertEqual(dotAt(mocks, Snap.childMarker, "the child's dot"), "BOTTOMLEFT 50,165")
-    -- 2 under 1, its own strip 5 under 1's block and its anchor 25 under it.
+    -- 1's strip hidden, 2 under 1, its own strip 5 under 1's block and its anchor 25 under it.
+    CM.instances[1].handle:Hide()
     plant(inst.handle, 0, 77, 100, 95)
     plant(inst.anchor, 0, 55, 100, 75)
     hit = Snap.Tick()
@@ -519,6 +520,36 @@ test("drag: the dots and the line sit on the target's strip and the dragged one'
     assertEqual(dotAt(mocks, Snap.childMarker, "the child's dot"), "BOTTOMLEFT 50,95", "on its strip's top edge")
     assertEqual(lineEnd(mocks, Snap.line, "SetStartPoint"), "BOTTOMLEFT 50,100")
     assertEqual(lineEnd(mocks, Snap.line, "SetEndPoint"), "BOTTOMLEFT 50,95")
+    restore()
+end)
+
+test("drag: a parent whose strip sits below its block takes the dot on the strip's corner, not the block's (A10)", function()
+    local NS, mocks = env(2)
+    local restore = recordOverlays(mocks)
+    local CM = NS.ContainerManager
+    plant(CM.instances[1].engine, 0, 100, 100, 140)
+    plant(CM.instances[1].handle, 0, 82, 100, 100)   -- 1's strip, below its block (it grows up)
+    local inst = CM.instances[2]
+    recordAnchor(inst.anchor)
+    inst.handle:__fire("OnDragStart")
+    local Snap = NS.Anchors.Snap
+    -- 2 narrow, its strip 5 over 1's strip (inside 1's block) and its anchor above that.
+    plant(inst.handle, 0, 105, 20, 123)
+    plant(inst.anchor, 0, 125, 20, 145)
+    local hit = Snap.Tick()
+    -- red under: A8's footprints (the two overlap by 35 on top, so the left side, 20 off, and its pair)
+    assertEqual(hit.side .. " " .. hit.point .. ">" .. hit.relPoint .. " " .. hit.dist,
+        "top BOTTOMLEFT>TOPLEFT 5", "1's strip's top, its first third")
+    -- red under: the parent's dot on the block's top-left corner (0,140), the placeholder's
+    assertEqual(dotAt(mocks, Snap.marker, "the parent's dot"), "BOTTOMLEFT 0,100", "on the strip's top-left corner")
+    assertEqual(dotAt(mocks, Snap.childMarker, "the child's dot"), "BOTTOMLEFT 0,105", "on 2's strip's corner")
+    assertEqual(lineEnd(mocks, Snap.line, "SetStartPoint"), "BOTTOMLEFT 0,100")
+    assertEqual(lineEnd(mocks, Snap.line, "SetEndPoint"), "BOTTOMLEFT 0,105")
+    -- 2's strip reading nothing: its anchor (125..145) inside 1's block, 25 over 1's strip: no side.
+    rawset(inst.handle, "GetLeft", function() return nil end)
+    -- red under: no fallback for an unreadable strip (its nil read taken as a rect)
+    assertNil(Snap.Tick(), "the anchor alone: out of range")
+    Snap.EndDrag(inst)
     restore()
 end)
 
@@ -931,29 +962,34 @@ test("drag: a child flush under a long parent, in snap range of its own pair far
     restore()
 end)
 
-test("drag: the leeway is measured on footprints, the parent's strip and the child's own strip taken in (A4, A8)", function()
+test("drag: the leeway is measured on the strips, the parent's and the child's own (A4, A10)", function()
     local NS, mocks = env(2)
     local restore = recordOverlays(mocks)
     local CM = NS.ContainerManager
     plant(CM.instances[1].engine, 0, 100, 100, 140)
-    plant(CM.instances[1].handle, 0, 82, 100, 100)   -- 1's strip, under its block
+    plant(CM.instances[1].handle, 0, 142, 100, 160)   -- 1's strip, above its block
     local at = NS.Database.FindContainer(2).attach
     at.mode, at.container = "container", 1   -- Automatic: TOPLEFT on BOTTOMLEFT
     local inst = CM.instances[2]
     recordAnchor(inst.anchor)
-    -- At rest (a Y nudge), 2's own strip on its block's top, 300 under 1's strip.
-    plant(inst.handle, 0, -236, 20, -218)
-    plant(inst.anchor, 0, -258, 20, -238)
+    -- At rest (a Y nudge), 2's own strip under its block, far under 1.
+    plant(inst.handle, 0, -420, 20, -402)
+    plant(inst.anchor, 0, -400, 20, -380)
     inst.handle:__fire("OnDragStart")
     local Snap = NS.Anchors.Snap
-    -- 175 up: the footprints' points 125 apart (the blocks' 163), 175 from where they rested.
-    plant(inst.handle, 0, -61, 20, -43)
-    plant(inst.anchor, 0, -83, 20, -63)
-    -- red under: either footprint read as its bare block (1's: 143 apart; 2's: 145): red, a release detaches
-    assertEqual(select(2, Snap.Tick()), "hold", "125 apart by the footprints")
-    plant(inst.handle, 0, -65, 20, -47)
-    plant(inst.anchor, 0, -87, 20, -67)
-    assertEqual(select(2, Snap.Tick()), "detach", "129 apart by the footprints")
+    -- 380 up: 2's strip's TOPLEFT (0,-22) 164 under 1's strip's BOTTOMLEFT (0,142).
+    plant(inst.handle, 0, -40, 20, -22)
+    plant(inst.anchor, 0, -20, 20, 0)
+    -- red under: A8's footprints (2's anchor top 0 to 1's block bottom 100: 100 apart, a hold)
+    assertEqual(select(2, Snap.Tick()), "detach", "164 apart by the strips")
+    plant(inst.handle, 0, 0, 20, 18)
+    plant(inst.anchor, 0, 20, 20, 40)
+    assertEqual(select(2, Snap.Tick()), "hold", "124 apart by the strips")
+    -- 1's strip hidden: its block with its label, 1's BOTTOMLEFT (0,100), 82 from 2's strip.
+    CM.instances[1].handle:Hide()
+    plant(inst.handle, 0, -40, 20, -22)
+    plant(inst.anchor, 0, -20, 20, 0)
+    assertEqual(select(2, Snap.Tick()), "hold", "122 apart, 1 measured on its block")
     Snap.EndDrag(inst)
     restore()
 end)

@@ -94,8 +94,8 @@ eligible container within `C.SNAP_RADIUS` (`Snap.Find`; never itself or one that
 it, `Anchors.WouldCycle`), picked side first and then by alignment (the addendum's A7: the nearest
 side by the gap between the two facing edges, its span overlapping, then the start, middle or end
 pair by which third of that side the dragged container's center is over), every rect measured and
-drawn on the container's visible footprint (A8: its block with its strip and name label while each
-shows, `Snap.Footprint`), with a 2 px edge in the mark's color on that container's drag-handle strip
+drawn on the container's drag-handle strip while it shows and reads (A10, `Snap.Footprint`; else
+A8's footprint, its block with its name label while that shows), with a 2 px edge in the mark's color on that container's drag-handle strip
 (the owner-feedback addendum's A5 and A6: the strip's own 1 px gold edge repainted through
 `Style.DrawEdge`, no frame of ours anchored to it, and its gold, `Anchors.STRIP_EDGE`, painted back
 when the mark leaves it, hides or its container is destroyed; a box over its rect only when it has no
