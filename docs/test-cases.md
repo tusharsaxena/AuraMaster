@@ -1088,7 +1088,7 @@ badge and any count quoted in the docs must agree with it.
 - snap: folding reads Automatic for the target dropped on, not the container's current parent
 - snap: the radius is 24 UIParent units and the highlight is an opaque green
 
-### test_anchors_drag.lua (20)
+### test_anchors_drag.lua (21)
 
 - drag: a screen container and a container-attached one drag; a frame-attached one does not
 - drag: no drag starts in combat, and none leaves the container marked dragging
@@ -1109,9 +1109,10 @@ badge and any count quoted in the docs must agree with it.
 - drag: a pair no nearer than its current one does not take it, so a child let go where it sits holds (A4)
 - drag: an unreadable parent holds while the cursor has moved less than C.DETACH_RADIUS, in UIParent units (A4)
 - drag: a parent whose block reads secret is measured by the cursor, never by its one-element fallback (A4)
+- drag: on a parent whose block reads secret, a hit on its one-element fallback never takes the current parent back (A4)
 - drag: a screen container's drag has no hold and no red (A4)
 
-### test_anchors_drop.lua (21)
+### test_anchors_drop.lua (22)
 
 - drop: a candidate in range attaches by one whole-section write: the side's points, x and y 0, the rest kept
 - drop: on the Automatic side both points store nil (Automatic), as a fresh attach on the panel does
@@ -1131,6 +1132,7 @@ badge and any count quoted in the docs must agree with it.
 - drop: the release is classified again, never taken from the last tick
 - drop: Shift within the leeway still snaps back; another pair in range attaches without Shift
 - drop: with its parent unreadable, a release before the cursor travels C.DETACH_RADIUS snaps back
+- drop: a one-row parent reading secret, released where it rests, snaps back and keeps its nudge
 - drop: an attached container whose drop position reads secret is not detached; it goes back to its parent
 - drop: combat started mid-drag attaches nothing; an attached one writes nothing and waits to be re-placed
 - drop: every outcome writes one [Anchor] line
@@ -2328,8 +2330,8 @@ badge and any count quoted in the docs must agree with it.
 | test_anchors_collapse.lua | 9 |
 | test_anchors_width.lua | 6 |
 | test_anchors_snap.lua | 17 |
-| test_anchors_drag.lua | 20 |
-| test_anchors_drop.lua | 21 |
+| test_anchors_drag.lua | 21 |
+| test_anchors_drop.lua | 22 |
 | test_texttemplate.lua | 26 |
 | test_style.lua | 60 |
 | test_castaura.lua | 7 |
@@ -2380,4 +2382,4 @@ badge and any count quoted in the docs must agree with it.
 | test_layout_cap.lua | 13 |
 | test_diagnostics_contract.lua | 9 |
 | test_lizard_sighted.lua | 8 |
-| **Total** | **1990** |
+| **Total** | **1992** |

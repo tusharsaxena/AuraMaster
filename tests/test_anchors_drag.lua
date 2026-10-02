@@ -598,6 +598,29 @@ test("drag: a parent whose block reads secret is measured by the cursor, never b
     assertEqual(state, "hold", "the cursor has not moved")
 end)
 
+test("drag: on a parent whose block reads secret, a hit on its one-element fallback never takes the current parent back (A4)", function()
+    local SECRET = 41.5
+    local NS, mocks = env(2)
+    mocks.issecretvalue = function(v) return v == SECRET end
+    local CM = NS.ContainerManager
+    -- An engine one row deep holding auras: its rect reads secret; its anchor, the first element,
+    -- plainly, and that element's bottom is the block's.
+    plant(CM.instances[1].engine, SECRET, 220, 20, 240)
+    plant(CM.instances[1].anchor, 0, 220, 20, 240)
+    local at = NS.Database.FindContainer(2).attach
+    at.mode, at.container, at.x, at.y = "container", 1, 7, -3
+    local inst = CM.instances[2]
+    recordAnchor(inst.anchor)
+    inst.handle:__fire("OnDragStart")
+    -- Where it rests, nudged: its TOPLEFT 8.6 from the fallback's BOTTOMLEFT, inside C.SNAP_RADIUS.
+    plant(inst.anchor, 7, 195, 27, 215)
+    local pair, state = NS.Anchors.Snap.Tick()
+    -- red under: any hit wins while the current pair has no distance (it re-attached by its own pair,
+    -- measured on the first element, and the drop wrote the section, losing the nudge)
+    assertEqual(state, "hold", "its own parent's fallback is not another pair")
+    assertEqual(pair.point .. ">" .. pair.relPoint, "TOPLEFT>BOTTOMLEFT", "shown on the current pair")
+end)
+
 test("drag: a screen container's drag has no hold and no red (A4)", function()
     local NS = env(2)
     local CM = NS.ContainerManager

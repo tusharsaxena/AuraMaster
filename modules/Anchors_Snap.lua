@@ -377,8 +377,9 @@ end
 -- ---------------------------------------------------------------------------
 -- A container attached to another is not detached the moment it leaves snap range. Each tick, and
 -- again at the release, classify works out what letting go now would do, in this order:
---   1. "attach": a pair in snap range (Snap.Find, any target including its own parent) that is
---      STRICTLY NEARER than its current pair, Shift not held: green on that pair, a release attaches;
+--   1. "attach": a pair in snap range (Snap.Find, any target including its own parent) that is not
+--      its current pair and is STRICTLY NEARER than it (beats), Shift not held: green on that pair, a
+--      release attaches;
 --   2. "hold": its current pair's two points (its own now, its parent's now) at most
 --      C.DETACH_RADIUS apart: green on the current pair, a release snaps it back and writes nothing;
 --   3. "detach": beyond it: the whole mark red (C.DETACH_COLOR) on the current pair, a release
@@ -390,7 +391,8 @@ end
 -- read (hidden, or the frame a follower hangs from reading secret, as an engine holding auras does)
 -- has no measurable pair, so step 2 holds while the cursor has moved less than C.DETACH_RADIUS from
 -- where the drag began. Never the one-element anchor Snap.TargetRect falls back to: the child hangs
--- from the whole block, so a parent several rows deep would measure it far past the radius at rest. A
+-- from the whole block, so a parent several rows deep would measure it far past the radius at rest,
+-- and step 1 takes no pair of such a parent either, since Snap.Find measured it on that fallback. A
 -- parent with no live instance at all leaves nothing to hold on: such a container detaches as before.
 -- A screen container has no current pair: step 1 or nothing, exactly as before A4.
 
@@ -437,6 +439,21 @@ local function holds(cur)
     return travel ~= nil and travel < C.DETACH_RADIUS
 end
 
+--- Whether snap answer `hit` takes the container from current pair `cur` (step 1): with no current
+--- pair, any hit; never `cur` itself; never any pair of the current parent while `cur` has no
+--- distance (its block does not read, so the hit was measured on Snap.TargetRect's one-element
+--- fallback, which a child resting under a one-row parent is always in range of); else only a pair
+--- strictly nearer than `cur`.
+--- @return boolean
+local function beats(hit, cur)
+    if not (hit and cur) then return hit ~= nil end
+    if hit.id == cur.id then
+        if not cur.dist then return false end
+        if hit.point == cur.point and hit.relPoint == cur.relPoint then return false end
+    end
+    return not (cur.dist and hit.dist >= cur.dist)
+end
+
 --- What releasing live container `container` now would do (the order above), and the pair the mark
 --- is shown on: "attach" and Snap.Nearest's answer, "hold" or "detach" and the current pair
 --- (scratch), or nil and nil (a screen container with nothing in range). Reads Shift, the rects and
@@ -450,8 +467,7 @@ local function classify(container)
         return hit and "attach" or nil, hit
     end
     local cur = currentPair(container, cfg)
-    local d = cur and cur.dist
-    if hit and not (d and hit.dist >= d) then return "attach", hit end
+    if beats(hit, cur) then return "attach", hit end
     if not cur then return "detach", nil end
     return holds(cur) and "hold" or "detach", cur
 end

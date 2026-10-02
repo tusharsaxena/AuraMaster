@@ -480,6 +480,27 @@ test("drop: with its parent unreadable, a release before the cursor travels C.DE
     assertEqual(NS.Database.FindContainer(2).attach.mode, "screen", "116.6 units: detached")
 end)
 
+test("drop: a one-row parent reading secret, released where it rests, snaps back and keeps its nudge", function()
+    local SECRET = 41.5
+    local NS, mocks = env()
+    mocks.issecretvalue = function(v) return v == SECRET end
+    local CM = NS.ContainerManager
+    plant(CM.instances[1].engine, SECRET, 220, 20, 240)
+    plant(CM.instances[1].anchor, 0, 220, 20, 240)
+    local lines = recordAnchorLines(NS)
+    local at = NS.Database.FindContainer(2).attach
+    at.mode, at.container, at.x, at.y = "container", 1, 7, -3
+    local inst = CM.instances[2]
+    recordAnchor(inst.anchor)
+    local writes = recordWrites(NS)
+    dragTo(inst, 7, 195, 27, 215)
+    -- red under: the current pair re-attached by its one-element fallback (x and y reset to 0)
+    assertEqual(#writes, 0, "nothing written")
+    at = NS.Database.FindContainer(2).attach
+    assertEqual(at.x .. "," .. at.y, "7,-3", "the nudge kept")
+    assertEqual(lines[#lines], "container 2: drop: held (leeway)")
+end)
+
 test("drop: an attached container whose drop position reads secret is not detached; it goes back to its parent", function()
     local SECRET = 77.5
     local NS, mocks = env()
