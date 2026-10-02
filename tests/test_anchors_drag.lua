@@ -1160,6 +1160,41 @@ test("drag: a parent whose block reads secret is measured by the cursor, never b
     restore()
 end)
 
+test("drag: a parent whose block reads secret but whose strip reads holds on its strip, two dots and a line (A4, A11; DRAG-9)", function()
+    local SECRET = 41.5
+    local NS, mocks = env(2)
+    mocks.issecretvalue = function(v) return v == SECRET end
+    local CM = NS.ContainerManager
+    local restore = recordOverlays(mocks)
+    -- As in game: an engine holding auras reads secret, its anchor (the first element) plainly, and
+    -- its strip, hung from that anchor, reads too.
+    plant(CM.instances[1].engine, SECRET, 100, 100, 240)
+    plant(CM.instances[1].anchor, 0, 220, 20, 240)
+    plant(CM.instances[1].handle, 0, 242, 100, 260)   -- 1's strip, above its first element
+    local at = NS.Database.FindContainer(2).attach
+    at.mode, at.container = "container", 1   -- Automatic: TOPLEFT on BOTTOMLEFT
+    local inst = CM.instances[2]
+    recordAnchor(inst.anchor)
+    plant(inst.handle, 0, 77, 20, 95)
+    plant(inst.anchor, 0, 55, 20, 75)
+    inst.handle:__fire("OnDragStart")
+    local Snap = NS.Anchors.Snap
+    local pair, state = Snap.Tick()
+    assertEqual(state, "hold", "the cursor has not moved")
+    assertEqual(pair.id, 1, "the current pair's parent")
+    -- Characterizes DRAG-9 (DD-16R): not the lone dot it described, which only a hidden or unreadable
+    -- strip gives; 1's dot on its strip's BOTTOMLEFT, since its secret block never reaches its growth side
+    assertEqual(dotAt(mocks, Snap.marker, "the parent's dot"), "BOTTOMLEFT 0,242")
+    assertEqual(dotAt(mocks, Snap.childMarker, "the child's dot"), "BOTTOMLEFT 0,95")
+    assertEqual(lineEnd(mocks, Snap.line, "SetStartPoint"), "BOTTOMLEFT 0,242", "the line from 1's strip")
+    assertEqual(lineEnd(mocks, Snap.line, "SetEndPoint"), "BOTTOMLEFT 0,95", "the line to 2's strip")
+    assertEdgeOn(NS, mocks, CM.instances[1].handle, NS.Constants.SNAP_COLOR, "hold: the parent's strip")
+    assertFalse(Snap.box:IsShown(), "hold: no box")
+    assertPainted(NS, NS.Constants.SNAP_COLOR, "hold")
+    Snap.EndDrag(inst)
+    restore()
+end)
+
 test("drag: on a parent whose block reads secret, a hit on its one-element fallback never takes the current parent back (A4)", function()
     local SECRET = 41.5
     local NS, mocks = env(2)
