@@ -7,19 +7,24 @@
 -- those containers draw today: their ids view and their Blizzard (formerly no-ids) view stay byte-
 -- identical. `F.master` is that "today", recorded from master at 5b6c9f2 (the merged spell-list views)
 -- rather than read from git at test time, so the proof does not change meaning once this branch is
--- merged into master.
+-- merged into master. Its inputs are frozen with it: `F.shipped` is the shipped category definitions
+-- at 5b6c9f2 (what the compiler reads of each: key, kind, label, aura type, token, flag, dispel types
+-- and spell list), so a later edit to defaults/Categories.lua (a spell id added to a list) moves
+-- neither side of the comparison (SI-06).
 --
 -- `F.profile`: from the owner's SavedVariables (2026-10-02, schema 11), each container cut to its id,
 -- name, unit, aura type and `filter`, with `filter.categories` keeping only its Hides (a missing key
 -- compiles as Show, which is what the stored "show" means). `F.categoriesFor` stands in for
--- Cat.SyncUserCategories without touching the shared environment's category lists: the shipped
--- definitions, plus each user category inserted where the sync inserts it.
+-- Cat.SyncUserCategories without touching the shared environment's category lists: the frozen
+-- shipped definitions, plus each user category inserted where the sync inserts it.
 --
 -- REGENERATING `F.master` (only if the reference ever has to move): export the reference commit with
 -- `git archive <ref> | tar -x -C <dir>`, copy this file to <dir>/tests/, and from <dir> run a Lua
 -- script that builds the environment as tests/run.lua does (Loader.loadAll of the LibKa0s XML and the
 -- TOC files, OnInitialize, OnEnable, __fireTimers) and prints `F.render(NS)` with tests/_kit's
--- serializer of choice. `F.render` reads `g.noIds` where `g.views` does not exist yet.
+-- serializer of choice. `F.render` reads `g.noIds` where `g.views` does not exist yet. Re-dump
+-- `F.shipped` from the same environment's `NS.Categories.For(auraType)` (every definition that is not
+-- a user category) in the same pass, so the inputs and the outputs name one reference.
 
 local F = {}
 
@@ -73,17 +78,63 @@ F.profile = {
     },
 }
 
---- A `ctx.categories` for the profile: the shipped definitions of each aura type, and each user
---- category, in `userCategoryOrder`, inserted before the aura type's first `enchant` or
+--- The shipped category definitions at the reference (5b6c9f2), in order, cut to what the compiler
+--- reads. Frozen, like `F.master`: never the live defaults/Categories.lua.
+F.shipped = {
+    HELPFUL = {
+        { key = "defensives", kind = "spells", label = "Defensive cooldowns", auraType = "HELPFUL", spells = { [498] = true, [642] = true, [871] = true, [1966] = true, [5277] = true, [6940] = true, [11426] = true, [12975] = true, [19236] = true, [22812] = true, [23920] = true, [31224] = true, [31850] = true, [33206] = true, [45438] = true, [47585] = true, [48707] = true, [48792] = true, [49039] = true, [55233] = true, [61336] = true, [86659] = true, [102342] = true, [104773] = true, [108271] = true, [108416] = true, [116849] = true, [118038] = true, [120954] = true, [122278] = true, [122470] = true, [122783] = true, [125174] = true, [132578] = true, [184364] = true, [184662] = true, [186265] = true, [196555] = true, [205191] = true, [207771] = true, [212641] = true, [212800] = true, [235313] = true, [235450] = true, [264735] = true, [342246] = true, [357170] = true, [363916] = true, [374349] = true, [385391] = true, [389539] = true, [393108] = true, [403876] = true, [414658] = true } },
+        { key = "bigDefensive", kind = "token", label = "Big defensives (Blizzard)", auraType = "HELPFUL", token = "BIG_DEFENSIVE" },
+        { key = "externals", kind = "token", label = "External defensives (Blizzard)", auraType = "HELPFUL", token = "EXTERNAL_DEFENSIVE" },
+        { key = "activeMitigation", kind = "spells", label = "Active mitigation", auraType = "HELPFUL", spells = { [132403] = true, [132404] = true, [190456] = true, [192081] = true, [195181] = true, [203819] = true } },
+        { key = "raidCDs", kind = "spells", label = "Raid cooldowns", auraType = "HELPFUL", spells = { [740] = true, [2825] = true, [31821] = true, [32182] = true, [80353] = true, [81782] = true, [97463] = true, [145629] = true, [209426] = true, [264667] = true, [325174] = true, [374227] = true, [390386] = true, [444257] = true, [466904] = true, [1243972] = true } },
+        { key = "offensiveCDs", kind = "spells", label = "Offensive cooldowns", auraType = "HELPFUL", spells = { [1719] = true, [12472] = true, [13750] = true, [19574] = true, [31884] = true, [51271] = true, [102543] = true, [102560] = true, [106951] = true, [107574] = true, [114051] = true, [114052] = true, [121471] = true, [137639] = true, [162264] = true, [185422] = true, [186254] = true, [187827] = true, [190319] = true, [194223] = true, [194249] = true, [207289] = true, [252071] = true, [288613] = true, [360952] = true, [365362] = true, [373316] = true, [375087] = true, [431698] = true, [436358] = true, [454351] = true, [1219480] = true, [1235388] = true, [1276767] = true, [1285912] = true } },
+        { key = "healing", kind = "spells", label = "Healing", auraType = "HELPFUL", spells = { [17] = true, [139] = true, [774] = true, [974] = true, [8936] = true, [33763] = true, [41635] = true, [48438] = true, [53563] = true, [61295] = true, [77489] = true, [102352] = true, [115175] = true, [119611] = true, [124682] = true, [155777] = true, [156322] = true, [156910] = true, [194384] = true, [200025] = true, [207386] = true, [287280] = true, [355941] = true, [363534] = true, [364343] = true, [366155] = true, [367364] = true, [373267] = true, [373862] = true, [376788] = true, [382024] = true, [383648] = true, [406220] = true, [409678] = true, [409895] = true, [443113] = true, [1227806] = true, [1244893] = true, [1245369] = true, [1246768] = true, [1253593] = true, [1260617] = true, [1260681] = true, [1291636] = true } },
+        { key = "support", kind = "spells", label = "Support", auraType = "HELPFUL", spells = { [10060] = true, [29166] = true, [34477] = true, [57934] = true, [115834] = true, [360827] = true, [369459] = true, [375226] = true, [375229] = true, [375230] = true, [375234] = true, [375238] = true, [375240] = true, [375252] = true, [375253] = true, [375254] = true, [375255] = true, [375256] = true, [375257] = true, [375258] = true, [406789] = true, [413984] = true, [454863] = true, [474750] = true, [474754] = true, [1224098] = true } },
+        { key = "groupBuffs", kind = "spells", label = "Group buffs", auraType = "HELPFUL", spells = { [1126] = true, [1459] = true, [6673] = true, [21562] = true, [381732] = true, [381741] = true, [381746] = true, [381748] = true, [381749] = true, [381750] = true, [381751] = true, [381752] = true, [381753] = true, [381754] = true, [381756] = true, [381757] = true, [381758] = true, [462854] = true } },
+        { key = "movement", kind = "spells", label = "Movement", auraType = "HELPFUL", spells = { [1044] = true, [1850] = true, [2645] = true, [2983] = true, [36554] = true, [48265] = true, [58875] = true, [65081] = true, [73325] = true, [77761] = true, [77764] = true, [79206] = true, [106898] = true, [111400] = true, [116841] = true, [119085] = true, [121557] = true, [186257] = true, [186258] = true, [192082] = true, [202164] = true, [212552] = true, [221883] = true, [221885] = true, [221886] = true, [221887] = true, [252216] = true, [254471] = true, [254472] = true, [254473] = true, [254474] = true, [260881] = true, [276111] = true, [276112] = true, [294133] = true, [358267] = true, [363608] = true, [374227] = true, [387633] = true, [394454] = true, [400126] = true, [434029] = true, [442204] = true, [443569] = true, [444347] = true, [446044] = true, [450552] = true, [453804] = true, [454025] = true, [468226] = true, [1244157] = true, [1289616] = true, [1289617] = true } },
+        { key = "utility", kind = "spells", label = "Utility", auraType = "HELPFUL", spells = { [130] = true, [546] = true, [1784] = true, [5215] = true, [5384] = true, [5697] = true, [20707] = true, [32612] = true, [111759] = true } },
+        { key = "stances", kind = "spells", label = "Stances", auraType = "HELPFUL", spells = { [465] = true, [768] = true, [1066] = true, [5487] = true, [24858] = true, [32223] = true, [40120] = true, [114282] = true, [165961] = true, [210053] = true, [232698] = true, [317920] = true, [386164] = true, [386196] = true, [386208] = true } },
+        { key = "racials", kind = "spells", label = "Racials", auraType = "HELPFUL", spells = { [7744] = true, [20572] = true, [26297] = true, [28880] = true, [33697] = true, [33702] = true, [58984] = true, [59542] = true, [59543] = true, [59544] = true, [59545] = true, [59547] = true, [59548] = true, [59752] = true, [65116] = true, [68992] = true, [87840] = true, [121093] = true, [255654] = true, [256374] = true, [256948] = true, [273104] = true, [274739] = true, [274740] = true, [274741] = true, [274742] = true, [281954] = true, [291843] = true, [291944] = true, [360022] = true, [370626] = true, [406087] = true, [416250] = true, [436344] = true, [461063] = true, [1238467] = true, [1289789] = true } },
+        { key = "important", kind = "token", label = "Important (Blizzard)", auraType = "HELPFUL", token = "IMPORTANT" },
+        { key = "castable", kind = "token", label = "Castable by you", auraType = "HELPFUL", token = "RAID" },
+        { key = "cancelable", kind = "token", label = "Cancelable", auraType = "HELPFUL", token = "CANCELABLE" },
+        { key = "stealable", kind = "flag", label = "Stealable / purgeable", auraType = "HELPFUL", field = "isStealable", value = true },
+        { key = "weaponEnchants", kind = "enchant", label = "Weapon enchants", auraType = "HELPFUL" },
+        { key = "uncategorized", kind = "uncategorized", label = "Uncategorized", auraType = "HELPFUL" },
+    },
+    HARMFUL = {
+        { key = "hardCC", kind = "spells", label = "Hard CC (loss of control)", auraType = "HARMFUL", spells = { [99] = true, [118] = true, [408] = true, [605] = true, [710] = true, [853] = true, [1098] = true, [1513] = true, [1776] = true, [1833] = true, [2094] = true, [2637] = true, [3355] = true, [5211] = true, [5246] = true, [5484] = true, [6770] = true, [6789] = true, [8122] = true, [9484] = true, [10326] = true, [20549] = true, [24394] = true, [30283] = true, [31661] = true, [33786] = true, [51514] = true, [64044] = true, [82691] = true, [105421] = true, [107079] = true, [108194] = true, [111673] = true, [115078] = true, [117526] = true, [118699] = true, [118905] = true, [119381] = true, [132168] = true, [132169] = true, [163505] = true, [179057] = true, [198909] = true, [200196] = true, [200200] = true, [203123] = true, [204437] = true, [205364] = true, [207167] = true, [207685] = true, [211881] = true, [213691] = true, [217832] = true, [221562] = true, [287712] = true, [360806] = true, [372245] = true, [383121] = true, [385954] = true, [427773] = true, [1234195] = true, [1258508] = true } },
+        { key = "softCC", kind = "spells", label = "Soft CC (roots & snares)", auraType = "HARMFUL", spells = { [122] = true, [339] = true, [1715] = true, [3409] = true, [5116] = true, [12323] = true, [15407] = true, [31589] = true, [35546] = true, [45524] = true, [51490] = true, [58180] = true, [61391] = true, [64803] = true, [102359] = true, [114404] = true, [116095] = true, [116706] = true, [121253] = true, [123586] = true, [127797] = true, [135299] = true, [157981] = true, [157997] = true, [162480] = true, [164812] = true, [185763] = true, [186387] = true, [190925] = true, [195645] = true, [196840] = true, [198813] = true, [204843] = true, [206930] = true, [212792] = true, [213405] = true, [236299] = true, [260369] = true, [273977] = true, [324382] = true, [334275] = true, [355689] = true, [357214] = true, [368970] = true, [370898] = true, [370970] = true, [378760] = true, [384069] = true, [390669] = true, [391104] = true, [392983] = true, [403695] = true, [408383] = true, [444826] = true, [460501] = true, [470194] = true, [1251059] = true } },
+        { key = "racialDebuffs", kind = "spells", label = "Racials", auraType = "HARMFUL", spells = { [20549] = true, [107079] = true, [255723] = true, [260369] = true, [287712] = true, [357214] = true, [368970] = true, [1238474] = true } },
+        { key = "crowdControl", kind = "token", label = "Crowd control", auraType = "HARMFUL", token = "CROWD_CONTROL" },
+        { key = "boss", kind = "flag", label = "Boss debuffs", auraType = "HARMFUL", field = "isBossAura", value = true },
+        { key = "role", kind = "flag", label = "Role debuffs", auraType = "HARMFUL", field = "isRoleAura", value = true },
+        { key = "priority", kind = "flag", label = "Priority", auraType = "HARMFUL", field = "isPriorityAura", value = true },
+        { key = "raid", kind = "token", label = "Raid (you can dispel)", auraType = "HARMFUL", token = "RAID" },
+        { key = "raidInCombat", kind = "token", label = "Raid in combat", auraType = "HARMFUL", token = "RAID_IN_COMBAT" },
+        { key = "groupDispellable", kind = "token", label = "Dispellable by your group", auraType = "HARMFUL", token = "RAID_PLAYER_DISPELLABLE" },
+        { key = "dispellable", kind = "token", label = "Dispellable by anyone", auraType = "HARMFUL", token = "DISPELLABLE" },
+        { key = "dispels", kind = "dispel", label = "Has a dispel type", auraType = "HARMFUL", types = { ["Bleed"] = true, ["Curse"] = true, ["Disease"] = true, ["Magic"] = true, ["Poison"] = true } },
+        { key = "magic", kind = "dispel", label = "Magic", auraType = "HARMFUL", types = { ["Magic"] = true } },
+        { key = "curse", kind = "dispel", label = "Curse", auraType = "HARMFUL", types = { ["Curse"] = true } },
+        { key = "disease", kind = "dispel", label = "Disease", auraType = "HARMFUL", types = { ["Disease"] = true } },
+        { key = "poison", kind = "dispel", label = "Poison", auraType = "HARMFUL", types = { ["Poison"] = true } },
+        { key = "bleed", kind = "dispel", label = "Bleed", auraType = "HARMFUL", types = { ["Bleed"] = true } },
+        { key = "fromNonPlayers", kind = "flag", label = "From non-players", auraType = "HARMFUL", field = "isFromPlayerOrPlayerPet", value = false },
+        { key = "fromPlayers", kind = "flag", label = "From any player", auraType = "HARMFUL", field = "isFromPlayerOrPlayerPet", value = true },
+        { key = "uncategorizedDebuffs", kind = "uncategorized", label = "Uncategorized", auraType = "HARMFUL" },
+    },
+}
+
+--- A `ctx.categories` for the profile: the frozen shipped definitions of each aura type, and each
+--- user category, in `userCategoryOrder`, inserted before the aura type's first `enchant` or
 --- `uncategorized` definition (defaults/UserCategories.lua's userInsertIndex).
 --- @return table  { For = function(auraType) }
-function F.categoriesFor(Cat, profile)
+function F.categoriesFor(profile)
     local lists = {}
     for _, at in ipairs({ "HELPFUL", "HARMFUL" }) do
         local list = {}
-        for _, def in ipairs(Cat.For(at)) do
-            if not def.userCategory then list[#list + 1] = def end
-        end
+        for _, def in ipairs(F.shipped[at]) do list[#list + 1] = def end
         lists[at] = list
     end
     for _, key in ipairs(profile.userCategoryOrder) do
@@ -104,8 +155,8 @@ end
 
 --- The compile context for the profile.
 --- @return table
-function F.ctx(NS)
-    return { categories = F.categoriesFor(NS.Categories, F.profile), categorySpells = F.profile.categorySpells }
+function F.ctx()
+    return { categories = F.categoriesFor(F.profile), categorySpells = F.profile.categorySpells }
 end
 
 --- Each container's groups, as `{ label, filter, cand, bFilter, bCand }`: the ids view and the Blizzard
@@ -113,7 +164,7 @@ end
 --- @return table  [container id] = { group, ... }
 function F.render(NS)
     local FC = NS.FilterCompiler
-    local ctx = F.ctx(NS)
+    local ctx = F.ctx()
     local out = {}
     for _, c in ipairs(F.profile.containers) do
         local rows = {}

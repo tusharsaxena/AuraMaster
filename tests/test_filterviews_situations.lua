@@ -234,7 +234,7 @@ test("situations: every container of the owner's real profile keeps master's ids
     local F = dofile("tests/situations_owner_profile.lua")
     local now = F.render(NS)
     local plans = {}
-    local ctx = F.ctx(NS)
+    local ctx = F.ctx()
     for _, c in ipairs(F.profile.containers) do plans[c.id] = FC.Compile(c, ctx) end
     local checked, grew = 0, {}
     for _, c in ipairs(F.profile.containers) do
