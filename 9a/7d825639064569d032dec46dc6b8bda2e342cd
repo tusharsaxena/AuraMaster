@@ -1,0 +1,1 @@
+OK SI-06 13 confirmed, fixed; gate 1897 passed/0 failed/1 skipped, luacheck 0/0, complexity green (max CCN 15); mutations M1-M3,M5-M7 red on the named cases, live spell-list edit leaves the owner-profile proof green
