@@ -1,1 +1,2 @@
 when	milestone	head_before_log	evidence
+2026-10-02	M1	268d01a	SI-00..SI-02 done and reviewed OK; 1856 passed, 0 failed, 1 skipped, 1857 total (16 shards); Total: 0 warnings / 0 errors in 157 files; complexity max CCN 15 / 0 warnings; vendor identical (LibKa0s v1.67.0); SI-01 implementer verified by the orchestrator (safety classifier timed out on it): changes confined to AuraMaster, owner-profile fixture holds no character or realm names
