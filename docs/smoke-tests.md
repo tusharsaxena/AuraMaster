@@ -1454,22 +1454,29 @@ chain's, and E, a Text container growing down like A. Unlock first (`/am unlock`
 debug console's logging on (`/am debug on`) to read the `[Anchor]` lines.
 
 **DRAG-1. Drop to attach, with the highlight.** Drag E by its strip toward A → while E comes within
-about 24 px of one of A's sides, A's strip (its drag handle) has its own gold edge turn green and
+about 24 px of one of A's sides (counting what you see of each: A's strip and name label as well as
+its block, and E's own strip), A's strip (its drag handle) has its own gold edge turn green and
 2 px thick, with no box drawn over A's placeholders, a green dot sits on the point of A where E
-would join, a dot of the same size on E's own point and a 2 px green line between the two; moving away hides
+would join, on the outer edge of what you see of A (on A's strip, above A, never on a placeholder's
+corner under it), a dot of the same size on E's own point (on E's strip, below A) and a 2 px green
+line between the two; moving away hides
 them all, and nothing else on screen changes while you drag. Drop E inside that range → E attaches there at once, with no popup: Layout → Anchor reads Attach to
 *Another container*, Parent container A, the two anchor points of that side (Automatic where the
 side is the default one), X and Y offsets 0. E's strip name turns gray, and moving A moves E. The log shows
 `drop: attach to <A's id> <E's point>><A's point> (<side>)`, the side `free` for a pair above A. No Lua error, no `ADDON_ACTION_BLOCKED`. Result:
 
-**DRAG-2. The nearest pair, on all four sides.** Drag E (attached to A, A growing down) to A four
-more times, letting go each time just below A, just above A, just to A's right and just to A's left →
-A's strip lights up green each time and the marker sits on the point of A you came closest to; E joins flush
-outside that side, lined up with whichever of its start, middle or end you dropped nearest: below A
-(*after*, E's top on A's bottom), above A (E's bottom on A's top: the side A's lines start from, so a
-free pair, placed past A's strip and name label, with no other gap), on its right (*ahead*, E's left on A's right) and on its
-left (*behind*, E's right on A's left). Layout → Anchor shows the matching pair each time, the default
-side's as Automatic and the pair above A as both points picked. Result:
+**DRAG-2. The side, then the third, on all four sides.** Give E the same width as A (E's General tab:
+Size to fit off, the same Width (px) as A's bars). Drag E (attached to A, A growing down) to A, letting
+go each time just below A, just above A, just to A's right and just to A's left, and on each side three
+times: with E's center over the first third of that side (its left third, or its top third beside A),
+over its middle third, and over its last third → A's strip lights up green each time, E joins flush
+outside the side it came nearest to, and the pair is the side's start, middle or end by the third E's
+center was over: centered, the MIDDLE pair (below A, E's top middle on A's bottom middle), never the
+start pair. The sides: below A (*after*, E's top on A's bottom), above A (E's bottom on A's top: the
+side A's lines start from, so a free pair, placed past A's strip and name label, with no other gap),
+on its right (*ahead*, E's left on A's right) and on its left (*behind*, E's right on A's left).
+Layout → Anchor shows the matching pair each time, the default pair (below A, its start) as Automatic
+and the others as both points picked. Result:
 
 **DRAG-3. Shift places without attaching.** Drag D toward A with Shift held → no mark appears and A's
 strip stays gold, even right on A's edge. Let Shift go while still close → A's strip turns green, with
@@ -1483,7 +1490,7 @@ it, and neither strip ever lights up green; drop A → it stays on the screen wh
 the side of A it came from. No container's strip lights up while it is the one being dragged. Result:
 
 **DRAG-5. Detach by dragging away.** Drag E (attached to A) well away from every container → once
-it is about 64 px from where it was attached, the edge on A's strip, both dots and the line turn red; drop it
+it is about 128 px from where it was attached, the edge on A's strip, both dots and the line turn red; drop it
 there → E stays exactly where you let go, now on the screen: Attach to reads *Screen*, the X and Y
 offsets 0, and Layout → Anchor → Screen holds the position. Its strip name turns gold, A no longer
 moves it, and after `/reload` it is still there. The log shows `drop: detach`. Result:
@@ -1507,7 +1514,7 @@ shows `drop: held (combat)`. Result:
 A's live engine), start dragging B → B may jump so that its center sits under the cursor (by up to the
 distance from where you grabbed its strip to its center, strip and name label included) and then
 follows the cursor smoothly; the drop attaches or detaches as in DRAG-1
-and DRAG-5, and a drop before the cursor has moved about 64 px snaps B back onto A (DRAG-15); while
+and DRAG-5, and a drop before the cursor has moved about 128 px snaps B back onto A (DRAG-15); while
 it holds, the mark is a single green dot on B's join point, with no box and no line, A's strip edged
 green, and both turn red past that travel. Drag E toward A while A holds several auras → A's strip
 lights up, but the dots sit on A's first element only, and a drop near that element attaches. Both are known limitations. No Lua error. Result:
@@ -1547,21 +1554,22 @@ Layout change to D moves it at once. Result:
 at first the edge on A's strip, the dot on A's join point, the dot on E's own point and the line between
 them stay green, though E is already out of snap range. Let go there → E snaps straight back to where
 it was on A, Layout → Anchor is unchanged, `/reload` agrees, and the log shows `drop: held (leeway)`.
-Drag it down again past about 64 px → strip edge, dots and line all turn red at once; move back up → they turn
+Drag it down again past about 128 px → strip edge, dots and line all turn red at once; move back up → they turn
 green again; go past it once more and let go → E detaches where you let go (as DRAG-5, log `drop:
-detach`). Now give E a width 40 to 80 px less than A's (on E's General tab: Size to fit off and a smaller
-Width (px)), so that, below A, E's top-middle under A's bottom-middle is 20 to 40 px
-nearer than E's own pair and still inside the leeway. Re-attach E below A, then without Shift drag it
-so its top's middle sits just under A's bottom middle → the marks move to that middle pair in green,
-and a drop attaches E there (Layout → Anchor shows E's top on A's bottom). Re-attach E below A on its
-own pair again and repeat that drag with Shift held → no other pair lights up, the marks stay on E's
-own pair in green, and a drop snaps it back. (With E as wide as A, all three of A's bottom pairs are
-equally near, so E's own pair wins without Shift too and this step proves nothing.) Hover E's strip → its tooltip explains all this
-(DRAG-11). No Lua error. Result:
+detach`). Now give E the same width as A (as DRAG-2) and re-attach it below A by its default pair
+(Layout → Anchor: Automatic). Pick E up by its strip and let go without moving it → it holds and snaps
+back, Layout → Anchor still Automatic, though E's center is over A's middle third (`drop: held
+(leeway)`). Without Shift, drag E sideways along A's bottom until its center is over A's right third →
+the marks move to the end pair (E's top right on A's bottom right) in green, and a drop attaches E
+there. Re-attach E below A by its default pair again and repeat that drag with Shift held → no other
+pair lights up, the marks stay on E's own pair in green, and a drop snaps it back. Hover E's strip →
+its tooltip explains all this (DRAG-11). No Lua error. Result:
 
-**DRAG-16. A drop above the parent, with the line.** Drag E toward the middle of A's top edge (A grows
-down, so its top is the side its lines start from) → A's strip gets the green edge, a green dot about 10 px
-across sits on the middle of A's top edge, a dot of the same size on the middle of E's bottom edge, and
+**DRAG-16. A drop above the parent, with the line.** Drag E toward the middle of A's top (A grows
+down, so its top is the side its lines start from, where its strip sits) → A's strip gets the green
+edge once E is within about 24 px of the strip's top edge (not of A's block under it), a green dot
+about 10 px across sits on the middle of the top edge of A's strip, a dot of the same size on the
+middle of E's bottom edge, and
 a 2 px green line joins the two; as E moves the line and E's dot follow it, and strip edge, dots and line
 show and hide together. Drop → E attaches above A, its bottom just past A's strip (and A's name label, when shown), never over
 either, with no other gap; turn A's name label on and off, and lock and unlock → E moves out and back in
@@ -1573,7 +1581,8 @@ and A's strip is gold again. Result:
 **DRAG-17. The strip lights up, not a box.** Detach E (DRAG-5), then drag it toward A, B and C in turn → each
 time only the strip of the container E would join turns green (its own 1 px gold edge repainted 2 px
 green, never a second frame over it), the one it left goes back to its 1 px gold at once, and no box is
-drawn over any container's placeholders.
+drawn over any container's placeholders; the dots sit on the edges of the strips and blocks you see,
+never on a placeholder's corner inside them.
 Drag B (attached to A) away past the leeway → A's strip turns red with the dots and the line; move back
 within it and let go → B snaps back onto A and every strip is gold again. Detach E again and drag it toward A
 until A's strip turns green, then end the mark each of these ways in turn: move away from A; press Shift;
@@ -2047,7 +2056,7 @@ line, then remove its row here.
 | DRAG-1 to DRAG-14 | new on 2026-10-02 with drag to attach (issue #22); DRAG-12 to DRAG-14 from its whole-branch review (DD-05); DRAG-1's highlight corrected the same day for the two join dots and the line (owner feedback, DD-08) |
 | DRAG-15 | new on 2026-10-02 from the owner's smoke feedback (addendum A4; DD-09): the detach leeway, its snap back and the red past `C.DETACH_RADIUS`; DRAG-5, DRAG-9, DRAG-11 and CONT-9 corrected the same day for it |
 | DRAG-16 | new on 2026-10-02 from the owner's smoke feedback (addendum A1, A3; DD-08): a before-side drop, the line and both dots |
-| DRAG-17 | new on 2026-10-02 from the owner's smoke feedback (addendum A5; DD-11): the mark edges the target's strip, not a box over its placeholders; DRAG-1 to DRAG-5, DRAG-8, DRAG-9, DRAG-15 and DRAG-16 corrected the same day for it; DRAG-1 and DRAG-17 corrected again the same evening (addendum A6; DD-12): the strip's own edge is repainted, since A5's overlay never showed in game, and DRAG-17 ends the mark every way it can end |
+| DRAG-17 | new on 2026-10-02 from the owner's smoke feedback (addendum A5; DD-11): the mark edges the target's strip, not a box over its placeholders; DRAG-1 to DRAG-5, DRAG-8, DRAG-9, DRAG-15 and DRAG-16 corrected the same day for it; DRAG-1 and DRAG-17 corrected again the same evening (addendum A6; DD-12): the strip's own edge is repainted, since A5's overlay never showed in game, and DRAG-17 ends the mark every way it can end; DRAG-1, DRAG-2, DRAG-5, DRAG-9, DRAG-15, DRAG-16 and DRAG-17 corrected for the second smoke round (addendum A7 to A9; DD-13): the side first and then the third (a centered drop takes the middle pair), everything measured on what you see (block, strip and name label), and the leeway 128 px |
 | STYLE-3 | 63, batch 5 |
 | STYLE-6 | 59a, batch 5 |
 | STYLE-9 | 61, batch 5; 163, smoke batch 2 (owed, as CONT-8); its bullet count corrected to four on 2026-09-29 |

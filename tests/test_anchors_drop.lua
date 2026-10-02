@@ -417,9 +417,9 @@ test("drop: let go past the leeway, an attached container detaches where it was 
     recordAnchor(inst.anchor, 0, 10)
     plant(inst.anchor, 0, 75, 20, 95)   -- at rest, 5 under 1's BOTTOMLEFT
     local writes = recordWrites(NS)
-    -- 65 below its rest (70 under 1's BOTTOMLEFT): one past the radius.
-    dragTo(inst, 0, 10, 20, 30)
-    -- red under: a hold with no bound, or a bound read exclusive of 65
+    -- 129 below its rest (134 under 1's BOTTOMLEFT): one past the radius.
+    dragTo(inst, 0, -54, 20, -34)
+    -- red under: a hold with no bound, or the first leeway's 64 read inclusive of 129 (A9: 128)
     assertEqual(table.concat(writes, ","), "container.position,container.attach", "detached")
     assertEqual(NS.Database.FindContainer(2).attach.mode, "screen")
 end)
@@ -427,14 +427,14 @@ end)
 test("drop: released where it rests, a container its settings put past the radius snaps back and writes nothing", function()
     local NS = env()
     local at = NS.Database.FindContainer(2).attach
-    at.mode, at.container, at.y = "container", 1, -70
+    at.mode, at.container, at.y = "container", 1, -145
     local inst = NS.ContainerManager.instances[2]
     recordAnchor(inst.anchor)
     local writes = recordWrites(NS)
-    -- Its seam gap and Y nudge put its TOPLEFT 75 under 1's BOTTOMLEFT.
-    plant(inst.anchor, 0, 5, 20, 25)
-    dragTo(inst, 2, 5, 22, 25)
-    -- red under: the leeway measured on the bare join (75 > 64: a pick-up and release detached it)
+    -- Its seam gap and Y nudge put its TOPLEFT 150 under 1's BOTTOMLEFT.
+    plant(inst.anchor, 0, -70, 20, -50)
+    dragTo(inst, 2, -70, 22, -50)
+    -- red under: the leeway measured on the bare join (150 > 128: a pick-up and release detached it)
     assertEqual(#writes, 0, "nothing written")
     assertEqual(NS.Database.FindContainer(2).attach.mode, "container", "still attached")
     assertEqual(inst.placedAs, "container", "placed back on its parent")
@@ -474,6 +474,7 @@ test("drop: Shift within the leeway still snaps back; another pair in range atta
     -- red under: Shift suppressing the hold as well (it would detach)
     assertEqual(#writes, 0, "Shift: held, nothing written")
     assertEqual(inst.placedAs, "container")
+    plant(inst.anchor, 0, 75, 20, 95)   -- where the snap back put it, 5 under 1's BOTTOMLEFT
     dragTo(inst, 40, 75, 60, 95)
     at = NS.Database.FindContainer(2).attach
     -- red under: the hold checked before another pair
@@ -511,10 +512,10 @@ test("drop: with its parent unreadable, a release before the cursor travels C.DE
     -- red under: no fallback (an unreadable parent detached at once)
     assertEqual(#writes, 0, "40 units: held")
     inst.handle:__fire("OnDragStart")
-    mocks.GetCursorPosition = function() return 200, 160 end
+    mocks.GetCursorPosition = function() return 260, 260 end
     inst.handle:__fire("OnDragStop")
     mocks.GetCursorPosition = function() return 100, 100 end
-    assertEqual(NS.Database.FindContainer(2).attach.mode, "screen", "116.6 units: detached")
+    assertEqual(NS.Database.FindContainer(2).attach.mode, "screen", "200 units: detached")
 end)
 
 test("drop: a one-row parent reading secret, released where it rests, snaps back and keeps its nudge", function()

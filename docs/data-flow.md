@@ -541,24 +541,33 @@ every 0.03 s. Once combat has started a tick shows nothing; otherwise `classify`
 release now would do (below), and while Shift is not held `Snap.Find` measures, for every eligible container (enabled, its anchor shown, not the dragged one, not
 one that follows it: `Anchors.WouldCycle`), the twelve outside pairs (each of its sides' start,
 middle and end point joined to the dragged one's point mirrored across that side, absolute and
-independent of growth; the three on its before side place as a free pair), between the dragged
-anchor's point and the target's relative point on the rect a follower would hang from (`Anchors.HangFrame`; an engine that reads secret falls back to its anchor). The
-nearest within `C.SNAP_RADIUS` (24 UIParent units) is marked by a green highlight (the addendum's A5, as A6 amends it):
+independent of growth; the three on its before side place as a free pair), side first and then by
+alignment (the addendum's A7, `Snap.Nearest`): each side is eligible when the gap between the dragged
+container's facing edge and it is at most `C.SNAP_RADIUS` (24 UIParent units) either way and their
+spans along it overlap, with the target's widened by the radius; the side's pair is the start, middle
+or end one by which third of that side the dragged container's center is over; the smallest gap wins,
+ties to the lower id and then the table's order. Both containers are measured on their visible
+footprints (A8, `Snap.Footprint`): the block (the dragged one's anchor; the target's rect a follower
+would hang from, `Anchors.HangFrame`, an engine that reads secret falling back to its anchor) with its
+strip and its name label taken in while each shows and reads. The pick is marked by a green highlight (the addendum's A5, as A6 amends it):
 the target's drag-handle strip has its OWN 1 px gold edge repainted 2 px in the mark's color, through
 the painter that drew it (`Style.DrawEdge` on the strip, the same four textures; no frame of ours is
 anchored to a strip, since A5's overlay hung on it never showed in game), and the widget's gold
 (`Anchors.STRIP_EDGE`) painted back the moment the mark moves to another strip or hides, on every way a
 drag ends, and from `ContainerClass:Destroy` (`Snap.ReleaseStrip`) when the strip's container is
 destroyed mid-drag, so a dormant instance never comes back green; with a 10 px dot on the target's join point, one on the dragged
-container's and a 2 px line between them, all in one color. A target with no visible strip
-(LibKa0s-Widgets absent, or its strip hidden) gets a box over its rect instead (`Snap.box`), so a mark
+container's and a 2 px line between them, all in one color, the dots on the two footprints. A target
+with no visible strip (LibKa0s-Widgets absent, or its strip hidden) gets a box over its footprint instead (`Snap.box`), so a mark
 is never lost. The dots, the line and the box hang from UIParent, never from the target. A container attached to another has a
-leeway (the owner-feedback addendum's A4): a pair found that way wins only when it is strictly nearer
-than the container's CURRENT pair (its stored pair in effect, `Anchors.AttachPoints`, measured from its
-own point now to its parent's point now on `Anchors.HangFrame`, with no fallback to the anchor), so a
-container picked up and let go where it sits keeps its pair, and never a pair of the current parent
+leeway (the owner-feedback addendum's A4): a pair found that way wins only when its gap is strictly
+under the distance of the container's CURRENT pair (its stored pair in effect, `Anchors.AttachPoints`,
+measured from its own point now to its parent's point now, on the two footprints, the parent's block on
+`Anchors.HangFrame` with no fallback to the anchor) and it is not the pair the pick gave where the
+container rested when the drag began (a child as wide as its parent rests centered, so that pick is
+its middle pair, whatever pair it is stored by), so a container picked up and let go where it sits
+keeps its pair, and never a pair of the current parent
 while that parent's block does not read (the snap measured it on the one-element fallback). Otherwise,
-while that pair's two points are at most `C.DETACH_RADIUS` (64 UIParent units) from where they were
+while that pair's two points are at most `C.DETACH_RADIUS` (128 UIParent units, A9) from where they were
 when the drag began (read before the lift, where its settings put it: the seam gap, its strip and
 label room and its X/Y nudge already between them), or from each other, the mark stays green on the current pair (a *hold*); beyond it,
 the repainted strip (or the box), both dots and the line all turn red (`C.DETACH_COLOR`, a *detach*). Shift suppresses only

@@ -1070,13 +1070,16 @@ badge and any count quoted in the docs must agree with it.
 - width: a one-icon container too narrow for the marks and a readable label keeps its natural width
 - width: the label is worked out once per name and width, not on every pass
 
-### test_anchors_snap.lua (17)
+### test_anchors_snap.lua (23)
 
 - snap: PointAt gives each of the nine WoW points on a rect
 - snap: Nearest picks each of the twelve outside pairs, the child's point the mirror of the parent's, under two growths
 - snap: Nearest picks the pair of each of the nine sides under each growth, and names its token
 - snap: Nearest answers nil past the radius, and takes a pair exactly on it
-- snap: a tie keeps the first target in the order given, and the first pair in the A2 table's order
+- snap: a tie keeps the first target in the order given, and the first side in the A2 table's order
+- snap: equal-width containers pick the middle pair centered, and the start or end pair in the outer thirds, on all four sides (A7)
+- snap: a third's border goes to the middle pair, and a target one point wide answers its middle pair
+- snap: the side is the nearest gap whose span overlaps the target's widened by the radius, an overlap's gap counted as its size (A7)
 - snap: Candidates lists every other live container in id order, with its rect and flow growth
 - snap: Candidates gives id order whatever order pairs walks the instances in, so a tie keeps the lower id
 - snap: a follower of the dragged container, and one further down its chain, is never a target
@@ -1085,12 +1088,15 @@ badge and any count quoted in the docs must agree with it.
 - snap: rects are read in UIParent units
 - snap: an engine whose rect reads secret falls back to the anchor; an unreadable anchor drops the target
 - snap: Find reads the dragged anchor and answers the nearest in-range target
+- snap: a target's footprint is its block with its strip while that shows, on each growth (A8)
+- snap: a target's footprint takes its name label in while that shows, and leaves out a strip or label that does not read (A8)
+- snap: Find measures the target's footprint and the dragged one's, strips included (A8)
 - snap: a picked side equal to Automatic stores nil for both points
 - snap: a side other than Automatic's stores the whole absolute pair, even one sharing a point with it
 - snap: folding reads Automatic for the target dropped on, not the container's current parent
 - snap: the radius is 24 UIParent units and the highlight is an opaque green
 
-### test_anchors_drag.lua (26)
+### test_anchors_drag.lua (29)
 
 - drag: a screen container and a container-attached one drag; a frame-attached one does not
 - drag: no drag starts in combat, and none leaves the container marked dragging
@@ -1105,6 +1111,8 @@ badge and any count quoted in the docs must agree with it.
 - drag: a target with no strip, or with its strip hidden, is boxed over its rect instead (A5, A6)
 - drag: the highlight puts a dot of the parent's size on the child's join point and a 2px line between the two (A3)
 - drag: a before-side pair draws the line from the target's top to the child's bottom, as a free pair (A2, A3)
+- drag: the dots and the line sit on the target's strip and the dragged one's own strip, never on their placeholders (A8)
+- drag: the box fallback frames the target's footprint, its name label included (A8)
 - drag: the highlight hides on Shift, on combat and at the drop
 - drag: a strip hidden mid-drag ends the drag at the next tick, and the container goes back where its settings put it
 - drag: a container destroyed mid-drag ends its drag and stops the driver
@@ -1113,6 +1121,7 @@ badge and any count quoted in the docs must agree with it.
 - drag: the leeway runs from where the container rests, seam room and nudge included, never from the bare join (A4)
 - drag: another pair in snap range beats the hold, and Shift suppresses only that (A4)
 - drag: a pair no nearer than its current one does not take it, so a child let go where it sits holds (A4)
+- drag: an equal-width child let go where it rests holds by its own pair, though its center is in the middle third; moved into another third, that pair takes it (A4, A7)
 - drag: an unreadable parent holds while the cursor has moved less than C.DETACH_RADIUS, in UIParent units (A4)
 - drag: a hidden parent is measured by the cursor and drawn as the child's dot alone, never at its last rect (A4)
 - drag: a parent whose block reads secret is measured by the cursor, never by its one-element fallback (A4)
@@ -2338,8 +2347,8 @@ badge and any count quoted in the docs must agree with it.
 | test_anchors_steady.lua | 8 |
 | test_anchors_collapse.lua | 9 |
 | test_anchors_width.lua | 6 |
-| test_anchors_snap.lua | 17 |
-| test_anchors_drag.lua | 26 |
+| test_anchors_snap.lua | 23 |
+| test_anchors_drag.lua | 29 |
 | test_anchors_drop.lua | 24 |
 | test_texttemplate.lua | 26 |
 | test_style.lua | 60 |
@@ -2391,4 +2400,4 @@ badge and any count quoted in the docs must agree with it.
 | test_layout_cap.lua | 13 |
 | test_diagnostics_contract.lua | 9 |
 | test_lizard_sighted.lua | 8 |
-| **Total** | **2001** |
+| **Total** | **2010** |

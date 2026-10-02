@@ -209,13 +209,13 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   to the anchor's center: on a 16 px bar about 28 px, or 48 px with the label shown, more than the
   bar's own height. The drop is unaffected: it attaches, or detaches at
   wherever the anchor was let go. The detach leeway cannot measure such a parent either, so it holds
-  while the cursor has moved less than 64 UIParent units from where the drag began (below).
+  while the cursor has moved less than 128 UIParent units from where the drag began (below).
 - **A container whose engine reads secret is measured by its first element while you drag onto it**
   (issue #22). The snap aims at the frame a follower would hang from (`Anchors.HangFrame`). An engine
   holding auras reads secret, so `Snap.TargetRect` falls back to the container's anchor, one element
-  where its first aura sits: the highlight's dots sit on that element (and the box, where the container
-  has no visible strip, frames it), and the twelve outside pairs are measured on it
-  rather than on the whole block. A drop near the far end of a long populated container may find
+  where its first aura sits: the highlight's dots sit on that element and its strip and name label
+  (and the box, where the container has no visible strip, frames them), and the side and its third
+  are measured on them rather than on the whole block. A drop near the far end of a long populated container may find
   nothing in range; drop near its start, or turn test mode on, where the snap aims at the whole
   placeholder block (`Preview.Extent`, a frame of ours).
 - **In test mode, a container attached to another hangs from that container's preview extent.** A

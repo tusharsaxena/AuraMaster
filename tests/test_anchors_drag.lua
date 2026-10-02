@@ -491,6 +491,61 @@ test("drag: a before-side pair draws the line from the target's top to the child
     restore()
 end)
 
+test("drag: the dots and the line sit on the target's strip and the dragged one's own strip, never on their placeholders (A8)", function()
+    local NS, mocks = env(2)
+    local restore = recordOverlays(mocks)
+    local CM = NS.ContainerManager
+    plant(CM.instances[1].engine, 0, 100, 100, 140)
+    plant(CM.instances[1].handle, 0, 142, 100, 160)   -- 1's strip, above its block (it grows down)
+    local inst = CM.instances[2]
+    recordAnchor(inst.anchor)
+    inst.handle:__fire("OnDragStart")
+    local Snap = NS.Anchors.Snap
+    -- 2, as wide as 1, 5 over 1's strip and 25 over its block.
+    plant(inst.anchor, 0, 165, 100, 185)
+    local hit = Snap.Tick()
+    -- red under: the target's block alone (25 past the radius: no pair, nothing shown)
+    assertTrue(hit ~= nil, "in range of 1's strip")
+    assertEqual(hit.side .. " " .. hit.point .. ">" .. hit.relPoint, "top BOTTOM>TOP", "centered: the middle pair")
+    assertEqual(dotAt(mocks, Snap.marker, "the parent's dot"), "BOTTOMLEFT 50,160", "on the strip's top edge")
+    assertEqual(dotAt(mocks, Snap.childMarker, "the child's dot"), "BOTTOMLEFT 50,165")
+    -- 2 under 1, its own strip 5 under 1's block and its anchor 25 under it.
+    plant(inst.handle, 0, 77, 100, 95)
+    plant(inst.anchor, 0, 55, 100, 75)
+    hit = Snap.Tick()
+    -- red under: the dragged anchor's rect alone (25 past the radius)
+    assertTrue(hit ~= nil, "in range by 2's own strip")
+    assertEqual(hit.side .. " " .. hit.point .. ">" .. hit.relPoint, "bottom TOP>BOTTOM")
+    assertEqual(dotAt(mocks, Snap.childMarker, "the child's dot"), "BOTTOMLEFT 50,95", "on its strip's top edge")
+    assertEqual(lineEnd(mocks, Snap.line, "SetStartPoint"), "BOTTOMLEFT 50,100")
+    assertEqual(lineEnd(mocks, Snap.line, "SetEndPoint"), "BOTTOMLEFT 50,95")
+    restore()
+end)
+
+test("drag: the box fallback frames the target's footprint, its name label included (A8)", function()
+    local NS, mocks = env(2)
+    local restore = recordOverlays(mocks)
+    local CM = NS.ContainerManager
+    plant(CM.instances[1].engine, 0, 100, 100, 140)
+    CM.instances[1].handle:Hide()
+    local label = mocks.CreateFrame("Frame")
+    plant(label, 0, 142, 100, 160)
+    label:Show()
+    CM.instances[1].label = label
+    local inst = CM.instances[2]
+    recordAnchor(inst.anchor)
+    inst.handle:__fire("OnDragStart")
+    local Snap = NS.Anchors.Snap
+    plant(inst.anchor, 40, 165, 60, 185)
+    local hit = Snap.Tick()
+    -- red under: the target's block alone (25 past the radius: no pair, no box)
+    assertTrue(hit ~= nil and hit.point == "BOTTOM", "5 over 1's label")
+    local p = Snap.box:__last("SetPoint")
+    assertEqual(p[3] .. " " .. p[4] .. "," .. p[5], "BOTTOMLEFT 0,100")
+    assertEqual(Snap.box:__joined("SetSize"), "100,60", "the block and its label")
+    restore()
+end)
+
 test("drag: the highlight hides on Shift, on combat and at the drop", function()
     local NS, mocks = env(2)
     local restore = recordOverlays(mocks)
@@ -694,8 +749,8 @@ end
 test("drag: held within C.DETACH_RADIUS of its current pair, green on that pair; past it, red, and green again on the way back (A4)", function()
     local NS, mocks, inst, Snap, restore = leewayDrag()
     local C = NS.Constants
-    -- red under: no DETACH_RADIUS (the addendum's 64 UIParent units)
-    assertEqual(C.DETACH_RADIUS, 64)
+    -- red under: the first leeway, 64 UIParent units (the owner, the second smoke round: far too little; A9)
+    assertEqual(C.DETACH_RADIUS, 128)
     -- 2's TOPLEFT 30 under 1's BOTTOMLEFT, 25 from where it rested: out of snap range, inside the leeway.
     plant(inst.anchor, 0, 50, 20, 70)
     local pair, state = Snap.Tick()
@@ -708,19 +763,19 @@ test("drag: held within C.DETACH_RADIUS of its current pair, green on that pair;
     assertEdgeOn(NS, mocks, NS.ContainerManager.instances[1].handle, C.SNAP_COLOR, "hold: the parent's strip")
     assertFalse(Snap.box:IsShown(), "hold: no box")
     assertPainted(NS, C.SNAP_COLOR, "hold")
-    -- Exactly 64 from where it rested holds ("at most"); 65 does not.
-    plant(inst.anchor, 0, 11, 20, 31)
-    assertEqual(select(2, Snap.Tick()), "hold", "64: still held")
-    plant(inst.anchor, 0, 10, 20, 30)
+    -- Exactly 128 from where it rested holds ("at most"); 129 does not.
+    plant(inst.anchor, 0, -53, 20, -33)
+    assertEqual(select(2, Snap.Tick()), "hold", "128: still held")
+    plant(inst.anchor, 0, -54, 20, -34)
     pair, state = Snap.Tick()
     -- red under: a hold with no bound (an attached container could never be detached)
-    assertEqual(state, "detach", "65: past the radius")
+    assertEqual(state, "detach", "129: past the radius")
     assertEqual(pair.id .. " " .. pair.point .. ">" .. pair.relPoint, "1 TOPLEFT>BOTTOMLEFT", "shown on the current pair")
     assertTrue(Snap.highlight:IsShown(), "still shown")
     -- red under: no DETACH_COLOR, or only the box repainted (the dots and the line left green)
     assertPainted(NS, C.DETACH_COLOR, "detach")
     assertEdgeOn(NS, mocks, NS.ContainerManager.instances[1].handle, C.DETACH_COLOR, "detach: the parent's strip, red")
-    assertEqual(dotAt(mocks, Snap.childMarker, "the child's dot"), "BOTTOMLEFT 0,30",
+    assertEqual(dotAt(mocks, Snap.childMarker, "the child's dot"), "BOTTOMLEFT 0,-34",
         "the child's dot on its own point of the current pair")
     plant(inst.anchor, 0, 50, 20, 70)
     Snap.Tick()
@@ -730,19 +785,19 @@ test("drag: held within C.DETACH_RADIUS of its current pair, green on that pair;
 end)
 
 test("drag: the leeway runs from where the container rests, seam room and nudge included, never from the bare join (A4)", function()
-    -- Its seam gap, strip and label room and a Y nudge put it 75 under 1's BOTTOMLEFT at rest.
-    local NS, _, inst, Snap, restore = leewayDrag(2, 75)
+    -- Its seam gap, strip and label room and a Y nudge put it 150 under 1's BOTTOMLEFT at rest.
+    local NS, _, inst, Snap, restore = leewayDrag(2, 150)
     local pair, state = Snap.Tick()
-    -- red under: the bare join measured (75 > 64: red the moment the drag starts, a release detaches)
+    -- red under: the bare join measured (more than the radius: red the moment the drag starts)
     assertEqual(state, "hold", "at rest")
     assertEqual(pair.point .. ">" .. pair.relPoint, "TOPLEFT>BOTTOMLEFT", "on its current pair")
-    plant(inst.anchor, 0, -59, 20, -39)
-    assertEqual(select(2, Snap.Tick()), "hold", "64 further down: still held")
-    plant(inst.anchor, 0, -60, 20, -40)
-    assertEqual(select(2, Snap.Tick()), "detach", "65 further down")
+    plant(inst.anchor, 0, -198, 20, -178)
+    assertEqual(select(2, Snap.Tick()), "hold", "128 further down: still held")
+    plant(inst.anchor, 0, -199, 20, -179)
+    assertEqual(select(2, Snap.Tick()), "detach", "129 further down")
     -- red under: a distance from the rest point alone (it would only grow, moving toward the parent)
     plant(inst.anchor, 0, 80, 20, 100)
-    assertEqual(select(2, Snap.Tick()), "hold", "75 up, flush on its parent: its own pair, held")
+    assertEqual(select(2, Snap.Tick()), "hold", "150 up, flush on its parent: its own pair, held")
     NS.Anchors.Snap.EndDrag(inst)
     restore()
 end)
@@ -769,16 +824,44 @@ test("drag: another pair in snap range beats the hold, and Shift suppresses only
 end)
 
 test("drag: a pair no nearer than its current one does not take it, so a child let go where it sits holds (A4)", function()
-    local NS, _, inst, Snap, restore = leewayDrag()
-    local at = NS.Database.FindContainer(2).attach
-    at.childPoint, at.relPoint = "TOP", "BOTTOM"   -- after-center, stored absolute
-    -- As wide as its parent, 5 under it: all three bottom pairs are 5 away, and the table's first
-    -- (TOPLEFT on BOTTOMLEFT) wins a tie among the others.
+    local _, _, inst, Snap, restore = leewayDrag()
+    -- Its own pair Automatic's, TOPLEFT on BOTTOMLEFT; where it rested (20 wide) the pick was that
+    -- pair too, so only "strictly nearer" is left to hold it. Now as wide as its parent and 5 under
+    -- it: centered, the pick is the middle pair (A7), 5 away by its gap, and its own pair's two points
+    -- are 5 apart: no nearer.
     plant(inst.anchor, 0, 75, 100, 95)
     local pair, state = Snap.Tick()
     -- red under: "any pair that is not the current one" (a pick-up and release re-attaches by another pair)
     assertEqual(state, "hold")
-    assertEqual(pair.point .. ">" .. pair.relPoint, "TOP>BOTTOM", "its own pair")
+    assertEqual(pair.point .. ">" .. pair.relPoint, "TOPLEFT>BOTTOMLEFT", "its own pair")
+    restore()
+end)
+
+test("drag: an equal-width child let go where it rests holds by its own pair, though its center is in the middle third; moved into another third, that pair takes it (A4, A7)", function()
+    local NS, mocks = env(2)
+    local restore = recordOverlays(mocks)
+    local CM = NS.ContainerManager
+    plant(CM.instances[1].engine, 0, 100, 100, 140)
+    local at = NS.Database.FindContainer(2).attach
+    at.mode, at.container = "container", 1   -- Automatic: TOPLEFT on BOTTOMLEFT
+    local inst = CM.instances[2]
+    recordAnchor(inst.anchor)
+    -- At rest, as wide as 1 and 5 under it, 1 to the right (the parent's engine lead taken back):
+    -- its own pair's points 5.1 apart, the bottom side 5 away and its middle pair the pick.
+    plant(inst.anchor, 1, 75, 101, 95)
+    inst.handle:__fire("OnDragStart")
+    local Snap = NS.Anchors.Snap
+    local pair, state = Snap.Tick()
+    -- red under: no exception for the pick where it rests (the middle pair, 5 < 5.1, re-attaches it)
+    assertEqual(state, "hold", "let go where it rests")
+    assertEqual(pair.point .. ">" .. pair.relPoint, "TOPLEFT>BOTTOMLEFT", "its own pair")
+    plant(inst.anchor, 60, 75, 160, 95)
+    pair, state = Snap.Tick()
+    assertEqual(state, "attach", "its center in the last third")
+    assertEqual(pair.point .. ">" .. pair.relPoint, "TOPRIGHT>BOTTOMRIGHT")
+    plant(inst.anchor, 1, 75, 101, 95)
+    assertEqual(select(2, Snap.Tick()), "hold", "back where it rests")
+    Snap.EndDrag(inst)
     restore()
 end)
 
@@ -795,18 +878,18 @@ test("drag: an unreadable parent holds while the cursor has moved less than C.DE
     inst.handle:__fire("OnDragStart")
     plant(inst.anchor, 300, 410, 320, 430)
     local Snap = NS.Anchors.Snap
-    mocks.GetCursorPosition = function() return 500, 300 end   -- 100 screen px: 50 UIParent units
+    mocks.GetCursorPosition = function() return 600, 300 end   -- 200 screen px: 100 UIParent units
     local pair, state = Snap.Tick()
-    -- red under: no fallback (an unreadable parent detaches at once), or screen units (100 > 64)
-    assertEqual(state, "hold", "50 units from the start")
+    -- red under: no fallback (an unreadable parent detaches at once), or screen units (200 > 128)
+    assertEqual(state, "hold", "100 units from the start")
     assertEqual(pair.id, 3, "the current pair's parent")
     -- red under: nothing drawn with no parent rect (a detach then never turns anything red)
     -- (its TOPLEFT, 300,430 at scale 1 under UIParent's 2: 150,215 in UIParent units)
     -- red under: the parent's strip left plain where its rect does not read (it has one: A5 still edges it)
     local strip = CM.instances[3].handle
     assertLoneDot(NS, mocks, 150, 215, NS.Constants.SNAP_COLOR, "hold", strip)
-    mocks.GetCursorPosition = function() return 530, 300 end   -- 65 units
-    assertEqual(select(2, Snap.Tick()), "detach", "65 units")
+    mocks.GetCursorPosition = function() return 658, 300 end   -- 129 units
+    assertEqual(select(2, Snap.Tick()), "detach", "129 units")
     assertLoneDot(NS, mocks, 150, 215, NS.Constants.DETACH_COLOR, "detach", strip)
     mocks.GetCursorPosition = function() return 100, 100 end
     restore()
@@ -835,9 +918,9 @@ test("drag: a hidden parent is measured by the cursor and drawn as the child's d
     assertEqual(state, "hold", "the cursor has not moved")
     -- red under: a hidden parent's stale rect boxed (the parent's IsShown not read for the mark)
     assertLoneDot(NS, mocks, 0, 95, NS.Constants.SNAP_COLOR, "hold")
-    mocks.GetCursorPosition = function() return 165, 100 end   -- 65 units
+    mocks.GetCursorPosition = function() return 229, 100 end   -- 129 units
     -- red under: the hidden parent measured at its last rect (its rest vector read too: held at 0)
-    assertEqual(select(2, Snap.Tick()), "detach", "65 units of cursor travel")
+    assertEqual(select(2, Snap.Tick()), "detach", "129 units of cursor travel")
     assertLoneDot(NS, mocks, 0, 95, NS.Constants.DETACH_COLOR, "detach")
     mocks.GetCursorPosition = function() return 100, 100 end
     restore()

@@ -1,8 +1,10 @@
 -- tests/test_anchors_snap.lua - issue #22, the snap core (DD-01): what a container dropped near
--- another snaps to. modules/Anchors_Snap.lua's pure core (Snap.PointAt, Snap.Nearest) picks the
--- nearest of the twelve outside pairs (the addendum's A2: each side's start, middle and end joined to
--- the child's mirror point, absolute and independent of growth), within C.SNAP_RADIUS (D2), and names
--- the side token it classifies as under the target's flow growth, nil for a free one; its eligibility keeps a container off itself, off anything that follows it
+-- another snaps to. modules/Anchors_Snap.lua's pure core (Snap.PointAt, Snap.Nearest) picks one of
+-- the twelve outside pairs (the addendum's A2: each side's start, middle and end joined to the child's
+-- mirror point, absolute and independent of growth) side first, by the gap within C.SNAP_RADIUS (D2),
+-- then by the third of that side the child's center is over (A7), and names the side token it
+-- classifies as under the target's flow growth, nil for a free one; every rect is a container's
+-- visible footprint, block, strip and name label (A8); its eligibility keeps a container off itself, off anything that follows it
 -- and off a disabled or hidden one (D5); its rect read goes through the secrets guard and falls back
 -- from an unreadable engine to the target's anchor; and its folding stores the picked pair nil, nil
 -- only when the whole of it is what Automatic would give, else both points absolute (D7).
@@ -67,6 +69,9 @@ end)
 
 -- The addendum's A2 table, written out here rather than read from the module: the parent's side,
 -- then each of its three points joined to the child's point that mirrors it across that side.
+-- How far a child 2 right and 1 up of a pair's join sits from the side it is on (A7: the gap).
+local GAP = { bottom = 1, top = 1, right = 2, left = 2 }
+
 local OUTSIDE = {
     { "bottom", "BOTTOMLEFT", "TOPLEFT" }, { "bottom", "BOTTOM", "TOP" }, { "bottom", "BOTTOMRIGHT", "TOPRIGHT" },
     { "top", "TOPLEFT", "BOTTOMLEFT" }, { "top", "TOP", "BOTTOM" }, { "top", "TOPRIGHT", "BOTTOMRIGHT" },
@@ -106,7 +111,8 @@ test("snap: Nearest picks each of the twelve outside pairs, the child's point th
             -- red under: the nine growth-relative sides only (the parent's before side is never offered)
             assertTrue(hit ~= nil, what)
             assertEqual(hit.side .. " " .. hit.point .. ">" .. hit.relPoint, side .. " " .. point .. ">" .. rel, what)
-            assertTrue(math.abs(hit.dist - math.sqrt(5)) < 1e-9, what .. " dist")
+            -- red under: the distance between the two points (A7: the gap to the side)
+            assertEqual(hit.dist, GAP[side], what .. " dist")
             -- The before side is free (G5); every other side is one of the nine under the target's growth.
             local want = tokenOf(NS, g[1], g[2], point, rel)
             assertEqual(tostring(hit.token), tostring(want), what .. " token")
@@ -134,7 +140,7 @@ test("snap: Nearest picks the pair of each of the nine sides under each growth, 
             assertEqual(hit.token, token, what)
             assertEqual(hit.point .. ">" .. hit.relPoint, point .. ">" .. rel, what)
             assertEqual(hit.id, 7, what)
-            assertTrue(math.abs(hit.dist - math.sqrt(5)) < 1e-9, what .. " dist")
+            assertEqual(hit.dist, GAP[hit.side], what .. " dist")
         end
     end
 end)
@@ -153,7 +159,7 @@ test("snap: Nearest answers nil past the radius, and takes a pair exactly on it"
     assertNil(Snap.Nearest(under(1), {}, 24), "no candidates")
 end)
 
-test("snap: a tie keeps the first target in the order given, and the first pair in the A2 table's order", function()
+test("snap: a tie keeps the first target in the order given, and the first side in the A2 table's order", function()
     local NS = fresh()
     local Snap = NS.Anchors.Snap
     local same = rectOf(0, 100, 100, 140)
@@ -164,20 +170,105 @@ test("snap: a tie keeps the first target in the order given, and the first pair 
     }, 24)
     -- red under: a <= comparison while scanning (the last of equals wins)
     assertEqual(hit.id, 2, "first target")
-    -- A point-sized target and a zero-width child: TOPLEFT, TOP and TOPRIGHT are one point, so
-    -- the three bottom pairs and the right side's start all meet at distance 0.
-    hit = Snap.Nearest(rectOf(50, 30, 50, 50),
-        { { id = 4, rect = rectOf(50, 50, 50, 50), growH = "right", growV = "down" } }, 24)
-    assertEqual(hit.side .. " " .. hit.point .. ">" .. hit.relPoint, "bottom TOPLEFT>BOTTOMLEFT", "first pair")
-    assertEqual(hit.token, "after-start")
-    assertEqual(hit.dist, 0)
-    -- Every point of both one point: all twelve meet. Growing up, the bottom is the before side.
-    hit = Snap.Nearest(rectOf(50, 50, 50, 50),
-        { { id = 4, rect = rectOf(50, 50, 50, 50), growH = "right", growV = "up" } }, 24)
-    -- red under: the nine sides in ATTACH_EDGES order (after-start growing up: BOTTOMLEFT>TOPLEFT)
-    assertEqual(hit.side .. " " .. hit.point .. ">" .. hit.relPoint, "bottom TOPLEFT>BOTTOMLEFT",
-        "the table's first pair, whatever the growth")
+    -- At the target's bottom-right corner, 5 below it and 5 right of it: the bottom side and the right
+    -- side are both 5 away, and the bottom comes first in the table.
+    hit = Snap.Nearest(rectOf(105, 75, 125, 95),
+        { { id = 4, rect = same, growH = "right", growV = "down" } }, 24)
+    -- red under: a <= comparison across sides (the last side of equals, the right, wins)
+    assertEqual(hit.side .. " " .. hit.point .. ">" .. hit.relPoint, "bottom TOPRIGHT>BOTTOMRIGHT", "first side")
+    assertEqual(hit.token, "after-end")
+    assertEqual(hit.dist, 5)
+    -- Growing up, the bottom is the before side: the same pick, free.
+    hit = Snap.Nearest(rectOf(105, 75, 125, 95),
+        { { id = 4, rect = same, growH = "right", growV = "up" } }, 24)
+    assertEqual(hit.side .. " " .. hit.point .. ">" .. hit.relPoint, "bottom TOPRIGHT>BOTTOMRIGHT",
+        "the table's first side, whatever the growth")
     assertNil(hit.token, "a before-side pair is free")
+end)
+
+-- ── side first, then align by thirds (the addendum's A7) ──────────────────────────────────────
+
+-- For each side of a 90x90 target at 0,0: where a 90x90 child sits 5 outside it, centered on that
+-- side, and how far "along" moves it toward the side's start (left, or the top for a vertical side).
+local SIDE_AT = {
+    bottom = function(along) return rectOf(-along, -95, 90 - along, -5) end,
+    top    = function(along) return rectOf(-along, 95, 90 - along, 185) end,
+    right  = function(along) return rectOf(95, along, 185, 90 + along) end,
+    left   = function(along) return rectOf(-95, along, -5, 90 + along) end,
+}
+-- The pair each third answers, start, middle and end (A2's table, read along the side).
+local THIRDS = {
+    bottom = { "TOPLEFT>BOTTOMLEFT", "TOP>BOTTOM", "TOPRIGHT>BOTTOMRIGHT" },
+    top    = { "BOTTOMLEFT>TOPLEFT", "BOTTOM>TOP", "BOTTOMRIGHT>TOPRIGHT" },
+    right  = { "TOPLEFT>TOPRIGHT", "LEFT>RIGHT", "BOTTOMLEFT>BOTTOMRIGHT" },
+    left   = { "TOPRIGHT>TOPLEFT", "RIGHT>LEFT", "BOTTOMRIGHT>BOTTOMLEFT" },
+}
+
+test("snap: equal-width containers pick the middle pair centered, and the start or end pair in the outer thirds, on all four sides (A7)", function()
+    local NS = fresh()
+    local Snap = NS.Anchors.Snap
+    local target = { { id = 7, rect = rectOf(0, 0, 90, 90), growH = "right", growV = "down" } }
+    for _, side in ipairs({ "bottom", "top", "right", "left" }) do
+        -- Centered, then its center 5 inside the start end and 5 inside the far end (40 along).
+        for i, along in ipairs({ 40, 0, -40 }) do
+            local hit = Snap.Nearest(SIDE_AT[side](along), target, 24)
+            local what = side .. " " .. along
+            -- red under: the nearest pair of points (every pair of a side as near, the start pair kept)
+            assertTrue(hit ~= nil, what)
+            assertEqual(hit.side .. " " .. hit.point .. ">" .. hit.relPoint, side .. " " .. THIRDS[side][i], what)
+            assertEqual(hit.dist, 5, what .. ": dist is the gap")
+        end
+    end
+end)
+
+test("snap: a third's border goes to the middle pair, and a target one point wide answers its middle pair", function()
+    local NS = fresh()
+    local Snap = NS.Anchors.Snap
+    local target = { { id = 7, rect = rectOf(0, 0, 90, 90), growH = "right", growV = "down" } }
+    -- A 30-wide child under the target, its center on 30, then on 29.5 (the first third's border is 30).
+    local hit = Snap.Nearest(rectOf(15, -35, 45, -5), target, 24)
+    -- red under: a border taken by the outer third
+    assertEqual(hit.point .. ">" .. hit.relPoint, "TOP>BOTTOM", "on the border")
+    hit = Snap.Nearest(rectOf(14.5, -35, 44.5, -5), target, 24)
+    assertEqual(hit.point .. ">" .. hit.relPoint, "TOPLEFT>BOTTOMLEFT", "just inside the first third")
+    hit = Snap.Nearest(rectOf(45, -35, 75, -5), target, 24)
+    assertEqual(hit.point .. ">" .. hit.relPoint, "TOP>BOTTOM", "on the last third's border")
+    -- A target with no width: centered over it is the middle, either side of it the start or the end.
+    local dot = { { id = 4, rect = rectOf(50, 50, 50, 50), growH = "right", growV = "down" } }
+    hit = Snap.Nearest(rectOf(40, 30, 60, 45), dot, 24)
+    assertEqual(hit.point .. ">" .. hit.relPoint, "TOP>BOTTOM", "centered on a point")
+    hit = Snap.Nearest(rectOf(30, 30, 45, 45), dot, 24)
+    -- red under: a span that must overlap the target's own, unwidened (beside a point, it never does)
+    assertTrue(hit ~= nil, "left of a point")
+    assertEqual(hit.point .. ">" .. hit.relPoint, "TOPLEFT>BOTTOMLEFT", "left of a point")
+end)
+
+test("snap: the side is the nearest gap whose span overlaps the target's widened by the radius, an overlap's gap counted as its size (A7)", function()
+    local NS = fresh()
+    local Snap = NS.Anchors.Snap
+    local target = { { id = 7, rect = rectOf(0, 0, 90, 90), growH = "right", growV = "down" } }
+    -- Under it, overlapping it by 3: the bottom, 3 away.
+    local hit = Snap.Nearest(rectOf(30, -17, 60, 3), target, 24)
+    -- red under: a signed gap (an overlap ranked as nearer than flush)
+    assertEqual(hit.side .. " " .. hit.dist, "bottom 3", "an overlap")
+    -- 5 under it and 23 past its right edge: the bottom side (its span overlaps the widened one) beats
+    -- the right side's 23, and the child's center is in the last third.
+    hit = Snap.Nearest(rectOf(113, -25, 133, -5), target, 24)
+    -- red under: a span that must overlap the target's own (the corner never snaps)
+    assertEqual(hit.side .. " " .. hit.point .. ">" .. hit.relPoint .. " " .. hit.dist,
+        "bottom TOPRIGHT>BOTTOMRIGHT 5", "the widened span")
+    -- 24 past it: the bottom's span only touches the widened one, which is no overlap, and the right
+    -- side, 24 away, takes it, by its bottom third.
+    hit = Snap.Nearest(rectOf(114, -25, 134, -5), target, 24)
+    -- red under: a touch counted as an overlap (the bottom's 5 wins)
+    assertEqual(hit.side .. " " .. hit.point .. ">" .. hit.relPoint .. " " .. hit.dist,
+        "right BOTTOMLEFT>BOTTOMRIGHT 24", "a touch is no overlap")
+    -- 25 past it: the right side is 25 away, and nothing else is in range.
+    assertNil(Snap.Nearest(rectOf(115, -25, 135, -5), target, 24), "past the widened span")
+    -- 2 right of it and 5 under it: the right side is nearer, and the child's center is in its bottom third.
+    hit = Snap.Nearest(rectOf(92, -25, 112, -5), target, 24)
+    assertEqual(hit.side .. " " .. hit.point .. ">" .. hit.relPoint .. " " .. hit.dist,
+        "right BOTTOMLEFT>BOTTOMRIGHT 2", "the nearer gap")
 end)
 
 -- ── eligibility (D5) ──────────────────────────────────────────────────────────────────────────
@@ -326,6 +417,107 @@ test("snap: Find reads the dragged anchor and answers the nearest in-range targe
     assertNil(NS.Anchors.Snap.Find(CM.instances[2]), "nothing within the radius")
     rawset(CM.instances[2].anchor, "GetLeft", nil)
     assertNil(NS.Anchors.Snap.Find(CM.instances[2]), "the dragged anchor unreadable")
+end)
+
+-- ── the visible footprint (the addendum's A8) ─────────────────────────────────────────────────
+
+--- Give live container `inst` a strip and a name label of plain mock frames where it has none (the
+--- snap suite builds neither), both hidden. Returns the strip and the label.
+local function furniture(mocks, inst)
+    inst.handle = inst.handle or mocks.CreateFrame("Frame")
+    inst.label = inst.label or mocks.CreateFrame("Frame")
+    inst.handle:Hide()
+    inst.label:Hide()
+    return inst.handle, inst.label
+end
+
+local function edges(r) return r.left .. "," .. r.bottom .. "," .. r.right .. "," .. r.top end
+
+test("snap: a target's footprint is its block with its strip while that shows, on each growth (A8)", function()
+    -- Where the strip sits on each growth (Anchors.StripPoints): above the block growing down, below it
+    -- growing up, lined up with the side the lines start from and running on past the other.
+    local STRIP = {
+        ["right/down"] = { 0, 142, 120, 160 }, ["left/down"] = { -20, 142, 100, 160 },
+        ["right/up"] = { 0, 80, 120, 98 }, ["left/up"] = { -20, 80, 100, 98 },
+    }
+    local WANT = {
+        ["right/down"] = "0,100,120,160", ["left/down"] = "-20,100,100,160",
+        ["right/up"] = "0,80,120,140", ["left/up"] = "-20,80,100,140",
+    }
+    for _, g in ipairs(GROWTHS) do
+        local grow = g[1] .. "/" .. g[2]
+        local NS, mocks = env(2)
+        local inst = NS.ContainerManager.instances[2]
+        local L = NS.Database.FindContainer(2).layout
+        L.growH, L.growV = g[1], g[2]
+        plant(inst.engine, 0, 100, 100, 140)
+        local strip = furniture(mocks, inst)
+        plant(strip, unpack(STRIP[grow]))
+        local Snap = NS.Anchors.Snap
+        assertEqual(edges(Snap.Footprint(inst)), "0,100,100,140", grow .. ": the strip hidden, the block alone")
+        strip:Show()
+        -- red under: no Snap.Footprint, or one that reads the block alone (the dots on the placeholder)
+        assertEqual(edges(Snap.Footprint(inst)), WANT[grow], grow .. ": the strip shown")
+        assertEqual(edges(Snap.TargetRect(inst)), "0,100,100,140", grow .. ": the block rect is unchanged")
+    end
+end)
+
+test("snap: a target's footprint takes its name label in while that shows, and leaves out a strip or label that does not read (A8)", function()
+    local SECRET = 41.5
+    local NS, mocks = env(2)
+    mocks.issecretvalue = function(v) return v == SECRET end
+    local inst = NS.ContainerManager.instances[2]
+    plant(inst.engine, 0, 100, 100, 140)
+    local strip, label = furniture(mocks, inst)
+    plant(label, 0, 142, 100, 160)
+    plant(strip, 0, 162, 120, 180)
+    label:Show()
+    local Snap = NS.Anchors.Snap
+    -- red under: a footprint without the label (the strip outermost, the label between it and the block)
+    assertEqual(edges(Snap.Footprint(inst)), "0,100,100,160", "the label")
+    strip:Show()
+    assertEqual(edges(Snap.Footprint(inst)), "0,100,120,180", "the label and the strip")
+    plant(strip, 0, 162, SECRET, 180)
+    -- red under: no guard on the strip's rect (arithmetic on a secret), or a target dropped for it
+    assertEqual(edges(Snap.Footprint(inst)), "0,100,100,160", "a strip reading secret is left out")
+    plant(label, SECRET, 142, 100, 160)
+    assertEqual(edges(Snap.Footprint(inst)), "0,100,100,140", "and a label reading secret: the block")
+    -- A block that does not read at all, the anchor neither: no footprint, whatever the strip reads.
+    plant(strip, 0, 162, 120, 180)
+    rawset(inst.engine, "GetLeft", nil)
+    rawset(inst.anchor, "GetLeft", nil)
+    assertNil(Snap.Footprint(inst), "no block, no footprint")
+    -- The one-element fallback still takes the strip in.
+    plant(inst.anchor, 0, 120, 20, 140)
+    assertEqual(edges(Snap.Footprint(inst)), "0,120,120,180", "the fallback and the strip")
+end)
+
+test("snap: Find measures the target's footprint and the dragged one's, strips included (A8)", function()
+    local NS, mocks = env(3)
+    local CM = NS.ContainerManager
+    plant(CM.instances[3].engine, 400, 100, 500, 140)
+    local strip3 = furniture(mocks, CM.instances[3])
+    local strip2 = furniture(mocks, CM.instances[2])
+    plant(strip3, 400, 142, 500, 160)
+    -- 2 as wide as 3, 30 over 3's block: out of range on blocks alone.
+    plant(CM.instances[2].anchor, 400, 170, 500, 190)
+    assertNil(NS.Anchors.Snap.Find(CM.instances[2]), "the blocks 30 apart")
+    strip3:Show()
+    local hit = NS.Anchors.Snap.Find(CM.instances[2])
+    -- red under: the target's block alone (30 > the radius: no pair)
+    assertTrue(hit ~= nil, "3's strip 10 under 2")
+    assertEqual(hit.id .. " " .. hit.side .. " " .. hit.point .. ">" .. hit.relPoint .. " " .. hit.dist,
+        "3 top BOTTOM>TOP 10")
+    -- 2 30 under 3's block, its own strip 10 under it: the bottom side, measured from 2's strip.
+    plant(CM.instances[2].anchor, 400, 50, 500, 70)
+    plant(strip2, 400, 72, 500, 90)
+    assertNil(NS.Anchors.Snap.Find(CM.instances[2]), "2's strip hidden: 30 apart")
+    strip2:Show()
+    hit = NS.Anchors.Snap.Find(CM.instances[2])
+    -- red under: the dragged anchor's rect alone
+    assertTrue(hit ~= nil, "2's strip 10 under 3")
+    assertEqual(hit.side .. " " .. hit.point .. ">" .. hit.relPoint .. " " .. hit.dist, "bottom TOP>BOTTOM 10")
+    assertEqual(NS.Anchors.Snap.Candidates(CM.instances[2])[1].rect.top, 160, "the candidate's rect is its footprint")
 end)
 
 -- ── Automatic folding (D7) ────────────────────────────────────────────────────────────────────

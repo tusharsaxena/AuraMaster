@@ -87,11 +87,15 @@ each under its drag handle, and one predicted empty under a faint outline one el
 empty container can still be found and dragged. A screen container or one attached to another drags
 (never one on a named frame, never in combat); dropped near another container it attaches there
 (issue #22, `modules/Anchors_Snap.lua`). The handle's `beginDrag` lifts an attached anchor onto
-`UIParent` and starts the snap driver, which every 0.03 s highlights the nearest of the twelve
+`UIParent` and starts the snap driver, which every 0.03 s highlights one of the twelve
 outside pairs (each side's start, middle and end joined to the child's mirror point, absolute and
-independent of growth; the three on the target's before side place as a free pair) of the nearest
+independent of growth; the three on the target's before side place as a free pair) of an
 eligible container within `C.SNAP_RADIUS` (`Snap.Find`; never itself or one that follows
-it, `Anchors.WouldCycle`) with a 2 px edge in the mark's color on that container's drag-handle strip
+it, `Anchors.WouldCycle`), picked side first and then by alignment (the addendum's A7: the nearest
+side by the gap between the two facing edges, its span overlapping, then the start, middle or end
+pair by which third of that side the dragged container's center is over), every rect measured and
+drawn on the container's visible footprint (A8: its block with its strip and name label while each
+shows, `Snap.Footprint`), with a 2 px edge in the mark's color on that container's drag-handle strip
 (the owner-feedback addendum's A5 and A6: the strip's own 1 px gold edge repainted through
 `Style.DrawEdge`, no frame of ours anchored to it, and its gold, `Anchors.STRIP_EDGE`, painted back
 when the mark leaves it, hides or its container is destroyed; a box over its rect only when it has no
@@ -100,11 +104,11 @@ points and a line between them, all in one color, and `Anchors.Place` leaves a d
 from the drop itself: a candidate and no Shift writes the whole `container.attach` section through
 `NS.AttachByDrop` (`settings/Layout.lua`), which asks first with the GC-1 popup when the chain's flow
 would change. An attached container has a leeway (the owner-feedback addendum's A4, `C.DETACH_RADIUS`,
-64): while its current pair's two points stay that close to where they rested when the drag began, or
+128 since A9): while its current pair's two points stay that close to where they rested when the drag began, or
 to each other (the cursor's travel when its parent does not read), the mark stays green on that pair, the parent's strip repainted, and a release snaps it back, writing nothing; past it, the
 whole mark turns red (`C.DETACH_COLOR`) and a release detaches to the drop position, X/Y 0. Another
-pair in snap range, not its current one and nearer than it (never one of a parent whose block reads
-secret), wins over both, and Shift suppresses only that.
+pair in snap range, not its current one nor the one the pick gave where it rested, and nearer than it
+(never one of a parent whose block reads secret), wins over both, and Shift suppresses only that.
 The tick and the drop classify alike (`classify`); combat started mid-drag attaches nothing. The handle's close mark (X) turns that container off through the write
 seam. A container can also show its name as a label where the handle sits, locked or unlocked;
 while unlocked the handle moves out past it (`Anchors.PlaceLabel`, batch 8 D6).
