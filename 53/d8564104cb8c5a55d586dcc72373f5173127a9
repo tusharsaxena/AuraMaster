@@ -1,0 +1,1 @@
+OK SI-01 tests 1845 passed / 0 failed / 1 skipped (1846, 16 shards); luacheck 0 warnings / 0 errors in 156 files; complexity 0 warnings, max CCN 15; 13 mutations killed (1 equivalent); owner-profile fixture re-rendered on master 5b6c9f2: 42 groups, 0 diffs
