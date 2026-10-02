@@ -347,6 +347,20 @@ function Compat.IsPlayerUnit(unit)
     return knownBoolean(_G.UnitIsPlayer, unit)
 end
 
+--- The kind of place the player is in (filter situations, S3): IsInInstance()'s second value,
+--- "none" in the open world, else "party", "scenario", "raid", "pvp", "arena" or a type this addon
+--- has no checkbox for. Nil when that is not knowable (the API is absent, the call raised, or the
+--- answer is secret or not a string); the zone gate allows a container then
+--- (modules/Container.lua zoneAllows).
+--- @return string|nil
+function Compat.InstanceType()
+    local fn = _G.IsInInstance
+    if type(fn) ~= "function" then return nil end
+    local ok, _, kind = pcall(fn)
+    if not (ok and NS.Secrets.CanAccess(kind)) or type(kind) ~= "string" then return nil end
+    return kind
+end
+
 -- ---------------------------------------------------------------------------
 -- Everything else
 -- ---------------------------------------------------------------------------

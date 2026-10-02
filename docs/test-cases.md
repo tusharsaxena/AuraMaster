@@ -521,6 +521,17 @@ badge and any count quoted in the docs must agree with it.
 - situations runtime: the [Filter] line names the view and the situation
 - situations runtime: player debuffs' [Filter] line names your own and your pet's debuffs
 
+### test_container_zones.lua (8)
+
+- zones: a locked container is hidden in each unticked kind of place and shown in the others
+- zones: a type with no checkbox, no type and an unreadable answer are all allowed
+- zones: unlocked or in test mode, a container shows in an unticked place, so it can be found
+- zones: the zone gate sits beside General visibility, both must allow
+- zones: a place change under lockdown disables the engine and never hides the anchor
+- zones: ZONE_CHANGED_NEW_AREA and PLAYER_ENTERING_WORLD each re-run the visibility pass
+- zones: the first visibility pass after a /reload inside an unticked place already hides it
+- zones: a follower of a zone-hidden parent re-seams as it does for a visibility-hidden one
+
 ### test_containermanager.lua (54)
 
 - manager: Create appends a container, names it uniquely and announces it
@@ -578,7 +589,7 @@ badge and any count quoted in the docs must agree with it.
 - apply: an error in one container's Apply does not stop the others or replaceAttached
 - apply: with no client error handler the pass finishes, then the first error is raised
 
-### test_compat.lua (33)
+### test_compat.lua (35)
 
 - compat: the aura engine counts as present only with its sort enum and CreateFrame
 - compat: EnsureAuraContainer loads Blizzard_AuraContainer only when it is not loaded yet
@@ -613,6 +624,8 @@ badge and any count quoted in the docs must agree with it.
 - compat: IdsApply is false whenever the answer is not knowable
 - compat: IsPlayerUnit answers UnitIsPlayer as a strict boolean
 - compat: IsPlayerUnit is nil whenever the answer is not knowable
+- compat: InstanceType answers IsInInstance's second value
+- compat: InstanceType is nil whenever the answer is not knowable
 
 ### test_secrets.lua (6)
 
@@ -641,7 +654,7 @@ badge and any count quoted in the docs must agree with it.
 
 ### test_lifecycle.lua (18)
 
-- lifecycle: the eleven lifecycle events are registered to their handlers, and nothing else is
+- lifecycle: the twelve lifecycle events are registered to their handlers, and nothing else is
 - lifecycle: a focus change refreshes the focus containers, a target change the target ones
 - lifecycle: UNIT_PET refreshes the pet containers only for the player's own pet
 - lifecycle: entering the world runs an apply held while auras were secret
@@ -652,7 +665,7 @@ badge and any count quoted in the docs must agree with it.
 - lifecycle: a reset profile gets its starters back, numbered from 1 again
 - lifecycle: a profile switch applies the new profile's Blizzard-frame settings
 - lifecycle: the degraded latch stands up and down only on an edge
-- lifecycle: one bad event name leaves the other ten registered and is recorded
+- lifecycle: one bad event name leaves the other eleven registered and is recorded
 - lifecycle: one bad event name, on a client without C_EventUtils, is caught by the probe rung
 - lifecycle: a rejection while logging is on is traced at the moment it happens
 - lifecycle: the degraded Core stub's SafeRegisterEvent records a bad name and keeps the rest
@@ -2062,7 +2075,7 @@ badge and any count quoted in the docs must agree with it.
 
 - prose: no authored file carries a British spelling from localization-§5's published list
 - prose: the gate carries localization-§5's two lists whole, and nothing of its own
-- prose: the exclusions this repository declared suppressed 11 of 195 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (11): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, docs/spell-research/2026-09-24-logs/CORRECTIONS.md, docs/spell-research/2026-09-24-logs/CURRENT_CATEGORIES.md, docs/spell-research/2026-09-24-logs/DECISIONS.md, docs/spell-research/2026-09-24-logs/FLAGS.md, docs/spell-research/2026-09-24-logs/PROPOSED_ADDITIONS.md, docs/spell-research/2026-09-24-logs/REVIEW.md, docs/spell-research/2026-09-24-logs/SOURCES.md, docs/spell-research/2026-09-24-logs/dictionary/AURAS.md
+- prose: the exclusions this repository declared suppressed 11 of 196 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (11): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, docs/spell-research/2026-09-24-logs/CORRECTIONS.md, docs/spell-research/2026-09-24-logs/CURRENT_CATEGORIES.md, docs/spell-research/2026-09-24-logs/DECISIONS.md, docs/spell-research/2026-09-24-logs/FLAGS.md, docs/spell-research/2026-09-24-logs/PROPOSED_ADDITIONS.md, docs/spell-research/2026-09-24-logs/REVIEW.md, docs/spell-research/2026-09-24-logs/SOURCES.md, docs/spell-research/2026-09-24-logs/dictionary/AURAS.md
 - prose: no path this repository narrows the gate by is loaded by a TOC
 - prose: every path this repository narrows the gate by is one .pkgmeta keeps out of the zip
 - prose self-test: the carve-out suppresses the named generated folder, and only it
@@ -2167,8 +2180,9 @@ badge and any count quoted in the docs must agree with it.
 | test_container.lua | 52 |
 | test_container_views.lua | 16 |
 | test_container_situations.lua | 15 |
+| test_container_zones.lua | 8 |
 | test_containermanager.lua | 54 |
-| test_compat.lua | 33 |
+| test_compat.lua | 35 |
 | test_secrets.lua | 6 |
 | test_bus.lua | 8 |
 | test_state.lua | 2 |
@@ -2239,4 +2253,4 @@ badge and any count quoted in the docs must agree with it.
 | test_layout_cap.lua | 13 |
 | test_diagnostics_contract.lua | 9 |
 | test_lizard_sighted.lua | 8 |
-| **Total** | **1877** |
+| **Total** | **1887** |

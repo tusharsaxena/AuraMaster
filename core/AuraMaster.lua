@@ -71,6 +71,9 @@ local LIFECYCLE_EVENTS = {
     -- either may carry it; the reset they arm is debounced to one (modules/ContainerManager.lua).
     { "ITEM_DATA_LOAD_RESULT", "OnItemDataLoaded" },
     { "GET_ITEM_INFO_RECEIVED", "OnItemDataLoaded" },
+    -- A border crossing into another kind of place with no loading screen: the zone gate's visibility
+    -- pass (filter situations, S3). PLAYER_ENTERING_WORLD covers every loading screen.
+    { "ZONE_CHANGED_NEW_AREA", "OnZoneChanged" },
 }
 
 --- Register the lifecycle events. Extracted so the stand-up restores exactly what the stand-down
@@ -115,6 +118,12 @@ function addon:OnEnterWorld(event, isLogin, isReload)
     if NS.ContainerManager then NS.ContainerManager.FlushPending() end
     -- The loading screen is still up here; the primer notes the time (issue #24, FP-06).
     if NS.FontPrimer then NS.FontPrimer.OnEnterWorld() end
+end
+
+-- The player may now be in another kind of place: re-run the visibility pass, which reads it
+-- (modules/Container.lua zoneAllows). Untraced, like the unit swaps: it fires on every border.
+function addon:OnZoneChanged()
+    NS.bus:SendMessage(NS.MSG.VISIBILITY_CHANGED)
 end
 
 -- The loading screen is gone: a font primed under it is drawn only now (issue #24, FP-06), and the

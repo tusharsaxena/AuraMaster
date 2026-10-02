@@ -573,6 +573,17 @@ local function visibilityAllows(vis)
     return true
 end
 
+--- Whether the container's Situations -> Show in boxes let it show in the kind of place the player
+--- is in now (filter situations, S3). Read on every pass, never cached, so the first pass after a
+--- /reload inside an instance is already right. A type with no checkbox, or one that cannot be read
+--- (NS.Compat.InstanceType answering nil), is allowed: no box exists to untick it.
+local function zoneAllows(cfg)
+    local zones = cfg.filter and cfg.filter.zones
+    local kind = zones and NS.Compat.InstanceType()
+    if not kind then return true end
+    return zones[kind] ~= false
+end
+
 --- The show ladder, in order. STEP 0 IS THE LATCH (slash-commands-§7, core/LifecycleSetup.lua):
 --- whether the addon is running at all, for either reason it might not be -- the player switched it
 --- off, or a perf capture is measuring its suspended arm. Nothing below it can re-show a container
@@ -588,6 +599,10 @@ end
 --- rule says, so one set to "in combat only" can still be found and moved out of combat. A container
 --- in TEST MODE shows too, locked or not: the mode shows the display without an unlock
 --- (options-ui-§15).
+--- THE ZONE GATE (filter situations, S3) sits beside General visibility and follows the same rule:
+--- a locked container hides where its Show in box is unticked, and an unlocked or test-mode one
+--- still shows so it can be found. Like visibility it reaches the engine only through ApplyLive's
+--- SetEnabled, which is combat-legal, never through the anchor.
 --- @return boolean show, boolean previewing
 function ContainerClass:ShouldShow()
     if NS.IsStoodDown() or self.parked then return false, false end
@@ -595,7 +610,7 @@ function ContainerClass:ShouldShow()
     local cfg = self:Cfg()
     if not (p and cfg and cfg.enabled) then return false, false end
     local previewing = NS.State.testMode and true or false
-    return (not p.locked) or previewing or visibilityAllows(p.visibility), previewing
+    return (not p.locked) or previewing or (visibilityAllows(p.visibility) and zoneAllows(cfg)), previewing
 end
 
 --- The anchor's own half of a stand-down (see ApplyVisibility). Returns whether combat deferred it.

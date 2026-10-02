@@ -688,3 +688,35 @@ test("compat: IsPlayerUnit is nil whenever the answer is not knowable", function
         assertEqual(NS.Compat.IsPlayerUnit(nil), nil, "no unit")
     end)
 end)
+
+-- ── the kind of place the player is in (filter situations, S3) ──────────────────────────────
+
+test("compat: InstanceType answers IsInInstance's second value", function()
+    for _, kind in ipairs({ "none", "party", "scenario", "raid", "pvp", "arena", "neighborhood" }) do
+        with({ { "IsInInstance", function() return kind ~= "none", kind end } }, function(NS)
+            -- red under: no such wrapper, or the first value (inInstance) answered
+            assertEqual(NS.Compat.InstanceType(), kind, kind)
+        end)
+    end
+end)
+
+test("compat: InstanceType is nil whenever the answer is not knowable", function()
+    -- red under: an unguarded call (the error escapes)
+    with({ { "IsInInstance", function() error("refused") end } }, function(NS)
+        assertEqual(NS.Compat.InstanceType(), nil)
+    end)
+    -- red under: a missing API answered as "none" (Open world), which an unticked Open world would hide
+    with({ { "IsInInstance", nil } }, function(NS)
+        assertEqual(NS.Compat.InstanceType(), nil)
+    end)
+    with({ { "IsInInstance", function() return false, nil end } }, function(NS)
+        assertEqual(NS.Compat.InstanceType(), nil, "no type")
+    end)
+    local SECRET = {}
+    with({ { "IsInInstance", function() return true, SECRET end },
+        { "issecretvalue", function(v) return v == SECRET end },
+        { "canaccessvalue", function(v) return v ~= SECRET end } }, function(NS)
+        -- red under: a secret answer handed on, so the zone lookup indexed a table with it
+        assertEqual(NS.Compat.InstanceType(), nil)
+    end)
+end)
