@@ -712,11 +712,12 @@ test("compat: InstanceType is nil whenever the answer is not knowable", function
     with({ { "IsInInstance", function() return false, nil end } }, function(NS)
         assertEqual(NS.Compat.InstanceType(), nil, "no type")
     end)
-    local SECRET = {}
+    -- a secret string: only the CanAccess guard stops it, since it passes the string check
+    local SECRET = "party"
     with({ { "IsInInstance", function() return true, SECRET end },
         { "issecretvalue", function(v) return v == SECRET end },
         { "canaccessvalue", function(v) return v ~= SECRET end } }, function(NS)
-        -- red under: a secret answer handed on, so the zone lookup indexed a table with it
+        -- red under: the CanAccess guard dropped, so the secret type reached the zone lookup
         assertEqual(NS.Compat.InstanceType(), nil)
     end)
 end)
