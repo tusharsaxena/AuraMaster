@@ -27,9 +27,9 @@ local _, NS = ...
 -- THE PURE CORE (Snap.PointAt, Snap.Nearest) touches no frame, so the headless harness tests the
 -- choice directly; Snap.Candidates and Snap.Find are the frame side that feeds it.
 --
--- THE DRAG LIFECYCLE (D3, D4, D9, D11) is at the end of the file: Snap.BeginDrag, the throttled
--- driver and its highlight, Snap.Drop. modules/Anchors.lua's beginDrag and the handle's OnDragStop
--- call into it.
+-- THE DRAG LIFECYCLE (D3, D4, D9, D11, and the addendum's A4 detach leeway) is at the end of the
+-- file: Snap.BeginDrag, the throttled driver and its highlight, the leeway's classify, Snap.Drop.
+-- modules/Anchors.lua's beginDrag and the handle's OnDragStop call into it.
 --
 -- LOAD-BEARING POSITION: after modules/Anchors_Attach.lua, whose pair table and flow growth this
 -- file binds from NS.AnchorsAttach at file load; after modules/Anchors.lua, which it extends
@@ -261,8 +261,8 @@ end
 -- hands the container here: Snap.BeginDrag lifts an attached anchor onto UIParent, marks the
 -- container `dragging` (Anchors.Place leaves a dragging anchor where the drag has it) and starts
 -- the DRIVER, one plain frame whose OnUpdate runs only while a drag is live and does its work at
--- most every DRIVER_PERIOD: Shift held or combat started means no candidate, else Snap.Find, and
--- the HIGHLIGHT follows the answer. The widget's OnDragStop ends it through Snap.Drop.
+-- most every DRIVER_PERIOD: combat started means no mark, else classify (below) says what a release
+-- now would do and the HIGHLIGHT follows its answer. The widget's OnDragStop ends it through Snap.Drop.
 --
 -- The highlight is ours and plain: a frame under UIParent with Style.DrawEdge's four strips, never a
 -- Backdrop (whose size arithmetic is the secret-geometry trap of docs/midnight-quirks.md), over the
@@ -272,7 +272,7 @@ end
 -- takes them all and none is ever toggled on its own. Everything is placed by numbers already in
 -- UIParent units (Snap.TargetRect, readRect), anchored to UIParent (the line's two ends too) and
 -- never to the target, so nothing of ours ever hangs from an engine's secret rect. One color paints
--- them all (paintHighlight), so a later state can turn the whole mark another color at once. All of
+-- them all (paintHighlight), so the leeway's detach turns the whole mark red at once. All of
 -- it is built on the first drag, so an addon nobody drags (or one stood down) makes none of it, and
 -- the driver's OnUpdate is cleared, not just idle, between drags: an armed OnUpdate is a per-frame
 -- cost nothing on screen reports.
@@ -293,6 +293,9 @@ local elapsed = 0 -- seconds since the driver last read the snap
 local hitRect = {} -- scratch: the highlighted target's rect
 local dragRect = {} -- scratch: the dragged anchor's rect, for the child's dot
 local painted     -- the color table the highlight was last painted in, or nil before it is built
+local ownRect, parentRect = {}, {} -- scratch: the dragged anchor's and its parent's rects, for the leeway
+local current = {} -- scratch: an attached drag's current pair, shaped as Snap.Nearest's answer
+local startX, startY -- the cursor where the live drag began, in screen units (the leeway's fallback)
 
 --- One join dot, a `MARKER`-square child frame of highlight `hl` filled by one texture (`dot.dot`,
 --- which paintHighlight colors).
@@ -345,17 +348,18 @@ local function placeDot(dot, x, y)
     dot:SetPoint("CENTER", UIParent, "BOTTOMLEFT", x, y)
 end
 
---- Show the highlight for pair `hit` of the drag of live container `dragged`: the box over the
---- rect of the target `hit` names, the target's dot on its relative point of the pair, the dragged
---- anchor's dot on its own point of it, and the line from the first dot to the second. Hidden when
---- there is no hit, or when either rect no longer reads. Every number is already a plain one in
---- UIParent units, and every part hangs from UIParent, so no offset is converted.
-local function showHighlight(hit, dragged)
+--- Show the highlight for pair `hit` of the drag of live container `dragged`, painted in `col`: the
+--- box over the rect of the target `hit` names, the target's dot on its relative point of the pair,
+--- the dragged anchor's dot on its own point of it, and the line from the first dot to the second.
+--- Hidden when there is no hit, or when either rect no longer reads. Every number is already a plain
+--- one in UIParent units, and every part hangs from UIParent, so no offset is converted.
+local function showHighlight(hit, dragged, col)
     local target = hit and NS.ContainerManager.instances[hit.id]
     local rect = target and Snap.TargetRect(target, hitRect)
     local own = rect and readRect(dragged and dragged.anchor, dragRect)
     if not own then return hideHighlight() end
     local hl = buildHighlight()
+    paintHighlight(col or C.SNAP_COLOR)
     hl:ClearAllPoints()
     hl:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", rect.left, rect.bottom)
     hl:SetSize(rect.right - rect.left, rect.top - rect.bottom)
@@ -366,6 +370,90 @@ local function showHighlight(hit, dragged)
     Snap.line:SetStartPoint("BOTTOMLEFT", UIParent, px, py)
     Snap.line:SetEndPoint("BOTTOMLEFT", UIParent, cx, cy)
     hl:Show()
+end
+
+-- ---------------------------------------------------------------------------
+-- The detach leeway (the owner-feedback addendum's A4)
+-- ---------------------------------------------------------------------------
+-- A container attached to another is not detached the moment it leaves snap range. Each tick, and
+-- again at the release, classify works out what letting go now would do, in this order:
+--   1. "attach": a pair in snap range (Snap.Find, any target including its own parent) that is
+--      STRICTLY NEARER than its current pair, Shift not held: green on that pair, a release attaches;
+--   2. "hold": its current pair's two points (its own now, its parent's now) at most
+--      C.DETACH_RADIUS apart: green on the current pair, a release snaps it back and writes nothing;
+--   3. "detach": beyond it: the whole mark red (C.DETACH_COLOR) on the current pair, a release
+--      detaches it where it was let go (D6).
+-- "Strictly nearer" is this file's reading of the addendum's "not its current pair": a pair only as
+-- near as the current one (a child as wide as its parent has all three of that side's pairs at one
+-- distance, and the first in table order wins the tie) would otherwise re-attach a container picked
+-- up and let go where it sits by another pair. Shift suppresses step 1 only. A parent that does not
+-- read (hidden, or the frame a follower hangs from reading secret, as an engine holding auras does)
+-- has no measurable pair, so step 2 holds while the cursor has moved less than C.DETACH_RADIUS from
+-- where the drag began. Never the one-element anchor Snap.TargetRect falls back to: the child hangs
+-- from the whole block, so a parent several rows deep would measure it far past the radius at rest. A
+-- parent with no live instance at all leaves nothing to hold on: such a container detaches as before.
+-- A screen container has no current pair: step 1 or nothing, exactly as before A4.
+
+--- How far the cursor has moved since the live drag began, in UIParent units (the cursor reads in
+--- screen units, so over UIParent's effective scale), or nil when any reading is not plain.
+--- @return number|nil
+local function cursorTravel()
+    local x, y = GetCursorPosition()
+    x, y = plain(x), plain(y)
+    local ui = plain(UIParent:GetEffectiveScale())
+    if not (x and y and startX and startY and ui) or ui <= 0 then return nil end
+    local dx, dy = (x - startX) / ui, (y - startY) / ui
+    return math.sqrt(dx * dx + dy * dy)
+end
+
+--- The pair attached container `container` (settings `cfg`) joins its parent by, in `current`
+--- (scratch, Snap.Nearest's shape): the parent's id and the pair in effect (Anchors.AttachPoints,
+--- Automatic resolved), with `dist` the distance in UIParent units between the dragged anchor's own
+--- point of it and the parent's point of it on the frame a follower hangs from (Anchors.HangFrame,
+--- with no fallback), or nil when either does not read or the parent's anchor is hidden. Nil when the
+--- parent has no live instance.
+--- @return table|nil
+local function currentPair(container, cfg)
+    local id = tonumber(cfg.attach.container)
+    local parent = id and NS.ContainerManager.instances[id]
+    if not parent then return nil end
+    current.id, current.point, current.relPoint = id, Anchors.AttachPoints(cfg)
+    current.dist = nil
+    local rect = parent.anchor and parent.anchor:IsShown() and readRect(Anchors.HangFrame(parent), parentRect)
+    local own = rect and readRect(container.anchor, ownRect)
+    if own then
+        local cx, cy = Snap.PointAt(own, current.point)
+        local px, py = Snap.PointAt(rect, current.relPoint)
+        current.dist = math.sqrt((cx - px) * (cx - px) + (cy - py) * (cy - py))
+    end
+    return current
+end
+
+--- Whether current pair `cur` (currentPair) is within the leeway: its two points at most
+--- C.DETACH_RADIUS apart, or, when they do not read, the cursor less than that from where the drag began.
+local function holds(cur)
+    if cur.dist then return cur.dist <= C.DETACH_RADIUS end
+    local travel = cursorTravel()
+    return travel ~= nil and travel < C.DETACH_RADIUS
+end
+
+--- What releasing live container `container` now would do (the order above), and the pair the mark
+--- is shown on: "attach" and Snap.Nearest's answer, "hold" or "detach" and the current pair
+--- (scratch), or nil and nil (a screen container with nothing in range). Reads Shift, the rects and
+--- the cursor afresh on every call, so a tick and the release answer alike for the same state. Combat
+--- is the caller's: the tick hides the mark, the drop holds (D11).
+--- @return string|nil state, table|nil pair
+local function classify(container)
+    local cfg = container:Cfg()
+    local hit = not IsShiftKeyDown() and Snap.Find(container) or nil
+    if not (cfg and cfg.attach and cfg.attach.mode == "container") then
+        return hit and "attach" or nil, hit
+    end
+    local cur = currentPair(container, cfg)
+    local d = cur and cur.dist
+    if hit and not (d and hit.dist >= d) then return "attach", hit end
+    if not cur then return "detach", nil end
+    return holds(cur) and "hold" or "detach", cur
 end
 
 --- Whether live container `container`'s drag can still end the usual way: its strip is visible. A
@@ -389,20 +477,26 @@ local function cancelStranded(container)
     container.placedAs = Anchors.Place(container)
 end
 
---- One driver tick's work, published so the suite drives it without a clock: the candidate the
---- live drag would snap to now (nil while Shift is held, D4, or once combat has started, D11, as well
---- as when nothing is in range), with the highlight shown over it or hidden. Nil with no live drag.
---- A drag whose strip hid is canceled here instead (cancelStranded), once out of combat.
---- @return table|nil  Snap.Nearest's answer
+--- One driver tick's work, published so the suite drives it without a clock: classify's answer for
+--- the live drag (A4), the highlight shown on its pair, red for "detach" and green otherwise, or
+--- hidden when there is none. Returns the pair and the state: a candidate and "attach" (on Shift a
+--- screen container has none, D4), an attached container's current pair and "hold" or "detach", or
+--- nil once combat has started (D11), with no live drag, or with nothing to show. A drag whose strip
+--- hid is canceled here instead (cancelStranded), once out of combat.
+--- @return table|nil pair, string|nil state
 function Snap.Tick()
     if live and strandedDrag(live) then
         hideHighlight()
         if not InCombatLockdown() then cancelStranded(live) end
         return nil
     end
-    local hit = live and not (IsShiftKeyDown() or InCombatLockdown()) and Snap.Find(live) or nil
-    showHighlight(hit, live)
-    return hit
+    if not live or InCombatLockdown() then
+        hideHighlight()
+        return nil
+    end
+    local state, pair = classify(live)
+    showHighlight(pair, live, state == "detach" and C.DETACH_COLOR or C.SNAP_COLOR)
+    return pair, state
 end
 
 --- The driver's OnUpdate: Snap.Tick at most every DRIVER_PERIOD.
@@ -463,7 +557,7 @@ end
 --- A drag of live container `container` begins (beginDrag in modules/Anchors.lua said yes, so it is
 --- screen or container-attached and out of combat). A container-attached one is lifted onto UIParent
 --- first (lift); a screen one already hangs there. Then `dragging` holds Anchors.Place off it, and
---- the driver starts.
+--- the driver starts, with the cursor's position noted for the leeway's fallback (classify).
 function Snap.BeginDrag(container)
     local cfg = container:Cfg()
     if cfg and cfg.attach and cfg.attach.mode == "container" and container.anchor then
@@ -471,6 +565,8 @@ function Snap.BeginDrag(container)
         if NS.Debug then NS.Debug("Anchor", "container %s: drag lifts it off its parent (%s)", container.id, how) end
     end
     container.dragging = true
+    startX, startY = GetCursorPosition()
+    startX, startY = plain(startX), plain(startY)
     startDriver(container)
 end
 
@@ -484,9 +580,9 @@ end
 -- ---------------------------------------------------------------------------
 -- The drop (D6, D7, D8, D10, D11; "Dropping")
 -- ---------------------------------------------------------------------------
--- What a drop does is decided here, from the drop alone: combat, Shift and the candidate are read
--- again at the drop, never taken from the driver's last tick (a tick may be up to DRIVER_PERIOD old,
--- and the key may have changed since). Every write goes through the seam, NS.SetByPath, on THIS
+-- What a drop does is decided here, from the drop alone: combat is read, and classify (A4) run, again
+-- at the drop, never taken from the driver's last tick (a tick may be up to DRIVER_PERIOD old, and
+-- the key may have changed since). Every write goes through the seam, NS.SetByPath, on THIS
 -- container rather than the settings panel's active one, and every outcome writes one [Anchor] line.
 
 --- A copy of container `cfg`'s stored attach section, the start of a whole-section write: every key
@@ -543,6 +639,13 @@ local function detach(container, cfg)
     NS.SetByPath("container.attach", section, container.id)
 end
 
+--- A release within the leeway (A4's hold): nothing written, and the anchor goes back where its
+--- stored settings put it, on its parent, as a canceled drag does (cancelStranded).
+local function snapBack(container)
+    debug("container %s: drop: held (leeway)", container.id)
+    container.placedAs = Anchors.Place(container)
+end
+
 -- Containers dropped in combat while attached, [id] = true, re-placed when combat ends (Snap.PlaceHeld).
 local held = {}
 
@@ -584,7 +687,7 @@ end
 
 --- The widget's OnDragStop (after StopMovingOrSizing). Ends the drag (Snap.EndDrag), then:
 ---   1. combat started mid-drag: dropInCombat (no attach, no detach);
----   2. a candidate in range and no Shift: dropOn, the attach (or its GC-1 question);
+---   2. else as classify (A4) answers now: "attach", dropOn (or its GC-1 question); "hold", snapBack;
 ---   3. else a container-attached one detaches where it was dropped, and a screen one stores its
 ---      position (Anchors.SavePosition), exactly as before issue #22.
 --- A drop that reaches here with no drag of this container live (a stray stop) does nothing.
@@ -595,8 +698,9 @@ function Snap.Drop(container)
     if not cfg then return end
     local attached = cfg.attach and cfg.attach.mode == "container"
     if InCombatLockdown() then return dropInCombat(container, attached) end
-    local hit = not IsShiftKeyDown() and Snap.Find(container) or nil
-    if hit then return dropOn(container, cfg, hit) end
+    local state, hit = classify(container)
+    if state == "attach" then return dropOn(container, cfg, hit) end
+    if state == "hold" then return snapBack(container) end
     if attached then return detach(container, cfg) end
     debug("container %s: drop: moved", container.id)
     Anchors.SavePosition(container)

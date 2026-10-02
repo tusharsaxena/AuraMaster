@@ -24,7 +24,7 @@ check's number is not reused. Checks with no recorded pass, and checks new or co
 | CONT-1 to CONT-25 | Containers | Create, duplicate, delete, rename, copy; handles, strips and the close mark; test mode; unit swaps; empty placeholders |
 | FILT-1 to FILT-63 | Filters and spell categories | Cast by, the category grids, Overrides, the add-a-spell box, aura ids, your own categories, weapon enchants and their names, the help marks' art, where spell lists apply, the Situations tab, its zones and its Unit type gate |
 | LAYOUT-1 to LAYOUT-38 | Layout | Anchor modes, attaching, chains, growth, anchor points, seams, the name label, mouse and tooltips |
-| DRAG-1 to DRAG-14, DRAG-16 | Layout | Drag to attach (issue #22): dropping a container on another, the highlight, the side a drop picks, Shift, loops, detaching, the growth-conflict popup, combat, a parent holding auras, frame-attached containers, the strip's tooltip, a drop between pulls in a key, a dropped side surviving a growth change, a drag cut short, a before-side drop with the line between the two join dots |
+| DRAG-1 to DRAG-16 | Layout | Drag to attach (issue #22): dropping a container on another, the highlight, the side a drop picks, Shift, loops, detaching and its leeway (green hold, snap back, red past it), the growth-conflict popup, combat, a parent holding auras, frame-attached containers, the strip's tooltip, a drop between pulls in a key, a dropped side surviving a growth change, a drag cut short, a before-side drop with the line between the two join dots |
 | STYLE-1 to STYLE-30 | Bars and Icons style, fonts | Bars and Icons tabs, the spark, borders, dispel colors, pandemic, the font primer |
 | TEXT-1 to TEXT-29 | Text style | Templates and tokens, justify, the icon, dispel type word, backdrop and edge, animation, Size to fit |
 | DEGRADED-1 | Library-absent install | The launcher libraries missing |
@@ -639,8 +639,9 @@ look the same. Run this after a `/reload` and again after Profiles → Reset Pro
 name and "Drag to move. Drop it on another container to attach it there; hold Shift to place it
 without attaching. Right-click for settings.", in the usual gold. B (attached to A) and a container
 attached to a named frame show their strip name in a desaturated warm gray; hover B's strip or "?" →
-the first line reads "Attached to '<A's name>'. Drag it away to detach it, or onto another container
-to attach it there; hold Shift to place it without attaching. Right-click for settings.", and the
+the first line reads "Attached to '<A's name>'. Drag it away and let go once the marks turn red to
+detach it; let go sooner and it snaps back. Drop it on another container to attach it there; hold
+Shift to drop it without attaching. Right-click for settings.", and the
 named-frame one's reads "Anchored to '<frame name>', so it cannot be dragged. Right-click for
 settings.". With `/am test on`, the named-frame one's tooltip carries the gold line "Attached — set
 its offsets in the Layout section." Set B's Attach to back to Screen → the name turns gold at once and
@@ -1479,10 +1480,11 @@ it, and neither is ever framed by the green box; drop A → it stays on the scre
 `drop: moved`). Likewise drag B → C travels with it and never lights up, though A may; drop B back on
 the side of A it came from. No container ever frames the one being dragged. Result:
 
-**DRAG-5. Detach by dragging away.** Drag E well away from every container and drop it → E stays
-exactly where you let go, now on the screen: Attach to reads *Screen*, the X and Y offsets 0, and
-Layout → Anchor → Screen holds the position. Its strip name turns gold, A no longer moves it,
-and after `/reload` it is still there. The log shows `drop: detach`. Result:
+**DRAG-5. Detach by dragging away.** Drag E (attached to A) well away from every container → once
+it is about 64 px from where it was attached, the box over A, both dots and the line turn red; drop it
+there → E stays exactly where you let go, now on the screen: Attach to reads *Screen*, the X and Y
+offsets 0, and Layout → Anchor → Screen holds the position. Its strip name turns gold, A no longer
+moves it, and after `/reload` it is still there. The log shows `drop: detach`. Result:
 
 **DRAG-6. The growth-conflict popup, accepted.** Drop D on A's side (D grows differently from A's
 chain) → D goes back to where it was before the drag and the growth-conflict popup of LAYOUT-5 names
@@ -1503,7 +1505,7 @@ shows `drop: held (combat)`. Result:
 A's live engine), start dragging B → B may jump so that its center sits under the cursor (by up to the
 distance from where you grabbed its strip to its center, strip and name label included) and then
 follows the cursor smoothly; the drop attaches or detaches as in DRAG-1
-and DRAG-5. Drag E toward A while A holds several auras → the green box frames only A's first
+and DRAG-5, and a drop before the cursor has moved about 64 px snaps B back onto A (DRAG-15). Drag E toward A while A holds several auras → the green box frames only A's first
 element, and a drop near that element attaches. Both are known limitations. No Lua error. Result:
 
 **DRAG-10. A frame-attached container still does not drag.** Attach a container to `PlayerFrame` and
@@ -1514,8 +1516,9 @@ screen line's "Drag to move". Result:
 
 **DRAG-11. The strip's tooltip.** Hover D's strip → "Drag to move. Drop it on another container to
 attach it there; hold Shift to place it without attaching. Right-click for settings."; hover B's →
-"Attached to '<A's name>'. Drag it away to detach it, or onto another container to attach it there;
-hold Shift to place it without attaching. Right-click for settings.", then the gold "Joined to the …
+"Attached to '<A's name>'. Drag it away and let go once the marks turn red to detach it; let go sooner
+and it snaps back. Drop it on another container to attach it there; hold Shift to drop it without
+attaching. Right-click for settings.", then the gold "Joined to the …
 of '<A's name>'" line; the frame-attached one as DRAG-10. Rename A → B's tooltip names the new name on
 the next hover. Result:
 
@@ -1535,6 +1538,17 @@ while the mouse button is still held → the strip hides and, within a moment, D
 cursor and goes back to where it was before the drag; nothing is saved (`/reload` agrees), and the log
 shows `drag canceled (its strip hid)`. Unlock and drag D → it moves and attaches as normal, and a
 Layout change to D moves it at once. Result:
+
+**DRAG-15. The detach leeway.** Drag E (attached to A, below it) slowly straight down, away from A →
+at first the box over A, the dot on A's join point, the dot on E's own point and the line between
+them stay green, though E is already out of snap range. Let go there → E snaps straight back to where
+it was on A, Layout → Anchor is unchanged, `/reload` agrees, and the log shows `drop: held (leeway)`.
+Drag it down again past about 64 px → box, dots and line all turn red at once; move back up → they turn
+green again; go past it once more and let go → E detaches where you let go (as DRAG-5, log `drop:
+detach`). Re-attach E below A, then with Shift held drag it so its top's middle sits just under A's
+bottom middle (a pair that would take it without Shift) → no other pair lights up, the marks stay on
+E's own pair in green, and a drop snaps it back. Hover E's strip → its tooltip explains all this
+(DRAG-11). No Lua error. Result:
 
 **DRAG-16. A drop above the parent, with the line.** Drag E toward the middle of A's top edge (A grows
 down, so its top is the side its lines start from) → the green box frames A, a green dot about 10 px
@@ -2005,6 +2019,7 @@ line, then remove its row here.
 | LAYOUT-37 | 64 and 76, batch 5 |
 | LAYOUT-38 | 84, batch 6 |
 | DRAG-1 to DRAG-14 | new on 2026-10-02 with drag to attach (issue #22); DRAG-12 to DRAG-14 from its whole-branch review (DD-05); DRAG-1's highlight corrected the same day for the two join dots and the line (owner feedback, DD-08) |
+| DRAG-15 | new on 2026-10-02 from the owner's smoke feedback (addendum A4; DD-09): the detach leeway, its snap back and the red past `C.DETACH_RADIUS`; DRAG-5, DRAG-9, DRAG-11 and CONT-9 corrected the same day for it |
 | DRAG-16 | new on 2026-10-02 from the owner's smoke feedback (addendum A1, A3; DD-08): a before-side drop, the line and both dots |
 | STYLE-3 | 63, batch 5 |
 | STYLE-6 | 59a, batch 5 |

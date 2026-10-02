@@ -163,6 +163,14 @@ C.ATTACH_EDGES = {
 C.SNAP_RADIUS = 24
 C.SNAP_COLOR = { r = 0.25, g = 0.90, b = 0.35, a = 1 }
 
+-- The detach leeway (issue #22, the owner-feedback addendum's A4): while a container attached to another
+-- is dragged, it holds (green on its current pair, and a release snaps it back, writing nothing) while
+-- its own point of that pair is at most this many UIParent units from its parent's; past it, the
+-- whole mark (the box, both dots and the line) turns this red and a release detaches it. Wider than
+-- C.SNAP_RADIUS, so a grab that barely moves never detaches by accident.
+C.DETACH_RADIUS = 64
+C.DETACH_COLOR = { r = 0.95, g = 0.25, b = 0.25, a = 1 }
+
 -- Growth.
 C.AXES = { "horizontal", "vertical" }
 C.AXIS_LABELS = { horizontal = "Rows (fill left to right first)", vertical = "Columns (fill top to bottom first)" }

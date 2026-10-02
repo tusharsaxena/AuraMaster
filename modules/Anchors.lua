@@ -517,8 +517,9 @@ end
 --- nothing under the anchor.
 local function tooltipSpec(container)
     -- How to use the strip (issue #22): on the screen, drag it, or drop it on another container to
-    -- attach it there; attached to another container, by that parent's name, drag it away to detach
-    -- it or onto another to attach it there; Shift places it without attaching either way. Attached
+    -- attach it there; attached to another container, by that parent's name, drag it away until the
+    -- marks turn red to detach it (sooner, it snaps back: the addendum's A4 leeway) or onto another
+    -- to attach it there; Shift places it without attaching either way. Attached
     -- to a named frame, by the frame's name (or, before one is set, by saying so), why a drag does
     -- nothing (beginDrag; the owner, 2026-09-26). A container-attached one whose parent is gone reads
     -- as a screen one: a drop attaches or detaches it all the same.
@@ -533,7 +534,7 @@ local function tooltipSpec(container)
         end
         local parent = at and at.mode == "container" and NS.Database.FindContainer(tonumber(at.container))
         if parent and parent.name and parent.name ~= "" then
-            return NS.L["Attached to '%s'. Drag it away to detach it, or onto another container to attach it there; hold Shift to place it without attaching. Right-click for settings."]:format(tostring(parent.name))
+            return NS.L["Attached to '%s'. Drag it away and let go once the marks turn red to detach it; let go sooner and it snaps back. Drop it on another container to attach it there; hold Shift to drop it without attaching. Right-click for settings."]:format(tostring(parent.name))
         end
         return NS.L["Drag to move. Drop it on another container to attach it there; hold Shift to place it without attaching. Right-click for settings."]
     end

@@ -372,12 +372,112 @@ test("drop: Shift held at the drop places without attaching: a screen one moves,
     assertEqual(cfg.position.x .. "," .. cfg.position.y, "12,75", "screen: its position saved")
     mocks.__shift = false
     cfg.attach.mode, cfg.attach.container = "container", 3
+    -- 3 planted far from 1, so the drop is past the leeway of 2's pair on 3 (A4).
+    plant(NS.ContainerManager.instances[3].engine, 300, 100, 400, 140)
     inst.handle:__fire("OnDragStart")
     plant(inst.anchor, 0, 75, 20, 95)
     mocks.__shift = true
     inst.handle:__fire("OnDragStop")
     mocks.__shift = false
     assertEqual(cfg.attach.mode, "screen", "attached, in range of 1, Shift: detached rather than attached")
+end)
+
+-- ── the detach leeway (A4) ────────────────────────────────────────────────────────────────────
+
+test("drop: let go within the leeway, an attached container snaps back onto its parent and writes nothing", function()
+    local NS = env()
+    local lines = recordAnchorLines(NS)
+    local at = NS.Database.FindContainer(2).attach
+    at.mode, at.container = "container", 1
+    local CM = NS.ContainerManager
+    local inst = CM.instances[2]
+    recordAnchor(inst.anchor)
+    local writes = recordWrites(NS)
+    -- 2's TOPLEFT 30 under 1's BOTTOMLEFT: no pair in snap range, inside C.DETACH_RADIUS.
+    dragTo(inst, 0, 50, 20, 70)
+    -- red under: the old drop (no candidate: an attached container detached where it was let go)
+    assertEqual(#writes, 0, "nothing written")
+    assertEqual(NS.Database.FindContainer(2).attach.mode .. " " .. NS.Database.FindContainer(2).attach.container,
+        "container 1", "still attached to 1")
+    -- red under: a hold that leaves the anchor loose where it was let go
+    assertEqual(inst.placedAs, "container", "placed back on its parent")
+    local p = inst.anchor.__points or {}
+    assertTrue(p[2] == CM.instances[1].engine, "hung from 1's engine again")
+    assertEqual(lines[#lines], "container 2: drop: held (leeway)")
+end)
+
+test("drop: let go past the leeway, an attached container detaches where it was let go", function()
+    local NS = env()
+    local at = NS.Database.FindContainer(2).attach
+    at.mode, at.container = "container", 1
+    local inst = NS.ContainerManager.instances[2]
+    recordAnchor(inst.anchor, 0, 15)
+    local writes = recordWrites(NS)
+    -- 65 under 1's BOTTOMLEFT: one past the radius.
+    dragTo(inst, 0, 15, 20, 35)
+    -- red under: a hold with no bound, or a bound read exclusive of 65
+    assertEqual(table.concat(writes, ","), "container.position,container.attach", "detached")
+    assertEqual(NS.Database.FindContainer(2).attach.mode, "screen")
+end)
+
+test("drop: the release is classified again, never taken from the last tick", function()
+    local NS = env()
+    local at = NS.Database.FindContainer(2).attach
+    at.mode, at.container = "container", 1
+    local inst = NS.ContainerManager.instances[2]
+    recordAnchor(inst.anchor, 300, 410)
+    inst.handle:Show()   -- a tick cancels the drag of a strip that is not visible
+    inst.handle:__fire("OnDragStart")
+    plant(inst.anchor, 0, 50, 20, 70)
+    assertEqual(select(2, NS.Anchors.Snap.Tick()), "hold", "the last tick held")
+    plant(inst.anchor, 300, 410, 320, 430)
+    inst.handle:__fire("OnDragStop")
+    -- red under: a drop that acts on the driver's last state (up to 0.03s old)
+    assertEqual(NS.Database.FindContainer(2).attach.mode, "screen", "detached: it was let go far away")
+end)
+
+test("drop: Shift within the leeway still snaps back; another pair in range attaches without Shift", function()
+    local NS, mocks = env()
+    sameFlow(NS, 2)
+    local at = NS.Database.FindContainer(2).attach
+    at.mode, at.container = "container", 1
+    local inst = NS.ContainerManager.instances[2]
+    recordAnchor(inst.anchor)
+    local writes = recordWrites(NS)
+    -- 2's TOP 5 under 1's BOTTOM: another pair of 1 in range, its current pair 40.3 away.
+    inst.handle:__fire("OnDragStart")
+    plant(inst.anchor, 40, 75, 60, 95)
+    mocks.__shift = true
+    inst.handle:__fire("OnDragStop")
+    mocks.__shift = false
+    -- red under: Shift suppressing the hold as well (it would detach)
+    assertEqual(#writes, 0, "Shift: held, nothing written")
+    assertEqual(inst.placedAs, "container")
+    dragTo(inst, 40, 75, 60, 95)
+    at = NS.Database.FindContainer(2).attach
+    -- red under: the hold checked before another pair
+    assertEqual(tostring(at.childPoint) .. ">" .. tostring(at.relPoint), "TOP>BOTTOM", "no Shift: attached by the other pair")
+end)
+
+test("drop: with its parent unreadable, a release before the cursor travels C.DETACH_RADIUS snaps back", function()
+    local NS, mocks = env()
+    local at = NS.Database.FindContainer(2).attach
+    at.mode, at.container = "container", 3   -- 3's engine and anchor read nothing plain
+    local inst = NS.ContainerManager.instances[2]
+    recordAnchor(inst.anchor, 300, 410)
+    local writes = recordWrites(NS)
+    mocks.GetCursorPosition = function() return 100, 100 end
+    inst.handle:__fire("OnDragStart")
+    plant(inst.anchor, 300, 410, 320, 430)
+    mocks.GetCursorPosition = function() return 140, 100 end
+    inst.handle:__fire("OnDragStop")
+    -- red under: no fallback (an unreadable parent detached at once)
+    assertEqual(#writes, 0, "40 units: held")
+    inst.handle:__fire("OnDragStart")
+    mocks.GetCursorPosition = function() return 200, 160 end
+    inst.handle:__fire("OnDragStop")
+    mocks.GetCursorPosition = function() return 100, 100 end
+    assertEqual(NS.Database.FindContainer(2).attach.mode, "screen", "116.6 units: detached")
 end)
 
 test("drop: an attached container whose drop position reads secret is not detached; it goes back to its parent", function()
@@ -449,6 +549,9 @@ test("drop: every outcome writes one [Anchor] line", function()
     dragTo(inst, 0, 75, 20, 95)
     -- red under: the line naming the token alone (a free pair would read "nil")
     assertEqual(last(), "container 2: drop: attach to 1 TOPLEFT>BOTTOMLEFT (after-start)")
+    dragTo(inst, 0, 50, 20, 70)
+    -- red under: a silent snap-back
+    assertEqual(last(), "container 2: drop: held (leeway)")
     dragTo(inst, 300, 410, 320, 430)
     assertEqual(last(), "container 2: drop: detach")
     inst.handle:__fire("OnDragStart")
