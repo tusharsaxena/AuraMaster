@@ -158,3 +158,32 @@ block's far edge on that side (the union of strip and block, on that edge only),
 The dragged child's rect stays its strip (its strip is on its own before side, which a seam joins). The
 side pick, the thirds, the dots, the line and the leeway all follow. The before side's one-element jump
 and overlap (known limitations) stay as documented.
+
+## A12-A13. Fourth smoke round (owner, 2026-10-03, Default profile)
+
+Owner: "sometimes, the wrong side is chosen (on the child container) to attach to": two screenshots
+of a column of 288 by 20 strips growing up. In the right one the child, up and to the right of its
+parent, joins by its left side to the parent's right side. In the wrong one the child sits right
+beside one strip of the column, overlapping its height, and is joined by its RIGHT end to the
+top-right corner of the strip below, a line the child's whole width long. And: "when doing a drag
+operation and a highlight is active on the anchor (strip with gold border) - it should highlight BOTH
+the parent and child. Currently only the parent gets the highlight."
+
+### A12. A side the child faces, then the shortest line (fixes the wrong side)
+
+Cause: A7 ranks the eligible sides by their gap alone. The strip below's top was 16 away and the strip
+beside's right 21, so the top won, and its thirds named the end pair, whose two points lie a whole
+strip width apart. The side and the third are still found as A7 says (eligible by the gap and the
+widened span; the pair by the third). Among the eligible sides, of every target:
+1. a side the child FACES, its span along that side overlapping the target's own, unwidened (a
+   touch is no overlap), beats a side it is only off the corner of;
+2. between two alike, the shorter line between the pair's two points (the line the mark draws) wins;
+3. ties keep the first target in id order, then A2's table order.
+The answer's `dist` stays the gap (A4's "strictly nearer" is unchanged); the line's length rides along
+as `line`.
+
+### A13. The dragged container's strip is lit too
+
+While a mark shows, the dragged container's own strip is repainted exactly as the target's (A6: its
+own edge, 2px, through `Style.DrawEdge`, in the mark's color, green or red past the leeway), and gets
+its 1px gold back on every path the mark ends by, alongside the target's.

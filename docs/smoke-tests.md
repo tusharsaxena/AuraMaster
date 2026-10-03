@@ -24,7 +24,7 @@ check's number is not reused. Checks with no recorded pass, and checks new or co
 | CONT-1 to CONT-25 | Containers | Create, duplicate, delete, rename, copy; handles, strips and the close mark; test mode; unit swaps; empty placeholders |
 | FILT-1 to FILT-63 | Filters and spell categories | Cast by, the category grids, Overrides, the add-a-spell box, aura ids, your own categories, weapon enchants and their names, the help marks' art, where spell lists apply, the Situations tab, its zones and its Unit type gate |
 | LAYOUT-1 to LAYOUT-38 | Layout | Anchor modes, attaching, chains, growth, anchor points, seams, the name label, mouse and tooltips |
-| DRAG-1 to DRAG-17 | Layout | Drag to attach (issue #22): dropping a container on another, the highlight on the target's strip, the side a drop picks, Shift, loops, detaching and its leeway (green hold, snap back, red past it), the growth-conflict popup, combat, a parent holding auras, frame-attached containers, the strip's tooltip, a drop between pulls in a key, a dropped side surviving a growth change, a drag cut short, a before-side drop with the line between the two join dots, the strip edge following the mark |
+| DRAG-1 to DRAG-18 | Layout | Drag to attach (issue #22): dropping a container on another, the highlight on the target's strip, the side a drop picks, Shift, loops, detaching and its leeway (green hold, snap back, red past it), the growth-conflict popup, combat, a parent holding auras, frame-attached containers, the strip's tooltip, a drop between pulls in a key, a dropped side surviving a growth change, a drag cut short, a before-side drop with the line between the two join dots, the strip edge following the mark |
 | STYLE-1 to STYLE-30 | Bars and Icons style, fonts | Bars and Icons tabs, the spark, borders, dispel colors, pandemic, the font primer |
 | TEXT-1 to TEXT-29 | Text style | Templates and tokens, justify, the icon, dispel type word, backdrop and edge, animation, Size to fit |
 | DEGRADED-1 | Library-absent install | The launcher libraries missing |
@@ -1647,6 +1647,18 @@ handle runs wider than its first element. (The box over a target with no visible
 headless suite's to cover: an unlocked container always shows its strip.) No Lua error, no
 `ADDON_ACTION_BLOCKED`. Result:
 
+**DRAG-18. Beside, not end to end; both strips lit** (fourth smoke round, addendum A12 and A13). Stack
+two wide containers, A over B, as a column (B attached to A's top or bottom), and detach E. Drag E so
+its strip sits just right of A's strip, overlapping A's height, with its bottom a little nearer B's
+top-right corner than its left edge is to A → A's strip turns green and the line is short, from A's
+right edge to E's left edge (E's left side on A's right side), never a long line from B's top-right
+corner to E's far right end. Drag E off A's top-right corner (a little above A and a little right of
+it) → the line still joins A's right edge to E's left edge. Let go → E lands beside A, its left edge
+on A's right edge. Throughout every drag above, E's own strip has the same 2 px edge as the strip it
+would join, green, and red with its parent's past the leeway (DRAG-15); once let go, or once the marks
+hide (move away, Shift, combat), both strips are back to their 1 px gold. No Lua error, no
+`ADDON_ACTION_BLOCKED`. Result:
+
 ## Bars and Icons style, fonts
 
 **STYLE-1. The Bars tabs.** On a bars container, rail → Bars → **[ General ][ Background & border ][
@@ -2110,6 +2122,7 @@ line, then remove its row here.
 | DRAG-1 to DRAG-14 | new on 2026-10-02 with drag to attach (issue #22); DRAG-12 to DRAG-14 from its whole-branch review (DD-05); DRAG-1's highlight corrected the same day for the two join dots and the line (owner feedback, DD-08); DRAG-11's tooltip placement added the same day (owner feedback, LibKa0s v1.68.0's `tooltipPlace`, TP-AM-01): beside the strip, flipped left near the screen's right edge |
 | DRAG-15 | new on 2026-10-02 from the owner's smoke feedback (addendum A4; DD-09): the detach leeway, its snap back and the red past `C.DETACH_RADIUS`; DRAG-5, DRAG-9, DRAG-11 and CONT-9 corrected the same day for it; the step with a child twice as wide as its parent added the same day (DD-13R): the pair picked where it rests no longer blocks a drop once it has moved |
 | DRAG-16 | new on 2026-10-02 from the owner's smoke feedback (addendum A1, A3; DD-08): a before-side drop, the line and both dots |
+| DRAG-18 | new on 2026-10-03 from the owner's fourth smoke round (addendum A12, A13; DD-17, DD-18): a side the child is beside beats a corner, then the shortest line; the dragged strip lit with the target's |
 | DRAG-17 | new on 2026-10-02 from the owner's smoke feedback (addendum A5; DD-11): the mark edges the target's strip, not a box over its placeholders; DRAG-1 to DRAG-5, DRAG-8, DRAG-9, DRAG-15 and DRAG-16 corrected the same day for it; DRAG-1 and DRAG-17 corrected again the same evening (addendum A6; DD-12): the strip's own edge is repainted, since A5's overlay never showed in game, and DRAG-17 ends the mark every way it can end; DRAG-1, DRAG-2, DRAG-5, DRAG-9, DRAG-15, DRAG-16 and DRAG-17 corrected for the second smoke round (addendum A7 to A9; DD-13): the side first and then the third (a centered drop takes the middle pair), everything measured on what you see (block, strip and name label), and the leeway 128 px; DRAG-1's dots split by the side E comes from, and DRAG-15's step with a long parent added (DD-14): a child in snap range of its own pair holds, however far from that pair's points; DRAG-1, DRAG-15, DRAG-16 and DRAG-17 corrected for the third smoke round (addendum A10; DD-15): the dots, the line, the side and the leeway are on the strips, not the placeholders; DRAG-1, DRAG-2, DRAG-9 and DRAG-15 corrected again from DD-15's review (DD-15R): the after side reached over the parent's block, the thirds of the strip, a populated parent's dots on its strip, and a neighbor beside a resting child never taking it; DRAG-2's centered drop below A and DRAG-15's step with a wide child corrected from DD-15R's review: a few px sideways as well as up, since a move straight up ties with the pair E hangs by and holds; DRAG-1, DRAG-2, DRAG-9, DRAG-15, DRAG-16 and DRAG-17 corrected on 2026-10-03 for the owner's pick after the final review (addendum A11; DD-16): the parent's growth sides reach its block, so below A the dots are on A's block's bottom and E is let go just under it, where it lands; DRAG-9 corrected again the same day from DD-16's review (DD-16R): its hold is two dots and a line on A's strip, which still reads while A's block reads secret, not a lone dot; and again from DD-16R's review: B dragged beside A's strip re-attaches on that side, B measured on A's strip alone; and again: a let-go right after the jump snaps back (no rest read, the `C.SNAP_RADIUS` travel gate), and from that gate's review, a container beside B does not take it either before that travel |
 | STYLE-3 | 63, batch 5 |
 | STYLE-6 | 59a, batch 5 |

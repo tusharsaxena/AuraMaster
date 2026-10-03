@@ -244,7 +244,7 @@ test("snap: a third's border goes to the middle pair, and a target one point wid
     assertEqual(hit.point .. ">" .. hit.relPoint, "TOPLEFT>BOTTOMLEFT", "left of a point")
 end)
 
-test("snap: the side is the nearest gap whose span overlaps the target's widened by the radius, an overlap's gap counted as its size (A7)", function()
+test("snap: a side is eligible by its gap and its span widened by the radius; a side it faces beats a corner, then the shorter line (A7, A12)", function()
     local NS = fresh()
     local Snap = NS.Anchors.Snap
     local target = { { id = 7, rect = rectOf(0, 0, 90, 90), growH = "right", growV = "down" } }
@@ -252,12 +252,13 @@ test("snap: the side is the nearest gap whose span overlaps the target's widened
     local hit = Snap.Nearest(rectOf(30, -17, 60, 3), target, 24)
     -- red under: a signed gap (an overlap ranked as nearer than flush)
     assertEqual(hit.side .. " " .. hit.dist, "bottom 3", "an overlap")
-    -- 5 under it and 23 past its right edge: the bottom side (its span overlaps the widened one) beats
-    -- the right side's 23, and the child's center is in the last third.
+    -- 5 under it and 23 past its right edge, off its corner: the bottom side (its span overlaps the
+    -- widened one) and the right side are both eligible and neither is faced, and the right side's
+    -- pair, its bottom third, has the shorter line (23 by 25 against 43 by 5).
     hit = Snap.Nearest(rectOf(113, -25, 133, -5), target, 24)
-    -- red under: a span that must overlap the target's own (the corner never snaps)
+    -- red under: the nearer gap ranking the sides (the bottom's 5 wins, end to end with the corner)
     assertEqual(hit.side .. " " .. hit.point .. ">" .. hit.relPoint .. " " .. hit.dist,
-        "bottom TOPRIGHT>BOTTOMRIGHT 5", "the widened span")
+        "right BOTTOMLEFT>BOTTOMRIGHT 23", "the widened span, ranked by the line")
     -- 24 past it: the bottom's span only touches the widened one, which is no overlap, and the right
     -- side, 24 away, takes it, by its bottom third.
     hit = Snap.Nearest(rectOf(114, -25, 134, -5), target, 24)
@@ -266,10 +267,47 @@ test("snap: the side is the nearest gap whose span overlaps the target's widened
         "right BOTTOMLEFT>BOTTOMRIGHT 24", "a touch is no overlap")
     -- 25 past it: the right side is 25 away, and nothing else is in range.
     assertNil(Snap.Nearest(rectOf(115, -25, 135, -5), target, 24), "past the widened span")
-    -- 2 right of it and 5 under it: the right side is nearer, and the child's center is in its bottom third.
+    -- 2 right of it and 5 under it, off its corner: the right side's gap is nearer, but the bottom's
+    -- end pair has the shorter line (22 by 5 against 2 by 25).
     hit = Snap.Nearest(rectOf(92, -25, 112, -5), target, 24)
+    -- red under: the nearer gap ranking the sides (right BOTTOMLEFT>BOTTOMRIGHT 2)
     assertEqual(hit.side .. " " .. hit.point .. ">" .. hit.relPoint .. " " .. hit.dist,
-        "right BOTTOMLEFT>BOTTOMRIGHT 2", "the nearer gap")
+        "bottom TOPRIGHT>BOTTOMRIGHT 5", "the shorter line")
+    -- Under it and overlapping its right edge by 17: the bottom side, which it faces, beats the right
+    -- side it is only off the corner of, though the right's line is shorter.
+    hit = Snap.Nearest(rectOf(73, -45, 133, -25), { { id = 7, rect = rectOf(0, -8, 90, 0) } }, 24)
+    -- red under: the line alone (right BOTTOMLEFT>BOTTOMRIGHT, its line 41 against 47)
+    assertEqual(hit.side .. " " .. hit.point .. ">" .. hit.relPoint, "bottom TOPRIGHT>BOTTOMRIGHT", "the faced side")
+end)
+
+-- The owner's smoke round four (A12): wide strips, 288 by 20, in a column growing up, each strip under
+-- the block it heads (the parent rect reaches the block on its growth side, A11).
+test("snap: a child let go off a wide parent's top-right corner joins its right side, not its top end to end (A12)", function()
+    local NS = fresh()
+    local Snap = NS.Anchors.Snap
+    local parent = { { id = 11, rect = rectOf(0, 0, 288, 40), growH = "right", growV = "up" } }
+    -- 12 right of it and 10 above it: the top's gap is the nearer, but its end pair's line runs the
+    -- child's whole width back (300 by 10); the right side's top third is 12 by 30.
+    local hit = Snap.Nearest(rectOf(300, 50, 588, 70), parent, 24)
+    -- red under: the nearer gap ranking the sides (top BOTTOMRIGHT>TOPRIGHT, end to end)
+    assertEqual(hit.side .. " " .. hit.point .. ">" .. hit.relPoint, "right TOPLEFT>TOPRIGHT", "its right side")
+    assertEqual(hit.dist, 12, "dist stays the gap")
+    assertTrue(math.abs(hit.line - math.sqrt(12 * 12 + 30 * 30)) < 1e-9, "line is the join's length")
+end)
+
+test("snap: a child let go beside a parent joins that side, though a neighbor's corner is nearer by its gap (A12)", function()
+    local NS = fresh()
+    local Snap = NS.Anchors.Snap
+    -- The owner's column: 11 above 12, 21 apart; the child is 21 right of 11 and spans 11's height,
+    -- and its bottom is 17 above 12's top, past 12's right edge.
+    local column = {
+        { id = 11, rect = rectOf(0, 43, 288, 84), growH = "right", growV = "up" },
+        { id = 12, rect = rectOf(0, 0, 288, 26), growH = "right", growV = "up" },
+    }
+    local hit = Snap.Nearest(rectOf(309, 43, 597, 63), column, 24)
+    -- red under: the nearer gap ranking the sides (12 top BOTTOMRIGHT>TOPRIGHT, 17 against 21)
+    assertEqual(hit.id .. " " .. hit.side .. " " .. hit.point .. ">" .. hit.relPoint, "11 right BOTTOMLEFT>BOTTOMRIGHT",
+        "beside 11")
 end)
 
 -- ── eligibility (D5) ──────────────────────────────────────────────────────────────────────────

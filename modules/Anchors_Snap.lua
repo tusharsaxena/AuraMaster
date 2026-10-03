@@ -13,9 +13,11 @@ local _, NS = ...
 -- spread), moved out past the target's own strip and label there (Anchors_Attach.lua's beforeRoom,
 -- DD-10). The answer names the token the pair classifies as under the TARGET's flow growth, the
 -- growth the dragged container inherits the moment it attaches (Anchors.FlowRoot), or nil when free.
--- Which pair is SIDE FIRST, THEN ALIGN (the addendum's A7, Snap.Nearest): the nearest side within
--- C.SNAP_RADIUS by the gap between the two containers' facing edges, then the pair whose third of
--- that side the dragged container's center is over. Everything is measured on the two containers'
+-- Which pair is SIDE, THEN ALIGN, THEN THE SHORTEST LINE (the addendum's A7 and A12, Snap.Nearest):
+-- each side within C.SNAP_RADIUS by the gap between the two containers' facing edges offers the pair
+-- whose third of that side the dragged container's center is over; a side the dragged container
+-- spans alongside beats one it is only off the corner of, and then the pair whose two points lie
+-- nearest each other wins (the line the mark draws). Everything is measured on the two containers'
 -- STRIPS (A10), or their block and name label where a strip is hidden or does not read (A8), the
 -- parent's strip with each edge on a side it grows toward out to its block's far edge (A11).
 -- Everything is in UIParent units, so the radius feels the same under any scale.
@@ -154,29 +156,58 @@ local function sideRow(side, c, p, radius)
     return BY_SIDE[side][k]
 end
 
---- The pair a drop of child rect `childRect` would join one of `candidates` by: SIDE FIRST, THEN
---- ALIGN (the addendum's A7, which replaced A2's nearest pair of points: equal-width containers made
---- a side's three pairs exactly as near, and the tie kept the start pair, so a middle pair never won).
+--- Whether child rect `c` faces side `side` of target rect `p` (A12): its span along that side
+--- overlaps the target's own, unwidened (a touch is no overlap), so it is beside that side rather
+--- than off one of its corners.
+--- @return boolean
+local function faces(side, c, p)
+    if ALONG_X[side] then return c.right > p.left and c.left < p.right end
+    return c.top > p.bottom and c.bottom < p.top
+end
+
+--- The length of the line between child rect `c`'s point of OUTSIDE row `row` and target rect `p`'s
+--- (A12): how far the child's join point is from the target's, what the mark's line draws.
+--- @return number
+local function lineLength(row, c, p)
+    local cx, cy = Snap.PointAt(c, row[3])
+    local px, py = Snap.PointAt(p, row[2])
+    local dx, dy = cx - px, cy - py
+    return math.sqrt(dx * dx + dy * dy)
+end
+
+--- The pair a drop of child rect `childRect` would join one of `candidates` by: SIDE, THEN ALIGN, THEN
+--- THE SHORTEST LINE (the addendum's A7, which replaced A2's nearest pair of points: equal-width
+--- containers made a side's three pairs exactly as near, and the tie kept the start pair, so a middle
+--- pair never won; and A12, which ranks the sides A7 offers by whether the child faces them, then by
+--- their pair's line, not their gap: off a corner of a wide parent, the side with the nearer gap
+--- could offer a pair whose points lie the parent's whole width apart, so a child let go beside the
+--- parent was joined above it, end to end, or a neighbor's corner beat the side it was let go beside).
 --- Each of `candidates` is { id, rect, growH, growV }, the target's rect (A10) and the growth its chain
 --- flows by, all rects { left, bottom, right, top } in one unit (UIParent's, from Snap.Candidates).
 --- For every candidate in the order given (Snap.Candidates gives id order) and each of its four sides
 --- in OUTSIDE's order: 1. the side is eligible when the child's facing edge is within `radius` of it
 --- (|sideGap|, inclusive) and its span along the side overlaps the target's widened by `radius`;
 --- 2. its pair is the one the child's center aligns to (sideRow), with the child's point mirrored
---- (OUTSIDE). 3. Only a strictly smaller |gap| replaces the best so far, so a tie keeps the first
---- target and then the first side. Growth plays no part in the choice. The answer is { id, side,
---- point, relPoint, token, dist }: `side` the target's side, `token` the one of the nine the pair is
---- under the target's growth, nil for a free one (its before side), and `dist` the |gap|, which is
---- what A4's "strictly nearer" compares (beats). Nil with no eligible side. Allocates only the answer.
+--- (OUTSIDE). 3. A side the child faces (faces) beats one it does not, and between two alike only a
+--- strictly shorter line between the pair's two points (lineLength) replaces the best so far, so a
+--- tie keeps the first target and then the first side. Growth plays no part in
+--- the choice. The answer is { id, side, point, relPoint, token, dist, line }: `side` the target's
+--- side, `token` the one of the nine the pair is under the target's growth, nil for a free one (its
+--- before side), `dist` the |gap|, which is what A4's "strictly nearer" compares (beats), and `line`
+--- the length that ranked it. Nil with no eligible side. Allocates only the answer.
 --- @return table|nil
 function Snap.Nearest(childRect, candidates, radius)
-    local bestGap, bestCand, bestRow
+    local bestFaces, bestLine, bestGap, bestCand, bestRow
     for _, cand in ipairs(candidates) do
         for _, side in ipairs(SIDES) do
             local gap = math.abs(sideGap(side, childRect, cand.rect))
-            if gap <= radius and (bestGap == nil or gap < bestGap) then
-                local row = sideRow(side, childRect, cand.rect, radius)
-                if row then bestGap, bestCand, bestRow = gap, cand, row end
+            local row = gap <= radius and sideRow(side, childRect, cand.rect, radius)
+            if row then
+                local facing, line = faces(side, childRect, cand.rect), lineLength(row, childRect, cand.rect)
+                if bestLine == nil or (facing and not bestFaces)
+                    or (facing == bestFaces and line < bestLine) then
+                    bestFaces, bestLine, bestGap, bestCand, bestRow = facing, line, gap, cand, row
+                end
             end
         end
     end
@@ -184,7 +215,7 @@ function Snap.Nearest(childRect, candidates, radius)
     local point, relPoint = bestRow[3], bestRow[2]
     return {
         id = bestCand.id, side = bestRow[1], point = point, relPoint = relPoint,
-        token = tokenFor(bestCand.growH, bestCand.growV, point, relPoint), dist = bestGap,
+        token = tokenFor(bestCand.growH, bestCand.growV, point, relPoint), dist = bestGap, line = bestLine,
     }
 end
 
@@ -318,7 +349,9 @@ end
 -- refuses or voids anchors into from outside (the rule that makes GameTooltip refuse SetOwner on the
 -- strip, modules/Anchors.lua's tooltipSpec); not provable headless. The repaint reads nothing off the
 -- strip and lays its textures only against the strip itself, so a strip on secret geometry is fine.
--- ONE strip at most is repainted at a time (`edged`), and every way a mark ends gives its gold back:
+-- The DRAGGED container's own strip is repainted with it, in the same color (A13: both ends of the
+-- join say which containers it joins). At most two strips are repainted at a time, the target's
+-- (TARGET) and the dragged one's (CHILD), and every way a mark ends gives their gold back:
 -- the mark moving to another strip or to the box, and hideHighlight, which every end runs through (no
 -- pair, Shift, combat, a strip hidden mid-drag, the drop, Snap.EndDrag from a cancel or a Destroy of
 -- the dragged container), plus Snap.ReleaseStrip, which a Destroy of ANY container calls, so a target
@@ -350,8 +383,10 @@ local HIGHLIGHT_STRATA = "TOOLTIP"   -- over every container, whatever strata it
 local live        -- the live container being dragged, or nil
 local elapsed = 0 -- seconds since the driver last read the snap
 local hitRect = {} -- scratch: the highlighted target's rect
-local edged       -- the strip whose own edge the mark has repainted, or nil while it has none
-local edgedCol    -- the color table `edged` was last repainted in, or nil before its first repaint
+-- The two strips whose own edge the mark repaints (A6, A13): TARGET the target's or current parent's,
+-- CHILD the dragged container's; each `strip` nil while it has none, and `col` the color table it was
+-- last repainted in, nil before its first repaint.
+local TARGET, CHILD = {}, {}
 local GOLD = Anchors.STRIP_EDGE   -- the strip's own edge, put back when the mark leaves it (A6)
 local dragRect = {} -- scratch: the dragged container's strip or footprint, for the child's dot
 local painted     -- the color table the highlight was last painted in, or nil before it is built
@@ -418,43 +453,57 @@ local function buildHighlight()
     return hl
 end
 
---- Repaint strip `strip`'s own edge `EDGE` px in color `col` ({ r, g, b, a }), or, with `strip` nil,
---- repaint none (A6). Whatever strip it repainted before and is leaving gets the widget's gold back
---- first (GOLD: 1px, as the widget drew it), so at most one strip is ever off its own gold. A strip
---- already in `col` is not repainted, so a tick on the same target in the same color lays nothing.
---- Both paints are Style.DrawEdge on the strip, the painter the widget drew it with: the same four
---- textures, laid against the strip alone, no size read and no frame of ours anchored to it.
-local function edgeStrip(strip, col)
-    if strip ~= edged then
-        if edged then NS.Style.DrawEdge(edged, GOLD.size, GOLD.r, GOLD.g, GOLD.b, GOLD.a) end
-        edged, edgedCol = strip, nil
+--- Repaint, in slot `slot` (TARGET or CHILD), strip `strip`'s own edge `EDGE` px in color `col`
+--- ({ r, g, b, a }), or, with `strip` nil, repaint none (A6). Whatever strip the slot repainted before
+--- and is leaving gets the widget's gold back first (GOLD: 1px, as the widget drew it), so at most one
+--- strip per slot is ever off its own gold. A strip already in `col` is not repainted, so a tick on the
+--- same target in the same color lays nothing. Both paints are Style.DrawEdge on the strip, the
+--- painter the widget drew it with: the same four textures, laid against the strip alone, no size
+--- read and no frame of ours anchored to it.
+local function edgeStrip(slot, strip, col)
+    if strip ~= slot.strip then
+        local old = slot.strip
+        if old then NS.Style.DrawEdge(old, GOLD.size, GOLD.r, GOLD.g, GOLD.b, GOLD.a) end
+        slot.strip, slot.col = strip, nil
     end
-    if strip and col ~= edgedCol then
-        edgedCol = col
+    if strip and col ~= slot.col then
+        slot.col = col
         NS.Style.DrawEdge(strip, EDGE, col.r, col.g, col.b, col.a)
     end
 end
 
---- Hide the highlight (and every part of it with it), if it was ever built, and give the repainted
---- strip its gold back (edgeStrip), built or not: every way a mark ends runs through here.
+--- Hide the highlight (and every part of it with it), if it was ever built, and give both repainted
+--- strips their gold back (edgeStrip), built or not: every way a mark ends runs through here.
 local function hideHighlight()
-    edgeStrip(nil)
+    edgeStrip(TARGET, nil)
+    edgeStrip(CHILD, nil)
     if Snap.highlight then Snap.highlight:Hide() end
 end
 
---- The strip whose own edge the mark has repainted now, or nil (published for the headless suite).
+--- The target's (or current parent's) strip whose own edge the mark has repainted now, or nil
+--- (published for the headless suite).
 --- @return table|nil
 function Snap.MarkedStrip()
-    return edged
+    return TARGET.strip
+end
+
+--- The dragged container's own strip, while the mark has repainted it (A13), or nil (published for
+--- the headless suite).
+--- @return table|nil
+function Snap.MarkedChildStrip()
+    return CHILD.strip
 end
 
 --- Container `container` is being destroyed (ContainerClass:Destroy, for a delete, a profile switch or
---- reset, or a stand-down): when its strip is the one the mark repainted, the gold goes back now. A
+--- reset, or a stand-down): when its strip is one the mark repainted, the gold goes back now. A
 --- destroyed instance is kept dormant and revived under its id with the same strip, and a destroyed
 --- TARGET is not the drag's, so no tick or end of drag might come to restore it before it shows again.
 --- The drag itself, the mark and the driver go on as they were; the next tick finds another pair or none.
 function Snap.ReleaseStrip(container)
-    if edged and container.handle == edged then edgeStrip(nil) end
+    local strip = container.handle
+    if not strip then return end
+    if TARGET.strip == strip then edgeStrip(TARGET, nil) end
+    if CHILD.strip == strip then edgeStrip(CHILD, nil) end
 end
 
 --- The strip the mark for `pair` repaints (A5, A6): the drag-handle strip of the container it names (the
@@ -492,7 +541,7 @@ local function placeDot(dot, x, y)
 end
 
 --- Show the highlight for pair `pair` of the drag of live container `dragged`, painted in `col`: the
---- own edge of `strip` repainted (markStrip: the target's or parent's strip, A6), or with none the box over `rect`
+--- own edge of `dragged`'s strip repainted (A13), and of `strip` (markStrip: the target's or parent's strip, A6), or with none the box over `rect`
 --- (the target's or parent's rect, Snap.ParentRect, in UIParent units, A11); the target's dot on its relative point
 --- of the pair, the dragged container's dot on its own point of it on its own strip, and the line
 --- from the first dot to the second. With no `rect` (a parent that is hidden or does not read, A4) the
@@ -508,7 +557,9 @@ local function showHighlight(pair, rect, strip, dragged, col)
     local cx, cy = Snap.PointAt(own, pair.point)
     local px, py = cx, cy
     if rect then px, py = Snap.PointAt(rect, pair.relPoint) end
-    edgeStrip(strip, col)
+    edgeStrip(TARGET, strip, col)
+    local ownStrip = dragged.handle
+    edgeStrip(CHILD, (ownStrip and ownStrip:IsVisible()) and ownStrip or nil, col)
     placeBox(rect, strip, cx, cy)
     placeDot(Snap.marker, px, py)
     placeDot(Snap.childMarker, cx, cy)

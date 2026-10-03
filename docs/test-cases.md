@@ -1079,7 +1079,7 @@ badge and any count quoted in the docs must agree with it.
 - width: a one-icon container too narrow for the marks and a readable label keeps its natural width
 - width: the label is worked out once per name and width, not on every pass
 
-### test_anchors_snap.lua (29)
+### test_anchors_snap.lua (31)
 
 - snap: PointAt gives each of the nine WoW points on a rect
 - snap: Nearest picks each of the twelve outside pairs, the child's point the mirror of the parent's, under two growths
@@ -1088,7 +1088,9 @@ badge and any count quoted in the docs must agree with it.
 - snap: a tie keeps the first target in the order given, and the first side in the A2 table's order
 - snap: equal-width containers pick the middle pair centered, and the start or end pair in the outer thirds, on all four sides (A7)
 - snap: a third's border goes to the middle pair, and a target one point wide answers its middle pair
-- snap: the side is the nearest gap whose span overlaps the target's widened by the radius, an overlap's gap counted as its size (A7)
+- snap: a side is eligible by its gap and its span widened by the radius; a side it faces beats a corner, then the shorter line (A7, A12)
+- snap: a child let go off a wide parent's top-right corner joins its right side, not its top end to end (A12)
+- snap: a child let go beside a parent joins that side, though a neighbor's corner is nearer by its gap (A12)
 - snap: Candidates lists every other live container in id order, with its rect and flow growth
 - snap: Candidates gives id order whatever order pairs walks the instances in, so a tie keeps the lower id
 - snap: a follower of the dragged container, and one further down its chain, is never a target
@@ -1156,6 +1158,12 @@ badge and any count quoted in the docs must agree with it.
 - drag: beside a parent whose block reads secret but whose strip reads, a child re-pairs onto that side (A4, A11)
 - drag: a drop on the right side of a parent whose block reads secret but whose strip reads re-attaches there (A4, A11)
 - drag: a screen container's drag has no hold and no red (A4)
+
+### test_anchors_mark.lua (3)
+
+- mark: the dragged container's own strip is repainted with the target's, 2px in green (A13)
+- mark: past the leeway the dragged strip turns red with its parent's, and a hold is green (A4, A13)
+- mark: the dragged strip's own gold comes back on every path the mark ends by (A13)
 
 ### test_anchors_drop.lua (24)
 
@@ -2377,8 +2385,9 @@ badge and any count quoted in the docs must agree with it.
 | test_anchors_steady.lua | 8 |
 | test_anchors_collapse.lua | 9 |
 | test_anchors_width.lua | 6 |
-| test_anchors_snap.lua | 29 |
+| test_anchors_snap.lua | 31 |
 | test_anchors_drag.lua | 43 |
+| test_anchors_mark.lua | 3 |
 | test_anchors_drop.lua | 24 |
 | test_texttemplate.lua | 26 |
 | test_style.lua | 60 |
@@ -2430,4 +2439,4 @@ badge and any count quoted in the docs must agree with it.
 | test_layout_cap.lua | 13 |
 | test_diagnostics_contract.lua | 9 |
 | test_lizard_sighted.lua | 8 |
-| **Total** | **2036** |
+| **Total** | **2041** |

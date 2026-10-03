@@ -97,11 +97,14 @@ independent of growth; the three on the target's before side place as a free pai
 eligible container within `C.SNAP_RADIUS` (`Snap.Find`; never itself or one that follows
 it, `Anchors.WouldCycle`), picked side first and then by alignment (the addendum's A7: the nearest
 side by the gap between the two facing edges, its span overlapping, then the start, middle or end
-pair by which third of that side the dragged container's center is over), every rect measured and
+pair by which third of that side the dragged container's center is over; of the sides in range, A12:
+one the dragged container spans alongside beats one it is only off the corner of, then the pair whose
+two join points are nearest, the shortest line, wins), every rect measured and
 drawn on the container's drag-handle strip while it shows and reads (A10, `Snap.Footprint`; else
 A8's footprint, its block with its name label while that shows), the target's (and, for the detach
 leeway, the parent's) strip with each edge on a side it grows toward taken out to its block's far
 edge (A11, `Snap.ParentRect`, read in `modules/Anchors_SnapRect.lua`), with a 2 px edge in the mark's color on that container's drag-handle strip
+and on the dragged container's own (A13)
 (the owner-feedback addendum's A5 and A6: the strip's own 1 px gold edge repainted through
 `Style.DrawEdge`, no frame of ours anchored to it, and its gold, `Anchors.STRIP_EDGE`, painted back
 when the mark leaves it, hides or its container is destroyed; a box over its rect only when it has no

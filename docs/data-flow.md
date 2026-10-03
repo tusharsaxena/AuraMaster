@@ -545,8 +545,11 @@ independent of growth; the three on its before side place as a free pair), side 
 alignment (the addendum's A7, `Snap.Nearest`): each side is eligible when the gap between the dragged
 container's facing edge and it is at most `C.SNAP_RADIUS` (24 UIParent units) either way and their
 spans along it overlap, with the target's widened by the radius; the side's pair is the start, middle
-or end one by which third of that side the dragged container's center is over; the smallest gap wins,
-ties to the lower id and then the table's order. Both containers are measured on their drag-handle
+or end one by which third of that side the dragged container's center is over; a side the dragged
+container spans alongside (their spans along it overlap, unwidened) beats one it is only off the
+corner of, and then the pair whose two join points are nearest wins, the shortest line (A12: off a
+wide parent's corner the nearer gap could name a pair a whole width apart), ties to the lower id and
+then the table's order. The gap stays the answer's `dist`, what the leeway compares. Both containers are measured on their drag-handle
 strips while each shows and reads (A10, `Snap.Footprint`); where a strip is hidden or does not read,
 on A8's footprint: the block (the dragged one's anchor; the target's rect a follower would hang from,
 `Anchors.HangFrame`, an engine that reads secret falling back to its anchor) with its name label taken
