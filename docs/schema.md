@@ -227,9 +227,9 @@ and its one writer (the library's `P.Save`, behind `/am perf finish`) are named 
 
 ## Settings schema, registries and named non-setting state
 
-`NS.Schema` holds **258** rows across seven pages: General 18 (its Dispel Colors tab's five and its
+`NS.Schema` holds **268** rows across seven pages: General 18 (its Dispel Colors tab's five and its
 Spell Categories tab's three `enchantSlots` rows among them), Containers 5 (`N-1`, batch 7 — split
-out of General's own tab), Filters 46, Layout 38 (the Label tab's ten among them, batch 8 and B9 LJ-1; batch 9's Side row replaced by batch 11's two anchor-point rows),
+out of General's own tab), Filters 56, Layout 38 (the Label tab's ten among them, batch 8 and B9 LJ-1; batch 9's Side row replaced by batch 11's two anchor-point rows),
 Bars 72, Icons 42 and Text 37 (its `autoSize` among them). The
 AceConfig-drawn Profiles page carries none. That is the count on a profile with no categories of the
 player's own; **the schema is a live table, not a frozen one**, and each user category adds one
@@ -773,8 +773,9 @@ The stamp follows savedvariables-§1 as ruled at WowAddonStandards v2.65.0:
   `Database.CurrentSchemaVersion()` answers `11`. It turns batch 9's side into two absolute points:
   an `attach.edge` equal to `after-start` (or not one of the nine tokens, which v9 and v10 read as
   `after-start`) is dropped, so the container becomes Automatic and takes G3's default; any other side
-  is converted to the points it resolved to at v10, exactly as `Anchors.ResolvedEdge` and
-  `Anchors.EdgePoints` placed it under the container's effective layout (its chain root's axis and
+  is converted to the points it resolved to at v10, exactly as batch 10 placed it (its edge resolver,
+  since removed, over the batch 9 design table that `Anchors_Attach.lua`'s `EDGE_PAIRS` still holds and
+  the step freezes as `v10Pair`) under the container's effective layout (its chain root's axis and
   growth read from that profile's own containers, its own per-line count, and `behind` read as
   `after` at the same align while it was more than one aura wide), and stored as
   `attach.childPoint` / `attach.relPoint`, so a side the owner picked never moves. Points already

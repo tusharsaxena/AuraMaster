@@ -92,7 +92,8 @@ for _, growH in ipairs({ "right", "left" }) do
 end
 
 --- The child's point and the parent's relative point for `token`, under layout `L`'s growth. A token
---- that is not one of the nine reads as after-start.
+--- that is not one of the nine reads as after-start. A test seam, published for the headless suite:
+--- no production path calls it; Place reads EDGE_PAIRS directly (AttachPoints, AutoPoints, Spec).
 --- @return string point, string relativePoint
 function Anchors.EdgePoints(L, token)
     local growH, growV = NS.Container.Growth(L or {})

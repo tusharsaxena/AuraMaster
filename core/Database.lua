@@ -1033,9 +1033,9 @@ end
 ---    Automatic and takes G3's defaults. So is a side that is not one of the nine, which v9 and v10
 ---    read as after-start. Accepted consequence: an Automatic Text-under-Text chain may re-center.
 --- 2. Any other stored side is converted to the absolute points it resolved to at v10, exactly as
----    batch 10's Anchors.ResolvedEdge and Anchors.EdgePoints placed it under its effective layout:
----    its chain root's axis and growth, its own per-line count, and behind read as after at the same
----    align while the container was more than one aura wide. So a side the owner picked never moves.
+---    batch 10's edge resolver (since removed) and Anchors.EdgePoints placed it under its effective
+---    layout: its chain root's axis and growth, its own per-line count, and behind read as after at
+---    the same align while it was more than one aura wide. So a side the owner picked never moves.
 ---    Every container with an attach table, whatever its mode, the same rule as v9 (a later switch to
 ---    Another container keeps the side); points already stored are the player's own and are kept.
 --- 3. `attach.edge` is removed. Nothing but this ladder reads it from v11 on.

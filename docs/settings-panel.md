@@ -1,7 +1,7 @@
 # Settings panel
 
 How the options are organized, what each control does, and which schema key it writes. The rows
-below are derived from the live schema (`NS.Schema`, 258 rows on a profile with no categories of the
+below are derived from the live schema (`NS.Schema`, 268 rows on a profile with no categories of the
 player's own — each of those adds one more `container.filter.categories.<key>` row at runtime) by
 loading the addon headlessly and
 walking it page → group → subgroup; a page, tab or row listed here that the schema does not produce
@@ -656,7 +656,7 @@ flow. Its fill axis and both growth directions are its chain root's, resolved up
 `Anchors.EffectiveLayout` (cycle-safe through `Anchors.WouldCycle`). Its anchor points are the two
 in effect (`Anchors.AttachPoints`, batch 11 G2): each picked, or Automatic, the matching half of the
 default pair (G3), which for a bars child under a bars parent is the `after-start` pair
-(`Anchors.EdgePoints(L, "after-start")`): the child stacks below its parent (above, when growing up), on the side the
+(the `after-start` row of `Anchors_Attach.lua`'s `EDGE_PAIRS` table under the chain's growth, which `NS.AnchorsAttach.Spec` places by): the child stacks below its parent (above, when growing up), on the side the
 parent's lines start from, whether the parent fills rows or columns (IA-1). A pair that is none of
 batch 9's nine sides is free: placed at X/Y alone, with no seam (G5), moved out past the parent's strip
 and label only when it sits flush outside the parent's before side (DD-10). `container.attach.point` / `.relativePoint` are read only in `frame`
