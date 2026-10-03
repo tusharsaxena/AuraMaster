@@ -114,6 +114,16 @@ test("mark: past the leeway the dragged strip turns red with its parent's, and a
     assertNil(Snap.MarkedChildStrip(), "and the mark holds no dragged strip")
 end)
 
+test("mark: a Destroy of the dragged container gives its strip's gold back by itself, before the drag ends (A13)", function()
+    local NS, _, inst, Snap = screenDrag()
+    Snap.ReleaseStrip(inst)
+    -- red under: ReleaseStrip checking the target's strip only (the dragged one waited for EndDrag)
+    assertEqual(stripEdge(inst.handle), GOLD, "the dragged strip's gold is back")
+    assertNil(Snap.MarkedChildStrip(), "and the mark holds no dragged strip")
+    assertEqual(stripEdge(NS.ContainerManager.instances[1].handle), rgba(NS.Constants.SNAP_COLOR),
+        "the target's strip is not the dragged one's: still marked")
+end)
+
 -- Every way a mark ends while the drag's container is still the one dragged, or the drag itself ends.
 local END_PATHS = {
     { "the drop", function(_, _, inst) inst.handle:__fire("OnDragStop") end },

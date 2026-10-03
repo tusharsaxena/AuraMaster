@@ -276,7 +276,7 @@ test("snap: a side is eligible by its gap and its span widened by the radius; a 
     -- Under it and overlapping its right edge by 17: the bottom side, which it faces, beats the right
     -- side it is only off the corner of, though the right's line is shorter.
     hit = Snap.Nearest(rectOf(73, -45, 133, -25), { { id = 7, rect = rectOf(0, -8, 90, 0) } }, 24)
-    -- red under: the line alone (right BOTTOMLEFT>BOTTOMRIGHT, its line 41 against 47)
+    -- red under: the line alone (right BOTTOMLEFT>BOTTOMRIGHT, its line about 41 against 46)
     assertEqual(hit.side .. " " .. hit.point .. ">" .. hit.relPoint, "bottom TOPRIGHT>BOTTOMRIGHT", "the faced side")
 end)
 
