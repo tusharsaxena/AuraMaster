@@ -128,6 +128,15 @@ local function confirmMode(v, id)
     return attachPrompt(cfg, at.container)
 end
 
+--- The target the popup's `data` would attach to: the section's target (a drop), the value itself
+--- (the Container row), or the target already stored (the Attach to row switching into container mode).
+local function popupTarget(data)
+    if type(data.value) == "table" then return tonumber(data.value.container) end
+    if data.path == "container.attach.container" then return tonumber(data.value) end
+    local cfg = NS.Database.FindContainer(data.id)
+    return cfg and cfg.attach and tonumber(cfg.attach.container)
+end
+
 StaticPopupDialogs[ATTACH_POPUP] = {
     -- The whole question is built by attachPrompt and handed in as the one argument, so a container
     -- name holding a % cannot break the format.
@@ -144,6 +153,13 @@ StaticPopupDialogs[ATTACH_POPUP] = {
             return NS.Printf("|cff808080%s|r", L["cannot attach a container during combat; try again when combat ends"])
         end
         if not data then return end
+        -- The popup has no timeout, so its target may have been deleted while it was up; the row's
+        -- validate would let a missing id through (a loop check finds no loop), and the write would
+        -- send the container to a stale screen position. Nothing is written, and the line says why.
+        if not NS.Database.FindContainer(popupTarget(data)) then
+            if NS.Debug then NS.Debug("Anchor", "attach refused (the target is gone)") end
+            return NS.Printf("|cff808080%s|r", L["cannot attach: the container to attach to no longer exists"])
+        end
         -- The row's validate checks the loop again: the chain may have changed while the popup was up.
         confirmed = true
         NS.SetByPath(data.path, data.value, data.id)
@@ -153,6 +169,53 @@ StaticPopupDialogs[ATTACH_POPUP] = {
     OnCancel     = function() NS.RequestPanelRefresh() end,
     OnHide       = function() NS.RequestPanelRefresh() end,
 }
+
+-- ---------------------------------------------------------------------------
+-- A drag's drop (issue #22)
+-- ---------------------------------------------------------------------------
+-- Dropping a container on another (modules/Anchors_Snap.lua's Snap.Drop) attaches it by one
+-- whole-section write of container.attach. The question GC-1 asks is this page's, so the drop hands
+-- the section here: the same popup the panel's rows raise, carrying the SECTION as its data, so its
+-- OnAccept (above) writes the whole of it through the same seam, combat gate and loop check
+-- (the Container row's validate runs inside the section write) included.
+
+local ATTACH_SECTION = "container.attach"
+
+--- Whether attaching `cfg` to container `targetId` keeps the flow it has now: it already follows a
+--- chain, and the target's chain has the same root (a drop that only moves it along its own chain,
+--- or to another side of its own parent). Nothing about how it fills or grows changes then, however
+--- its own stored Growth differs, so there is nothing to ask and nothing to say in chat.
+local function keepsFlow(cfg, targetId)
+    local now = NS.Anchors.FlowRoot(cfg)
+    local target = now and NS.Database.FindContainer(tonumber(targetId))
+    local after = target and (NS.Anchors.FlowRoot(target) or target)
+    return after ~= nil and after.id == now.id
+end
+
+--- Attach container `id` by the whole attach `section` a drop built (mode container, a target, the
+--- two points, x and y 0). Asks first with the attach popup when the drop changes how it flows
+--- (GC-1); else writes it at once. Answers true when the section was written, "asked" when the
+--- popup is up (nothing written yet: OnAccept writes it, Cancel leaves everything as it was), and
+--- false when there is no such container or the seam refused the section. The caller re-places the
+--- container whenever this is not true.
+--- @return boolean|string
+function NS.AttachByDrop(id, section)
+    local cfg = NS.Database.FindContainer(id)
+    if not (cfg and type(section) == "table") then return false end
+    local same = keepsFlow(cfg, section.container)
+    local which, text = attachPrompt(cfg, section.container)
+    if which and not same then
+        if NS.Debug then NS.Debug("Anchor", "container %s: drop asks first (its flow changes)", id) end
+        local popup = StaticPopup_Show(which, text)
+        if popup then popup.data = { path = ATTACH_SECTION, value = section, id = id } end
+        return "asked"
+    end
+    -- Along its own chain the flow does not change, so the targetChanged chat line would be noise.
+    confirmed = same
+    local ok = NS.SetByPath(ATTACH_SECTION, section, id)
+    confirmed = false
+    return ok and true or false
+end
 
 --- The chat line for an attachment written without the popup, when it changes how `cfg` flows.
 local function sayAttached(cfg, targetId)
@@ -315,7 +378,7 @@ NS.RegisterSchemaRows({
         -- Asks first when a stored target would change how it flows (GC-1): panel only.
         confirmWrite = confirmMode,
         values = NS.Choices(C.ATTACH_MODES, C.ATTACH_MODE_LABELS), label = L["Attach to"],
-        desc = L["The screen (drag it anywhere), another container (it follows that container as it grows), or any named frame — a unit frame, an action bar. Only the settings for your choice are shown below."],
+        desc = L["The screen (drag it anywhere), another container (it follows that container as it grows; while unlocked, drop it on one to attach it there, or drag it away to put it back on the screen), or any named frame — a unit frame, an action bar. Only the settings for your choice are shown below."],
     },
     {
         path = "container.position.point", page = PAGE, group = G_ANCHOR, subgroup = S_SCREEN, shownWhen = SCREEN_ONLY,

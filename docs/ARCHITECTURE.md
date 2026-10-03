@@ -44,13 +44,19 @@ what each LibKa0s setup file publishes: `docs/module-map.md` → *Libraries*.
 ## Module Map
 
 Five source folders in the TOC's load order — `locales/` → `core/` → `defaults/` → `modules/` →
-`settings/` (layout-§1) — 55 authored Lua files under them: one locale, 16 core, 4 defaults, 19
+`settings/` (layout-§1) — 58 authored Lua files under them: one locale, 16 core, 4 defaults, 22
 modules and 15 settings. The load-bearing positions are annotated at their TOC lines:
 `core/MediaSetup.lua` before `core/Constants.lua` (the monospace face), `core/CoreSetup.lua` before
 anything that prints, `core/PerfSetup.lua` before every module that takes `NS.Perf` as an upvalue,
 `defaults/Categories.lua` before `defaults/Profile.lua` (the template's category states) and
 `defaults/UserCategories.lua` directly after it (the `NS.Categories` upvalue),
 `modules/Anchors_Attach.lua` before `modules/Anchors.lua` (which binds `NS.AnchorsAttach` at file load),
+`modules/Anchors_Tooltip.lua` before `modules/Anchors.lua` (which binds `NS.AnchorsTooltip.Place` at file
+load as the strip's `tooltipPlace`),
+`modules/Anchors_SnapRect.lua` after `modules/Anchors_Attach.lua` (it binds `FlowGrowth` at file load) and
+before `modules/Anchors_Snap.lua`,
+`modules/Anchors_Snap.lua` after all three (it binds `NS.AnchorsAttach`'s pair table and
+`NS.AnchorsSnapRect` at file load and extends `Anchors` as `Anchors.Snap`),
 `settings/OptionsSetup.lua` before every page file (the composers run at file load), and
 `settings/GeneralUserCategories.lua` (read by `settings/GeneralSpells.lua` at file load), then
 `settings/GeneralSpells.lua`, then `settings/GeneralDispel.lua` (which reads its bullet constants), all
@@ -69,7 +75,8 @@ files (`Style_Bars.lua`, `Style_Icons.lua` and `Style_Text.lua`, chosen per cont
 continues its chain root's flow (`Anchors.EffectiveLayout`) and joins it by two absolute points,
 `attach.childPoint` and `attach.relPoint`, each Automatic while unset (`Anchors.AttachPoints`,
 batch 11 G2, G3); a pair that is one of batch 9's nine sides keeps that side's seam and spread
-(`Anchors.AttachEdge`, G5), and any other is placed at its X/Y alone. A write to a
+(`Anchors.AttachEdge`, G5), and any other is placed at its X/Y alone, except that one mirrored onto the
+parent's before side is moved out past the parent's strip and label while each shows (DD-10). A write to a
 flow or attachment path re-applies its followers (`Anchors.Followers`) and its parent. While a container previews,
 the containers attached to it hang from `Preview.Extent`, a frame of ours sized to its placeholder
 block; while it is unlocked, not previewing and predicted empty (`modules/EmptyWatch.lua`, batch 9
@@ -81,8 +88,49 @@ the client loads an addon font file lazily and text first drawn before the load 
 (`NS.State.testMode`, switched only by `Preview.SetTestMode`): every container shows its placeholder
 auras. Unlocking is separate: it makes containers draggable while their live auras keep drawing,
 each under its drag handle, and one predicted empty under a faint outline one element in size, so an
-empty container can still be found and dragged. The handle's close mark (X) turns that container off through the write
-seam. A container can also show its name as a label where the handle sits, locked or unlocked;
+empty container can still be found and dragged. A screen container or one attached to another drags
+(never one on a named frame, never in combat); dropped near another container it attaches there
+(issue #22, `modules/Anchors_Snap.lua`). The handle's `beginDrag` lifts an attached anchor onto
+`UIParent` and starts the snap driver, which every 0.03 s highlights one of the twelve
+outside pairs (each side's start, middle and end joined to the child's mirror point, absolute and
+independent of growth; the three on the target's before side place as a free pair) of an
+eligible container within `C.SNAP_RADIUS` (`Snap.Find`; never itself or one that follows
+it, `Anchors.WouldCycle`), picked side first and then by alignment (the addendum's A7: the nearest
+side by the gap between the two facing edges, its span overlapping, then the start, middle or end
+pair by which third of that side the dragged container's center is over; of the sides in range, A12:
+one the dragged container spans alongside beats one it is only off the corner of, then the pair whose
+two join points are nearest, the shortest line, wins), every rect measured and
+drawn on the container's drag-handle strip while it shows and reads (A10, `Snap.Footprint`; else
+A8's footprint, its block with its name label while that shows), the target's (and, for the detach
+leeway, the parent's) strip with each edge on a side it grows toward taken out to its block's far
+edge (A11, `Snap.ParentRect`, read in `modules/Anchors_SnapRect.lua`), with a 2 px edge in the mark's color on that container's drag-handle strip
+and on the dragged container's own (A13)
+(the owner-feedback addendum's A5 and A6: the strip's own 1 px gold edge repainted through
+`Style.DrawEdge`, no frame of ours anchored to it, and its gold, `Anchors.STRIP_EDGE`, painted back
+when the mark leaves it, hides or its container is destroyed; a box over its rect only when it has no
+visible strip), a dot on each of the two join
+points and a line between them, all in one color, and `Anchors.Place` leaves a dragging anchor alone. `Snap.Drop` decides
+from the drop itself: a candidate and no Shift writes the whole `container.attach` section through
+`NS.AttachByDrop` (`settings/Layout.lua`), which asks first with the GC-1 popup when the chain's flow
+would change. An attached container has a leeway (the owner-feedback addendum's A4, `C.DETACH_RADIUS`,
+128 since A9): while its current pair's two points stay that close to where they rested when the drag began, or
+to each other (the cursor's travel when its parent does not read), or while the snap's own pick is that
+very pair (over its third of a long parent's side, however far from its points), the mark stays green on that pair, the parent's strip repainted, and a release snaps it back, writing nothing; past it, the
+whole mark turns red (`C.DETACH_COLOR`) and a release detaches to the drop position, X/Y 0. Another
+pair in snap range, not its current one nor the one the pick gave where it rested, and nearer than it
+by the leeway's measure (the nearer of its two points' distance and how far that has moved since the
+drag began: 0 where it rests, though those points rest a seam, a nudge or a strip apart; DD-15R)
+(the current parent measured on the rect its current pair is, `findFrom`: its strip alone where its
+block reads secret; never one of it where no rect of it reads but the one-element fallback, nor, when
+its rest did not read before the lift, before the cursor has moved past `C.SNAP_RADIUS`, nor then any other
+container's either; DD-16R), wins over both, and Shift suppresses only that.
+The tick and the drop classify alike (`classify`); combat started mid-drag attaches nothing. The handle's close mark (X) turns that container off through the write
+seam. The strip's tooltip, and its marks', sits beside the strip: to its right, or to its left when
+the strip is too close to the right edge of the screen for it to fit (`modules/Anchors_Tooltip.lua`,
+LibKa0s-Widgets' `tooltipPlace`); where the strip's rect reads secret (a container attached under a
+parent holding auras), beside the cursor where it entered the strip instead, fixed for the hover. It is anchored to `UIParent` alone, from the strip's rect read through
+`NS.Secrets` and converted through both effective scales, because nothing may anchor into the
+anchor's restricted tree; only where the cursor, the tooltip or the screen does not read either does it follow the cursor. A container can also show its name as a label where the handle sits, locked or unlocked;
 while unlocked the handle moves out past it (`Anchors.PlaceLabel`, batch 8 D6).
 
 Every non-vendored file, its responsibility and the full load order: `docs/module-map.md`.
@@ -153,8 +201,8 @@ pass on.
 | Message | Sender | Payload | Consumers |
 |---|---|---|---|
 | `Ka0s_AuraMaster_ContainersChanged` (`NS.MSG.CONTAINERS_CHANGED`) | `modules/ContainerManager.lua` — create, delete, rename, duplicate, profile change (copy-from and reset positions are settings writes, announced by `CONFIG_CHANGED`) | none | `settings/OptionsSetup.lua:405` — `NS.RequestPanelRefresh`, a coalesced panel re-render (every banner lists containers); `modules/TimedSpells.lua:204` — `TS.Sync`, which starts or stops the timed-spell scan (a container added or removed can change whether any needs it) |
-| `Ka0s_AuraMaster_ConfigChanged` (`NS.MSG.CONFIG_CHANGED`) | `settings/Schema.lua:603` — the write seam, once per write; never for a session row | `{ section, containerId, path }`; `containerId` nil for an addon-wide row, `path` the row written | `modules/ContainerManager.lua:865` — first `FontPrimer.PrimeAll` (a new font is drawn before anything is applied in it), then by the row's `effect`: `"visibility"` (the master enable, visibility, lock and alpha, a container's enable, its six `filter.zones` rows and its two `filter.unitFilter` rows) runs `ApplyVisibility()` at once, `"none"` queues nothing, `"view"` (the two `filter.situations` rows) runs `CM.ApplyViews` for that container at once, in combat too and never held, otherwise `RequestApply(containerId)` (nil re-applies all), a write to a flow or attachment path also re-applies every container following that one (`Anchors.Followers`), and a write to a container's attach points, mode or target also re-applies the container it attaches to (`requestParents`); `modules/TimedSpells.lua:203` — `TS.Sync`, the same re-sync (a filter write can change whether any container needs the scan) |
-| `Ka0s_AuraMaster_VisibilityChanged` (`NS.MSG.VISIBILITY_CHANGED`) | `core/AuraMaster.lua` — entering the world, combat start and end; `modules/Preview.lua` — `Preview.SetTestMode`, when test mode switches on or off | none | `modules/ContainerManager.lua:878` — `ApplyVisibility()` over every container |
+| `Ka0s_AuraMaster_ConfigChanged` (`NS.MSG.CONFIG_CHANGED`) | `settings/Schema.lua:603` — the write seam, once per write; never for a session row | `{ section, containerId, path }`; `containerId` nil for an addon-wide row, `path` the row written | `modules/ContainerManager.lua:866` — first `FontPrimer.PrimeAll` (a new font is drawn before anything is applied in it), then by the row's `effect`: `"visibility"` (the master enable, visibility, lock and alpha, a container's enable, its six `filter.zones` rows and its two `filter.unitFilter` rows) runs `ApplyVisibility()` at once, `"none"` queues nothing, `"view"` (the two `filter.situations` rows) runs `CM.ApplyViews` for that container at once, in combat too and never held, otherwise `RequestApply(containerId)` (nil re-applies all), a write to a flow or attachment path also re-applies every container following that one (`Anchors.Followers`), and a write to a container's attach points, mode or target also re-applies the container it attaches to (`requestParents`); `modules/TimedSpells.lua:203` — `TS.Sync`, the same re-sync (a filter write can change whether any container needs the scan) |
+| `Ka0s_AuraMaster_VisibilityChanged` (`NS.MSG.VISIBILITY_CHANGED`) | `core/AuraMaster.lua` — entering the world, combat start and end; `modules/Preview.lua` — `Preview.SetTestMode`, when test mode switches on or off | none | `modules/ContainerManager.lua:879` — `ApplyVisibility()` over every container |
 | `Ka0s_AuraMaster_TimedSpellsChanged` (`NS.MSG.TIMED_SPELLS_CHANGED`) | `modules/TimedSpells.lua` — a scan learned timed spells, or `/am forgettimed` emptied the set | none from a scan; `{ byPlayer = true }` from `/am forgettimed` | `modules/ContainerManager.lua` `CM.Init` — `RequestApply(nil, system)` over every container (their excluded ids moved); a scan's request is the addon's own, so a deferral of it prints no notice |
 
 Four messages, well under the more-than-ten trigger for a separate `message-bus.md`.
@@ -313,7 +361,9 @@ Units stop at player, target, focus and pet. Nothing structural happens while au
 under lockdown, so settings changes, teardown and class colors wait for it to lift. The engine bounds
 what a Text line can do, which spell-id filters it honors, and when a non-Solid border redraws. A
 handful of user-category trade-offs were accepted by the owner. A font a media addon registers
-after login is not primed until the next settings change or `/reload`. Every limitation, its cause and any
+after login is not primed until the next settings change or `/reload`. A container on a named frame
+cannot be dragged, and an attached one whose position reads secret jumps to the cursor when its drag
+starts. Every limitation, its cause and any
 ruling: `docs/known-limitations.md`.
 
 ## Documentation map

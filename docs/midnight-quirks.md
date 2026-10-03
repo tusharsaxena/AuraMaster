@@ -148,7 +148,9 @@ never read back off an engine frame; the anchor is sized to one element from con
 anchor chain. `GameTooltip` does not inherit the template, so `GameTooltip:SetOwner` on the drag handle
 or its help mark, both anchored under the anchor, raises "Anchoring disallowed as dependent object
 would inherit forbidden aspects: UntrustedLayoutScriptExecution". The handle's tooltip is owned by
-`UIParent` with `ANCHOR_CURSOR` instead, so it depends on nothing under the anchor.
+`UIParent` instead, so it depends on nothing under the anchor: placed beside the strip from the strip's
+rect, read and anchored to `UIParent` alone (`modules/Anchors_Tooltip.lua`), or with `ANCHOR_CURSOR`
+where that rect reads secret.
 
 ## Groups are add-only, and some setters reset a group
 
@@ -323,7 +325,7 @@ hides it, and clearing does not show it again.
 `UpdateAllAuras` exists for external refreshes such as target changes.
 
 **What this addon does.** `PLAYER_TARGET_CHANGED`, `PLAYER_FOCUS_CHANGED` and `UNIT_PET` (for the
-player) call `UpdateAllAuras` on every container on that unit (`core/AuraMaster.lua:170-189`).
+player) call `UpdateAllAuras` on every container on that unit (`core/AuraMaster.lua:172-191`).
 
 ## An addon font loads lazily, and the engine writes a name once (measured 2026-09-27)
 
@@ -694,18 +696,22 @@ values was secret.
   anchored under the anchor, the drag handle and its help mark included, and the client refuses
   `GameTooltip:SetOwner` on any of them ("Anchoring disallowed as dependent object would inherit
   forbidden aspects: UntrustedLayoutScriptExecution"). The handle's tooltip is therefore owned by
-  `UIParent` and follows the cursor (`modules/Anchors.lua`, `showTooltip`).
+  `UIParent` and anchored to `UIParent` beside the strip (`modules/Anchors_Tooltip.lua`), or follows
+  the cursor where the strip's rect reads secret.
 - **Anchors stay out of the client's layout cache.** An anchor is movable (a handle drag moves it
   with `StartMoving`), and the client saves a movable frame's position and restores it at login.
   `Container.New` calls `SetDontSavePosition(true)`, so the stored `container.position` is the only
   position an anchor ever has.
-- **The drag handle sits outside the anchor and never re-anchors anything.** It is our own strip,
+- **The drag handle sits outside the anchor and re-anchors nothing while it shows.** It is our own strip,
   placed against the anchor on the side the auras do not grow into; the anchor, the engine and the
   preview stay where they are. While it shows, the anchor's clamp rect is widened over it
   (`SetClampRectInsets`). Placing the strip and widening the clamp both happen only out of combat,
   because the anchor parents an aura engine: under lockdown the handle keeps its last placement and
   only shows or hides, except that a handle never placed (first shown in combat) is placed once so
-  it draws. The next visibility pass after combat catches both up.
+  it draws. The next visibility pass after combat catches both up. A drag of a container attached to
+  another is the one time its anchor is re-hung: `Snap.BeginDrag` (`modules/Anchors_Snap.lua`, issue
+  #22) hangs it from `UIParent` before it moves, out of combat only, so the move never starts from
+  the parent's geometry, which may read secret.
 - **The engine is anchored before its first `AddAuraGroup`**; after that an addon can no longer
   anchor it (`modules/Container.lua:399-402`).
 - **No structural work while auras are secret or under combat lockdown.** `ContainerManager.MustDefer`

@@ -15,12 +15,12 @@ engine does the reading, filtering, sorting, layout and timer animation in its o
 
 ```
  1  a control, /am set, a Defaults button or a drag handle
-        │  NS.SetByPath(path, value[, containerId])            settings/Schema.lua:893
+        │  NS.SetByPath(path, value[, containerId])            settings/Schema.lua:894
         │    write → row.onChange → [Set] debug line → CONFIG_CHANGED { section, containerId, path }
         │    (a session row stops after the debug line: it sends nothing)
         │    (inside a bulk copy or reset the [Set] line is muted and tallied: one line per act)
         ▼
- 2  ContainerManager (CONFIG_CHANGED listener)                 modules/ContainerManager.lua:865
+ 2  ContainerManager (CONFIG_CHANGED listener)                 modules/ContainerManager.lua:866
         │  first FontPrimer.PrimeAll: a font no container drew in yet is drawn on a shown frame
         │  the row's effect:  "visibility" → ApplyVisibility now    "none" → nothing
         │  otherwise RequestApply(containerId)   nil = every container
@@ -228,10 +228,13 @@ width, so `stripOverhang` is 0. Only an element too narrow for both reserves and
 keeps the natural width, `ApplyWidth(element)`, and runs past it. Nothing on screen
 marks the point where a container attached to another joins it (batch 11 G6 removed batch 9's join
 pin); the strip's tooltip names the parent's point and the parent (`Anchors.JoinText`). While the
-container is attached to another container or a named frame, which it follows and cannot be dragged
-away from, its strip name is a warm gray (`C.ATTACHED_NAME_COLOR`) and the tooltip's first line says
-so instead of "Drag to move": "Anchored to '*parent or frame*', so it cannot be dragged" (the owner,
-2026-09-26). The strip's close mark (X) writes `container.enabled = false` through
+container is attached to another container or a named frame, its strip name is a warm gray
+(`C.ATTACHED_NAME_COLOR`, the owner, 2026-09-26): attached, not undraggable. The tooltip's first line
+says how to use the strip (`tooltipSpec`, issue #22): on the screen, "Drag to move. Drop it on another
+container to attach it there; hold Shift to place it without attaching."; attached to another
+container, "Attached to '*parent*'. Drag it away and let go once the marks turn red to detach it; let
+go sooner and it snaps back. ..."; attached to a named frame, which a drag cannot move, "Anchored to '*frame*', so it cannot
+be dragged", or, before a frame name is set, "Set to a named frame, so it cannot be dragged". A drag and its drop are in *Drag to attach* below. The strip's close mark (X) writes `container.enabled = false` through
 `NS.SetByPath`, the same write as the Enabled checkbox, so the next visibility pass hides it.
 
 ## Preview
@@ -449,7 +452,7 @@ player's forget is announced like a setting change.
 
 ## Where a container sits
 
-`Anchors.Place` (`modules/Anchors.lua:299`) sizes the anchor to one element and attaches it: to
+`Anchors.Place` (`modules/Anchors.lua:306`) sizes the anchor to one element and attaches it: to
 another container's engine frame (or its anchor, before the engine exists; or, while that container
 previews, its preview extent, because the disabled engine keeps a stale rect; or, while it is unlocked,
 not previewing and predicted empty, its one-element anchor, because an engine holding no aura is a
@@ -462,8 +465,10 @@ loading makes it a target); else to the screen at `container.position`. A pendin
 is skipped under combat lockdown, so `PLAYER_REGEN_ENABLED` runs it again once combat ends. A
 container set to a container or a frame that lands on the screen instead writes one `[Anchor]` debug
 line, and so does a skipped resolve. Positions are stored, never read back off an engine frame, whose
-geometry can be secret; the only position read is the anchor's own after a drag, saved through the
-write seam against that container's id. The client never saves an anchor's position itself
+geometry can be secret; the only positions read are a dragged anchor's own (at the start, to lift an
+attached one onto UIParent, and after the drop, saved through the write seam against that
+container's id) and, while a drag is live, the rects the snap aims at, every number through
+`NS.Secrets.NumberOr` (*Drag to attach* below). The client never saves an anchor's position itself
 (`SetDontSavePosition`), so a login cannot restore one over the stored position.
 
 Attached to another container, the child joins it by two absolute points, `attach.childPoint` (its
@@ -472,7 +477,12 @@ own) and `attach.relPoint` (the parent's), each Automatic while unset (`Anchors.
 vertical growth side, lined up with a Text child's justify, centered for an icons or bars child under
 a Text parent justified Center, else on the side the parent's lines start from. The pair in effect is
 classified against batch 9's nine sides under the chain's growth (`Anchors.AttachEdge`, G5); a free
-pair, one of none of them, is placed at its X/Y alone, with no seam, no spread and no push.
+pair, one of none of them, is placed at its X/Y alone, with no seam, no spread and no push, except
+the three outside pairs on the parent's before side (the child's point mirroring the parent's across
+the side its lines start from, as a drop above a parent growing down picks): those are moved out past
+the parent's strip while it shows and its name label while that shows, in the parent's scale, so the
+child never covers them (`beforeRoom`, DD-10), and `Anchors.PlaceAttached` re-places them when either
+shows or hides.
 Along the chain the gap across the seam is the child's own gap between consecutive elements in the
 direction the chain stacks, its Spacing or, when it fills rows, its Line spacing (`Anchors.SeamOffset`,
 SS-1); on a side it is the child's gap across (AP-2); the stored `attach.x` / `.y` add on top as a
@@ -517,3 +527,108 @@ One element's size is `Style.ElementSize`. On a Text container with Size to fit 
 `Style.Text.AutoSize` measures the widest line over the placeholders, the sample and the worst-case
 durations with the container's font, icon, gap and bounce, clamps the width, memoizes it per style
 signature and falls back to the stored size when nothing can be measured (AS-2).
+
+### Drag to attach
+
+While unlocked, a screen container or one attached to another drags by its strip (issue #22,
+`modules/Anchors_Snap.lua`); one on a named frame does not, and no drag starts in combat. The widget
+asks `beginDrag` (its `canDrag`) immediately before `StartMoving`, so on a yes `Snap.BeginDrag` can
+first hang an attached anchor from UIParent: where its left and bottom edges read, at them, so it does
+not move; where they read secret (it hangs from an engine holding auras), centered under the cursor.
+It sets `dragging`, which makes `Anchors.Place` leave the anchor where the drag has it, and starts
+the driver: one frame whose OnUpdate is armed only while a drag is live and runs `Snap.Tick` at most
+every 0.03 s. Once combat has started a tick shows nothing; otherwise `classify` works out what a
+release now would do (below), and while Shift is not held `Snap.Find` measures, for every eligible container (enabled, its anchor shown, not the dragged one, not
+one that follows it: `Anchors.WouldCycle`), the twelve outside pairs (each of its sides' start,
+middle and end point joined to the dragged one's point mirrored across that side, absolute and
+independent of growth; the three on its before side place as a free pair), side first and then by
+alignment (the addendum's A7, `Snap.Nearest`): each side is eligible when the gap between the dragged
+container's facing edge and it is at most `C.SNAP_RADIUS` (24 UIParent units) either way and their
+spans along it overlap, with the target's widened by the radius; the side's pair is the start, middle
+or end one by which third of that side the dragged container's center is over; a side the dragged
+container spans alongside (their spans along it overlap, unwidened) beats one it is only off the
+corner of, and then the pair whose two join points are nearest wins, the shortest line (A12: off a
+wide parent's corner the nearer gap could name a pair a whole width apart), ties to the lower id and
+then the table's order. The gap stays the answer's `dist`, what the leeway compares. Both containers are measured on their drag-handle
+strips while each shows and reads (A10, `Snap.Footprint`); where a strip is hidden or does not read,
+on A8's footprint: the block (the dragged one's anchor; the target's rect a follower would hang from,
+`Anchors.HangFrame`, an engine that reads secret falling back to its anchor) with its name label taken
+in while that shows and reads. The target's strip has each edge on a side the target grows toward (its
+flow growth: the bottom growing down, the top growing up, the right growing right, the left growing
+left) taken out to its block's far edge, when that block reads (A11, `Snap.ParentRect`), since a child
+joined there lands past the block; its before-side edges stay the strip's. The rect readers live in
+`modules/Anchors_SnapRect.lua`. The pick is marked by a green highlight (the addendum's A5, as A6 amends it):
+the target's drag-handle strip has its OWN 1 px gold edge repainted 2 px in the mark's color, through
+the painter that drew it (`Style.DrawEdge` on the strip, the same four textures; no frame of ours is
+anchored to a strip, since A5's overlay hung on it never showed in game), and the widget's gold
+(`Anchors.STRIP_EDGE`) painted back the moment the mark moves to another strip or hides, on every way a
+drag ends, and from `ContainerClass:Destroy` (`Snap.ReleaseStrip`) when the strip's container is
+destroyed mid-drag, so a dormant instance never comes back green; with a 10 px dot on the target's join point, one on the dragged
+container's and a 2 px line between them, all in one color, the dots on the two rects (the target's
+reaching its block on its growth sides). A target
+with no visible strip (LibKa0s-Widgets absent, or its strip hidden) gets a box over its block (and name label) instead (`Snap.box`), so a mark
+is never lost. The dots, the line and the box hang from UIParent, never from the target. A container attached to another has a
+leeway (the owner-feedback addendum's A4): a pair found that way wins only when its gap is strictly
+under the leeway's measure of the container's CURRENT pair (its stored pair in effect, `Anchors.AttachPoints`,
+measured from its own point now to its parent's point now, on its own strip and the parent's strip
+reaching its block on its growth sides (A11), or where a strip does not show or read the parent's
+block on `Anchors.HangFrame` with no fallback to the anchor, which is also the only block the parent's
+growth sides reach): the nearer of that distance and how far it has moved since the drag began. Those
+two points rest a seam, a nudge or a strip apart, so the distance alone let any neighbor's strip in snap range take a container
+picked up and let go where it sits; the measure is 0 there (DD-15R). Nor does the pair the pick gave where the
+container rested when the drag began win while the container is still there, within 2 UIParent units
+(`REST_SLACK`; a child as wide as its parent rests centered, so that pick is its middle pair, whatever
+pair it is stored by), so a container picked up and let go where it sits keeps its pair; moved further,
+that pick competes like any other pair, so a child wider than its parent, whose rest pick is the end
+pair, can still be dropped onto it. The current parent is measured, for the pick, on the same rect its
+current pair is (`findFrom`): where its engine reads secret and its strip reads, that is its strip
+alone, never the strip out to the one-element fallback the snap takes for any other target, so a
+child of a parent holding auras can still be moved to another of its sides, and a nudge under it
+re-pairs nothing (DD-16R); never a pair of the current parent where no rect of it reads but that
+fallback, nor, where the child's rest did not read before the lift (it hung from that secret engine,
+so the lift moved it by the grab's offset), before the cursor has moved past `C.SNAP_RADIUS`. When the pick IS the current pair (measured), the container holds whatever the
+leeway below says: A7 makes that pair the pick anywhere over its third of the parent's side, so a child
+flush under a long parent can be in snap range of its own pair far past `C.DETACH_RADIUS` from that
+pair's two points, and it must not turn red there. Otherwise,
+while that pair's two points are at most `C.DETACH_RADIUS` (128 UIParent units, A9) from where they were
+when the drag began (read before the lift, where its settings put it: the seam gap, its strip and
+label room and its X/Y nudge already between them), or from each other, the mark stays green on the current pair (a *hold*); beyond it,
+the repainted strip (or the box), both dots and the line all turn red (`C.DETACH_COLOR`, a *detach*). Shift suppresses only
+the other pair. When the parent does not read (hidden, or its hang frame secret, as an engine holding
+auras is), the hold lasts while the cursor has moved less than `C.DETACH_RADIUS` from where the drag
+began, and the dots and the line, having no parent rect to sit on, collapse onto the dot on the dragged
+container's join point, green and then red, with the parent's strip still repainted when it shows one,
+else a dot-sized box on that dot (a hold or a detach is always drawn on the rect the leeway measured,
+never on the one-element fallback); a parent with no live instance gives no hold at all. A screen container has neither. A strip hidden mid-drag (`/am lock`, a
+stand-down or a disable run while the button is held) is sent no OnDragStop, so the tick itself
+cancels that drag once out of combat: the anchor stops moving, `dragging` is cleared and the
+container is placed back from its settings, with nothing written. `ContainerClass:Destroy` ends a
+drag still live on the instance it tears down.
+
+`Snap.Drop`, the strip's OnDragStop, reads combat and runs `classify` again at the drop (never the
+last tick's answer) and writes through the seam against this container's id, never the panel's
+selection:
+
+1. **Combat started mid-drag:** nothing attaches. A screen container stores its position as before; an
+   attached one writes nothing and is held: `Snap.PlaceHeld`, at `PLAYER_REGEN_ENABLED`, puts it back
+   on its parent, even while auras stay secret and ContainerManager still holds applies.
+2. **A candidate and no Shift** (for an attached container, one nearer than its current pair): the whole `container.attach` section (mode container, the target,
+   the picked side's two points, both nil when the side is Automatic's and both absolute otherwise,
+   `Snap.FoldPoints`, and X/Y 0; the frame mode's keys kept) goes to `NS.AttachByDrop`
+   (`settings/Layout.lua`). It writes it, or,
+   when the chain the drop joins flows differently, shows the `AURAMASTER_ATTACH_FLOW` popup (GC-1)
+   carrying the section, whose Accept writes it and whose Cancel leaves everything as it was. Either
+   way the container is placed at once from its settings as they then are (`Anchors.Place`): on its
+   new parent, or back where it was until the popup is answered. It never waits for the apply, which
+   ContainerManager holds while auras are secret, as between pulls in a key.
+3. **A hold** (an attached container within the leeway): nothing is written; the container is placed
+   back on its parent from its settings (`Anchors.Place`).
+4. **Otherwise:** an attached container detaches. `Anchors.SavePosition` stores the drop position,
+   then the section is written with mode screen and X/Y 0, the target and points kept. A position that
+   reads secret is not stored, and the container goes back to its parent instead. A screen container
+   stores its position, as it always did.
+
+A whole-section write of `container.attach` sends one `CONFIG_CHANGED` whose path re-applies the
+container's followers and the container it names (`docs/schema.md`), as a write to its mode, target or
+points does. Each outcome writes an `[Anchor]` line: `drop: attach to <id> <side>`, `drop: held
+(leeway)`, `drop: detach`, `drop: moved` or `drop: held (combat)`.

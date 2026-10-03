@@ -588,14 +588,14 @@ Strata `container.layout.strata`, Frame level `container.layout.level` (1–100)
 
 | Row | Path | Type | Behavior |
 |---|---|---|---|
-| Attach to | `container.attach.mode` | string | Screen / Another container / Named frame; structural. Switching to Another container with a target already stored asks first when that target's chain flows differently (GC-1, below) |
+| Attach to | `container.attach.mode` | string | Screen / Another container / Named frame; structural. Switching to Another container with a target already stored asks first when that target's chain flows differently (GC-1, below). While unlocked, a drag's drop writes the whole `container.attach` section (issue #22, `docs/data-flow.md` → *Drag to attach*): dropped near another container it attaches there, asking first the same way, and an attached one dropped away from every container goes back to Screen at the drop |
 | *Screen:* Point / Relative point | `container.position.point` / `.relativePoint` | string | The corner of the container's **first aura** placed on the screen / the screen corner it is measured from; set by dragging |
 | *Screen:* X / Y | `container.position.x` / `.y` | number −2000–2000 | |
 | *Another container:* Parent container | `container.attach.container` | number (dropdown) | Labeled "Parent container" (the owner, 2026-09-26; the banner picker keeps "Container"). None, then every other container by name (B2-2); a choice that would loop is refused; one whose chain flows differently asks first (GC-1, below); structural, and it re-applies the container it left. Beside it (`pairWith`) a read-only line, "Its *point* joins the *relative point* of '*target*'", names the two points in effect, picked or Automatic (`Anchors.AttachPoints`, batch 11 G2) |
 | *Another container:* Parent container anchor point / This container anchor point | `container.attach.relPoint` / `.childPoint` | string (dropdown) | Batch 11 G1, in place of batch 9's Side row. Each offers "Automatic (*the point Automatic gives*)" first, then the nine points; the entry names Automatic's own point (`Anchors.AutoPoints`) even while the row holds a pick, so it says what choosing it would do; Automatic stores nothing (`nilAs = "auto"`, docs/schema.md), a point stores its token, and one picked point leaves the other Automatic. Any pair is stored, with no validate refusal and no fallback note. Structural (the attachment line and the other row's Automatic entry redraw); the write re-places the container, its parent and its followers. `/am set` takes the nine names in any case or `auto`; `container.attach.edge` is not a path |
 | *Named frame:* Frame name | `container.attach.frame` | string, edit box | A global frame name; **Pick a frame…** beside it |
 | *Named frame:* Named frame anchor point / This container anchor point | `container.attach.relativePoint` / `.point` | string | The corner of the frame, on the left / the corner of the container's **first aura** that is attached, on the right: the same order and names as Another container's two rows (the owner, 2026-09-26); This container anchor point is structural (it redraws the facing-growth hint) |
-| *Offset:* X offset / Y offset | `container.attach.x` / `.y` | number −500–500 | Used by both attached modes: from the named frame's point, or as a nudge on top of the seam gap (SS-2) |
+| *Offset:* X offset / Y offset | `container.attach.x` / `.y` | number −500–500 | Used by both attached modes: from the named frame's point, or as a nudge on top of the seam gap (SS-2). A drag's drop, attaching or detaching, sets both to 0 |
 
 Each subsection's rows carry a `shownWhen` switch on **Attach to** (LibKa0s-Options-1.0 W22,
 feedback #4), so only the subsections the mode reads are drawn, each heading with its rows: in
@@ -635,7 +635,8 @@ vertically), nothing is written: the rows' `confirmWrite` hands the write to the
 on the stored value. The popup reads "Attach '*child*' to '*target*'? '*child*' will fill and grow
 like '*root*' (*the changed settings*). Its own Growth settings are kept and come back if you detach
 it.", plus " *n* container(s) attached to it follow too." when others follow it. **Attach** writes
-through the seam, whose validate checks the loop again; in combat it is refused with a gray line.
+through the seam, whose validate checks the loop again; in combat, or once its target has been
+deleted while the popup was up, it is refused with a gray line.
 **Cancel** writes nothing. It asks on the Parent container row in container mode, and on Attach to when
 switching to Another container with a target already stored; a matching flow, None and every other
 write attach at once. `/am set` and the resets never ask: an attachment they make that changes the
@@ -657,7 +658,8 @@ in effect (`Anchors.AttachPoints`, batch 11 G2): each picked, or Automatic, the 
 default pair (G3), which for a bars child under a bars parent is the `after-start` pair
 (`Anchors.EdgePoints(L, "after-start")`): the child stacks below its parent (above, when growing up), on the side the
 parent's lines start from, whether the parent fills rows or columns (IA-1). A pair that is none of
-batch 9's nine sides is free: placed at X/Y alone, with no seam (G5). `container.attach.point` / `.relativePoint` are read only in `frame`
+batch 9's nine sides is free: placed at X/Y alone, with no seam (G5), moved out past the parent's strip
+and label only when it sits flush outside the parent's before side (DD-10). `container.attach.point` / `.relativePoint` are read only in `frame`
 mode. The gap across the seam is the child's own gap between consecutive elements in the direction
 the chain stacks: its Spacing when it fills columns, its Line spacing when it fills rows
 (`Anchors.SeamOffset`, SS-1), upward when the chain grows up; on a Right or Left side it is the

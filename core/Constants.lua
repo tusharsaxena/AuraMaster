@@ -155,6 +155,24 @@ C.ATTACH_EDGES = {
     "behind-start", "behind-center", "behind-end",
 }
 
+-- Drag to attach (issue #22, D2, D3, A2): a container dropped with its own point of one of the twelve
+-- outside pairs within this many UIParent units of the matching point on another one snaps on there.
+-- Distances are read in UIParent units (modules/Anchors_Snap.lua), so the radius feels the same
+-- under any container or UI scale. The highlight that marks the candidate while it is in range is
+-- drawn in this green, opaque, so it reads over any bar or icon color.
+C.SNAP_RADIUS = 24
+C.SNAP_COLOR = { r = 0.25, g = 0.90, b = 0.35, a = 1 }
+
+-- The detach leeway (issue #22, the owner-feedback addendum's A4): while a container attached to another
+-- is dragged, it holds (green on its current pair, and a release snaps it back, writing nothing) while
+-- its own point of that pair is at most this many UIParent units from where it rested, or from its
+-- parent's, both measured on the two containers' strips (A10); past it, the whole mark (the
+-- parent's strip edge, both dots and the line) turns this red and a release detaches it. Wider than
+-- C.SNAP_RADIUS, so a grab that barely moves never detaches by accident; 128 since the second smoke
+-- round (A9: the first 64 was "way too little").
+C.DETACH_RADIUS = 128
+C.DETACH_COLOR = { r = 0.95, g = 0.25, b = 0.25, a = 1 }
+
 -- Growth.
 C.AXES = { "horizontal", "vertical" }
 C.AXIS_LABELS = { horizontal = "Rows (fill left to right first)", vertical = "Columns (fill top to bottom first)" }
@@ -205,8 +223,9 @@ C.TEST_TAG_COLOR = "ffff8000"
 -- with. The Growth tab's inherited note reads in it. The AARRGGBB body of a "|c" escape.
 C.SECONDARY_GOLD = "ffd9b861"
 -- The strip name of a container attached to another container or a named frame: a warm gray, the
--- strip's gold with the color drained out, so at a glance it reads as not draggable on its own (the
--- owner, 2026-09-26; the dim SECONDARY_GOLD of the first cut was not muted enough).
+-- strip's gold with the color drained out, so at a glance it reads as attached (the owner,
+-- 2026-09-26; the dim SECONDARY_GOLD of the first cut was not muted enough). It once meant "cannot
+-- be dragged"; since issue #22 a container-attached one drags too, so it means attached alone.
 C.ATTACHED_NAME_COLOR = "ff8c8a84"
 
 -- Time text. Each is a SecondsFormatter setup; "blizzard" copies the engine's own, rounding up.

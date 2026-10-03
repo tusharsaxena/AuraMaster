@@ -327,14 +327,34 @@ local function engineLead(rel, pcfg, cfg)
     return fx * lead * GROW_SIGN[growH], fy * lead * GROW_SIGN[growV]
 end
 
+-- The vertical part a before-side child's point mirrors: TOP for BOTTOM and back.
+local V_MIRROR = { TOP = "BOTTOM", BOTTOM = "TOP" }
+
+--- The y offset that moves a FREE pair on the parent's before side (DD-10) out past the parent's own
+--- furniture there: the three outside pairs of issue #22's drop on the side the parent's lines start
+--- from (GROW_START[growV]), the child's point mirroring the relative point across it, so the child
+--- sits outside that side, where the parent's strip and name label are (Anchors.StripPoints: out past
+--- V0). Its strip row while it shows and its label row while that shows (AA.furnitureRoom of the
+--- parent `target`), converted from the parent's scale to the child's, away from the block; 0 for
+--- any other pair, or with no live parent. As an after follower's seam makes room for its OWN
+--- furniture (seamRoom), so a drop above a parent growing down never covers its name.
+--- @return number
+local function beforeRoom(point, rel, growV, target, pcfg, cfg)
+    local v = POINT_V[rel]
+    if not (target and pcfg) or v ~= GROW_START[growV] then return 0 end
+    if POINT_V[point] ~= V_MIRROR[v] or POINT_H[point] ~= POINT_H[rel] then return 0 end
+    return -GROW_SIGN[growV] * AA.furnitureRoom(target) * ownScale(pcfg) / ownScale(cfg)
+end
+
 --- The points and offsets container `cfg` attaches with. Attached to a container: the points in
 --- effect (AttachPoints, G2, G3), the relative one held steady on an empty parent (steadyRelative,
 --- T9), and, hung from the parent's engine (`onEngine`), the engine's lead taken back
 --- (engineLead). A pair that is one of the nine sides (AttachEdge) takes one of its own gaps across the seam
 --- with the stored X/Y on top as a nudge (SS-1, SS-2, AP-2), moved on along the chain by the
---- furniture in the way (seamRoom, batch 10 F2, F4); a free pair is placed at X/Y alone (G5). The
---- classification reads the points in effect, never the steadied one. Attached to a named frame: the
---- stored points and offsets as they are.
+--- furniture in the way (seamRoom, batch 10 F2, F4); a free pair is placed at X/Y alone (G5), but for
+--- one on the parent's before side, which is moved out past the parent's strip and label (beforeRoom).
+--- The classification and beforeRoom read the points in effect, never the steadied one. Attached to a
+--- named frame: the stored points and offsets as they are.
 --- @return string point, string relativePoint, number x, number y
 local function attachSpec(container, cfg, at, mode, target, onEngine)
     local x, y = tonumber(at.x) or 0, tonumber(at.y) or 0
@@ -343,13 +363,15 @@ local function attachSpec(container, cfg, at, mode, target, onEngine)
         local edge = Anchors.AttachEdge(cfg)
         local side = edge and EDGE_PARTS[edge][1]
         local pcfg = target and target:Cfg()
-        local sx, sy = 0, 0
+        local sx, sy, inEffect = 0, 0, rel
         if pcfg then rel, sx, sy = steadyRelative(rel, JOIN_AXIS[side], pcfg, cfg, growH, growV) end
         if pcfg and onEngine then
             local lx, ly = engineLead(rel, pcfg, cfg)
             sx, sy = sx + lx, sy + ly
         end
-        if not edge then return point, rel, x + sx, y + sy end
+        if not edge then
+            return point, rel, x + sx, y + sy + beforeRoom(point, inEffect, growV, target, pcfg, cfg)
+        end
         local L = Anchors.EffectiveLayout(cfg) or {}
         local gx, gy = Anchors.SeamOffset(L, side)
         gy = alongGrowth(L, gy, seamRoom(container, cfg, side, target))
@@ -361,3 +383,7 @@ end
 AA.EDGE_PARTS = EDGE_PARTS
 AA.ownScale = ownScale
 AA.Spec = attachSpec
+-- For modules/Anchors_Snap.lua (issue #22): the pair each token gives under each growth, and the
+-- growth a container flows by, so a drop picks its side from the same table a Place reads.
+AA.EDGE_PAIRS = EDGE_PAIRS
+AA.FlowGrowth = flowGrowth

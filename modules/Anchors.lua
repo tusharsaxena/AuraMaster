@@ -9,7 +9,7 @@ local _, NS = ...
 -- to UIParent and carries nothing secret.
 --
 -- A container attaches to one of three things (container.attach.mode):
---   screen     UIParent, at container.position — the only mode a drag can change;
+--   screen     UIParent, at container.position, where a drag stores its drop;
 --   container  another container's ENGINE frame, so it follows that container as it grows. The
 --              anchor inherits DisableUntrustedLayoutScriptsTemplate, Blizzard's opt-in for a frame
 --              that anchors to an aura container (whose layout scripts are forbidden to addons).
@@ -136,16 +136,22 @@ function Anchors.HangMode(t)
     return t.hangMode or (t.previewShown and "preview") or "engine"
 end
 
+--- The frame a container attached to live container `t` hangs from, in its hang mode
+--- (Anchors.HangMode): its preview extent while previewing, its anchor in the slot mode, else its
+--- engine (its anchor when it has none). Published for the snap (modules/Anchors_Snap.lua, issue
+--- #22), whose target rect has to be the very frame a drop would hang the container from.
+function Anchors.HangFrame(t)
+    local mode = Anchors.HangMode(t)
+    if mode == "preview" and t.previewExtent then return t.previewExtent end
+    if mode == "slot" then return t.anchor end
+    return t.engine or t.anchor
+end
+
 --- The frame to hang from, the mode that names it and, for a container target, the live container.
 local function targetFor(container, at)
     if at.mode == "container" then
         local target = targetContainer(container, at)
-        if target then
-            local mode = Anchors.HangMode(target)
-            if mode == "preview" and target.previewExtent then return target.previewExtent, "container", target end
-            if mode == "slot" then return target.anchor, "container", target end
-            return target.engine or target.anchor, "container", target
-        end
+        if target then return Anchors.HangFrame(target), "container", target end
     elseif at.mode == "frame" then
         local f = Anchors.ResolveFrame(at.frame)
         if f then return f, "frame" end
@@ -173,6 +179,7 @@ local FLOW_KEYS = { "axis", "growH", "growV" }
 -- container following the one written (Anchors.Followers; modules/ContainerManager.lua).
 local FLOW_PATHS = {
     ["container.layout"] = true,
+    ["container.attach"] = true,   -- the whole section: a drop's attach or detach (issue #22)
     ["container.layout.axis"] = true,
     ["container.layout.growH"] = true,
     ["container.layout.growV"] = true,
@@ -297,6 +304,10 @@ end
 --- differs from the setting when a target could not be used.
 --- @return string  "screen" | "container" | "frame"
 function Anchors.Place(container)
+    -- HOLDING THE DRAG STEADY (issue #22): while a player drags it (beginDrag set `dragging`, the
+    -- drop clears it) its points stay as the drag left them, so a visibility pass, a parent's hang
+    -- mode change (PlaceAttached) or an apply cannot yank the anchor back to its parent mid-drag.
+    if container.dragging then return container.placedAs or "screen" end
     local cfg = container:Cfg()
     local anchor = container.anchor
     if not (cfg and anchor) then return "screen" end
@@ -342,17 +353,18 @@ end
 
 --- Re-place every container attached to `target` once what they hang from has changed since they
 --- were last placed: its hang mode (Anchors.HangMode; test mode, lock, unlock and the empty
---- prediction: L-4, HG-1) or the room its strip and label take over a side follower's column
---- (sideRoom, batch 10 F4). Called on every visibility pass
+--- prediction: L-4, HG-1), the room its strip and label take over a side follower's column
+--- (sideRoom, batch 10 F4) or on its before side, which a before-side follower clears (furnitureRoom,
+--- Anchors_Attach.lua's beforeRoom, DD-10). Called on every visibility pass
 --- (ContainerClass:ApplyVisibility), so a pass that changes nothing re-places nothing. Layout work
 --- beside an aura engine, so never under lockdown: the last placement stands, unrecorded, and the
 --- first pass after combat catches up.
 function Anchors.PlaceAttached(target)
-    local mode, room = Anchors.HangMode(target), sideRoom(target)
-    if (target.attachedPlacedFor == mode and target.attachedPlacedRoom == room) or InCombatLockdown() then
-        return
-    end
-    target.attachedPlacedFor, target.attachedPlacedRoom = mode, room
+    local mode, room, own = Anchors.HangMode(target), sideRoom(target), furnitureRoom(target)
+    local same = target.attachedPlacedFor == mode and target.attachedPlacedRoom == room
+        and target.attachedPlacedOwn == own
+    if same or InCombatLockdown() then return end
+    target.attachedPlacedFor, target.attachedPlacedRoom, target.attachedPlacedOwn = mode, room, own
     local CM = NS.ContainerManager
     if not CM then return end
     for _, inst in pairs(CM.instances) do
@@ -413,6 +425,9 @@ local function round(v) return math.floor((tonumber(v) or 0) * 10 + 0.5) / 10 en
 --- After a drag: read the anchor's point back (it is attached to UIParent and holds nothing secret)
 --- and store it through the single write seam, on THIS container rather than the settings panel's
 --- active one. One whole-section write: the position lands whole or not at all, announced once.
+--- Answers whether it was stored: a drop's detach (modules/Anchors_Snap.lua) goes on to the screen
+--- mode only when it was, or the container would land at a stale position.
+--- @return boolean|nil
 function Anchors.SavePosition(container)
     local anchor = container.anchor
     if not (anchor and anchor.GetPoint) then return end
@@ -426,7 +441,7 @@ function Anchors.SavePosition(container)
         return
     end
     if not point then return end
-    NS.SetByPath("container.position",
+    return NS.SetByPath("container.position",
         { point = point, relativePoint = relPoint or point, x = round(x), y = round(y) }, container.id)
 end
 
@@ -440,7 +455,7 @@ end
 -- the anchor is exactly one element in size and the first element sits on it: a handle covering the
 -- anchor covered the first bar or icon. Nothing moves to make room for it — the anchor, the engine
 -- (which may never be re-anchored once it holds groups) and the preview stay where they are.
--- The strip is LibKa0s-Widgets-1.0's (libs/LibKa0s/WidgetsDragHandle.lua, minor 3): the fill, the
+-- The strip is LibKa0s-Widgets-1.0's (libs/LibKa0s/WidgetsDragHandle.lua, minor 4): the fill, the
 -- edge, the label, the help and close marks with their own art fallbacks, the tooltips, the drag
 -- scripts and the width arithmetic are the library's; what the X DOES (disableContainer) is ours. ConsumableMaster drew the same strip
 -- over its macro bar, which is why the widget exists. Resolved at file load like every other library
@@ -448,6 +463,8 @@ end
 -- Anchors.UpdateHandle and Container:Park already tolerate.
 local KW   = LibStub and LibStub("LibKa0s-Widgets-1.0", true)
 local DRAG = KW and KW.DRAG_HANDLE
+-- Where the strip's tooltip sits (modules/Anchors_Tooltip.lua, loaded first): beside the strip.
+local placeTooltip = NS.AnchorsTooltip.Place
 
 -- The strip's height, the gap it leaves and what it keeps clear each side of its label are the
 -- widget's numbers (`lib.DRAG_HANDLE`), read through DRAG rather than copied back here: a copy is a
@@ -460,6 +477,14 @@ local HANDLE_LEVEL = 50   -- how far above its anchor the strip sits: over every
 -- own figures stand in when it is missing.
 local STRIP_H   = DRAG and DRAG.HEIGHT or 18
 local STRIP_GAP = DRAG and DRAG.GAP or 2
+
+-- The strip's own edge as the widget paints it once, at build (LibKa0s-Widgets' dhBuildChrome calls
+-- the painter we hand it, `edge = NS.Style.DrawEdge` in BuildHandle, as edge(handle, 1, 1, 0.82, 0,
+-- 0.6)): 1px of gold at 0.6 alpha. The widget publishes no figure for it, so it is named here, once,
+-- for the one other painter of that edge: the drag's mark (modules/Anchors_Snap.lua), which repaints
+-- the target's strip in its own color and must give back exactly this when it leaves (the
+-- owner-feedback addendum's A6). Read-only; a change in the widget's chrome means a change here.
+Anchors.STRIP_EDGE = { size = 1, r = 1, g = 0.82, b = 0, a = 0.6 }
 
 --- Right-click (the strip or its "?"): the Containers page, with THIS container selected in its band
 --- (feedback #9). Under combat lockdown the open is refused with options-ui-§2's gray line, and the
@@ -495,27 +520,36 @@ end
 --- through the `{ entry, r, g, b }` shape, so it stays the color it is today instead of taking the
 --- body band's white.
 ---
---- OWNED BY UIParent AT THE CURSOR (`tooltipOwner = "cursor"`), never by the hovered frame. The
---- anchor inherits DisableUntrustedLayoutScriptsTemplate (modules/Container.lua), and that
---- restriction reaches every frame anchored under it: the strip and the mark. GameTooltip does not
---- inherit the template, so the client refuses SetOwner on either ("Anchoring disallowed as dependent
---- object would inherit forbidden aspects: UntrustedLayoutScriptExecution"). ANCHOR_CURSOR depends on
---- nothing under the anchor.
+--- PLACED BESIDE THE STRIP (`tooltipPlace`, modules/Anchors_Tooltip.lua), owned by UIParent and
+--- anchored to UIParent alone, never by or to the hovered frame. The anchor inherits
+--- DisableUntrustedLayoutScriptsTemplate (modules/Container.lua), and that restriction reaches every
+--- frame anchored under it: the strip and the marks. GameTooltip does not inherit the template, so the
+--- client refuses SetOwner on either ("Anchoring disallowed as dependent object would inherit
+--- forbidden aspects: UntrustedLayoutScriptExecution"). Where the strip's rect does not read, it is
+--- pinned beside the cursor instead; only where nothing reads does the widget fall back to
+--- `tooltipOwner = "cursor"`: ANCHOR_CURSOR depends on nothing under the anchor.
 local function tooltipSpec(container)
-    -- How to use the strip: drag it, or, attached, why a drag does nothing (canDrag) and what it
-    -- follows, by the parent container's name or the frame's (the owner, 2026-09-26).
+    -- How to use the strip (issue #22): on the screen, drag it, or drop it on another container to
+    -- attach it there; attached to another container, by that parent's name, drag it away until the
+    -- marks turn red to detach it (sooner, it snaps back: the addendum's A4 leeway) or onto another
+    -- to attach it there; Shift places it without attaching either way. Attached
+    -- to a named frame, by the frame's name (or, before one is set, by saying so), why a drag does
+    -- nothing (beginDrag; the owner, 2026-09-26). A container-attached one whose parent is gone reads
+    -- as a screen one: a drop attaches or detaches it all the same.
     local function howTo()
         local cfg = container:Cfg()
         local at = cfg and cfg.attach
-        local target
-        if at and at.mode == "container" then
-            local parent = NS.Database.FindContainer(tonumber(at.container))
-            target = parent and parent.name
-        elseif at and at.mode == "frame" then
-            target = at.frame
+        if at and at.mode == "frame" then
+            if not (at.frame and at.frame ~= "") then
+                return NS.L["Set to a named frame, so it cannot be dragged. Right-click for settings."]
+            end
+            return NS.L["Anchored to '%s', so it cannot be dragged. Right-click for settings."]:format(tostring(at.frame))
         end
-        if not (target and target ~= "") then return NS.L["Drag to move. Right-click for settings."] end
-        return NS.L["Anchored to '%s', so it cannot be dragged. Right-click for settings."]:format(tostring(target))
+        local parent = at and at.mode == "container" and NS.Database.FindContainer(tonumber(at.container))
+        if parent and parent.name and parent.name ~= "" then
+            return NS.L["Attached to '%s'. Drag it away and let go once the marks turn red to detach it; let go sooner and it snaps back. Drop it on another container to attach it there; hold Shift to drop it without attaching. Right-click for settings."]:format(tostring(parent.name))
+        end
+        return NS.L["Drag to move. Drop it on another container to attach it there; hold Shift to place it without attaching. Right-click for settings."]
     end
     local function attached()
         local cfg = container:Cfg()
@@ -551,8 +585,8 @@ local function disableContainer(container)
 end
 
 --- The close mark's own tooltip: the container's name (a function, read on every hover, so a rename
---- shows through) and what the click does. Cursor-owned like the strip's, through the same
---- `tooltipOwner` (see tooltipSpec).
+--- shows through) and what the click does. Placed beside the strip like the strip's, through the
+--- same `tooltipPlace` and `tooltipOwner` (see tooltipSpec).
 local function closeTooltipSpec(container)
     return {
         title = function()
@@ -565,17 +599,25 @@ local function closeTooltipSpec(container)
     }
 end
 
---- Asked by the widget at every OnDragStart. Only a screen-attached container moves by dragging; an
---- attached one follows its target, and its offsets are set in the Layout section. Never mid-combat:
---- the anchor parents an aura engine.
-local function canDrag(container)
+--- The widget's canDrag, asked at every OnDragStart immediately before it calls StartMoving
+--- (libs/LibKa0s/WidgetsDragHandle.lua, dhSetDragScripts), so it both answers the gate and, on a yes,
+--- begins the drag (issue #22, D9). A screen container drags as it always has; a container-attached
+--- one drags too, to be dropped onto another container or away from its parent
+--- (modules/Anchors_Snap.lua: Snap.BeginDrag lifts its anchor onto UIParent first, so the move never
+--- starts from its parent's geometry). A frame-attached one does not: it follows its frame, and its
+--- offsets are set in the Layout section. Never mid-combat: the anchor parents an aura engine.
+local function beginDrag(container)
     local cfg = container:Cfg()
-    return (cfg and cfg.attach and cfg.attach.mode == "screen" and not InCombatLockdown()) and true or false
+    local mode = cfg and cfg.attach and cfg.attach.mode
+    if not (mode == "screen" or mode == "container") or InCombatLockdown() then return false end
+    Anchors.Snap.BeginDrag(container)
+    return true
 end
 
 --- The handle's label, in its three parts: the container's name, a warm gray
 --- (C.ATTACHED_NAME_COLOR) while it is attached to another container or a named frame, the sign that
---- it follows that and cannot be dragged on its own (canDrag; the owner, 2026-09-26); and while test
+--- it is attached and follows that (the owner, 2026-09-26; since issue #22 a container-attached one
+--- drags too, so the gray says "attached", not "cannot be dragged"); and while test
 --- mode is on an orange TEST tag after it (feedback #8), so the placeholders on screen read as
 --- placeholders. Apart, so a strip too narrow for the whole shortens the name alone (stripLabel).
 --- @return string open, string name, string close, string tag  open and close wrap the name's color
@@ -626,10 +668,11 @@ function Anchors.BuildHandle(container)
         closeIcon    = NS.Icon and NS.Icon("close") or nil,
         onClose      = function() disableContainer(container) end,
         closeTooltip = closeTooltipSpec(container),
-        canDrag      = function() return canDrag(container) end,
-        onDragStop   = function() Anchors.SavePosition(container) end,
+        canDrag      = function() return beginDrag(container) end,
+        onDragStop   = function() Anchors.Snap.Drop(container) end,
         onRightClick = function() openSettings(container) end,
         tooltip      = tooltipSpec(container),
+        tooltipPlace = placeTooltip,
         tooltipOwner = "cursor",
         edge         = NS.Style.DrawEdge,
         number       = NS.Secrets.NumberOr,

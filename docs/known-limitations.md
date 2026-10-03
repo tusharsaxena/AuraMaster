@@ -196,6 +196,79 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   matching reserve on the other side, so the label stays centered, and a shown name label pushes the
   strip further out by the label's height plus the gap (D6); both count in the clamp, so the push
   grows with them.
+- **A container attached to a named frame cannot be dragged** (issue #22, out of scope). It follows
+  its frame; move it with the X/Y offsets on Layout > Anchor, or set Attach to back to Screen. A
+  screen container and one attached to another container drag, out of combat only; no drag starts in
+  combat, and one under way when combat starts attaches nothing at the drop (an attached one goes back
+  to its parent once combat ends).
+- **An attached container can jump to the cursor when its drag starts** (issue #22). Before it moves,
+  `Snap.BeginDrag` hangs its anchor from UIParent where its left and bottom edges read. Hung from a
+  parent's engine that holds auras, those edges read secret, so the anchor is centered under the
+  cursor instead. The cursor is on the strip, which sits outside the block (past a shown name label,
+  and wider than a narrow element), so the jump is up to the distance from where you grabbed the strip
+  to the anchor's center: on a 16 px bar about 28 px, or 48 px with the label shown, more than the
+  bar's own height. The drop is unaffected: it attaches, or detaches at
+  wherever the anchor was let go. Its rest does not read either, so no other pair, of that parent or of
+  a container beside it, is picked until the cursor has moved more than 24 UIParent units (`C.SNAP_RADIUS`, DD-16R): a let-go
+  right after the jump snaps back on its stored pair rather than re-pairing by the jump's offset. The detach leeway cannot measure such a parent either, so it holds
+  while the cursor has moved less than 128 UIParent units from where the drag began (below).
+- **A container whose engine reads secret, and whose strip does not show or read, is measured by its
+  first element while you drag onto it** (issue #22, addendum A10). The snap measures every container
+  by its one-element drag-handle strip, populated or in test mode alike (next entry but one), and the
+  strip hangs from the container's anchor, which reads where an engine holding auras does not. Only
+  when the strip is hidden or does not read does the snap fall back to `Snap.TargetRect`: the frame a
+  follower would hang from (`Anchors.HangFrame`) or, where that engine reads secret, the container's
+  anchor, one element where its first aura sits, with its name label. The dots and the box then sit
+  on that element, and a drop near the far end of a long populated container finds nothing in range;
+  drop near its start.
+- **A container whose position reads secret cannot be dragged onto** (issue #22, owner report
+  2026-10-03). After a reload, a container attached to another can keep reporting its position as a
+  secret value after its parent has become readable again, until it is itself re-anchored. A drag's
+  start now re-places every such container, parents first (`Snap.RefreshUnread`), out of combat. One
+  whose parent's engine is laying out secret auras right now (in an instance, in combat) still reads
+  nothing, so it is no target and a hold on it shows a lone dot, until that changes.
+- **A container wider than its parent aligns backwards by thirds** (issue #22, addendum A7). The
+  pair a drop picks comes from the dragged container's center over the parent's side cut in thirds,
+  so the pair picked can differ from the flush edge the child rests on. For a child more than about a
+  third wider than its parent the center sits past the parent's middle on the far side of the edge it
+  lines up with: placed by the end pair (right edges flush), its center is over the parent's first
+  third, so letting go there picks the start pair, and placed by the start pair (left edges flush) it
+  picks the end pair. A child up to a third wider than its parent has its center over the middle third
+  either way, and picks the middle pair. Drop it with its center over the third of the pair you want,
+  or set the pair on Layout > Anchor. Picked up and let go where it rests, it keeps its pair either way.
+- **The dots mark the strips, not always the exact join** (issue #22, addenda A8, A10, A11). The
+  side, its third, both dots and the leeway are measured on each container's drag-handle strip (or,
+  where the strip is hidden or does not read, its block with its name label), the parent's strip with
+  each edge on a side it grows toward taken out to its block's far edge (A11: the bottom growing down,
+  the top growing up, the right growing right, the left growing left). The drop attaches by the
+  blocks' points: `Anchors.Place` hangs the child's block on the parent's hang frame and pushes it out
+  past the strips and labels between. So across a growth side the dots sit where the child lands, and
+  a pair along that side's length is a pair of the block's. A strip is one element long and sits on
+  its block's before side (above a block growing down), so elsewhere the child can land off the dots:
+  - **Along a side, at its before-side end, up to a strip off.** For a parent growing down,
+    its left and right sides run from the bottom of its block to the top of its strip, so the dot of
+    a pair on the before-side end (TOPRIGHT, say) sits on the strip's corner, about 20 px (the strip
+    and its gap) above the block's, and the middle pair's half that. The end pair, on the growth side,
+    is the block's. Where the strip reads but the parent's engine reads secret, its block is its first
+    element (the entry above but one), so its growth sides reach only that element. A child dragged
+    off such a parent, its own, is measured on the parent's strip alone (the first element is not
+    where it hangs), so below that parent another pair is picked only within about 24 px of the
+    strip's bottom, and let go further down it snaps back; its other sides re-pair as usual. Set the
+    pair on Layout > Anchor, or drag it in test mode.
+  - **Across the before side, one element off, and overlapping.** A drop above a parent growing down
+    gives a free pair (BOTTOM to TOP, say) that Place sets on the child's ANCHOR, its first element,
+    pushed past the parent's strip and label. The child's dot was on the bottom of its own strip, which
+    sits above that first element, so on the drop the child moves up by about one element plus the
+    strip gap. A follower flows like its chain root (L-6), so above a parent growing down it grows
+    down too, and its further elements land over the parent: the before side suits a container that
+    shows one aura at a time.
+  - **Overhang.** An Icons container's strip often runs wider than one element, by an amount that follows the length of its name, so for a middle or end
+    pair the child can land sideways of what the dots showed: by half the difference between the two
+    overhangs for the middle pair, by all of it for the end pair (a 36 px icon parent whose strip runs 64
+    past its block, under a 36 px icon child whose strip runs 44 past, lands 10 px or 20 px off). The
+    start pair, between two containers whose strips fit their blocks, lands in line with the dots. Nudge it with X/Y on Layout > Anchor. Joining on the strips, or
+    measuring on the blocks while drawing on the strips, is a change to attach geometry for the owner to
+    decide.
 - **In test mode, a container attached to another hangs from that container's preview extent.** A
   previewing container's engine is disabled and keeps a stale rect, so a container attached to it is
   re-placed onto a frame of ours sized to its placeholder block (`Preview.Extent`), where it sits as
@@ -210,7 +283,8 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   weird, it's on the user"). Only a pair that is one of batch 9's nine sides under the parent's growth
   gets the seam gap, the chain's spread for the strips and labels, and the side push
   (`Anchors.AttachEdge`); any other pair is placed at its X/Y alone, so its strip and label can overlap
-  its parent's. Picked points are absolute: flipping the chain's growth mirrors an Automatic point and
+  its parent's. The one exception is a pair that puts the child flush outside its parent's before side
+  (the side its lines start from), which is moved out past the parent's strip and label (DD-10). Picked points are absolute: flipping the chain's growth mirrors an Automatic point and
   leaves a picked one where it is.
 - **Schema v11 can move a follower that was on the old default side** (batch 11 G4). A stored
   `after-start`, which schemas v9 and v10 stamped on every attachment, becomes Automatic and takes

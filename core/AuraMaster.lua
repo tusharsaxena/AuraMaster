@@ -159,6 +159,8 @@ function addon:OnCombatChanged(event)
         if NS.BlizzardFrames and NS.BlizzardFrames.Apply then NS.BlizzardFrames.Apply() end
         -- A frame an add-on created during combat could not be resolved then (OnAddonLoaded).
         if NS.Anchors and NS.Anchors.ResolvePending then NS.Anchors.ResolvePending() end
+        -- A container dropped in combat while attached (issue #22, D11), even while applies stay held.
+        if NS.Anchors and NS.Anchors.Snap then NS.Anchors.Snap.PlaceHeld() end
     end
 end
 

@@ -266,7 +266,9 @@ test("handle: the help mark carries the tooltip and right-click opens the settin
     rawset(mocks.GameTooltip, "AddLine", add)
     h.help:__fire("OnEnter")
     assertEqual(lines[1], NS.Database.FindContainer(2).name)
-    assertEqual(lines[2], NS.L["Drag to move. Right-click for settings."])
+    -- red under: the old "Drag to move. Right-click for settings." line, which never said a drop on
+    -- another container attaches it, or that Shift places it without attaching (issue #22)
+    assertEqual(lines[2], NS.L["Drag to move. Drop it on another container to attach it there; hold Shift to place it without attaching. Right-click for settings."])
     local opened = {}
     NS.OpenOptionsPage = function(key)
         local n = #opened
@@ -279,10 +281,14 @@ test("handle: the help mark carries the tooltip and right-click opens the settin
     assertEqual(NS.State.activeContainerId, 2)
 end)
 
-test("handle: the tooltip follows the cursor, owned by UIParent, never anchored to the strip or the mark", function()
+test("handle: where neither the strip's rect nor the tooltip reads, the tooltip shows at the cursor, owned by UIParent, never by the strip or the mark", function()
     -- Every anchor inherits DisableUntrustedLayoutScriptsTemplate, so the strip and its help mark sit in
     -- a restricted layout chain, and the client refuses GameTooltip:SetOwner on either: "Anchoring
     -- disallowed as dependent object would inherit forbidden aspects: UntrustedLayoutScriptExecution".
+    -- The tooltip is placed beside the strip (tests/test_anchors_tooltip.lua); here the mock's strip
+    -- answers no rect (so the placement would pin it beside the cursor), and the mock's tooltip scale
+    -- and screen edge do not read, so the placement declines and the widget falls back to the
+    -- cursor-following tooltip.
     -- red under: showTooltip owning the tooltip by the hovered frame (the old SetOwner(owner, "ANCHOR_TOP")).
     local NS, mocks = fresh()
     local inst = NS.ContainerManager.instances[2]
@@ -293,10 +299,11 @@ test("handle: the tooltip follows the cursor, owned by UIParent, never anchored 
     end)
     h:__fire("OnEnter")
     h.help:__fire("OnEnter")
-    assertEqual(#owners, 2, "the strip and the help mark both show the tooltip")
+    assertEqual(#owners, 4, "the strip and the help mark both show the tooltip, each placed then re-owned")
     for i, o in ipairs(owners) do
-        assertTrue(o.owner == mocks.UIParent, "hover " .. i .. " is owned by UIParent")
-        assertEqual(o.anchor, "ANCHOR_CURSOR", "hover " .. i .. " follows the cursor")
+        assertTrue(o.owner == mocks.UIParent, "owner " .. i .. " is UIParent")
+        assertEqual(o.anchor, i % 2 == 1 and "ANCHOR_NONE" or "ANCHOR_CURSOR",
+            "owner " .. i .. ": the placement's, then the cursor fallback")
     end
 end)
 
@@ -378,6 +385,9 @@ test("handle: an attached container's tooltip says where its offsets are set; a 
     rawset(mocks.GameTooltip, "AddLine", function(_, s)
         lines[#lines + 1] = s
     end)
+    -- Each draw starts with an owner: the mock's strip answers no rect, so the placement declines
+    -- and the widget draws again at the cursor. The lines read are the last draw's.
+    rawset(mocks.GameTooltip, "SetOwner", function() lines = {} end)
     h:__fire("OnEnter")
     assertEqual(#lines, 1, "a screen container: how to drag, nothing more")
     NS.Database.FindContainer(1).attach.mode = "frame"
@@ -390,7 +400,39 @@ test("handle: an attached container's tooltip says where its offsets are set; a 
     assertEqual(lines[2], NS.L["Attached — set its offsets in the Layout section."])
 end)
 
-test("handle: an attached container, or one in combat, does not move on a drag, and a stray drag stop stores nothing", function()
+test("handle: a container-attached tooltip whose parent is gone tells how to drop it, as a screen one's does (#22)", function()
+    local NS, mocks = fresh()
+    local inst = NS.ContainerManager.instances[1]
+    local h = recordedHandle(mocks, NS, inst)
+    local lines = {}
+    rawset(mocks.GameTooltip, "AddLine", function(_, s)
+        lines[#lines + 1] = s
+    end)
+    local at = NS.Database.FindContainer(1).attach
+    at.mode, at.container = "container", 99
+    h:__fire("OnEnter")
+    -- red under: a howTo that names whatever the stored id finds ("Attached to 'nil'"), or the old
+    -- screen line that never said a drop attaches it; beginDrag drags it, so the drop line holds
+    assertEqual(lines[1], NS.L["Drag to move. Drop it on another container to attach it there; hold Shift to place it without attaching. Right-click for settings."])
+end)
+
+test("handle: a container set to a named frame with no name yet says it cannot be dragged, not how to drop it", function()
+    local NS, mocks = fresh()
+    local inst = NS.ContainerManager.instances[1]
+    local h = recordedHandle(mocks, NS, inst)
+    local lines = {}
+    rawset(mocks.GameTooltip, "AddLine", function(_, s)
+        lines[#lines + 1] = s
+    end)
+    -- Right after Attach to is switched to Named frame: the mode is written, the name not yet.
+    local at = NS.Database.FindContainer(1).attach
+    at.mode, at.frame = "frame", ""
+    h:__fire("OnEnter")
+    -- red under: a frame branch keyed on the name (the screen line, promising a drag beginDrag refuses)
+    assertEqual(lines[1], NS.L["Set to a named frame, so it cannot be dragged. Right-click for settings."])
+end)
+
+test("handle: a frame-attached container, or one in combat, does not move on a drag, and a stray drag stop stores nothing", function()
     local NS, mocks = fresh()
     local inst = NS.ContainerManager.instances[1]
     local h = recordedHandle(mocks, NS, inst)
@@ -398,11 +440,14 @@ test("handle: an attached container, or one in combat, does not move on a drag, 
     rawset(inst.anchor, "StartMoving", function() moved = moved + 1 end)
     NS.NewBusTarget():RegisterMessage(NS.MSG.CONFIG_CHANGED, function() writes = writes + 1 end)
     inst.anchor.GetPoint = function() return "TOP", nil, "TOP", 1, 1 end
-    NS.Database.FindContainer(1).attach.mode = "container"
+    -- A container-attached one drags since issue #22 (tests/test_anchors_drag.lua); a frame-attached
+    -- one still follows its frame.
+    NS.Database.FindContainer(1).attach.mode = "frame"
+    NS.Database.FindContainer(1).attach.frame = "PlayerFrame"
     h:__fire("OnDragStart")
     h:__fire("OnDragStop")
-    -- red under: the drag start without its screen-mode check (an attached container is dragged off its target)
-    assertEqual(moved, 0, "attached")
+    -- red under: the drag start without its mode check (a frame-attached container is dragged off its frame)
+    assertEqual(moved, 0, "frame-attached")
     assertEqual(writes, 0, "and no position is stored for it")
     NS.Database.FindContainer(1).attach.mode = "screen"
     mocks.__lockdown = true

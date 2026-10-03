@@ -38,8 +38,9 @@ client. The player-facing contract is the README; the engineering boundary is th
   of every stored profile. **A shipped category cannot be renamed, retyped or deleted** — the lock is
   on the category object, never on its spell list, which stays editable and restorable as it always
   was.
-- **Placement:** attached to the screen (draggable), to another container (follows it as it grows),
-  or to any named frame, with a click-to-pick frame selector (`modules/FramePicker.lua`).
+- **Placement:** attached to the screen (draggable), to another container (follows it as it grows;
+  while unlocked, a drop on another container attaches it there and a drag away detaches it), or to
+  any named frame, with a click-to-pick frame selector (`modules/FramePicker.lua`).
 - **Test mode:** placeholder auras drawn through the same `Style` code, switched by the Master
   controls *Test mode* checkbox, `/am test` or the minimap button's right-click menu; session-only and
   ended when combat starts. Unlocking only makes containers draggable, and live auras keep drawing.

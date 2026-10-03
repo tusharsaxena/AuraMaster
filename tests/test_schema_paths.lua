@@ -463,14 +463,16 @@ end)
 
 -- ── whole sections ────────────────────────────────────────────────────────────────────────────
 
-test("schema paths: exactly the six documented sections are whole-writable", function()
+test("schema paths: exactly the documented sections are whole-writable", function()
     local NS2 = fresh()
+    -- container.attach joined for a drag's drop (issue #22): its rows' validators take the id the
+    -- write targets (validateSectionRows), so a section write no longer reads the active container.
     for _, p in ipairs({ "container.filter", "container.layout", "container.behavior",
-            "container.position", "container.bars", "container.icons" }) do
+            "container.position", "container.bars", "container.icons", "container.attach" }) do
+        -- red under: SECTIONS without container.attach (a drop could not write it whole)
         assertTrue(NS2.IsSection(p), p)
     end
-    -- red under: SECTIONS gaining container.attach (its validator reads the active container)
-    for _, p in ipairs({ "container.attach", "container.name", "container", "container.filter.whitelist",
+    for _, p in ipairs({ "container.name", "container", "container.filter.whitelist",
             "bars", "container.bars.name" }) do
         assertFalse(NS2.IsSection(p), p)
     end

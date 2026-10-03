@@ -139,8 +139,10 @@ test("strip: the tooltip of a container joined to another names the parent's poi
         :format(NS.L["Bottom"], NS.Database.FindContainer(1).name)
     -- red under: the generic "Attached" line
     assertEqual(lines[2], want)
-    -- red under: "Drag to move" on a follower a drag cannot move (owner, 2026-09-26)
-    assertEqual(lines[1], NS.L["Anchored to '%s', so it cannot be dragged. Right-click for settings."]
+    -- red under: "Anchored to '%s', so it cannot be dragged" on a follower a drag now moves: away to
+    -- detach it, onto another container to attach it there (issue #22); or the line before the
+    -- detach leeway, which said nothing of the red marks or the snap back (addendum A4)
+    assertEqual(lines[1], NS.L["Attached to '%s'. Drag it away and let go once the marks turn red to detach it; let go sooner and it snaps back. Drop it on another container to attach it there; hold Shift to drop it without attaching. Right-click for settings."]
         :format(NS.Database.FindContainer(1).name))
 end)
 

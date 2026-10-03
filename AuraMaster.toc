@@ -103,7 +103,17 @@ modules\Style_Text.lua
 # LOAD-BEARING: Anchors_Attach before Anchors, which binds its join spec, edge parts and scale from
 # NS.AnchorsAttach at file load.
 modules\Anchors_Attach.lua
+# LOAD-BEARING: Anchors_Tooltip before Anchors, which binds NS.AnchorsTooltip.Place at file load as
+# the drag strip's tooltipPlace (issue #22).
+modules\Anchors_Tooltip.lua
 modules\Anchors.lua
+# LOAD-BEARING: Anchors_SnapRect after Anchors_Attach, whose flow growth it binds from
+# NS.AnchorsAttach at file load, and before Anchors_Snap, which binds NS.AnchorsSnapRect at file load.
+modules\Anchors_SnapRect.lua
+# LOAD-BEARING: Anchors_Snap after Anchors_Attach, whose pair table and flow growth it binds from
+# NS.AnchorsAttach at file load; after Anchors_SnapRect, whose rect readers it binds at file load;
+# after Anchors too, which it extends (Anchors.Snap).
+modules\Anchors_Snap.lua
 # Conventional: the rest of the modules; peers resolved at call time.
 modules\Preview.lua
 modules\EmptyWatch.lua

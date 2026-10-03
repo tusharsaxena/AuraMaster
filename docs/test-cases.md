@@ -269,7 +269,7 @@ badge and any count quoted in the docs must agree with it.
 - schema paths: a spell set goes to the container it names, announced as filters and logged once
 - schema paths: a spell set or a section with no container to land in is refused, naming why
 - schema paths: category edits drop an empty edit set and store a truthy edit as true
-- schema paths: exactly the six documented sections are whole-writable
+- schema paths: exactly the documented sections are whole-writable
 - schema paths: a section write fires onChange only for the leaves it changed, with the target id
 - schema paths: a row under a section that refuses its leaf refuses the whole section — CheckWrite says the same
 - schema paths: a section write backfills a copy, so the caller's table comes back as it went in
@@ -762,7 +762,7 @@ badge and any count quoted in the docs must agree with it.
 - anchors: under lockdown ending test mode leaves an attached container where it is; the pass after combat moves it (L-4)
 - handle: an attached container's strip sits above every placeholder of the container it is attached to (L-4)
 
-### test_anchors_handle.lua (27)
+### test_anchors_handle.lua (29)
 
 - handle: a dark strip with a 1px gold edge, a gold label and the catalog help mark
 - handle: under a secret anchor size it builds, resizes and draws its edge without arithmetic
@@ -773,13 +773,15 @@ badge and any count quoted in the docs must agree with it.
 - handle: a handle first shown under lockdown is placed once; the anchor's clamp still waits
 - handle: a visibility pass that changes nothing re-sets no clamp insets
 - handle: the help mark carries the tooltip and right-click opens the settings on this container
-- handle: the tooltip follows the cursor, owned by UIParent, never anchored to the strip or the mark
+- handle: where neither the strip's rect nor the tooltip reads, the tooltip shows at the cursor, owned by UIParent, never by the strip or the mark
 - handle: a left-drag that starts on the help mark moves the container as one on the strip does
 - handle: with no media catalog the help mark falls back to Blizzard's information icon
 - handle: with LibKa0s absent a container has no handle at all, and every pass over it is a no-op
 - handle: the strip names its container, and a container whose settings are gone hides it
 - handle: an attached container's tooltip says where its offsets are set; a screen one does not
-- handle: an attached container, or one in combat, does not move on a drag, and a stray drag stop stores nothing
+- handle: a container-attached tooltip whose parent is gone tells how to drop it, as a screen one's does (#22)
+- handle: a container set to a named frame with no name yet says it cannot be dragged, not how to drop it
+- handle: a frame-attached container, or one in combat, does not move on a drag, and a stray drag stop stores nothing
 - handle: the strip sits fifty levels above its anchor, over the container's elements
 - handle: a left click on the strip opens nothing; a right click opens this container's settings
 - handle: the width comes from a detached measuring string, never the label, which may sit on secret geometry (E)
@@ -791,6 +793,15 @@ badge and any count quoted in the docs must agree with it.
 - handle: a right-click on the ? opens the Containers page with this container selected in its band (feedback #9)
 - handle: under combat lockdown the right-click is refused in gray and selects nothing (feedback #9)
 - handle: an attached container's name is a desaturated gray, to the screen it keeps the plain color (owner, 2026-09-26)
+
+### test_anchors_tooltip.lua (6)
+
+- tooltip: it sits a gap right of the strip, its TOPLEFT on the strip's TOPRIGHT, anchored to UIParent
+- tooltip: near the right edge it flips to the strip's left, its TOPRIGHT a gap left of the strip
+- tooltip: a strip rect that reads secret or not at all pins it beside the cursor where it entered, anchored to UIParent
+- tooltip: the strip's rect is converted into the tooltip's own units through both scales
+- tooltip: a help or close mark places by the strip it belongs to, not by itself
+- tooltip: the strip, its help mark and its close mark show it beside the strip, owned by UIParent with no anchor
 
 ### test_anchors_seam.lua (10)
 
@@ -1015,7 +1026,7 @@ badge and any count quoted in the docs must agree with it.
 - column: a behind follower keeps its strip before it, lined up with the edge facing its parent, and is never pushed
 - column: a follower of a side follower spreads by its own strip, as any after follower does
 
-### test_anchors_points.lua (16)
+### test_anchors_points.lua (18)
 
 - points: a bars or icons child under a bars or icons parent defaults to after-start, under every growth
 - points: an icons or bars child under a Text parent justified CENTER is centered; LEFT or RIGHT is not
@@ -1030,6 +1041,8 @@ badge and any count quoted in the docs must agree with it.
 - points: behind is no longer refused: a child several auras wide sits on its behind pair
 - points: a free pair is placed at X/Y alone: no seam, no spread, no push
 - points: an after pair spreads by the child's furniture while unlocked; the free pair beside it does not
+- points: a before-side pair clears its parent's strip and label while each shows, in the parent's scale
+- points: a parent's strip shown or hidden re-places its followers, though its hang mode and side room stay
 - points: a free follower's strip and label sit on its own before side, lined up with H0
 - points: a write to either point, a style or a text justify re-applies the followers
 - points: AttachPoints and AttachEdge allocate nothing
@@ -1065,6 +1078,124 @@ badge and any count quoted in the docs must agree with it.
 - width: the full name stays the strip's tooltip title
 - width: a one-icon container too narrow for the marks and a readable label keeps its natural width
 - width: the label is worked out once per name and width, not on every pass
+
+### test_anchors_snap.lua (31)
+
+- snap: PointAt gives each of the nine WoW points on a rect
+- snap: Nearest picks each of the twelve outside pairs, the child's point the mirror of the parent's, under two growths
+- snap: Nearest picks the pair of each of the nine sides under each growth, and names its token
+- snap: Nearest answers nil past the radius, and takes a pair exactly on it
+- snap: a tie keeps the first target in the order given, and the first side in the A2 table's order
+- snap: equal-width containers pick the middle pair centered, and the start or end pair in the outer thirds, on all four sides (A7)
+- snap: a third's border goes to the middle pair, and a target one point wide answers its middle pair
+- snap: a side is eligible by its gap and its span widened by the radius; a side it faces beats a corner, then the shorter line (A7, A12)
+- snap: a child let go off a wide parent's top-right corner joins its right side, not its top end to end (A12)
+- snap: a child let go beside a parent joins that side, though a neighbor's corner is nearer by its gap (A12)
+- snap: Candidates lists every other live container in id order, with its rect and flow growth
+- snap: Candidates gives id order whatever order pairs walks the instances in, so a tie keeps the lower id
+- snap: a follower of the dragged container, and one further down its chain, is never a target
+- snap: a disabled container, and one whose anchor is hidden, is never a target
+- snap: Candidates allocates nothing on a tick, though the dragged container is the last id and never a target
+- snap: the target rect is the frame a follower would hang from in its hang mode
+- snap: rects are read in UIParent units
+- snap: an engine whose rect reads secret falls back to the anchor; an unreadable anchor drops the target
+- snap: Find reads the dragged anchor and answers the nearest in-range target
+- snap: a target's rect is its strip's while that shows and reads, on each growth (A10)
+- snap: a strip that is hidden or does not read falls back to the block with its name label (A8, A10)
+- snap: Find measures the side on the target's strip and the dragged one's own strip (A10)
+- snap: a parent's rect is its strip, each edge on a side it grows toward out to its block's far edge (A11)
+- snap: a strip that overhangs its block on a side the parent grows toward keeps its own edge there (A11)
+- snap: a block past the strip on the sides the parent does not grow toward leaves the strip's edges there (A11)
+- snap: a parent's block is read with its guards and fallback, and one that does not read leaves the strip (A11)
+- snap: the side pick measures a parent's growth sides on its block's far edges, its other sides on its strip (A11)
+- snap: a picked side equal to Automatic stores nil for both points
+- snap: a side other than Automatic's stores the whole absolute pair, even one sharing a point with it
+- snap: folding reads Automatic for the target dropped on, not the container's current parent
+- snap: the radius is 24 UIParent units and the highlight is an opaque green
+
+### test_anchors_drag.lua (43)
+
+- drag: a screen container and a container-attached one drag; a frame-attached one does not
+- drag: no drag starts in combat, and none leaves the container marked dragging
+- drag: a container-attached anchor is lifted onto UIParent where it reads, before it moves
+- drag: a container-attached anchor whose rect reads secret is centered under the cursor
+- drag: a screen container is not re-anchored at the start; it already hangs from UIParent
+- drag: Place leaves a dragging anchor where the drag has it, and answers how it was placed
+- drag: the driver runs only while a drag is live, at most every 0.03s, and is cleared at the drop
+- drag: Shift held, or combat started, means no candidate this tick
+- drag: the mark repaints the target strip's own edge 2px in green, never boxes its placeholder, and gives the gold back with no candidate (A6)
+- drag: the repaint moves to the new target's strip, and the old one gets its gold back, as the mark moves (A6)
+- drag: a target with no strip, or with its strip hidden, is boxed over its rect instead (A5, A6)
+- drag: the highlight puts a dot of the parent's size on the child's join point and a 2px line between the two (A3)
+- drag: a before-side pair draws the line from the target's top to the child's bottom, as a free pair (A2, A3)
+- drag: the dots and the line sit on the target's strip and the dragged one's own strip, never on their placeholders (A8, A10)
+- drag: a parent growing up whose strip sits below its block takes the dot on the strip's corner, not the block's, on its before side (A10, A11)
+- drag: the parent's dot sits on its block's far edge on the side it grows toward (A11)
+- drag: the box fallback frames the target's footprint, its name label included (A8)
+- drag: the highlight hides on Shift, on combat and at the drop
+- drag: a strip hidden mid-drag ends the drag at the next tick, and the container goes back where its settings put it
+- drag: a container destroyed mid-drag ends its drag and stops the driver
+- drag: the target strip's own gold comes back on every path the mark ends by (A6)
+- drag: held within C.DETACH_RADIUS of its current pair, green on that pair; past it, red, and green again on the way back (A4)
+- drag: the leeway runs from where the container rests, seam room and nudge included, never from the bare join (A4)
+- drag: another pair in snap range beats the hold, and Shift suppresses only that (A4)
+- drag: a pair no nearer than its current one does not take it, so a child let go where it sits holds (A4)
+- drag: an equal-width child let go where it rests holds by its own pair, though its center is in the middle third; moved into another third, that pair takes it (A4, A7)
+- drag: a child resting a unit under its parent, nudged within REST_SLACK, is not re-attached by the pick where it rests (A4, A7)
+- drag: a child wider than its parent, moved off where it rests, is re-attached by the end pair its rest pick named (A4, A7)
+- drag: a child flush under a long parent, in snap range of its own pair far from that pair's points, holds (A4, A7)
+- drag: the leeway is measured on the parent's rect and the child's own strip (A4, A10, A11)
+- drag: a child let go where it rests holds, though a neighbor's strip is nearer than its own pair's points are apart (A4, A10, A11)
+- drag: an unreadable parent holds while the cursor has moved less than C.DETACH_RADIUS, in UIParent units (A4)
+- drag: a hidden parent is measured by the cursor and drawn as the child's dot alone, never at its last rect (A4)
+- drag: a parent whose block reads secret is measured by the cursor, never by its one-element fallback (A4)
+- drag: a parent whose block reads secret but whose strip reads holds on its strip, two dots and a line (A4, A11; DRAG-9)
+- drag: on a parent whose block reads secret, a hit on its one-element fallback never takes the current parent back (A4)
+- drag: on a parent whose block reads secret but whose strip reads, a nudge inside the radius holds on the stored pair (A4, A11)
+- drag: under a parent read off its strip, a child whose anchor read secret at the start holds until the cursor moves C.SNAP_RADIUS (A4, A11)
+- drag: with no rest read, a neighbor in snap range takes no child until the cursor moves C.SNAP_RADIUS (A4, A11)
+- drag: with no rect of its parent readable and no rest read, a neighbor takes no child until the cursor moves C.SNAP_RADIUS (A4)
+- drag: beside a parent whose block reads secret but whose strip reads, a child re-pairs onto that side (A4, A11)
+- drag: a drop on the right side of a parent whose block reads secret but whose strip reads re-attaches there (A4, A11)
+- drag: a screen container's drag has no hold and no red (A4)
+
+### test_anchors_mark.lua (7)
+
+- mark: the dragged container's own strip is repainted with the target's, 2px in green (A13)
+- mark: past the leeway the dragged strip turns red with its parent's, and a hold is green (A4, A13)
+- mark: a Destroy of the dragged container gives its strip's gold back by itself, before the drag ends (A13)
+- mark: with logging on, a drag's start and its drop each log what the snap sees, and nothing with it off
+- drag: a container whose rect reads secret is re-placed at the drag's start, parents first, and becomes a target (owner's 2026-10-03 log)
+- drag: nothing is re-placed in combat, and a container that reads is never re-placed
+- mark: the dragged strip's own gold comes back on every path the mark ends by (A13)
+
+### test_anchors_drop.lua (25)
+
+- drop: a candidate in range attaches by one whole-section write: the side's points, x and y 0, the rest kept
+- drop: on the Automatic side both points store nil (Automatic), as a fresh attach on the panel does
+- drop: on the parent's before side the absolute pair is stored, and it places as a free pair (A2)
+- drop: container.attach written whole re-applies the new parent, the container and its followers
+- drop: a written attach places the container on its new parent at once, even while applies are held
+- drop: an attached container dropped in combat goes back on its parent when combat ends, applies held or not
+- drop: a chain that flows differently asks with the attach popup, writes nothing and re-places the container
+- drop: accepting the drop's popup writes the section; canceling it leaves everything as it was
+- drop: accepting the drop's popup after its target was deleted writes nothing and says why
+- drop: re-attaching onto the chain it already follows asks nothing, however its own flow differs
+- drop: moving along its own chain asks nothing and says nothing in chat, though the target changes
+- drop: an attached container dropped with no candidate detaches: position, then mode screen with x and y 0
+- drop: Shift held at the drop places without attaching: a screen one moves, an attached one detaches
+- drop: let go within the leeway, an attached container snaps back onto its parent and writes nothing
+- drop: let go past the leeway, an attached container detaches where it was let go
+- drop: released where it rests, a container its settings put past the radius snaps back and writes nothing
+- drop: the release is classified again, never taken from the last tick
+- drop: Shift within the leeway still snaps back; another pair in range attaches without Shift
+- drop: an attached container whose parent has no live instance detaches, with no leeway to hold it
+- drop: with its parent unreadable, a release before the cursor travels C.DETACH_RADIUS snaps back
+- drop: a one-row parent reading secret, released where it rests, snaps back and keeps its nudge
+- drop: an attached container whose drop position reads secret is not detached; it goes back to its parent
+- drop: combat started mid-drag attaches nothing; an attached one writes nothing and waits to be re-placed
+- drop: every outcome writes one [Anchor] line
+- drop: a container dragged off its parent and straight back onto it re-attaches there (the owner's 2026-10-03 report)
 
 ### test_texttemplate.lua (26)
 
@@ -2127,7 +2258,7 @@ badge and any count quoted in the docs must agree with it.
 
 - prose: no authored file carries a British spelling from localization-§5's published list
 - prose: the gate carries localization-§5's two lists whole, and nothing of its own
-- prose: the exclusions this repository declared suppressed 11 of 200 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (11): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, docs/spell-research/2026-09-24-logs/CORRECTIONS.md, docs/spell-research/2026-09-24-logs/CURRENT_CATEGORIES.md, docs/spell-research/2026-09-24-logs/DECISIONS.md, docs/spell-research/2026-09-24-logs/FLAGS.md, docs/spell-research/2026-09-24-logs/PROPOSED_ADDITIONS.md, docs/spell-research/2026-09-24-logs/REVIEW.md, docs/spell-research/2026-09-24-logs/SOURCES.md, docs/spell-research/2026-09-24-logs/dictionary/AURAS.md
+- prose: the exclusions this repository declared suppressed 11 of 208 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (11): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, docs/spell-research/2026-09-24-logs/CORRECTIONS.md, docs/spell-research/2026-09-24-logs/CURRENT_CATEGORIES.md, docs/spell-research/2026-09-24-logs/DECISIONS.md, docs/spell-research/2026-09-24-logs/FLAGS.md, docs/spell-research/2026-09-24-logs/PROPOSED_ADDITIONS.md, docs/spell-research/2026-09-24-logs/REVIEW.md, docs/spell-research/2026-09-24-logs/SOURCES.md, docs/spell-research/2026-09-24-logs/dictionary/AURAS.md
 - prose: no path this repository narrows the gate by is loaded by a TOC
 - prose: every path this repository narrows the gate by is one .pkgmeta keeps out of the zip
 - prose self-test: the carve-out suppresses the named generated folder, and only it
@@ -2242,7 +2373,8 @@ badge and any count quoted in the docs must agree with it.
 | test_state.lua | 2 |
 | test_lifecycle.lua | 18 |
 | test_anchors.lua | 51 |
-| test_anchors_handle.lua | 27 |
+| test_anchors_handle.lua | 29 |
+| test_anchors_tooltip.lua | 6 |
 | test_anchors_seam.lua | 10 |
 | test_anchors_edges.lua | 14 |
 | test_anchors_hang.lua | 11 |
@@ -2254,10 +2386,14 @@ badge and any count quoted in the docs must agree with it.
 | test_anchors_label.lua | 23 |
 | test_anchors_strip.lua | 7 |
 | test_anchors_column.lua | 19 |
-| test_anchors_points.lua | 16 |
+| test_anchors_points.lua | 18 |
 | test_anchors_steady.lua | 8 |
 | test_anchors_collapse.lua | 9 |
 | test_anchors_width.lua | 6 |
+| test_anchors_snap.lua | 31 |
+| test_anchors_drag.lua | 43 |
+| test_anchors_mark.lua | 7 |
+| test_anchors_drop.lua | 25 |
 | test_texttemplate.lua | 26 |
 | test_style.lua | 60 |
 | test_castaura.lua | 7 |
@@ -2308,4 +2444,4 @@ badge and any count quoted in the docs must agree with it.
 | test_layout_cap.lua | 13 |
 | test_diagnostics_contract.lua | 9 |
 | test_lizard_sighted.lua | 8 |
-| **Total** | **1930** |
+| **Total** | **2046** |

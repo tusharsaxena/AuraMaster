@@ -144,7 +144,7 @@ backfills it onto every stored container, so it needs no schema step.
 | `expiringThreshold` | `5` | `expiringColor` | `{ 1, 0.25, 0.25, 1 }` |
 | `pandemic` | `false` | `pandemicColor` | `{ 1, 0.85, 0.10, 1 }` |
 
-The profile's `dispelColors` defaults (`C.DEFAULT_DISPEL_COLORS`, `core/Constants.lua:224`): Magic `{0.20, 0.60, 1.00}`, Curse `{0.60, 0.00, 1.00}`, Disease
+The profile's `dispelColors` defaults (`C.DEFAULT_DISPEL_COLORS`, `core/Constants.lua:243`): Magic `{0.20, 0.60, 1.00}`, Curse `{0.60, 0.00, 1.00}`, Disease
 `{0.60, 0.40, 0.00}`, Poison `{0.00, 0.60, 0.00}`,
 Bleed `{0.80, 0.10, 0.10}`, all alpha 1. An aura
 with no dispel type takes the surface's own color instead (feedback #7); schema v5 clears a stored
@@ -237,7 +237,7 @@ player's own; **the schema is a live table, not a frozen one**, and each user ca
 it in schema order, `NS.UnregisterSchemaRows(pred)` takes it down again on a profile switch, and
 `NS.Schema` is rebuilt in place so the live reference the options descriptor and the CLI hold stays
 the same table — the rest of this file). It drives the panel,
-`/am list|get|set|reset` and the resets; one write seam, `NS.SetByPath` (`settings/Schema.lua:893`),
+`/am list|get|set|reset` and the resets; one write seam, `NS.SetByPath` (`settings/Schema.lua:894`),
 is where the panel, the CLI, the Defaults buttons and a drag handle all land. It resolves the
 container, validates against it, runs the row's optional `normalize` hook, writes, reacts and
 announces, in that order.
@@ -260,9 +260,10 @@ seam answers and writes it directly, inverting on the way (the path and the row 
 stored key says hidden) and telling `NS.Launcher` so the button moves at once. A row's `default` is never typed in a page file —
 `NS.RegisterSchemaRows` stamps it from `defaults/Profile.lua`, and `NS.ValidateSchema` proves every
 path resolves. Three whole-set carve-outs (`container.filter.whitelist`, `.blacklist`, and the
-profile-wide `categorySpells`) and six whole-section paths (`container.filter`, `.layout`, `.behavior`,
-`.position`, `.bars`, `.icons`) are written through the same seam and normalized there. A drag, a
-copy between containers, a position reset and a delete's fallback to the screen all write that way.
+profile-wide `categorySpells`) and nine whole-section paths (`container.filter`, `.layout`, `.behavior`,
+`.label`, `.position`, `.bars`, `.icons`, `.text`, `.attach`) are written through the same seam and
+normalized there. A drag, a drop's attach or detach, a copy between containers, a position reset and a
+delete's fallback to the screen all write that way.
 
 The addon holds one structural registry, the containers (architecture-§5). No schema row addresses
 it, and none can, since a row is a leaf.
@@ -465,16 +466,18 @@ trimmed name made unique by `ContainerManager.UniqueName`, and that comparison i
 next to `Buffs` becomes `buffs (2)`). The rule covers every writer, whether that is the panel,
 `/am set`, `ContainerManager.Rename` or a reset.
 
-The write seam also takes eight **whole sections**: `container.filter`, `.layout`, `.behavior`,
-`.label`, `.position`, `.bars`, `.icons` and `.text` (`NS.IsSection`). `NS.SetByPath("container.position", tbl, id)`
+The write seam also takes nine **whole sections**: `container.filter`, `.layout`, `.behavior`,
+`.label`, `.position`, `.bars`, `.icons`, `.text` and `.attach` (`NS.IsSection`). `NS.SetByPath("container.position", tbl, id)`
 stores a deep copy of `tbl` in place of the section. First it backfills the copy from the template, so
 no key can be dropped. Then it runs the spell-set carve-outs under that section, and then every row
 `validate` under it. A single rejection refuses the whole write, and nothing gets stored. Once the
 section is written, `onChange` fires for each row whose leaf actually changed, compared by
 `FilterCompiler.Signature`. The write logs one `[Set]` line that renders the stored table (for example
 `container.position = {point=TOP, relativePoint=CENTER, x=5, y=0}`), built only while debug is on, and
-sends one `CONFIG_CHANGED` whose `path` is the section path. `container.attach` is not a section: no
-caller writes it whole.
+sends one `CONFIG_CHANGED` whose `path` is the section path. `container.attach` is written whole by a
+drag's drop (issue #22, `modules/Anchors_Snap.lua`'s `Snap.Drop`, through `NS.AttachByDrop`); its
+path re-applies the container's followers and the container it names, as a write to its mode, target
+or points does.
 
 **A bulk copy or reset is one line** (debug-logging-§10). `NS.Bulk` brackets every act that
 rewrites a set of rows wholesale. That covers a page's Defaults and Reset all (the library's

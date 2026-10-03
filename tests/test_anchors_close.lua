@@ -146,14 +146,21 @@ test("close: the X's tooltip names the container (following a rename) and says h
     rawset(mocks.GameTooltip, "AddLine", add)
     rawset(mocks.GameTooltip, "SetOwner", function(_, owner, anchor)
         owners[#owners + 1] = { owner = owner, anchor = anchor }
+        lines = {}
     end)
     NS.SetByPath("container.name", "Renamed Close", 2)
     h.close:__fire("OnEnter")
     assertEqual(lines[1], "Renamed Close", "the title is read on every hover")
     -- red under: the X falling back to the strip's own tooltip (its body is the drag hint)
     assertEqual(lines[2], NS.L["Click to disable this container. Its settings are kept; turn Enabled back on for it on the Containers page to bring it back."])
-    -- The anchor inherits DisableUntrustedLayoutScriptsTemplate: SetOwner on the X would error.
-    assertEqual(#owners, 1)
-    assertTrue(owners[1].owner == mocks.UIParent, "owned by UIParent")
-    assertEqual(owners[1].anchor, "ANCHOR_CURSOR")
+    -- The anchor inherits DisableUntrustedLayoutScriptsTemplate: SetOwner on the X would error. The
+    -- placement beside the strip (tests/test_anchors_tooltip.lua) owns by UIParent with no anchor;
+    -- the mock's tooltip scale and screen edge do not read, so it declines and the widget re-owns at
+    -- the cursor.
+    assertEqual(#owners, 2)
+    for i, o in ipairs(owners) do
+        assertTrue(o.owner == mocks.UIParent, "owner " .. i .. " is UIParent")
+    end
+    assertEqual(owners[1].anchor, "ANCHOR_NONE")
+    assertEqual(owners[2].anchor, "ANCHOR_CURSOR")
 end)

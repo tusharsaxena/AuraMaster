@@ -54,6 +54,13 @@ test("loadorder: the load-bearing pairs are in order, and the TOC says why", fun
         { "modules/FilterViews.lua", "modules/FilterCompiler.lua" },
         -- Anchors binds NS.AnchorsAttach at file load (AM-ATS-04).
         { "modules/Anchors_Attach.lua", "modules/Anchors.lua" },
+        -- Anchors binds NS.AnchorsTooltip.Place at file load as the strip's tooltipPlace (TP-AM-01).
+        { "modules/Anchors_Tooltip.lua", "modules/Anchors.lua" },
+        -- Anchors_Snap decorates NS.Anchors and binds NS.AnchorsAttach at file load (issue #22, DD-01).
+        { "modules/Anchors.lua", "modules/Anchors_Snap.lua" },
+        -- Anchors_SnapRect binds NS.AnchorsAttach, and Anchors_Snap binds it, at file load (DD-16).
+        { "modules/Anchors_Attach.lua", "modules/Anchors_SnapRect.lua" },
+        { "modules/Anchors_SnapRect.lua", "modules/Anchors_Snap.lua" },
         { "settings/Schema.lua", "settings/OptionsSetup.lua" },
         { "settings/OptionsSetup.lua", "settings/General.lua" },
         { "settings/GeneralSpells.lua", "settings/General.lua" },

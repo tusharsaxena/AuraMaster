@@ -835,6 +835,7 @@ end
 
 -- The writes that change where on its parent a container joins (batch 9 AP-4; batch 11 G2).
 local PARENT_PATHS = {
+    ["container.attach"] = true,   -- the whole section: a drop's attach or detach (issue #22)
     ["container.attach.childPoint"] = true,
     ["container.attach.relPoint"] = true,
     ["container.attach.mode"] = true,

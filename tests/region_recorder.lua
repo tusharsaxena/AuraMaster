@@ -13,7 +13,8 @@
 -- the kit's stub does. The few answers production branches on are real: IsShown tracks Show, Hide and
 -- SetShown; SetFont answers true (a font the client accepted); GetStatusBarTexture answers one
 -- recorder of its own (the bar's moving edge); CreateTexture answers a new recorder each call, so a
--- border's four strips (modules/Style.lua's ApplyBorder) are four regions; GetWidth and GetHeight
+-- border's four strips (modules/Style.lua's ApplyBorder) are four regions, and CreateLine does the same
+-- (the drag highlight's line, modules/Anchors_Snap.lua), each with its frame on `parent`; GetWidth and GetHeight
 -- answer 0, a real number (fidelity rule 2). SetBackdrop does what Blizzard's does to a frame's size
 -- (Blizzard_SharedXML/Backdrop.lua:226, SetupTextureCoordinates): arithmetic on GetWidth and
 -- GetHeight, so a recorder whose size reads secret (tests/wow_mock.lua's __layOut) raises there as
@@ -39,6 +40,11 @@ local ANSWERS = {
         local tex = new()
         tex.parent = self
         return tex
+    end,
+    CreateLine = function(self)
+        local line = new()
+        line.parent = self
+        return line
     end,
     GetWidth = function() return 0 end,
     GetHeight = function() return 0 end,
