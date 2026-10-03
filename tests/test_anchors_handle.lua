@@ -281,12 +281,13 @@ test("handle: the help mark carries the tooltip and right-click opens the settin
     assertEqual(NS.State.activeContainerId, 2)
 end)
 
-test("handle: a strip whose rect does not read shows the tooltip at the cursor, owned by UIParent, never by the strip or the mark", function()
+test("handle: where neither the strip's rect nor the tooltip reads, the tooltip shows at the cursor, owned by UIParent, never by the strip or the mark", function()
     -- Every anchor inherits DisableUntrustedLayoutScriptsTemplate, so the strip and its help mark sit in
     -- a restricted layout chain, and the client refuses GameTooltip:SetOwner on either: "Anchoring
     -- disallowed as dependent object would inherit forbidden aspects: UntrustedLayoutScriptExecution".
     -- The tooltip is placed beside the strip (tests/test_anchors_tooltip.lua); here the mock's strip
-    -- answers no rect, so the placement declines and the widget falls back to the cursor.
+    -- answers no rect (so the placement would pin it beside the cursor) and the mock's tooltip no width,
+    -- so the placement declines and the widget falls back to the cursor-following tooltip.
     -- red under: showTooltip owning the tooltip by the hovered frame (the old SetOwner(owner, "ANCHOR_TOP")).
     local NS, mocks = fresh()
     local inst = NS.ContainerManager.instances[2]

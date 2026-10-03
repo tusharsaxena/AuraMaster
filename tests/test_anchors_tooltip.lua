@@ -1,7 +1,7 @@
 -- tests/test_anchors_tooltip.lua — modules/Anchors_Tooltip.lua: the drag strip's tooltip sits beside
 -- the strip, to its right, or to its left near the right edge of the screen, anchored to UIParent
--- alone; a strip whose rect reads secret or not at all falls back to the cursor (issue #22, the
--- owner's smoke feedback of 2026-10-02). Then the strip itself: BuildHandle hands the widget this
+-- alone; a strip whose rect reads secret or not at all pins it beside the cursor where it entered (issue
+-- #22, the owner's smoke feedback of 2026-10-02 and 2026-10-03). Then the strip itself: BuildHandle hands the widget this
 -- placement as its `tooltipPlace`, for the strip and the close mark alike.
 
 local T = _G.AM_TEST
@@ -72,9 +72,11 @@ test("tooltip: near the right edge it flips to the strip's left, its TOPRIGHT a 
     assertEqual(fits.points[1][1], "TOPLEFT", "a tooltip that just fits stays on the right")
 end)
 
-test("tooltip: a strip rect that reads secret or not at all falls back to the cursor, placing nothing", function()
+test("tooltip: a strip rect that reads secret or not at all pins it beside the cursor where it entered, anchored to UIParent", function()
     local NS, mocks = fresh()
     screen(mocks, 1920)
+    local Tip = NS.AnchorsTooltip
+    mocks.GetCursorPosition = function() return 400, 600 end
     local reads = {
         { left = 100, right = mocks.__SECRET, top = 500 },
         { left = mocks.__SECRET, right = 300, top = 500 },
@@ -84,17 +86,42 @@ test("tooltip: a strip rect that reads secret or not at all falls back to the cu
     }
     for i, rect in ipairs(reads) do
         local tip = tipOf(200)
-        -- red under: arithmetic on the secret (it raises), or a placement answering true anyway
-        local ok, placed = pcall(NS.AnchorsTooltip.Place, tip, stripAt(rect))
+        -- red under: arithmetic on the secret (it raises), or nil (the widget's cursor-following tooltip)
+        local ok, placed = pcall(Tip.Place, tip, stripAt(rect))
         assertTrue(ok, "read " .. i .. " does not raise: " .. tostring(placed))
-        assertNil(placed, "read " .. i .. " answers nil, so the widget falls back to the cursor")
-        assertEqual(#tip.points, 0, "read " .. i .. " anchors nothing")
+        assertEqual(placed, true, "read " .. i .. " is placed")
+        local p = tip.points[1]
+        assertEqual(#tip.points, 1, "read " .. i .. ": one point")
+        assertEqual(p[1], "TOPLEFT")
+        assertTrue(p[2] == mocks.UIParent, "read " .. i .. ": anchored to UIParent")
+        assertEqual(p[3], "BOTTOMLEFT")
+        assertEqual(p[4], 400 + Tip.CURSOR_GAP, "read " .. i .. ": right of the cursor")
+        assertEqual(p[5], 600 + Tip.CURSOR_RISE, "read " .. i .. ": its top a little above the cursor")
     end
-    -- The tooltip's own width, and the screen, unreadable: the cursor too.
-    local tip = tipOf(mocks.__SECRET)
-    assertNil(NS.AnchorsTooltip.Place(tip, stripAt{ left = 100, right = 300, top = 500 }))
+    -- Near the right edge it flips to the cursor's left; through the tooltip's scale.
+    mocks.GetCursorPosition = function() return 1800, 600 end
+    local tip = tipOf(200)
+    assertEqual(Tip.Place(tip, stripAt{ left = 100, right = mocks.__SECRET, top = 500 }), true)
+    -- red under: always right of the cursor (it runs off the screen)
+    assertEqual(table.concat({ tip.points[1][1], tip.points[1][4], tip.points[1][5] }, " "),
+        "TOPRIGHT " .. (1800 - Tip.CURSOR_GAP) .. " " .. (600 + Tip.CURSOR_RISE), "flipped left")
+    mocks.GetCursorPosition = function() return 400, 600 end
+    local scaled = tipOf(200, 2)
+    screen(mocks, 1920, 2)
+    Tip.Place(scaled, stripAt{ left = 100, right = mocks.__SECRET, top = 500 })
+    assertEqual(scaled.points[1][4] .. "," .. scaled.points[1][5],
+        (200 + Tip.CURSOR_GAP) .. "," .. (300 + Tip.CURSOR_RISE), "the cursor in the tooltip's own units")
+    screen(mocks, 1920)
+    -- The cursor unreadable as well: nil, nothing anchored, so the widget follows the cursor.
+    mocks.GetCursorPosition = function() return mocks.__SECRET, 600 end
+    tip = tipOf(200)
+    assertNil(Tip.Place(tip, stripAt{ left = 100, right = mocks.__SECRET, top = 500 }), "no cursor: nil")
+    assertEqual(#tip.points, 0, "no cursor: nothing anchored")
+    -- The tooltip's own width, and the screen, unreadable: nil too, whatever the strip.
+    mocks.GetCursorPosition = function() return 400, 600 end
+    assertNil(Tip.Place(tipOf(mocks.__SECRET), stripAt{ left = 100, right = 300, top = 500 }))
     rawset(mocks.UIParent, "GetRight", nil)
-    assertNil(NS.AnchorsTooltip.Place(tipOf(200), stripAt{ left = 100, right = 300, top = 500 }))
+    assertNil(Tip.Place(tipOf(200), stripAt{ left = 100, right = mocks.__SECRET, top = 500 }))
 end)
 
 test("tooltip: the strip's rect is converted into the tooltip's own units through both scales", function()

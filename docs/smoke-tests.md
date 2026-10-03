@@ -1564,7 +1564,11 @@ of '<A's name>'" line; the frame-attached one as DRAG-10. Rename A → B's toolt
 the next hover. Each tooltip, the strip's and its X's and "?"'s alike, sits beside the strip, its top
 level with the strip's top, a few px to the right of the strip, not at the cursor; drag D until its
 strip is near the right edge of the screen → its tooltip sits to the strip's left instead, and is never
-cut off by the screen's edge. No Lua error. Result:
+cut off by the screen's edge. Attach a container under a parent that holds auras (in a dungeon,
+where aura geometry is secret) and hover its strip → its tooltip is not on the strip's top but a little
+right of where the cursor came in, its top just above the cursor, and stays put while the cursor moves
+along the strip (it does not follow it); near the screen's right edge it sits left of the cursor
+instead. No Lua error. Result:
 
 **DRAG-12. A drop between pulls in a key.** In a Mythic+ key, out of combat between pulls (auras are
 secret there with no combat lockdown), drop E on A's side → E attaches and sits on that side of A at
@@ -2087,6 +2091,7 @@ line, then remove its row here.
 | CONT-3 | 31: its in-combat steps rewritten on 2026-09-29 for `/am new`, `/am delete` and a Delete popup opened before the pull, since the panel is locked in combat |
 | CONT-5 | 205: its in-combat rename rewritten on 2026-09-29 for `/am set container.name` |
 | CONT-8 | 162, smoke batch 2 (owed: the owner verified 143 to 161 only) |
+| DRAG-11 | its step under a parent holding auras added on 2026-10-03 (owner's fourth smoke round, DD-20): the tooltip pinned beside the cursor where it entered, since that strip's rect reads secret |
 | CONT-9 | its tooltip lines corrected on 2026-10-02 for drag to attach (issue #22): the screen line names the drop, and a container attached to another names its parent and how to detach it; its placement corrected the same day for `tooltipPlace` (TP-AM-01): beside the strip, flipping left near the screen's right edge, no longer at the cursor |
 | CONT-21 | 136 and 224: the placeholder count corrected on 2026-09-29 (one per ticked slot, three by default) |
 | FILT-2 | 80, batch 6 |

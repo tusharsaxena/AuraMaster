@@ -65,3 +65,4 @@ Spec: `docs/superpowers/specs/2026-10-02-drag-attach-addendum-owner-feedback.md`
 | DD-17 | M7 | A side the child faces beats a corner, then the shortest line (A12); docs and smoke DRAG-18 | snap cases green |
 | DD-18 | M7 | The dragged container's strip lit with the target's (A13) | mark cases green |
 | DD-19 | M7 | Review of DD-17, DD-18, verify, fixes; battery; checkpoint row; push | row in the checkpoints file; origin equals HEAD |
+| DD-20 | M8 | Strip tooltip pinned beside the cursor where the strip does not read (A14, owner's option B); review; battery; checkpoint row; push | row in the checkpoints file; origin equals HEAD |

@@ -187,3 +187,14 @@ as `line`.
 While a mark shows, the dragged container's own strip is repainted exactly as the target's (A6: its
 own edge, 2px, through `Style.DrawEdge`, in the mark's color, green or red past the leeway), and gets
 its 1px gold back on every path the mark ends by, alongside the target's.
+
+### A14. The strip tooltip under a parent holding auras (owner's option B)
+
+The owner saw the strip tooltip at the cursor for containers attached under a parent holding auras:
+their strip's rect reads secret, so `tooltipPlace` declined and the widget followed the cursor. Of the
+three options put to the owner (document it; pin it beside the cursor; a custom tooltip frame inside
+the restricted tree, a LibKa0s change), the owner chose B: where the strip's rect does not read,
+`NS.AnchorsTooltip.Place` pins the tooltip to UIParent beside the cursor where it entered the strip
+(TOPLEFT `CURSOR_GAP` = 16 right of it and `CURSOR_RISE` = 10 above it, or TOPRIGHT 16 left of it near
+the screen's right edge), fixed for the hover. Only a cursor, tooltip or screen that does not read
+still answers nil (the cursor-following fallback).

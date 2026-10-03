@@ -773,7 +773,7 @@ badge and any count quoted in the docs must agree with it.
 - handle: a handle first shown under lockdown is placed once; the anchor's clamp still waits
 - handle: a visibility pass that changes nothing re-sets no clamp insets
 - handle: the help mark carries the tooltip and right-click opens the settings on this container
-- handle: a strip whose rect does not read shows the tooltip at the cursor, owned by UIParent, never by the strip or the mark
+- handle: where neither the strip's rect nor the tooltip reads, the tooltip shows at the cursor, owned by UIParent, never by the strip or the mark
 - handle: a left-drag that starts on the help mark moves the container as one on the strip does
 - handle: with no media catalog the help mark falls back to Blizzard's information icon
 - handle: with LibKa0s absent a container has no handle at all, and every pass over it is a no-op
@@ -798,7 +798,7 @@ badge and any count quoted in the docs must agree with it.
 
 - tooltip: it sits a gap right of the strip, its TOPLEFT on the strip's TOPRIGHT, anchored to UIParent
 - tooltip: near the right edge it flips to the strip's left, its TOPRIGHT a gap left of the strip
-- tooltip: a strip rect that reads secret or not at all falls back to the cursor, placing nothing
+- tooltip: a strip rect that reads secret or not at all pins it beside the cursor where it entered, anchored to UIParent
 - tooltip: the strip's rect is converted into the tooltip's own units through both scales
 - tooltip: a help or close mark places by the strip it belongs to, not by itself
 - tooltip: the strip, its help mark and its close mark show it beside the strip, owned by UIParent with no anchor

@@ -127,7 +127,8 @@ container's either; DD-16R), wins over both, and Shift suppresses only that.
 The tick and the drop classify alike (`classify`); combat started mid-drag attaches nothing. The handle's close mark (X) turns that container off through the write
 seam. The strip's tooltip, and its marks', sits beside the strip: to its right, or to its left when
 the strip is too close to the right edge of the screen for it to fit (`modules/Anchors_Tooltip.lua`,
-LibKa0s-Widgets' `tooltipPlace`). It is anchored to `UIParent` alone, from the strip's rect read through
+LibKa0s-Widgets' `tooltipPlace`); where the strip's rect reads secret (a container attached under a
+parent holding auras), beside the cursor where it entered the strip instead, fixed for the hover. It is anchored to `UIParent` alone, from the strip's rect read through
 `NS.Secrets` and converted through both effective scales, because nothing may anchor into the
 anchor's restricted tree; where that rect reads secret it follows the cursor. A container can also show its name as a label where the handle sits, locked or unlocked;
 while unlocked the handle moves out past it (`Anchors.PlaceLabel`, batch 8 D6).
