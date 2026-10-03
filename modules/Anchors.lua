@@ -525,8 +525,9 @@ end
 --- DisableUntrustedLayoutScriptsTemplate (modules/Container.lua), and that restriction reaches every
 --- frame anchored under it: the strip and the marks. GameTooltip does not inherit the template, so the
 --- client refuses SetOwner on either ("Anchoring disallowed as dependent object would inherit
---- forbidden aspects: UntrustedLayoutScriptExecution"). Where the strip's rect does not read, the
---- widget falls back to `tooltipOwner = "cursor"`: ANCHOR_CURSOR depends on nothing under the anchor.
+--- forbidden aspects: UntrustedLayoutScriptExecution"). Where the strip's rect does not read, it is
+--- pinned beside the cursor instead; only where nothing reads does the widget fall back to
+--- `tooltipOwner = "cursor"`: ANCHOR_CURSOR depends on nothing under the anchor.
 local function tooltipSpec(container)
     -- How to use the strip (issue #22): on the screen, drag it, or drop it on another container to
     -- attach it there; attached to another container, by that parent's name, drag it away until the

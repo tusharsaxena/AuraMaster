@@ -130,7 +130,7 @@ the strip is too close to the right edge of the screen for it to fit (`modules/A
 LibKa0s-Widgets' `tooltipPlace`); where the strip's rect reads secret (a container attached under a
 parent holding auras), beside the cursor where it entered the strip instead, fixed for the hover. It is anchored to `UIParent` alone, from the strip's rect read through
 `NS.Secrets` and converted through both effective scales, because nothing may anchor into the
-anchor's restricted tree; where that rect reads secret it follows the cursor. A container can also show its name as a label where the handle sits, locked or unlocked;
+anchor's restricted tree; only where the cursor, the tooltip or the screen does not read either does it follow the cursor. A container can also show its name as a label where the handle sits, locked or unlocked;
 while unlocked the handle moves out past it (`Anchors.PlaceLabel`, batch 8 D6).
 
 Every non-vendored file, its responsibility and the full load order: `docs/module-map.md`.

@@ -155,7 +155,8 @@ test("close: the X's tooltip names the container (following a rename) and says h
     assertEqual(lines[2], NS.L["Click to disable this container. Its settings are kept; turn Enabled back on for it on the Containers page to bring it back."])
     -- The anchor inherits DisableUntrustedLayoutScriptsTemplate: SetOwner on the X would error. The
     -- placement beside the strip (tests/test_anchors_tooltip.lua) owns by UIParent with no anchor;
-    -- the mock's strip answers no rect, so it declines and the widget re-owns at the cursor.
+    -- the mock's tooltip scale and screen edge do not read, so it declines and the widget re-owns at
+    -- the cursor.
     assertEqual(#owners, 2)
     for i, o in ipairs(owners) do
         assertTrue(o.owner == mocks.UIParent, "owner " .. i .. " is UIParent")
