@@ -286,6 +286,7 @@ end
 
 local childRect = {}
 
+
 --- What dropping live container `dragged` now would snap it onto (Snap.Nearest's answer for its own
 --- strip or footprint over Snap.Candidates, within C.SNAP_RADIUS), or nil: nothing in range, or its own
 --- strip and anchor do not read plainly (it hangs from UIParent while dragged, so it should).
@@ -864,6 +865,52 @@ local function lift(container)
     return "cursor"
 end
 
+--- Why live container `t` is not a target of `dragged` (eligible's checks, in its order), or nil.
+--- @return string|nil
+local function ineligibleWhy(dragged, t)
+    local cfg = t:Cfg()
+    if not (cfg and cfg.enabled) then return "disabled" end
+    if not (t.anchor and t.anchor:IsShown()) then return "hidden" end
+    if Anchors.WouldCycle(dragged.id, t.id) then return "follows it" end
+    return nil
+end
+
+local logRect = {} -- scratch: a container's rect, for logCandidates
+
+--- A rect as "l,b,r,t" to the unit.
+--- @return string
+local function rectText(r)
+    return ("%.0f,%.0f,%.0f,%.0f"):format(r.left, r.bottom, r.right, r.top)
+end
+
+--- One [Anchor] line, only while logging is on (the work is skipped otherwise): what the snap sees
+--- for live container `dragged` at `when` (the drag's start, or its drop with `what` the outcome):
+--- its own rect, and every other container in id order, its rect as a parent or why it is no target
+--- ("no rect": neither its strip nor its block reads). The owner's 2026-10-03 report (a detached
+--- container not finding its old parent until another target had been shown) could not be told apart
+--- from the log without it.
+local function logCandidates(dragged, when, what)
+    if not (NS.State and NS.State.debug and NS.Debug) then return end
+    local own = ownFootprint(dragged, logRect) and rectText(logRect) or "no rect"
+    local ids, instances = {}, NS.ContainerManager.instances
+    for id in pairs(instances) do
+        if id ~= dragged.id then ids[#ids + 1] = id end
+    end
+    table.sort(ids)
+    local parts = {}
+    for i, id in ipairs(ids) do
+        local t = instances[id]
+        local why = ineligibleWhy(dragged, t)
+        if not why then
+            local growH, growV = flowGrowth(t:Cfg())
+            why = Snap.ParentRect(t, logRect, growH, growV) and rectText(logRect) or "no rect"
+        end
+        parts[i] = id .. " " .. why
+    end
+    debug("container %s: %s%s: own %s; targets %s", dragged.id, when, what and (" " .. what) or "", own,
+        #parts > 0 and table.concat(parts, "; ") or "none")
+end
+
 --- Note where attached container `container` rests (settings `cfg`), before it is lifted: its current
 --- pair's vector (currentPair) as the leeway's rest, and the pair Snap.Nearest picks for it on its
 --- parent there as the rest pick that never re-attaches it (beats). Both nil where they do not read.
@@ -890,6 +937,7 @@ function Snap.BeginDrag(container)
         if NS.Debug then NS.Debug("Anchor", "container %s: drag lifts it off its parent (%s)", container.id, how) end
     end
     container.dragging = true
+    logCandidates(container, "drag starts")
     startX, startY = GetCursorPosition()
     startX, startY = plain(startX), plain(startY)
     startDriver(container)
@@ -1024,6 +1072,7 @@ function Snap.Drop(container)
     local attached = cfg.attach and cfg.attach.mode == "container"
     if InCombatLockdown() then return dropInCombat(container, attached) end
     local state, hit = classify(container)
+    logCandidates(container, "drop", state and (state .. (hit and (" on " .. tostring(hit.id)) or "")) or "nothing in range")
     if state == "attach" then return dropOn(container, cfg, hit) end
     if state == "hold" then return snapBack(container) end
     if attached then return detach(container, cfg) end

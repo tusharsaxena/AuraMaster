@@ -1159,14 +1159,15 @@ badge and any count quoted in the docs must agree with it.
 - drag: a drop on the right side of a parent whose block reads secret but whose strip reads re-attaches there (A4, A11)
 - drag: a screen container's drag has no hold and no red (A4)
 
-### test_anchors_mark.lua (4)
+### test_anchors_mark.lua (5)
 
 - mark: the dragged container's own strip is repainted with the target's, 2px in green (A13)
 - mark: past the leeway the dragged strip turns red with its parent's, and a hold is green (A4, A13)
 - mark: a Destroy of the dragged container gives its strip's gold back by itself, before the drag ends (A13)
+- mark: with logging on, a drag's start and its drop each log what the snap sees, and nothing with it off
 - mark: the dragged strip's own gold comes back on every path the mark ends by (A13)
 
-### test_anchors_drop.lua (24)
+### test_anchors_drop.lua (25)
 
 - drop: a candidate in range attaches by one whole-section write: the side's points, x and y 0, the rest kept
 - drop: on the Automatic side both points store nil (Automatic), as a fresh attach on the panel does
@@ -1192,6 +1193,7 @@ badge and any count quoted in the docs must agree with it.
 - drop: an attached container whose drop position reads secret is not detached; it goes back to its parent
 - drop: combat started mid-drag attaches nothing; an attached one writes nothing and waits to be re-placed
 - drop: every outcome writes one [Anchor] line
+- drop: a container dragged off its parent and straight back onto it re-attaches there (the owner's 2026-10-03 report)
 
 ### test_texttemplate.lua (26)
 
@@ -2388,8 +2390,8 @@ badge and any count quoted in the docs must agree with it.
 | test_anchors_width.lua | 6 |
 | test_anchors_snap.lua | 31 |
 | test_anchors_drag.lua | 43 |
-| test_anchors_mark.lua | 4 |
-| test_anchors_drop.lua | 24 |
+| test_anchors_mark.lua | 5 |
+| test_anchors_drop.lua | 25 |
 | test_texttemplate.lua | 26 |
 | test_style.lua | 60 |
 | test_castaura.lua | 7 |
@@ -2440,4 +2442,4 @@ badge and any count quoted in the docs must agree with it.
 | test_layout_cap.lua | 13 |
 | test_diagnostics_contract.lua | 9 |
 | test_lizard_sighted.lua | 8 |
-| **Total** | **2042** |
+| **Total** | **2044** |

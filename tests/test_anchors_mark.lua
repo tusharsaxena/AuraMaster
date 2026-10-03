@@ -124,6 +124,40 @@ test("mark: a Destroy of the dragged container gives its strip's gold back by it
         "the target's strip is not the dragged one's: still marked")
 end)
 
+test("mark: with logging on, a drag's start and its drop each log what the snap sees, and nothing with it off", function()
+    local NS = env(3)
+    local spy = dofile("tests/console_spy.lua")
+    local lines = {}
+    local restore = spy(NS, function(tag, fmt, ...)
+        if tag ~= "Anchor" then return end
+        local args = { ... }
+        for i = 1, select("#", ...) do args[i] = tostring(args[i]) end
+        lines[#lines + 1] = fmt:format(unpack(args))
+    end)
+    local CM = NS.ContainerManager
+    plant(CM.instances[1].engine, 0, 100, 100, 140)
+    NS.Database.FindContainer(3).enabled = false
+    local inst = CM.instances[2]
+    holdAnchor(inst.anchor)
+    NS.State.debug = false
+    inst.handle:__fire("OnDragStart")
+    plant(inst.anchor, 0, 75, 20, 95)
+    inst.handle:__fire("OnDragStop")
+    -- red under: the snapshot built and written whatever the logging switch says
+    assertTrue(not table.concat(lines, " | "):find("own ", 1, true), "logging off: no snapshot: " .. table.concat(lines, " | "))
+    lines = {}
+    NS.State.debug = true
+    inst.handle:__fire("OnDragStart")
+    plant(inst.anchor, 0, 75, 20, 95)
+    inst.handle:__fire("OnDragStop")
+    restore()
+    local all = table.concat(lines, " | ")
+    -- red under: no snapshot lines (a drop that finds nothing could not be told apart in game)
+    assertTrue(all:find("container 2: drag starts: own ", 1, true) ~= nil, "the start: " .. all)
+    assertTrue(all:find("targets 1 0,100,100,140; 3 disabled", 1, true) ~= nil, "each target: " .. all)
+    assertTrue(all:find("container 2: drop attach on 1: own 0,75,20,95", 1, true) ~= nil, "the drop: " .. all)
+end)
+
 -- Every way a mark ends while the drag's container is still the one dragged, or the drag itself ends.
 local END_PATHS = {
     { "the drop", function(_, _, inst) inst.handle:__fire("OnDragStop") end },

@@ -625,3 +625,23 @@ test("drop: every outcome writes one [Anchor] line", function()
     assertEqual(last(), "container 2: drop: held (combat)")
     assertFalse(inst.dragging == true, "and the drag is over")
 end)
+
+test("drop: a container dragged off its parent and straight back onto it re-attaches there (the owner's 2026-10-03 report)", function()
+    local NS, mocks = env()
+    sameFlow(NS, 2)
+    local at = NS.Database.FindContainer(2).attach
+    at.mode, at.container, at.childPoint, at.relPoint = "container", 1, "TOPLEFT", "BOTTOMLEFT"
+    local inst = NS.ContainerManager.instances[2]
+    recordAnchor(inst.anchor, 400, 500)
+    plant(inst.anchor, 0, 75, 20, 95)
+    dragTo(inst, 400, 500, 420, 520)
+    mocks.__fireTimers()
+    at = NS.Database.FindContainer(2).attach
+    assertEqual(at.mode, "screen", "detached first")
+    -- The apply the detach queued rebuilt nothing a drag needs; an unlocked profile shows both strips.
+    for id = 1, 2 do NS.ContainerManager.instances[id].handle:Show() end
+    dragTo(inst, 0, 75, 20, 95)
+    at = NS.Database.FindContainer(2).attach
+    -- red under: a detach that leaves the drag or the snap stale for the next drag of the same container
+    assertEqual(at.mode .. ":" .. tostring(at.container), "container:1", "back on its old parent")
+end)
