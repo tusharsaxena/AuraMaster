@@ -221,6 +221,12 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   anchor, one element where its first aura sits, with its name label. The dots and the box then sit
   on that element, and a drop near the far end of a long populated container finds nothing in range;
   drop near its start.
+- **A container whose position reads secret cannot be dragged onto** (issue #22, owner report
+  2026-10-03). After a reload, a container attached to another can keep reporting its position as a
+  secret value after its parent has become readable again, until it is itself re-anchored. A drag's
+  start now re-places every such container, parents first (`Snap.RefreshUnread`), out of combat. One
+  whose parent's engine is laying out secret auras right now (in an instance, in combat) still reads
+  nothing, so it is no target and a hold on it shows a lone dot, until that changes.
 - **A container wider than its parent aligns backwards by thirds** (issue #22, addendum A7). The
   pair a drop picks comes from the dragged container's center over the parent's side cut in thirds,
   so the pair picked can differ from the flush edge the child rests on. For a child more than about a

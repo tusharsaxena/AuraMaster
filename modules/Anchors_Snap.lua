@@ -923,6 +923,49 @@ local function noteRest(container, cfg)
     if pick then restPoint, restRel = pick.point, pick.relPoint end
 end
 
+local readRect = {} -- scratch: a container's footprint, for refreshUnread
+
+--- How many links of attach chain lead from container `cfg` to the screen or a frame (0 for a root).
+--- @return number
+local function chainDepth(cfg)
+    local depth, at = 0, cfg.attach
+    while at and at.mode == "container" and depth < 64 do
+        depth = depth + 1
+        local parent = NS.Database.FindContainer(tonumber(at.container))
+        at = parent and parent.attach
+    end
+    return depth
+end
+
+--- Re-place, out of lockdown, every live, enabled, shown container whose footprint (Snap.Footprint)
+--- does not read, parents before their followers, so the drag can measure it (the owner's report of
+--- 2026-10-03). A container attached to another keeps its geometry secret after its parent has become
+--- readable again, until it is itself re-anchored: the log showed a whole chain reading "no rect"
+--- after a reload, one link turning readable only once an apply re-placed it, and while it reads none
+--- it can be no target (a detached container could not go back on its parent) and a hold on it shows
+--- no dots. Anchors.Place is layout only (SetPoint, SetSize). A parent whose engine still lays out
+--- secret auras stays unreadable; that one has nothing to gain and is placed back where it was.
+--- Answers how many it re-placed.
+--- @return number
+local function refreshUnread()
+    if InCombatLockdown() then return 0 end
+    local unread = {}
+    for _, t in pairs(NS.ContainerManager.instances) do
+        local cfg = t:Cfg()
+        if cfg and cfg.enabled and t.anchor and t.anchor:IsShown() and not t.dragging
+            and not Snap.Footprint(t, readRect) then
+            unread[#unread + 1] = { inst = t, depth = chainDepth(cfg) }
+        end
+    end
+    table.sort(unread, function(a, b)
+        if a.depth ~= b.depth then return a.depth < b.depth end
+        return a.inst.id < b.inst.id
+    end)
+    for _, u in ipairs(unread) do u.inst.placedAs = Anchors.Place(u.inst) end
+    return #unread
+end
+Snap.RefreshUnread = refreshUnread
+
 --- A drag of live container `container` begins (beginDrag in modules/Anchors.lua said yes, so it is
 --- screen or container-attached and out of combat). A container-attached one is lifted onto UIParent
 --- first (lift), where it rests noted beforehand (noteRest); a screen one already hangs there. Then
@@ -931,6 +974,8 @@ end
 function Snap.BeginDrag(container)
     local cfg = container:Cfg()
     restX, restY, restPoint, restRel = nil, nil, nil, nil
+    local refreshed = refreshUnread()
+    if refreshed > 0 then debug("container %s: drag re-placed %d container(s) whose rect did not read", container.id, refreshed) end
     if cfg and cfg.attach and cfg.attach.mode == "container" and container.anchor then
         noteRest(container, cfg)
         local how = lift(container)

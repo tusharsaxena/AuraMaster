@@ -198,3 +198,12 @@ the restricted tree, a LibKa0s change), the owner chose B: where the strip's rec
 (TOPLEFT `CURSOR_GAP` = 16 right of it and `CURSOR_RISE` = 10 above it, or TOPRIGHT 16 left of it near
 the screen's right edge), fixed for the hover. Only a cursor, tooltip or screen that does not read
 still answers nil (the cursor-following fallback).
+
+### A15. Stale secret geometry re-anchored at a drag's start (owner's report, with the debug log)
+
+After a reload, a container dragged off its parent could not be dropped back on it until another
+target had shown, and the hold showed no dots. DD-21's snapshot lines showed the parent, and its own
+parent, reading "no rect" (neither strip nor block readable) while their chain's root read plainly;
+one link turned readable only once an apply re-placed it. A drag's start now re-places, out of
+lockdown, every live, enabled, shown container whose footprint does not read, in attach-chain depth
+order (parents first), before the lift and the rest read; the snapshot line follows it.

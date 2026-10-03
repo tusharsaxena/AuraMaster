@@ -158,6 +158,61 @@ test("mark: with logging on, a drag's start and its drop each log what the snap 
     assertTrue(all:find("container 2: drop attach on 1: own 0,75,20,95", 1, true) ~= nil, "the drop: " .. all)
 end)
 
+test("drag: a container whose rect reads secret is re-placed at the drag's start, parents first, and becomes a target (owner's 2026-10-03 log)", function()
+    local SECRET = 77.5
+    local NS, mocks = env(4)
+    mocks.issecretvalue = function(v) return v == SECRET end
+    local CM = NS.ContainerManager
+    -- 3 follows 1, and 4 follows 3; after a reload both read secret until re-anchored.
+    local c3, c4 = NS.Database.FindContainer(3).attach, NS.Database.FindContainer(4).attach
+    c3.mode, c3.container = "container", 1
+    c4.mode, c4.container = "container", 3
+    plant(CM.instances[1].engine, 0, 300, 100, 340)
+    local function stale(inst)
+        for _, f in ipairs({ inst.engine, inst.anchor, inst.handle }) do plant(f, SECRET, SECRET, SECRET, SECRET) end
+    end
+    stale(CM.instances[3])
+    stale(CM.instances[4])
+    local placed = {}
+    local real = NS.Anchors.Place
+    NS.Anchors.Place = function(inst)
+        placed[#placed + 1] = inst.id
+        if inst.id == 3 then plant(inst.engine, 0, 100, 100, 140) end
+        if inst.id == 4 then plant(inst.engine, 0, 500, 100, 540) end
+        return real(inst)
+    end
+    local inst = CM.instances[2]
+    holdAnchor(inst.anchor)
+    plant(inst.anchor, 0, 75, 20, 95)
+    inst.handle:__fire("OnDragStart")
+    NS.Anchors.Place = real
+    -- red under: no refresh (3 and 4 never re-placed, so neither can be a target)
+    local order = {}
+    for _, id in ipairs(placed) do if id == 3 or id == 4 then order[#order + 1] = id end end
+    assertEqual(table.concat(order, ","), "3,4", "the unreadable ones, the parent before its follower")
+    local pair = NS.Anchors.Snap.Tick()
+    assertTrue(pair ~= nil and pair.id == 3, "3 now reads, and 2 snaps to it")
+end)
+
+test("drag: nothing is re-placed in combat, and a container that reads is never re-placed", function()
+    local NS, mocks = env(3)
+    local placed = {}
+    local real = NS.Anchors.Place
+    NS.Anchors.Place = function(inst) placed[#placed + 1] = inst.id; return real(inst) end
+    for id, t in pairs(NS.ContainerManager.instances) do plant(t.engine, id * 200, 100, id * 200 + 100, 140) end
+    for id, t in pairs(NS.ContainerManager.instances) do plant(t.handle, id * 200, 140, id * 200 + 100, 160) end
+    assertEqual(NS.Anchors.Snap.RefreshUnread(), 0, "all read: none")
+    mocks.__lockdown = true
+    for _, t in pairs(NS.ContainerManager.instances) do plant(t.handle, nil, nil, nil, nil) end
+    for _, t in pairs(NS.ContainerManager.instances) do plant(t.engine, nil, nil, nil, nil) end
+    for _, t in pairs(NS.ContainerManager.instances) do plant(t.anchor, nil, nil, nil, nil) end
+    -- red under: a refresh that ignores lockdown (Place on a protected anchor in combat)
+    assertEqual(NS.Anchors.Snap.RefreshUnread(), 0, "combat: none")
+    mocks.__lockdown = false
+    NS.Anchors.Place = real
+    assertEqual(#placed, 0)
+end)
+
 -- Every way a mark ends while the drag's container is still the one dragged, or the drag itself ends.
 local END_PATHS = {
     { "the drop", function(_, _, inst) inst.handle:__fire("OnDragStop") end },
