@@ -105,8 +105,8 @@ stop.
 Run the addon gates through the bounded runner:
 
 ```sh
-/home/tushar/.claude/wow-addon/bin/ka0s-bounded luacheck .
-/home/tushar/.claude/wow-addon/bin/ka0s-bounded lua5.1 tests/run.lua
+/home/tushar/.claude/dev-copilot/bin/ka0s-bounded luacheck .
+/home/tushar/.claude/dev-copilot/bin/ka0s-bounded lua5.1 tests/run.lua
 ```
 
 luacheck must report 0 warnings / 0 errors and the suite 0 failed. **If either is red, show the
