@@ -456,7 +456,7 @@ end
 -- for the wrong reason and stopped being either once `Cat.HARMFUL` gained spell lists.
 local UNCATEGORIZED_NOTE = L["Uncategorized defaults to Show, which rescues any aura not on the lists above from a Hidden Blizzard category (rank 3 beats rank 4). To actually hide a Blizzard category's auras, set BOTH it and Uncategorized to Hide."]
 
--- A3 (issue #11): Hard CC, Soft CC and Racials are the debuff spell lists, and Blizzard honors spell
+-- A3 (issue #11): the three CC lists and Racials are the debuff spell lists, and Blizzard honors spell
 -- ids for debuffs only on a unit you CANNOT assist (UnitCanAssist; neutral units included) — on you,
 -- your pet or an assistable unit it skips the list. Since the spell-list views (SV-05) the rows are not
 -- inert there: those containers draw the view their Situations setting picks (every aura once, or the
@@ -468,7 +468,7 @@ local UNCATEGORIZED_NOTE = L["Uncategorized defaults to Show, which rescues any 
 -- it. The per-container orange warning above every tab (FC.WARN.IDS_ASSISTABLE / IDS_OWN_DEBUFFS)
 -- is the other half: it says the same thing for the container's actual unit, this says it for the
 -- rows regardless of unit.
-local SPELL_LIST_DEBUFF_NOTE = L["Hard CC, Soft CC and Racials only match on a target or focus you can't assist. On your own, your pet's or an assistable unit's debuffs they match nothing, and the Situations tab picks what draws there."]
+local SPELL_LIST_DEBUFF_NOTE = L["The CC lists and Racials only match on a target or focus you can't assist. On your own, your pet's or an assistable unit's debuffs they match nothing, and the Situations tab picks what draws there."]
 
 -- SV-04 (spell-list views, V4): where Blizzard does not apply spell ids, a container draws its blizzard
 -- view (modules/FilterViews.lua), in which every spell category's group, the whitelist and the
@@ -522,8 +522,8 @@ end
 -- T-2 (batch 7, readability): "These are the lists on General -> Spell Categories..."
 -- claims the grid holds EDITABLE lists. True wherever the grid carries a `spells`-kind row or the
 -- `weaponEnchants` row, both of which own a list on General -> Spell Categories — which since issue
--- #11 is BOTH aura types' grids, not the buff one alone (`Cat.HARMFUL` carries `hardCC` and
--- `softCC`, and settings/GeneralSpells.lua offers every `spells`-kind row of either type). It stays
+-- #11 is BOTH aura types' grids, not the buff one alone (`Cat.HARMFUL` carries `hardCC`, `ccRoot`
+-- and `ccSnare`, and settings/GeneralSpells.lua offers every `spells`-kind row of either type). It stays
 -- false for a grid whose only row is `uncategorized`, a Show/Hide flag over the catch-all rather
 -- than a list of spells — which is what a debuff grid was until A1, and what either grid becomes if
 -- its lists are ever taken away. So the line is printed only when the grid this container drew
@@ -815,7 +815,7 @@ local function overrideList(ctx, cfg, key, heading, blurb)
         --
         -- THIS IS A CONSISTENCY CALL, NOT A SCROLL-LENGTH ONE, and it is worth saying which.
         -- An override list is per CONTAINER and a player writes a handful of ids into one, so
-        -- unlike Hard CC -- 60-odd ids, most of a screen before the next control -- these lists
+        -- unlike CC Loss of Control -- 60-odd ids, most of a screen before the next control -- these lists
         -- are short and two columns saves them little. What it saves is the reading: the same
         -- spell rows, with the same X and the same gray id, drawn one per line here and two per
         -- line on General reads as an omission on whichever page the player sees second. An odd

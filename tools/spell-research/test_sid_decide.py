@@ -481,5 +481,37 @@ class CliTests(TempLua, unittest.TestCase):
                      "--ruling", "accept", "--decisions", str(self.decisions)])
 
 
+class ShippedDecisionsTest(unittest.TestCase):
+    """The checked-in decisions.json after the 2026-10-04 split of softCC into ccRoot / ccSnare."""
+
+    def setUp(self):
+        self.decisions = sid_decide.load_decisions(HERE / "decisions.json")
+
+    def test_no_ruling_names_the_retired_softcc_key(self):
+        for key, entry in self.decisions.items():
+            self.assertNotEqual(key.split("|")[1], "softCC", key)
+            self.assertNotEqual(entry.get("category"), "softCC", key)
+
+    def test_the_former_softcc_rulings_are_rekeyed_to_root_or_snare(self):
+        expected = {
+            "add|ccSnare|DEATHKNIGHT|chains of ice|444826#444826#correction-add": "ccSnare",
+            "add|ccSnare|DEATHKNIGHT|heart strike|460501#460501#correction-add": "ccSnare",
+            "add|ccRoot|MONK|disable|116706#116706#correction-add": "ccRoot",
+            "replace|ccRoot|DEMONHUNTER|the hunt|370970#370970#correction-add": "ccRoot",
+        }
+        for key, category in expected.items():
+            self.assertEqual(self.decisions[key]["category"], category, key)
+            self.assertEqual(self.decisions[key]["ruling"], "accept", key)
+        deletion = self.decisions["replace|ccRoot|DEMONHUNTER|the hunt|370970#323996#deletion"]
+        self.assertEqual(deletion["ruling"], "accept")
+        self.assertNotIn("category", deletion)
+
+    def test_the_file_is_in_the_writers_own_format(self):
+        # record()/record_many() write sorted keys, indent 2, CRLF; a hand edit must not drift.
+        text = json.dumps(self.decisions, indent=2, sort_keys=True, ensure_ascii=False) + "\n"
+        self.assertEqual((HERE / "decisions.json").read_bytes(),
+                         text.replace("\n", "\r\n").encode("utf-8"))
+
+
 if __name__ == "__main__":
     unittest.main()

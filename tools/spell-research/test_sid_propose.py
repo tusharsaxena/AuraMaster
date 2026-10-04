@@ -17,6 +17,7 @@ if str(HERE) not in sys.path:
 
 import json  # noqa: E402
 
+import research  # noqa: E402
 import sid_cache  # noqa: E402
 import sid_propose  # noqa: E402
 from sid_scan import AuraStats, FileAggregate  # noqa: E402
@@ -50,9 +51,11 @@ SHIPPED = [
      "classes": {"WARRIOR": [871]}},
     {"key": "offensiveCDs", "label": "Offensive cooldowns", "aura": "BUFF",
      "classes": {"WARRIOR": [1719], "SHAMAN": [114051]}},
-    {"key": "hardCC", "label": "Hard CC (loss of control)", "aura": "DEBUFF",
+    {"key": "hardCC", "label": "CC Loss of Control", "aura": "DEBUFF",
      "classes": {"WARRIOR": [5246]}},
-    {"key": "softCC", "label": "Soft CC (roots & snares)", "aura": "DEBUFF",
+    {"key": "ccRoot", "label": "CC Root", "aura": "DEBUFF",
+     "classes": {}},
+    {"key": "ccSnare", "label": "CC Snare", "aura": "DEBUFF",
      "classes": {}},
 ]
 
@@ -215,7 +218,7 @@ class AllClassesTest(unittest.TestCase):
     applied it", because no log player is of a class called ALL)."""
 
     NAMES = {**NAMES, 20549: "War Stomp", 900881: "War Stomp"}
-    SHIPPED = [{"key": "hardCC", "label": "Hard CC", "aura": "DEBUFF", "classes": {"ALL": [20549]}}]
+    SHIPPED = [{"key": "hardCC", "label": "CC Loss of Control", "aura": "DEBUFF", "classes": {"ALL": [20549]}}]
     ROWS = [("WARRIOR", ARMS, "DEBUFF", 20549, stats("War Stomp", 30, 3)),
             ("SHAMAN", RESTO, "DEBUFF", 20549, stats("War Stomp", 30, 3, tag="s"))]
 
@@ -404,7 +407,7 @@ class CrowdControlCrossCheckTest(unittest.TestCase):
 
     def test_a_same_name_debuff_without_a_cc_mechanic_is_never_proposed_into_a_cc_list(self):
         # SID-10, the real run: Rake's bleed 155722 was proposed into hardCC beside the stun
-        # 163505, the Binding Shot tether 117405 beside the stun, Moonfire's DoT into softCC. The
+        # 163505, the Binding Shot tether 117405 beside the stun, Moonfire's DoT into softCC (since split into ccRoot/ccSnare). The
         # CC lists are research.py's DB2-mechanic method; logs may only add an id DB2 calls CC.
         rows = [("WARRIOR", ARMS, "DEBUFF", 5246, stats("Intimidating Shout", 40, 4)),
                 ("WARRIOR", ARMS, "DEBUFF", 900779, stats("Intimidating Shout", 400, 9, tag="d"))]
@@ -426,11 +429,32 @@ class CrowdControlCrossCheckTest(unittest.TestCase):
 
     def test_a_cc_listed_under_another_class_is_listed(self):
         # The addon's filter ignores the class key: an id listed under any class is in the category.
-        shipped = SHIPPED[:3] + [{"key": "softCC", "label": "S", "aura": "DEBUFF",
+        shipped = SHIPPED[:3] + [{"key": "ccSnare", "label": "S", "aura": "DEBUFF",
                                   "classes": {"SHAMAN": [900777]}}]
         rows = [("WARRIOR", ARMS, "DEBUFF", 900777, stats("Storm Bolt", 40, 4))]
         flags = sid_propose.flags(agg_of(rows), SPEC_MAP, NAMES, shipped, FAMILY, self.CC)
         self.assertNotIn("cc_unlisted", {f.kind for f in flags})
+
+    def test_a_cc_listed_in_any_of_the_three_cc_categories_is_not_unlisted(self):
+        # 2026-10-04: softCC split into ccRoot and ccSnare; each of the three counts as listed.
+        rows = [("WARRIOR", ARMS, "DEBUFF", 900777, stats("Storm Bolt", 40, 4))]
+        for key in ("hardCC", "ccRoot", "ccSnare"):
+            with self.subTest(key=key):
+                shipped = SHIPPED[:2] + [{"key": key, "label": "C", "aura": "DEBUFF",
+                                          "classes": {"WARRIOR": [900777]}}]
+                flags = sid_propose.flags(agg_of(rows), SPEC_MAP, NAMES, shipped, FAMILY, self.CC)
+                self.assertNotIn("cc_unlisted", {f.kind for f in flags})
+        # ... and a category outside the three (the retired softCC key among them) does not.
+        shipped = SHIPPED[:2] + [{"key": "softCC", "label": "S", "aura": "DEBUFF",
+                                  "classes": {"WARRIOR": [900777]}}]
+        flags = sid_propose.flags(agg_of(rows), SPEC_MAP, NAMES, shipped, FAMILY, self.CC)
+        cc = [f for f in flags if f.kind == "cc_unlisted"]
+        self.assertEqual(len(cc), 1)
+        self.assertIn("in none of hardCC, ccRoot or ccSnare", cc[0].detail)
+
+    def test_cc_categories_are_research_bucket_order(self):
+        self.assertEqual(sid_propose.CC_CATEGORIES, ("hardCC", "ccRoot", "ccSnare"))
+        self.assertEqual(sid_propose.CC_CATEGORIES, research.BUCKET_ORDER)
 
 
 

@@ -91,17 +91,17 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   the player and pet), and the same gate runs in `FC.ExplainSpell` so the Filters section never claims a
   rescue the plan does not contain. Accepted deliberately by the owner (issue #11, 2026-09-20):
   losing a niche rescue on one unit beats defeating every Hide by default. The debuff side answers
-  false on every unit for the same reason, which is what keeps issue #11's `hardCC`/`softCC` from
+  false on every unit for the same reason, which is what keeps issue #11's CC lists from
   re-opening fix round 3's failure.
-- **Five crowd-control spells are missing from the shipped `hardCC`/`softCC` lists.** Both lists are
+- **Three crowd-control spells are missing from the shipped `hardCC`/`ccRoot`/`ccSnare` lists.** The lists are
   derived by `tools/spell-research/research.py` from the client's own DB2 tables, and five abilities
   sit where that pipeline cannot reach: Repentance (20066), in none of the four pool sources for the
   build; Axe Toss (89766) and Seduction (6358), on a pet skill line with ClassMask 0, which the same
   test that excludes professions and mounts throws away; and Earthbind Totem (2484) and Earthgrab
-  Totem (64695), whose root auras carry no mechanic and no matching name, so Shaman ships no root at
-  all. The KNOWN GAPS comment above `hardCC` (`defaults/Categories.lua:819`) records each one and why
-  rather than papering over it. A player who
-  wants any of the five adds it by id on General → Spell Categories, which is a profile-wide edit
+  Totem, whose totems carry no mechanic and whose auras no matching name — those two now ship by
+  hand (Earthbind 3600 on CC Snare, Earthgrab 64695 on CC Root, owner 2026-10-04). The KNOWN GAPS comment
+  above `hardCC` (`defaults/Categories.lua:822`) records each one and why rather than papering over it. A player who
+  wants any of the other three adds it by id on General → Spell Categories, which is a profile-wide edit
   every container picks up.
 - **"Only auras without a duration" is learned, not filtered.** The engine has no such filter; the
   addon excludes every spell it has seen carry a duration, learned from player and pet buffs while
@@ -142,7 +142,7 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   debuff container this row means only that: its Show side does not contribute a group of its own, so
   it is Hide-only in practice, exactly reproducing the retired per-container **"only these
   categories"** toggle it replaced (batch 7 fix round 2). The reason is no longer "`Cat.HARMFUL` has
-  no `spells`-kind category" — it carries `hardCC` and `softCC` as of issue #11 — but that
+  no `spells`-kind category" — it carries `hardCC`, `ccRoot` and `ccSnare` (one `softCC` until schema v12) as of issue #11 — but that
   `FC.IdsMode` is never `"always"` for a debuff container: the engine discards debuff spell ids on
   the player and pet outright, and may discard them on a `target` or `focus` the moment the unit is
   friendly, so the group that Show would contribute could arrive carrying nothing at all.

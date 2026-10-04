@@ -4,11 +4,20 @@ The repeatable half of GitHub issue #11. Design of record:
 `docs/superpowers/specs/2026-09-20-cc-categories-spell-research-design.md`, **Part C**.
 
 `defaults/Categories.lua`'s spell lists are a starter set that was assembled by hand from public
-spell data (that file's own header says so). This tool replaces the hand-assembly for the two CC
-categories: it reads Blizzard's DB2 tables for one pinned retail build, works out which spells a
+spell data (that file's own header says so). This tool replaces the hand-assembly for the three CC
+categories — `hardCC` ("CC Loss of Control"), `ccRoot` ("CC Root") and `ccSnare` ("CC Snare"): it
+reads Blizzard's DB2 tables for one pinned retail build, works out which spells a
 player can actually be hit by, buckets them by the crowd-control **mechanic the client itself
 stamps on them**, and prints either a diff against what the addon ships today or a paste-ready Lua
 fragment.
+
+> **2026-10-04:** `softCC` ("Soft CC (roots & snares)") was split into `ccRoot` ("CC Root") and
+> `ccSnare` ("CC Snare"), and `hardCC` was relabeled "CC Loss of Control" (its key is unchanged).
+> Every run now derives, diffs and emits three lists. The ids a run reported under `softCC` before
+> that date split by mechanic: Rooted (7) to `ccRoot`, Slowed/Snared/Dazed (8/11/27) to `ccSnare`.
+> The frozen bundles under `docs/spell-research/` predate the split and still say `softCC`; they are
+> records and are not edited. `decisions.json`'s five `softCC` rulings were re-keyed to the new
+> categories the same day.
 
 **`research.py` never writes `defaults/Categories.lua`.** Part C's narrowing rule is that the author accepts
 the diff per change. A generator that edited the shipped file would turn a judgment call into a
@@ -32,7 +41,7 @@ python3 tools/spell-research/research.py --diff
 python3 tools/spell-research/research.py --emit --date 2026-09-20
 
 # Cross-check every id defaults/Categories.lua ships, against the build (issue #15). Three
-# questions, over all of them and not just the two CC buckets: does the build still name this id,
+# questions, over all of them and not just the three CC buckets: does the build still name this id,
 # does it apply an aura of its own, and does its name still agree with the comment beside it?
 python3 tools/spell-research/research.py --check-shipped
 
@@ -148,7 +157,7 @@ Two steps exist solely because of this:
 
 ## The shipped-id cross-check (`--check-shipped`)
 
-`--diff` derives the two CC buckets and compares them. Nothing checked the **other nine** shipped
+`--diff` derives the three CC buckets and compares them. Nothing checked the **other** shipped
 lists, and nothing checked any list for the failure that actually bites: an id that is no longer
 what the file says it is. This does, mechanically, over every id in `defaults/Categories.lua`:
 
@@ -183,12 +192,18 @@ same spell applies. Both need a human or a live client — `docs/scope.md` says 
 Everything downstream is derived from the client's data. It maps each category to a set of
 `SpellMechanic` ids:
 
-- **hardCC** — charmed, disoriented, fleeing, asleep, stunned, frozen, incapacitated, polymorphed,
-  banished, shackled, turned, horrified, sapped. *The unit loses control.*
-- **softCC** — rooted, slowed, snared, dazed. *The unit keeps control but moves less.*
+- **hardCC** ("CC Loss of Control") — charmed, disoriented, fleeing, asleep, stunned, frozen,
+  incapacitated, polymorphed, banished, shackled, turned, horrified, sapped. *The unit loses
+  control.*
+- **ccRoot** ("CC Root") — rooted (mechanic 7). *The unit keeps control but cannot move.*
+- **ccSnare** ("CC Snare") — slowed, snared, dazed (mechanics 8, 11, 27). *The unit keeps control
+  but moves more slowly.*
 
-That is Part A's two-way split, not Blizzard's five DR groups. A spell matching both buckets is Hard
-CC: losing control is the stronger statement.
+That is a three-way split, not Blizzard's five DR groups. (Part A shipped a two-way Hard CC / Soft
+CC split; the soft half was divided into root and snare on 2026-10-04.) A spell is placed in exactly
+one bucket, and when its mechanics match several the first in `BUCKET_ORDER` wins (`bucket_of`):
+**hardCC > ccRoot > ccSnare**. Losing control beats being pinned, which beats being slowed — a stun
+that also roots is `hardCC`, a root that also slows is `ccRoot`.
 
 Each id carries the mechanic's name as the pinned build reports it, and a run warns when a name no
 longer matches — the loudest early warning available that a human needs to look at the map.
@@ -197,7 +212,9 @@ longer matches — the loudest early warning available that a human needs to loo
 
 `SENTINELS`, also at the top of `research.py`: a checked-in set of spells that **must** land in a
 given bucket, grouped by class so a gap is legible as a gap. A miss prints every missing sentinel
-and **exits non-zero**. Build 12.1.0.69875 satisfies 66 of them.
+and **exits non-zero**. There are 71 — 44 `hardCC`, 10 `ccRoot`, 17 `ccSnare` (Disable sits in both
+of the last two: 116706 is its root, 116095 its snare). Every one is present, in its bucket, in the
+2026-09-20 run's `derived.json` for build 12.1.0.69875.
 
 This is not belt-and-braces. Silent under-coverage was demonstrated three separate times while the
 approach was being validated: a first cut matched 32 hard-CC spells, a second 66, and only a third —
@@ -208,7 +225,8 @@ bridge above.
 
 ### Sentinels are chosen from the game, never from the output
 
-The gate's first version held ten hard-CC and six soft-CC names, and every one of them was a name
+The gate's first version held ten hard-CC and six soft-CC names (soft CC being the bucket since
+split into `ccRoot` and `ccSnare`), and every one of them was a name
 the implementation of the day already produced. **A gate assembled that way can only ever report
 PASS.** It certifies that the tool still does what it did, which is not the question anyone is
 asking. It duly reported PASS over a derived set missing Storm Bolt, Ring of Frost, Blinding Light,
@@ -234,10 +252,12 @@ Matching is by **name**, case-insensitively. Names rather than ids on purpose: a
 thing a patch is allowed to change, and a sentinel that silently stopped existing would defeat the
 gate it is part of.
 
-**Entangling Roots is a soft-CC sentinel, deliberately.** The design's Part C prose names it among
+**Entangling Roots is a `ccRoot` sentinel, deliberately.** The design's Part C prose names it among
 the spells the third validation run finally reached, which is a statement about *pool coverage* and
-reads easily as one about its *bucket*. It is not: Part A defines Soft CC as "roots and snares", and
-the client agrees — Entangling Roots (339) carries mechanic 7, Rooted, and nothing else.
+reads easily as one about its *bucket*. It is not: the unit keeps control and only cannot move, and
+the client agrees — Entangling Roots (339) carries mechanic 7, Rooted, and nothing else. Frost Nova,
+Void Tendrils, Mass Entanglement and Landslide are `ccRoot` sentinels for the same reason; Hamstring,
+Chains of Ice, Cone of Cold and the rest of the slows are `ccSnare` ones.
 
 ## Class grouping
 
@@ -285,7 +305,11 @@ populations cleanly, and seven is a simple majority of thirteen.
   grants it by a route none of the four pool sources describes. Recorded in `SENTINELS_UNREACHABLE`.
 - **A handoff that also renames is invisible.** Earthbind Totem (2484) is in the pool but carries no
   mechanic, and the aura it lands is named "Earthbind" — so neither the mechanic match nor the family
-  bridge, which needs an exact name match, can cross from the totem to its snare.
+  bridge, which needs an exact name match, can cross from the totem to its snare. Recorded under
+  `ccSnare` in `SENTINELS_UNREACHABLE`. Earthgrab Totem's root (aura 64695, mechanic 7) has the same
+  shape: only the totem's pulse 116943 triggers it, and the pool never reaches that. Both auras ship
+  in `defaults/Categories.lua` BY HAND (owner 2026-10-04), so every `--diff` will list Earthbind 3600
+  and Earthgrab 64695 as shipped-but-not-derived; keep them.
 - **A trait outside any loadout's tree has no class** and falls to `ALL` with
   `classSource: "unknown"` in `derived.json`.
 - **A new run needs network access.** wago.tools serves the exports. A past run replays offline
@@ -455,7 +479,9 @@ reach every racial's aura (Stoneform 65116 and Fireblood 273104 are on none in b
   the counts before and after: candidates, dropped as low confidence, folded, already ruled,
   proposed.
 - `FLAGS.md`: unverified and stale ids, below-the-bar sightings, and the crowd-control debuff
-  cross-check (report only, never proposed).
+  cross-check — player-applied debuffs DB2 gives a CC mechanic that are in none of `hardCC`,
+  `ccRoot` or `ccSnare` (`sid_propose.CC_CATEGORIES`, pinned equal to `research.BUCKET_ORDER` by a
+  test). Report only, never proposed: the CC lists stay `research.py`'s to derive.
 - `SOURCES.md`: logs scanned, date range, bytes, skipped lines, DB2 build and thresholds.
 - `proposals.json`: the review queue, corrections then additions, most-applied first.
 - `REVIEW.csv`: the review sheet, UTF-8 with a byte-order mark so Excel opens it cleanly. One row

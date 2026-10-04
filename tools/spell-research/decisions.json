@@ -3146,6 +3146,24 @@
     "reason": "review sheet R0302",
     "ruling": "reject"
   },
+  "add|ccRoot|MONK|disable|116706#116706#correction-add": {
+    "category": "ccRoot",
+    "date": "2026-09-25",
+    "reason": "review sheet R0038",
+    "ruling": "accept"
+  },
+  "add|ccSnare|DEATHKNIGHT|chains of ice|444826#444826#correction-add": {
+    "category": "ccSnare",
+    "date": "2026-09-25",
+    "reason": "review sheet R0005",
+    "ruling": "accept"
+  },
+  "add|ccSnare|DEATHKNIGHT|heart strike|460501#460501#correction-add": {
+    "category": "ccSnare",
+    "date": "2026-09-25",
+    "reason": "review sheet R0008",
+    "ruling": "accept"
+  },
   "add|defensives|DEMONHUNTER|metamorphosis|162264#162264#correction-add": {
     "date": "2026-09-25",
     "reason": "review sheet R0026",
@@ -3355,24 +3373,6 @@
     "reason": "review sheet R0030",
     "ruling": "accept"
   },
-  "add|softCC|DEATHKNIGHT|chains of ice|444826#444826#correction-add": {
-    "category": "softCC",
-    "date": "2026-09-25",
-    "reason": "review sheet R0005",
-    "ruling": "accept"
-  },
-  "add|softCC|DEATHKNIGHT|heart strike|460501#460501#correction-add": {
-    "category": "softCC",
-    "date": "2026-09-25",
-    "reason": "review sheet R0008",
-    "ruling": "accept"
-  },
-  "add|softCC|MONK|disable|116706#116706#correction-add": {
-    "category": "softCC",
-    "date": "2026-09-25",
-    "reason": "review sheet R0038",
-    "ruling": "accept"
-  },
   "add|support|EVOKER|blessing of the bronze|381732,381741,381746,381749,381750,381751,381752,381756,381757#381732#correction-add": {
     "category": "support",
     "date": "2026-09-25",
@@ -3484,6 +3484,17 @@
     "reason": "review sheet R0047",
     "ruling": "reject"
   },
+  "replace|ccRoot|DEMONHUNTER|the hunt|370970#323996#deletion": {
+    "date": "2026-09-25",
+    "reason": "review sheet R0058",
+    "ruling": "accept"
+  },
+  "replace|ccRoot|DEMONHUNTER|the hunt|370970#370970#correction-add": {
+    "category": "ccRoot",
+    "date": "2026-09-25",
+    "reason": "review sheet R0059",
+    "ruling": "accept"
+  },
   "replace|defensives|EVOKER|renewing blaze|374349#374348#deletion": {
     "date": "2026-09-25",
     "reason": "review sheet R0041",
@@ -3504,17 +3515,6 @@
     "category": "offensiveCDs",
     "date": "2026-09-25",
     "reason": "review sheet R0028",
-    "ruling": "accept"
-  },
-  "replace|softCC|DEMONHUNTER|the hunt|370970#323996#deletion": {
-    "date": "2026-09-25",
-    "reason": "review sheet R0058",
-    "ruling": "accept"
-  },
-  "replace|softCC|DEMONHUNTER|the hunt|370970#370970#correction-add": {
-    "category": "softCC",
-    "date": "2026-09-25",
-    "reason": "review sheet R0059",
     "ruling": "accept"
   }
 }

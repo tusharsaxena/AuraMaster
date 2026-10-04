@@ -146,9 +146,15 @@ from pathlib import Path
 # table's own `StateName_lang` for the pinned build, so a patch that renumbers a mechanic shows up as
 # a name that no longer reads correctly (and, far more loudly, as a failed sentinel).
 #
-# The split follows Part A's definition of the two categories, not Blizzard's DR groups: Hard CC is
-# "the unit loses control", Soft CC is "the unit keeps control but moves less". That is a deliberate
-# two-way split rather than the five DR categories — see the spec's "Decisions taken".
+# The split follows the categories `defaults/Categories.lua` ships, not Blizzard's DR groups:
+#   hardCC  "CC Loss of Control" — the unit loses control (stuns, fears, incapacitates, ...);
+#   ccRoot  "CC Root"            — the unit keeps control but cannot move;
+#   ccSnare "CC Snare"           — the unit keeps control but moves more slowly.
+# That is a deliberate three-way split rather than the five DR categories — see the spec's
+# "Decisions taken". HISTORY: Part A shipped it as a two-way Hard CC / Soft CC split; on 2026-10-04
+# the old softCC bucket ("roots & snares") was split into ccRoot and ccSnare, and hardCC was
+# relabeled "CC Loss of Control" (its key is unchanged). The root/snare line is the client's own:
+# mechanic 7 (Rooted) is a root, 8/11/27 (Slowed/Snared/Dazed) are snares.
 BUCKET_MECHANICS = {
     "hardCC": {
         1: "Charmed",
@@ -165,8 +171,10 @@ BUCKET_MECHANICS = {
         24: "Horrified",
         30: "Sapped",
     },
-    "softCC": {
+    "ccRoot": {
         7: "Rooted",
+    },
+    "ccSnare": {
         8: "Slowed",
         11: "Snared",
         27: "Dazed",
@@ -174,15 +182,17 @@ BUCKET_MECHANICS = {
 }
 
 # Bucket order everywhere this tool prints or writes, so a diff of two runs' output is a diff of the
-# data and not of dict ordering.
-BUCKET_ORDER = ("hardCC", "softCC")
+# data and not of dict ordering. IT IS ALSO THE PRECEDENCE: a spell whose mechanics match several
+# buckets lands in the FIRST of them (bucket_of), so hardCC > ccRoot > ccSnare — losing control
+# beats being pinned, which beats being slowed.
+BUCKET_ORDER = ("hardCC", "ccRoot", "ccSnare")
 
 # The category `name` Part A gives each bucket in `defaults/Categories.lua`. Used to LABEL each
-# emitted block: `--emit` prints the two `spells({ ... })` tables back to back, each a hundred lines
-# long, and the fragment is pasted into a file where putting the hard-CC ids under the soft-CC key
-# is both silent and catastrophic — the editor would look right and every filter would be wrong.
+# emitted block: `--emit` prints the three `spells({ ... })` tables back to back, each up to a hundred
+# lines long, and the fragment is pasted into a file where putting one bucket's ids under another's
+# key is both silent and catastrophic — the editor would look right and every filter would be wrong.
 # A block that names its own bucket and category key cannot be pasted into the wrong one by accident.
-BUCKET_TITLES = {"hardCC": "Hard CC", "softCC": "Soft CC"}
+BUCKET_TITLES = {"hardCC": "CC Loss of Control", "ccRoot": "CC Root", "ccSnare": "CC Snare"}
 
 # THE COVERAGE GATE (spec C4). A checked-in set of spells that MUST land in a given bucket.
 #
@@ -193,13 +203,14 @@ BUCKET_TITLES = {"hardCC": "Hard CC", "softCC": "Soft CC"}
 # plausible-looking list that a reviewer would have accepted.
 #
 # AND THEN THE GATE ITSELF FAILED, WHICH IS WHY THIS LIST LOOKS THE WAY IT DOES. Its first version
-# held ten hard-CC and six soft-CC names, and every one of them was a name the implementation of the
-# day already produced. A gate assembled that way can only ever report PASS; it certifies that the
-# tool still does what it did, which is not the question. It duly reported PASS over a derived set
-# missing Storm Bolt, Ring of Frost, Blinding Light, Holy Word: Chastise and Capacitor Totem — five
-# of the most recognisable stuns in the game — because the area-trigger fence on the name bridge
-# could not see them (see the module docstring). A gate that cannot fail is worse than no gate: no
-# gate leaves a reviewer suspicious, a passing gate buys their trust with nothing behind it.
+# held ten hard-CC and six soft-CC names (softCC, since split into ccRoot and ccSnare), and every
+# one of them was a name the implementation of the day already produced. A gate assembled that way
+# can only ever report PASS; it certifies that the tool still does what it did, which is not the
+# question. It duly reported PASS over a derived set missing Storm Bolt, Ring of Frost, Blinding
+# Light, Holy Word: Chastise and Capacitor Totem — five of the most recognisable stuns in the game —
+# because the area-trigger fence on the name bridge could not see them (see the module docstring).
+# A gate that cannot fail is worse than no gate: no gate leaves a reviewer suspicious, a passing
+# gate buys their trust with nothing behind it.
 #
 # So this list is built the other way round, and MUST KEEP BEING BUILT THAT WAY. Write down what a
 # player would name as that class's crowd control — from the game, from a PvP talent row, from
@@ -247,12 +258,28 @@ SENTINELS = {
         # emitted fragment, so a pool step that loses racials loses them for thirteen classes at once.
         "War Stomp", "Quaking Palm", "Haymaker",
     ),
-    "softCC": (
-        # ENTANGLING ROOTS IS A SOFT-CC SENTINEL, DELIBERATELY. The design's Part C prose names it
-        # among the spells the third validation run finally reached, which is a statement about POOL
-        # COVERAGE, and it was easy to read that as a statement about its BUCKET. It is not: Part A
-        # defines Soft CC as "the unit keeps control but moves less: roots and snares", and the
-        # client agrees — Entangling Roots (339) carries mechanic 7, Rooted, and nothing else.
+    "ccRoot": (
+        # ENTANGLING ROOTS IS A ROOT SENTINEL, DELIBERATELY. The design's Part C prose names it among
+        # the spells the third validation run finally reached, which is a statement about POOL
+        # COVERAGE, and it was easy to read that as a statement about its BUCKET. It is not: the
+        # unit keeps control and only cannot move, and the client agrees — Entangling Roots (339)
+        # carries mechanic 7, Rooted, and nothing else. (Before 2026-10-04 this bucket and ccSnare
+        # were one, softCC.)
+        # Hunter
+        "Entrapment", "Steel Trap", "Harpoon",
+        # Priest
+        "Void Tendrils",
+        # Mage
+        "Frost Nova",          # roots; ccRoot because its mechanic is Rooted, not Stunned
+        "Ice Nova",
+        # Monk
+        "Disable",             # 116706 is the root; 116095, the first application, is a snare
+        # Druid
+        "Entangling Roots", "Mass Entanglement",
+        # Evoker
+        "Landslide",
+    ),
+    "ccSnare": (
         # Warrior
         "Hamstring", "Piercing Howl",
         # Hunter
@@ -260,24 +287,21 @@ SENTINELS = {
         # Rogue
         "Crippling Poison",
         # Priest
-        "Void Tendrils", "Mind Flay",
+        "Mind Flay",
         # Death Knight
         "Chains of Ice", "Grip of the Dead",
         # Shaman
         "Frost Shock", "Thunderstorm",
         # Mage
-        "Frost Nova",          # roots; lands in soft CC because its mechanic is Rooted, not Stunned
         "Cone of Cold", "Slow",
         # Warlock
         "Curse of Exhaustion",
         # Monk
-        "Disable",
+        "Disable",             # 116095; see ccRoot
         # Druid
-        "Entangling Roots", "Mass Entanglement", "Ursol's Vortex", "Typhoon",
+        "Ursol's Vortex", "Typhoon",
         # Demon Hunter
         "Sigil of Chains",
-        # Evoker
-        "Landslide",
     ),
 }
 
@@ -307,7 +331,7 @@ SENTINELS_UNREACHABLE = {
         "Axe Toss": "pet skill line 761/931; the pool keeps ClassMask-0 rows only on class lines",
         "Seduction": "pet skill line 205; same test",
     },
-    "softCC": {
+    "ccSnare": {
         # Earthbind Totem (2484) IS in the pool, but it carries no mechanic and the aura it lands is
         # named "Earthbind", not "Earthbind Totem" — so neither the mechanic match nor the family
         # bridge, which requires an exact name match, can cross from the totem to its snare.
@@ -920,10 +944,10 @@ def close_over_triggers(pool: set[int], classes: dict[int, set[str]],
 def read_spell_categories(path: Path) -> tuple[dict[int, int], dict[int, int]]:
     """`SpellCategories` at base difficulty: spell -> `Mechanic`, and spell -> `DiminishType`.
 
-    `DiminishType` is not used to bucket anything — Part A is a two-way Hard/Soft split, not the five
-    DR groups (spec, "Decisions taken"). It is carried into derived.json purely as provenance, so the
-    author accepting a diff can see at a glance that a spell the tool calls Hard CC is also something
-    the client diminishes.
+    `DiminishType` is not used to bucket anything — the buckets are the three-way hardCC / ccRoot /
+    ccSnare split, not the five DR groups (spec, "Decisions taken"). It is carried into derived.json
+    purely as provenance, so the author accepting a diff can see at a glance that a spell the tool
+    puts in hardCC is also something the client diminishes.
     """
     mechanics: dict[int, int] = {}
     diminish: dict[int, int] = {}
@@ -1037,34 +1061,43 @@ def derive(cache: dict[str, Path]) -> dict:
         name = names.get(spell, "")
         if not name:
             continue  # unnamed internal ids would be blank rows in the editor
-        mechs = mechanics_of(spell)
-        if not mechs:
+        placed = bucket_of(mechanics_of(spell))
+        if placed is None:
             continue
-        for bucket in BUCKET_ORDER:
-            matched = sorted(mechs & set(BUCKET_MECHANICS[bucket]))
-            if not matched:
-                continue
-            reached = sorted(classes.get(spell, ()))
-            buckets[bucket][spell] = {
-                "id": spell,
-                "name": name,
-                "classes": reached,
-                "class": emit_class_key(reached),
-                "classSource": "skillline" if reached else "unknown",
-                "source": "bridge" if spell in bridged else "pool",
-                "mechanics": [{"id": m, "name": mechanic_names.get(m, "?")} for m in matched],
-                "diminishType": diminish.get(spell, 0),
-            }
-            # A spell matching mechanics in both buckets is Hard CC: losing control is the stronger
-            # statement, and Part A's two rows are meant to be read as a hierarchy rather than as
-            # overlapping sets. BUCKET_ORDER puts hardCC first, so breaking here is that rule.
-            break
+        bucket, matched = placed
+        reached = sorted(classes.get(spell, ()))
+        buckets[bucket][spell] = {
+            "id": spell,
+            "name": name,
+            "classes": reached,
+            "class": emit_class_key(reached),
+            "classSource": "skillline" if reached else "unknown",
+            "source": "bridge" if spell in bridged else "pool",
+            "mechanics": [{"id": m, "name": mechanic_names.get(m, "?")} for m in matched],
+            "diminishType": diminish.get(spell, 0),
+        }
     return {
         "poolSize": len(pool),
         "triggerClosureAdded": added,
         "familyBridgeAdded": len(bridged),
         "buckets": buckets,
     }
+
+
+def bucket_of(mechanics) -> tuple[str, list[int]] | None:
+    """`(bucket, matched mechanic ids)` for a spell carrying `mechanics`, or None when none is CC.
+
+    FIRST MATCH IN BUCKET_ORDER WINS, which is the precedence hardCC > ccRoot > ccSnare: a spell
+    that both stuns and roots is loss of control, and one that both roots and slows is a root. The
+    three categories are meant to be read as a hierarchy rather than as overlapping sets, so a spell
+    is placed in exactly one. `matched` holds only that bucket's mechanics.
+    """
+    mechs = set(mechanics)
+    for bucket in BUCKET_ORDER:
+        matched = sorted(mechs & set(BUCKET_MECHANICS[bucket]))
+        if matched:
+            return bucket, matched
+    return None
 
 
 def emit_class_key(reached: list[str]) -> str:
@@ -1335,7 +1368,7 @@ def format_lua(result: dict, build: str, date: str) -> str:
     """The paste-ready fragment, in `defaults/Categories.lua`'s own shape.
 
     One id per line with the spell name as a trailing comment, the layout the file uses for every
-    list: a hard-CC list of eighty ids is not reviewable any other way, and a reviewer accepting a
+    list: a CC list of eighty ids is not reviewable any other way, and a reviewer accepting a
     diff has to be able to read what each id IS. The `spells({ CLASS = { ... } })`
     call, the class key order and the indentation are the file's.
 
@@ -1343,10 +1376,10 @@ def format_lua(result: dict, build: str, date: str) -> str:
     itself, not only in a bundle nobody opens.
 
     WHY THE BRIDGED IDS SIT IN THEIR OWN RUN INSIDE EACH CLASS. The derived set is majority
-    name-bridged (138 of 215 hardCC, 160 of 212 softCC on build 12.1.0.69875) and the bridge is by
-    design a weaker edge than the mechanic graph: it matches on an exact name inside a shared spell
-    family, so it drags in rank and encounter variants — twenty-one ids named Polymorph, forty-three
-    named Mind Flay. That is the design contract (see the family-bridge note at the top of this file,
+    name-bridged (138 of 215 hardCC, 160 of 212 softCC on build 12.1.0.69875, before softCC was
+    split into ccRoot and ccSnare) and the bridge is by design a weaker edge than the mechanic
+    graph: it matches on an exact name inside a shared spell family, so it drags in rank and
+    encounter variants — twenty-one ids named Polymorph, forty-three named Mind Flay. That is the design contract (see the family-bridge note at the top of this file,
     spec C3 step 5), not a defect, and the tool must not quietly drop any of them: the author decides
     what to cut, at the diff, with the names in front of them.
 
@@ -1745,8 +1778,8 @@ def _trail(entry: dict, target: int | None) -> str:
 # The shipped-id cross-check (--check-shipped)
 # ---------------------------------------------------------------------------
 #
-# WHAT IT IS FOR. `--emit` derives the two CC buckets and diffs them; nothing checked the OTHER
-# nine shipped lists at all, and nothing checked any list for the failure that actually bites:
+# WHAT IT IS FOR. `--emit` derives the three CC buckets and diffs them; nothing checked the OTHER
+# shipped lists at all, and nothing checked any list for the failure that actually bites:
 # an id that is no longer what the file says it is. Three ways that happens, and this catches all
 # three mechanically over every shipped id:
 #
@@ -1863,7 +1896,8 @@ def check_shipped(cache: dict[str, Path], categories_path: Path) -> tuple[str, i
 def parse_args(argv: list[str] | None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         prog="research.py",
-        description="Derive AuraMaster's Hard CC / Soft CC spell lists from Blizzard's DB2 exports.",
+        description="Derive AuraMaster's CC spell lists (hardCC \"CC Loss of Control\", ccRoot "
+                    "\"CC Root\", ccSnare \"CC Snare\") from Blizzard's DB2 exports.",
         epilog="This tool never writes defaults/Categories.lua. See tools/spell-research/README.md.",
     )
     parser.add_argument("--build", help="pin a build (e.g. 12.1.0.69875); default is live retail")

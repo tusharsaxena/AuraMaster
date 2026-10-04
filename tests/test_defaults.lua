@@ -186,13 +186,13 @@ local function shippedSpells(auraType, key)
     return def.spells, def
 end
 
-test("defaults: Hard CC and Soft CC ship as non-empty HARMFUL spell lists of positive integer ids", function()
+test("defaults: CC Loss of Control, CC Root and CC Snare ship as non-empty HARMFUL spell lists of positive integer ids", function()
     -- Issue #11 part A1: the first `spells`-kind categories `Cat.HARMFUL` has ever carried. Asserted
     -- against the SHIPPED data, not a fixture — the lists are curated by hand from
     -- tools/spell-research/research.py's output (docs/spell-research/2026-09-20/), so a paste slip is
     -- exactly the kind of mistake that reaches a player otherwise.
     local seen = {}
-    for _, key in ipairs({ "hardCC", "softCC" }) do
+    for _, key in ipairs({ "hardCC", "ccRoot", "ccSnare" }) do
         local ids, def = shippedSpells("HARMFUL", key)
         local n = 0
         for id, class in pairs(ids) do
@@ -200,7 +200,7 @@ test("defaults: Hard CC and Soft CC ship as non-empty HARMFUL spell lists of pos
             assertEqual(type(id), "number", key .. ": id " .. tostring(id))
             assertTrue(id > 0 and id == math.floor(id), key .. ": id " .. tostring(id))
             assertTrue(type(class) == "string" and class ~= "", key .. ": id " .. id .. " has no class")
-            -- red under: the same spell in both buckets — a spell belongs to exactly ONE, so the two
+            -- red under: the same spell in two buckets — a spell belongs to exactly ONE, so the
             -- lists can never double-count an aura or disagree about which row claims it.
             assertTrue(seen[id] == nil, ("id %d is in both %s and %s"):format(id, tostring(seen[id]), key))
             seen[id] = key
@@ -218,27 +218,39 @@ test("defaults: Hard CC and Soft CC ship as non-empty HARMFUL spell lists of pos
     assertEqual(hard[853], "PALADIN", "Hammer of Justice")
     assertEqual(hard[118], "MAGE", "Polymorph")
     assertEqual(hard[3355], "HUNTER", "Freezing Trap — the bridged aura id, not the cast id")
-    local soft = shippedSpells("HARMFUL", "softCC")
-    assertEqual(soft[339], "DRUID", "Entangling Roots")
-    assertEqual(soft[1715], "WARRIOR", "Hamstring")
+    local root = shippedSpells("HARMFUL", "ccRoot")
+    assertEqual(root[339], "DRUID", "Entangling Roots")
+    assertEqual(root[122], "MAGE", "Frost Nova — a freeze is a root")
+    assertEqual(root[378760], "MAGE", "Frostbite")
+    assertEqual(root[102359], "DRUID", "Mass Entanglement")
+    local snare = shippedSpells("HARMFUL", "ccSnare")
+    assertEqual(snare[1715], "WARRIOR", "Hamstring")
+    assertEqual(snare[390669], "PRIEST", "Apathy")
+    assertEqual(snare[186387], "HUNTER", "Bursting Shot")
+    -- Disable ships on both: its snare 116095 here, the root 116706 a reapplication lands there.
+    assertEqual(snare[116095], "MONK", "Disable's snare")
+    assertEqual(root[116706], "MONK", "Disable's root")
     -- The owner removed Wake of Ashes from these lists on 2026-09-20, and a later research run will
     -- derive it back into the hard-CC bucket: this is the assertion that makes re-adding it a red
     -- test rather than an unexplained diff. Every id of the ability -- the stun aura, the cast, the
-    -- older stun aura and the ancestor's slow -- is out of BOTH rows.
+    -- older stun aura and the ancestor's slow -- is out of every row.
     for _, id in ipairs({ 255941, 255937, 205290, 205273 }) do
         assertTrue(hard[id] == nil, "Wake of Ashes id " .. id .. " is back on hardCC")
-        assertTrue(soft[id] == nil, "Wake of Ashes id " .. id .. " is back on softCC")
+        assertTrue(root[id] == nil, "Wake of Ashes id " .. id .. " is back on ccRoot")
+        assertTrue(snare[id] == nil, "Wake of Ashes id " .. id .. " is back on ccSnare")
     end
 end)
 
-test("defaults: Hard CC and Soft CC are declared ABOVE crowdControl, the Blizzard token they refine", function()
+test("defaults: the CC lists are declared ABOVE crowdControl, the Blizzard token they refine", function()
     -- Spec A1, and not cosmetic: Cat.For's order is the order settings/Filters.lua draws the grid in
     -- and the order modules/FilterCompiler.lua's shown-group loop dedups in.
     local at = {}
     for i, def in ipairs(Cat.HARMFUL) do at[def.key] = i end
     assertTrue(at.hardCC < at.crowdControl, "hardCC is below crowdControl")
-    assertTrue(at.softCC < at.crowdControl, "softCC is below crowdControl")
-    assertTrue(at.hardCC < at.softCC, "hard before soft, as the descs read")
+    assertTrue(at.ccRoot < at.crowdControl, "ccRoot is below crowdControl")
+    assertTrue(at.ccSnare < at.crowdControl, "ccSnare is below crowdControl")
+    assertTrue(at.hardCC < at.ccRoot and at.ccRoot < at.ccSnare, "loss of control, root, snare: strongest first")
+    assertTrue(at.softCC == nil, "Soft CC is retired (schema v12 split it)")
 end)
 
 test("defaults: uncategorized is declared LAST in both Cat.HELPFUL and Cat.HARMFUL (U-1, fix round 3)", function()

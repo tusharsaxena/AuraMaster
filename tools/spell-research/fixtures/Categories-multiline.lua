@@ -78,7 +78,7 @@ Cat.HELPFUL = {
 
 Cat.HARMFUL = {
     {
-        key = "hardCC", kind = "spells", label = "Hard CC (loss of control)",
+        key = "hardCC", kind = "spells", label = "CC Loss of Control",
         desc = "Stuns, incapacitates, disorients and fears.",
         spells = spells({
             WARRIOR = {
@@ -86,6 +86,24 @@ Cat.HARMFUL = {
                 132168,  -- Shockwave
             },
             SHAMAN      = { 51514, 118905 },                        -- Hex (Frog; 211004 is the Spider), Capacitor Totem
+        }),
+    },
+    {
+        key = "ccRoot", kind = "spells", label = "CC Root",
+        desc = "Roots: the unit keeps control but cannot move.",
+        spells = spells({
+            DRUID = {
+                339,     -- Entangling Roots
+            },
+        }),
+    },
+    {
+        key = "ccSnare", kind = "spells", label = "CC Snare",
+        desc = "Snares: the unit keeps control but moves more slowly.",
+        spells = spells({
+            WARRIOR = {
+                1715,    -- Hamstring
+            },
         }),
     },
     {

@@ -318,7 +318,7 @@ test("general → spell categories: the list draws two columns, filled row-major
 end)
 
 
-test("general → spell categories: a dropdown of the fourteen spell categories plus Weapon enchants, opening on the first", function()
+test("general → spell categories: a dropdown of the fifteen spell categories plus Weapon enchants, opening on the first", function()
     local NS, _, _, ws = spells()
     local dd
     for _, w in ipairs(ws) do
@@ -327,11 +327,11 @@ test("general → spell categories: a dropdown of the fourteen spell categories 
     assertTrue(dd ~= nil, "the category dropdown is drawn")
     assertTrue(inScroll(NS, dd), "in the tab body")
     -- red under: the dropdown offering a flag or token category (only spell categories and the
-    -- enchant row belong here). 15 = eleven buff spell lists + weaponEnchants + issue #11's hardCC and
-    -- softCC and schema v7's racialDebuffs, which are `spells`-kind on Cat.HARMFUL: this tab is keyed on the KIND, never on the
+    -- enchant row belong here). 16 = eleven buff spell lists + weaponEnchants + issue #11's hardCC,
+    -- schema v12's ccRoot and ccSnare and schema v7's racialDebuffs, which are `spells`-kind on Cat.HARMFUL: this tab is keyed on the KIND, never on the
     -- aura type, or a shipped debuff list would have no editor and its `See spells` link would go
     -- nowhere.
-    assertEqual(#dd.order, 15)
+    assertEqual(#dd.order, 16)
     for _, k in ipairs(dd.order) do
         assertTrue(NS.Categories.IsSpellCategory(k) or k == "weaponEnchants", "a spell category or the enchant row: " .. k)
     end
@@ -340,12 +340,14 @@ test("general → spell categories: a dropdown of the fourteen spell categories 
     assertEqual(dd.list.healing, marked(NS, "healing"), "the merged Healing category is offered")
     assertEqual(dd.list.weaponEnchants, marked(NS, "weaponEnchants"), "Weapon enchants is offered too")
     assertEqual(dd.list.hardCC, marked(NS, "hardCC"), "and the debuff lists")
-    assertEqual(dd.list.softCC, marked(NS, "softCC"))
+    assertEqual(dd.list.ccRoot, marked(NS, "ccRoot"))
+    assertEqual(dd.list.ccSnare, marked(NS, "ccSnare"))
     assertEqual(dd.order[1], "defensives")
     assertEqual(dd.order[12], "weaponEnchants", "the buff rows first, in defaults/Categories.lua's order")
     assertEqual(dd.order[13], "hardCC", "then Cat.HARMFUL's, in its own order")
-    assertEqual(dd.order[14], "softCC")
-    assertEqual(dd.order[15], "racialDebuffs")
+    assertEqual(dd.order[14], "ccRoot")
+    assertEqual(dd.order[15], "ccSnare")
+    assertEqual(dd.order[16], "racialDebuffs")
     assertEqual(dd.value, "defensives")
 end)
 
@@ -366,13 +368,13 @@ test("general → spell categories: every Category entry is prefixed with the au
         assertEqual(rendered(dd.list[key]):sub(1, #word + 3), "[" .. word .. "] ", key .. ": marked as a prefix")
         -- red under: the marker drawn in no color at all, or in the OTHER aura type's color.
         assertEqual(dd.list[key]:sub(1, 10), TYPE_COLOR[auraType], key .. ": colored by aura type")
-        -- red under: a suffix-shaped marker, which would collide with the two CC rows' own
-        -- parenthetical suffixes ("Hard CC (loss of control)")
+        -- red under: a suffix-shaped marker, which collided with the CC rows' parenthetical suffixes
+        -- of the day ("Hard CC (loss of control)") and would read as part of any name
         assertTrue(dd.list[key]:find(NS.L[NS.Categories.Find(auraType, key).label], 1, true) ~= nil,
             key .. ": the name survives the marker whole")
         if auraType == "HELPFUL" then buffs = buffs + 1 else debuffs = debuffs + 1 end
     end
-    -- red under: the case passing on a buff-only list again — issue #11 put hardCC and softCC here,
+    -- red under: the case passing on a buff-only list again — issue #11 put the CC lists here,
     -- and a marker nothing ever draws as Debuffs is a marker that is not doing its job
     assertTrue(buffs > 0 and debuffs > 0, ("both aura types appear: %d buff, %d debuff"):format(buffs, debuffs))
     -- Weapon enchants is kind "enchant", not a spell list, and is marked buff-side like the rest of
@@ -381,10 +383,10 @@ test("general → spell categories: every Category entry is prefixed with the au
     -- Anchored to the literal rather than to the accessor: everything above builds its expectation
     -- by asking Cat.AuraTypeOf, so a build in which EVERY category answered the wrong type would
     -- still pass. These two say what a player reads, in full, padding included.
-    assertEqual(dd.list.hardCC, "|cffcc7373[Debuffs]|r Hard CC (loss of control)")
+    assertEqual(dd.list.hardCC, "|cffcc7373[Debuffs]|r CC Loss of Control")
     assertEqual(dd.list.healing, "|cff73bf80[Buffs]|r   Healing")
     -- And what the client DRAWS of those two, which is the pair the padding is for.
-    assertEqual(rendered(dd.list.hardCC), "[Debuffs] Hard CC (loss of control)")
+    assertEqual(rendered(dd.list.hardCC), "[Debuffs] CC Loss of Control")
     assertEqual(rendered(dd.list.healing), "[Buffs]   Healing")
     -- And anchored to the declaration: hardCC reads Debuffs because it is declared in Cat.HARMFUL.
     local declaredHarmful = false
@@ -423,11 +425,11 @@ test("general → spell categories: the markers are padded so every name starts 
         assertNil(shown:find("|r", 1, true), key)
     end
     -- red under: a padding rule that happens to align only one aura type's rows with itself
-    assertEqual(rendered(dd.list.softCC):find("Soft CC", 1, true),
+    assertEqual(rendered(dd.list.ccSnare):find("CC Snare", 1, true),
         rendered(dd.list.healing):find("Healing", 1, true))
     -- The escapes are the same length on both aura types (one `|c` and one `|r` each), so the
     -- column survives in BYTES as well -- which is what every other case here indexes with.
-    assertEqual(dd.list.softCC:find("Soft CC", 1, true), dd.list.healing:find("Healing", 1, true))
+    assertEqual(dd.list.ccSnare:find("CC Snare", 1, true), dd.list.healing:find("Healing", 1, true))
 end)
 
 test("general → spell categories: the closed dropdown shows the marked label too (issue #10)", function()

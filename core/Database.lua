@@ -1137,6 +1137,77 @@ function Database.MigrateV11(p)
     return dropped, converted
 end
 
+--- v12 (owner 2026-10-04): the debuff category Soft CC (`softCC`, "roots & snares") is split in two,
+--- CC Root (`ccRoot`) and CC Snare (`ccSnare`); Hard CC keeps its key and is relabeled CC Loss of
+--- Control, which stores nothing and needs no step.
+---
+--- THE SAME RULE AS v7: NO STORED CONTAINER DRAWS DIFFERENTLY BECAUSE OF THE UPGRADE. A container
+--- that stored a Soft CC state gets that state on BOTH new keys, so a Hidden Soft CC stays Hidden
+--- for roots and snares alike; a key already stored is the player's own and is kept. Left to the
+--- backfill, both would read Show and a hidden root would start drawing. `softCC` is then removed.
+--- A container that stored no Soft CC state is left to the backfill, the Show it read before.
+---
+--- The player's own Soft CC list edits follow the ids: an edit on an id the split put in CC Root
+--- moves there, on any other id the old row shipped to CC Snare, and on an id the old row never
+--- shipped (one the player added) to BOTH, because both new rows carry the old row's state and so
+--- together claim exactly what it claimed. An edit already on the destination is kept. The split
+--- is FROZEN here as the ids it was (`V12_ROOT_IDS`), never read from the live lists, whose
+--- curation may move on. Each set also carries the Shaman totem aura the owner added to its list
+--- in the same change (Earthgrab 64695, Earthbind 3600), so an old Soft CC edit on one lands on the
+--- list that ships it. IDEMPOTENT: a second run finds no `softCC` and changes nothing.
+--- @return number  the containers whose Soft CC state it split
+local V12_ROOT_IDS = {}
+for _, id in ipairs({ 122, 339, 64803, 102359, 114404, 116706, 157997, 162480, 190925, 324382,
+    355689, 370970, 378760, 64695 }) do V12_ROOT_IDS[id] = true end
+local V12_SNARE_IDS = {}
+for _, id in ipairs({ 1715, 3409, 5116, 12323, 15407, 31589, 35546, 45524, 51490, 58180, 61391,
+    116095, 121253, 123586, 127797, 135299, 157981, 164812, 185763, 186387, 195645, 196840, 198813,
+    204843, 206930, 212792, 213405, 236299, 260369, 273977, 334275, 357214, 368970, 370898, 384069,
+    390669, 391104, 392983, 403695, 408383, 444826, 460501, 470194, 1251059, 3600 }) do
+    V12_SNARE_IDS[id] = true
+end
+
+--- Copy edit `on` for id key `k` into category `key` of `edits` unless it holds one of its own.
+local function keepEdit(edits, key, k, on)
+    local dst = edits[key]
+    if type(dst) ~= "table" then dst = {}; edits[key] = dst end
+    if dst[k] == nil then dst[k] = on end
+end
+
+local function splitSoftEdits(edits)
+    local src = edits.softCC
+    edits.softCC = nil
+    if type(src) ~= "table" then return end
+    for k, on in pairs(src) do
+        local id = tonumber(k)
+        if id and V12_ROOT_IDS[id] then
+            keepEdit(edits, "ccRoot", k, on)
+        elseif id and V12_SNARE_IDS[id] then
+            keepEdit(edits, "ccSnare", k, on)
+        else
+            keepEdit(edits, "ccRoot", k, on)
+            keepEdit(edits, "ccSnare", k, on)
+        end
+    end
+end
+
+function Database.MigrateV12(p)
+    if type(p) ~= "table" then return 0 end
+    if type(p.categorySpells) == "table" then splitSoftEdits(p.categorySpells) end
+    if type(p.containers) ~= "table" then return 0 end
+    local split = 0
+    for _, c in pairs(p.containers) do
+        local cats = type(c) == "table" and type(c.filter) == "table" and c.filter.categories
+        if type(cats) == "table" and cats.softCC ~= nil then
+            if cats.ccRoot == nil then cats.ccRoot = cats.softCC end
+            if cats.ccSnare == nil then cats.ccSnare = cats.softCC end
+            cats.softCC = nil
+            split = split + 1
+        end
+    end
+    return split
+end
+
 --- Run `fn(profile, name)` over every stored profile: AceDB's raw store (`db.sv.profiles`, the
 --- inactive ones included), or the no-AceDB fallback's one profile. Sorted, so the log is stable.
 ---
@@ -1265,6 +1336,14 @@ local SCHEMA_STEPS = {
             local dropped, converted = Database.MigrateV11(p)
             if NS.Debug then
                 NS.Debug("Migrate", "v11 profile '%s': attach side dropped to Automatic on %s container(s); converted to points on %s", name, dropped, converted)
+            end
+        end)
+    end },
+    { to = 12, apply = function(db)
+        eachProfile(db, function(p, name)
+            local n = Database.MigrateV12(p)
+            if NS.Debug then
+                NS.Debug("Migrate", "v12 profile '%s': Soft CC split into CC Root and CC Snare on %s container(s)", name, n)
             end
         end)
     end },

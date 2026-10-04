@@ -169,6 +169,103 @@ test("v7: a v6 profile climbs to v7 with every schema row still resolving", func
     assertEqual(NS.ValidateSchema(), 0, "and every schema row still resolves")
 end)
 
+-- ── v12: Soft CC split into CC Root and CC Snare (owner 2026-10-04) ───────────────────────────
+
+test("v12: every container that stored a Soft CC state gets it on BOTH CC Root and CC Snare", function()
+    local NS = fresh()
+    local p = { containers = {
+        [1] = { filter = { categories = { hardCC = "show", softCC = "hide" } } },
+        [2] = { filter = { categories = { softCC = "show" } } },
+        [3] = { filter = { categories = { softCC = "hide", ccSnare = "show" } } },
+        [4] = { filter = { categories = { defensives = "show" } } },
+        [5] = { filter = {} },
+    } }
+    assertEqual(NS.Database.MigrateV12(p), 3, "the three containers that stored a Soft CC state")
+    local function cats(i) return p.containers[i].filter.categories end
+    -- red under: leaving the new keys to the backfill's Show, which would draw a root or a snare a
+    -- container hid
+    assertEqual(cats(1).ccRoot, "hide")
+    assertEqual(cats(1).ccSnare, "hide")
+    assertEqual(cats(1).hardCC, "show", "CC Loss of Control keeps its key and its state")
+    assertEqual(cats(2).ccRoot, "show")
+    assertEqual(cats(2).ccSnare, "show")
+    assertEqual(cats(3).ccRoot, "hide")
+    assertEqual(cats(3).ccSnare, "show", "a stored state is the player's own")
+    for i = 1, 3 do assertNil(cats(i).softCC, "the retired key is removed from container " .. i) end
+    assertNil(cats(4).ccRoot, "a container with no Soft CC state is left to the backfill")
+    assertNil(cats(4).ccSnare)
+end)
+
+test("v12: the player's Soft CC edits follow their ids, an unshipped id to both, and a second run changes nothing", function()
+    local NS = fresh()
+    local p = {
+        categorySpells = {
+            softCC = { [339] = false, [1715] = false, [900001] = true, ["122"] = false },
+            ccSnare = { [1715] = true },
+        },
+        containers = { [1] = { filter = { categories = { softCC = "hide" } } } },
+    }
+    NS.Database.MigrateV12(p)
+    local e = p.categorySpells
+    assertNil(e.softCC, "the retired list's edits are gone with it")
+    -- red under: every edit copied to both lists, which would put a root on CC Snare
+    assertEqual(e.ccRoot[339], false, "Entangling Roots' edit goes to CC Root")
+    assertNil(e.ccSnare[339])
+    assertEqual(e.ccRoot["122"], false, "a string id key is read as the id")
+    assertEqual(e.ccSnare[1715], true, "an edit already on the destination wins over the moved one")
+    assertNil(e.ccRoot[1715])
+    assertEqual(e.ccRoot[900001], true, "an id the old row never shipped goes to both")
+    assertEqual(e.ccSnare[900001], true)
+    local before = {}
+    for k, v in pairs(p.containers[1].filter.categories) do before[k] = v end
+    assertEqual(NS.Database.MigrateV12(p), 0, "idempotent")
+    for k, v in pairs(before) do assertEqual(p.containers[1].filter.categories[k], v, k) end
+end)
+
+test("v12: the frozen split is the shipped CC Root and CC Snare lists exactly", function()
+    local NS = fresh()
+    -- Every shipped id, put on a Soft CC edit, must land on the one list that ships it: the frozen
+    -- sets in core/Database.lua and defaults/Categories.lua cannot drift apart unnoticed.
+    local root = NS.Categories.Find("HARMFUL", "ccRoot").spells
+    local snare = NS.Categories.Find("HARMFUL", "ccSnare").spells
+    local edits = {}
+    for id in pairs(root) do edits[id] = false end
+    for id in pairs(snare) do edits[id] = false end
+    local p = { categorySpells = { softCC = edits } }
+    NS.Database.MigrateV12(p)
+    for id in pairs(root) do
+        assertEqual(p.categorySpells.ccRoot[id], false, "root " .. id)
+        assertNil(p.categorySpells.ccSnare[id], "root " .. id .. " is not a snare")
+    end
+    for id in pairs(snare) do
+        assertEqual(p.categorySpells.ccSnare[id], false, "snare " .. id)
+        assertNil(p.categorySpells.ccRoot[id], "snare " .. id .. " is not a root")
+    end
+end)
+
+test("v12: a v11 profile climbs to v12 in every profile with every schema row still resolving", function()
+    local function raw()
+        return {
+            seeded = true, nextContainerId = 2, containerOrder = { 1 }, userCategories = {}, userCategoryOrder = {},
+            categorySpells = { softCC = { [102359] = false } },
+            containers = { [1] = { name = "Roots", unit = "target", auraType = "HARMFUL", style = "icons",
+                filter = { categories = { softCC = "hide", hardCC = "show" } } } },
+        }
+    end
+    local NS = fresh({ savedVariables = { profiles = { Default = raw(), Raid = raw() }, global = { schemaVersion = 11 } } })
+    assertEqual(NS.db.global.schemaVersion, NS.SCHEMA_VERSION)
+    for _, name in ipairs({ "Default", "Raid" }) do
+        local p = NS.db.sv.profiles[name]
+        local cats = p.containers[1].filter.categories
+        -- red under: the step touching the active profile only
+        assertNil(cats.softCC, name)
+        assertEqual(cats.ccRoot, "hide", name)
+        assertEqual(cats.ccSnare, "hide", name)
+        assertEqual(p.categorySpells.ccRoot[102359], false, name .. ": Mass Entanglement's edit")
+    end
+    assertEqual(NS.ValidateSchema(), 0, "and every schema row still resolves")
+end)
+
 test("user categories: one round-trips through a reload, with its spells", function()
     local NS = fresh()
     local key = NS.Categories.CreateUserCategory("Affixes", "HELPFUL")

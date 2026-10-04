@@ -23,7 +23,8 @@ local _, NS = ...
 --                  so a buff category's list bites on the player, the pet and an assistable target or
 --                  focus, and a debuff category's list on a target or focus you cannot assist and
 --                  nowhere else
---                  (issue #11 gave `Cat.HARMFUL` its first two, `hardCC` and `softCC`). The Filters
+--                  (issue #11 gave `Cat.HARMFUL` its first, `hardCC` and the `softCC` the 2026-10-04 split made
+--                  `ccRoot` and `ccSnare`). The Filters
 --                  page and General -> Spell Categories say so where it matters (docs/scope.md,
 --                  "What the engine cannot do").
 --   enchant        the player's temporary weapon enchants. The odd one out: it matches no aura and
@@ -42,7 +43,7 @@ local _, NS = ...
 --                  row an earlier pass dropped; issue #11's part A2 re-derived the asymmetry from the
 --                  UNIT rather than from the aura type). Both rows' unions are now genuine subsets —
 --                  `Cat.HELPFUL` has always had `spells`-kind categories and `Cat.HARMFUL` gained
---                  `hardCC` and `softCC` below — so what decides whether a Show row may contribute a
+--                  `hardCC`, `ccRoot` and `ccSnare` below — so what decides whether a Show row may contribute a
 --                  group of its own is no longer "is the union empty" but "is the one constraint that
 --                  group would carry CERTAIN to be applied". Its only constraint is an
 --                  `excludeSpellIDs` of the union, and the engine discards spell ids except for buffs
@@ -76,7 +77,8 @@ local _, NS = ...
 -- An id that does not exist in the current client simply never matches, so a stale entry costs
 -- nothing but a row in the editor.
 --
--- PROVENANCE (issue #11 part C, spec section C6). `hardCC` and `softCC` below are the first lists
+-- PROVENANCE (issue #11 part C, spec section C6). `hardCC` and `ccRoot`/`ccSnare` below (one `softCC`
+-- row until the 2026-10-04 split) are the first lists
 -- here that were DERIVED rather than hand-assembled: `tools/spell-research/research.py` reads the
 -- client's own DB2 tables, closes the player-reachable spell pool over `EffectTriggerSpell` (the
 -- addon filters on the AURA's id, not the cast's), buckets by spell mechanic, and diffs the result
@@ -702,10 +704,10 @@ Cat.HELPFUL = {
 -- Debuff categories
 -- ---------------------------------------------------------------------------
 --
--- Every category here but the first two is something the engine can evaluate for ANY unit. `hardCC`
--- and `softCC` are `spells`-kind (issue #11 part A) and so are not: Blizzard honors spell ids for
--- debuffs only on units you CANNOT assist (UnitCanAssist, so neutral units too), and discards them on
--- the player, the pet and any unit you can assist. The rows are still worth shipping — the question
+-- Every category here but the four spell lists is something the engine can evaluate for ANY unit.
+-- `hardCC`, `ccRoot`, `ccSnare` and `racialDebuffs` are `spells`-kind (issue #11 part A) and so are
+-- not: Blizzard honors spell ids for debuffs only on units you CANNOT assist (UnitCanAssist, so
+-- neutral units too), and discards them on the player, the pet and any unit you can assist. The rows are still worth shipping — the question
 -- they answer ("is my sheep on the target", "is it rooted") is asked of an enemy target or focus,
 -- which is exactly where the ids do bite — and every
 -- surface that can mislead says so: their own descs below, the Filters section's Categories tab, the
@@ -723,7 +725,7 @@ local ALL_DISPELS = { Magic = true, Curse = true, Disease = true, Poison = true,
 
 Cat.HARMFUL = {
     {
-        -- ABOVE `crowdControl` on purpose: these two editable rows read before the Blizzard token
+        -- ABOVE `crowdControl` on purpose: these three editable CC rows read before the Blizzard token
         -- they refine, which is the order a player reasons in (spec A1).
         --
         -- CURATED, not the generator's raw output, and curated BY HAND. The 2026-09-20 run bucketed
@@ -740,7 +742,7 @@ Cat.HARMFUL = {
         --      later curator may call it differently. It is a defensible call because nothing is
         --      lost — the exhaustive derived set (215 hard, 212 soft for build 12.1.0.69875) is
         --      frozen in docs/spell-research/2026-09-20/, and General -> Spell Categories lets a
-        --      player add any id out of it. These two rows are A STARTER SET meant to be edited,
+        --      player add any id out of it. These CC rows are A STARTER SET meant to be edited,
         --      exactly what this file says of every other list it ships.
         --
         -- WHAT THE JUDGMENT LOOKED LIKE — illustrations, not a closed list of exclusions. Out under
@@ -772,7 +774,7 @@ Cat.HARMFUL = {
         -- the two do not actually disagree.
         --
         -- Every id added was read out of derived.json first for name, mechanic and DR. Class was
-        -- verified too, but by hand wherever derived.json is unreliable on it (see `softCC`).
+        -- verified too, but by hand wherever derived.json is unreliable on it (see `ccSnare`).
         --
         -- THE ONE EXCEPTION TO RULE 1: an ability the client SPEC-SPLITS, shipping a live id per
         -- specialization rather than an old rank and a new one. Asphyxiate is the only
@@ -787,7 +789,7 @@ Cat.HARMFUL = {
         -- filing it as one; that argument is gone with the id, because the decision was not that the
         -- research was wrong. No id of the ability belongs on either list — not 255941, not 255937
         -- (the cast), not 205290 (the older stun aura) and not 205273 (the ancestor's slow, which
-        -- `softCC` has never shipped; Paladin's Soft CC row is Judgment of Justice). A later research
+        -- `ccSnare` has never shipped; Paladin's CC Snare row is Judgment of Justice). A later research
         -- run WILL derive the ability into the hard-CC bucket again: leaving it out is the intended
         -- diff, not an oversight to helpfully correct. A player who wants it adds the id on
         -- General -> Spell Categories.
@@ -799,24 +801,25 @@ Cat.HARMFUL = {
         -- aura of its own and so is not a debuff id at all.
         --
         -- KNOWN GAPS, recorded rather than papered over, because a player who notices one missing
-        -- should find the reason in this file. Five abilities are absent and stay absent:
+        -- should find the reason in this file. Three abilities are absent and stay absent (two more
+        -- the research run cannot reach, the Shaman totems, now ship by hand):
         --   * Repentance (20066), hard CC. The research run's SENTINELS_UNREACHABLE records why —
         --     its id appears in none of the four pool sources for this build, so the client grants
         --     it by a route the pipeline cannot see.
         --   * Axe Toss (89766) and Seduction (6358), hard CC, the warlock's pet CC. Both sit on a
         --     PET skill line with ClassMask 0, and the pool keeps a ClassMask-0 row only on one of
         --     the thirteen class lines — the same test that keeps professions and mounts out.
-        --   * Earthbind Totem (2484), soft CC. In the pool, but it carries no mechanic and its aura
-        --     is named "Earthbind", so neither the mechanic match nor the bridge's exact-name test
-        --     can cross to it.
-        --   * Earthgrab Totem (64695), soft CC — found while closing this review, and recorded ONLY
-        --     here: the bundle under docs/spell-research/ is frozen and its ANALYSIS.md does not
-        --     name it. The id is in NEITHER derived bucket, which is why Shaman ships no root at
-        --     all. Same shape as Earthbind: the talent 51485 is in the pool but carries mechanic 0,
-        --     and the root aura 64695 ("Earthgrab", mechanic 7) is triggered only by 116943, the
-        --     totem's own pulse, which the pool never reaches.
-        -- A player who wants any of the five adds it by id on General -> Spell Categories.
-        key = "hardCC", kind = "spells", label = "Hard CC (loss of control)",
+        --   * Earthbind Totem (2484) — SHIPPED BY HAND on `ccSnare` as its aura, Earthbind 3600
+        --     (owner 2026-10-04, from the in-game tooltip: "Movement speed reduced by 30%."). The
+        --     research run cannot derive it: the totem carries no mechanic and its aura is named
+        --     "Earthbind", so neither the mechanic match nor the bridge's exact-name test crosses.
+        --   * Earthgrab Totem — SHIPPED BY HAND on `ccRoot` as its aura, Earthgrab 64695 (owner
+        --     2026-10-04, tooltip "Rooted."). Same shape as Earthbind and in NEITHER derived bucket:
+        --     the talent 51485 is in the pool but carries mechanic 0, and the root aura 64695
+        --     (mechanic 7) is triggered only by 116943, the totem's own pulse, which the pool never
+        --     reaches. A later research run's diff will propose dropping both; keep them.
+        -- A player who wants any of the three adds it by id on General -> Spell Categories.
+        key = "hardCC", kind = "spells", label = "CC Loss of Control",
         desc = "Stuns, incapacitates, disorients and fears, plus Cyclone, Banish and Mind Control — the unit is not in control of itself. Only works on a target or focus you can't assist: Blizzard discards spell lists for debuffs on you or on a unit you can assist.",
         spells = spells({
             WARRIOR = {
@@ -912,6 +915,74 @@ Cat.HARMFUL = {
         }),
     },
     {
+        -- CC ROOT and CC SNARE (owner 2026-10-04) are the two halves of what shipped until then as one
+        -- `softCC` row, "Soft CC (roots & snares)". The owner split it because "is it pinned" and "is
+        -- it slowed" are different questions: a root stops the unit moving at all, a snare only slows
+        -- it. Schema v12 (core/Database.lua) gives every container that stored a Soft CC state BOTH
+        -- new keys with that same state, and moves the player's Soft CC list edits to whichever half
+        -- ships the id (an id in neither goes to both), so no container draws differently.
+        --
+        -- THE SPLIT IS THE CLIENT'S OWN, and it fell out cleanly: every id the `softCC` row shipped
+        -- carries exactly one of the two in build 12.1.0.69875 — SpellMechanic 7 (rooted) on a
+        -- MOD_ROOT_2 aura (455), or SpellMechanic 11 (snared) on a MOD_DECREASE_SPEED aura (33) —
+        -- and the tooltip of every one reads the same way ("Rooted.", "Frozen in place.",
+        -- "Immobilized." against "Movement speed reduced by $s1%."). Nothing was added or dropped:
+        -- 13 ids moved here, the rest to `ccSnare`, and the two rows together were the old row exactly;
+        -- the owner then added the Shaman totems' Earthgrab (here) and Earthbind (`ccSnare`) by hand.
+        -- A FREEZE is a root (Frost Nova, Ice Nova, Frostbite): the unit is held in place but keeps
+        -- control of itself, which is what SpellMechanic 7 records, unlike the stun-like Frozen (13)
+        -- that `hardCC` buckets.
+        --
+        -- The old row's curation still governs both halves — one id per ability, the id the TARGET
+        -- carries (Void Tendrils on its aura 114404, not the cast 108920; The Hunt on its root, the
+        -- 2026-09-24 combat logs' 370970) and every class's signature root or snare shipped. An
+        -- ability that lands BOTH a snare and a root ships each on its own id, in its own row: Disable
+        -- snares on 116095 and roots on 116706 (the 2026-09-24 combat logs' aura id) when it is
+        -- reapplied to a snared target. The research tool (tools/spell-research/research.py) buckets
+        -- the two by mechanic, a root winning over a snare on a spell that carries both.
+        --
+        -- Shaman's root is Earthgrab 64695, shipped by hand: the `hardCC` KNOWN GAPS note says why.
+        key = "ccRoot", kind = "spells", label = "CC Root",
+        desc = "Roots and freezes — the unit keeps control of itself but cannot move. Only works on a target or focus you can't assist: Blizzard discards spell lists for debuffs on you or on a unit you can assist.",
+        spells = spells({
+            HUNTER = {
+                64803,   -- Entrapment
+                162480,  -- Steel Trap
+                190925,  -- Harpoon
+            },
+            PRIEST = {
+                114404,  -- Void Tendrils
+            },
+            SHAMAN = {
+                64695,   -- Earthgrab; the aura of Earthgrab Totem; added by hand, owner 2026-10-04
+            },
+            MAGE = {
+                122,     -- Frost Nova
+                157997,  -- Ice Nova
+                378760,  -- Frostbite
+            },
+            MONK = {
+                324382,  -- Clash
+                116706,  -- Disable; the aura id the 2026-09-24 combat logs show
+            },
+            DRUID = {
+                339,     -- Entangling Roots
+                102359,  -- Mass Entanglement
+            },
+            DEMONHUNTER = {
+                370970,  -- The Hunt; the aura id the 2026-09-24 combat logs show; replaces 323996
+            },
+            EVOKER = {
+                355689,  -- Landslide
+            },
+        }),
+    },
+    {
+        -- The snare half of the 2026-10-04 split; `ccRoot` above says why and how. What follows is the
+        -- old `softCC` row's own curation record, unchanged but for the ids that went to `ccRoot`: where
+        -- it names a root (Void Tendrils, Steel Trap, Clash, Landslide, Entrapment, The Hunt) that id now
+        -- ships there, and its "212 derived, 54 shipped" counts the row before the split.
+        --
         -- CURATED BY HAND, by the same three rules `hardCC` above states: 212 derived, 54 shipped,
         -- and no mechanical filter over derived.json reproduces those 54 either. Rule 1 picks the id
         -- the target carries — VOID TENDRILS ships on 114404, the aura, not on 108920, the cast:
@@ -961,12 +1032,13 @@ Cat.HARMFUL = {
         -- Sleet, Bursting Shot, Clash, Mind Flay, Ring of Frost, The Hunt). Each ships
         -- ONCE, on the id whose mechanic is the one the target actually carries, because a spell
         -- belongs to exactly one bucket and the two lists must never double-count an aura. The Hunt
-        -- ships here on its root id (323996 rooted; 333762 is the stun): a demon hunter watching The
-        -- Hunt on a target is watching the root that pins them. Wake of Ashes was the eighth such
+        -- ships on its root id (323996 rooted, since 370970; 333762 is the stun), in `ccRoot` since
+        -- the split: a demon hunter watching The Hunt on a target is watching the root that pins
+        -- them. Wake of Ashes was the eighth such
         -- name and went to `hardCC`; the owner removed it from both rows on 2026-09-20, and `hardCC`
         -- says so.
-        key = "softCC", kind = "spells", label = "Soft CC (roots & snares)",
-        desc = "Roots and snares — the unit keeps control of itself but cannot move freely. Only works on a target or focus you can't assist: Blizzard discards spell lists for debuffs on you or on a unit you can assist.",
+        key = "ccSnare", kind = "spells", label = "CC Snare",
+        desc = "Snares and slows — the unit keeps control of itself but moves more slowly. Only works on a target or focus you can't assist: Blizzard discards spell lists for debuffs on you or on a unit you can assist.",
         spells = spells({
             WARRIOR = {
                 1715,    -- Hamstring
@@ -978,11 +1050,8 @@ Cat.HARMFUL = {
             },
             HUNTER = {
                 5116,    -- Concussive Shot
-                64803,   -- Entrapment
                 135299,  -- Tar Trap
-                162480,  -- Steel Trap
                 186387,  -- Bursting Shot
-                190925,  -- Harpoon
                 195645,  -- Wing Clip
             },
             -- 35546 IS THE CAST AND ITS AURA IS UNKNOWN (issue #15). It applies no aura of its
@@ -999,7 +1068,6 @@ Cat.HARMFUL = {
             },
             PRIEST = {
                 15407,   -- Mind Flay
-                114404,  -- Void Tendrils
                 390669,  -- Apathy
             },
             DEATHKNIGHT = {
@@ -1013,16 +1081,14 @@ Cat.HARMFUL = {
                 51490,   -- Thunderstorm
                 196840,  -- Frost Shock
                 470194,  -- Ice Strike
+                3600,    -- Earthbind; the aura of Earthbind Totem (2484); added by hand, owner 2026-10-04
                 1251059, -- Stormbind
             },
             MAGE = {
-                122,     -- Frost Nova
                 31589,   -- Slow
                 157981,  -- Blast Wave
-                157997,  -- Ice Nova
                 212792,  -- Cone of Cold
                 236299,  -- Chrono Shift
-                378760,  -- Frostbite
                 391104,  -- Mass Slow
             },
             WARLOCK = {
@@ -1033,15 +1099,11 @@ Cat.HARMFUL = {
                 116095,  -- Disable
                 121253,  -- Keg Smash
                 123586,  -- Flying Serpent Kick
-                324382,  -- Clash
                 392983,  -- Strike of the Windlord
-                116706,  -- Disable; the aura id the 2026-09-24 combat logs show
             },
             DRUID = {
-                339,     -- Entangling Roots
                 58180,   -- Infected Wounds
                 61391,   -- Typhoon
-                102359,  -- Mass Entanglement
                 127797,  -- Ursol's Vortex; the aura; 102793 is the cast
                 164812,  -- Moonfire
             },
@@ -1049,10 +1111,8 @@ Cat.HARMFUL = {
                 198813,  -- Vengeful Retreat
                 204843,  -- Sigil of Chains
                 213405,  -- Master of the Glaive
-                370970,  -- The Hunt; the aura id the 2026-09-24 combat logs show; replaces 323996
             },
             EVOKER = {
-                355689,  -- Landslide
                 357214,  -- Wing Buffet; racial (Dracthyr); also in Racials (debuffs)
                 368970,  -- Tail Swipe; racial (Dracthyr); also in Racials (debuffs)
                 370898,  -- Permeating Chill
@@ -1064,7 +1124,7 @@ Cat.HARMFUL = {
     },
     {
         -- Owner 2026-09-25: the debuffs of the DB2 "Racial - <race>" skill lines, every one seen in the
-        -- 2026-09-24 combat logs. They stay in Hard CC and Soft CC as well; this list only groups them.
+        -- 2026-09-24 combat logs. They stay in CC Loss of Control, CC Root and CC Snare as well; this list only groups them.
         -- Mechagnome's Recently Failed (313015) is left out: a lockout on yourself, where Blizzard
         -- discards a debuff spell list anyway. A key of its own, not `racials`: a key names one
         -- category across both aura types (`Cat.AuraTypeOf`).
@@ -1139,7 +1199,7 @@ Cat.HARMFUL = {
         -- Hide reproduces the retired "Only these categories" toggle exactly (drops the catch-all, so
         -- only what is explicitly Shown is drawn). Show is a plain default that must NOT contribute a
         -- group of its own, and since issue #11's A2 that is a fact about the UNIT, not about this
-        -- file: `hardCC` and `softCC` above give the debuff union real content, so the old reason
+        -- file: `hardCC`, `ccRoot` and `ccSnare` above give the debuff union real content, so the old reason
         -- ("there is nothing to be outside of") is dead. The live reason is that the group a Show
         -- would contribute carries one constraint, an `excludeSpellIDs` of that union, and the engine
         -- discards spell ids on every debuff container there is — on the player and pet outright, on
@@ -1149,7 +1209,7 @@ Cat.HARMFUL = {
         -- all four debuff units and for a `target`/`focus` buff container too — so this stays a
         -- general rule keyed on whether ids are CERTAIN to be honored, not a debuff-only special case.
         key = "uncategorizedDebuffs", kind = "uncategorized", label = "Uncategorized",
-        desc = "Hide draws only what you have explicitly set to Show on this tab (the retired 'Only these categories' toggle, exactly). Show is the default and changes nothing by itself: Hard CC and Soft CC are the only debuff spell lists, and Blizzard never lets a debuff container use a spell list to rescue an aura, so there is no rescue for this row to perform.",
+        desc = "Hide draws only what you have explicitly set to Show on this tab (the retired 'Only these categories' toggle, exactly). Show is the default and changes nothing by itself: Blizzard never lets a debuff container use a spell list to rescue an aura, so there is no rescue for this row to perform.",
     },
 }
 

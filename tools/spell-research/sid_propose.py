@@ -18,7 +18,7 @@ spell names, CastToAura families) and the shipped `spells`-kind categories. Outp
   logs -- that spec may be the one that applies it.
 - flags(): Flag objects, report only, never proposals: unverified, stale, below_bar (a sighting of a
   listed spell under the evidence bar) and cc_unlisted (a player-applied crowd-control debuff in
-  neither hardCC nor softCC).
+  none of hardCC, ccRoot or ccSnare).
 - suggest(): the category rules R0-R9, first match wins, over one aura's class-wide target
   shape, recast, DB2 signals and racial skill line. moves() applies it to listed BUFF entries (a
   move is medium confidence at most, never from a debuff category and never out of Racials);
@@ -44,7 +44,9 @@ DEFAULT_MIN_PLAYERS = 3
 DEFAULT_STALE_DAYS = 60
 
 # The debuff categories log evidence only cross-checks (research.py's DB2 mechanic method owns them).
-CC_CATEGORIES = ("hardCC", "softCC")
+# research.BUCKET_ORDER's keys, spelled out so this module stays free of research.py's import; a
+# test pins the two equal. (softCC was split into ccRoot and ccSnare on 2026-10-04.)
+CC_CATEGORIES = ("hardCC", "ccRoot", "ccSnare")
 
 # ChrSpecialization's levelling specs (OrderIndex 4, Name "Initial", one per class, e.g. 1444
 # SHAMAN and 1446 WARRIOR in build 12.1.0.69875). No max-level player is ever in one, so they
@@ -433,7 +435,7 @@ class _Review:
                           % (t.last_seen, self.cutoff, _ids(fresh)))
 
     def cc_unlisted(self, agg, cc_ids):
-        """Player-applied CC debuffs above the bar that are in neither hardCC nor softCC."""
+        """Player-applied CC debuffs above the bar that are in none of hardCC, ccRoot or ccSnare."""
         listed = set()  # type: Set[int]
         for cat in self.shipped:
             if cat["key"] in CC_CATEGORIES:
@@ -456,8 +458,8 @@ class _Review:
                 continue
             self.flags.append(Flag(
                 "cc_unlisted", "", cls, sid, self.names.get(sid) or _top_name(slot["names"]),
-                "%s / %s; DB2 gives it a crowd-control mechanic, and it is in neither hardCC nor "
-                "softCC" % (plural(total.apps, "application"), plural(total.players, "player"))))
+                "%s / %s; DB2 gives it a crowd-control mechanic, and it is in none of hardCC, "
+                "ccRoot or ccSnare" % (plural(total.apps, "application"), plural(total.players, "player"))))
 
 
 def _who(klass):
@@ -478,7 +480,7 @@ def corrections(agg, spec_map, names, shipped, aura_to_family, decisions=None, t
     """Replace and Add proposals for listed entries, most-applied first, minus ruled keys.
 
     `cc_ids` (DB2's crowd-control ids, as for flags()) keeps a same-name id without a CC mechanic
-    out of hardCC and softCC; None applies no such filter.
+    out of hardCC, ccRoot and ccSnare; None applies no such filter.
     """
     review = _Review(agg, spec_map, names, shipped, aura_to_family, thresholds or Thresholds(),
                      cc_ids).run()

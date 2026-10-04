@@ -123,7 +123,7 @@ badge and any count quoted in the docs must agree with it.
 - v3: MigrateV3 returns the number of containers it walked
 - v3: a container skipped for an unrecognized auraType is not counted in the walked total, and logs its own line
 - v3: the whitelist lift never sweeps a category the aura type does not have
-- v11: the current schema version is 11
+- v12: the current schema version is 12
 - v3: RunMigrations migrates every stored profile, the inactive one included
 - v4: a HELPFUL container with the toggle on ends up with Uncategorized hidden, and the dead key cleared
 - v4: a HARMFUL container with the toggle on ends up with Uncategorized (debuffs) hidden, and the dead key cleared
@@ -143,7 +143,7 @@ badge and any count quoted in the docs must agree with it.
 - v5: the profile's retired dispelColors.None leaf is cleared (feedback #7)
 - database: GetContainersByName sorts by name, case-insensitively, the id breaking a tie; display order untouched (B2-2)
 
-### test_database_categories.lua (24)
+### test_database_categories.lua (28)
 
 - v6: MigrateV6 stamps the user-category store, and a second run changes nothing
 - v6: a profile that predates user categories climbs the ladder and stays valid
@@ -151,6 +151,10 @@ badge and any count quoted in the docs must agree with it.
 - v7: the debuff-side Racials is Hidden wherever Hard CC or Soft CC is
 - v7: a second MigrateV7 run changes nothing, and a new key's stored edit wins over a moved one
 - v7: a v6 profile climbs to v7 with every schema row still resolving
+- v12: every container that stored a Soft CC state gets it on BOTH CC Root and CC Snare
+- v12: the player's Soft CC edits follow their ids, an unshipped id to both, and a second run changes nothing
+- v12: the frozen split is the shipped CC Root and CC Snare lists exactly
+- v12: a v11 profile climbs to v12 in every profile with every schema row still resolving
 - user categories: one round-trips through a reload, with its spells
 - user categories: the sync runs BEFORE PrepareProfile, so a stored one reaches every container
 - user categories: the schema row resolves, and the seam reads and writes it per container
@@ -346,7 +350,7 @@ badge and any count quoted in the docs must agree with it.
 - filter: max auras stamps EVERY group, not just the first — the cap is per group, not per container
 - filter: an aura in a Show category is drawn even if it is also in a Hide category (rank 3 beats rank 4)
 - filter: a Hide plus a Show yields a group per shown category plus the catch-all, with no aura drawn twice (R-4/R-5)
-- filter: one Hide on the real shipped category list explodes to one group per other shown category — 17 for HELPFUL, 18 for HARMFUL today
+- filter: one Hide on the real shipped category list explodes to one group per other shown category — 17 for HELPFUL, 19 for HARMFUL today
 - filter: an unknown sort method falls back to Blizzard's default
 - filter: Signature is independent of key insertion order and sees nested changes
 - filter: StructureKey tracks the group count, the enchant slots and hide-permanent
@@ -1857,7 +1861,7 @@ badge and any count quoted in the docs must agree with it.
 - general: the tab strip reads Master controls, Display, Spell Categories, Dispel Colors — Containers is gone from it
 - general → spell categories: the list is ordered by name, case-insensitively, ids the client cannot name last (owner 2026-09-20)
 - general → spell categories: the list draws two columns, filled row-major, in the by-name order (owner 2026-09-20)
-- general → spell categories: a dropdown of the fourteen spell categories plus Weapon enchants, opening on the first
+- general → spell categories: a dropdown of the fifteen spell categories plus Weapon enchants, opening on the first
 - general → spell categories: every Category entry is prefixed with the aura type it filters (issue #10)
 - general → spell categories: the markers are padded so every name starts at the same column (issue #10)
 - general → spell categories: the closed dropdown shows the marked label too (issue #10)
@@ -1962,7 +1966,7 @@ badge and any count quoted in the docs must agree with it.
 - filters: a category the player made is marked as theirs in the grid, and its schema row is not (owner 2026-09-21)
 - filters: every grid's columns are Show and Hide, then the category (schema v3)
 - filters: the Spell Categories grid opens with a line naming where its lists live (F-2)
-- filters: the 'these are the lists' line draws wherever the grid holds an editable list — both aura types since Hard CC and Soft CC (T-2)
+- filters: the 'these are the lists' line draws wherever the grid holds an editable list — both aura types since the CC lists (T-2)
 - filters: a debuff container's Categories tab says its spell lists only match on a target or focus you can't assist (A3)
 - filters: the Uncategorized cost note draws only where the engine is certain to honor spell ids (A2)
 - filters: the Spell Categories NOTE names where spell categories are not applied, per unit (SV-04)
@@ -2184,8 +2188,8 @@ badge and any count quoted in the docs must agree with it.
 - defaults: IsSpellCategory names exactly the spells-kind categories of BOTH aura types
 - defaults: every shipped category answers its own aura type through AuraTypeOf, by def and by key
 - defaults: AuraTypeOf is total — nil for an unknown key and for anything that is not a definition
-- defaults: Hard CC and Soft CC ship as non-empty HARMFUL spell lists of positive integer ids
-- defaults: Hard CC and Soft CC are declared ABOVE crowdControl, the Blizzard token they refine
+- defaults: CC Loss of Control, CC Root and CC Snare ship as non-empty HARMFUL spell lists of positive integer ids
+- defaults: the CC lists are declared ABOVE crowdControl, the Blizzard token they refine
 - defaults: uncategorized is declared LAST in both Cat.HELPFUL and Cat.HARMFUL (U-1, fix round 3)
 - defaults: every leaf of the container template is edited by a settings row or is a spell set
 - defaults: every profile default is a settings row, a spell set or the registry's own bookkeeping
@@ -2351,7 +2355,7 @@ badge and any count quoted in the docs must agree with it.
 | test_setups.lua | 14 |
 | test_launcher.lua | 30 |
 | test_database.lua | 73 |
-| test_database_categories.lua | 24 |
+| test_database_categories.lua | 28 |
 | test_migrations.lua | 28 |
 | test_schema.lua | 38 |
 | test_schema_paths.lua | 38 |
@@ -2444,4 +2448,4 @@ badge and any count quoted in the docs must agree with it.
 | test_layout_cap.lua | 13 |
 | test_diagnostics_contract.lua | 9 |
 | test_lizard_sighted.lua | 8 |
-| **Total** | **2046** |
+| **Total** | **2050** |

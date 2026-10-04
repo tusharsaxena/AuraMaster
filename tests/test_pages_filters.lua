@@ -333,20 +333,21 @@ test("filters: the Spell Categories grid opens with a line naming where its list
 end)
 
 -- T-2 fix round 4 (batch 7), revised by issue #11 A1: the F-2 line claims the grid holds EDITABLE
--- lists. That is now true on BOTH aura types — `Cat.HARMFUL` carries `hardCC` and `softCC` — so the
+-- lists. That is now true on BOTH aura types — `Cat.HARMFUL` carries the CC lists — so the
 -- gate has stopped discriminating by aura type, which is exactly what it was written to do: it asks
 -- the grid what it drew, never which tab it is on. It still refuses a grid whose only row is
 -- `uncategorized`, the Show/Hide flag over the catch-all, which is what a debuff grid was before A1.
-test("filters: the 'these are the lists' line draws wherever the grid holds an editable list — both aura types since Hard CC and Soft CC (T-2)", function()
+test("filters: the 'these are the lists' line draws wherever the grid holds an editable list — both aura types since the CC lists (T-2)", function()
     local NS, _, P, buffWs = categories(1)
     assertTrue(P.hasText(buffWs, "General -> Spell Categories"), "a buff container has editable lists")
     local _, _, P2, debuffWs = categories(2)
     assertTrue(P2.hasText(debuffWs, "General -> Spell Categories"),
-        "a debuff container's grid now carries Hard CC and Soft CC, whose lists live there")
+        "a debuff container's grid now carries the CC lists, which live there")
     assertTrue(P2.find(debuffWs, "Heading", NS.L["Spell Categories"]) ~= nil, "the Spell Categories grid still draws")
     assertTrue(gridLine(NS, debuffWs, "uncategorizedDebuffs") ~= nil, "and still carries its Uncategorized row")
-    assertTrue(gridLine(NS, debuffWs, "hardCC") ~= nil, "and the Hard CC row the claim is now about")
-    assertTrue(gridLine(NS, debuffWs, "softCC") ~= nil, "and Soft CC")
+    assertTrue(gridLine(NS, debuffWs, "hardCC") ~= nil, "and the CC Loss of Control row the claim is now about")
+    assertTrue(gridLine(NS, debuffWs, "ccRoot") ~= nil, "and CC Root")
+    assertTrue(gridLine(NS, debuffWs, "ccSnare") ~= nil, "and CC Snare")
 end)
 
 -- A3 (issue #11): the debuff grid's own limitation note. Blizzard honors debuff spell ids only on a

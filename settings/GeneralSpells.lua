@@ -121,7 +121,8 @@ local SECTION_GAP = UC.SECTION_GAP
 
 --- Whether `def` is a row this tab can draw: a spell list of either aura type, or the weapon-enchant
 --- row, whose entry shows its slots rather than a list. Buffs are no longer the whole story — issue
---- #11 gave `Cat.HARMFUL` its first `spells`-kind categories (`hardCC`, `softCC`) and the engine
+--- #11 gave `Cat.HARMFUL` its first `spells`-kind categories (`hardCC`, and the `softCC` the
+--- 2026-10-04 split made `ccRoot` and `ccSnare`) and the engine
 --- honors debuff spell ids on a target or focus you cannot assist — so the test is the KIND, never the aura
 --- type. Missing that is how a shipped list becomes uneditable: the Filters section's `See spells` link
 --- offers itself for every `spells`-kind row it draws, including a debuff container's.
@@ -315,14 +316,15 @@ local ID_TOOLTIP = (L["Type a spell id or a name and pick from the list, or shif
 --
 -- Every entry in the Category dropdown says which aura type its category filters. Until issue #11
 -- the list was buff-only and the question never arose; it now mixes `Cat.HELPFUL`'s nine spell
--- lists and Weapon enchants with `Cat.HARMFUL`'s `hardCC` and `softCC`, and nothing on the row said
--- so -- a player editing "Hard CC (loss of control)" had no way to tell from this tab that its ids
--- only ever bite on a target or focus you cannot assist.
+-- lists and Weapon enchants with `Cat.HARMFUL`'s CC lists, and nothing on the row said so -- a
+-- player editing what was then "Hard CC (loss of control)" had no way to tell from this tab that
+-- its ids only ever bite on a target or focus you cannot assist.
 --
--- A PREFIX, NOT A SUFFIX, and the real labels decide it rather than taste: the two debuff rows
--- already end in parenthetical suffixes ("Hard CC (loss of control)", "Soft CC (roots & snares)"),
--- so a trailing marker would sit a second bracketed phrase behind the first and read as part of the
--- name. A prefix also puts every marker in the same column down the open list, which is what makes
+-- A PREFIX, NOT A SUFFIX, and the real labels decided it rather than taste: the two debuff rows of
+-- the day ended in parenthetical suffixes ("Hard CC (loss of control)", "Soft CC (roots & snares)"),
+-- so a trailing marker would have sat a second bracketed phrase behind the first and read as part of
+-- the name. The 2026-10-04 relabel (CC Loss of Control, CC Root, CC Snare) dropped the suffixes;
+-- the reasons below still hold. A prefix also puts every marker in the same column down the open list, which is what makes
 -- it scannable rather than something to be read per row. And it survives the one thing this
 -- dropdown cannot afford: it is narrow, and a pullout row's FontString is LEFT-justified and
 -- anchored to both edges of its button (AceGUIWidget-DropDown-Items.lua:166-169, under libs/), so
@@ -496,7 +498,7 @@ end
 -- `self.pulloutWidth or self.frame:GetWidth()`
 -- (libs/AceGUI-3.0/widgets/AceGUIWidget-DropDown.lua:381) and nothing anywhere measures the items,
 -- so with no `pulloutWidth` the open list is exactly as wide as this half-width control while its
--- longest entry, "[Debuffs] Hard CC (loss of control)", runs to 35 characters -- and a row that
+-- longest entry (then "[Debuffs] Hard CC (loss of control)") ran to 35 characters -- and a row that
 -- does not fit loses its tail, which is the end of the category's name. `SetPulloutWidth`
 -- (AceGUIWidget-DropDown.lua:639-641) is the widget's own answer, and a fixed width is the right
 -- shape for it: the list is sized to its contents, not to whatever fraction of the panel the
@@ -856,7 +858,7 @@ local function renderSpells(ctx)
         kind       = spellKind(def),
         removeStyle = "icon",
         -- TWO COLUMNS, FILLED ROW-MAJOR (1 2 / 3 4). Owner, 2026-09-20: one entry per row ran very
-        -- long for a 60-id category -- Hard CC alone is most of a screen of scrolling before the
+        -- long for a 60-id category -- CC Loss of Control alone is most of a screen of scrolling before the
         -- next control. `columns` is LibKa0s v1.47.0's O.IdList option (OptionsWidgets minor 24,
         -- `libs/LibKa0s/OptionsIdList.lua:856-863`): the count is floored and clamped into
         -- 1..ID_COLUMNS_MAX, which the library pins at 2 (`:139`), so two is the whole of what it

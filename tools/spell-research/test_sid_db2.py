@@ -161,7 +161,7 @@ class ShippedCategoriesTest(unittest.TestCase):
         self.assertEqual(self.by_key["defensives"]["aura"], "BUFF")
         self.assertEqual(self.by_key["offensiveCDs"]["aura"], "BUFF")
         self.assertEqual(self.by_key["hardCC"]["aura"], "DEBUFF")
-        self.assertEqual(self.by_key["hardCC"]["label"], "Hard CC (loss of control)")
+        self.assertEqual(self.by_key["hardCC"]["label"], "CC Loss of Control")
 
     def test_class_lines_with_trailing_comments_and_commented_lines(self):
         self.assertEqual(self.by_key["offensiveCDs"]["classes"],
@@ -222,7 +222,8 @@ class SharedReaderTest(unittest.TestCase):
 
     def test_shipped_categories_reads_one_id_per_line_in_file_order(self):
         cats = {c["key"]: c for c in sid_db2.shipped_categories(MULTILINE)}
-        self.assertEqual(list(cats), ["defensives", "offensiveCDs", "raidCDs", "hardCC"])
+        self.assertEqual(list(cats),
+                         ["defensives", "offensiveCDs", "raidCDs", "hardCC", "ccRoot", "ccSnare"])
         self.assertEqual(cats["defensives"]["classes"],
                          {"WARRIOR": [871, 12975], "SHAMAN": [108271], "EVOKER": [363916, 374349]})
         self.assertEqual(cats["offensiveCDs"]["classes"],
@@ -233,15 +234,22 @@ class SharedReaderTest(unittest.TestCase):
                          {"WARRIOR": [5246, 132168], "SHAMAN": [51514, 118905]})
         self.assertEqual(cats["hardCC"]["aura"], "DEBUFF")
         self.assertEqual(cats["raidCDs"]["aura"], "BUFF")
+        self.assertEqual((cats["ccRoot"]["label"], cats["ccRoot"]["aura"], cats["ccRoot"]["classes"]),
+                         ("CC Root", "DEBUFF", {"DRUID": [339]}))
+        self.assertEqual((cats["ccSnare"]["label"], cats["ccSnare"]["aura"],
+                          cats["ccSnare"]["classes"]),
+                         ("CC Snare", "DEBUFF", {"WARRIOR": [1715]}))
 
     def test_no_id_is_ever_taken_from_a_comment(self):
         ids = {r["id"] for r in research.read_shipped_named(MULTILINE)}
         self.assertEqual(ids & COMMENT_DIGITS, set())
-        self.assertEqual(len(research.read_shipped_named(MULTILINE)), 17)
+        self.assertEqual(len(research.read_shipped_named(MULTILINE)), 19)
         shipped = research.read_shipped(MULTILINE)
         self.assertEqual(shipped["hardCC"],
                          {5246: "WARRIOR", 132168: "WARRIOR", 51514: "SHAMAN", 118905: "SHAMAN"})
-        self.assertEqual(shipped["softCC"], {})
+        self.assertEqual(shipped["ccRoot"], {339: "DRUID"})
+        self.assertEqual(shipped["ccSnare"], {1715: "WARRIOR"})
+        self.assertNotIn("softCC", shipped)
 
     def test_names_come_from_the_same_line_comment_before_the_first_semicolon(self):
         named = {(r["class"], r["id"]): r["comment"] for r in research.read_shipped_named(MULTILINE)}
@@ -285,7 +293,8 @@ class SharedReaderTest(unittest.TestCase):
                  107574: "Avatar", 31884: "Avenging Wrath", 454351: "Avenging Wrath",
                  114051: "Ascendance", 2825: "Heroism", 325174: "Spirit Link Totem",
                  1243972: "Void-touched Drums", 5246: "Intimidating Shout", 132168: "Shockwave",
-                 51514: "Hex", 118905: "Capacitor Totem"}
+                 51514: "Hex", 118905: "Capacitor Totem", 339: "Entangling Roots",
+                 1715: "Hamstring"}
         with tempfile.TemporaryDirectory() as tmp:
             spell_name = Path(tmp) / "SpellName.csv"
             spell_name.write_text("ID,Name_lang\n" + "".join(
@@ -293,7 +302,7 @@ class SharedReaderTest(unittest.TestCase):
             with redirect_stderr(io.StringIO()):
                 report, _failures = research.check_shipped(
                     {"SpellName": spell_name, "SpellEffect": SPELL_EFFECT}, MULTILINE)
-        self.assertIn("Name checks ran over 17 of 17 id slots", report)
+        self.assertIn("Name checks ran over 19 of 19 id slots", report)
         self.assertIn("## Ids whose name disagrees with the comment beside them — 1", report)
         self.assertIn("the file says **Bloodlust**, the build says **Heroism**", report)
 
@@ -462,6 +471,81 @@ class CcSpellIdsTest(unittest.TestCase):
             got = sid_db2.cc_spell_ids(d / "SpellEffect.csv", d / "SpellCategories.csv",
                                        {853, 339, 900001, 900002, 188389})
         self.assertEqual(got, {853, 339})
+
+
+class CcBucketTest(unittest.TestCase):
+    """research.py's three CC buckets (2026-10-04: softCC split into ccRoot and ccSnare, hardCC
+    relabeled "CC Loss of Control"), and the precedence hardCC > ccRoot > ccSnare."""
+
+    def test_bucket_order_titles_and_mechanics(self):
+        self.assertEqual(research.BUCKET_ORDER, ("hardCC", "ccRoot", "ccSnare"))
+        self.assertEqual(list(research.BUCKET_MECHANICS), list(research.BUCKET_ORDER))
+        self.assertEqual(research.BUCKET_TITLES, {"hardCC": "CC Loss of Control",
+                                                  "ccRoot": "CC Root", "ccSnare": "CC Snare"})
+        self.assertEqual(research.BUCKET_MECHANICS["ccRoot"], {7: "Rooted"})
+        self.assertEqual(research.BUCKET_MECHANICS["ccSnare"],
+                         {8: "Slowed", 11: "Snared", 27: "Dazed"})
+        seen = set()
+        for mapping in research.BUCKET_MECHANICS.values():
+            self.assertEqual(seen & set(mapping), set())  # no mechanic in two buckets
+            seen |= set(mapping)
+
+    def test_a_root_mechanic_buckets_to_ccroot(self):
+        self.assertEqual(research.bucket_of({7}), ("ccRoot", [7]))
+
+    def test_each_snare_mechanic_buckets_to_ccsnare(self):
+        for mechanic in (8, 11, 27):
+            with self.subTest(mechanic=mechanic):
+                self.assertEqual(research.bucket_of({mechanic}), ("ccSnare", [mechanic]))
+
+    def test_root_and_snare_lands_in_ccroot(self):
+        self.assertEqual(research.bucket_of({11, 7, 8}), ("ccRoot", [7]))
+
+    def test_hard_and_root_lands_in_hardcc(self):
+        self.assertEqual(research.bucket_of({7, 12}), ("hardCC", [12]))
+        self.assertEqual(research.bucket_of({14, 11}), ("hardCC", [14]))
+
+    def test_no_cc_mechanic_is_no_bucket(self):
+        self.assertIsNone(research.bucket_of(set()))
+        self.assertIsNone(research.bucket_of({15}))  # Bleeding
+
+    def test_sentinels_cover_the_three_buckets_and_name_no_retired_key(self):
+        self.assertEqual(set(research.SENTINELS), set(research.BUCKET_ORDER))
+        self.assertLessEqual(set(research.SENTINELS_UNREACHABLE), set(research.BUCKET_ORDER))
+        self.assertIn("Entangling Roots", research.SENTINELS["ccRoot"])
+        self.assertIn("Frost Nova", research.SENTINELS["ccRoot"])
+        self.assertIn("Hamstring", research.SENTINELS["ccSnare"])
+        self.assertNotIn("Entangling Roots", research.SENTINELS["ccSnare"])
+        self.assertIn("Earthbind Totem", research.SENTINELS_UNREACHABLE["ccSnare"])
+
+    @staticmethod
+    def result(buckets):
+        return {"buckets": {b: {i: {"id": i, "name": n, "class": "ALL", "source": "pool",
+                                    "mechanics": [{"id": 7, "name": "Rooted"}]}
+                                for i, n in enumerate(buckets.get(b, ()), start=1)}
+                            for b in research.BUCKET_ORDER}}
+
+    def test_the_coverage_gate_checks_each_bucket_separately(self):
+        full = {b: list(research.SENTINELS[b]) for b in research.BUCKET_ORDER}
+        self.assertEqual(research.check_sentinels(self.result(full)), [])
+        # Frost Nova derived as a snare instead of a root is a miss in ccRoot.
+        moved = dict(full, ccRoot=[n for n in full["ccRoot"] if n != "Frost Nova"],
+                     ccSnare=full["ccSnare"] + ["Frost Nova"])
+        self.assertEqual(research.check_sentinels(self.result(moved)), ["ccRoot: Frost Nova"])
+
+    def test_emit_and_diff_carry_all_three_keys(self):
+        res = self.result({"hardCC": ["Hex"], "ccRoot": ["Entangling Roots"],
+                           "ccSnare": ["Hamstring"]})
+        lua = research.format_lua(res, "12.1.0.69875", "2026-10-04")
+        for title, key in (("CC Loss of Control", "hardCC"), ("CC Root", "ccRoot"),
+                           ("CC Snare", "ccSnare")):
+            self.assertIn("-- ===== %s — category key `%s`" % (title, key), lua)
+        self.assertEqual(lua.count("spells = spells({"), 3)
+        self.assertNotIn("softCC", lua)
+        diff = research.format_diff(res, research.read_shipped(MULTILINE), MULTILINE)
+        for key in research.BUCKET_ORDER:
+            self.assertIn("## %s\n" % key, diff)
+        self.assertNotIn("softCC", diff)
 
 
 class OpenDb2Test(unittest.TestCase):

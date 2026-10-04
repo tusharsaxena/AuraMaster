@@ -284,7 +284,7 @@ class EndToEnd(unittest.TestCase):
     def test_flags_and_sources(self):
         flags = self.bundle_run.read("FLAGS.md")
         for heading in ("## Unverified", "## Stale", "## Below the evidence bar",
-                        "## Crowd-control debuffs in neither hardCC nor softCC"):
+                        "## Crowd-control debuffs in none of hardCC, ccRoot or ccSnare"):
             self.assertIn(heading, flags)
         sources = self.bundle_run.read("SOURCES.md")
         self.assertIn("| Logs scanned | 2 |", sources)
@@ -346,7 +346,7 @@ class DictionaryRowsTest(unittest.TestCase):
                 264: {"class": "SHAMAN", "name": "Restoration", "role": 1}}
     SHIPPED = [{"key": "defensives", "label": "Defensive cooldowns", "aura": "BUFF",
                 "classes": {"SHAMAN": [108271]}},
-               {"key": "hardCC", "label": "Hard CC", "aura": "DEBUFF",
+               {"key": "hardCC", "label": "CC Loss of Control", "aura": "DEBUFF",
                 "classes": {"SHAMAN": [51514]}}]
 
     def agg(self):
@@ -401,7 +401,7 @@ class CurrentCategoriesAllTest(unittest.TestCase):
     def test_an_all_entry_is_confirmed_from_every_class(self):
         spec_map = {71: {"class": "WARRIOR", "name": "Arms", "role": 2},
                     264: {"class": "SHAMAN", "name": "Restoration", "role": 1}}
-        shipped = [{"key": "hardCC", "label": "Hard CC", "aura": "DEBUFF",
+        shipped = [{"key": "hardCC", "label": "CC Loss of Control", "aura": "DEBUFF",
                     "classes": {"ALL": [20549]}}]
         agg = FileAggregate(first_date="2026-09-01", last_date="2026-09-20")
         for key, n in ((("WARRIOR", 71), 30), (("SHAMAN", 264), 12)):

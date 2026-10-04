@@ -541,7 +541,7 @@ test("filter: a PLAYER debuff container with a non-empty union still gives Uncat
     -- category's negation. The catch-all's `excludeSpellIDs` is left in place deliberately — an
     -- exclude the engine ignores costs nothing, and suppressing it would change no outcome.
     assertEqual(#categoryGroups(plan), 2)
-    assertEqual(plan.groups[1].label, "Hard CC (loss of control)")
+    assertEqual(plan.groups[1].label, "CC Loss of Control")
     assertEqual(setOf(plan.groups[1].candidateFilters.includeSpellIDs), HARD_CC_IDS)
     assertEqual(plan.groups[2].label, "All")
     assertEqual(plan.groups[2].filter, "HARMFUL|!CROWD_CONTROL")
@@ -569,7 +569,7 @@ test("filter: a TARGET debuff container gives Uncategorized Show no group either
     -- no longer supersedes — which is exactly "as if the row were not there", the behavior fix round
     -- 3 defined for this side of the gate.
     assertEqual(#categoryGroups(plan), 2)
-    assertEqual(plan.groups[1].label, "Hard CC (loss of control)")
+    assertEqual(plan.groups[1].label, "CC Loss of Control")
     assertEqual(setOf(plan.groups[1].candidateFilters.includeSpellIDs), HARD_CC_IDS)
     assertEqual(plan.groups[2].label, "All")
     assertEqual(plan.groups[2].filter, "HARMFUL|!CROWD_CONTROL")
@@ -641,7 +641,7 @@ test("filter: a TARGET debuff container's spells-kind Show emits its ids-view gr
         filter = { categories = { crowdControl = "hide" } } },
         { categories = onlyPlus("HARMFUL", { "crowdControl", "uncategorizedDebuffs" }, HARMFUL_SPELLS_DEF) })
     assertEqual(#categoryGroups(plan), 2)
-    assertEqual(plan.groups[1].label, "Hard CC (loss of control)", "the Show group is emitted, not suppressed")
+    assertEqual(plan.groups[1].label, "CC Loss of Control", "the Show group is emitted, not suppressed")
     assertEqual(plan.groups[1].filter, "HARMFUL", "nothing but the aura-type token in the string")
     assertEqual(setOf(plan.groups[1].candidateFilters), "includeSpellIDs",
         "in the ids view the id list is its only constraint")
@@ -889,7 +889,7 @@ end)
 
 -- ── the cost is real: the REAL shipped category list, not `only` (documented in the plan ledger) ──
 
-test("filter: one Hide on the real shipped category list explodes to one group per other shown category — 17 for HELPFUL, 18 for HARMFUL today", function()
+test("filter: one Hide on the real shipped category list explodes to one group per other shown category — 17 for HELPFUL, 19 for HARMFUL today", function()
     -- Not a bug — R-4's shape is inherent to "in ANY shown category" being a union over heterogeneous
     -- predicates the engine ORs as groups (ruling, 2026-09-15 fix round 1 of batch 6). This test
     -- exists so the count is visible in the suite: if it moves, a category was added or removed and
@@ -903,10 +903,11 @@ test("filter: one Hide on the real shipped category list explodes to one group p
     -- subset of `uncategorized`'s own group's, or a group that could never match — see
     -- modules/FilterCompiler.lua's top-of-file comment). 17 groups total.
     --
-    -- HARMFUL: 20 filterable categories (16 pre-batch-7, plus `uncategorizedDebuffs` restored in fix
+    -- HARMFUL: 21 filterable categories (16 pre-batch-7, plus `uncategorizedDebuffs` restored in fix
     -- round 3 with an asymmetric meaning — defaults/Categories.lua's KINDS doc — plus issue #11's
-    -- `hardCC` and `softCC`, plus schema v7's `racialDebuffs`) minus 1 hidden (crowdControl) = 19
-    -- shown categories, but only 18 actually become groups: `uncategorizedDebuffs` contributes NO group of its own on Show (fix
+    -- `hardCC` and `softCC`, plus schema v7's `racialDebuffs`, plus one more since schema v12 split
+    -- `softCC` into `ccRoot` and `ccSnare`) minus 1 hidden (crowdControl) = 20
+    -- shown categories, but only 19 actually become groups: `uncategorizedDebuffs` contributes NO group of its own on Show (fix
     -- round 3, gated on the unit by issue #11 — `hasUnion` is false here). The count moved by
     -- exactly the two categories A1 added, which is the prediction the previous revision of this
     -- comment wrote down before they existed. What did NOT move is the reasoning about this row: it
@@ -932,7 +933,7 @@ test("filter: one Hide on the real shipped category list explodes to one group p
     local helpfulPlan = compile({ filter = { categories = { defensives = "hide" } } })
     assertEqual(#helpfulPlan.groups, 17, "HELPFUL: 17 shown groups, no catch-all (Uncategorized supersedes it)")
     local harmfulPlan = compile({ auraType = "HARMFUL", filter = { categories = { crowdControl = "hide" } } })
-    assertEqual(#categoryGroups(harmfulPlan), 18, "HARMFUL: 18 shown groups, no catch-all (it self-contradicts and is dropped)")
+    assertEqual(#categoryGroups(harmfulPlan), 19, "HARMFUL: 19 shown groups, no catch-all (it self-contradicts and is dropped)")
 end)
 
 test("filter: an unknown sort method falls back to Blizzard's default", function()

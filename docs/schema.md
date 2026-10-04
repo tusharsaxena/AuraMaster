@@ -227,9 +227,9 @@ and its one writer (the library's `P.Save`, behind `/am perf finish`) are named 
 
 ## Settings schema, registries and named non-setting state
 
-`NS.Schema` holds **268** rows across seven pages: General 18 (its Dispel Colors tab's five and its
+`NS.Schema` holds **269** rows across seven pages: General 18 (its Dispel Colors tab's five and its
 Spell Categories tab's three `enchantSlots` rows among them), Containers 5 (`N-1`, batch 7 — split
-out of General's own tab), Filters 56, Layout 38 (the Label tab's ten among them, batch 8 and B9 LJ-1; batch 9's Side row replaced by batch 11's two anchor-point rows),
+out of General's own tab), Filters 57, Layout 38 (the Label tab's ten among them, batch 8 and B9 LJ-1; batch 9's Side row replaced by batch 11's two anchor-point rows),
 Bars 72, Icons 42 and Text 37 (its `autoSize` among them). The
 AceConfig-drawn Profiles page carries none. That is the count on a profile with no categories of the
 player's own; **the schema is a live table, not a frozen one**, and each user category adds one
@@ -563,7 +563,7 @@ compare with the rest of the seam.
 
 ## Migration path
 
-The account-wide ladder is `SCHEMA_STEPS` in `core/Database.lua:1176`: one `{ to = N, apply = fn }`
+The account-wide ladder is `SCHEMA_STEPS` in `core/Database.lua:1247`: one `{ to = N, apply = fn }`
 row per stored-shape change, applied in order by `NS.RunMigrations` while
 `global.schemaVersion < to`, each logging one `[Migrate]` debug line.
 
@@ -724,7 +724,7 @@ The stamp follows savedvariables-§1 as ruled at WowAddonStandards v2.65.0:
   container's `groupBuffs` takes its `support` state (the raid buffs were Support's), and `stances`
   and `racials` take its `uncategorized` state (those auras were on no list), a stored state or an
   absent source being left alone. The debuff-side `racialDebuffs` is `"hide"` on a container that
-  Hides `hardCC` or `softCC` (seven of its eight ids are in those lists, and a Show claim beats a
+  Hides `hardCC` or `softCC` (seven of its eight ids are in those lists — `softCC` split by v12 —, and a Show claim beats a
   Hide) and `"show"` on any other container carrying either key. `consumables` is deleted from every container and from
   `categorySpells`; a player's Support edit on a group buff, and a Utility edit on Shadowmeld, move
   to the new category unless it already holds its own. Idempotent: the seeds are `== nil` tests.
@@ -785,6 +785,19 @@ The stamp follows savedvariables-§1 as ruled at WowAddonStandards v2.65.0:
   Center or to its end side, and an Icons or Bars follower under a Text parent justified Center, may
   move to the center or the end (G4 names the Text-under-Text case); every other one stays put. Idempotent: a
   second run finds no `attach.edge`. Tests climb from v1, v8, v9 and v10 (`tests/test_migrations.lua`).
+- **Schema v12** (`Database.MigrateV12`, `core/Database.lua`, owner 2026-10-04) runs over **every**
+  stored profile and logs one `[Migrate] v12 profile '<name>'` line each;
+  `Database.CurrentSchemaVersion()` answers `12`. It splits the debuff category `softCC` (Soft CC,
+  roots & snares) into `ccRoot` (CC Root) and `ccSnare` (CC Snare); `hardCC` keeps its key and is
+  relabeled CC Loss of Control, which stores nothing. Every container that stored a `softCC` state
+  gets that state on BOTH new keys (a key already stored is kept) and loses `softCC`, so no container
+  draws differently; one that stored none is left to the backfill's Show. The player's
+  `categorySpells.softCC` edits follow their ids: to `ccRoot` for an id the split put there, to
+  `ccSnare` for any other id the old row shipped, and to both for an id it never shipped (one the
+  player added), an edit already on the destination being kept; `categorySpells.softCC` is removed.
+  The split is frozen inside the step as the 14 root and 45 snare ids it was (the old row's 57 plus the two Shaman totem auras added with it), and a test pins it to
+  the shipped lists. Idempotent: a second run finds no `softCC`
+  (`tests/test_database_categories.lua`).
 - **Migration lesson (batch 10 F7): a step already pushed is never extended again.** A step's
   version stamp is written once per account, so a half added to a step after any build carrying it
   has been pushed never reaches an install that already ran that build: the owner's v9 install

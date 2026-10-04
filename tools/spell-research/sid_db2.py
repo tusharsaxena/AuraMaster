@@ -107,7 +107,7 @@ def cc_spell_ids(spell_effect_csv: Path, spell_categories_csv: Path,
 
     research.py's own method: the base-difficulty mechanic at the effect level
     (SpellEffect.EffectMechanic) or the spell level (SpellCategories.Mechanic), matched against
-    every mechanic in research.BUCKET_MECHANICS (hard and soft CC alike).
+    every mechanic in research.BUCKET_MECHANICS (hardCC, ccRoot and ccSnare alike).
     """
     wanted = set(spell_ids)
     cc = set()  # type: Set[int]

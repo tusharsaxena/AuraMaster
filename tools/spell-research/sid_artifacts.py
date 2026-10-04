@@ -59,7 +59,7 @@ FLAG_SECTIONS = (
                        "without a ruling."),
     ("below_bar", "Below the evidence bar",
      "Sightings of listed spells (and their same-name siblings) under the bar: never proposed."),
-    ("cc_unlisted", "Crowd-control debuffs in neither hardCC nor softCC",
+    ("cc_unlisted", "Crowd-control debuffs in none of hardCC, ccRoot or ccSnare",
      "Debuffs players applied that DB2 gives a crowd-control mechanic. A cross-check only: the CC "
      "categories stay research.py's to derive."),
 )

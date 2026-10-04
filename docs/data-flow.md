@@ -99,7 +99,7 @@ ANY shown category" is a union and needs a group per Shown category. With nothin
 one group is emitted (the base minus the whitelist) — a Show cannot rescue anything when nothing is
 hiding, so the extra groups would be pure cost. Once anything is Hidden, one group per Shown category
 is emitted, followed by a catch-all group that draws an aura in no category at all (rank 5). A
-container with anything Hidden therefore compiles to roughly 15 groups on buffs and 17 on debuffs,
+container with anything Hidden therefore compiles to roughly 15 groups on buffs and 18 on debuffs,
 not one, and the "Max auras"
 cap applies **per group**, not to the container as a whole (`container.filter.maxAuras`,
 `docs/schema.md`). The catch-all is skipped instead of joined whenever an `uncategorized` category
@@ -159,9 +159,9 @@ priority*, above, states (`FC.ExplainSpell` answers the same question for one sp
   On every debuff container, and on a `target`/`focus` buff container whose unit may be hostile when
   the engine looks, Show contributes no group of its own at all and changes nothing, so the catch-all
   is left exactly as it would be without the category. `hasUnion` is that gate, not an emptiness
-  test: `Cat.HARMFUL` has carried `hardCC` and `softCC` since issue #11, so a debuff union is no
+  test: `Cat.HARMFUL` has carried spell lists since issue #11 (`hardCC`, `ccRoot`, `ccSnare`), so a debuff union is no
   longer empty — what stops the group is that the engine may throw its one `excludeSpellIDs` away. A
-  container with anything Hidden this way compiles to roughly 15 groups on buffs and 17 on debuffs,
+  container with anything Hidden this way compiles to roughly 15 groups on buffs and 18 on debuffs,
   not one, and the "Max auras"
   cap (`maxFrameCount`) applies to each group separately.
 - **A category applies by kind**: a token adds `TOKEN` or `!TOKEN`; a flag sets a boolean candidate

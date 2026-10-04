@@ -58,14 +58,14 @@ Example: a bar option.
    (`includeCategory`) is used only when the aura's category set needs its own group (rank 3, when
    something else is Hidden). A `spells` or `enchant` category of EITHER aura type also joins General → Spell
    Categories' dropdown (and gets a `See spells` link on the Categories grid) — the tab tests the
-   kind, never the aura type (`editableHere`, `settings/GeneralSpells.lua:128`) — and its profile-wide
+   kind, never the aura type (`editableHere`, `settings/GeneralSpells.lua:129`) — and its profile-wide
    edits reach the compiler through `FC.ProfileContext`. A new `kind` needs a branch in both
    `excludeCategory` and `includeCategory`, and a grid in `GRID_BY_KIND` (`settings/Filters.lua`),
    plus an entry in `GRIDS` when the grid is new.
 3. A `spells` category on a debuff list is honored only on a HOSTILE target or focus; the engine
    discards its ids on you or a friendly unit (the identity gate, `docs/midnight-quirks.md`). That
-   is a real place to put one — `hardCC` and `softCC` live there (`defaults/Categories.lua:819`,
-   `:966`) — but say so in the `desc`, the way those two do, so a player reading the tooltip knows
+   is a real place to put one — `hardCC`, `ccRoot` and `ccSnare` live there (`defaults/Categories.lua:822`,
+   `:945`, `:1040`) — but say so in the `desc`, the way those three do, so a player reading the tooltip knows
    where the list bites and where it does nothing.
 4. Add the label and desc to `locales/enUS.lua`, and a compiler case to `tests/test_filtercompiler.lua`.
 
@@ -98,9 +98,10 @@ path it walks, for when something about it has to be changed or debugged.
    `tests/test_filtercompiler_categories.lua` (what the compiler makes of one) or
    `tests/test_pages_general_categories.lua` (the block's widgets).
 
-## Re-derive the Hard CC / Soft CC spell lists
+## Re-derive the CC spell lists
 
-`hardCC` and `softCC` are not hand-assembled: `tools/spell-research/research.py` derives them from
+`hardCC` (CC Loss of Control), `ccRoot` (CC Root) and `ccSnare` (CC Snare) are not hand-assembled:
+`tools/spell-research/research.py` derives them from
 Blizzard's own DB2 exports for one pinned build. Python 3.8+ and the standard library; the first
 run downloads ~75 MB of CSV into `tools/spell-research/.cache/`.
 
@@ -136,9 +137,9 @@ the first run. **Prefer replay unless the point is to pick up a new build** — 
 live data answers a different question from a run against the build the shipped lists were derived
 from, and mixing them silently is how a diff stops meaning anything.
 
-### Refresh the Hard CC / Soft CC lists
+### Refresh the CC lists
 
-> Re-derive the Hard CC and Soft CC lists with `tools/spell-research/research.py` against the
+> Re-derive the CC Loss of Control, CC Root and CC Snare lists with `tools/spell-research/research.py` against the
 > current retail build. Show me the diff against what we ship, freeze the run as a bundle under
 > `docs/spell-research/<today>`, and tell me which sentinels the coverage gate checked. **Do not
 > change `defaults/Categories.lua`** — I accept or reject each add and drop myself. For anything
@@ -241,7 +242,7 @@ step, in the same change:
 
 1. Change the template in `defaults/Profile.lua`.
 2. Append `{ to = 12, apply = function(db) … end }` (the next version) to `SCHEMA_STEPS` in
-   `core/Database.lua:1176`. The ladder is account-wide (`global.schemaVersion`), but containers live
+   `core/Database.lua:1247`. The ladder is account-wide (`global.schemaVersion`), but containers live
    in **every** profile: run the change through `eachProfile(db, fn)`, which walks `db.sv.profiles`
    (AceDB's raw store, the inactive profiles included) or the no-AceDB fallback's one profile, and
    transform `profile.containers[*]` in each, not only `db.profile`. Keep the per-profile body a pure

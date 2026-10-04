@@ -1,7 +1,7 @@
 # Settings panel
 
 How the options are organized, what each control does, and which schema key it writes. The rows
-below are derived from the live schema (`NS.Schema`, 268 rows on a profile with no categories of the
+below are derived from the live schema (`NS.Schema`, 269 rows on a profile with no categories of the
 player's own — each of those adds one more `container.filter.categories.<key>` row at runtime) by
 loading the addon headlessly and
 walking it page → group → subgroup; a page, tab or row listed here that the schema does not produce
@@ -191,11 +191,11 @@ that can never match carries a gray note naming what to use instead, because the
 chat and is gone by the next login.
 
 **Spell Categories** — bespoke, and profile-wide: every container shares these lists. A **Category**
-dropdown of the fourteen shipped spell categories, plus every category the player has made — the eleven buff ones (defensives, activeMitigation, raidCDs,
-offensiveCDs, healing, support, groupBuffs, movement, utility, stances, racials; schema v7 retired consumables) and the three debuff ones (hardCC and
-softCC from issue #11, racialDebuffs from schema v7) — **plus Weapon enchants** (schema v3). The dropdown is keyed on the category
+dropdown of the fifteen shipped spell categories, plus every category the player has made — the eleven buff ones (defensives, activeMitigation, raidCDs,
+offensiveCDs, healing, support, groupBuffs, movement, utility, stances, racials; schema v7 retired consumables) and the four debuff ones (hardCC from
+issue #11, ccRoot and ccSnare from schema v12's split of its softCC, racialDebuffs from schema v7) — **plus Weapon enchants** (schema v3). The dropdown is keyed on the category
 KIND, not on an aura type, so a debuff spell list is editable here like any other. Every entry
-carries an aura-type marker — `[Buffs] Healing`, `[Debuffs] Hard CC (loss of control)` — read out of
+carries an aura-type marker — `[Buffs] Healing`, `[Debuffs] CC Loss of Control` — read out of
 `C.AURA_TYPE_LABELS` rather than worded again here, so the picker uses the same two words the
 container's own Aura type control does (issue #10). The shorter word is padded so every name starts
 at the same character offset; that is character-exact rather than pixel-exact, since the row font is
@@ -408,7 +408,7 @@ Then **Duplicate** and **Delete** (asks first), and — with more than one conta
 from**: a source dropdown (every other container, by name), a "what to copy" dropdown (everything, or one of Filters, Layout, Mouse,
 Label, Bar style, Icon style, Text style) and **Copy onto this container**. Name and position are never copied.
 
-### Filters (56 rows, `settings/Filters.lua`) — a section of Containers (#6)
+### Filters (57 rows, `settings/Filters.lua`) — a section of Containers (#6)
 
 Every tab opens with the container's warnings in orange — what the engine will silently not honor
 here (`Helpers.RenderWarnings`, from `FilterCompiler.Compile`'s `warnings`), followed by a gap of

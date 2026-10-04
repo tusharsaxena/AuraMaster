@@ -82,7 +82,7 @@ other profile → the same. Result:
 
 **INSTALL-6. Upgrade of a Weapon enchants container (schema v5).** Use a SavedVariables file with a
 Weapon enchants container whose "Always shown" list held spells. Log in, then `/am debug on` → the
-console's `[Init]` line reads `schema v11`. The container now reads unit Player, aura type Buffs,
+console's `[Init]` line reads `schema v12`. The container now reads unit Player, aura type Buffs,
 only **Weapon enchants** shown on Filters → Categories, and an empty Overrides list; it draws no
 group from the cleared whitelist. Apply an enchant (a sharpening stone, a rogue poison, a shaman
 imbue) → it shows, with no "can never match" warning. The Aura type dropdown on Containers → General
@@ -96,7 +96,7 @@ Text page. `/dump` a bars and an icons container's stored `text` table from `Aur
 
 **INSTALL-8. Chains stay put through the attach upgrades (schema v8 to v11).** Note where every
 chain sits on the old build, locked and in test mode. Log in on this build, then `/am debug on` →
-the console's `[Init]` line reads `schema v11`. Every chain sits where it did, locked and in test
+the console's `[Init]` line reads `schema v12`. Every chain sits where it did, locked and in test
 mode, with these exceptions only: a follower that was on the old default side now reads Automatic in
 both anchor-point rows and takes Automatic's place, so a Text follower justified Center moves to the
 center, and one justified to its growth's end side to that end (LAYOUT-10); an Icons or Bars
@@ -107,7 +107,18 @@ offsets are unchanged. `/am select` a screen container, `/am get container.attac
 diagnostics` lists no `attach.y=-4`. Switch a container that was on the screen to Another container
 → it gains no 4px nudge (its X/Y offsets read 0). `/am get container.attach.edge` → "Setting not
 found". `/reload`, then `/am debug on` → nothing has moved, and the `[Init]` line still reads
-`schema v11`. Result:
+`schema v12`. Result:
+
+**INSTALL-9. Soft CC splits into CC Root and CC Snare (schema v12).** On the old build, in two
+profiles: set a debuff container's **Soft CC (roots & snares)** to **Hide** in one, and leave another
+container's at **Show**; on General → Spell Categories remove **Entangling Roots** and **Hamstring**
+from Soft CC and add a spell id of your own. Log in on this build, then `/am debug on` → the
+`[Init]` line reads `schema v12`. On Filters → Categories the Spell Categories grid holds **CC Loss
+of Control**, **CC Root**, **CC Snare** and **Racials**, with no Soft CC row; the container that hid
+Soft CC has **both** CC Root and CC Snare on **Hide**, the other has both on **Show**, in each
+profile. On General → Spell Categories, **CC Root** lacks Entangling Roots, **CC Snare** lacks
+Hamstring, and your added id is on **both**. Root a dummy with Entangling Roots → a CC Root container
+draws it and a CC Snare one does not; Hamstring it → the other way round. Result:
 
 ## Slash commands
 
@@ -760,9 +771,9 @@ Result:
 **FILT-4. A debuff container's Categories.** Switch the container's aura type to Debuffs → four
 grids, **Blizzard Categories**, **Spell Categories**, **Dispel Types** and **Who Cast It**. Above the
 Spell Categories grid the line reads "These are the lists on General -> Spell Categories, shared by
-every container."; the grid holds **Hard CC (loss of control)**, **Soft CC (roots & snares)** and
+every container."; the grid holds **CC Loss of Control**, **CC Root**, **CC Snare** and
 **Racials**, each with a **See spells** link, then **Uncategorized** with none (plus any debuff
-category of your own); under it a note reads "Hard CC, Soft CC and Racials only match on a target or
+category of your own); under it a note reads "The CC lists and Racials only match on a target or
 focus you can't assist. …". On a *player* container, straight under the **Spell Categories** heading and above its
 **Show all** / **Hide all**, a line reads "NOTE: on your own debuffs, these spell categories are not
 applied." Result:
@@ -833,12 +844,12 @@ starter list** → back to shipped. Filters → Overrides lists carry the X too,
 spell. Result:
 
 **FILT-13. Lists read alphabetically.** The **Category** dropdown offers **Defensive cooldowns**,
-**Hard CC (loss of control)** and **Soft CC (roots & snares)**, the parentheses and `&` as written in
-the dropdown, its tooltip and on Filters → Categories. Pick **Soft CC (roots & snares)** → the spells
-read in name order (Chains of Ice, Concussive Shot, Crippling Poison, …), not Frost Nova first. Add a
+**CC Loss of Control**, **CC Root** and **CC Snare**, as written in the dropdown, its tooltip and on
+Filters → Categories. Pick **CC Snare** → the spells read in name order (Apathy, Arcane Pulse, Blast
+Wave, …), not Hamstring first. Add a
 spell of yours by name → it lands in the alphabet among the starters. An id the client cannot name
 reads "Unknown spell <id>" at the end, and the order does not shuffle a second after the tab opens.
-**Wake of Ashes** is in neither Hard CC nor Soft CC; cast it with a Hard CC container up → nothing is
+**Wake of Ashes** is in none of the CC lists; cast it with a CC Loss of Control container up → nothing is
 drawn for it. Result:
 
 **FILT-14. The add box takes a link.** Click into **Add a spell** and shift-click a spell in your
@@ -895,9 +906,9 @@ whitelist → the same chat line as FILT-21. If the id also has a verdict note, 
 never-matches sentence first. Result:
 
 **FILT-25. The corrected shipped ids.** Each now matches: **Levitate** on yourself → a container
-covering *Utility* shows it (111759); **Fear** on the dummy → a *Hard CC* debuff container shows it
+covering *Utility* shows it (111759); **Fear** on the dummy → a *CC Loss of Control* debuff container shows it
 (118699); **Spirit Link Totem**, standing in it → the container covering it shows it (325174);
-**Ursol's Vortex**, dummy inside it → a *Soft CC* container shows it (127797). `35546` Fatal Flourish
+**Ursol's Vortex**, dummy inside it → a *CC Snare* container shows it (127797). `35546` Fatal Flourish
 is knowingly still the cast id and matches nothing; if you ever see a lasting Fatal Flourish debuff,
 note its id. Result:
 
@@ -1050,9 +1061,9 @@ set to Show (player; unit cannot be assisted)` for each target buff container an
 When the duel ends the lines flip back. Nothing draws twice at any point. Result:
 
 **FILT-50. A player debuff container with several spell categories.** On *Player debuffs* set
-*Hard CC*, *Soft CC* and *Racials* to **Show**, *Dispellable by anyone* to **Hide**, and every other
+*CC Loss of Control*, *CC Root*, *CC Snare* and *Racials* to **Show**, *Dispellable by anyone* to **Hide**, and every other
 category to **Show**. Take a stun or root from a dungeon mob or a training partner → each debuff
-draws once, from the Blizzard Categories, Dispel Types or Who Cast It rows set to Show; the three
+draws once, from the Blizzard Categories, Dispel Types or Who Cast It rows set to Show; the four
 spell categories add nothing and duplicate nothing. Set every Blizzard Categories, Dispel Types and
 Who Cast It row to **Hide** → the container stays empty whatever you take, since spell ids never apply
 to your own debuffs. Result:
@@ -1071,7 +1082,7 @@ The README's Usage paragraph on where spell categories apply and the FAQ entry "
 target's buffs show on enemies?" read the same as these notes. Result:
 
 **FILT-52. Mind control flips the view on the charmer.** On a raid or dungeon boss that mind-controls
-(charms) a player, keep a *Target debuffs (mine)* container with *Hard CC*, *Soft CC* and *Racials*
+(charms) a player, keep a *Target debuffs (mine)* container with *CC Loss of Control*, *CC Root*, *CC Snare* and *Racials*
 **Show** and *Dispellable by anyone* **Hide**, targeting the boss. When you are charmed, the console
 logs `spell lists off, only Blizzard categories set to Show (NPC; unit can be assisted)` for that container if the charm made the boss
 assistable, with no target change and no Lua error; nothing draws twice while charmed. When the charm

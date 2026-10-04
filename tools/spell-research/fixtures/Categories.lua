@@ -43,7 +43,7 @@ Cat.HELPFUL = {
 
 Cat.HARMFUL = {
     {
-        key = "hardCC", kind = "spells", label = "Hard CC (loss of control)",
+        key = "hardCC", kind = "spells", label = "CC Loss of Control",
         desc = "Stuns, incapacitates, disorients and fears.",
         spells = spells({
             WARRIOR     = { 5246, 132168 },                         -- Intimidating Shout, Shockwave
