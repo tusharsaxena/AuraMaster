@@ -335,8 +335,8 @@ Cat.HELPFUL = {
         }),
     },
     {
-        -- One list since schema v2: the former coreHealing and lesserHealing, united (core/Database.lua's
-        -- MigrateV2 merges a player's edits and category states of the two).
+        -- One list since schema v2: the former coreHealing and lesserHealing, united
+        -- (core/Database_Migrations.lua's MigrateV2 merges a player's edits and states of the two).
         key = "healing", kind = "spells", label = "Healing",
         desc = "Heal-over-time effects, shields and beacons.",
         spells = spells({
@@ -918,9 +918,9 @@ Cat.HARMFUL = {
         -- CC ROOT and CC SNARE (owner 2026-10-04) are the two halves of what shipped until then as one
         -- `softCC` row, "Soft CC (roots & snares)". The owner split it because "is it pinned" and "is
         -- it slowed" are different questions: a root stops the unit moving at all, a snare only slows
-        -- it. Schema v12 (core/Database.lua) gives every container that stored a Soft CC state BOTH
-        -- new keys with that same state, and moves the player's Soft CC list edits to whichever half
-        -- ships the id (an id in neither goes to both), so no container draws differently.
+        -- it. Schema v12 (core/Database_Migrations.lua) gives every container that stored a Soft CC
+        -- state BOTH new keys with that same state, and moves the player's Soft CC list edits to
+        -- whichever half ships the id (an id in neither goes to both), so none draws differently.
         --
         -- THE SPLIT IS THE CLIENT'S OWN, and it fell out cleanly: every id the `softCC` row shipped
         -- carries exactly one of the two in build 12.1.0.69875 — SpellMechanic 7 (rooted) on a
@@ -1336,8 +1336,8 @@ end
 
 --- The states of an ENCHANT-ONLY buff container (schema v5, feedback #6): every buff category Hidden
 --- but Weapon enchants, Uncategorized included, so the container draws the player's temporary weapon
---- enchants and no aura at all. The v5 migration (core/Database.lua) and `/am new enchants`
---- (settings/Slash.lua) both build one from this.
+--- enchants and no aura at all. The v5 migration (core/Database_Migrations.lua) and
+--- `/am new enchants` (settings/Slash.lua) both build one from this.
 --- @return table
 function Cat.EnchantOnlyStates()
     return Cat.StatesShowing({ "weaponEnchants" })

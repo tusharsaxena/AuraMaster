@@ -44,8 +44,8 @@ NS.defaults.profile = {
     hideBlizzardBuffs   = false,
     hideBlizzardDebuffs = false,
 
-    -- Profile-wide since schema v2 (core/Database.lua's MigrateV2 lifted them off the containers):
-    -- every container shares one set of spell-category edits and one dispel palette.
+    -- Profile-wide since schema v2 (core/Database_Migrations.lua's MigrateV2 lifted them off the
+    -- containers): every container shares one set of spell-category edits and one dispel palette.
     -- `categorySpells` is [categoryKey] = { [spellId] = true (added) | false (removed) }, layered
     -- over defaults/Categories.lua's starter lists, so a shipped list update still reaches a player
     -- who has edited one. Written whole through settings/Schema.lua's `categorySpells` carve-out.
@@ -264,7 +264,7 @@ NS.CONTAINER_TEMPLATE = {
         width = 220, height = 16,
         -- Size to fit (batch 8, AS-1): the size follows the line's content (Style.ElementSize), and
         -- width/height stand only when it cannot be measured. On for a new profile or container;
-        -- core/Database.lua's v8 stamps it off on every container stored before it (D7).
+        -- core/Database_Migrations.lua's v8 stamps it off on every container stored before it (D7).
         autoSize = true,
         template = "$spellname$[ x$stacks$][ - $remainingduration$]",
         justifyH = "LEFT", justifyV = "MIDDLE", x = 2, y = 0,

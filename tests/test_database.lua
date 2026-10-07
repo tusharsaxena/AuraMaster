@@ -713,9 +713,10 @@ test("v3: a container with no filter.categories table at all converges without a
     NS.Database.MigrateV3(p)
     local cats = p.containers[1].filter.categories
     for _, cat in ipairs(NS.Categories.HELPFUL) do
-        -- `uncategorized` is excluded from filterableCategories for its own reason (core/Database.lua's
-        -- comment above the function): MigrateV3 has no opinion about a key the old whitelist model
-        -- never had, so it is left nil here for the ordinary backfill to supply "show" afterward.
+        -- `uncategorized` is excluded from filterableCategories for its own reason
+        -- (core/Database_Migrations.lua's comment above the function): MigrateV3 has no opinion about
+        -- a key the old whitelist model never had, so it is left nil here for the ordinary backfill
+        -- to supply "show" afterward.
         if cat.kind ~= "enchant" and cat.kind ~= "uncategorized" then
             assertEqual(cats[cat.key], "show", cat.key .. ": never swept to hide by an enchant row")
         end

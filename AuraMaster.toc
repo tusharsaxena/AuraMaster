@@ -72,6 +72,8 @@ core\LauncherSetup.lua
 core\AuraMaster.lua
 # Conventional: reached from OnInitialize, at call time.
 core\Database.lua
+# Conventional: the frozen schema step bodies; SCHEMA_STEPS reaches them at call time.
+core\Database_Migrations.lua
 
 # Defaults
 # LOAD-BEARING: Categories before Profile — the container template's category states are built

@@ -44,7 +44,7 @@ what each LibKa0s setup file publishes: `docs/module-map.md` → *Libraries*.
 ## Module Map
 
 Five source folders in the TOC's load order — `locales/` → `core/` → `defaults/` → `modules/` →
-`settings/` (layout-§1) — 58 authored Lua files under them: one locale, 16 core, 4 defaults, 22
+`settings/` (layout-§1) — 59 authored Lua files under them: one locale, 17 core, 4 defaults, 22
 modules and 15 settings. The load-bearing positions are annotated at their TOC lines:
 `core/MediaSetup.lua` before `core/Constants.lua` (the monospace face), `core/CoreSetup.lua` before
 anything that prints, `core/PerfSetup.lua` before every module that takes `NS.Perf` as an upvalue,
@@ -296,7 +296,7 @@ optional. The full table and the reasons:
 | `UNIT_FACTION`, `UNIT_FLAGS` for `target` and `focus` | `modules/ContainerManager.lua:820` — the module's one private frame, `CM.viewFrame` (the same carve-out), through `NS.SafeRegisterUnitEvent`; built once, hidden and reused, opened by `CM.StartListening` and unregistered by hand in `CM.StopListening` | `onViewEvent`: proves the unit a safe key, then `CM.ApplyViews(unit)`: a reaction change without a swap (a duel, mind control, an NPC turning hostile) switches the view; the two setters redraw, so no refresh follows; then `CM.ApplyUnitGate(unit)` re-runs the visibility pass of each container whose Unit type answer moved (filter situations S6). Combat-legal, never held. When a view moved, `EW.OnViewsMoved` re-predicts at once (gated on unlocked, out of combat and auras readable), so the empty prediction follows the engine |
 | `UNIT_FACTION`, `UNIT_FLAGS` for `player` | `modules/ContainerManager.lua` — a second private frame, `CM.viewPlayerFrame`, built, opened and closed with `CM.viewFrame` (`RegisterUnitEvent` takes two units, and a second call replaces the first) | `onPlayerViewEvent`: proves the unit a safe key, then `CM.ApplyViews` for `target` and for `focus`, quietly, and one `EW.OnViewsMoved` if either moved: the player's own side changing (mind control) moves whether a target or focus can be assisted with no event for that unit (SV-05); then `CM.ApplyUnitGate` for `target` and for `focus`, since the same change moves their reaction to you |
 | `PLAYER_REGEN_DISABLED`, `PLAYER_REGEN_ENABLED`, `ADDON_RESTRICTION_STATE_CHANGED` | `modules/TimedSpells.lua` (AceEvent, on its own target) — while a container uses "without a duration" and the addon is not suspended | `syncAuraListen`: `PLAYER_REGEN_DISABLED` closes the readable gate by itself (it fires before combat lockdown begins); the other two re-check it, dropping or restoring `UNIT_AURA`; reopening schedules one scan |
-| AceDB `OnProfileChanged` / `OnProfileCopied` / `OnProfileReset` | `core/Database.lua:275-279` | `NS.OnProfileChanged` / `NS.OnProfileCopied` / `NS.OnProfileReset` → re-prepare the registry, trace the event once in its own words (a switch `[Profile] changed -> X`; a copy or a reset one `[Set]` line, debug-logging-§10), rebuild, re-render |
+| AceDB `OnProfileChanged` / `OnProfileCopied` / `OnProfileReset` | `core/Database.lua:273-277` | `NS.OnProfileChanged` / `NS.OnProfileCopied` / `NS.OnProfileReset` → re-prepare the registry, trace the event once in its own words (a switch `[Profile] changed -> X`; a copy or a reset one `[Set]` line, debug-logging-§10), rebuild, re-render |
 
 Each container's own `UNIT_AURA` belongs to the engine (`SetUnit`, `modules/Container.lua:442`) and
 is not addon code. The twelve `core/AuraMaster.lua` registrations are one module-level list,

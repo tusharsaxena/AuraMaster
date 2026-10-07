@@ -6,7 +6,7 @@ Two SavedVariables globals (`AuraMasterDB`, `AuraMasterPerfDB`, `AuraMaster.toc:
 
 ## `AuraMasterDB` — the AceDB database
 
-Created by `NS.InitDB` (`core/Database.lua:272`) as `AceDB:New("AuraMasterDB", NS.defaults, true)`:
+Created by `NS.InitDB` (`core/Database.lua:270`) as `AceDB:New("AuraMasterDB", NS.defaults, true)`:
 the third argument puts every character on the shared `Default` profile until the player chooses
 otherwise (`docs/profiles.md`).
 
@@ -563,7 +563,7 @@ compare with the rest of the seam.
 
 ## Migration path
 
-The account-wide ladder is `SCHEMA_STEPS` in `core/Database.lua:1255`: one `{ to = N, apply = fn }`
+The account-wide ladder is `SCHEMA_STEPS` in `core/Database.lua:337`: one `{ to = N, apply = fn }`
 row per stored-shape change, applied in order by `NS.RunMigrations` while
 `global.schemaVersion < to`, each logging one `[Migrate]` debug line. The ladder runs at
 `OnInitialize`, before logging can be on, so its summary lines go through the console's at-enable
@@ -608,7 +608,7 @@ The stamp follows savedvariables-§1 as ruled at WowAddonStandards v2.65.0:
     from the defaults. `bars.dispelColors` is deleted from every container.
   - `layout.strata`: a stored `"MEDIUM"` (the v1 default) becomes `"HIGH"`; any other value is kept.
   - Additive keys ride the ordinary backfill with no step.
-- **Schema v3** (`Database.MigrateV3`, `core/Database.lua:678`) runs over **every** stored profile,
+- **Schema v3** (`Database.MigrateV3`, `core/Database_Migrations.lua:404`) runs over **every** stored profile,
   same reach as v2. It logs one `[Migrate] v3 profile '<name>'` line each, and
   stamps `global.schemaVersion` to `3`. Only a container whose `auraType` is a known one
   (`HELPFUL`/`HARMFUL`/`ENCHANT`) is converted; a missing or corrupt `auraType` is left completely
@@ -663,7 +663,7 @@ The stamp follows savedvariables-§1 as ruled at WowAddonStandards v2.65.0:
     one of `NS.Categories.For`'s keys (task B3 then added the category definition and wired the
     compiler and UI to it; this step only wrote the stored key ahead of that); the categorical
     `kind == "enchant"` exclusion above is what keeps this order safe now that B3 has added it.
-- **Schema v4** (`Database.MigrateV4`, `core/Database.lua`, batch 7 fix rounds 2 and 3) runs over
+- **Schema v4** (`Database.MigrateV4`, `core/Database_Migrations.lua`, batch 7 fix rounds 2 and 3) runs over
   **every** stored profile, same reach as v2/v3. It logs one `[Migrate] v4 profile '<name>'` line
   each naming how many containers converted and how many lost the capability, and
   `Database.CurrentSchemaVersion()` answers `4`. The owner retired the per-container "Only these
@@ -690,7 +690,7 @@ The stamp follows savedvariables-§1 as ruled at WowAddonStandards v2.65.0:
   `NS.CONTAINER_TEMPLATE` no longer carries it. A container where the toggle was already off or
   absent is untouched entirely, not even the dead-key clear (idempotent: nothing at `true` to act on
   on a second run either).
-- **Schema v5** (`Database.MigrateV5`, `core/Database.lua`, feedback #6, 2026-09-19) runs over
+- **Schema v5** (`Database.MigrateV5`, `core/Database_Migrations.lua`, feedback #6, 2026-09-19) runs over
   **every** stored profile and logs one `[Migrate] v5 profile '<name>'` line each, plus one
   `[Migrate] v5 container '<key>' (<name>)` line per container it converts. The **Weapon enchants aura type retires**: weapon enchants are the buff category
   `weaponEnchants` only. Every container with `auraType == "ENCHANT"` becomes an **enchant-only buff
@@ -706,11 +706,11 @@ The stamp follows savedvariables-§1 as ruled at WowAddonStandards v2.65.0:
   and how many ids were dropped. `filter.hidePermanentEnchants`, the name, the style, every styling
   block and the position carry over untouched. Such a container compiles to the enchant slots and no
   aura group, and `FC.Compile` does not call it one that can never match. The step also clears the
-  profile's `dispelColors.None` leaf, if present (`core/Database.lua:764`): an aura with no dispel
+  profile's `dispelColors.None` leaf, if present (`core/Database_Migrations.lua:490`): an aura with no dispel
   type takes the surface's own color now (feedback #7), so nothing reads a None swatch any longer.
   The v3 and v4 steps keep their `ENCHANT` handling, because an old profile climbs them before it
   reaches v5.
-- **Schema v6** (`Database.MigrateV6`, `core/Database.lua`, issue #10 checkpoint 3, 2026-09-20) runs
+- **Schema v6** (`Database.MigrateV6`, `core/Database_Migrations.lua`, issue #10 checkpoint 3, 2026-09-20) runs
   over **every** stored profile and logs one `[Migrate] v6 profile '<name>'` line each;
   `Database.CurrentSchemaVersion()` answers `6`. It stamps the two keys a player's own spell
   categories live in — `userCategories` and `userCategoryOrder` — and **converts nothing**: both are
@@ -719,7 +719,7 @@ The stamp follows savedvariables-§1 as ruled at WowAddonStandards v2.65.0:
   (toc-file-§2) and because a later step can then say "a profile at v6 or later carries these keys"
   without re-deriving it. Idempotent in the strongest sense: it creates only what is absent and
   replaces only a non-table leaf.
-- **Schema v7** (`Database.MigrateV7`, `core/Database.lua`, owner 2026-09-25) runs over **every**
+- **Schema v7** (`Database.MigrateV7`, `core/Database_Migrations.lua`, owner 2026-09-25) runs over **every**
   stored profile and logs one `[Migrate] v7 profile '<name>'` line each;
   `Database.CurrentSchemaVersion()` answers `7`. It retires the `consumables` buff category and
   seeds the three that arrived with it so that no stored container draws differently: each
@@ -730,7 +730,7 @@ The stamp follows savedvariables-§1 as ruled at WowAddonStandards v2.65.0:
   Hide) and `"show"` on any other container carrying either key. `consumables` is deleted from every container and from
   `categorySpells`; a player's Support edit on a group buff, and a Utility edit on Shadowmeld, move
   to the new category unless it already holds its own. Idempotent: the seeds are `== nil` tests.
-- **Schema v8** (`Database.MigrateV8`, `core/Database.lua`, batch 8, owner 2026-09-25, D5/D8) runs over
+- **Schema v8** (`Database.MigrateV8`, `core/Database_Migrations.lua`, batch 8, owner 2026-09-25, D5/D8) runs over
   **every** stored profile and logs one `[Migrate] v8 profile '<name>'` line each;
   `Database.CurrentSchemaVersion()` answers `8`. The seam between a container and the container it is
   attached to is now the child's own spacing, and `attach.x` / `attach.y` nudge on top of it, so a
@@ -744,7 +744,7 @@ The stamp follows savedvariables-§1 as ruled at WowAddonStandards v2.65.0:
   and every later container read `true`.
   Idempotent: a second run finds `0` / `0` and a stored `autoSize`, and changes nothing. It is
   unreleased, so the later batch 8 tasks extend this same step (D8).
-- **Schema v9** (`Database.MigrateV9`, `core/Database.lua`, batch 9, owner 2026-09-25, E6/MG-1) runs over
+- **Schema v9** (`Database.MigrateV9`, `core/Database_Migrations.lua`, batch 9, owner 2026-09-25, E6/MG-1) runs over
   **every** stored profile and logs one `[Migrate] v9 profile '<name>'` line each;
   `Database.CurrentSchemaVersion()` answers `9`. It removes `text.autoSize` from every container whose
   `style` is not `"text"` (no stored style is the template's bars): an early v8 build stamped it on
@@ -761,7 +761,7 @@ The stamp follows savedvariables-§1 as ruled at WowAddonStandards v2.65.0:
   keeps its offsets. Idempotent: a second run finds nothing to remove, every side known and no screen
   `0` / `-4`. The attach side and the screen reset joined this step after a first v9 build had been
   pushed, so an install that ran that build carries v9 without them; v10 re-runs them.
-- **Schema v10** (`Database.MigrateV10`, `core/Database.lua`, batch 10, owner 2026-09-25, F7) runs
+- **Schema v10** (`Database.MigrateV10`, `core/Database_Migrations.lua`, batch 10, owner 2026-09-25, F7) runs
   over **every** stored profile and logs one `[Migrate] v10 profile '<name>'` line each;
   `Database.CurrentSchemaVersion()` answers `10`. It re-runs exactly v9's two late halves, with v9's
   rules: `attach.edge = "after-start"` on every container with an `attach` table whose `edge` is
@@ -770,7 +770,7 @@ The stamp follows savedvariables-§1 as ruled at WowAddonStandards v2.65.0:
   build ran. On a profile a full v9 already migrated it changes nothing, and a second run changes
   nothing. Tests climb from v8, from a full v9 and from an early v9 profile missing both halves
   (`tests/test_migrations.lua`).
-- **Schema v11** (`Database.MigrateV11`, `core/Database.lua`, batch 11, owner 2026-09-26, G4) runs
+- **Schema v11** (`Database.MigrateV11`, `core/Database_Migrations.lua`, batch 11, owner 2026-09-26, G4) runs
   over **every** stored profile and logs one `[Migrate] v11 profile '<name>'` line each;
   `Database.CurrentSchemaVersion()` answers `11`. It turns batch 9's side into two absolute points:
   an `attach.edge` equal to `after-start` (or not one of the nine tokens, which v9 and v10 read as
@@ -787,7 +787,7 @@ The stamp follows savedvariables-§1 as ruled at WowAddonStandards v2.65.0:
   Center or to its end side, and an Icons or Bars follower under a Text parent justified Center, may
   move to the center or the end (G4 names the Text-under-Text case); every other one stays put. Idempotent: a
   second run finds no `attach.edge`. Tests climb from v1, v8, v9 and v10 (`tests/test_migrations.lua`).
-- **Schema v12** (`Database.MigrateV12`, `core/Database.lua`, owner 2026-10-04) runs over **every**
+- **Schema v12** (`Database.MigrateV12`, `core/Database_Migrations.lua`, owner 2026-10-04) runs over **every**
   stored profile and logs one `[Migrate] v12 profile '<name>'` line each;
   `Database.CurrentSchemaVersion()` answers `12`. It splits the debuff category `softCC` (Soft CC,
   roots & snares) into `ccRoot` (CC Root) and `ccSnare` (CC Snare); `hardCC` keeps its key and is
@@ -807,7 +807,7 @@ The stamp follows savedvariables-§1 as ruled at WowAddonStandards v2.65.0:
   While a step exists only in local, unpushed commits it may still grow; once the branch carrying it
   has been pushed, a new stored-shape change takes a new step with the next version, even when the
   earlier step is unreleased.
-- **An additive change needs no step.** `Database.PrepareProfile` (`core/Database.lua:252`) runs after
+- **An additive change needs no step.** `Database.PrepareProfile` (`core/Database.lua:250`) runs after
   the ladder on every `InitDB` and on every profile change: it backfills every stored container from
   the template with `== nil` tests (a stored `false` survives, savedvariables-§5), normalizes string
   ids to numbers, rebuilds `containerOrder` to exactly the ids that exist, raises `nextContainerId`

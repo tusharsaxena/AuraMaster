@@ -37,7 +37,7 @@ NS.AnchorsAttach = AA
 -- of the nine under the parent's growth behaves exactly as batch 10 placed that token: its seam, the
 -- chain's spread, the side push. Any other pair is FREE: placed at X/Y alone, no spread, no push, its
 -- strip and label still on its own before side (G5). `attach.edge`, the stored token before v11, is
--- read by the v11 migration alone (core/Database.lua).
+-- read by the v11 migration alone (core/Database_Migrations.lua).
 
 local C = NS.Constants
 
