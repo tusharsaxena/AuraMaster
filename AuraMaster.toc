@@ -116,12 +116,16 @@ modules\Anchors_SnapRect.lua
 # NS.AnchorsAttach at file load; after Anchors_SnapRect, whose rect readers it binds at file load;
 # after Anchors too, which it extends (Anchors.Snap).
 modules\Anchors_Snap.lua
-# Conventional: the rest of the modules; peers resolved at call time.
+# Conventional: the rest of the modules; peers resolved at call time. What they bind at load
+# (NS.Constants, NS.L, NS.Perf, NS.NewBusTarget) is published in # Core above.
 modules\Preview.lua
 modules\EmptyWatch.lua
 modules\FramePicker.lua
 modules\BlizzardFrames.lua
+# LOAD-BEARING: Container binds NS.CONTAINER_TEMPLATE (defaults\Profile.lua) at file load as its
+# fallback for every unset layout and label leaf.
 modules\Container.lua
+# Conventional: peers resolved at call time; it binds only NS.Perf and NS.L at load.
 modules\ContainerManager.lua
 # Conventional: the font primer (issue #24); reaches Style, Database and ContainerManager at call time.
 modules\FontPrimer.lua

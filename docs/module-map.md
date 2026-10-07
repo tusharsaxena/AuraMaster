@@ -29,7 +29,10 @@ naming what resolves at load (toc-file-§5); the rest are conventional and free 
    `tooltipPlace`) at file load, `Anchors_SnapRect.lua` after `Anchors_Attach.lua`, whose flow
    growth it binds at file load, and `Anchors_Snap.lua` after all of them, since it binds
    `NS.AnchorsAttach`'s pair table and flow growth and `NS.AnchorsSnapRect`'s rect readers at file
-   load and extends `NS.Anchors` as `Anchors.Snap`. The rest reach each other only at call time.
+   load and extends `NS.Anchors` as `Anchors.Snap`. `Container.lua` binds `NS.CONTAINER_TEMPLATE`
+   (`defaults/Profile.lua`) at file load as its fallback, so its position below `defaults/` is
+   load-bearing too. The rest reach each other only at call time, binding nothing at load beyond
+   what `core/` publishes (`NS.Constants`, `NS.L`, `NS.Perf`, `NS.NewBusTarget`).
 6. **`settings/`** — last. `Schema.lua` first (every page registers into it), `Slash.lua`, then
    `OptionsSetup.lua` before every page file, because the pages call the composers
    (`NS.Helpers.ColorPair`, `FontGroup`, `BorderGroup`, `BarGroup`, `MasterControls`) inside

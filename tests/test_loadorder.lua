@@ -151,6 +151,21 @@ test("loadorder: every addon file in the TOC is covered by a LOAD-BEARING or Con
     assertEqual(table.concat(bare, ", "), "", "TOC lines with no governing note")
 end)
 
+test("loadorder: Container loads after the container template it binds at load, and the TOC says so", function()
+    -- red under: modules\Container.lua under a Conventional note, or moved above defaults\Profile.lua.
+    -- It binds NS.CONTAINER_TEMPLATE as its fallback table at file load (toc-file-§5).
+    local index = indexOf()
+    assertTrue(index["defaults/Profile.lua"] < index["modules/Container.lua"],
+        "defaults/Profile.lua must load before modules/Container.lua")
+    local entry
+    for _, e in ipairs(tocCoverage(readFile("AuraMaster.toc"))) do
+        if e.file == "modules\\Container.lua" then entry = e end
+    end
+    assertTrue(entry ~= nil and entry.adjacent, "modules\\Container.lua carries its own note")
+    assertTrue(entry.note:find("LOAD-BEARING", 1, true) ~= nil, "the note says LOAD-BEARING")
+    assertTrue(entry.note:find("NS.CONTAINER_TEMPLATE", 1, true) ~= nil, "the note names what resolves")
+end)
+
 test("loadorder: the runner loaded exactly the TOC's files and the XML's library files", function()
     assertEqual(table.concat(T.loadedAddonFiles, "\n"), table.concat(Loader.tocFiles("AuraMaster.toc"), "\n"))
     assertEqual(table.concat(T.loadedLibFiles, "\n"),
