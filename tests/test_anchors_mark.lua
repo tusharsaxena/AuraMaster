@@ -21,7 +21,7 @@ local function plant(frame, l, b, r, t)
 end
 
 --- A fresh environment with `n` containers, all enabled, on the screen and shown, each strip rebuilt
---- under the recorder and shown (as tests/test_anchors_drag.lua's env).
+--- under the recorder and shown (as tests/drag_helpers.lua's env).
 local function env(n)
     local NS, mocks = fresh()
     while #NS.Database.GetContainers() < n do NS.ContainerManager.Create({}) end
@@ -49,7 +49,7 @@ local GOLD = "1 1,0.82,0,0.6"   -- the strip's own edge: 1px of the widget's gol
 local function rgba(col) return "2 " .. table.concat({ col.r, col.g, col.b, col.a }, ",") end
 
 --- How `strip`'s own four edge strips were last painted, "size r,g,b,a", or the four listed when they
---- disagree (as tests/test_anchors_drag.lua's stripEdge).
+--- disagree (as tests/drag_helpers.lua's stripEdge).
 local function stripEdge(strip)
     local s = BS.strips(strip)
     if #s ~= 4 then return #s .. " strips" end

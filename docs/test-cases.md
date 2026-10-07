@@ -1120,7 +1120,7 @@ Total.
 - snap: folding reads Automatic for the target dropped on, not the container's current parent
 - snap: the radius is 24 UIParent units and the highlight is an opaque green
 
-### test_anchors_drag.lua (43)
+### test_anchors_drag.lua (21)
 
 - drag: a screen container and a container-attached one drag; a frame-attached one does not
 - drag: no drag starts in combat, and none leaves the container marked dragging
@@ -1143,6 +1143,9 @@ Total.
 - drag: a strip hidden mid-drag ends the drag at the next tick, and the container goes back where its settings put it
 - drag: a container destroyed mid-drag ends its drag and stops the driver
 - drag: the target strip's own gold comes back on every path the mark ends by (A6)
+
+### test_anchors_attach.lua (22)
+
 - drag: held within C.DETACH_RADIUS of its current pair, green on that pair; past it, red, and green again on the way back (A4)
 - drag: the leeway runs from where the container rests, seam room and nudge included, never from the bare join (A4)
 - drag: another pair in snap range beats the hold, and Shift suppresses only that (A4)
@@ -2403,7 +2406,8 @@ Total.
 | test_anchors_collapse.lua | 9 |
 | test_anchors_width.lua | 6 |
 | test_anchors_snap.lua | 31 |
-| test_anchors_drag.lua | 43 |
+| test_anchors_drag.lua | 21 |
+| test_anchors_attach.lua | 22 |
 | test_anchors_mark.lua | 7 |
 | test_anchors_drop.lua | 25 |
 | test_texttemplate.lua | 26 |
