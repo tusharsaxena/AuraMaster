@@ -9,8 +9,7 @@ ignore:
   - .pkgmeta         # dev-only: this file configures the packager; it is not part of the package
   - .gitignore
   - .gitattributes   # dev-only: the repo's line-ending policy (line-endings)
-  # - .claude        # ONLY in a repo that HAS a .claude/ — dev-only agent tooling, never loaded by
-  #                    the client. Copied in when the directory appears, and left out until then.
+  - .claude          # dev-only: agent tooling (.claude/commands/); never loaded by the client
   - .superpowers     # dev-only: agent tooling; never loaded by the client
   - docs             # holds docs/audits/ and docs/reviews/ too — all dev-only
   - tests
@@ -24,3 +23,4 @@ ignore:
   # and the .jpg render exist for the project page and for regenerating the .tga.
   - media/logos/*.png
   - media/logos/*.jpg
+  - media/screenshots # project-page images (README links the forgecdn copies); WoW cannot load PNG/JPG
