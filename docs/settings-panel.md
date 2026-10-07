@@ -95,7 +95,8 @@ band holds **the picker itself** (options-ui-§14):
   **Copy settings from**'s source and Layout's *Another container* all read
   `Database.GetContainersByName` — sorted case-insensitively, the id breaking a tie (names are unique
   regardless of case, so a tie needs a hand-edited store). The banner keeps its gray "(unit, aura type,
-  style)" suffix; the stored display order (`containerOrder`, `/am containers`) does not change.
+  style)" suffix, each label as the translation cases it (enUS "(Player Debuffs, Icons)"; no
+  `:lower()` after translation, AM-R-06); the stored display order (`containerOrder`, `/am containers`) does not change.
 - **The selection is shared.** Every banner writes one pointer, `NS.State.activeContainerId`, through
   `Helpers.SelectContainer`, which then re-renders every panel. The active tab survives a container
   change, so one surface can be compared across two containers.

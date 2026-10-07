@@ -183,7 +183,7 @@ test("containers: the picker and New container sit in the band above the strip, 
     assertEqual(picker.labelText, NS.L["Container"], "the band's picker")
     assertEqual(new.text, NS.L["New container"], "and its create act")
     assertEqual(table.concat(picker.order, ","), "1,4,2,3", "by name (B2-2)")
-    assertTrue(picker.list[2]:find("(Player debuffs, icons)", 1, true) ~= nil, "what it shows: " .. picker.list[2])
+    assertTrue(picker.list[2]:find("(Player Debuffs, Icons)", 1, true) ~= nil, "what it shows, in the translation's casing (AM-R-06): " .. picker.list[2])
 end)
 
 test("containers: the picker retargets the tab and every page", function()
