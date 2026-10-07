@@ -332,7 +332,7 @@ writes at `OnInitialize`; the per-container lines inside a step stay gated, and 
 | `Style` | host | `modules/Style.lua`, `modules/Style_Text.lua` | A binding or a guarded dress that raised, once per distinct error; a Text template refused, once per template |
 | `Fonts` | host | `modules/FontPrimer.lua` | `primed N new font(s)`; `N font(s) refused` when the refused count changes; each loading screen's end with its timing |
 | `Timed` | host | `modules/TimedSpells.lua` | A scan that learned something (`learned N timed spell(s)`); `/am forgettimed` |
-| `Migrate` | host | `core/Database.lua`, `defaults/UserCategories.lua` | A schema migration step that ran, a seeded starter set (both through the at-enable queue, so they land after `[Init]`), a stored user category skipped |
+| `Migrate` | host | `core/Database.lua`, `core/Database_Migrations.lua`, `defaults/UserCategories.lua` | A schema migration step that ran, a seeded starter set (both through the at-enable queue, so they land after `[Init]`), a stored user category skipped |
 | `Launcher` | library | LibKa0s-Launcher-1.0 (Launcher 5), through `core/LauncherSetup.lua`'s descriptor | Its state lines (`LibDataBroker-1.1 absent`, `LibDBIcon-1.0 absent`, no minimap table, `registered`) through the at-enable queue, so they land after `[Init]` the first time logging is turned on; its events at once |
 | `Perf` | host | `core/PerfSetup.lua` | A perf capture's report, written ungated because the player asked for it |
 
