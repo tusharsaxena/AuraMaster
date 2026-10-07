@@ -146,8 +146,8 @@ Every `container.` path is relative to the selected container (`docs/schema.md`)
 **Test mode** (`state.testMode`, bool, session) sits beside Minimap button, composed from
 `testModePath` (preview-mode, options-ui-§15). It shows every container's placeholder auras without
 unlocking, and each container's engine is disabled while it is on. It is bound to
-`NS.State.testMode` through `Preview.SetTestMode`, the one writer `/am test` and the minimap button's
-left click also use: off after a reload, ended when combat starts (`PLAYER_REGEN_DISABLED`), and a
+`NS.State.testMode` through `Preview.SetTestMode`, the one writer `/am test` and the launcher menu's
+*Test mode* entry also use: off after a reload, ended when combat starts (`PLAYER_REGEN_DISABLED`), and a
 start in combat is refused with one gray line, the checkbox reading false again. Its default is
 false, so *Reset all settings* ends it too.
 

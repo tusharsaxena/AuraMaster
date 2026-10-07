@@ -214,8 +214,8 @@ ordered `NS.COMMANDS` (`settings/Slash.lua:39`). Twenty-five verbs; `options` is
 A bare `/am` runs `config`, opening the settings panel on its landing page (slash-commands-§4); `/am
 help` prints the list.
 `/am test` is the test mode's verb (preview-mode): unlocking no longer previews, so the placeholders
-have a switch of their own, shared with the Master controls *Test mode* checkbox and the minimap
-button's left click.
+have a switch of their own, shared with the Master controls *Test mode* checkbox and the launcher
+menu's *Test mode* entry.
 
 | Command | What it does |
 |---|---|
@@ -381,7 +381,7 @@ span bundle is `<date>-v<A>-v<B>/`, and the one untagged bundle is `docs/revendo
 | `scope.md` | What the addon does, and what it deliberately does not |
 | `module-map.md` | Every non-vendored file, its one-line responsibility, and the TOC load order and why; the vendored libraries and what each is used for |
 | `schema.md` | The profile and global SavedVariables shape, the container template, every default, the migration path; the settings schema's rules, both structural registries and the named non-setting state |
-| `settings-panel.md` | The `Tab \| Covers` table, the page → tab → row tree, per-option behavior and schema keys; the launcher |
+| `settings-panel.md` | The `Page \| Tabs \| Covers` table, the page → tab → row tree, per-option behavior and schema keys; the launcher |
 | `data-flow.md` | Settings → filter plan → aura groups → the engine renders; the filter priority; lifecycle, deferral and the disabled state |
 | `common-tasks.md` | Recipes for the changes made most often here, naming real files; the locale-routing rule and its one exemption |
 
