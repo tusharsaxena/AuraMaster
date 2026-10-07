@@ -1634,7 +1634,7 @@ Total.
 - slash: /am profile in combat refuses and switches nothing
 - slash: /am profile answers while disabled, and the switch re-reads the new profile's enabled flag
 
-### test_slash_verbs.lua (51)
+### test_slash_verbs.lua (55)
 
 - slash verbs: /am help prints the alias header, then one row per NS.COMMANDS verb in order
 - slash verbs: the landing page's rows are /am help's rows without the chat indent
@@ -1674,6 +1674,10 @@ Total.
 - slash verbs: /am select matches a name in any case, and a miss moves nothing
 - slash verbs: /am new reads its words in any case, and a later word overrides an earlier one
 - slash verbs: /am delete matches a name in any case and names what it deleted; a miss deletes nothing
+- slash verbs: /am delete 3 refuses when one container is named '3' and another is #3, and deletes nothing
+- slash verbs: /am delete #3 deletes container #3 even when another container is named '3'
+- slash verbs: /am select 7 selects the container named '7' when no container is #7
+- slash verbs: a bare number no container is named resolves by id, and one container answering both is that one
 - slash verbs: /am resetposition and /am forgettimed do their act and say so
 - slash verbs: /am get global.minimap.shown answers true while the button shows; /am set global.minimap.shown false stores hide = true
 - slash verbs: the old path global.minimap.hide is not a setting, and nothing is written
@@ -2414,7 +2418,7 @@ Total.
 | test_framepicker.lua | 15 |
 | test_disabled.lua | 18 |
 | test_slash.lua | 34 |
-| test_slash_verbs.lua | 51 |
+| test_slash_verbs.lua | 55 |
 | test_diagnostics.lua | 49 |
 | test_diagnostics_situations.lua | 4 |
 | test_bulklog.lua | 20 |
@@ -2451,4 +2455,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **2049** |
+| **Total** | **2053** |

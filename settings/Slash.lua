@@ -160,19 +160,15 @@ local function firstWord(rest)
     return ((rest or ""):match("^%s*(%S*)") or ""):lower()
 end
 
---- A container by id or by name (case-insensitive), or nil. A name more than one container answers
---- to — a profile saved before names were kept unique case-insensitively — is refused rather than
---- guessed: nil, the ambiguity sentence and the name as typed, for the caller to printf.
-local function findContainer(arg)
-    arg = (arg or ""):match("^%s*(.-)%s*$")
-    if arg == "" then return nil end
-    local id = tonumber(arg)
-    if id then return NS.Database.FindContainer(id) end
+--- The one container whose name is `arg` (case-insensitive), or nil. A name more than one container
+--- answers to — a profile saved before names were kept unique case-insensitively — is refused
+--- rather than guessed: nil and the refusal { sentence, name as typed }.
+local function findByName(arg)
     local want, found = arg:lower(), nil
     for _, c in ipairs(NS.Database.GetContainers()) do
         if type(c.name) == "string" and c.name:lower() == want then
             if found then
-                return nil, L["More than one container is called '%s' — use its number from /am containers."], arg
+                return nil, { L["More than one container is called '%s' — use its number from /am containers."], arg }
             end
             found = c
         end
@@ -180,9 +176,34 @@ local function findContainer(arg)
     return found
 end
 
---- The line for a lookup that found nothing: the ambiguity sentence when there is one.
-local function sayNotFound(ambiguous, name)
-    if ambiguous then return printf(ambiguous, name) end
+--- A container by id or by name, or nil plus a refusal { sentence, args... } for sayNotFound to
+--- printf. The precedence (AM-R-05; docs/slash-dispatch.md rows 12 and 14):
+---   * `#N` is always the id N, never a name, so a container can always be reached by number;
+---   * otherwise an exact name match (case-insensitive) wins, because the validator accepts a
+---     bare-number name like '3' and the player who typed it meant that container;
+---   * a bare number that is one container's name and a DIFFERENT container's id is refused,
+---     naming both: `delete` is destructive and AceDB has no undo, so it never guesses;
+---   * a bare number no container is named falls back to the id.
+local function findContainer(arg)
+    arg = (arg or ""):match("^%s*(.-)%s*$")
+    if arg == "" then return nil end
+    local hashId = arg:match("^#(%d+)$")
+    if hashId then return NS.Database.FindContainer(tonumber(hashId)) end
+    local named, refusal = findByName(arg)
+    if refusal then return nil, refusal end
+    local id = tonumber(arg)
+    if not id then return named end
+    local byId = NS.Database.FindContainer(id)
+    if named and byId and byId ~= named then
+        return nil, { L["'%s' is the name of container #%s and the number of container #%s — type #%s for the number."],
+            arg, tostring(named.id), tostring(byId.id), tostring(byId.id) }
+    end
+    return named or byId
+end
+
+--- The line for a lookup that found nothing: the refusal, formatted, when there is one.
+local function sayNotFound(refusal)
+    if refusal then return printf(unpack(refusal)) end
     print(L["No such container — /am containers lists them"])
 end
 
@@ -253,8 +274,8 @@ function runContainers()
 end
 
 function runSelect(rest)
-    local c, ambiguous, name = findContainer(rest)
-    if not c then return sayNotFound(ambiguous, name) end
+    local c, refusal = findContainer(rest)
+    if not c then return sayNotFound(refusal) end
     NS.State.SetActiveContainer(c.id)
     afterRegistryChange()
     printf(L["Selected %s"], describe(c))
@@ -307,8 +328,8 @@ function runDelete(rest)
         if NS.Debug then NS.Debug("Containers", "delete refused (in combat)") end
         return refuse(L["cannot delete a container during combat — its display cannot be torn down until combat ends"])
     end
-    local c, ambiguous, typed = findContainer(rest)
-    if not c then return sayNotFound(ambiguous, typed) end
+    local c, refusal = findContainer(rest)
+    if not c then return sayNotFound(refusal) end
     local name = c.name
     local ok, err = NS.ContainerManager.Delete(c.id)
     if not ok then return print(err) end
