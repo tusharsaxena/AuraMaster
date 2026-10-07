@@ -309,7 +309,9 @@ logging on, re-arms them and the next pass says its line again. The one gate kep
 queue's hold trace (it compares the hold, not the line, because the edge is in the line), is re-armed
 on Clear through the console descriptor's `onClear`. The Launcher's state lines, written at
 `OnEnable` while logging is off, are held by the console's at-enable queue and land just after the
-`[Init]` summary the first time logging is turned on.
+`[Init]` summary the first time logging is turned on. So are the schema ladder's `[Migrate]` lines
+(each step's per-profile summary, the `vX -> vY` stamp and the starter seed), which `NS.RunMigrations`
+writes at `OnInitialize`; the per-container lines inside a step stay gated, and the step summary counts them.
 
 | Tag | Writer | What writes it | When |
 |---|---|---|---|
@@ -330,7 +332,7 @@ on Clear through the console descriptor's `onClear`. The Launcher's state lines,
 | `Style` | host | `modules/Style.lua`, `modules/Style_Text.lua` | A binding or a guarded dress that raised, once per distinct error; a Text template refused, once per template |
 | `Fonts` | host | `modules/FontPrimer.lua` | `primed N new font(s)`; `N font(s) refused` when the refused count changes; each loading screen's end with its timing |
 | `Timed` | host | `modules/TimedSpells.lua` | A scan that learned something (`learned N timed spell(s)`); `/am forgettimed` |
-| `Migrate` | host | `core/Database.lua`, `defaults/UserCategories.lua` | A schema migration step that ran, a seeded starter set, a stored user category skipped |
+| `Migrate` | host | `core/Database.lua`, `defaults/UserCategories.lua` | A schema migration step that ran, a seeded starter set (both through the at-enable queue, so they land after `[Init]`), a stored user category skipped |
 | `Launcher` | library | LibKa0s-Launcher-1.0 (Launcher 5), through `core/LauncherSetup.lua`'s descriptor | Its state lines (`LibDataBroker-1.1 absent`, `LibDBIcon-1.0 absent`, no minimap table, `registered`) through the at-enable queue, so they land after `[Init]` the first time logging is turned on; its events at once |
 | `Perf` | host | `core/PerfSetup.lua` | A perf capture's report, written ungated because the player asked for it |
 

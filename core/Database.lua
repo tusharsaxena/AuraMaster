@@ -1244,20 +1244,28 @@ local eachProfile = Database.EachProfile
 -- `db.sv.profiles` and is never gated by the account-wide stamp alone. Every step is also
 -- idempotent against a fresh default profile, because a fresh install (stamp 0) runs all of them,
 -- and so does an account whose stamp AceDB stripped at logout for equalling the default.
+--
+-- THE LADDER LOGS THROUGH NS.DebugLog.DebugAtEnable, NOT THE GATED NS.Debug. The runner runs only
+-- from NS:InitDB at OnInitialize, while NS.State.debug is still false, so a gated line here never
+-- lands; the at-enable queue holds it and writes it after the [Init] summary when logging is turned
+-- on (debug-logging-§8 Lifecycle coverage: a schema migration is a MUST line). Only the per-step,
+-- per-profile summaries, the stamp line and the starter seed go there: the per-container lines in
+-- the MigrateVn bodies stay on NS.Debug, because a large profile would overflow the queue's bound
+-- (lib.AT_ENABLE_MAX) and each step's summary already counts them.
 local SCHEMA_STEPS = {
     { to = 2, apply = function(db)
         eachProfile(db, function(p, name)
             local n = Database.MigrateV2(p)
-            if NS.Debug then
-                NS.Debug("Migrate", "v2 profile '%s': spell lists, dispel colors, healing and strata over %s container(s)", name, n)
+            if NS.DebugLog then
+                NS.DebugLog.DebugAtEnable("Migrate", "v2 profile '%s': spell lists, dispel colors, healing and strata over %s container(s)", name, n)
             end
         end)
     end },
     { to = 3, apply = function(db)
         eachProfile(db, function(p, name)
             local n = Database.MigrateV3(p)
-            if NS.Debug then
-                NS.Debug("Migrate", "v3 profile '%s': category whitelist lift and weaponEnchants over %s container(s)", name, n)
+            if NS.DebugLog then
+                NS.DebugLog.DebugAtEnable("Migrate", "v3 profile '%s': category whitelist lift and weaponEnchants over %s container(s)", name, n)
             end
         end)
     end },
@@ -1270,8 +1278,8 @@ local SCHEMA_STEPS = {
         local allLost = {}
         eachProfile(db, function(p, name)
             local converted, lost, lostList = Database.MigrateV4(p)
-            if NS.Debug then
-                NS.Debug("Migrate", "v4 profile '%s': 'Only these categories' retired -- %s container(s) moved to Uncategorized = Hide, %s lost the capability", name, converted, lost)
+            if NS.DebugLog then
+                NS.DebugLog.DebugAtEnable("Migrate", "v4 profile '%s': 'Only these categories' retired -- %s container(s) moved to Uncategorized = Hide, %s lost the capability", name, converted, lost)
             end
             for _, entry in ipairs(lostList) do
                 allLost[#allLost + 1] = ("%s (%s, profile '%s')"):format(
@@ -1286,64 +1294,64 @@ local SCHEMA_STEPS = {
     { to = 5, apply = function(db)
         eachProfile(db, function(p, name)
             local n = Database.MigrateV5(p)
-            if NS.Debug then
-                NS.Debug("Migrate", "v5 profile '%s': the Weapon enchants aura type retired -- %s container(s) now show only the Weapon enchants category", name, n)
+            if NS.DebugLog then
+                NS.DebugLog.DebugAtEnable("Migrate", "v5 profile '%s': the Weapon enchants aura type retired -- %s container(s) now show only the Weapon enchants category", name, n)
             end
         end)
     end },
     { to = 6, apply = function(db)
         eachProfile(db, function(p, name)
             local n = Database.MigrateV6(p)
-            if NS.Debug then
-                NS.Debug("Migrate", "v6 profile '%s': the user-category store stamped -- %s category(ies) already stored", name, n)
+            if NS.DebugLog then
+                NS.DebugLog.DebugAtEnable("Migrate", "v6 profile '%s': the user-category store stamped -- %s category(ies) already stored", name, n)
             end
         end)
     end },
     { to = 7, apply = function(db)
         eachProfile(db, function(p, name)
             local n = Database.MigrateV7(p)
-            if NS.Debug then
-                NS.Debug("Migrate", "v7 profile '%s': Consumables retired; Group buffs, Stances and Racials seeded over %s container(s)", name, n)
+            if NS.DebugLog then
+                NS.DebugLog.DebugAtEnable("Migrate", "v7 profile '%s': Consumables retired; Group buffs, Stances and Racials seeded over %s container(s)", name, n)
             end
         end)
     end },
     { to = 8, apply = function(db)
         eachProfile(db, function(p, name)
             local n, fit = Database.MigrateV8(p)
-            if NS.Debug then
-                NS.Debug("Migrate", "v8 profile '%s': the old 0/-4 attach offset reset on %s container(s) attached to another; Size to fit stamped off on %s Text container(s)", name, n, fit)
+            if NS.DebugLog then
+                NS.DebugLog.DebugAtEnable("Migrate", "v8 profile '%s': the old 0/-4 attach offset reset on %s container(s) attached to another; Size to fit stamped off on %s Text container(s)", name, n, fit)
             end
         end)
     end },
     { to = 9, apply = function(db)
         eachProfile(db, function(p, name)
             local removed, stamped, reset = Database.MigrateV9(p)
-            if NS.Debug then
-                NS.Debug("Migrate", "v9 profile '%s': Size to fit removed from %s bars or icons container(s); attach side stamped after-start on %s; the old 0/-4 offset reset on %s screen container(s)", name, removed, stamped, reset)
+            if NS.DebugLog then
+                NS.DebugLog.DebugAtEnable("Migrate", "v9 profile '%s': Size to fit removed from %s bars or icons container(s); attach side stamped after-start on %s; the old 0/-4 offset reset on %s screen container(s)", name, removed, stamped, reset)
             end
         end)
     end },
     { to = 10, apply = function(db)
         eachProfile(db, function(p, name)
             local stamped, reset = Database.MigrateV10(p)
-            if NS.Debug then
-                NS.Debug("Migrate", "v10 profile '%s': attach side stamped after-start on %s container(s); the old 0/-4 offset reset on %s screen container(s)", name, stamped, reset)
+            if NS.DebugLog then
+                NS.DebugLog.DebugAtEnable("Migrate", "v10 profile '%s': attach side stamped after-start on %s container(s); the old 0/-4 offset reset on %s screen container(s)", name, stamped, reset)
             end
         end)
     end },
     { to = 11, apply = function(db)
         eachProfile(db, function(p, name)
             local dropped, converted = Database.MigrateV11(p)
-            if NS.Debug then
-                NS.Debug("Migrate", "v11 profile '%s': attach side dropped to Automatic on %s container(s); converted to points on %s", name, dropped, converted)
+            if NS.DebugLog then
+                NS.DebugLog.DebugAtEnable("Migrate", "v11 profile '%s': attach side dropped to Automatic on %s container(s); converted to points on %s", name, dropped, converted)
             end
         end)
     end },
     { to = 12, apply = function(db)
         eachProfile(db, function(p, name)
             local n = Database.MigrateV12(p)
-            if NS.Debug then
-                NS.Debug("Migrate", "v12 profile '%s': Soft CC split into CC Root and CC Snare on %s container(s)", name, n)
+            if NS.DebugLog then
+                NS.DebugLog.DebugAtEnable("Migrate", "v12 profile '%s': Soft CC split into CC Root and CC Snare on %s container(s)", name, n)
             end
         end)
     end },
@@ -1374,7 +1382,7 @@ local function climbLadder(g)
                     NS.name, step.to, err)
                 return false
             end
-            if NS.Debug then NS.Debug("Migrate", "v%s -> v%s", g.schemaVersion, step.to) end
+            if NS.DebugLog then NS.DebugLog.DebugAtEnable("Migrate", "v%s -> v%s", g.schemaVersion, step.to) end
             g.schemaVersion = step.to
         end
     end
@@ -1402,5 +1410,5 @@ function NS.RunMigrations()
     -- own comment (defaults/Categories.lua) promises for a key added in a later version.
     NS.Categories.SyncUserCategories(NS.db.profile)
     local seeded = Database.PrepareProfile(NS.db.profile)
-    if seeded > 0 and NS.Debug then NS.Debug("Migrate", "seeded %s starter container(s)", seeded) end
+    if seeded > 0 and NS.DebugLog then NS.DebugLog.DebugAtEnable("Migrate", "seeded %s starter container(s)", seeded) end
 end

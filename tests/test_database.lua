@@ -541,10 +541,12 @@ end)
 test("database v2: RunMigrations logs one [Migrate] line per profile, and a second run is a no-op", function()
     local NS = fresh()
     local lines = {}
-    NS.Debug = function(tag, fmt, ...)
+    -- The ladder's summaries go through the at-enable queue (it runs at OnInitialize, logging off).
+    NS.DebugLog.DebugAtEnable = function(tag, fmt, ...)
         if tag == "Migrate" then
             lines[#lines + 1] = fmt:format(...)
         end
+        return false
     end
     NS.db.sv.profiles.Other = v1profile({ { layout = { strata = "MEDIUM" } } })
     NS.db.global.schemaVersion = 1

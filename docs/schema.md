@@ -563,9 +563,11 @@ compare with the rest of the seam.
 
 ## Migration path
 
-The account-wide ladder is `SCHEMA_STEPS` in `core/Database.lua:1247`: one `{ to = N, apply = fn }`
+The account-wide ladder is `SCHEMA_STEPS` in `core/Database.lua:1255`: one `{ to = N, apply = fn }`
 row per stored-shape change, applied in order by `NS.RunMigrations` while
-`global.schemaVersion < to`, each logging one `[Migrate]` debug line.
+`global.schemaVersion < to`, each logging one `[Migrate]` debug line. The ladder runs at
+`OnInitialize`, before logging can be on, so its summary lines go through the console's at-enable
+queue (`NS.DebugLog.DebugAtEnable`) and land after `[Init]` when logging is turned on.
 
 The stamp follows savedvariables-§1 as ruled at WowAddonStandards v2.65.0:
 

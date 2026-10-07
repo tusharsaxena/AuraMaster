@@ -176,10 +176,11 @@ Total.
 - user categories: the name cap counts characters, so a non-ASCII name is never cut mid-sequence
 - user categories: a deleted category is gone from the grid and from the union, and Uncategorized is still last
 
-### test_migrations.lua (28)
+### test_migrations.lua (29)
 
 - migrations: NS.SCHEMA_VERSION is the runner's target, the last step's version
 - migrations: a legacy v1 account with NO stamp runs every step
+- migrations: the ladder's [Migrate] lines, written at load with logging off, land after [Init] when logging is turned on
 - migrations: a stored stamp survives the logout strip, so the next build's step runs
 - migrations: every step is idempotent on a fresh default profile
 - migrations: a step that raises leaves the stamp where it was and the addon loads
@@ -2362,7 +2363,7 @@ Total.
 | test_launcher.lua | 30 |
 | test_database.lua | 73 |
 | test_database_categories.lua | 28 |
-| test_migrations.lua | 28 |
+| test_migrations.lua | 29 |
 | test_schema.lua | 38 |
 | test_schema_paths.lua | 38 |
 | test_filtercompiler.lua | 85 |
@@ -2455,4 +2456,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **2053** |
+| **Total** | **2054** |

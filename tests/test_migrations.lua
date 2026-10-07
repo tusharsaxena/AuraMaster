@@ -57,9 +57,10 @@ local function v1profile()
     }
 end
 
---- Collect the [Migrate] step lines ("v2 -> v3") into `into`.
+--- Collect the [Migrate] step lines ("v2 -> v3") into `into`: the ladder writes them through the
+--- console's at-enable queue, since it runs at OnInitialize with logging off.
 local function captureSteps(NS, into)
-    NS.Debug = function(tag, fmt, ...)
+    NS.DebugLog.DebugAtEnable = function(tag, fmt, ...)
         if tag == "Migrate" then
             local line = fmt:format(...)
             if line:match("^v%d+ %-> v%d+$") then
@@ -67,6 +68,7 @@ local function captureSteps(NS, into)
                 into[n + 1] = line
             end
         end
+        return false
     end
 end
 
@@ -87,6 +89,32 @@ test("migrations: a legacy v1 account with NO stamp runs every step", function()
     assertEqual(p.containers[4].layout.strata, "HIGH", "v2 ran")
     assertEqual(p.categorySpells.defensives[111], true, "v2 lifted the spell list")
     assertEqual(type(p.userCategories), "table", "v6 ran")
+end)
+
+test("migrations: the ladder's [Migrate] lines, written at load with logging off, land after [Init] when logging is turned on", function()
+    -- The runner runs only from NS:InitDB at OnInitialize, while NS.State.debug is false
+    -- (debug-logging-§8 Lifecycle coverage: schema migration is a MUST line). AM-A-08.
+    local NS = fresh({ savedVariables = { profiles = { Default = v1profile() }, global = { schemaVersion = 10 } } })
+    local buf = NS.DebugLog.buffer
+    for _, l in ipairs(buf) do
+        assertTrue(not l:find("[Migrate]", 1, true), "nothing logged while off: " .. l)
+    end
+    local from = #buf
+    NS.DebugLog:SetEnabled(true)
+    local init, stamp, summary
+    for i = from + 1, #buf do
+        local l = buf[i]
+        if l:find("[Init]", 1, true) then init = i end
+        if l:find("[Migrate] v11 -> v12", 1, true) then stamp = i end
+        if l:find("[Migrate] v12 profile 'Default'", 1, true) then summary = i end
+    end
+    local dump = table.concat(buf, " | ", from + 1)
+    -- red under: core/Database.lua's ladder lines through the gated NS.Debug (dropped at load, never
+    -- reaching the log) rather than NS.DebugLog.DebugAtEnable
+    assertTrue(stamp ~= nil, "the stamp line landed: " .. dump)
+    assertTrue(summary ~= nil, "the step summary landed: " .. dump)
+    assertTrue(init ~= nil and init < stamp and init < summary, "after the [Init] summary: " .. dump)
+    NS.DebugLog:SetEnabled(false)
 end)
 
 test("migrations: a stored stamp survives the logout strip, so the next build's step runs", function()
