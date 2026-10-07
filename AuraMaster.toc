@@ -97,16 +97,19 @@ modules\FilterCompiler.lua
 # LOAD-BEARING: TextTemplate before Style_Text, which takes NS.TextTemplate as a file-scope upvalue.
 modules\TextTemplate.lua
 # LOAD-BEARING: Style before Style_Bars, Style_Icons and Style_Text, which decorate NS.Style at file
-# scope.
+# scope. All four bind NS.CONTAINER_TEMPLATE (defaults\Profile.lua) at file load, and Style_Text
+# indexes its .text there.
 modules\Style.lua
 modules\Style_Bars.lua
 modules\Style_Icons.lua
 modules\Style_Text.lua
 # LOAD-BEARING: Anchors_Attach before Anchors, which binds its join spec, edge parts and scale from
-# NS.AnchorsAttach at file load.
+# NS.AnchorsAttach at file load. Anchors_Attach binds NS.CONTAINER_TEMPLATE (defaults\Profile.lua) at
+# file load.
 modules\Anchors_Attach.lua
 # LOAD-BEARING: Anchors_Tooltip before Anchors, which binds NS.AnchorsTooltip.Place at file load as
-# the drag strip's tooltipPlace (issue #22).
+# the drag strip's tooltipPlace (issue #22). Anchors also binds NS.CONTAINER_TEMPLATE
+# (defaults\Profile.lua) at file load.
 modules\Anchors_Tooltip.lua
 modules\Anchors.lua
 # LOAD-BEARING: Anchors_SnapRect after Anchors_Attach, whose flow growth it binds from

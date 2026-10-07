@@ -21,7 +21,8 @@ naming what resolves at load (toc-file-§5); the rest are conventional and free 
 4. **`defaults/`** — `Categories.lua` before `Profile.lua`, because the container template's
    `filter.categories` is built from the category lists, and `UserCategories.lua` directly after
    `Categories.lua`, because it takes the `NS.Categories` table as a file-scope upvalue.
-5. **`modules/`** — `TextTemplate.lua` before `Style_Text.lua` (a file-scope upvalue), and
+5. **`modules/`** — `FilterViews.lua` before `FilterCompiler.lua`, which takes `NS.FilterViews` as a
+   file-scope upvalue, `TextTemplate.lua` before `Style_Text.lua` (a file-scope upvalue), and
    `Style.lua` before `Style_Bars.lua`, `Style_Icons.lua` and `Style_Text.lua`, which decorate
    `NS.Style` at file scope, and `Anchors_Attach.lua` before `Anchors.lua`, which binds
    `NS.AnchorsAttach` (its join spec, `EDGE_PARTS` and `ownScale`) at file load, and
@@ -29,10 +30,12 @@ naming what resolves at load (toc-file-§5); the rest are conventional and free 
    `tooltipPlace`) at file load, `Anchors_SnapRect.lua` after `Anchors_Attach.lua`, whose flow
    growth it binds at file load, and `Anchors_Snap.lua` after all of them, since it binds
    `NS.AnchorsAttach`'s pair table and flow growth and `NS.AnchorsSnapRect`'s rect readers at file
-   load and extends `NS.Anchors` as `Anchors.Snap`. `Container.lua` binds `NS.CONTAINER_TEMPLATE`
-   (`defaults/Profile.lua`) at file load as its fallback, so its position below `defaults/` is
-   load-bearing too. The rest reach each other only at call time, binding nothing at load beyond
-   what `core/` publishes (`NS.Constants`, `NS.L`, `NS.Perf`, `NS.NewBusTarget`).
+   load and extends `NS.Anchors` as `Anchors.Snap`. Seven modules bind `NS.CONTAINER_TEMPLATE`
+   (`defaults/Profile.lua`) at file load, so their position below `defaults/` is load-bearing too:
+   `Style.lua`, `Style_Bars.lua`, `Style_Icons.lua`, `Style_Text.lua` (which indexes its `.text`
+   there), `Anchors_Attach.lua`, `Anchors.lua` and `Container.lua`, whose fallback it is for every
+   unset layout and label leaf. The rest reach each other only at call time, binding nothing at
+   load beyond what `core/` publishes (`NS.Constants`, `NS.L`, `NS.Perf`, `NS.NewBusTarget`).
 6. **`settings/`** — last. `Schema.lua` first (every page registers into it), `Slash.lua`, then
    `OptionsSetup.lua` before every page file, because the pages call the composers
    (`NS.Helpers.ColorPair`, `FontGroup`, `BorderGroup`, `BarGroup`, `MasterControls`) inside

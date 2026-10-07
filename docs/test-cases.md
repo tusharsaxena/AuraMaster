@@ -8,7 +8,7 @@ Total.
 
 **Generated — do not hand-edit.** Regenerate with `lua tests/run.lua --list > docs/test-cases.md`.
 
-### test_loadorder.lua (9)
+### test_loadorder.lua (10)
 
 - loadorder: the TOC lists the locale first and the Profiles page last
 - loadorder: every TOC path exists, and none is a library
@@ -16,6 +16,7 @@ Total.
 - loadorder: GeneralDispel loads after GeneralSpells and before General
 - loadorder: every addon file in the TOC is covered by a LOAD-BEARING or Conventional note
 - loadorder: Container loads after the container template it binds at load, and the TOC says so
+- loadorder: every module binding the container template at load follows it, and its note says so
 - loadorder: the runner loaded exactly the TOC's files and the XML's library files
 - loadorder: the offline perf runner and the degraded list derive from the TOC too
 - loadorder: the library registered — NS.Perf is the real probe, not the stub
@@ -2364,7 +2365,7 @@ Total.
 
 | Suite | Cases |
 |-------|------:|
-| test_loadorder.lua | 9 |
+| test_loadorder.lua | 10 |
 | test_setups.lua | 14 |
 | test_launcher.lua | 30 |
 | test_database.lua | 73 |
@@ -2463,4 +2464,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **2057** |
+| **Total** | **2058** |
