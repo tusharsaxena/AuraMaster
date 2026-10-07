@@ -334,9 +334,9 @@ end)
 -- used to mean, and fix round 1 already proved the two are the same shape once the catch-all is
 -- correctly dropped in both of Uncategorized's states, leaving the toggle nothing left to do. The
 -- migration that replaces a stored `onlyShown = true` with `categories.uncategorized = "hide"` lives
--- in core/Database.lua (tests/test_database.lua's schema step 4); this file only needs to prove the
--- compiler never reads the dead key at all any more — belt-and-braces, in case one somehow survives
--- migration (a restored backup, a profile copy from before this version).
+-- in core/Database_Migrations.lua (tests/test_database.lua's schema step 4); this file only needs
+-- to prove the compiler never reads the dead key at all any more — belt-and-braces, in case one
+-- somehow survives migration (a restored backup, a profile copy from before this version).
 
 test("filter: a stray filter.onlyShown key, however it got there, is inert — the compiler never reads it (D8 retired)", function()
     local withKey = compile({ filter = { onlyShown = true, categories = { bigDefensive = "hide" } } },

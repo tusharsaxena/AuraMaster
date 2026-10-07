@@ -410,14 +410,16 @@ ev:RegisterMessage(NS.MSG.CONTAINERS_CHANGED, function() NS.RequestPanelRefresh(
 
 local C = NS.Constants
 
---- The picker's entries: every container, labeled with what it shows, by name (B2-2).
+--- The picker's entries: every container, labeled with what it shows, by name (B2-2). The type and
+--- style labels are shown as translated: casing belongs to the translation, and a byte-wise
+--- string.lower would miss non-ASCII capitals and decapitalize German nouns (AM-R-06).
 local function containerList()
     local list, order = {}, {}
     for _, c in ipairs(NS.Database.GetContainersByName()) do
         list[c.id] = ("%s  |cff888888(%s %s, %s)|r"):format(tostring(c.name),
             L[C.UNIT_LABELS[c.unit] or tostring(c.unit)],
-            L[C.AURA_TYPE_LABELS[c.auraType] or tostring(c.auraType)]:lower(),
-            L[C.STYLE_LABELS[c.style] or tostring(c.style)]:lower())
+            L[C.AURA_TYPE_LABELS[c.auraType] or tostring(c.auraType)],
+            L[C.STYLE_LABELS[c.style] or tostring(c.style)])
         order[#order + 1] = c.id
     end
     return list, order

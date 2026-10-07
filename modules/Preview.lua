@@ -24,7 +24,7 @@ local C = NS.Constants
 --- (preview-mode, options-ui-§15). Session-only, never saved. A START in combat is refused with one
 --- gray line and changes nothing (the checkbox then reads false again); combat ending it is
 --- core/AuraMaster.lua's PLAYER_REGEN_DISABLED, which calls this with false. The Master controls
---- checkbox, `/am test` and the launcher's left-click all come through here.
+--- checkbox, `/am test` and the launcher menu's Test mode entry all come through here.
 ---
 --- `why` names a caller outside the write seam (`/am test`, which the launcher runs, and combat
 --- starting), and a switch it makes writes one [Preview] line (debug-logging-§8). The checkbox passes

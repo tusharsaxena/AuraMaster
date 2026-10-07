@@ -72,6 +72,8 @@ core\LauncherSetup.lua
 core\AuraMaster.lua
 # Conventional: reached from OnInitialize, at call time.
 core\Database.lua
+# Conventional: the frozen schema step bodies; SCHEMA_STEPS reaches them at call time.
+core\Database_Migrations.lua
 
 # Defaults
 # LOAD-BEARING: Categories before Profile — the container template's category states are built
@@ -95,16 +97,19 @@ modules\FilterCompiler.lua
 # LOAD-BEARING: TextTemplate before Style_Text, which takes NS.TextTemplate as a file-scope upvalue.
 modules\TextTemplate.lua
 # LOAD-BEARING: Style before Style_Bars, Style_Icons and Style_Text, which decorate NS.Style at file
-# scope.
+# scope. All four bind NS.CONTAINER_TEMPLATE (defaults\Profile.lua) at file load, and Style_Text
+# indexes its .text there.
 modules\Style.lua
 modules\Style_Bars.lua
 modules\Style_Icons.lua
 modules\Style_Text.lua
 # LOAD-BEARING: Anchors_Attach before Anchors, which binds its join spec, edge parts and scale from
-# NS.AnchorsAttach at file load.
+# NS.AnchorsAttach at file load. Anchors_Attach binds NS.CONTAINER_TEMPLATE (defaults\Profile.lua) at
+# file load.
 modules\Anchors_Attach.lua
 # LOAD-BEARING: Anchors_Tooltip before Anchors, which binds NS.AnchorsTooltip.Place at file load as
-# the drag strip's tooltipPlace (issue #22).
+# the drag strip's tooltipPlace (issue #22). Anchors also binds NS.CONTAINER_TEMPLATE
+# (defaults\Profile.lua) at file load.
 modules\Anchors_Tooltip.lua
 modules\Anchors.lua
 # LOAD-BEARING: Anchors_SnapRect after Anchors_Attach, whose flow growth it binds from
@@ -114,12 +119,16 @@ modules\Anchors_SnapRect.lua
 # NS.AnchorsAttach at file load; after Anchors_SnapRect, whose rect readers it binds at file load;
 # after Anchors too, which it extends (Anchors.Snap).
 modules\Anchors_Snap.lua
-# Conventional: the rest of the modules; peers resolved at call time.
+# Conventional: the rest of the modules; peers resolved at call time. What they bind at load
+# (NS.Constants, NS.L, NS.Perf, NS.NewBusTarget) is published in # Core above.
 modules\Preview.lua
 modules\EmptyWatch.lua
 modules\FramePicker.lua
 modules\BlizzardFrames.lua
+# LOAD-BEARING: Container binds NS.CONTAINER_TEMPLATE (defaults\Profile.lua) at file load as its
+# fallback for every unset layout and label leaf.
 modules\Container.lua
+# Conventional: peers resolved at call time; it binds only NS.Perf and NS.L at load.
 modules\ContainerManager.lua
 # Conventional: the font primer (issue #24); reaches Style, Database and ContainerManager at call time.
 modules\FontPrimer.lua

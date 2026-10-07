@@ -44,9 +44,9 @@ local _, NS = ...
 -- categories; once `uncategorized`'s own group correctly supersedes the catch-all in both of its
 -- states, the toggle had nothing left to drop — `uncategorized = "hide"` IS what it
 -- used to mean, on buffs. The owner chose one concept over two controls that needed explaining
--- against each other. `core/Database.lua`'s schema step 4 migrates a stored `onlyShown = true` to
--- `categories.uncategorized = "hide"` so an existing container keeps drawing only what it
--- categorized rather than silently widening.
+-- against each other. `core/Database_Migrations.lua`'s schema step 4 migrates a stored
+-- `onlyShown = true` to `categories.uncategorized = "hide"` so an existing container keeps drawing
+-- only what it categorized rather than silently widening.
 --
 -- The blacklist applies to the base, so it reaches the shown groups and the catch-all, but never the
 -- whitelist group. Kind `enchant` takes part in neither the shown groups nor the exclusions — it

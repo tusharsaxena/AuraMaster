@@ -95,7 +95,8 @@ band holds **the picker itself** (options-ui-§14):
   **Copy settings from**'s source and Layout's *Another container* all read
   `Database.GetContainersByName` — sorted case-insensitively, the id breaking a tie (names are unique
   regardless of case, so a tie needs a hand-edited store). The banner keeps its gray "(unit, aura type,
-  style)" suffix; the stored display order (`containerOrder`, `/am containers`) does not change.
+  style)" suffix, each label as the translation cases it (enUS "(Player Debuffs, Icons)"; no
+  `:lower()` after translation, AM-R-06); the stored display order (`containerOrder`, `/am containers`) does not change.
 - **The selection is shared.** Every banner writes one pointer, `NS.State.activeContainerId`, through
   `Helpers.SelectContainer`, which then re-renders every panel. The active tab survives a container
   change, so one surface can be compared across two containers.
@@ -145,8 +146,8 @@ Every `container.` path is relative to the selected container (`docs/schema.md`)
 **Test mode** (`state.testMode`, bool, session) sits beside Minimap button, composed from
 `testModePath` (preview-mode, options-ui-§15). It shows every container's placeholder auras without
 unlocking, and each container's engine is disabled while it is on. It is bound to
-`NS.State.testMode` through `Preview.SetTestMode`, the one writer `/am test` and the minimap button's
-left click also use: off after a reload, ended when combat starts (`PLAYER_REGEN_DISABLED`), and a
+`NS.State.testMode` through `Preview.SetTestMode`, the one writer `/am test` and the launcher menu's
+*Test mode* entry also use: off after a reload, ended when combat starts (`PLAYER_REGEN_DISABLED`), and a
 start in combat is refused with one gray line, the checkbox reading false again. Its default is
 false, so *Reset all settings* ends it too.
 

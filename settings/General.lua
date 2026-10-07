@@ -29,7 +29,7 @@ local _, NS = ...
 -- test mode and preview-mode's exception no longer applies: the placeholders have a switch of their
 -- own. The composer emits it from `testModePath` beside Minimap button; it is a SESSION row bound to
 -- NS.State.testMode through modules/Preview.lua's Preview.SetTestMode, the one writer `/am test` and
--- the launcher's left-click also use. Off after a reload, ended when combat starts, refused in
+-- the launcher menu's Test mode entry also use. Off after a reload, ended when combat starts, refused in
 -- combat, and ended by Reset all settings (the row's default is false).
 --
 -- THE MINIMAP ROW'S PATH IS UNPREFIXED AND ABSOLUTE, `global.minimap.shown` (NS.MINIMAP_PATH,
@@ -114,7 +114,7 @@ for _, row in ipairs(masterRows) do
         -- itself and re-syncs this checkbox (a refused start reads false again).
         --
         -- AND A START IS REFUSED WHILE THE ADDON IS DISABLED (slash-commands-§7, launcher-§2), the
-        -- same refusal `/am test` and the launcher's left click answer: the dispatcher's one line,
+        -- same refusal `/am test` and the launcher menu's Test mode entry answer: the dispatcher's one line,
         -- then a panel refresh so the checkbox reads off again. Turning it OFF stays allowed, since
         -- stopping a preview is not a feature.
         row.get = function() return NS.State.testMode end

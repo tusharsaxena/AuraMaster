@@ -877,10 +877,32 @@ end
 
 local logRect = {} -- scratch: a container's rect, for logCandidates
 
---- A rect as "l,b,r,t" to the unit.
+--- logRect as "l,b,r,t" to the unit when `found` (the read that filled it succeeded), else "no rect".
 --- @return string
-local function rectText(r)
-    return ("%.0f,%.0f,%.0f,%.0f"):format(r.left, r.bottom, r.right, r.top)
+local function rectText(found)
+    if not found then return "no rect" end
+    return ("%.0f,%.0f,%.0f,%.0f"):format(logRect.left, logRect.bottom, logRect.right, logRect.top)
+end
+
+--- The ids of every live container but `dragged`, in id order.
+--- @return number[]
+local function otherIds(dragged)
+    local ids = {}
+    for id in pairs(NS.ContainerManager.instances) do
+        if id ~= dragged.id then ids[#ids + 1] = id end
+    end
+    table.sort(ids)
+    return ids
+end
+
+--- What logCandidates says of live container `t` as a target of `dragged`: why it is none, else its
+--- rect as a parent ("no rect": neither its strip nor its block reads).
+--- @return string
+local function targetText(dragged, t)
+    local why = ineligibleWhy(dragged, t)
+    if why then return why end
+    local growH, growV = flowGrowth(t:Cfg())
+    return rectText(Snap.ParentRect(t, logRect, growH, growV))
 end
 
 --- One [Anchor] line, only while logging is on (the work is skipped otherwise): what the snap sees
@@ -891,24 +913,14 @@ end
 --- from the log without it.
 local function logCandidates(dragged, when, what)
     if not (NS.State and NS.State.debug and NS.Debug) then return end
-    local own = ownFootprint(dragged, logRect) and rectText(logRect) or "no rect"
-    local ids, instances = {}, NS.ContainerManager.instances
-    for id in pairs(instances) do
-        if id ~= dragged.id then ids[#ids + 1] = id end
+    local own = rectText(ownFootprint(dragged, logRect))
+    local instances, parts = NS.ContainerManager.instances, {}
+    for i, id in ipairs(otherIds(dragged)) do
+        parts[i] = id .. " " .. targetText(dragged, instances[id])
     end
-    table.sort(ids)
-    local parts = {}
-    for i, id in ipairs(ids) do
-        local t = instances[id]
-        local why = ineligibleWhy(dragged, t)
-        if not why then
-            local growH, growV = flowGrowth(t:Cfg())
-            why = Snap.ParentRect(t, logRect, growH, growV) and rectText(logRect) or "no rect"
-        end
-        parts[i] = id .. " " .. why
-    end
-    debug("container %s: %s%s: own %s; targets %s", dragged.id, when, what and (" " .. what) or "", own,
-        #parts > 0 and table.concat(parts, "; ") or "none")
+    local outcome = what and (" " .. what) or ""
+    local targets = #parts > 0 and table.concat(parts, "; ") or "none"
+    debug("container %s: %s%s: own %s; targets %s", dragged.id, when, outcome, own, targets)
 end
 
 --- Note where attached container `container` rests (settings `cfg`), before it is lifted: its current

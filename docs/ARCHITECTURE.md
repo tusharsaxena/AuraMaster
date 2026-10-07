@@ -44,7 +44,7 @@ what each LibKa0s setup file publishes: `docs/module-map.md` → *Libraries*.
 ## Module Map
 
 Five source folders in the TOC's load order — `locales/` → `core/` → `defaults/` → `modules/` →
-`settings/` (layout-§1) — 58 authored Lua files under them: one locale, 16 core, 4 defaults, 22
+`settings/` (layout-§1) — 59 authored Lua files under them: one locale, 17 core, 4 defaults, 22
 modules and 15 settings. The load-bearing positions are annotated at their TOC lines:
 `core/MediaSetup.lua` before `core/Constants.lua` (the monospace face), `core/CoreSetup.lua` before
 anything that prints, `core/PerfSetup.lua` before every module that takes `NS.Perf` as an upvalue,
@@ -63,75 +63,14 @@ before `modules/Anchors_Snap.lua`,
 before `settings/General.lua`, which registers their rows after its own.
 The Settings tree's order is the TOC's own registration order: General, then Containers, then Profiles. Filters, Layout, Bars, Icons and Text are sections of the Containers page (#6) with no tree entry; they load after `settings/OptionsSetup.lua` in any order, and the rail's order is `SECTION_ORDER` there.
 
-The engine-facing core is four modules: `modules/FilterCompiler.lua` (settings → groups, pure; the
-profile's spell-category edits reach it through `FC.ProfileContext`, and each group's blizzard view comes
-from `modules/FilterViews.lua`), `modules/Container.lua` (one
-engine), `modules/ContainerManager.lua` (the registry and the deferred apply, each container's apply
-guarded so one error cannot drop the rest of the pass) and `modules/Style.lua` with its three style
-files (`Style_Bars.lua`, `Style_Icons.lua` and `Style_Text.lua`, chosen per container by
-`Style.Styler`), plus the pure template parser the Text style draws from
-(`modules/TextTemplate.lua`). Placement is `modules/Anchors.lua`, with how a follower joins its parent in
-`modules/Anchors_Attach.lua`. A container attached to another
-continues its chain root's flow (`Anchors.EffectiveLayout`) and joins it by two absolute points,
-`attach.childPoint` and `attach.relPoint`, each Automatic while unset (`Anchors.AttachPoints`,
-batch 11 G2, G3); a pair that is one of batch 9's nine sides keeps that side's seam and spread
-(`Anchors.AttachEdge`, G5), and any other is placed at its X/Y alone, except that one mirrored onto the
-parent's before side is moved out past the parent's strip and label while each shows (DD-10). A write to a
-flow or attachment path re-applies its followers (`Anchors.Followers`) and its parent. While a container previews,
-the containers attached to it hang from `Preview.Extent`, a frame of ours sized to its placeholder
-block; while it is unlocked, not previewing and predicted empty (`modules/EmptyWatch.lua`, batch 9
-HG-1), from its one-element anchor, which its placeholder outline marks; otherwise from its engine
-(`Anchors.HangMode`, re-placed by `Anchors.PlaceAttached`). Before any container text is drawn,
-`modules/FontPrimer.lua` draws every font the containers use once on a shown frame of its own, because
-the client loads an addon font file lazily and text first drawn before the load stays blank (issue
-#24, `docs/midnight-quirks.md`). Previewing is the session-only **test mode**
-(`NS.State.testMode`, switched only by `Preview.SetTestMode`): every container shows its placeholder
-auras. Unlocking is separate: it makes containers draggable while their live auras keep drawing,
-each under its drag handle, and one predicted empty under a faint outline one element in size, so an
-empty container can still be found and dragged. A screen container or one attached to another drags
-(never one on a named frame, never in combat); dropped near another container it attaches there
-(issue #22, `modules/Anchors_Snap.lua`). The handle's `beginDrag` lifts an attached anchor onto
-`UIParent` and starts the snap driver, which every 0.03 s highlights one of the twelve
-outside pairs (each side's start, middle and end joined to the child's mirror point, absolute and
-independent of growth; the three on the target's before side place as a free pair) of an
-eligible container within `C.SNAP_RADIUS` (`Snap.Find`; never itself or one that follows
-it, `Anchors.WouldCycle`), picked side first and then by alignment (the addendum's A7: the nearest
-side by the gap between the two facing edges, its span overlapping, then the start, middle or end
-pair by which third of that side the dragged container's center is over; of the sides in range, A12:
-one the dragged container spans alongside beats one it is only off the corner of, then the pair whose
-two join points are nearest, the shortest line, wins), every rect measured and
-drawn on the container's drag-handle strip while it shows and reads (A10, `Snap.Footprint`; else
-A8's footprint, its block with its name label while that shows), the target's (and, for the detach
-leeway, the parent's) strip with each edge on a side it grows toward taken out to its block's far
-edge (A11, `Snap.ParentRect`, read in `modules/Anchors_SnapRect.lua`), with a 2 px edge in the mark's color on that container's drag-handle strip
-and on the dragged container's own (A13)
-(the owner-feedback addendum's A5 and A6: the strip's own 1 px gold edge repainted through
-`Style.DrawEdge`, no frame of ours anchored to it, and its gold, `Anchors.STRIP_EDGE`, painted back
-when the mark leaves it, hides or its container is destroyed; a box over its rect only when it has no
-visible strip), a dot on each of the two join
-points and a line between them, all in one color, and `Anchors.Place` leaves a dragging anchor alone. `Snap.Drop` decides
-from the drop itself: a candidate and no Shift writes the whole `container.attach` section through
-`NS.AttachByDrop` (`settings/Layout.lua`), which asks first with the GC-1 popup when the chain's flow
-would change. An attached container has a leeway (the owner-feedback addendum's A4, `C.DETACH_RADIUS`,
-128 since A9): while its current pair's two points stay that close to where they rested when the drag began, or
-to each other (the cursor's travel when its parent does not read), or while the snap's own pick is that
-very pair (over its third of a long parent's side, however far from its points), the mark stays green on that pair, the parent's strip repainted, and a release snaps it back, writing nothing; past it, the
-whole mark turns red (`C.DETACH_COLOR`) and a release detaches to the drop position, X/Y 0. Another
-pair in snap range, not its current one nor the one the pick gave where it rested, and nearer than it
-by the leeway's measure (the nearer of its two points' distance and how far that has moved since the
-drag began: 0 where it rests, though those points rest a seam, a nudge or a strip apart; DD-15R)
-(the current parent measured on the rect its current pair is, `findFrom`: its strip alone where its
-block reads secret; never one of it where no rect of it reads but the one-element fallback, nor, when
-its rest did not read before the lift, before the cursor has moved past `C.SNAP_RADIUS`, nor then any other
-container's either; DD-16R), wins over both, and Shift suppresses only that.
-The tick and the drop classify alike (`classify`); combat started mid-drag attaches nothing. The handle's close mark (X) turns that container off through the write
-seam. The strip's tooltip, and its marks', sits beside the strip: to its right, or to its left when
-the strip is too close to the right edge of the screen for it to fit (`modules/Anchors_Tooltip.lua`,
-LibKa0s-Widgets' `tooltipPlace`); where the strip's rect reads secret (a container attached under a
-parent holding auras), beside the cursor where it entered the strip instead, fixed for the hover. It is anchored to `UIParent` alone, from the strip's rect read through
-`NS.Secrets` and converted through both effective scales, because nothing may anchor into the
-anchor's restricted tree; only where the cursor, the tooltip or the screen does not read either does it follow the cursor. A container can also show its name as a label where the handle sits, locked or unlocked;
-while unlocked the handle moves out past it (`Anchors.PlaceLabel`, batch 8 D6).
+The engine-facing modules: `modules/FilterCompiler.lua` with `modules/FilterViews.lua` (settings →
+groups, pure), `modules/Container.lua` (one engine), `modules/ContainerManager.lua` (the registry and
+the deferred apply), `modules/Style.lua` with `Style_Bars.lua`, `Style_Icons.lua`, `Style_Text.lua` and
+`modules/TextTemplate.lua`, placement in `modules/Anchors.lua` with `Anchors_Attach.lua`,
+`Anchors_Snap.lua`, `Anchors_SnapRect.lua` and `Anchors_Tooltip.lua`, `modules/EmptyWatch.lua`,
+`modules/FontPrimer.lua` and `modules/Preview.lua` (the session-only test mode). How they place,
+attach, preview, unlock and drag a container: `docs/data-flow.md` →
+[*Placement, preview and drag in brief*](data-flow.md#placement-preview-and-drag-in-brief).
 
 Every non-vendored file, its responsibility and the full load order: `docs/module-map.md`.
 
@@ -214,8 +153,8 @@ ordered `NS.COMMANDS` (`settings/Slash.lua:39`). Twenty-five verbs; `options` is
 A bare `/am` runs `config`, opening the settings panel on its landing page (slash-commands-§4); `/am
 help` prints the list.
 `/am test` is the test mode's verb (preview-mode): unlocking no longer previews, so the placeholders
-have a switch of their own, shared with the Master controls *Test mode* checkbox and the minimap
-button's left click.
+have a switch of their own, shared with the Master controls *Test mode* checkbox and the launcher
+menu's *Test mode* entry.
 
 | Command | What it does |
 |---|---|
@@ -296,7 +235,7 @@ optional. The full table and the reasons:
 | `UNIT_FACTION`, `UNIT_FLAGS` for `target` and `focus` | `modules/ContainerManager.lua:820` — the module's one private frame, `CM.viewFrame` (the same carve-out), through `NS.SafeRegisterUnitEvent`; built once, hidden and reused, opened by `CM.StartListening` and unregistered by hand in `CM.StopListening` | `onViewEvent`: proves the unit a safe key, then `CM.ApplyViews(unit)`: a reaction change without a swap (a duel, mind control, an NPC turning hostile) switches the view; the two setters redraw, so no refresh follows; then `CM.ApplyUnitGate(unit)` re-runs the visibility pass of each container whose Unit type answer moved (filter situations S6). Combat-legal, never held. When a view moved, `EW.OnViewsMoved` re-predicts at once (gated on unlocked, out of combat and auras readable), so the empty prediction follows the engine |
 | `UNIT_FACTION`, `UNIT_FLAGS` for `player` | `modules/ContainerManager.lua` — a second private frame, `CM.viewPlayerFrame`, built, opened and closed with `CM.viewFrame` (`RegisterUnitEvent` takes two units, and a second call replaces the first) | `onPlayerViewEvent`: proves the unit a safe key, then `CM.ApplyViews` for `target` and for `focus`, quietly, and one `EW.OnViewsMoved` if either moved: the player's own side changing (mind control) moves whether a target or focus can be assisted with no event for that unit (SV-05); then `CM.ApplyUnitGate` for `target` and for `focus`, since the same change moves their reaction to you |
 | `PLAYER_REGEN_DISABLED`, `PLAYER_REGEN_ENABLED`, `ADDON_RESTRICTION_STATE_CHANGED` | `modules/TimedSpells.lua` (AceEvent, on its own target) — while a container uses "without a duration" and the addon is not suspended | `syncAuraListen`: `PLAYER_REGEN_DISABLED` closes the readable gate by itself (it fires before combat lockdown begins); the other two re-check it, dropping or restoring `UNIT_AURA`; reopening schedules one scan |
-| AceDB `OnProfileChanged` / `OnProfileCopied` / `OnProfileReset` | `core/Database.lua:275-279` | `NS.OnProfileChanged` / `NS.OnProfileCopied` / `NS.OnProfileReset` → re-prepare the registry, trace the event once in its own words (a switch `[Profile] changed -> X`; a copy or a reset one `[Set]` line, debug-logging-§10), rebuild, re-render |
+| AceDB `OnProfileChanged` / `OnProfileCopied` / `OnProfileReset` | `core/Database.lua:273-277` | `NS.OnProfileChanged` / `NS.OnProfileCopied` / `NS.OnProfileReset` → re-prepare the registry, trace the event once in its own words (a switch `[Profile] changed -> X`; a copy or a reset one `[Set]` line, debug-logging-§10), rebuild, re-render |
 
 Each container's own `UNIT_AURA` belongs to the engine (`SetUnit`, `modules/Container.lua:442`) and
 is not addon code. The twelve `core/AuraMaster.lua` registrations are one module-level list,
@@ -381,7 +320,7 @@ span bundle is `<date>-v<A>-v<B>/`, and the one untagged bundle is `docs/revendo
 | `scope.md` | What the addon does, and what it deliberately does not |
 | `module-map.md` | Every non-vendored file, its one-line responsibility, and the TOC load order and why; the vendored libraries and what each is used for |
 | `schema.md` | The profile and global SavedVariables shape, the container template, every default, the migration path; the settings schema's rules, both structural registries and the named non-setting state |
-| `settings-panel.md` | The `Tab \| Covers` table, the page → tab → row tree, per-option behavior and schema keys; the launcher |
+| `settings-panel.md` | The `Page \| Tabs \| Covers` table, the page → tab → row tree, per-option behavior and schema keys; the launcher |
 | `data-flow.md` | Settings → filter plan → aura groups → the engine renders; the filter priority; lifecycle, deferral and the disabled state |
 | `common-tasks.md` | Recipes for the changes made most often here, naming real files; the locale-routing rule and its one exemption |
 

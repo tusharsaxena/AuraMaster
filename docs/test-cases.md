@@ -1,18 +1,22 @@
 # Test Cases
 
 The full inventory of every headless test case in this repo, grouped by the suite file it
-lives in. The `## Totals` table below is the **authoritative pass count** — the README test
-badge and any count quoted in the docs must agree with it.
+lives in. The `## Totals` table below counts the cases that run: its **Total** is the
+authoritative pass count, and the README test badge and any count quoted in the docs must equal
+it. A declared skip is listed by name in its group and counted on the `Skipped` row, never in
+Total.
 
 **Generated — do not hand-edit.** Regenerate with `lua tests/run.lua --list > docs/test-cases.md`.
 
-### test_loadorder.lua (8)
+### test_loadorder.lua (10)
 
 - loadorder: the TOC lists the locale first and the Profiles page last
 - loadorder: every TOC path exists, and none is a library
 - loadorder: the load-bearing pairs are in order, and the TOC says why
 - loadorder: GeneralDispel loads after GeneralSpells and before General
 - loadorder: every addon file in the TOC is covered by a LOAD-BEARING or Conventional note
+- loadorder: Container loads after the container template it binds at load, and the TOC says so
+- loadorder: every module binding the container template at load follows it, and its note says so
 - loadorder: the runner loaded exactly the TOC's files and the XML's library files
 - loadorder: the offline perf runner and the degraded list derive from the TOC too
 - loadorder: the library registered — NS.Perf is the real probe, not the stub
@@ -174,10 +178,11 @@ badge and any count quoted in the docs must agree with it.
 - user categories: the name cap counts characters, so a non-ASCII name is never cut mid-sequence
 - user categories: a deleted category is gone from the grid and from the union, and Uncategorized is still last
 
-### test_migrations.lua (28)
+### test_migrations.lua (29)
 
 - migrations: NS.SCHEMA_VERSION is the runner's target, the last step's version
 - migrations: a legacy v1 account with NO stamp runs every step
+- migrations: the ladder's [Migrate] lines, written at load with logging off, land after [Init] when logging is turned on
 - migrations: a stored stamp survives the logout strip, so the next build's step runs
 - migrations: every step is idempotent on a fresh default profile
 - migrations: a step that raises leaves the stamp where it was and the addon loads
@@ -1117,7 +1122,7 @@ badge and any count quoted in the docs must agree with it.
 - snap: folding reads Automatic for the target dropped on, not the container's current parent
 - snap: the radius is 24 UIParent units and the highlight is an opaque green
 
-### test_anchors_drag.lua (43)
+### test_anchors_drag.lua (21)
 
 - drag: a screen container and a container-attached one drag; a frame-attached one does not
 - drag: no drag starts in combat, and none leaves the container marked dragging
@@ -1140,6 +1145,9 @@ badge and any count quoted in the docs must agree with it.
 - drag: a strip hidden mid-drag ends the drag at the next tick, and the container goes back where its settings put it
 - drag: a container destroyed mid-drag ends its drag and stops the driver
 - drag: the target strip's own gold comes back on every path the mark ends by (A6)
+
+### test_anchors_attach.lua (22)
+
 - drag: held within C.DETACH_RADIUS of its current pair, green on that pair; past it, red, and green again on the way back (A4)
 - drag: the leeway runs from where the container rests, seam room and nudge included, never from the bare join (A4)
 - drag: another pair in snap range beats the hold, and Shift suppresses only that (A4)
@@ -1163,12 +1171,13 @@ badge and any count quoted in the docs must agree with it.
 - drag: a drop on the right side of a parent whose block reads secret but whose strip reads re-attaches there (A4, A11)
 - drag: a screen container's drag has no hold and no red (A4)
 
-### test_anchors_mark.lua (7)
+### test_anchors_mark.lua (8)
 
 - mark: the dragged container's own strip is repainted with the target's, 2px in green (A13)
 - mark: past the leeway the dragged strip turns red with its parent's, and a hold is green (A4, A13)
 - mark: a Destroy of the dragged container gives its strip's gold back by itself, before the drag ends (A13)
 - mark: with logging on, a drag's start and its drop each log what the snap sees, and nothing with it off
+- mark: the snapshot lines, byte for byte: a target's rect, why one is none, or no rect, the drop's outcome, and no targets at all
 - drag: a container whose rect reads secret is re-placed at the drag's start, parents first, and becomes a target (owner's 2026-10-03 log)
 - drag: nothing is re-placed in combat, and a container that reads is never re-placed
 - mark: the dragged strip's own gold comes back on every path the mark ends by (A13)
@@ -1595,7 +1604,7 @@ badge and any count quoted in the docs must agree with it.
 - disabled: a profile switch while disabled builds nothing until enable
 - disabled: a profile switch while down, then a stand-up in combat, keeps a reused id parked
 
-### test_slash.lua (34)
+### test_slash.lua (35)
 
 - slash: every command is a positional {name, desc, fn} triple
 - slash: the reserved verbs are all present
@@ -1615,6 +1624,7 @@ badge and any count quoted in the docs must agree with it.
 - slash: enable and disable are listed by /am help and on the landing page
 - slash: the degraded stub's /am disable and /am enable store the switch through writeThrough
 - slash: the degraded stub's /am lock and /am unlock store the lock through writeThrough
+- slash: the degraded stub prints a plain help row, `/am verb  desc` (slash-commands-§1, AM-A-07)
 - slash: /am delete removes a container by id
 - slash: a name two containers share is refused, not guessed
 - slash: /am delete in combat refuses in gray and keeps the container
@@ -1632,7 +1642,7 @@ badge and any count quoted in the docs must agree with it.
 - slash: /am profile in combat refuses and switches nothing
 - slash: /am profile answers while disabled, and the switch re-reads the new profile's enabled flag
 
-### test_slash_verbs.lua (51)
+### test_slash_verbs.lua (55)
 
 - slash verbs: /am help prints the alias header, then one row per NS.COMMANDS verb in order
 - slash verbs: the landing page's rows are /am help's rows without the chat indent
@@ -1672,6 +1682,10 @@ badge and any count quoted in the docs must agree with it.
 - slash verbs: /am select matches a name in any case, and a miss moves nothing
 - slash verbs: /am new reads its words in any case, and a later word overrides an earlier one
 - slash verbs: /am delete matches a name in any case and names what it deleted; a miss deletes nothing
+- slash verbs: /am delete 3 refuses when one container is named '3' and another is #3, and deletes nothing
+- slash verbs: /am delete #3 deletes container #3 even when another container is named '3'
+- slash verbs: /am select 7 selects the container named '7' when no container is #7
+- slash verbs: a bare number no container is named resolves by id, and one container answering both is that one
 - slash verbs: /am resetposition and /am forgettimed do their act and say so
 - slash verbs: /am get global.minimap.shown answers true while the button shows; /am set global.minimap.shown false stores hide = true
 - slash verbs: the old path global.minimap.hide is not a setting, and nothing is written
@@ -2262,7 +2276,7 @@ badge and any count quoted in the docs must agree with it.
 
 - prose: no authored file carries a British spelling from localization-§5's published list
 - prose: the gate carries localization-§5's two lists whole, and nothing of its own
-- prose: the exclusions this repository declared suppressed 11 of 208 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (11): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, docs/spell-research/2026-09-24-logs/CORRECTIONS.md, docs/spell-research/2026-09-24-logs/CURRENT_CATEGORIES.md, docs/spell-research/2026-09-24-logs/DECISIONS.md, docs/spell-research/2026-09-24-logs/FLAGS.md, docs/spell-research/2026-09-24-logs/PROPOSED_ADDITIONS.md, docs/spell-research/2026-09-24-logs/REVIEW.md, docs/spell-research/2026-09-24-logs/SOURCES.md, docs/spell-research/2026-09-24-logs/dictionary/AURAS.md
+- prose: the exclusions this repository declared suppressed 11 of 211 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (11): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, docs/spell-research/2026-09-24-logs/CORRECTIONS.md, docs/spell-research/2026-09-24-logs/CURRENT_CATEGORIES.md, docs/spell-research/2026-09-24-logs/DECISIONS.md, docs/spell-research/2026-09-24-logs/FLAGS.md, docs/spell-research/2026-09-24-logs/PROPOSED_ADDITIONS.md, docs/spell-research/2026-09-24-logs/REVIEW.md, docs/spell-research/2026-09-24-logs/SOURCES.md, docs/spell-research/2026-09-24-logs/dictionary/AURAS.md
 - prose: no path this repository narrows the gate by is loaded by a TOC
 - prose: every path this repository narrows the gate by is one .pkgmeta keeps out of the zip
 - prose self-test: the carve-out suppresses the named generated folder, and only it
@@ -2351,12 +2365,12 @@ badge and any count quoted in the docs must agree with it.
 
 | Suite | Cases |
 |-------|------:|
-| test_loadorder.lua | 8 |
+| test_loadorder.lua | 10 |
 | test_setups.lua | 14 |
 | test_launcher.lua | 30 |
 | test_database.lua | 73 |
 | test_database_categories.lua | 28 |
-| test_migrations.lua | 28 |
+| test_migrations.lua | 29 |
 | test_schema.lua | 38 |
 | test_schema_paths.lua | 38 |
 | test_filtercompiler.lua | 85 |
@@ -2395,8 +2409,9 @@ badge and any count quoted in the docs must agree with it.
 | test_anchors_collapse.lua | 9 |
 | test_anchors_width.lua | 6 |
 | test_anchors_snap.lua | 31 |
-| test_anchors_drag.lua | 43 |
-| test_anchors_mark.lua | 7 |
+| test_anchors_drag.lua | 21 |
+| test_anchors_attach.lua | 22 |
+| test_anchors_mark.lua | 8 |
 | test_anchors_drop.lua | 25 |
 | test_texttemplate.lua | 26 |
 | test_style.lua | 60 |
@@ -2411,8 +2426,8 @@ badge and any count quoted in the docs must agree with it.
 | test_blizzardframes.lua | 8 |
 | test_framepicker.lua | 15 |
 | test_disabled.lua | 18 |
-| test_slash.lua | 34 |
-| test_slash_verbs.lua | 51 |
+| test_slash.lua | 35 |
+| test_slash_verbs.lua | 55 |
 | test_diagnostics.lua | 49 |
 | test_diagnostics_situations.lua | 4 |
 | test_bulklog.lua | 20 |
@@ -2446,6 +2461,7 @@ badge and any count quoted in the docs must agree with it.
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 2 |
 | test_layout_cap.lua | 13 |
-| test_diagnostics_contract.lua | 9 |
+| test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
-| **Total** | **2050** |
+| Skipped | 1 |
+| **Total** | **2058** |

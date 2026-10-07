@@ -21,8 +21,8 @@ local test, assertTrue, assertEqual = T.test, T.assertTrue, T.assertEqual
 local R = dofile("tests/region_recorder.lua")
 local fresh = dofile("tests/fresh_env.lua")
 
---- Append `v` to list `t`. The length sits on a line of its own: lizard reads a `#` as a comment
---- (tests/test_lintconfig.lua).
+--- Append `v` to list `t`. The length sits on a line of its own: lizard reads a `#` as a comment,
+--- a blind spot the vendored kit's test_lizard_sighted gate covers.
 local function push(t, v)
     local n = #t
     t[n + 1] = v

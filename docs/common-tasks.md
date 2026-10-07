@@ -241,12 +241,13 @@ An **added** key needs nothing but the template (above). A **renamed, removed or
 step, in the same change:
 
 1. Change the template in `defaults/Profile.lua`.
-2. Append `{ to = 12, apply = function(db) … end }` (the next version) to `SCHEMA_STEPS` in
-   `core/Database.lua:1247`. The ladder is account-wide (`global.schemaVersion`), but containers live
+2. Append `{ to = 13, apply = function(db) … end }` (the next version) to `SCHEMA_STEPS` in
+   `core/Database.lua:337`. The ladder is account-wide (`global.schemaVersion`), but containers live
    in **every** profile: run the change through `eachProfile(db, fn)`, which walks `db.sv.profiles`
    (AceDB's raw store, the inactive profiles included) or the no-AceDB fallback's one profile, and
    transform `profile.containers[*]` in each, not only `db.profile`. Keep the per-profile body a pure
-   function over one profile table, as `Database.MigrateV2` is, so a test can run it over a raw one.
+   function over one profile table, as `Database.MigrateV2` is, so a test can run it over a raw one;
+   the step bodies live in `core/Database_Migrations.lua`, beside the ones before them.
    Test the stored value with `== nil`, never `or` (savedvariables-§5).
 3. `RunMigrations` calls the step under `pcall`, stamps its `to` only if it returned without
    raising, logs one `[Migrate]` line, and then `PrepareProfile` backfills whatever the step did not

@@ -194,7 +194,7 @@ test("options descriptor: the banner lists every container by name and ignores a
     local dd = P.banner(NS2.Helpers.__pageCtx.bars)
     -- Player buffs, Player cooldowns, Player debuffs, Target debuffs (mine): by name (B2-2)
     assertEqual(table.concat(dd.order, ","), "1,4,2,3")
-    assertEqual(dd.list[2], "Player debuffs  |cff888888(Player debuffs, icons)|r")
+    assertEqual(dd.list[2], "Player debuffs  |cff888888(Player Debuffs, Icons)|r", "labels keep the translation's casing (AM-R-06)")
     assertEqual(dd.value, 2)
     local refreshes = counter(NS2.Helpers, "RefreshAllPanels")
     dd:__fire("OnValueChanged", 2)

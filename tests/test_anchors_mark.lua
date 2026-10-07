@@ -21,7 +21,7 @@ local function plant(frame, l, b, r, t)
 end
 
 --- A fresh environment with `n` containers, all enabled, on the screen and shown, each strip rebuilt
---- under the recorder and shown (as tests/test_anchors_drag.lua's env).
+--- under the recorder and shown (as tests/drag_helpers.lua's env).
 local function env(n)
     local NS, mocks = fresh()
     while #NS.Database.GetContainers() < n do NS.ContainerManager.Create({}) end
@@ -49,7 +49,7 @@ local GOLD = "1 1,0.82,0,0.6"   -- the strip's own edge: 1px of the widget's gol
 local function rgba(col) return "2 " .. table.concat({ col.r, col.g, col.b, col.a }, ",") end
 
 --- How `strip`'s own four edge strips were last painted, "size r,g,b,a", or the four listed when they
---- disagree (as tests/test_anchors_drag.lua's stripEdge).
+--- disagree (as tests/drag_helpers.lua's stripEdge).
 local function stripEdge(strip)
     local s = BS.strips(strip)
     if #s ~= 4 then return #s .. " strips" end
@@ -156,6 +156,66 @@ test("mark: with logging on, a drag's start and its drop each log what the snap 
     assertTrue(all:find("container 2: drag starts: own ", 1, true) ~= nil, "the start: " .. all)
     assertTrue(all:find("targets 1 0,100,100,140; 3 disabled", 1, true) ~= nil, "each target: " .. all)
     assertTrue(all:find("container 2: drop attach on 1: own 0,75,20,95", 1, true) ~= nil, "the drop: " .. all)
+end)
+
+--- Every [Anchor] line logged while `fn` runs with logging on, formatted.
+local function anchorLines(NS, fn)
+    local spy = dofile("tests/console_spy.lua")
+    local lines = {}
+    local restore = spy(NS, function(tag, fmt, ...)
+        if tag ~= "Anchor" then return end
+        local args = { ... }
+        for i = 1, select("#", ...) do args[i] = tostring(args[i]) end
+        lines[#lines + 1] = fmt:format(unpack(args))
+    end)
+    NS.State.debug = true
+    fn()
+    NS.State.debug = false
+    restore()
+    return lines
+end
+
+--- The [Anchor] snapshot lines alone (the ones naming `own`), in order.
+local function snapshots(lines)
+    local out = {}
+    for _, line in ipairs(lines) do
+        if line:find(": own ", 1, true) then out[#out + 1] = line end
+    end
+    return out
+end
+
+test("mark: the snapshot lines, byte for byte: a target's rect, why one is none, or no rect, the drop's outcome, and no targets at all", function()
+    local NS = env(4)
+    local CM = NS.ContainerManager
+    plant(CM.instances[1].engine, 0, 100, 100, 140)
+    NS.Database.FindContainer(3).enabled = false
+    local inst = CM.instances[2]
+    holdAnchor(inst.anchor)
+    plant(inst.anchor, 0, 75, 20, 95)
+    local got = snapshots(anchorLines(NS, function()
+        inst.handle:__fire("OnDragStart")
+        inst.handle:__fire("OnDragStop")
+    end))
+    -- red under: an ineligible target's why replaced by its rect, or a target with no rect dropped
+    -- from the list; a drag start (no outcome) logging "drag starts nil" or a doubled space
+    assertEqual(got[1], "container 2: drag starts: own 0,75,20,95; targets 1 0,100,100,140; 3 disabled; 4 no rect")
+    -- red under: the outcome not joined to `when` by one space
+    assertEqual(got[2], "container 2: drop attach on 1: own 0,75,20,95; targets 1 0,100,100,140; 3 disabled; 4 no rect")
+    assertEqual(#got, 2, "one line at the start, one at the drop")
+    -- Container 1 alone: no other container is live, so there are no targets.
+    for id in pairs(CM.instances) do
+        if id ~= 1 then CM.instances[id] = nil end
+    end
+    local only = CM.instances[1]
+    holdAnchor(only.anchor)
+    plant(only.anchor, 300, 410, 320, 430)
+    got = snapshots(anchorLines(NS, function()
+        only.handle:__fire("OnDragStart")
+        only.handle:__fire("OnDragStop")
+    end))
+    -- red under: an empty target list logged as "targets " (the concat of nothing)
+    assertEqual(table.concat(got, " | "), "container 1: drag starts: own 300,410,320,430; targets none"
+        .. " | container 1: drop nothing in range: own 300,410,320,430; targets none")
 end)
 
 test("drag: a container whose rect reads secret is re-placed at the drag's start, parents first, and becomes a target (owner's 2026-10-03 log)", function()

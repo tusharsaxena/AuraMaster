@@ -225,7 +225,7 @@ end)
 test("v12: the frozen split is the shipped CC Root and CC Snare lists exactly", function()
     local NS = fresh()
     -- Every shipped id, put on a Soft CC edit, must land on the one list that ships it: the frozen
-    -- sets in core/Database.lua and defaults/Categories.lua cannot drift apart unnoticed.
+    -- sets in core/Database_Migrations.lua and defaults/Categories.lua cannot drift apart unnoticed.
     local root = NS.Categories.Find("HARMFUL", "ccRoot").spells
     local snare = NS.Categories.Find("HARMFUL", "ccSnare").spells
     local edits = {}

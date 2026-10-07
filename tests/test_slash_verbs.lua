@@ -611,6 +611,58 @@ test("slash verbs: /am delete matches a name in any case and names what it delet
     assertEqual(#NS2.Database.GetContainers(), #NS2.STARTER_CONTAINERS - 1)
 end)
 
+-- ── a bare number: name first, a cross-match refused, '#N' always the id (AM-R-05) ───────────
+
+local AMBIGUOUS_3 = "'3' is the name of container #1 and the number of container #3 — type #3 for the number."
+
+test("slash verbs: /am delete 3 refuses when one container is named '3' and another is #3, and deletes nothing", function()
+    local NS2, mocks = fresh()
+    local lines = capture(mocks)
+    NS2.Database.FindContainer(1).name = "3"
+    -- red under: findContainer reading a numeric arg as an id before any name match
+    assertEqual(dump(slash(NS2, lines, "delete 3")), "{" .. AMBIGUOUS_3 .. "}")
+    assertEqual(#NS2.Database.GetContainers(), #NS2.STARTER_CONTAINERS, "nothing was deleted")
+    NS2.State.SetActiveContainer(2)
+    assertEqual(dump(slash(NS2, lines, "select 3")), "{" .. AMBIGUOUS_3 .. "}")
+    assertEqual(NS2.State.activeContainerId, 2, "the selection does not move")
+end)
+
+test("slash verbs: /am delete #3 deletes container #3 even when another container is named '3'", function()
+    local NS2, mocks = fresh()
+    local lines = capture(mocks)
+    NS2.Database.FindContainer(1).name = "3"
+    -- red under: findContainer without the '#N' form (it reads '#3' as a name and misses)
+    assertEqual(dump(slash(NS2, lines, "delete  #3 ")), "{Deleted 'Target debuffs (mine)'}")
+    assertNil(NS2.Database.FindContainer(3))
+    assertTrue(NS2.Database.FindContainer(1) ~= nil, "the container named '3' remains")
+    assertEqual(dump(slash(NS2, lines, "delete #99")), "{No such container — /am containers lists them}")
+end)
+
+test("slash verbs: /am select 7 selects the container named '7' when no container is #7", function()
+    local NS2, mocks = fresh()
+    local lines = capture(mocks)
+    NS2.Database.FindContainer(1).name = "7"
+    NS2.State.SetActiveContainer(2)
+    -- red under: findContainer reading a numeric arg as an id before any name match (#7 misses)
+    local p = slash(NS2, lines, "select 7")
+    assertTrue(p[1] ~= nil and p[1]:find("^Selected 7  #1 ") ~= nil, dump(p))
+    assertEqual(NS2.State.activeContainerId, 1)
+end)
+
+test("slash verbs: a bare number no container is named resolves by id, and one container answering both is that one", function()
+    local NS2, mocks = fresh()
+    local lines = capture(mocks)
+    NS2.State.SetActiveContainer(1)
+    -- red under: findContainer dropping the id fallback once names are tried first
+    assertEqual(dump(slash(NS2, lines, "select 2")), "{Selected Player debuffs  #2 - Player - Debuffs - Icons}")
+    assertEqual(NS2.State.activeContainerId, 2)
+    NS2.Database.FindContainer(3).name = "3"
+    -- red under: the cross-match refusal firing when the name and the id are the same container
+    assertEqual(dump(slash(NS2, lines, "delete 3")), "{Deleted '3'}")
+    assertNil(NS2.Database.FindContainer(3))
+    assertEqual(#NS2.Database.GetContainers(), #NS2.STARTER_CONTAINERS - 1)
+end)
+
 test("slash verbs: /am resetposition and /am forgettimed do their act and say so", function()
     local NS2, mocks = fresh()
     local lines = capture(mocks)
@@ -724,7 +776,8 @@ test("slash verbs: without the library a bare /am still runs config, help prints
     for i, l in ipairs(p) do if l == "v" .. NS2.Version() .. " — slash commands" then head = i end end
     assertTrue(head > 0, "the stub's header: " .. dump(p))
     assertEqual(#p - head, #NS2.COMMANDS, "one row per verb after it")
-    assertEqual(p[head + 1], "  /am help — List available commands")
+    -- The plain degraded row (slash-commands-§1): two spaces, no em dash, no gold command.
+    assertEqual(p[head + 1], "  /am help  List available commands")
     -- red under: the stub ignoring the descriptor's aliases
     NS2.Slash:OnSlash("options")
     assertEqual(opened[1], 3)
