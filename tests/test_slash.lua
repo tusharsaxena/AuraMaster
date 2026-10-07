@@ -286,6 +286,24 @@ test("slash: the degraded stub's /am lock and /am unlock store the lock through 
     assertTrue(said(lines, "Containers locked"), lastLine(lines))
 end)
 
+test("slash: the degraded stub prints a plain help row, `/am verb  desc` (slash-commands-§1, AM-A-07)", function()
+    local NS2, mocks = degraded()
+    local rows = NS2.Slash.LandingRows()
+    assertEqual(#rows, #NS2.COMMANDS, "one landing row per verb")
+    for i, e in ipairs(NS2.COMMANDS) do
+        local row = rows[i]
+        -- red under: the stub's FormatRow copy, which joined `cmd — desc`
+        assertEqual(row, "/am " .. e[1] .. "  " .. e[2], "the plain row for " .. e[1])
+        assertFalse(row:find("/am " .. e[1] .. " \226\128\148 ", 1, true) ~= nil, "no em-dash join: " .. row)
+        assertFalse(row:find("|c", 1, true) ~= nil, "no color code: " .. row)
+    end
+    local lines = capture(mocks)
+    NS2.Slash:OnSlash("help")
+    -- red under: the old key, `Toggle the debug console - on/off enable or disable logging` (AM-R-07)
+    assertTrue(said(lines, "  /am debug  " .. NS2.L["Toggle the debug console — on/off enable/disable logging"]),
+        "/am help prints the same plain row")
+end)
+
 test("slash: /am delete removes a container by id", function()
     local NS2 = fresh()
     NS2.Slash:OnSlash("delete 3")

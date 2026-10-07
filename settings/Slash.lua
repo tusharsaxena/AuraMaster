@@ -84,7 +84,7 @@ NS.COMMANDS = {
     -- A feature verb (SP-AMX-02): refused while disabled, as it is not in liveVerbs below.
     {"redraw",        L["Repaint every container: light now, full with fonts and styling — /am redraw [light|full]"],
         function(rest) runRedraw(rest) end},
-    {"debug",         L["Toggle the debug console - on/off enable or disable logging"],
+    {"debug",         L["Toggle the debug console — on/off enable/disable logging"],
         function(rest) runDebug(rest) end},
     {"diagnostics",   L["Write a diagnostic report to the debug console (also /am debug diagnostics)"],
         function() NS.DebugLog:RunDiagnostics() end},
@@ -437,11 +437,12 @@ end
 --
 -- Degrade, never error: `/am` is registered unconditionally, so something must answer it. The
 -- host verbs never went to the library and keep working; the schema verbs name the missing
--- library instead of going quiet. The stub keeps only a minimal "/am verb — desc" join, so the
--- landing page and `/am help` still list the verbs; nothing else of the library is copied here — no
+-- library instead of going quiet. The landing page and `/am help` still list the verbs, each as a
+-- plain "/am verb  desc" row: no gold command and no em dash, because the stub MUST NOT copy the
+-- library's FormatRow (slash-commands-§1). Nothing else of the library is copied here either: no
 -- parser, no `key = value` shape.
 if not SlashLib then
-    SlashLib = { FormatRow = function(cmd, desc) return cmd .. " — " .. desc end }
+    SlashLib = {}
 
     function SlashLib.New(_, d)
         local stub = { SetRowAnnotator = function() end }
@@ -459,7 +460,7 @@ if not SlashLib then
         stub.LandingRows = function()
             local out = {}
             for _, e in ipairs(d.commands) do
-                out[#out + 1] = SlashLib.FormatRow("/am " .. e[1], e[2])
+                out[#out + 1] = "/am " .. e[1] .. "  " .. e[2]
             end
             return out
         end

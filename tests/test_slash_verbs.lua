@@ -776,7 +776,8 @@ test("slash verbs: without the library a bare /am still runs config, help prints
     for i, l in ipairs(p) do if l == "v" .. NS2.Version() .. " — slash commands" then head = i end end
     assertTrue(head > 0, "the stub's header: " .. dump(p))
     assertEqual(#p - head, #NS2.COMMANDS, "one row per verb after it")
-    assertEqual(p[head + 1], "  /am help — List available commands")
+    -- The plain degraded row (slash-commands-§1): two spaces, no em dash, no gold command.
+    assertEqual(p[head + 1], "  /am help  List available commands")
     -- red under: the stub ignoring the descriptor's aliases
     NS2.Slash:OnSlash("options")
     assertEqual(opened[1], 3)

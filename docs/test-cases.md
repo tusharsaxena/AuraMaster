@@ -1598,7 +1598,7 @@ Total.
 - disabled: a profile switch while disabled builds nothing until enable
 - disabled: a profile switch while down, then a stand-up in combat, keeps a reused id parked
 
-### test_slash.lua (34)
+### test_slash.lua (35)
 
 - slash: every command is a positional {name, desc, fn} triple
 - slash: the reserved verbs are all present
@@ -1618,6 +1618,7 @@ Total.
 - slash: enable and disable are listed by /am help and on the landing page
 - slash: the degraded stub's /am disable and /am enable store the switch through writeThrough
 - slash: the degraded stub's /am lock and /am unlock store the lock through writeThrough
+- slash: the degraded stub prints a plain help row, `/am verb  desc` (slash-commands-§1, AM-A-07)
 - slash: /am delete removes a container by id
 - slash: a name two containers share is refused, not guessed
 - slash: /am delete in combat refuses in gray and keeps the container
@@ -2418,7 +2419,7 @@ Total.
 | test_blizzardframes.lua | 8 |
 | test_framepicker.lua | 15 |
 | test_disabled.lua | 18 |
-| test_slash.lua | 34 |
+| test_slash.lua | 35 |
 | test_slash_verbs.lua | 55 |
 | test_diagnostics.lua | 49 |
 | test_diagnostics_situations.lua | 4 |
@@ -2456,4 +2457,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **2054** |
+| **Total** | **2055** |
