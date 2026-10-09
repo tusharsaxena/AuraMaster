@@ -473,15 +473,16 @@ categories of container <id>: N rows` line, one apply pass).
 | Grid (`grid`) | Buff categories | Debuff categories |
 |---|---|---|
 | Blizzard Categories (`blizzard`) | bigDefensive, externals, important, castable, cancelable, stealable | crowdControl, boss, role, priority, raid, raidInCombat, groupDispellable, dispellable |
-| Spell Categories (`custom`) | defensives, activeMitigation, raidCDs, offensiveCDs, healing, support, groupBuffs, movement, utility, stances, racials, *then every buff category the player made*, **weaponEnchants**, **uncategorized** (last) | *every debuff category the player made*, **uncategorizedDebuffs** (last, fix round 3) |
+| Spell Categories (`custom`) | defensives, activeMitigation, raidCDs, offensiveCDs, healing, support, groupBuffs, movement, utility, stances, racials, *then every buff category the player made*, **weaponEnchants**, **uncategorized** (last) | hardCC, ccRoot, ccSnare, racialDebuffs, *then every debuff category the player made*, **uncategorizedDebuffs** (last, fix round 3) |
 | Dispel Types (`dispel`) | — | dispels, magic, curse, disease, poison, bleed |
 | Who Cast It (`who`) | — | fromNonPlayers, fromPlayers |
 
 The **Spell Categories** grid (renamed from Custom Categories, `F-1`) carries one extra line above
 it — saying these are the lists on General → Spell Categories, shared by every container — but only
 when the grid this container drew actually holds a `spells`- or `enchant`-kind row (batch 7, `T-2`
-fix round 4): true on a buff container, false on a debuff one, whose grid is `uncategorizedDebuffs`
-alone, a Show/Hide flag over the catch-all rather than a list of anything. A category the player made is labeled **`<name> (yours)`** in this grid, in the same words the General
+fix round 4): true on every container today, a debuff one included since its grid carries hardCC, ccRoot, ccSnare
+and racialDebuffs; a grid holding only a catch-all (`uncategorized`/`uncategorizedDebuffs`, a Show/Hide
+flag rather than a list of anything) would skip it. A category the player made is labeled **`<name> (yours)`** in this grid, in the same words the General
 → Spell Categories dropdown uses and read from there (`NS.GeneralSpells.MarkedName`) rather than
 formatted twice; the marker is added to a per-render COPY of the row, because the schema row's label
 is the row's identity in `/am list` and in the write log. It also carries one extra
