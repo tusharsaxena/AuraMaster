@@ -12,7 +12,7 @@ the analysis of a given run is its `ANALYSIS.md`.
 read and compared, not thresholded (`performance-§9`, `performance-§10`).
 
 **The tag is gated on all four suites at `pass`, plus zero functions above CCN 15**
-(`automated-tests-§3`, *The release gate*), evaluated by `/wow-addon:bump-version` from the
+(`automated-tests-§3`, *The release gate*), evaluated by `/dev-copilot:bump-version` from the
 `manifest.json` the release run writes — not by this script, whose exit code is unchanged.
 
 A `skip` is a suite that did not run at all. It is never a pass, and at the release gate it is
@@ -32,6 +32,7 @@ archaeology, for the same reason a skip is never a pass (`automated-tests-§4`).
 
 | Run | Commit | Tree | Version | Lint w/e | Files | Tests | Perf | NLOC | Funcs | Avg NLOC | Avg CCN | Max CCN | CCN warn | Verdict |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| [`20261009-191725`](20261009-191725/) | `ad636a2` | clean | 1.0.1 → 1.1.0 | 0/0 | 174 | 2058/1/2059 | pass | 49857 | 5459 | 8.3 | 2.3 | 15 | 0 | **green** |
 | [`20260927-214918`](20260927-214918/) | `b5208f3` | clean | 1.0.0 → 1.0.1 | 0/0 | 146 | 1702/0/1702 | pass | 41031 | 4472 | 8.2 | 2.3 | 15 | 0 | **green** |
 | [`20260927-214805`](20260927-214805/) | `4e03d41` | clean | 1.0.0 → 1.0.1 | 0/0 | 146 | 1701/0/1702 | pass | 41031 | 4472 | 8.2 | 2.3 | 15 | 0 | **red** |
 | [`20260927-015127`](20260927-015127/) | `28c1ee3` | clean | 0.1.0 → 1.0.0 | 0/0 | 144 | 1665/0/1665 | pass | 40071 | 4367 | 8.2 | 2.3 | 15 | 0 | **green** |
@@ -47,18 +48,18 @@ archaeology, for the same reason a skip is never a pass (`automated-tests-§4`).
 
 ## Test suite
 
-**1702 cases** — 1702 passed, 0 failed, 0 skipped. The generated inventory
-[`20260927-214918/test-cases.md`](20260927-214918/test-cases.md) is the authority on which cases existed at this run;
+**2059 cases** — 2058 passed, 0 failed, 1 skipped. The generated inventory
+[`20261009-191725/test-cases.md`](20261009-191725/test-cases.md) is the authority on which cases existed at this run;
 `docs/test-cases.md` is that same list at HEAD.
 
-Unchanged from the previous run at 1702 cases.
+Moved **1702 → 2059** since the previous run.
 
-No case reported a `skip`, so passed and total agree and nothing in this row claims coverage
-that was not exercised.
+**1 case(s) reported a `skip`.** A skip is counted in the total and never in `passed`, and at
+the release gate it is NOT EVALUATED rather than passed (`automated-tests-§3`).
 
 ## Lint
 
-**0 warnings / 0 errors over 146 files** (`luacheck .`).
+**0 warnings / 0 errors over 174 files** (`luacheck .`).
 
 Read that figure with its scope attached: `.luacheckrc` excludes 6 path(s) from it — `libs/`, `tests/_kit/`, `docs/audits/`, `docs/reviews/`, `docs/automated-tests/`, `_dev/` —
 so nothing under them is in the count above. A `0/0` that never moves is partly a statement about
@@ -68,28 +69,28 @@ to whoever thinks to open `.luacheckrc`.
 ## Perf
 
 **11 scenarios** from `tests/perf.lua`; the measurements are in
-[`20260927-214918/perf.json`](20260927-214918/perf.json).
+[`20261009-191725/perf.json`](20261009-191725/perf.json).
 
 | `scenario` | `iters` | `ms/iter` | `api/iter` | `bytes/iter` |
 |---|---|---|---|---|
-| `compile` | 2000 | 0.00805 | 0.0 | 3576.0 |
-| `applyPass` | 200 | 1.35130 | 30.0 | 104403.4 |
-| `restyle` | 200 | 0.34332 | 0.0 | 50203.5 |
-| `restyleText` | 200 | 0.21653 | 0.0 | 31587.6 |
-| `visibilityPass` | 1000 | 0.01408 | 4.0 | 384.0 |
-| `unitSwap` | 1000 | 0.00099 | 1.0 | 0.0 |
-| `probeOverheadOff` | 1000 | 0.01731 | 5.0 | 384.0 |
-| `probeOverheadOn` | 1000 | 0.01513 | 5.0 | 384.5 |
-| `probeAbsent` | 1000 | 0.01365 | 5.0 | 384.0 |
-| `unitAuraFiltered` | 1000 | 0.00020 | 0.0 | 0.0 |
-| `emptyWatchAura` | 1000 | 0.00008 | 0.0 | 0.0 |
+| `compile` | 2000 | 0.01373 | 0.0 | 4136.0 |
+| `applyPass` | 200 | 1.88129 | 30.0 | 107620.5 |
+| `restyle` | 200 | 0.49976 | 0.0 | 50333.5 |
+| `restyleText` | 200 | 0.32025 | 0.0 | 31587.6 |
+| `visibilityPass` | 1000 | 0.02316 | 4.0 | 384.0 |
+| `unitSwap` | 1000 | 0.00625 | 1.0 | 0.0 |
+| `probeOverheadOff` | 1000 | 0.03204 | 5.0 | 384.0 |
+| `probeOverheadOn` | 1000 | 0.03211 | 5.0 | 384.5 |
+| `probeAbsent` | 1000 | 0.02721 | 5.0 | 384.0 |
+| `unitAuraFiltered` | 1000 | 0.00030 | 0.0 | 0.0 |
+| `emptyWatchAura` | 1000 | 0.00007 | 0.0 | 0.0 |
 
 `perf` never fails a run and never blocks a commit — it is recorded, read and compared, not
 thresholded (`performance-§9`). It does gate the **tag** (`automated-tests-§3`).
 
 ## Complexity watch list
 
-Current as of [`20260927-214918`](20260927-214918/) — **this run's measurement, not its diff.** Max CCN **15** across 4472
+Current as of [`20261009-191725`](20261009-191725/) — **this run's measurement, not its diff.** Max CCN **15** across 5459
 functions, **0** of them warned on; 10 file(s) in the 1000–1500 band and 0 over the 1500 cap
 (`layout-§1`).
 
@@ -109,16 +110,16 @@ None.
 
 | Band | File | LOC | Disposition |
 |---|---|---|---|
-| 1000–1500 (on notice) | `core/Database.lua` | 1327 | Accepted — in the band since `20260926-160451` (948 → 1327 then; 1327 at this run, unchanged); size, not tangle: 87 functions, max CCN 14 (`Database.MigrateV5`, a linear migration step). The growth is migration steps; if it grows further, the migrations are the seam to peel. Peeled after this run (2026-10-07, review F-002): the frozen step bodies moved verbatim to `core/Database_Migrations.lua`, leaving `core/Database.lua` at 496 lines and the new file at 935, both below the band |
-| 1000–1500 (on notice) | `defaults/Categories.lua` | 1282 | Accepted — in the band since `20260926-160451` (676 → 1282 then; 1282 at this run, unchanged); data, not logic: 7 functions, max CCN 4. The bulk is hand-curated spell-ID tables (authored, so the cap binds; not the generated carve-out) |
-| 1000–1500 (on notice) | `modules/Style.lua` | 1021 | Accepted — in the band since `20260926-160451` (943 → 1018 then; 1031 at the 1.0.0 release run; 1021 at the 1.0.1 release run, after `Style.MeasuredTimeWidths` was removed and `Style.FontKey` added), just inside the band; 67 functions, max CCN 13 (`Style.CurveColor`), size rather than tangle |
-| 1000–1500 (on notice) | `settings/Schema.lua` | 1035 | Accepted — in the band since `20260926-160451` (976 → 1035 then; 1035 at this run, unchanged); 62 functions, max CCN 13 (`normalizeCategoryEdits`), size rather than tangle |
-| 1000–1500 (on notice) | `tests/test_containermanager.lua` | 1053 | Accepted — case count, not tangle: 53 independent `test(` cases, no function in it above CCN 4 |
-| 1000–1500 (on notice) | `tests/test_database.lua` | 1194 | Accepted — case count, not tangle: 73 independent `test(` cases, no function in it above CCN 4 |
-| 1000–1500 (on notice) | `tests/test_filtercompiler.lua` | 1271 | Accepted — case count, not tangle: 85 independent `test(` cases, no function in it above CCN 5 |
-| 1000–1500 (on notice) | `tests/test_pages_filters.lua` | 1085 | Accepted — case count, not tangle: 49 independent `test(` cases; its one CCN 15 function is the `entryHelp` reader, at the threshold, not over it |
-| 1000–1500 (on notice) | `tests/test_style.lua` | 1203 | Accepted — case count, not tangle: 60 independent `test(` cases, no function in it above CCN 7 |
-| 1000–1500 (on notice) | `tests/test_style_text.lua` | 1016 | Accepted — newly in the band at the 1.0.1 release run (998 → 1016: the case pinning the text measures to `Style.FontKey`); case count, not tangle: 56 `test(` cases, no function in it above CCN 8 |
+| 1000–1500 (on notice) | `defaults/Categories.lua` | 1344 | Accepted — in the band since `20260926-160451` (676 → 1282 then; 1282 at the 1.0.1 release run; 1344 at the 1.1.0 release run, from the CC Root / CC Snare split and the Castable/Dispellable rows); data, not logic: 8 functions, max CCN 4 (`Cat.AuraTypeOf`). The bulk is hand-curated spell-ID tables (authored, so the cap binds; not the generated carve-out). Third consecutive release run carried as Accepted: owed a fix or a tracked deviation ID (anti-pattern #53) |
+| 1000–1500 (on notice) | `modules/Anchors_Snap.lua` | 1138 | Accepted — newly in the band at the 1.1.0 release run (a new file: the snap core for drag to attach, #22); 60 functions, max CCN 15 (`classify`, at the threshold, not over it). One concern, the pair pick and its geometry; `modules/Anchors_SnapRect.lua` already holds the rect reads, and the pick is the next seam if it grows |
+| 1000–1500 (on notice) | `modules/Style.lua` | 1024 | Accepted — in the band since `20260926-160451` (943 → 1018 then; 1031 at the 1.0.0 release run; 1021 at the 1.0.1 release run; 1024 at the 1.1.0 release run, debug coverage lines), just inside the band; 66 functions, max CCN 13 (`Style.CurveColor`), size rather than tangle. Third consecutive release run carried as Accepted: owed a fix or a tracked deviation ID (anti-pattern #53) |
+| 1000–1500 (on notice) | `settings/Schema.lua` | 1057 | Accepted — in the band since `20260926-160451` (976 → 1035 then; 1035 at the 1.0.1 release run; 1057 at the 1.1.0 release run, from the drag-attach and panel rows); 63 functions, max CCN 13 (`normalizeCategoryEdits`), size rather than tangle. Third consecutive release run carried as Accepted: owed a fix or a tracked deviation ID (anti-pattern #53) |
+| 1000–1500 (on notice) | `tests/test_containermanager.lua` | 1074 | Accepted — case count, not tangle: 54 independent `test(` cases (1053 → 1074 at the 1.1.0 release run), no function in it above CCN 4. Third consecutive release run carried as Accepted: owed a fix or a tracked deviation ID (anti-pattern #53) |
+| 1000–1500 (on notice) | `tests/test_database.lua` | 1197 | Accepted — case count, not tangle: 73 independent `test(` cases (1194 → 1197 at the 1.1.0 release run), no function in it above CCN 4. Third consecutive release run carried as Accepted: owed a fix or a tracked deviation ID (anti-pattern #53) |
+| 1000–1500 (on notice) | `tests/test_filtercompiler.lua` | 1311 | Accepted — case count, not tangle: 85 independent `test(` cases (1271 → 1311 at the 1.1.0 release run, Situations and CC split cases), no function in it above CCN 5. Third consecutive release run carried as Accepted: owed a fix or a tracked deviation ID (anti-pattern #53) |
+| 1000–1500 (on notice) | `tests/test_pages_filters.lua` | 1184 | Accepted — case count, not tangle: 52 independent `test(` cases (1085 → 1184 at the 1.1.0 release run, the Situations tab); its one CCN 15 function is the `entryHelp` reader, at the threshold, not over it. Third consecutive release run carried as Accepted: owed a fix or a tracked deviation ID (anti-pattern #53) |
+| 1000–1500 (on notice) | `tests/test_style.lua` | 1205 | Accepted — case count, not tangle: 60 independent `test(` cases (1203 → 1205 at the 1.1.0 release run), no function in it above CCN 7. Third consecutive release run carried as Accepted: owed a fix or a tracked deviation ID (anti-pattern #53) |
+| 1000–1500 (on notice) | `tests/test_style_text.lua` | 1023 | Accepted — in the band since the 1.0.1 release run (998 → 1016 then; 1023 at the 1.1.0 release run); case count, not tangle: 56 `test(` cases, no function in it above CCN 6. Second release run as Accepted |
 
 `lizard` counts every `and`/`or` short-circuit as a decision, so in Lua a run of
 `t.k = rec.k or D.k` defaulting lines scores high with no visible branching at all: a large CCN
