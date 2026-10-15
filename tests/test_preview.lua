@@ -415,6 +415,49 @@ test("preview: a text container's placeholders read its template, each bracket's
     assertEqual(lines[5], "Well Fed", "a timeless aura: the name alone")
 end)
 
+test("preview: a glowing text container's placeholders carry shown copies, and a non-glowing one's carry none (TG-10)", function()
+    local B = dofile("tests/region_builder.lua")
+    local NS2, m2 = fresh({ before = dofile("tests/text_apis.lua") })
+    local twins = NS2.Constants.TEXT_GLOW_TWINS
+    local function show(c)
+        local made, k = {}, container(c)
+        k.previewFactory = function() return B.new(made) end
+        B.during(m2, made, function() NS2.Preview.Show(k) end)
+        return k, made
+    end
+    local c = cfg({ style = "text", text = { template = "$spellname$[ x$stacks$]", glow = true } }, NS2)
+    local k, made = show(c)
+    for i, f in ipairs(k.previewPools.text.active) do
+        local am = f.__am
+        for p = 1, am.pieceCount do
+            local set = am["glow" .. p]
+            -- red under: Text.GlowCopies never reached from Preview.Show's dress (the test-mode look
+            -- would carry no glow)
+            assertTrue(type(set) == "table", ("placeholder %d piece %d has copies"):format(i, p))
+            assertEqual(#set, twins)
+            for j, copy in ipairs(set) do
+                assertTrue(copy:IsShown(), ("placeholder %d piece %d copy %d shown"):format(i, p, j))
+            end
+        end
+    end
+    c.text.glow = false
+    k.previewDirty = true
+    B.during(m2, made, function() NS2.Preview.Show(k) end)
+    for i, f in ipairs(k.previewPools.text.active) do
+        for p = 1, f.__am.glowCount or 0 do
+            for j, copy in ipairs(f.__am["glow" .. p]) do
+                -- red under: a placeholder dressed again with glow off left with its copies drawn
+                assertFalse(copy:IsShown(), ("placeholder %d piece %d copy %d hidden"):format(i, p, j))
+            end
+        end
+    end
+    k = show(cfg({ style = "text", text = { template = "$spellname$[ x$stacks$]" } }, NS2))
+    for i, f in ipairs(k.previewPools.text.active) do
+        -- red under: copies built on a placeholder whose container has the glow off
+        assertTrue(f.__am.glow1 == nil, "placeholder " .. i .. " has no copies")
+    end
+end)
+
 -- ── the placeholder set per aura type (batch 8 TD-1..TD-3) ───────────────────────────────────────
 
 --- The icons pool's drawn placeholders' textures, in order.

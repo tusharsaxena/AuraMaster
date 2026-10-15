@@ -1543,7 +1543,7 @@ Total.
 - text glow: a container with only the glow's class-color companion on is class-colored
 - text glow: the docs name every glow leaf on the Font tab row and the halo's limits
 
-### test_preview.lua (28)
+### test_preview.lua (29)
 
 - preview: every placeholder aura is drawn, each where Preview.Offset puts it against the anchor
 - preview: the per-group cap limits the placeholders
@@ -1566,6 +1566,7 @@ Total.
 - preview: a real container's extent is a frame of ours under its anchor, kept when the preview hides (L-4)
 - preview: under lockdown a placed extent stands, and one never placed is placed once (L-4)
 - preview: a text container's placeholders read its template, each bracket's text hidden with its value
+- preview: a glowing text container's placeholders carry shown copies, and a non-glowing one's carry none (TG-10)
 - preview: a HARMFUL container draws the debuff placeholders, a HELPFUL one the buffs (TD-1)
 - preview: Preview.AurasFor answers the set for the aura type, and the buffs for anything else (TD-1)
 - preview: switching a previewed container's aura type re-dresses it with the other set (TD-1)
@@ -2452,7 +2453,7 @@ Total.
 | test_style_text.lua | 56 |
 | test_style_text_autosize.lua | 18 |
 | test_style_text_glow.lua | 23 |
-| test_preview.lua | 28 |
+| test_preview.lua | 29 |
 | test_render_coverage.lua | 3 |
 | test_blizzardframes.lua | 8 |
 | test_framepicker.lua | 15 |
@@ -2495,4 +2496,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **2085** |
+| **Total** | **2086** |
