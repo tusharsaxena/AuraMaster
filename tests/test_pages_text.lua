@@ -657,6 +657,7 @@ test("text page: /am set container.text.autoSize reaches the same seam", functio
     assertTrue(NS.SetByPath(P_ .. "autoSize", false, 1))
     assertEqual(NS.Database.FindContainer(1).text.autoSize, false)
 end)
+
 -- ── glow behind the text (TG-03, spec G4) ─────────────────────────────────────────────────────
 
 -- The Glow subgroup's rows, in the order G4 registers them.

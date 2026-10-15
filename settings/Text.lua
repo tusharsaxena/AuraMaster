@@ -373,7 +373,7 @@ NS.RegisterSchemaRows(H.FontGroup({
 NS.RegisterSchemaRows({
     { path = P .. "glow", page = PAGE, group = G_FONT, subgroup = S_GLOW, type = "bool", startsLine = true,
       label = L["Glow behind the text"],
-      desc = L["Draw a soft glow behind the text, on top of its outline and shadow. The icon and the box get none."] },
+      desc = L["Draw a soft glow behind the text, in addition to its outline and shadow. The icon and the box get none."] },
 })
 NS.RegisterSchemaRows(H.ColorPair({
     prefix = P, page = PAGE, group = G_FONT, subgroup = S_GLOW, key = "glowColor",

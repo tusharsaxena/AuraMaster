@@ -93,7 +93,7 @@ the ARCHITECTURE load order name it.
 They are registered between the FontGroup block and the Countdown block, in this order:
 
 1. `glow`: bool, `startsLine`, label "Glow behind the text", desc "Draw a soft glow behind the
-   text, on top of its outline and shadow. The icon and the box get none."
+   text, in addition to its outline and shadow. The icon and the box get none."
 2. `H.ColorPair{ prefix = P, key = "glowColor", companionKey = "useClassColorGlow", label = L["Glow color"], classColor = UNIT, … }`.
    The composer forbids `disabledIf` on these rows (options-ui-§17).
 3. `glowIntensity`, `glowRadius`, `glowBlend`, `glowFalloff`, `glowX`, `glowY`, each
