@@ -82,7 +82,8 @@ test("text glow: a stored glow left on survives the backfill (savedvariables-§5
     local c = NS.Database.FindContainer(1)
     c.text.glow, c.text.glowBlend = true, "ADD"
     NS.Database.PrepareProfile(NS.db.profile)
-    -- red under: a backfill written with `or` against the template, which stamps the default back
+    -- red under: a load pass that rewrites present leaves from the template (an unconditional copy
+    -- in place of Backfill's `== nil` test), or a migration that forces a stored `glow` back off
     assertEqual(c.text.glow, true)
     assertEqual(c.text.glowBlend, "ADD")
 end)
