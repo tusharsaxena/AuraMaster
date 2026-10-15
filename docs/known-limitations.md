@@ -58,7 +58,9 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   belongs to its Shadow row. So the glow is a soft rounded rectangle of textures anchored to the font
   strings' edges, which the client sizes to the live text with no addon read
   (`modules/Style_TextGlow.lua`). Under Size to fit nothing clips, so the halo draws in full past the
-  box; under a hand-set Width the text area clips, and cuts the halo at the box as it cuts the text.
+  box. Under a hand-set Width and Height the text area clips everything in it, so the halo is cut
+  wherever it reaches past the box, on every side, even when the text fits and is not cut at all; with
+  a Height of about one font line, that trims the halo above and below the line.
   Size to fit, the element size and the drag strip ignore the halo, as they ignore the shadow.
 - **A border style other than Solid redraws a live button only when the button is rebuilt.** Its
   backdrop does arithmetic on the button's size, which reads secret once the engine has laid the button

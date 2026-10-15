@@ -2051,9 +2051,11 @@ Falloff Hard → a solid core with a short fade; Offset X 10 and Offset Y -10 �
 text and the text stays put. `/am set container.text.glowRadius 12` → the panel row follows. The Text
 section's **Defaults** → the glow is off again. Result:
 
-**TEXT-33. The glow and the box.** Size to fit on → the halo draws in full, past the box. Untick it
-and set a Width narrower than the line → the halo is cut at the box's edge, as the text is. `/am test`
-→ the placeholders draw the glow, and so does the preview in the panel. Result:
+**TEXT-33. The glow and the box.** Size to fit on → the halo draws in full, past the box. Untick it,
+with a Width wider than the line and a Height of about one font line → the text draws whole, and the
+halo is trimmed at the box's top and bottom edges. Set a Width narrower than the line → the text and
+the halo are both cut at the box's side edges. `/am test` → the placeholders draw the glow, and so does
+the preview in the panel. Result:
 
 **TEXT-34. The glow in combat.** Glow on, a target-debuff Text container, at a training dummy: apply
 and refresh debuffs, let stacks rise and fall and durations run out → the halo follows the text as

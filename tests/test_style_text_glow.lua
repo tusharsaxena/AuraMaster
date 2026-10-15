@@ -371,9 +371,13 @@ test("text glow: the docs name every glow leaf on the Font tab row and the halo'
         -- red under: the Font row without its Glow paths (spec G6)
         assertTrue(fontRow:find("`" .. key .. "`", 1, true) ~= nil, "the Font row names " .. key)
     end
-    local limits = read("docs/known-limitations.md")
-    -- red under: docs/known-limitations.md silent on the glow's shape or its clip (spec G6)
-    assertTrue(limits:find("glyph", 1, true) ~= nil, "no per-glyph glow, and why")
-    assertTrue(limits:find("halo", 1, true) ~= nil and limits:find("Size to fit", 1, true) ~= nil,
-        "the halo cut at the box under a hand-set Width")
+    local bullet = read("docs/known-limitations.md"):match("\n%- %*%*A Text line's glow(.-)\n%- ")
+    -- red under: docs/known-limitations.md without the glow's bullet (spec G6)
+    assertTrue(bullet ~= nil, "docs/known-limitations.md has the glow's bullet")
+    -- red under: the glow's bullet silent on its shape (no per-glyph glow, and why)
+    assertTrue(bullet:find("glyph", 1, true) ~= nil, "no per-glyph glow, and why")
+    for _, word in ipairs({ "hand-set", "Width", "Height", "wherever it reaches past the box" }) do
+        -- red under: the glow's bullet without its clip on every side under a hand-set Width and Height
+        assertTrue(bullet:find(word, 1, true) ~= nil, "the halo's clip names " .. word)
+    end
 end)
