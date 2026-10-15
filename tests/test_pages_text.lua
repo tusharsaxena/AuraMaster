@@ -377,8 +377,9 @@ test("text page: the blink row is engine-only, and the Font tab carries the comp
     assertEqual(table.concat(paths, ","), table.concat({ P_ .. "font.font", P_ .. "font.fontSize",
         P_ .. "font.fontColor", P_ .. "font.useClassColorFont", P_ .. "font.fontFlags",
         P_ .. "font.fontShadow", P_ .. "glow", P_ .. "glowColor", P_ .. "useClassColorGlow",
-        P_ .. "glowIntensity", P_ .. "glowThickness", P_ .. "glowX", P_ .. "glowY", P_ .. "timeFormat", P_ .. "dispelTypeColor", P_ .. "dispelBackdrop",
-        P_ .. "dispelBackdropAlpha", P_ .. "dispelEdge", P_ .. "dispelEdgeSize" }, ","))
+        P_ .. "glowIntensity", P_ .. "glowThickness", P_ .. "glowX", P_ .. "glowY", P_ .. "timeFormat",
+        P_ .. "dispelTypeColor", P_ .. "dispelBackdrop", P_ .. "dispelBackdropAlpha", P_ .. "dispelEdge",
+        P_ .. "dispelEdgeSize" }, ","))
     assertEqual(NS.FindSchemaRow(P_ .. "font.fontColor").classColorSource, "unit")
 end)
 
