@@ -798,11 +798,14 @@ end
 
 --- What a live engine is rebuilt for when it changes (modules/Container.lua's structure key): the
 --- style, and for the text style the template's shape (modules/Style_Text.lua). A new shape then
---- gets new buttons, so no engine binding is left pointing into the old shape's font strings.
+--- gets new buttons, so no engine binding is left pointing into the old shape's font strings. The
+--- text glow too: on or off builds or retires the container's twin engines (modules/Container_Twins.lua).
+--- Its ring and its look are not structure; a thickness or offset moves the twins' holders in place.
 function Style.StructureKey(cfg)
     local key = Style.StyleKey(cfg)
     if key ~= "text" or not Style.Text then return key end
-    return "text:" .. Style.Text.Compiled(cfg.text or {}).shape
+    local s = cfg.text or {}
+    return "text:" .. Style.Text.Compiled(s).shape .. (s.glow and ":glow" or "")
 end
 
 --- The styler that dresses `cfg`'s elements: Style.Bars, Style.Icons or Style.Text (each decorates

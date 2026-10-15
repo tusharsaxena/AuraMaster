@@ -99,6 +99,7 @@ Kit.run{
         "test_container_situations",
         "test_container_zones",
         "test_container_unitfilter",
+        "test_container_twins",
         "test_containermanager",
         "test_compat",
         "test_secrets",

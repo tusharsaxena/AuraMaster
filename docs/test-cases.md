@@ -574,6 +574,37 @@ Total.
 - unit type: the unit events stay on the view frames, nothing new is registered
 - unit type: a Unit type write takes effect at once, in combat too
 
+### test_container_twins.lua (28)
+
+- twins: a text container with the glow on builds C.TEXT_GLOW_TWINS twins beside its main, none while off
+- twins: a bars or icons container with a true glow leaf builds no twin and writes no main level
+- twins: each twin is anchored, sized and leveled before its first group, its unit last
+- twins: each twin takes the main's flow and groups, only the button init differing
+- twins: a glowing container with weapon enchants gives each twin the slots, kept apart from the main's
+- twins: holder k sits at thickness x d_k + (X, Y) from the anchor, twin k at the main's own point on it
+- twins: the main's level is written before its first group, max(anchor + 1, 4), and only with the glow on
+- twins: a refused main level write falls back to the main's level as read
+- twins: holder k is leveled before twin k is made, twin k at E - 3 and holder k at E - 4
+- twins: a filter change sends every twin the main's own calls, in place
+- twins: a sort, cap or layout change reaches every twin as it reaches the main
+- twins: an enchant sort-direction change reaches every twin, not the main alone
+- twins: a unit change reaches every twin, its own engine kept
+- twins: a view switch sends every twin the main's setters, and a twin's refusal keeps the view stale
+- twins: a unit refresh tells every twin to re-read its unit
+- twins: every hide path disables the twins with the main, and the show path enables them
+- twins: a flip turns every twin off and on after the main, and ResetEnchants flips them too
+- twins: a park disables every twin
+- twins: a delete retires the twins apart from the main, disabled and hidden
+- twins: the glow toggle rebuilds, retiring the twins and keeping the holders for the next build
+- twins: a thickness, X or Y change re-points the holders and builds nothing
+- twins: a frame level change re-levels every holder from the main's current level and writes no engine
+- twins: a color or intensity change re-dresses each twin's buttons in place as that twin
+- twins: a glow toggle in combat or while auras are secret waits for the flush
+- twins: the structure key carries the glow, so a toggle rebuilds and nothing else of the glow does
+- twins: a twin's buttons take no mouse, no click and no cancel
+- twins: the hang frame and the mouse blocker are the main's, never a twin
+- twins: the empty watch reads the main's pool only
+
 ### test_containermanager.lua (54)
 
 - manager: Create appends a container, names it uniquely and announces it
@@ -1727,7 +1758,7 @@ Total.
 - slash verbs: the disabled gate is ONE decision over the whole verb table, not a per-verb guard
 - slash verbs: /am new enchants makes a player buff container showing only Weapon enchants (feedback #6)
 
-### test_diagnostics.lua (49)
+### test_diagnostics.lua (50)
 
 - diag: /am diagnostics writes the report to the console ungated, opens it, and says so once
 - diag: /am diagnostics answers while the addon is disabled, and the state line says so
@@ -1761,6 +1792,7 @@ Total.
 - diag: [Cfg] lists only the settings in use; the rest go on an inert line
 - diag: [Cfg] prints no attach.edge: v11 made it two points, and no row stores it (batch 11 G4)
 - diag: [Cont] prints both points in effect, whether each is automatic, and the classification (batch 11 G7)
+- diag: [Cont] counts a container's text glow twins, 0 while the glow is off (TG-11)
 - diag: a failing section is reported and the next container still reports
 - diag: the report is capped below the console buffer and says it was truncated
 - diag: predictions stop at the id cap and the report says it was truncated
@@ -2415,6 +2447,7 @@ Total.
 | test_container_situations.lua | 16 |
 | test_container_zones.lua | 8 |
 | test_container_unitfilter.lua | 14 |
+| test_container_twins.lua | 28 |
 | test_containermanager.lua | 54 |
 | test_compat.lua | 37 |
 | test_secrets.lua | 6 |
@@ -2460,7 +2493,7 @@ Total.
 | test_disabled.lua | 18 |
 | test_slash.lua | 35 |
 | test_slash_verbs.lua | 55 |
-| test_diagnostics.lua | 49 |
+| test_diagnostics.lua | 50 |
 | test_diagnostics_situations.lua | 4 |
 | test_bulklog.lua | 20 |
 | test_debug_coverage.lua | 10 |
@@ -2496,4 +2529,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **2086** |
+| **Total** | **2115** |

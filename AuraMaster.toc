@@ -131,6 +131,9 @@ modules\BlizzardFrames.lua
 # LOAD-BEARING: Container binds NS.CONTAINER_TEMPLATE (defaults\Profile.lua) at file load as its
 # fallback for every unset layout and label leaf.
 modules\Container.lua
+# Conventional: a glowing text container's twin engines, after the Container they build beside;
+# Container, Style and Constants resolved at call time.
+modules\Container_Twins.lua
 # Conventional: peers resolved at call time; it binds only NS.Perf and NS.L at load.
 modules\ContainerManager.lua
 # Conventional: the font primer (issue #24); reaches Style, Database and ContainerManager at call time.

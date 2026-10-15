@@ -284,6 +284,10 @@ C.TEXT_ANIM_LABELS = { none = "None", pulse = "Pulse", blink = "Blink", bounce =
 C.TEXT_GLOW_RING = { { 1, 0 }, { 0, 1 }, { 1, 1 }, { 1, -1 }, { -1, 0 }, { 0, -1 }, { -1, -1 }, { -1, 1 } }
 C.TEXT_GLOW_PAIRED = true
 C.TEXT_GLOW_TWINS = C.TEXT_GLOW_PAIRED and 4 or 8
+-- How far below the main engine its twins sit. A text button nests our frames up to four deep (the
+-- text's chain at the button's level + 4, the icon at + 2, modules/Style_Text.lua), so a twin's text
+-- draws under the main's icon only with a gap above 2 (the twins design note, section 2).
+C.TEXT_GLOW_LEVEL_GAP = 3
 
 -- The template's tokens, in cheat-sheet order. modules/TextTemplate.lua parses with this list and
 -- settings/Text.lua prints it. `kind` is the engine field that draws a token; a duration token also

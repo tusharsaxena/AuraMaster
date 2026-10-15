@@ -274,14 +274,27 @@ local function placeholders(k)
     return k.inst.previewPools[k.style].active
 end
 
---- One apply, then one preview dress. Raises when the apply raised or the engine was rebuilt (the
---- button would then be dressed by nobody, and every row would read as reaching nothing).
+--- Whether structure key `s` has the text glow on (Style.StructureKey).
+local function glowsIn(s)
+    return tostring(s):find(":glow", 1, true) ~= nil
+end
+
+--- One apply, then one preview dress. Raises when the apply raised or the engine was rebuilt for
+--- anything but the glow toggle (the button would then be dressed by nobody, and every row would read
+--- as reaching nothing). The toggle rebuilds by design (its twins, modules/Container_Twins.lua): the
+--- new engine dresses each button it creates, which handing the button to it and restyling stands for.
 local function applyAndDress(k)
     local NS = k.NS
     local engine = plant(k)
+    local was = k.inst.structure
     NS.ContainerManager.RequestApply(k.c.id)
     NS.ContainerManager.FlushPending()
-    assertTrue(k.inst.engine == engine, "the engine was updated, not rebuilt")
+    if k.inst.engine ~= engine and glowsIn(was) ~= glowsIn(k.inst.structure) then
+        plant(k)
+        k.inst:Restyle(k.c)
+    end
+    assertTrue(k.inst.engine == engine or glowsIn(was) ~= glowsIn(k.inst.structure),
+        "the engine was updated, not rebuilt")
     if k.twin then NS.Style.Element(k.twin, k.c, true, k.inst.classColor, 1) end
     k.inst.previewDirty = true
     NS.Preview.Show(k.inst)
