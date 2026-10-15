@@ -68,11 +68,12 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   copies sit that much off center (smoke TEXT-36). Under Size to fit nothing clips. Under a hand-set
   Width and Height each twin clips at its own box, moved by its ring offset, so the ring is cut
   wherever it reaches past the box, and the paired shadow, which draws twice the Thickness back from
-  its twin's text, outside that twin's box, is cut by up to twice the Thickness (12 px at 6) plus
-  Offset X or Y. A placeholder's copies are cut only by the element's own box, so the preview can
-  show more of the ring's far side than a live line does. An empty field is empty on its twins too,
-  so it draws no glow. Size to fit, the element size and the drag strip ignore the ring, as they
-  ignore the shadow.
+  its twin's text, outside that twin's box, is cut by up to twice the Thickness (12 px at 6). Offset
+  X and Y move the twin's box with its text and its shadow, so they add nothing to that cut. A
+  placeholder's copies are cut only by the element's own box, which does not move with them, so at
+  an edge the preview can show less of a copy pushed past it, and more of the ring's far side, than
+  a live line does. An empty field is empty on its twins too, so it draws no glow. Size to fit, the
+  element size and the drag strip ignore the ring, as they ignore the shadow.
 - **A border style other than Solid redraws a live button only when the button is rebuilt.** Its
   backdrop does arithmetic on the button's size, which reads secret once the engine has laid the button
   out, so a new texture or thickness is applied on a new button, a rebuild or a `/reload`; its color

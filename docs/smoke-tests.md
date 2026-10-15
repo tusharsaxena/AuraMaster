@@ -2058,9 +2058,10 @@ off again. Result:
 **TEXT-33. The glow and the box.** Size to fit on → the glow draws in full, past the box. Untick it,
 with a Width wider than the line and a Height of about one font line → the text draws whole, and the
 glow is trimmed at the box's top and bottom edges. Set a Width narrower than the line → the text and
-the glow are both cut at the box's side edges; the live glow may be cut a little more on the far side
-than the preview's (`docs/known-limitations.md`). `/am test` → the placeholders draw the same glow as
-the live line, and so does the preview in the panel. Result:
+the glow are both cut at the box's side edges; at an edge the preview's glow may show less of a copy
+pushed past it, and more of the far side, than the live glow (`docs/known-limitations.md`).
+`/am test` → the placeholders draw the same glow as the live line, and so does the preview in the
+panel. Result:
 
 **TEXT-34. The glow in combat.** Glow on, a target-debuff Text container, at a training dummy: apply
 and refresh debuffs, let stacks rise and fall and durations run out → the gold stays under the right
@@ -2075,9 +2076,14 @@ until combat ends, then the glow goes. Result:
 
 **TEXT-35. The glow stays under the text at any frame level.** Glow on, Icon position Left, Layout →
 Frame level 1, then 5 → the glow stays under the icon and under the text both times. Then, glow still
-on and without a `/reload`, Frame level 20 → the glow still stays under the text and the icon. Record
-the outcome in `docs/midnight-quirks.md` → *A glyph glow needs twin engines* (Not yet probed).
-Result:
+on and without a `/reload`, Frame level 20 → the glow still stays under the text and the icon. Then
+run it again with the holders' fixed flag, which the addon does not set: Frame level 5, `/reload`,
+and this line, which calls `SetFixedFrameLevel(true)` on every twin's holder until the next
+`/reload`:
+`/run for _,i in pairs(LibStub("AceAddon-3.0"):GetAddon("AuraMaster").ContainerManager.instances)do for _,h in ipairs(i.holders or{})do h:SetFixedFrameLevel(true)end end`
+→ Frame level 20, then 1, with no `/reload` → the glow stays under the text and the icon both times.
+Record both outcomes, without and with the flag, in `docs/midnight-quirks.md` → *A glyph glow needs
+twin engines* (Not yet probed). Result:
 
 **TEXT-36. The glow on a long line.** Glow on, Font Outline on, Justify Left, a three-field template
 (`$spellname$ - $stacks$ - $remainingduration$`) on an aura with stacks → the glow on the last

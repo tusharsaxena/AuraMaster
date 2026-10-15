@@ -472,9 +472,11 @@ outline) and `docs/smoke-tests.md`.
   difference at the box edge under a hand-set Width only. **Under shadow pairing it is larger.** Each
   twin's shadow lands at −2·t·d_k from the twin's own text, outside the twin's own clip and area box
   (`applyClip`, `modules/Style_Text.lua:238-242`, turns clipping on when `autoSize` is off). With a
-  hand-set Width, the opposite copy is cut by up to 2·t (12 px at t = 6), plus the `glowX`/`glowY`
-  shift past the box edge. A preview copy's shadow is cut only by the element's `clip`, so the
-  preview shows more of the opposite side than the live twin does. With `autoSize` on, nothing clips
+  hand-set Width, the opposite copy is cut by up to 2·t (12 px at t = 6). `glowX`/`glowY` move the
+  twin's box with its text and its shadow, so they add nothing to that cut. A preview copy is cut
+  only by the element's `clip`, which does not move with it, so the preview shows more of the
+  opposite side than the live twin does, and less of a +t·d_k copy pushed past the box edge. With
+  `autoSize` on, nothing clips
   and the two agree. The known-limitations entry names this case.
 
 No deviation from the Ka0s WoW Addon Standard. The new module sits in `modules/` with a TOC note

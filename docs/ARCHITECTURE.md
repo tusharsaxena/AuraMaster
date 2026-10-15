@@ -18,8 +18,8 @@ So this addon reads no aura at all. Every container is a Blizzard **AuraContaine
 `modules/Container.lua:449`) that registers `UNIT_AURA` for its unit, gathers, sorts, lays out and
 animates its buttons in Blizzard's own code. A Text container with Glow on adds `C.TEXT_GLOW_TWINS`
 twin engines with the same content, offset around the main and dressed in the glow color
-(`modules/Container_Twins.lua`), since no addon code can copy the engine's secret text. The addon's job is to **declare** what each container
-shows and **dress** each button the engine creates:
+(`modules/Container_Twins.lua`), since no addon code can copy the engine's secret text. The addon's
+job is to **declare** what each container shows and **dress** each button the engine creates:
 
 ```
 settings row ─► NS.SetByPath ─► CONFIG_CHANGED ─► ContainerManager.RequestApply (next frame, coalesced)
@@ -244,12 +244,14 @@ optional. The full table and the reasons:
 | AceDB `OnProfileChanged` / `OnProfileCopied` / `OnProfileReset` | `core/Database.lua:273-277` | `NS.OnProfileChanged` / `NS.OnProfileCopied` / `NS.OnProfileReset` → re-prepare the registry, trace the event once in its own words (a switch `[Profile] changed -> X`; a copy or a reset one `[Set]` line, debug-logging-§10), rebuild, re-render |
 
 Each container's own `UNIT_AURA` belongs to its engine, and to each twin engine of a glowing Text
-container, which takes the same `SetUnit` (`modules/Container.lua:443`); none of it is addon code. The twelve `core/AuraMaster.lua` registrations are one module-level list,
-`LIFECYCLE_EVENTS`, which `RegisterLifecycleEvents` and `UnregisterLifecycleEvents` both walk, so the
-stand-down and the stand-up remove and restore the same list. With logging on, the world-entry, loading-screen, combat and
-restriction handlers each write one `[Event]` line before acting (`traceEvent`,
-`core/AuraMaster.lua:100`; `docs/debug.md` -> *The event trace*); the unit swaps, `ADDON_LOADED`, the two item events and
-`ZONE_CHANGED_NEW_AREA` (a border crossing, which fires on every zone border) do not. The weapon-enchant reset writes one `[Apply]` line when it fires.
+container, which takes the same `SetUnit` (`modules/Container.lua:443`); none of it is addon code.
+The twelve `core/AuraMaster.lua` registrations are one module-level list, `LIFECYCLE_EVENTS`, which
+`RegisterLifecycleEvents` and `UnregisterLifecycleEvents` both walk, so the stand-down and the
+stand-up remove and restore the same list. With logging on, the world-entry, loading-screen, combat
+and restriction handlers each write one `[Event]` line before acting (`traceEvent`,
+`core/AuraMaster.lua:100`; `docs/debug.md` -> *The event trace*); the unit swaps, `ADDON_LOADED`,
+the two item events and `ZONE_CHANGED_NEW_AREA` (a border crossing, which fires on every zone
+border) do not. The weapon-enchant reset writes one `[Apply]` line when it fires.
 
 The font primer (`modules/FontPrimer.lua`) registers no event of its own. It runs from
 `CM.StartListening` (the login's `CM.Init` and every stand-up, before the first build), from the
@@ -310,8 +312,8 @@ after login is not primed until the next settings change or `/reload`. A contain
 cannot be dragged, and an attached one whose position reads secret jumps to the cursor when its drag
 starts. A Text line's glow costs `C.TEXT_GLOW_TWINS` twin engines, each with its own `UNIT_AURA`
 work; a twin could break a sort tie differently from its main, runs its loop a few frames out of
-phase, and under a hand-set Width its ring and paired shadow are clipped at its own box. Every limitation, its cause and any ruling:
-`docs/known-limitations.md`.
+phase, and under a hand-set Width its ring and paired shadow are clipped at its own box. Every
+limitation, its cause and any ruling: `docs/known-limitations.md`.
 
 ## Documentation map
 

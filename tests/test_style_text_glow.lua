@@ -520,6 +520,9 @@ test("text glow: the docs name every glow leaf on the Font tab row and the twins
         "shadow" }) do
         assertTrue(bullet:find(word, 1, true) ~= nil, "the twins' bullet names " .. word)
     end
+    -- red under: the paired shadow's cut said to grow with Offset X or Y (the offset moves the
+    -- twin's box with its shadow, so the cut stays at twice the Thickness)
+    assertTrue(bullet:find("Thickness (12 px at 6) plus", 1, true) == nil, "the shadow's cut is 2t")
     local limits = readDoc("docs/ARCHITECTURE.md"):match("\n## Known Limitations\n(.-)\n## ")
     -- red under: ARCHITECTURE's summary still calling the glow a halo around the text's bounds
     assertTrue(limits ~= nil and limits:find("twin engines", 1, true) ~= nil, "ARCHITECTURE names the twins")
@@ -561,6 +564,11 @@ test("text glow: docs/midnight-quirks.md records the 12.1 glow probe", function(
         -- red under: a probe fact left out (the outline's color, the layer, placement, secret size, pairing)
         assertTrue(section:find(word, 1, true) ~= nil, "the glow section names " .. word)
     end
+    local open = (section .. "\n"):match("\n%*%*Not yet probed%*%*(.-)\n\n")
+    -- red under: the open questions without the fixed-level holders the design note names (twins
+    -- design R2: the outcome of SetFixedFrameLevel on the holders is recorded here)
+    assertTrue(open ~= nil and open:find("SetFixedFrameLevel", 1, true) ~= nil,
+        "the fixed flag is open")
 end)
 
 test("text glow: the glyph glow's smoke checks are written and wait for the owner", function()
@@ -574,4 +582,9 @@ test("text glow: the glyph glow's smoke checks are written and wait for the owne
         assertTrue(check ~= nil, "TEXT-" .. id .. " is written")
         assertTrue(check:match("Result:%s*$") ~= nil, "TEXT-" .. id .. " has an empty Result line")
     end
+    local level = body:match("\n%*%*TEXT%-35%. (.-)\n\n")
+    -- red under: TEXT-35 running only the re-level path (twins design R2: with and without the
+    -- fixed flag)
+    assertTrue(level:find("SetFixedFrameLevel", 1, true) ~= nil,
+        "TEXT-35 runs the fixed-flag variant")
 end)

@@ -733,7 +733,11 @@ container's twins (`docs/debug.md`).
 **Not yet probed** (smoke TEXT-35): `SetFrameLevel` on an engine before its first group, and whether
 the client re-bases an engine's level when an ancestor's level changes (a Frame level change with the
 glow on rebuilds nothing; `Twins.Place` re-levels the holders from the main's level on every apply).
-`SetSize` and `SetPoint` in that window are proven. Record the outcome here.
+`SetSize` and `SetPoint` in that window are proven. Also open: whether `SetFixedFrameLevel(true)` on
+the holders, which the addon does not set, keeps a raised anchor from lifting a holder and its twin
+over the main. It is the design's fallback before a rebuild on every level change
+(`docs/superpowers/research/2026-10-16-text-glow-twins-design.md`, R2), so the smoke step runs
+without and with it. Record both outcomes here.
 
 ## Taint notes
 
