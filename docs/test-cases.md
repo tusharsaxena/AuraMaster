@@ -2124,7 +2124,7 @@ Total.
 - icons: the Pandemic tab holds the time color and the highlight, in pandemic-window words, paths unchanged (B2-1)
 - icons: Defaults restores the selected container's icon look and leaves its bar look alone
 
-### test_pages_text.lua (29)
+### test_pages_text.lua (32)
 
 - text page: the five tabs are drawn in order, Pandemic before Animation (B2-1)
 - text page: General holds Size, the Template dropdown and box, the cheat sheet, then Placement
@@ -2140,7 +2140,7 @@ Total.
 - text page: without a duration token the pandemic-window rows dim, except the swatch, under a note
 - text page: the Pandemic tab holds the time color and the blink, in pandemic-window words, paths unchanged (B2-1)
 - text page: with Icon position None every Icon row but the position dims, the swatch excepted, under a note (item 6)
-- text page: the blink row is engine-only, and the Font tab carries the composed font block, time format and Dispel type
+- text page: the blink row is engine-only, and the Font tab carries the composed font block, Glow, time format and Dispel type
 - text page: Defaults restores the selected container's text look and nothing else
 - text page: the Template dropdown lists the aura type's built-ins, then Custom (feedback #5)
 - text page: picking a built-in writes its template, and the centered one Center; the box stays hidden (feedback #5)
@@ -2155,6 +2155,9 @@ Total.
 - text page: Font carries the three dispel-type options, all off, each dimmed until it can show (feedback #7, item 5)
 - text page: Size to fit leads Size; while it is on Width and Height dim under a note, and say why
 - text page: /am set container.text.autoSize reaches the same seam
+- text page: Font carries the Glow subgroup between the font block and Countdown, in order (TG-03)
+- text page: the glow's rows dim while it is off, the toggle and the color pair excepted (TG-03)
+- text page: /am set container.text.glow... reaches every glow row through the one seam (TG-03)
 
 ### test_pages_tabs.lua (6)
 
@@ -2463,7 +2466,7 @@ Total.
 | test_pages_layout.lua | 47 |
 | test_pages_bars.lua | 11 |
 | test_pages_icons.lua | 5 |
-| test_pages_text.lua | 29 |
+| test_pages_text.lua | 32 |
 | test_pages_tabs.lua | 6 |
 | test_pages_rail.lua | 20 |
 | test_pages_about.lua | 3 |
@@ -2484,4 +2487,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **2074** |
+| **Total** | **2077** |

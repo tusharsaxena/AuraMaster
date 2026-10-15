@@ -11,10 +11,11 @@
 -- why, when the other side cannot show it by nature. An exemption is checked too: a row that does
 -- reach the side it is exempt from has an exemption it no longer needs. Any other gap is a failure.
 --
--- THE BASELINE turns on the toggles that gate other rows (the two borders, the running-out color),
--- so the rows they gate can show a change; each gate is itself tested by turning it off. The mock
--- formatter and curves record their inputs as plain data, so a binding handed one carries what it
--- was built from.
+-- THE BASELINE turns on the toggles that gate other rows (the two borders, the running-out color, the
+-- text glow), so the rows they gate can show a change; each gate is itself tested by turning it off.
+-- The mock formatter and curves record their inputs as plain data, so a binding handed one carries
+-- what it was built from. A text glow set is a plain table of textures, each swapped and read as a
+-- region of its own.
 
 local T = _G.AM_TEST
 local test, assertTrue, assertEqual = T.test, T.assertTrue, T.assertEqual
@@ -148,24 +149,52 @@ local function ownedBy(r)
     return out
 end
 
---- Every recorder that belongs to one dressed element: the element, its regions and what they own.
+--- Whether `k`, `v` on `__am` is one of the text glow's sets (modules/Style_TextGlow.lua): a plain
+--- table of nine textures under `glow1`, `glow2`, ..., each texture a region of its own.
+local function isGlowSet(k, v)
+    return type(k) == "string" and k:match("^glow%d+$") ~= nil and type(v) == "table" and not isRecorder(v)
+end
+
+--- A glow set's textures, by part key in a fixed order, each as { suffix, recorder }.
+local function glowParts(set)
+    local keys = {}
+    for part, r in pairs(set) do
+        if isRecorder(r) then push(keys, part) end
+    end
+    table.sort(keys)
+    local out = {}
+    for i, part in ipairs(keys) do out[i] = { "." .. part, set[part] } end
+    return out
+end
+
+--- Every recorder that belongs to one dressed element: the element, its regions and what they own,
+--- and the textures of its glow sets.
 local function recordersOf(frame)
     local list = { frame }
-    for _, r in pairs(frame.__am or {}) do
+    for k, r in pairs(frame.__am or {}) do
         if isRecorder(r) then
             push(list, r)
             for _, o in ipairs(ownedBy(r)) do push(list, o[2]) end
+        elseif isGlowSet(k, r) then
+            for _, o in ipairs(glowParts(r)) do push(list, o[2]) end
         end
     end
     return list
 end
 
 --- Swap each region of a dressed element for a recorder, in place (the table stays the one
---- Style.RegionsFor knows), and name every recorder for the serializer.
+--- Style.RegionsFor knows), and name every recorder for the serializer. A glow set stays the set it
+--- is, and each of its textures is swapped instead.
 local function adopt(frame, prefix, names)
     names[frame] = prefix
     for k, v in pairs(frame.__am) do
-        if type(v) == "table" then
+        if isGlowSet(k, v) then
+            for part in pairs(v) do
+                local r = R()
+                v[part] = r
+                names[r] = prefix .. "." .. k .. "." .. part
+            end
+        elseif type(v) == "table" then
             local r = R()
             frame.__am[k] = r
             names[r] = prefix .. "." .. k
@@ -173,11 +202,17 @@ local function adopt(frame, prefix, names)
     end
 end
 
---- What one element recorded, as one string, regions in a fixed order.
+--- What one element recorded, as one string, regions in a fixed order, a glow set's textures each
+--- under its set's key.
 local function signature(frame, names)
     local keys = {}
     for k, v in pairs(frame.__am or {}) do
-        if isRecorder(v) then
+        if isGlowSet(k, v) then
+            for _, o in ipairs(glowParts(v)) do
+                if not names[o[2]] then names[o[2]] = k .. o[1] end
+                push(keys, k .. o[1])
+            end
+        elseif isRecorder(v) then
             push(keys, k)
             for _, o in ipairs(ownedBy(v)) do
                 if not names[o[2]] then names[o[2]] = names[v] .. o[1] end
@@ -187,7 +222,8 @@ local function signature(frame, names)
     table.sort(keys)
     local parts = { "frame:" .. serLog(frame, names) }
     for _, k in ipairs(keys) do
-        local r = frame.__am[k]
+        local set, part = k:match("^(glow%d+)%.(.+)$")
+        local r = set and frame.__am[set][part] or frame.__am[k]
         push(parts, k .. ":" .. serLog(r, names))
         for _, o in ipairs(ownedBy(r)) do push(parts, k .. o[1] .. ":" .. serLog(o[2], names)) end
     end
@@ -218,6 +254,9 @@ local function rig(style)
             return (last and tostring(last[1]):len() or 0) * 6 + 2
         end
         NS.Style.__measurer = function() return fs end
+        -- The glow's falloff files, planted as tests/test_style_text_glow.lua plants them: the shipped
+        -- textures wait on the owner's media call (TG-01), and with no file a glow draws nothing.
+        NS.Constants.TEXT_GLOW_TEXTURES = NS.Constants.TEXT_GLOW_TEXTURES or { soft = "glow-soft", hard = "glow-hard" }
     end
     return k
 end
@@ -315,8 +354,10 @@ local GATES = {
     -- Right, so Center (a multi-piece template stacks in rows, feedback #1) still moves the chain;
     -- an icon, so its rows reach one; a $dispeltype$ piece, so coloring its word has a word to color
     -- (feedback #7). Size to fit off, so Width and Height reach the element; turning it on then shows
-    -- through the measurer rig() installs (batch 8, AS-1).
+    -- through the measurer rig() installs (batch 8, AS-1). The glow on, so its rows reach its sets
+    -- (TG-03).
     text = { autoSize = false, icon = "LEFT", iconBorderShow = true, expiringColorOn = true, justifyH = "RIGHT",
+        glow = true,
         template = "$spellname$[ x$stacks$][ ($dispeltype$)][ - $remainingduration$]" },
 }
 

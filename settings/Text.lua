@@ -10,8 +10,10 @@ local _, NS = ...
 --               template box (Custom only), a read-only Preview EditBox (the line on a sample aura,
 --               PrettyChat's shape), the Tokens/Rules cheat sheet; then Placement and the centering
 --               note
---     Font      Font, Countdown, then Dispel type (feedback #7: the word's color, a backdrop, an
---               edge, each opt-in and off; moved here from Animation, smoke batch 2 item 5)
+--     Font      Font, Glow (a halo behind the text, never the icon or the box; off, and every row
+--               but the toggle and the color pair dims while it is), Countdown, then Dispel type
+--               (feedback #7: the word's color, a backdrop, an edge, each opt-in and off; moved here
+--               from Animation, smoke batch 2 item 5)
 --     Icon      Icon (position, size, gap, zoom), Icon border; every row but the position (and the
 --               border swatch) dims while the position is None, under a note
 --     Pandemic  Time color (the duration tokens' color and blink in the pandemic window, once
@@ -33,9 +35,9 @@ local _, NS = ...
 -- so the section is never drawn disabled, and its read-only text (the cheat sheet, the Preview) has
 -- no dimmed form (#23 removed it); the Placement notes are gray at all times. The Template dropdown
 -- still honors `ctx.__renderDisabled`, the library's idiom for a bespoke cell. The font and
--- icon-border blocks are composed (options-ui-§16) with class-color companions (options-ui-§17)
--- resolved to the tracked unit's class, as in the Bars section; the pandemic-window time swatch is a
--- palette color and carries none.
+-- icon-border blocks are composed (options-ui-§16), and they and the glow swatch carry class-color
+-- companions (options-ui-§17) resolved to the tracked unit's class, as in the Bars section; the
+-- pandemic-window time swatch is a palette color and carries none.
 
 local L = NS.L
 local H = NS.Helpers
@@ -49,7 +51,7 @@ local UNIT = { source = "unit" }
 
 local G_GENERAL, G_FONT, G_ICON, G_ANIM = L["General"], L["Font"], L["Icon"], L["Animation"]
 local G_PANDEMIC, S_TIME = L["Pandemic"], L["Time color"]
-local S_PLACEMENT, S_DISPEL = L["Placement"], L["Dispel type"]
+local S_PLACEMENT, S_DISPEL, S_GLOW = L["Placement"], L["Dispel type"], L["Glow"]
 local SMALL = { fontObject = "GameFontHighlightSmall" }
 local HEADING = { fontObject = "GameFontNormalSmall" }
 local GRAY = "|cff808080%s|r"
@@ -364,6 +366,40 @@ end
 NS.RegisterSchemaRows(H.FontGroup({
     prefix = P .. "font.", page = PAGE, group = G_FONT, subgroup = L["Font"], classColor = UNIT,
 }))
+-- The glow behind the text (text glow, spec G4): a halo hugging the text's bounds, drawn by
+-- modules/Style_TextGlow.lua on top of the font's outline and shadow, never in place of them. Off by
+-- default; its rows dim while it is off, except the color pair, which the composer never lets dim.
+NS.RegisterSchemaRows({
+    { path = P .. "glow", page = PAGE, group = G_FONT, subgroup = S_GLOW, type = "bool", startsLine = true,
+      label = L["Glow behind the text"],
+      desc = L["Draw a soft glow behind the text, on top of its outline and shadow. The icon and the box get none."] },
+})
+NS.RegisterSchemaRows(H.ColorPair({
+    prefix = P, page = PAGE, group = G_FONT, subgroup = S_GLOW, key = "glowColor",
+    companionKey = "useClassColorGlow", label = L["Glow color"], classColor = UNIT,
+}))
+NS.RegisterSchemaRows({
+    { path = P .. "glowIntensity", page = PAGE, group = G_FONT, subgroup = S_GLOW, type = "number",
+      min = 0.05, max = 1, step = 0.05, isPercent = true, disabledIf = unlessOn("glow"), startsLine = true,
+      label = L["Intensity"], desc = L["How strongly the glow shows. It scales the glow color's own opacity."] },
+    { path = P .. "glowRadius", page = PAGE, group = G_FONT, subgroup = S_GLOW, type = "number",
+      min = 1, max = 24, step = 1, disabledIf = unlessOn("glow"),
+      label = L["Radius (px)"], desc = L["How far the glow reaches past the text on every side."] },
+    { path = P .. "glowBlend", page = PAGE, group = G_FONT, subgroup = S_GLOW, type = "string",
+      values = NS.Choices(C.TEXT_GLOW_BLENDS, C.TEXT_GLOW_BLEND_LABELS), disabledIf = unlessOn("glow"),
+      label = L["Blend mode"],
+      desc = L["Normal lays the glow color over what is behind it. Additive adds it, so the glow brightens what is behind it, like light."] },
+    { path = P .. "glowFalloff", page = PAGE, group = G_FONT, subgroup = S_GLOW, type = "string",
+      values = NS.Choices(C.TEXT_GLOW_FALLOFFS, C.TEXT_GLOW_FALLOFF_LABELS), disabledIf = unlessOn("glow"),
+      label = L["Falloff"],
+      desc = L["Soft fades the glow out slowly from the text. Hard keeps it solid near the text and fades it only at its edge."] },
+    { path = P .. "glowX", page = PAGE, group = G_FONT, subgroup = S_GLOW, type = "number",
+      min = -20, max = 20, step = 1, disabledIf = unlessOn("glow"), startsLine = true,
+      label = L["Offset X"], desc = L["Nudge the glow off the text, sideways, in pixels."] },
+    { path = P .. "glowY", page = PAGE, group = G_FONT, subgroup = S_GLOW, type = "number",
+      min = -20, max = 20, step = 1, disabledIf = unlessOn("glow"),
+      label = L["Offset Y"], desc = L["Nudge the glow off the text, up or down, in pixels."] },
+})
 NS.RegisterSchemaRows({
     { path = P .. "timeFormat", page = PAGE, group = G_FONT, subgroup = L["Countdown"], type = "string",
       values = NS.Choices(C.TIME_FORMATS, C.TIME_FORMAT_LABELS), label = L["Time format"],

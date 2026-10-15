@@ -360,7 +360,7 @@ test("text page: with Icon position None every Icon row but the position dims, t
     end
 end)
 
-test("text page: the blink row is engine-only, and the Font tab carries the composed font block, time format and Dispel type", function()
+test("text page: the blink row is engine-only, and the Font tab carries the composed font block, Glow, time format and Dispel type", function()
     local NS = textPage()
     local L = NS.L
     assertEqual(NS.FindSchemaRow(P_ .. "expiringBlink").coverage, "engine-only")
@@ -371,11 +371,14 @@ test("text page: the blink row is engine-only, and the Font tab carries the comp
             paths[n + 1] = row.path
         end
     end
-    -- red under: the font block on a prefix other than text.font., the time format elsewhere, or the
-    -- Dispel type subsection not after them (smoke batch 2, item 5)
+    -- red under: the font block on a prefix other than text.font., the time format elsewhere, the
+    -- Dispel type subsection not after them (smoke batch 2, item 5), or the Glow subgroup anywhere but
+    -- between the font block and Countdown (TG-03)
     assertEqual(table.concat(paths, ","), table.concat({ P_ .. "font.font", P_ .. "font.fontSize",
         P_ .. "font.fontColor", P_ .. "font.useClassColorFont", P_ .. "font.fontFlags",
-        P_ .. "font.fontShadow", P_ .. "timeFormat", P_ .. "dispelTypeColor", P_ .. "dispelBackdrop",
+        P_ .. "font.fontShadow", P_ .. "glow", P_ .. "glowColor", P_ .. "useClassColorGlow",
+        P_ .. "glowIntensity", P_ .. "glowRadius", P_ .. "glowBlend", P_ .. "glowFalloff", P_ .. "glowX",
+        P_ .. "glowY", P_ .. "timeFormat", P_ .. "dispelTypeColor", P_ .. "dispelBackdrop",
         P_ .. "dispelBackdropAlpha", P_ .. "dispelEdge", P_ .. "dispelEdgeSize" }, ","))
     assertEqual(NS.FindSchemaRow(P_ .. "font.fontColor").classColorSource, "unit")
 end)
@@ -653,4 +656,96 @@ test("text page: /am set container.text.autoSize reaches the same seam", functio
     local NS = textPage()
     assertTrue(NS.SetByPath(P_ .. "autoSize", false, 1))
     assertEqual(NS.Database.FindContainer(1).text.autoSize, false)
+end)
+-- ── glow behind the text (TG-03, spec G4) ─────────────────────────────────────────────────────
+
+-- The Glow subgroup's rows, in the order G4 registers them.
+local GLOW_KEYS = { "glow", "glowColor", "useClassColorGlow", "glowIntensity", "glowRadius", "glowBlend",
+    "glowFalloff", "glowX", "glowY" }
+-- The rows that dim while the glow is off: all but the toggle and the class-colored pair.
+local GLOW_DIMMED = { "glowIntensity", "glowRadius", "glowBlend", "glowFalloff", "glowX", "glowY" }
+
+test("text page: Font carries the Glow subgroup between the font block and Countdown, in order (TG-03)", function()
+    local NS = textPage()
+    local L = NS.L
+    local got = {}
+    for _, row in ipairs(NS.SchemaForPage("text")) do
+        if row.subgroup == L["Glow"] then
+            -- red under: a glow row on a tab other than Font
+            assertEqual(row.group, L["Font"], row.path)
+            local n = #got
+            got[n + 1] = row.path
+        end
+    end
+    local want = {}
+    for i, key in ipairs(GLOW_KEYS) do want[i] = P_ .. key end
+    -- red under: no Glow subgroup, a row missing, or the rows registered out of G4's order
+    assertEqual(table.concat(got, ","), table.concat(want, ","))
+    -- red under: the swatch without its unit class color, or either half of the pair dimmable
+    -- (options-ui-§17: a ColorPair row never carries disabledIf)
+    assertEqual(NS.FindSchemaRow(P_ .. "glowColor").classColorSource, "unit")
+    assertTrue(NS.FindSchemaRow(P_ .. "glowColor").disabledIf == nil, "the swatch never dims")
+    assertTrue(NS.FindSchemaRow(P_ .. "useClassColorGlow").disabledIf == nil, "the companion never dims")
+    -- red under: the blend and falloff rows offering anything but the constants' choices, in order
+    for path, keys in pairs({ glowBlend = NS.Constants.TEXT_GLOW_BLENDS, glowFalloff = NS.Constants.TEXT_GLOW_FALLOFFS }) do
+        local offered = {}
+        for i, choice in ipairs(NS.FindSchemaRow(P_ .. path).values) do offered[i] = choice.value end
+        assertEqual(table.concat(offered, ","), table.concat(keys, ","), path)
+    end
+end)
+
+test("text page: the glow's rows dim while it is off, the toggle and the color pair excepted (TG-03)", function()
+    local NS, _, P = textPage()
+    -- red under: the glow on by default (the owner: off until asked for)
+    assertFalse(NS.CONTAINER_TEMPLATE.text.glow)
+    local ws = fontTab(NS, P)
+    for _, key in ipairs(GLOW_KEYS) do
+        -- red under: a glow row registered but not drawn on the Font tab
+        assertTrue(P.row(ws, P_ .. key) ~= nil, key .. " is drawn")
+    end
+    for _, key in ipairs(GLOW_DIMMED) do
+        -- red under: a dependent without unlessOn("glow"), live while nothing is drawn
+        assertTrue(P.row(ws, P_ .. key).disabled, key .. " waits for the glow")
+    end
+    for _, key in ipairs({ "glow", "glowColor", "useClassColorGlow" }) do
+        -- red under: the toggle or the pair dimmed (anti-pattern #74: a swatch is never grayed)
+        assertFalse(P.row(ws, P_ .. key).disabled and true or false, key .. " stays live")
+    end
+    NS.SetByPath(P_ .. "glow", true, 1)
+    ws = fontTab(NS, P)
+    for _, key in ipairs(GLOW_DIMMED) do
+        -- red under: a predicate reading a leaf other than glow
+        assertFalse(P.row(ws, P_ .. key).disabled and true or false, key .. " is live")
+    end
+end)
+
+test("text page: /am set container.text.glow... reaches every glow row through the one seam (TG-03)", function()
+    local NS = textPage()
+    local s = NS.Database.FindContainer(1).text
+    -- red under: any glow leaf without a schema row (the slash set refuses an unknown path)
+    NS.Slash:OnSlash("set container.text.glow true")
+    assertEqual(s.glow, true)
+    NS.Slash:OnSlash("set container.text.useClassColorGlow true")
+    assertEqual(s.useClassColorGlow, true)
+    NS.Slash:OnSlash("set container.text.glowIntensity 0.35")
+    assertEqual(s.glowIntensity, 0.35)
+    NS.Slash:OnSlash("set container.text.glowRadius 12")
+    assertEqual(s.glowRadius, 12)
+    NS.Slash:OnSlash("set container.text.glowBlend ADD")
+    assertEqual(s.glowBlend, "ADD")
+    NS.Slash:OnSlash("set container.text.glowFalloff hard")
+    assertEqual(s.glowFalloff, "hard")
+    NS.Slash:OnSlash("set container.text.glowX -4")
+    assertEqual(s.glowX, -4)
+    NS.Slash:OnSlash("set container.text.glowY 3")
+    assertEqual(s.glowY, 3)
+    -- red under: a radius row without its range (the seam clamps to it), or a blend row without its
+    -- choices (the seam refuses a value off the list)
+    NS.Slash:OnSlash("set container.text.glowRadius 99")
+    assertEqual(s.glowRadius, 24)
+    NS.Slash:OnSlash("set container.text.glowBlend MOD")
+    assertEqual(s.glowBlend, "ADD")
+    -- red under: the swatch unreachable at the seam
+    assertTrue(NS.SetByPath(P_ .. "glowColor", { r = 0, g = 1, b = 0, a = 1 }, 1))
+    assertEqual(s.glowColor.g, 1)
 end)
