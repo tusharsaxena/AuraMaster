@@ -186,10 +186,9 @@ false); the loop — `anim` (`"none"`, `"pulse"`, `"blink"`, `"bounce"`), `animS
 `dispelBackdrop` (false), `dispelBackdropAlpha` (0.35), `dispelEdge` (false), `dispelEdgeSize` (1 px);
 the glow behind the text (text glow, owner 2026-10-15: off, and added to the font's outline and
 shadow, never in place of them) — `glow` (false), `glowColor` (gold, `{ 1, 0.82, 0, 1 }`),
-`useClassColorGlow` (false, the swatch's class-color companion), `glowIntensity` (0.6, 0.05 to 1,
-scaling the color's alpha), `glowRadius` (6, 1 to 24 px past the text), `glowBlend` (`"BLEND"`, Normal,
-or `"ADD"`, Additive: `C.TEXT_GLOW_BLENDS`), `glowFalloff` (`"soft"` or `"hard"`:
-`C.TEXT_GLOW_FALLOFFS`), `glowX` and `glowY` (0, -20 to 20 px).
+`useClassColorGlow` (false, the swatch's class-color companion), `glowIntensity` (0.55, 0.05 to 1,
+scaling the color's alpha), `glowThickness` (2, 1 to 6 px: the radius of the ring of glow-colored
+copies, glyph glow addendum 2026-10-16), `glowX` and `glowY` (0, -20 to 20 px, shifting the whole ring).
 An existing container gains the block, and these leaves, by the ordinary backfill; there is no
 schema-version bump.
 
@@ -203,7 +202,7 @@ Every Bars and Icons text element (`bars.name`, `bars.time`, `bars.stacks`, `ico
 
 ## The starter containers
 
-`NS.STARTER_CONTAINERS` (`defaults/Profile.lua:304`) seeds a brand-new profile once, each spec merged
+`NS.STARTER_CONTAINERS` (`defaults/Profile.lua:303`) seeds a brand-new profile once, each spec merged
 over the template:
 
 | Name | Unit | Type | Style | Differs from the template |

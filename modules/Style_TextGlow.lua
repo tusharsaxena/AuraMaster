@@ -38,10 +38,14 @@ local _, NS = ...
 -- combat every call on a button's objects is refused, so a button built then must have its fields
 -- bound first. A change made in combat waits for the deferred restyle, like every other setting.
 --
+-- INTERIM (TG-09). The glyph glow addendum (docs/superpowers/specs/2026-10-16-text-glow-addendum-
+-- glyph-glow.md) removed the halo's falloff, blend and radius leaves and C.TEXT_GLOW_TEXTURES. Until
+-- TG-10 rewrites this module, the halo draws the one soft file with the Normal blend, glowThickness
+-- deep.
+--
 -- LOAD-BEARING POSITION: after modules/Style_Text.lua, whose Style.Text this decorates at file scope.
 
 local Style = NS.Style
-local C = NS.Constants
 local D = NS.CONTAINER_TEMPLATE.text
 local Text = Style.Text
 
@@ -74,9 +78,10 @@ local PARTS = {
     { "center", { .5, .5, .5, .5 }, { { "TOPLEFT", "L", "TOPLEFT" }, { "BOTTOMRIGHT", "R", "BOTTOMRIGHT" } } },
 }
 
--- The blend modes a stored glowBlend may name (C.TEXT_GLOW_BLENDS); anything else draws the default.
-local BLENDS = {}
-for _, b in ipairs(C.TEXT_GLOW_BLENDS) do BLENDS[b] = true end
+-- The halo's file, a radial texture the client ships, so the addon ships no media for it (layout-§3:
+-- a generic glow is not this addon's own art): GenericGlow64 (file 1063457), a linear radial alpha
+-- fade to nothing at its edge. Every piece of a set samples it as a nine-slice.
+local FILE = "Interface\\GLUES\\Models\\UI_Draenei\\GenericGlow64"
 
 local function number(v, default)
     return tonumber(v) or default
@@ -105,17 +110,13 @@ local function hideFrom(am, first)
     end
 end
 
---- The look every texture of every set takes: the falloff's file (nil when none is shipped for it),
---- the blend mode, the color with its alpha × the intensity, and the radius and offset.
+--- The look every texture of every set takes: the file, the blend mode, the color with its alpha ×
+--- the intensity, and the depth (the thickness) and offset.
 local function lookFor(s)
-    local files = C.TEXT_GLOW_TEXTURES
-    local falloff = s.glowFalloff or D.glowFalloff
-    local file = files and (files[falloff] or files[D.glowFalloff])
-    if not file then return nil end
     local r, g, b, a = Style.Color(s.glowColor or D.glowColor, s.useClassColorGlow)
-    return { file = file, blend = BLENDS[s.glowBlend] and s.glowBlend or D.glowBlend,
+    return { file = FILE, blend = "BLEND",
         r = r, g = g, b = b, a = (a or 1) * number(s.glowIntensity, D.glowIntensity),
-        radius = number(s.glowRadius, D.glowRadius),
+        radius = number(s.glowThickness, D.glowThickness),
         x = number(s.glowX, D.glowX), y = number(s.glowY, D.glowY) }
 end
 
@@ -174,8 +175,7 @@ local function dressLine(am, compiled, look)
 end
 
 --- Draw `s`'s glow on a dressed text element, after layoutChain has anchored its chain (Text.Apply):
---- hidden when off or when no file is shipped for the falloff, else one set per line or per stacked
---- row, and every set past those hidden.
+--- hidden when off, else one set per line or per stacked row, and every set past those hidden.
 function Text.Glow(am, s, compiled)
     local look = s.glow and lookFor(s)
     if not look then return hideFrom(am, 1) end

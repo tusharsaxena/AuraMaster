@@ -377,8 +377,7 @@ test("text page: the blink row is engine-only, and the Font tab carries the comp
     assertEqual(table.concat(paths, ","), table.concat({ P_ .. "font.font", P_ .. "font.fontSize",
         P_ .. "font.fontColor", P_ .. "font.useClassColorFont", P_ .. "font.fontFlags",
         P_ .. "font.fontShadow", P_ .. "glow", P_ .. "glowColor", P_ .. "useClassColorGlow",
-        P_ .. "glowIntensity", P_ .. "glowRadius", P_ .. "glowBlend", P_ .. "glowFalloff", P_ .. "glowX",
-        P_ .. "glowY", P_ .. "timeFormat", P_ .. "dispelTypeColor", P_ .. "dispelBackdrop",
+        P_ .. "glowIntensity", P_ .. "glowThickness", P_ .. "glowX", P_ .. "glowY", P_ .. "timeFormat", P_ .. "dispelTypeColor", P_ .. "dispelBackdrop",
         P_ .. "dispelBackdropAlpha", P_ .. "dispelEdge", P_ .. "dispelEdgeSize" }, ","))
     assertEqual(NS.FindSchemaRow(P_ .. "font.fontColor").classColorSource, "unit")
 end)
@@ -658,13 +657,12 @@ test("text page: /am set container.text.autoSize reaches the same seam", functio
     assertEqual(NS.Database.FindContainer(1).text.autoSize, false)
 end)
 
--- ── glow behind the text (TG-03, spec G4) ─────────────────────────────────────────────────────
+-- ── glow behind the text (TG-03, spec G4; rows per the glyph glow addendum, TG-09) ─────────────
 
--- The Glow subgroup's rows, in the order G4 registers them.
-local GLOW_KEYS = { "glow", "glowColor", "useClassColorGlow", "glowIntensity", "glowRadius", "glowBlend",
-    "glowFalloff", "glowX", "glowY" }
+-- The Glow subgroup's rows, in the order the addendum registers them.
+local GLOW_KEYS = { "glow", "glowColor", "useClassColorGlow", "glowIntensity", "glowThickness", "glowX", "glowY" }
 -- The rows that dim while the glow is off: all but the toggle and the class-colored pair.
-local GLOW_DIMMED = { "glowIntensity", "glowRadius", "glowBlend", "glowFalloff", "glowX", "glowY" }
+local GLOW_DIMMED = { "glowIntensity", "glowThickness", "glowX", "glowY" }
 
 test("text page: Font carries the Glow subgroup between the font block and Countdown, in order (TG-03)", function()
     local NS = textPage()
@@ -680,19 +678,20 @@ test("text page: Font carries the Glow subgroup between the font block and Count
     end
     local want = {}
     for i, key in ipairs(GLOW_KEYS) do want[i] = P_ .. key end
-    -- red under: no Glow subgroup, a row missing, or the rows registered out of G4's order
+    -- red under: no Glow subgroup, a row missing, a halo row (Radius, Blend mode, Falloff) left in, or
+    -- the rows registered out of the addendum's order
     assertEqual(table.concat(got, ","), table.concat(want, ","))
     -- red under: the swatch without its unit class color, or either half of the pair dimmable
     -- (options-ui-§17: a ColorPair row never carries disabledIf)
     assertEqual(NS.FindSchemaRow(P_ .. "glowColor").classColorSource, "unit")
     assertTrue(NS.FindSchemaRow(P_ .. "glowColor").disabledIf == nil, "the swatch never dims")
     assertTrue(NS.FindSchemaRow(P_ .. "useClassColorGlow").disabledIf == nil, "the companion never dims")
-    -- red under: the blend and falloff rows offering anything but the constants' choices, in order
-    for path, keys in pairs({ glowBlend = NS.Constants.TEXT_GLOW_BLENDS, glowFalloff = NS.Constants.TEXT_GLOW_FALLOFFS }) do
-        local offered = {}
-        for i, choice in ipairs(NS.FindSchemaRow(P_ .. path).values) do offered[i] = choice.value end
-        assertEqual(table.concat(offered, ","), table.concat(keys, ","), path)
-    end
+    local row = NS.FindSchemaRow(P_ .. "glowThickness")
+    -- red under: the thickness row off the addendum's 1 to 6 px in whole steps, or not labeled in px
+    assertEqual(row.type, "number")
+    assertEqual(row.min, 1); assertEqual(row.max, 6); assertEqual(row.step, 1)
+    assertEqual(row.label, L["Thickness (px)"])
+    assertTrue(row.isPercent == nil, "a pixel count, not a percent")
 end)
 
 test("text page: the glow's rows dim while it is off, the toggle and the color pair excepted (TG-03)", function()
@@ -730,22 +729,18 @@ test("text page: /am set container.text.glow... reaches every glow row through t
     assertEqual(s.useClassColorGlow, true)
     NS.Slash:OnSlash("set container.text.glowIntensity 0.35")
     assertEqual(s.glowIntensity, 0.35)
-    NS.Slash:OnSlash("set container.text.glowRadius 12")
-    assertEqual(s.glowRadius, 12)
-    NS.Slash:OnSlash("set container.text.glowBlend ADD")
-    assertEqual(s.glowBlend, "ADD")
-    NS.Slash:OnSlash("set container.text.glowFalloff hard")
-    assertEqual(s.glowFalloff, "hard")
+    NS.Slash:OnSlash("set container.text.glowThickness 4")
+    assertEqual(s.glowThickness, 4)
     NS.Slash:OnSlash("set container.text.glowX -4")
     assertEqual(s.glowX, -4)
     NS.Slash:OnSlash("set container.text.glowY 3")
     assertEqual(s.glowY, 3)
-    -- red under: a radius row without its range (the seam clamps to it), or a blend row without its
-    -- choices (the seam refuses a value off the list)
-    NS.Slash:OnSlash("set container.text.glowRadius 99")
-    assertEqual(s.glowRadius, 24)
-    NS.Slash:OnSlash("set container.text.glowBlend MOD")
-    assertEqual(s.glowBlend, "ADD")
+    -- red under: a thickness row without its range (the seam clamps to it)
+    NS.Slash:OnSlash("set container.text.glowThickness 99")
+    assertEqual(s.glowThickness, 6)
+    -- red under: a halo leaf still reachable (the seam refuses a path with no row, so nothing is stored)
+    NS.Slash:OnSlash("set container.text.glowRadius 12")
+    assertTrue(s.glowRadius == nil, "glowRadius has no row")
     -- red under: the swatch unreachable at the seam
     assertTrue(NS.SetByPath(P_ .. "glowColor", { r = 0, g = 1, b = 0, a = 1 }, 1))
     assertEqual(s.glowColor.g, 1)

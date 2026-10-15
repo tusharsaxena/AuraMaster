@@ -375,7 +375,7 @@ end)
 -- ── 7. docs/schema.md names every leaf of the Text style's block ───────────────────────────────
 
 test("docs: schema.md's `text` section names every leaf of NS.CONTAINER_TEMPLATE.text", function()
-  -- red under: dropping `glowFalloff` from docs/schema.md's ### `text` paragraph.
+  -- red under: dropping `glowThickness` from docs/schema.md's ### `text` paragraph.
   local body = readFile("docs/schema.md"):gsub("\r", "")
   local section = body:match("\n### `text`\n(.-)\n##")
   assertTrue(section ~= nil, "docs/schema.md has a ### `text` section")

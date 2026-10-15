@@ -829,10 +829,9 @@ addition to the font's outline and shadow and never in place of them; the icon a
 It hugs the text's bounds, not each letter, since the engine writes the text secret into a font string
 of ours (`docs/known-limitations.md`). Glow color is a swatch with alpha and its class-color companion
 (`glowColor`, `useClassColorGlow`). `glowIntensity` (Intensity, 5 to 100%) scales the color's alpha,
-`glowRadius` (Radius (px), 1 to 24) is how far the halo reaches past the text, `glowBlend` (Blend mode:
-Normal or Additive) and `glowFalloff` (Falloff: Soft, a long fade, or Hard, a solid core with a short
-fade) set how it draws, and `glowX` and `glowY` (Offset X and Offset Y, -20 to 20 px) nudge it off the
-text. Every row but the color pair dims while `glow` is off; the composer never lets the swatch dim
+`glowThickness` (Thickness (px), 1 to 6) is how far the glow reaches out from the text, and `glowX`
+and `glowY` (Offset X and Offset Y, -20 to 20 px) nudge it off the text. The glyph glow addendum
+(2026-10-16) removed the halo's Radius, Blend mode and Falloff rows. Every row but the color pair dims while `glow` is off; the composer never lets the swatch dim
 (options-ui-§17). A stacked Center line gets one halo per name or duration row. A stacks or dispel
 type field gets none of its own, since the engine writes it empty below 2 stacks or with no type and
 an empty field would glow as a dot (`docs/known-limitations.md`). The halo draws behind the icon and
@@ -857,7 +856,7 @@ This section is on the rail only for a container drawn as text (#6); another sty
 | Tab | Rows (all under `container.text.`) |
 |---|---|
 | General | Size: `autoSize` (Size to fit; `width` and `height` dim under a note while it is on, batch 8 AS-1), `width`, `height`. Text Template: the Template dropdown, `template` (Custom only; + the Preview box and the Tokens/Rules cheat sheet). Placement: `justifyH`, `justifyV` (+ the Justify note), `x`, `y` (+ the centering note) |
-| Font | the composed font block under `font.`; Glow: `glow`, `glowColor` · `useClassColorGlow`, `glowIntensity`, `glowRadius`, `glowBlend`, `glowFalloff`, `glowX`, `glowY`; Countdown: `timeFormat`. Dispel type: `dispelTypeColor`, `dispelBackdrop`, `dispelBackdropAlpha`, `dispelEdge`, `dispelEdgeSize` |
+| Font | the composed font block under `font.`; Glow: `glow`, `glowColor` · `useClassColorGlow`, `glowIntensity`, `glowThickness`, `glowX`, `glowY`; Countdown: `timeFormat`. Dispel type: `dispelTypeColor`, `dispelBackdrop`, `dispelBackdropAlpha`, `dispelEdge`, `dispelEdgeSize` |
 | Icon | `icon`, `iconSize`, `iconGap`, `iconZoom`; the composed icon-border block |
 | Pandemic | Time color: `expiringColorOn` (Recolor the time in the pandemic window), `expiringThreshold` (Pandemic window (seconds left)), `expiringColor` (Pandemic-window time color), `expiringBlink` (Blink in the pandemic window; engine-only) (+ the duration-token note) |
 | Animation | Loop: `anim`, `animSpeed`, `animIntensity`, `animBounce` |

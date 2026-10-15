@@ -4,7 +4,7 @@
 ![CurseForge Version](https://img.shields.io/curseforge/v/1698345)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-2081%2F2081_passing-green)
+![Tests](https://img.shields.io/badge/Tests-2080%2F2080_passing-green)
 
 Ka0s Aura Master lets you build your own buff and debuff displays. Each one is a container. You pick
 whose auras it shows (yours, your target's, your focus's or your pet's), whether it shows buffs,
@@ -61,7 +61,7 @@ the rest.
 - **Create a container**. Click New container, or type `/am new target debuffs icons` in chat. On General, pick whose auras it shows (yours, your target's, your focus's or your pet's), whether it shows buffs or debuffs, and whether it draws them as bars, icons or text. You can rename, duplicate or delete it there too, or copy another container's settings onto it.
 - **Choose what it shows**. Filters decides which auras make the cut: who cast them, timed or permanent, a maximum duration, and the spell categories. Each category is set to Show or Hide, and an aura in any category set to Show gets drawn. The Overrides tab holds a whitelist and a blacklist for single spells, and the whitelist always wins. General → Spell Categories is where you change which spells a category holds, or make your own. The Situations tab, last on Filters, covers the places spell lists can't reach, the kinds of zone the container shows in, and which kinds of unit it shows for. If a filter can't work where you've put it, an orange line at the top of the page says why.
 - **Place it**. Layout decides where the container lives: anywhere on screen, following another container as that one grows, or attached to a frame such as your unit frame or an action bar. While unlocked you can also just drop a container onto another one to attach it. **Pick a frame…** closes the settings so you can just click the one you want. Growth direction, spacing, scale and the optional name label are on Layout too.
-- **Make it look right**. The last entry in the list is the container's style, Bar, Icon or Text, with its textures, fonts, colors and borders. A Text container draws each aura as one line from a template such as `$spellname$[ x$stacks$][ - $remainingduration$]`, and the page lists every token it understands. Its text can also get a soft glow behind it, in the color, strength, size and blend you pick, in addition to the font's outline and shadow. General → Dispel Colors picks the color for each dispel type.
+- **Make it look right**. The last entry in the list is the container's style, Bar, Icon or Text, with its textures, fonts, colors and borders. A Text container draws each aura as one line from a template such as `$spellname$[ x$stacks$][ - $remainingduration$]`, and the page lists every token it understands. Its text can also get a soft glow behind it, in the color, strength, thickness and offset you pick, in addition to the font's outline and shadow. General → Dispel Colors picks the color for each dispel type.
 
 Spell categories and the Overrides lists don't work everywhere, because the game only filters by
 spell in some places. On your target or focus they work for buffs while you can help that unit

@@ -274,21 +274,16 @@ C.TEXT_ICON_POSITION_LABELS = { NONE = "Hidden", LEFT = "Left of the text", RIGH
 C.TEXT_ANIMS = { "none", "pulse", "blink", "bounce" }
 C.TEXT_ANIM_LABELS = { none = "None", pulse = "Pulse", blink = "Blink", bounce = "Bounce" }
 
--- The glow behind the text (text glow, docs/superpowers/specs/2026-10-15-text-glow-design.md G1):
--- the blend mode its textures draw with, and how the halo's edge fades.
-C.TEXT_GLOW_BLENDS = { "BLEND", "ADD" }
-C.TEXT_GLOW_BLEND_LABELS = { BLEND = "Normal", ADD = "Additive" }
-C.TEXT_GLOW_FALLOFFS = { "soft", "hard" }
-C.TEXT_GLOW_FALLOFF_LABELS = { soft = "Soft", hard = "Hard" }
--- Each falloff's file, a radial texture the client ships, so the addon ships no media for it
--- (layout-§3: a generic glow is not this addon's own art). Every piece of a glow set samples it as a
--- nine-slice (modules/Style_TextGlow.lua). Soft is GenericGlow64 (file 1063457): a linear radial
--- alpha fade to nothing at its edge, its color dimming with its alpha. Hard is TempPortraitAlphaMask
--- (file 130924): a white disc, opaque to a crisp, anti-aliased rim.
-C.TEXT_GLOW_TEXTURES = {
-    soft = "Interface\\GLUES\\Models\\UI_Draenei\\GenericGlow64",
-    hard = "Interface\\CharacterFrame\\TempPortraitAlphaMask",
-}
+-- The glow around the text's glyphs (text glow, docs/superpowers/specs/2026-10-16-text-glow-addendum-
+-- glyph-glow.md): a ring of glow-colored copies of the text, each `glowThickness` px out along one of
+-- the ring's unit directions. Live, each copy is a twin engine of the container's own; on the preview,
+-- an addon-written copy string. Under shadow pairing a copy's font string shadow, in the glow color,
+-- draws the opposite point of the ring, so four copies draw all eight (owner probe `/amgp twin4s`,
+-- 2026-10-16). The first four directions hold one of each opposite pair; the last four are the
+-- shadows' under pairing, and copies of their own without it. Flipping the flag is the one-line change.
+C.TEXT_GLOW_RING = { { 1, 0 }, { 0, 1 }, { 1, 1 }, { 1, -1 }, { -1, 0 }, { 0, -1 }, { -1, -1 }, { -1, 1 } }
+C.TEXT_GLOW_PAIRED = true
+C.TEXT_GLOW_TWINS = C.TEXT_GLOW_PAIRED and 4 or 8
 
 -- The template's tokens, in cheat-sheet order. modules/TextTemplate.lua parses with this list and
 -- settings/Text.lua prints it. `kind` is the engine field that draws a token; a duration token also

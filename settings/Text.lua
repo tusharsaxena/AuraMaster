@@ -10,7 +10,7 @@ local _, NS = ...
 --               template box (Custom only), a read-only Preview EditBox (the line on a sample aura,
 --               PrettyChat's shape), the Tokens/Rules cheat sheet; then Placement and the centering
 --               note
---     Font      Font, Glow (a halo behind the text, never the icon or the box; off, and every row
+--     Font      Font, Glow (around the text, never the icon or the box; off, and every row
 --               but the toggle and the color pair dims while it is), Countdown, then Dispel type
 --               (feedback #7: the word's color, a backdrop, an edge, each opt-in and off; moved here
 --               from Animation, smoke batch 2 item 5)
@@ -366,7 +366,7 @@ end
 NS.RegisterSchemaRows(H.FontGroup({
     prefix = P .. "font.", page = PAGE, group = G_FONT, subgroup = L["Font"], classColor = UNIT,
 }))
--- The glow behind the text (text glow, spec G4): a halo hugging the text's bounds, drawn by
+-- The glow behind the text (text glow, spec G4; rows per the glyph glow addendum, TG-09): drawn by
 -- modules/Style_TextGlow.lua in addition to the font's outline and shadow, behind the text, never in
 -- place of them. Off by default; its rows dim while it is off, except the color pair, which the
 -- composer never lets dim.
@@ -383,17 +383,9 @@ NS.RegisterSchemaRows({
     { path = P .. "glowIntensity", page = PAGE, group = G_FONT, subgroup = S_GLOW, type = "number",
       min = 0.05, max = 1, step = 0.05, isPercent = true, disabledIf = unlessOn("glow"), startsLine = true,
       label = L["Intensity"], desc = L["How strongly the glow shows. It scales the glow color's own opacity."] },
-    { path = P .. "glowRadius", page = PAGE, group = G_FONT, subgroup = S_GLOW, type = "number",
-      min = 1, max = 24, step = 1, disabledIf = unlessOn("glow"),
-      label = L["Radius (px)"], desc = L["How far the glow reaches past the text on every side."] },
-    { path = P .. "glowBlend", page = PAGE, group = G_FONT, subgroup = S_GLOW, type = "string",
-      values = NS.Choices(C.TEXT_GLOW_BLENDS, C.TEXT_GLOW_BLEND_LABELS), disabledIf = unlessOn("glow"),
-      label = L["Blend mode"],
-      desc = L["Normal lays the glow color over what is behind it. Additive adds it, so the glow brightens what is behind it, like light."] },
-    { path = P .. "glowFalloff", page = PAGE, group = G_FONT, subgroup = S_GLOW, type = "string",
-      values = NS.Choices(C.TEXT_GLOW_FALLOFFS, C.TEXT_GLOW_FALLOFF_LABELS), disabledIf = unlessOn("glow"),
-      label = L["Falloff"],
-      desc = L["Soft fades the glow out slowly from the text. Hard keeps it solid near the text and fades it only at its edge."] },
+    { path = P .. "glowThickness", page = PAGE, group = G_FONT, subgroup = S_GLOW, type = "number",
+      min = 1, max = 6, step = 1, disabledIf = unlessOn("glow"),
+      label = L["Thickness (px)"], desc = L["How far the glow reaches out from each letter."] },
     { path = P .. "glowX", page = PAGE, group = G_FONT, subgroup = S_GLOW, type = "number",
       min = -20, max = 20, step = 1, disabledIf = unlessOn("glow"), startsLine = true,
       label = L["Offset X"], desc = L["Nudge the glow off the text, sideways, in pixels."] },

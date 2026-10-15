@@ -1,30 +1,30 @@
 -- tests/test_style_text_glow.lua — a Text container's glow behind its text (text glow, TG-01..):
--- the stored leaves and their defaults, the blend and falloff choices, a container stored before
--- the glow existed, which the load backfill brings up to the template with the glow off, and the
--- render (modules/Style_TextGlow.lua): the nine-slice sets, their anchors per justify and per stacked
--- row, the falloff, blend and color, and the outline and shadow kept.
+-- the stored leaves and their defaults, the halo's leaves and tables gone and the twins' ring in
+-- their place (TG-09), a container stored before the glow existed, which the load backfill brings up
+-- to the template with the glow off, and the render (modules/Style_TextGlow.lua): the nine-slice sets,
+-- their anchors per justify and per stacked row, the file, blend and color, and the outline and shadow
+-- kept. The render cases are the halo's until TG-10 rewrites the module.
 --
--- Spec: docs/superpowers/specs/2026-10-15-text-glow-design.md G1, G2, G3 and G5.
+-- Spec: docs/superpowers/specs/2026-10-15-text-glow-design.md G1, G2, G3 and G5, as amended by
+-- docs/superpowers/specs/2026-10-16-text-glow-addendum-glyph-glow.md (stored leaves).
 
 local T = _G.AM_TEST
 local test, assertEqual, assertTrue, assertFalse, assertNil =
     T.test, T.assertEqual, T.assertTrue, T.assertFalse, T.assertNil
 local fresh = dofile("tests/fresh_env.lua")
 
--- Every glow leaf under `container.text`, in G1's order.
-local LEAVES = { "glow", "glowColor", "useClassColorGlow", "glowIntensity", "glowRadius", "glowBlend",
-    "glowFalloff", "glowX", "glowY" }
+-- Every glow leaf under `container.text`, in the addendum's order.
+local LEAVES = { "glow", "glowColor", "useClassColorGlow", "glowIntensity", "glowThickness", "glowX", "glowY" }
 
-test("text glow: every leaf sits in the text template at its G1 default, the glow off", function()
+test("text glow: every leaf sits in the text template at its addendum default, the glow off", function()
     local NS = fresh()
     local t = NS.CONTAINER_TEMPLATE.text
     -- red under: any leaf missing from CONTAINER_TEMPLATE.text, or the glow on by default
     assertEqual(t.glow, false, "off by default (owner, 2026-10-15)")
     assertEqual(t.useClassColorGlow, false)
-    assertEqual(t.glowIntensity, 0.6)
-    assertEqual(t.glowRadius, 6)
-    assertEqual(t.glowBlend, "BLEND")
-    assertEqual(t.glowFalloff, "soft")
+    -- red under: the halo's intensity (0.6) kept, or no glowThickness (the owner's r = 2 ring, TG-09)
+    assertEqual(t.glowIntensity, 0.55)
+    assertEqual(t.glowThickness, 2)
     assertEqual(t.glowX, 0)
     assertEqual(t.glowY, 0)
     local c = t.glowColor
@@ -33,31 +33,51 @@ test("text glow: every leaf sits in the text template at its G1 default, the glo
     assertEqual(c.r, 1); assertEqual(c.g, 0.82); assertEqual(c.b, 0); assertEqual(c.a, 1)
 end)
 
-test("text glow: the blend and falloff choices are labeled, and each default is one of them", function()
+test("text glow: the halo's radius, blend and falloff are gone, leaves, tables and rows (TG-09)", function()
     local NS = fresh()
     local C, t = NS.Constants, NS.CONTAINER_TEMPLATE.text
-    local pairsOf = {
-        { C.TEXT_GLOW_BLENDS, C.TEXT_GLOW_BLEND_LABELS, t.glowBlend, "BLEND,ADD" },
-        { C.TEXT_GLOW_FALLOFFS, C.TEXT_GLOW_FALLOFF_LABELS, t.glowFalloff, "soft,hard" },
-    }
-    for _, p in ipairs(pairsOf) do
-        local list, labels, default, want = p[1], p[2], p[3], p[4]
-        -- red under: either list or its labels missing from core/Constants.lua
-        assertTrue(type(list) == "table" and type(labels) == "table", "declared: " .. want)
-        assertEqual(table.concat(list, ","), want, "the values, in dropdown order")
-        local seen = false
-        for _, v in ipairs(list) do
-            -- red under: a value with no label (its dropdown entry reads blank)
-            assertTrue(type(labels[v]) == "string" and labels[v] ~= "", "a label for " .. v)
-            seen = seen or v == default
-        end
-        -- red under: a template default the dropdown cannot show
-        assertTrue(seen, "the default " .. tostring(default) .. " is a choice")
+    for _, key in ipairs({ "glowRadius", "glowBlend", "glowFalloff" }) do
+        -- red under: a halo leaf left in the template (the backfill would plant it in every container)
+        assertNil(t[key], key .. " is not a leaf")
+        -- red under: a halo row left registered (the panel draws a control that changes nothing)
+        assertNil(NS.FindSchemaRow("container.text." .. key), key .. " has no row")
     end
-    assertEqual(C.TEXT_GLOW_BLEND_LABELS.BLEND, "Normal")
-    assertEqual(C.TEXT_GLOW_BLEND_LABELS.ADD, "Additive")
-    assertEqual(C.TEXT_GLOW_FALLOFF_LABELS.soft, "Soft")
-    assertEqual(C.TEXT_GLOW_FALLOFF_LABELS.hard, "Hard")
+    for _, name in ipairs({ "TEXT_GLOW_BLENDS", "TEXT_GLOW_BLEND_LABELS", "TEXT_GLOW_FALLOFFS",
+        "TEXT_GLOW_FALLOFF_LABELS", "TEXT_GLOW_TEXTURES" }) do
+        -- red under: a halo table left in core/Constants.lua (a FontString has no blend mode or file)
+        assertNil(C[name], "C." .. name .. " is gone")
+    end
+end)
+
+test("text glow: the twins' ring is eight unit directions, four twins under shadow pairing (TG-09)", function()
+    local NS = fresh()
+    local C = NS.Constants
+    -- red under: pairing off, or a twin count other than the owner's twin4s pick (four twins, each
+    -- with its shadow on the opposite point, look the same as eight)
+    assertEqual(C.TEXT_GLOW_PAIRED, true)
+    assertEqual(C.TEXT_GLOW_TWINS, 4)
+    local ring = C.TEXT_GLOW_RING
+    -- red under: no ring, or a ring of other than the eight directions of a square
+    assertTrue(type(ring) == "table", "C.TEXT_GLOW_RING is defined")
+    assertEqual(#ring, 8, "eight directions")
+    local seen = {}
+    for k, d in ipairs(ring) do
+        local x, y = d[1], d[2]
+        -- red under: a direction off the unit square, or the center itself
+        assertTrue((x == -1 or x == 0 or x == 1) and (y == -1 or y == 0 or y == 1), "direction " .. k)
+        assertFalse(x == 0 and y == 0, "direction " .. k .. " is not the center")
+        local key = ("%d,%d"):format(x, y)
+        -- red under: a direction listed twice (a ring point never drawn)
+        assertNil(seen[key], "direction " .. k .. " is new")
+        seen[key] = k
+    end
+    for k = 1, C.TEXT_GLOW_TWINS do
+        local d = ring[k]
+        local opposite = seen[("%d,%d"):format(-d[1], -d[2])]   -- %d: no "-0" key for a zero
+        -- red under: two opposite directions among the first four (a twin and its shadow would draw
+        -- the same two points, and one opposite pair of the ring would be missing)
+        assertTrue(opposite > C.TEXT_GLOW_TWINS, "twin " .. k .. "'s opposite is a shadow, not a twin")
+    end
 end)
 
 test("text glow: a container stored without the glow leaves is backfilled with the glow off", function()
@@ -65,7 +85,7 @@ test("text glow: a container stored without the glow leaves is backfilled with t
     local c = NS.Database.FindContainer(1)
     c.style = "text"
     for _, k in ipairs(LEAVES) do c.text[k] = nil end
-    c.text.glowRadius = 12
+    c.text.glowThickness = 5
     NS.Database.PrepareProfile(NS.db.profile)
     -- red under: a leaf the load backfill does not reach (the renderer would index a nil), or a
     -- missing `glow` filled as on (every stored text container would light up after the update)
@@ -76,24 +96,24 @@ test("text glow: a container stored without the glow leaves is backfilled with t
     assertTrue(c.text.glowColor ~= NS.CONTAINER_TEMPLATE.text.glowColor,
         "the backfilled color is the container's own table, never the template's")
     -- red under: a backfill that overwrites a present leaf (Database.Backfill tests `== nil`)
-    assertEqual(c.text.glowRadius, 12, "a stored value survives")
+    assertEqual(c.text.glowThickness, 5, "a stored value survives")
 end)
 
 test("text glow: a stored glow left on survives the backfill (savedvariables-§5)", function()
     local NS = fresh()
     local c = NS.Database.FindContainer(1)
-    c.text.glow, c.text.glowBlend = true, "ADD"
+    c.text.glow, c.text.glowThickness = true, 4
     NS.Database.PrepareProfile(NS.db.profile)
     -- red under: a load pass that rewrites present leaves from the template (an unconditional copy
     -- in place of Backfill's `== nil` test), or a migration that forces a stored `glow` back off
     assertEqual(c.text.glow, true)
-    assertEqual(c.text.glowBlend, "ADD")
+    assertEqual(c.text.glowThickness, 4)
 end)
 
 -- ── the render (TG-02, G3) ─────────────────────────────────────────────────────────────────────
 -- One environment with the client's text APIs as recording stand-ins (tests/text_apis.lua), built
 -- once, every element on tests/region_builder.lua's recorders, as tests/test_style_text.lua does.
--- The falloff files are the shipped C.TEXT_GLOW_TEXTURES, never planted ones (TG-05).
+-- The halo's file is the client texture modules/Style_TextGlow.lua names, never a planted one.
 
 local B = dofile("tests/region_builder.lua")
 
@@ -106,11 +126,8 @@ local function E()
     return env.NS, env.m
 end
 
---- The shipped file for falloff `key` ("soft" or "hard").
-local function file(key)
-    local files = E().Constants.TEXT_GLOW_TEXTURES
-    return files and files[key]
-end
+-- The halo's one file until TG-10: the client's soft radial glow (GenericGlow64, file 1063457).
+local HALO_FILE = "Interface\\GLUES\\Models\\UI_Draenei\\GenericGlow64"
 
 --- A Text container's settings, `over` merged onto the template's text block.
 local function text(over)
@@ -196,24 +213,6 @@ local function pieces(am)
     return out
 end
 
-test("text glow: each falloff names a texture the client ships, by an extensionless path (TG-05)", function()
-    local NS = E()
-    local files = NS.Constants.TEXT_GLOW_TEXTURES
-    -- red under: no C.TEXT_GLOW_TEXTURES in core/Constants.lua (every glow row draws nothing in game)
-    assertTrue(type(files) == "table", "C.TEXT_GLOW_TEXTURES is defined")
-    for _, key in ipairs(NS.Constants.TEXT_GLOW_FALLOFFS) do
-        local path = files[key]
-        -- red under: a falloff with no file (that choice hides the glow)
-        assertTrue(type(path) == "string" and path ~= "", "a file for " .. key)
-        -- red under: addon-owned media (layout-§3 keeps a generic texture out of media/), or a path
-        -- spelled with its extension
-        assertFalse(path:lower():find("interface\\addons\\", 1, true) ~= nil, key .. " is a client file")
-        assertFalse(path:lower():find("%.%a+$") ~= nil, key .. " has no extension")
-    end
-    assertEqual(files.soft, "Interface\\GLUES\\Models\\UI_Draenei\\GenericGlow64")
-    assertEqual(files.hard, "Interface\\CharacterFrame\\TempPortraitAlphaMask")
-end)
-
 test("text glow: off builds no glow set; turned off after drawing, every set is hidden", function()
     local c = text({ template = "$spellname$ - $stacks$" })
     local frame, am = dress(c)
@@ -229,13 +228,13 @@ test("text glow: off builds no glow set; turned off after drawing, every set is 
 end)
 
 test("text glow: a Left line gets one set from piece 1's edges to the last piece's, offset and r deep", function()
-    local c = text({ template = "$spellname$ - $stacks$", justifyH = "LEFT", glow = true, glowRadius = 9,
+    local c = text({ template = "$spellname$ - $stacks$", justifyH = "LEFT", glow = true, glowThickness = 5,
         glowX = 3, glowY = -2 })
     local _, am = dress(c)
     local p = pieces(am)
     -- red under: a set anchored to the area or the chain (it would hug the box, not the text), a
-    -- piece anchored with no offset, or a radius taken from the template
-    assertSet(am.glow1, p[1], p[3], 3, -2, 9, "Left")
+    -- piece anchored with no offset, or a depth taken from the template
+    assertSet(am.glow1, p[1], p[3], 3, -2, 5, "Left")
     assertNil(am.glow2, "one set for a line")
     for _, part in ipairs(PARTS) do
         local tex = am.glow1[part[1]]
@@ -253,20 +252,21 @@ test("text glow: Right and a one-piece Center line keep L = piece 1 and R = the 
     local c = text({ template = "$spellname$ - $stacks$", justifyH = "RIGHT", glow = true })
     local _, am = dress(c)
     local p = pieces(am)
-    -- red under: L and R taken from the chain's head and tail (a Right line's head is the last piece)
-    assertSet(am.glow1, p[1], p[3], 0, 0, 6, "Right")
+    -- red under: L and R taken from the chain's head and tail (a Right line's head is the last piece),
+    -- or the depth read from a leaf other than glowThickness (the halo's removed glowRadius, TG-09)
+    assertSet(am.glow1, p[1], p[3], 0, 0, 2, "Right")
     c = text({ template = "$spellname$", justifyH = "CENTER", glow = true })
     _, am = dress(c)
     p = pieces(am)
     -- red under: a one-piece Center treated as stacked (no set) or given a set per row
-    assertSet(am.glow1, p[1], p[1], 0, 0, 6, "Center single")
+    assertSet(am.glow1, p[1], p[1], 0, 0, 2, "Center single")
     assertNil(am.glow2)
 end)
 
 test("text glow: a stacked Center line gets a set per name or duration row, none for stacks, dispel or literals", function()
     local NS = E()
     local c = text({ template = "$spellname$ :: $stacks$ ($dispeltype$)[ - $remainingduration$]",
-        justifyH = "CENTER", glow = true, glowX = 1, glowY = 1, glowRadius = 4 })
+        justifyH = "CENTER", glow = true, glowX = 1, glowY = 1, glowThickness = 4 })
     local frame, am = dress(c)
     local p = pieces(am)
     local rows = 0
@@ -312,45 +312,19 @@ test("text glow: a new template shape re-anchors the set to the new chain's piec
     dress(c, frame)
     local p = pieces(am)
     -- red under: a set still anchored to the stashed chain's strings (hidden with it, so no glow)
-    assertSet(am.glow1, p[1], p[#p], 0, 0, 6, "new shape")
+    assertSet(am.glow1, p[1], p[#p], 0, 0, 2, "new shape")
 end)
 
-test("text glow: each texture carries the falloff's file and the blend mode", function()
+test("text glow: each texture carries the halo's file, drawn with the Normal blend (TG-09)", function()
     local c = text({ template = "$spellname$", glow = true })
-    local frame, am = dress(c)
+    local _, am = dress(c)
     for _, part in ipairs(PARTS) do
         local tex = am.glow1[part[1]]
-        -- red under: the default falloff or blend not applied (a white box, or a blend left unset)
-        assertEqual(tex:__joined("SetTexture"), file("soft"), part[1] .. " soft")
+        -- red under: the file or blend still read from the removed C.TEXT_GLOW_TEXTURES and glowBlend
+        -- (an untextured box, or the dress erroring on a nil table)
+        assertEqual(tex:__joined("SetTexture"), HALO_FILE, part[1] .. " file")
         assertEqual(tex:__joined("SetBlendMode"), "BLEND", part[1] .. " Normal")
     end
-    c.text.glowFalloff, c.text.glowBlend = "hard", "ADD"
-    dress(c, frame)
-    for _, part in ipairs(PARTS) do
-        local tex = am.glow1[part[1]]
-        -- red under: the falloff or blend leaf ignored after the first dress
-        assertEqual(tex:__joined("SetTexture"), file("hard"), part[1] .. " hard")
-        assertEqual(tex:__joined("SetBlendMode"), "ADD", part[1] .. " Additive")
-    end
-    c.text.glowFalloff, c.text.glowBlend = "fuzzy", "MOD"
-    dress(c, frame)
-    -- red under: a hand-written choice outside the lists handed to the client as is
-    assertEqual(am.glow1.center:__joined("SetTexture"), file("soft"), "an unknown falloff draws the default")
-    assertEqual(am.glow1.center:__joined("SetBlendMode"), "BLEND", "an unknown blend draws the default")
-end)
-
-test("text glow: with no file for the falloff, nothing is drawn", function()
-    local NS = E()
-    local c = text({ template = "$spellname$", glow = true })
-    local frame, am = dress(c)
-    local saved = NS.Constants.TEXT_GLOW_TEXTURES
-    NS.Constants.TEXT_GLOW_TEXTURES = nil
-    local ok, err = pcall(dress, c, frame)
-    NS.Constants.TEXT_GLOW_TEXTURES = saved
-    -- red under: a dress that indexes the missing table (the whole element left half-dressed)
-    assertTrue(ok, tostring(err))
-    -- red under: a set drawn with no file (a flat, untextured box behind the text)
-    assertTrue(allHidden(am.glow1), "hidden without a file")
 end)
 
 test("text glow: the vertex color is the glow color, its alpha times the intensity", function()
