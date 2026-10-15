@@ -14,8 +14,14 @@
 -- THE BASELINE turns on the toggles that gate other rows (the two borders, the running-out color, the
 -- text glow), so the rows they gate can show a change; each gate is itself tested by turning it off.
 -- The mock formatter and curves record their inputs as plain data, so a binding handed one carries
--- what it was built from. A text glow set is a plain table of textures, each swapped and read as a
--- region of its own.
+-- what it was built from. A text glow set is a plain array of copy strings, each swapped and read as
+-- a region of its own.
+--
+-- A TEXT CONTAINER'S LIVE SIDE is its main button and one twin button (the glyph glow's twin engines,
+-- modules/Style_TextGlow.lua), the twin dressed here as twin 1 until the container builds its twins
+-- (TG-11). Three glow rows reach the live side only through the twin ENGINES themselves, not a twin
+-- button's dress: `glow` rebuilds them and `glowX` / `glowY` move their holders. They are listed in
+-- TWIN_ENGINE_ONLY below, held to exactly that list.
 
 local T = _G.AM_TEST
 local test, assertTrue, assertEqual = T.test, T.assertTrue, T.assertEqual
@@ -150,25 +156,22 @@ local function ownedBy(r)
 end
 
 --- Whether `k`, `v` on `__am` is one of the text glow's sets (modules/Style_TextGlow.lua): a plain
---- table of nine textures under `glow1`, `glow2`, ..., each texture a region of its own.
+--- array of one piece's copy strings under `glow1`, `glow2`, ..., each copy a region of its own.
 local function isGlowSet(k, v)
     return type(k) == "string" and k:match("^glow%d+$") ~= nil and type(v) == "table" and not isRecorder(v)
 end
 
---- A glow set's textures, by part key in a fixed order, each as { suffix, recorder }.
+--- A glow set's copies, in ring order, each as { suffix, recorder }.
 local function glowParts(set)
-    local keys = {}
-    for part, r in pairs(set) do
-        if isRecorder(r) then push(keys, part) end
-    end
-    table.sort(keys)
     local out = {}
-    for i, part in ipairs(keys) do out[i] = { "." .. part, set[part] } end
+    for j, r in ipairs(set) do
+        if isRecorder(r) then push(out, { "." .. j, r }) end
+    end
     return out
 end
 
 --- Every recorder that belongs to one dressed element: the element, its regions and what they own,
---- and the textures of its glow sets.
+--- and the copies of its glow sets.
 local function recordersOf(frame)
     local list = { frame }
     for k, r in pairs(frame.__am or {}) do
@@ -184,7 +187,7 @@ end
 
 --- Swap each region of a dressed element for a recorder, in place (the table stays the one
 --- Style.RegionsFor knows), and name every recorder for the serializer. A glow set stays the set it
---- is, and each of its textures is swapped instead.
+--- is, and each of its copies is swapped instead.
 local function adopt(frame, prefix, names)
     names[frame] = prefix
     for k, v in pairs(frame.__am) do
@@ -202,7 +205,7 @@ local function adopt(frame, prefix, names)
     end
 end
 
---- What one element recorded, as one string, regions in a fixed order, a glow set's textures each
+--- What one element recorded, as one string, regions in a fixed order, a glow set's copies each
 --- under its set's key.
 local function signature(frame, names)
     local keys = {}
@@ -223,7 +226,7 @@ local function signature(frame, names)
     local parts = { "frame:" .. serLog(frame, names) }
     for _, k in ipairs(keys) do
         local set, part = k:match("^(glow%d+)%.(.+)$")
-        local r = set and frame.__am[set][part] or frame.__am[k]
+        local r = set and frame.__am[set][tonumber(part)] or frame.__am[k]
         push(parts, k .. ":" .. serLog(r, names))
         for _, o in ipairs(ownedBy(r)) do push(parts, k .. o[1] .. ":" .. serLog(o[2], names)) end
     end
@@ -243,7 +246,8 @@ local function rig(style)
     end
     assertTrue(c ~= nil, "a starter container drawn as " .. style)
     local inst = NS.ContainerManager.instances[c.id]
-    local k = { NS = NS, c = c, inst = inst, style = style, names = {}, button = R() }
+    local k = { NS = NS, c = c, inst = inst, style = style, names = {}, button = R(),
+        twin = style == "text" and R() or nil }
     inst.previewFactory = function() return R() end
     if style == "text" then
         -- A measurer that reads, so Size to fit can size the line (the harness's own font string
@@ -278,6 +282,7 @@ local function applyAndDress(k)
     NS.ContainerManager.RequestApply(k.c.id)
     NS.ContainerManager.FlushPending()
     assertTrue(k.inst.engine == engine, "the engine was updated, not rebuilt")
+    if k.twin then NS.Style.Element(k.twin, k.c, true, k.inst.classColor, 1) end
     k.inst.previewDirty = true
     NS.Preview.Show(k.inst)
 end
@@ -286,11 +291,12 @@ end
 local function prime(k)
     applyAndDress(k)
     adopt(k.button, "live", k.names)
+    if k.twin then adopt(k.twin, "twin", k.names) end
     for i, f in ipairs(placeholders(k)) do adopt(f, "preview" .. i, k.names) end
 end
 
 local function clearLogs(k)
-    local frames = { k.button }
+    local frames = { k.button, k.twin }
     for _, f in ipairs(placeholders(k)) do push(frames, f) end
     for _, f in ipairs(frames) do
         for _, r in ipairs(recordersOf(f)) do r.__log = {} end
@@ -303,6 +309,7 @@ local function record(k)
     applyAndDress(k)
     local live = signature(k.button, k.names)
     assertTrue(live:find("SetSize", 1, true) ~= nil, "the live button was dressed")
+    if k.twin then live = live .. "\n--twin--\n" .. signature(k.twin, k.names) end
     local prev = {}
     for i, f in ipairs(placeholders(k)) do prev[i] = signature(f, k.names) end
     return live, table.concat(prev, "\n--\n")
@@ -358,6 +365,12 @@ local GATES = {
         template = "$spellname$[ x$stacks$][ ($dispeltype$)][ - $remainingduration$]" },
 }
 
+-- The glow rows that reach the live side through the twin engines alone, never a button's dress (the
+-- header's TEXT CONTAINER'S LIVE SIDE): no live gap is reported for them, and one whose write does move
+-- a live button is reported, so the list cannot outlive its reason.
+local TWIN_ENGINE_ONLY = { ["container.text.glow"] = true, ["container.text.glowX"] = true,
+    ["container.text.glowY"] = true }
+
 --- Every row of `page` whose write leaves a side unchanged, as "<path> (<side>)", plus exemptions
 --- the row no longer needs.
 local function gaps(page)
@@ -383,7 +396,9 @@ local function gaps(page)
         local cov = row.coverage
         assertTrue(cov == nil or cov == "engine-only" or cov == "preview-only", row.path .. ": a known coverage")
         local liveMoved, prevMoved = liveA ~= liveB, prevA ~= prevB
-        if not liveMoved and cov ~= "preview-only" then push(out, row.path .. " (live)") end
+        local twinOnly = TWIN_ENGINE_ONLY[row.path]
+        if twinOnly and liveMoved then push(out, row.path .. " (moves a live button; drop TWIN_ENGINE_ONLY)") end
+        if not liveMoved and cov ~= "preview-only" and not twinOnly then push(out, row.path .. " (live)") end
         if not prevMoved and cov ~= "engine-only" then push(out, row.path .. " (preview)") end
         if cov == "engine-only" and prevMoved then push(out, row.path .. " (reaches the preview; drop engine-only)") end
         if cov == "preview-only" and liveMoved then push(out, row.path .. " (reaches the engine; drop preview-only)") end

@@ -1,12 +1,13 @@
 -- tests/test_style_text_glow.lua — a Text container's glow behind its text (text glow, TG-01..):
 -- the stored leaves and their defaults, the halo's leaves and tables gone and the twins' ring in
 -- their place (TG-09), a container stored before the glow existed, which the load backfill brings up
--- to the template with the glow off, and the render (modules/Style_TextGlow.lua): the nine-slice sets,
--- their anchors per justify and per stacked row, the file, blend and color, and the outline and shadow
--- kept. The render cases are the halo's until TG-10 rewrites the module.
+-- to the template with the glow off, and the glyph glow's dress (TG-10, modules/Style_TextGlow.lua):
+-- Text.GlowFont's color, flags and paired shadow, a twin button dressed through the same Text.Apply
+-- as its main with only the look changed, and a placeholder's ring of copy strings.
 --
--- Spec: docs/superpowers/specs/2026-10-15-text-glow-design.md G1, G2, G3 and G5, as amended by
--- docs/superpowers/specs/2026-10-16-text-glow-addendum-glyph-glow.md (stored leaves).
+-- Spec: docs/superpowers/specs/2026-10-16-text-glow-addendum-glyph-glow.md (Rendering), which
+-- supersedes the halo of docs/superpowers/specs/2026-10-15-text-glow-design.md; the design note is
+-- docs/superpowers/research/2026-10-16-text-glow-twins-design.md, sections 3 and 4.
 
 local T = _G.AM_TEST
 local test, assertEqual, assertTrue, assertFalse, assertNil =
@@ -114,12 +115,12 @@ test("text glow: a stored glow left on survives the backfill (savedvariables-§5
     assertEqual(c.text.glowThickness, 4)
 end)
 
--- ── the render (TG-02, G3) ─────────────────────────────────────────────────────────────────────
+-- ── the glow dress (TG-10) ─────────────────────────────────────────────────────────────────────
 -- One environment with the client's text APIs as recording stand-ins (tests/text_apis.lua), built
 -- once, every element on tests/region_builder.lua's recorders, as tests/test_style_text.lua does.
--- The halo's file is the client texture modules/Style_TextGlow.lua names, never a planted one.
 
 local B = dofile("tests/region_builder.lua")
+local R = dofile("tests/region_recorder.lua")
 
 local env
 local function E()
@@ -130,9 +131,6 @@ local function E()
     return env.NS, env.m
 end
 
--- The halo's one file until TG-10: the client's soft radial glow (GenericGlow64, file 1063457).
-local HALO_FILE = "Interface\\GLUES\\Models\\UI_Draenei\\GenericGlow64"
-
 --- A Text container's settings, `over` merged onto the template's text block.
 local function text(over)
     local NS = E()
@@ -141,74 +139,12 @@ local function text(over)
     return NS.Database.Merge(c, { text = over or {} })
 end
 
---- Dress `frame` (a new builder when nil) for `c`; the frame and its regions.
-local function dress(c, frame, engine, classColor)
+--- Dress `frame` (a new builder when nil) for `c`, as twin `twin` when given; the frame and its regions.
+local function dress(c, frame, engine, classColor, twin)
     local NS, m = E()
     frame = frame or B.new({})
-    B.during(m, {}, function() NS.Style.Element(frame, c, engine or false, classColor) end)
+    B.during(m, {}, function() NS.Style.Element(frame, c, engine or false, classColor, twin) end)
     return frame, frame.__am
-end
-
--- The nine pieces of a set: each key, the part of the texture it samples (left, right, top, bottom)
--- and its anchors as { point, "L" or "R", the font string's point }, as G3 lays them out.
-local PARTS = {
-    { "topLeft",     "0,0.5,0,0.5",     { { "BOTTOMRIGHT", "L", "TOPLEFT" } } },
-    { "topRight",    "0.5,1,0,0.5",     { { "BOTTOMLEFT", "R", "TOPRIGHT" } } },
-    { "bottomLeft",  "0,0.5,0.5,1",     { { "TOPRIGHT", "L", "BOTTOMLEFT" } } },
-    { "bottomRight", "0.5,1,0.5,1",     { { "TOPLEFT", "R", "BOTTOMRIGHT" } } },
-    { "top",    "0.5,0.5,0,0.5", { { "BOTTOMLEFT", "L", "TOPLEFT" }, { "BOTTOMRIGHT", "R", "TOPRIGHT" } } },
-    { "bottom", "0.5,0.5,0.5,1", { { "TOPLEFT", "L", "BOTTOMLEFT" }, { "TOPRIGHT", "R", "BOTTOMRIGHT" } } },
-    { "left",   "0,0.5,0.5,0.5", { { "TOPRIGHT", "L", "TOPLEFT" }, { "BOTTOMRIGHT", "L", "BOTTOMLEFT" } } },
-    { "right",  "0.5,1,0.5,0.5", { { "TOPLEFT", "R", "TOPRIGHT" }, { "BOTTOMLEFT", "R", "BOTTOMRIGHT" } } },
-    { "center", "0.5,0.5,0.5,0.5", { { "TOPLEFT", "L", "TOPLEFT" }, { "BOTTOMRIGHT", "R", "BOTTOMRIGHT" } } },
-}
-
---- The SetPoint calls `tex` took since its last ClearAllPoints, oldest first; nil with none.
-local function sinceClear(tex)
-    local out
-    for _, e in ipairs(tex.__log) do
-        if e.name == "ClearAllPoints" then
-            out = {}
-        elseif e.name == "SetPoint" and out then
-            out[#out + 1] = e.args
-        end
-    end
-    return out
-end
-
---- Assert set `set` is shown and anchored to font strings `left` and `right`, offset by x/y, `r` deep.
-local function assertSet(set, left, right, x, y, r, label)
-    assertTrue(type(set) == "table", label .. ": the set is built")
-    for _, part in ipairs(PARTS) do
-        local tex, name = set[part[1]], label .. " " .. part[1]
-        assertTrue(tex ~= nil and tex:IsShown(), name .. " shown")
-        assertEqual(tex:__joined("SetTexCoord"), part[2], name .. " samples its slice")
-        local points = sinceClear(tex)
-        assertTrue(points ~= nil, name .. " re-anchored on the dress")
-        assertEqual(#points, #part[3], name .. " anchor count")
-        for i, want in ipairs(part[3]) do
-            local pt = points[i]
-            local to = want[2] == "L" and left or right
-            assertEqual(pt[1], want[1], name .. " point " .. i)
-            assertTrue(pt[2] == to, name .. " anchored to the " .. want[2] .. " font string")
-            assertEqual(pt[3], want[3], name .. " relative point " .. i)
-            assertEqual(pt[4], x, name .. " x"); assertEqual(pt[5], y, name .. " y")
-        end
-    end
-    assertEqual(set.topLeft:__joined("SetSize"), r .. "," .. r, label .. ": a corner is r x r")
-    assertEqual(set.top:__joined("SetHeight"), tostring(r), label .. ": the top edge r tall")
-    assertEqual(set.left:__joined("SetWidth"), tostring(r), label .. ": the left edge r wide")
-    assertEqual(set.center:__count("SetSize") + set.center:__count("SetWidth") + set.center:__count("SetHeight"),
-        0, label .. ": the center takes its size from its anchors")
-end
-
---- Every texture of `set` hidden (true for a set never built).
-local function allHidden(set)
-    if set == nil then return true end
-    for _, part in ipairs(PARTS) do
-        if set[part[1]]:IsShown() then return false end
-    end
-    return true
 end
 
 local function pieces(am)
@@ -217,137 +153,337 @@ local function pieces(am)
     return out
 end
 
-test("text glow: off builds no glow set; turned off after drawing, every set is hidden", function()
-    local c = text({ template = "$spellname$ - $stacks$" })
-    local frame, am = dress(c)
-    -- red under: a set built (and shown) while the glow is off, its default
-    assertNil(am.glow1, "no set built while off")
-    c.text.glow = true
-    dress(c, frame)
-    assertFalse(allHidden(am.glow1), "on draws the set")
-    c.text.glow = false
-    dress(c, frame)
-    -- red under: an off dress that returns before hiding what an earlier dress drew
-    assertTrue(allHidden(am.glow1), "turned off, the set is hidden")
-end)
+--- Font string `fs`'s last SetPoint, its anchor frame left out: "point,relPoint,x,y".
+local function pointOf(fs)
+    local p = fs:__last("SetPoint")
+    return ("%s,%s,%s,%s"):format(tostring(p[1]), tostring(p[3]), tostring(p[4]), tostring(p[5]))
+end
 
-test("text glow: a Left line gets one set from piece 1's edges to the last piece's, offset and r deep", function()
-    local c = text({ template = "$spellname$ - $stacks$", justifyH = "LEFT", glow = true, glowThickness = 5,
-        glowX = 3, glowY = -2 })
-    local _, am = dress(c)
-    local p = pieces(am)
-    -- red under: a set anchored to the area or the chain (it would hug the box, not the text), a
-    -- piece anchored with no offset, or a depth taken from the template
-    assertSet(am.glow1, p[1], p[3], 3, -2, 5, "Left")
-    assertNil(am.glow2, "one set for a line")
-    for _, part in ipairs(PARTS) do
-        local tex = am.glow1[part[1]]
-        -- red under: the textures on the text area (a child frame of anim, so they draw over the icon)
-        -- or on the chain (over the text)
-        assertTrue(tex.parent == am.anim, part[1] .. " is a texture of the animated frame")
-        -- red under: ARTWORK or above, where the icon (anim's ARTWORK) no longer covers them
-        assertEqual(tex.args[2], "BACKGROUND", part[1] .. " on BACKGROUND")
+--- Whether every copy of `set` is hidden (true for a set never built).
+local function allHidden(set)
+    if set == nil then return true end
+    for _, copy in ipairs(set) do
+        if copy:IsShown() then return false end
     end
-    assertTrue(am.icon.parent == am.anim and am.icon.args[2] == "ARTWORK",
-        "the icon is anim's ARTWORK, a layer above the glow")
-end)
+    return true
+end
 
-test("text glow: Right and a one-piece Center line keep L = piece 1 and R = the last piece", function()
-    local c = text({ template = "$spellname$ - $stacks$", justifyH = "RIGHT", glow = true })
-    local _, am = dress(c)
-    local p = pieces(am)
-    -- red under: L and R taken from the chain's head and tail (a Right line's head is the last piece),
-    -- or the depth read from a leaf other than glowThickness (the halo's removed glowRadius, TG-09)
-    assertSet(am.glow1, p[1], p[3], 0, 0, 2, "Right")
-    c = text({ template = "$spellname$", justifyH = "CENTER", glow = true })
-    _, am = dress(c)
-    p = pieces(am)
-    -- red under: a one-piece Center treated as stacked (no set) or given a set per row
-    assertSet(am.glow1, p[1], p[1], 0, 0, 2, "Center single")
-    assertNil(am.glow2)
-end)
-
-test("text glow: a stacked Center line gets a set per name or duration row, none for stacks, dispel or literals", function()
+test("text glow: GlowFont paints the glow color with its alpha times the intensity", function()
     local NS = E()
-    local c = text({ template = "$spellname$ :: $stacks$ ($dispeltype$)[ - $remainingduration$]",
-        justifyH = "CENTER", glow = true, glowX = 1, glowY = 1, glowThickness = 4 })
-    local frame, am = dress(c)
-    local p = pieces(am)
-    local rows = 0
-    for i, piece in ipairs(NS.Style.Text.Compiled(c.text).pieces) do
-        if piece.kind == "name" or piece.kind == "duration" then
-            rows = rows + 1
-            -- red under: one set over the whole stack (L = piece 1, R = the last) or a set per piece
-            assertSet(am["glow" .. rows], p[i], p[i], 1, 1, 4, "row " .. rows)
+    local fs = R()
+    NS.Style.Text.GlowFont(fs, text({ glowIntensity = 0.5, glowColor = { r = 0.1, g = 0.2, b = 0.3, a = 0.8 } }).text, 1)
+    -- red under: the font's own color kept (white), the intensity dropped (alpha 0.8), or applied to the
+    -- color channels too
+    assertEqual(fs:__joined("SetTextColor"), "0.1,0.2,0.3,0.4")
+end)
+
+test("text glow: GlowFont drops the outline and keeps MONOCHROME, in the font's own face and size", function()
+    local NS = E()
+    local want = { NONE = "", OUTLINE = "", THICKOUTLINE = "", MONOCHROME = "MONOCHROME",
+        MONOCHROMEOUTLINE = "MONOCHROME" }
+    for stored, flags in pairs(want) do
+        local s = text({ font = { fontFlags = stored, fontSize = 17 } }).text
+        local fs = R()
+        NS.Style.Text.GlowFont(fs, s, 1)
+        local path, size = NS.Style.FontKey(s.font, NS.CONTAINER_TEMPLATE.text.font)
+        local got = fs:__last("SetFont")
+        -- red under: the outline kept (the Slug outline is black and takes no color: a dark ring)
+        assertEqual(got[3], flags, stored)
+        -- red under: MONOCHROME dropped with the outline, or the face or size not the main's
+        assertEqual(got[1], path, stored .. " face")
+        assertEqual(got[2], size, stored .. " size")
+    end
+end)
+
+test("text glow: under pairing, copy k's shadow is the glow color at -2 x thickness x d_k", function()
+    local NS = E()
+    local C = NS.Constants
+    local s = text({ glowThickness = 3, glowIntensity = 0.5, glowColor = { r = 0.1, g = 0.2, b = 0.3, a = 0.8 },
+        font = { fontShadow = true } }).text
+    for k = 1, C.TEXT_GLOW_TWINS do
+        local fs = R()
+        NS.Style.Text.GlowFont(fs, s, k)
+        local d = C.TEXT_GLOW_RING[k]
+        local want = ("%d,%d"):format(-6 * d[1], -6 * d[2])
+        -- red under: the font's own shadow (1, -1) reaching the twin, the offset at +2td (the shadow
+        -- on the twin's own side), or at -td (the main's point, not the ring's opposite one)
+        assertEqual(fs:__joined("SetShadowOffset"), want, "copy " .. k)
+        -- red under: a black shadow (the font's), or one at the color's full alpha
+        assertEqual(fs:__joined("SetShadowColor"), "0.1,0.2,0.3,0.4", "copy " .. k .. " color")
+    end
+end)
+
+test("text glow: with pairing off, a copy draws no shadow", function()
+    local NS = E()
+    local C = NS.Constants
+    local s = text({ glowThickness = 3, font = { fontShadow = true } }).text
+    C.TEXT_GLOW_PAIRED = false
+    local fs = R()
+    local ok, err = pcall(NS.Style.Text.GlowFont, fs, s, 5)
+    C.TEXT_GLOW_PAIRED = true
+    assertTrue(ok, tostring(err))
+    -- red under: the pairing flag read once at load (the flip would change nothing), or the font's own
+    -- shadow taken when pairing is off
+    assertEqual(fs:__joined("SetShadowOffset"), "0,0")
+    assertEqual(fs:__count("SetShadowColor"), 0)
+end)
+
+test("text glow: a twin is laid out as its main: the same size and the same piece points", function()
+    local c = text({ template = "$spellname$[ x$stacks$][ - $remainingduration$]", icon = "LEFT",
+        justifyH = "LEFT", x = 3, y = -2 })
+    local main, mam = dress(c, nil, true)
+    local twin, tam = dress(c, nil, true, nil, 1)
+    -- red under: a twin given a size of its own (a button with no size is never placed, owner probe)
+    assertEqual(twin:__joined("SetSize"), main:__joined("SetSize"))
+    local mp, tp = pieces(mam), pieces(tam)
+    assertEqual(#tp, #mp)
+    for i = 1, #mp do
+        -- red under: a twin chain laid out by other code than the main's (layoutChain), or the icon's
+        -- room dropped from the twin's text area (its text would sit an icon's width to the left)
+        assertEqual(pointOf(tp[i]), pointOf(mp[i]), "piece " .. i)
+    end
+    local ma, ta = mam.area:__calls("SetPoint"), tam.area:__calls("SetPoint")
+    assertEqual(#ta, #ma, "the area's points")
+    for i = 1, #ma do assertEqual(ta[i][4], ma[i][4], "area point " .. i .. " x") end
+end)
+
+test("text glow: a twin's icon is laid out but hidden and never bound; the main's is bound", function()
+    local c = text({ template = "$spellname$", icon = "LEFT", iconBorderShow = true })
+    local main, mam = dress(c, nil, true)
+    local twin, tam = dress(c, nil, true, nil, 1)
+    assertEqual(main:__count("SetIcon"), 1, "the main binds its icon")
+    -- red under: the twin binding SetIcon (the engine would show a second icon under the main's)
+    assertEqual(twin:__count("SetIcon"), 0)
+    -- red under: the twin's icon or border left shown by the layout
+    assertFalse(tam.icon:IsShown(), "the icon hidden")
+    assertFalse(tam.iconBorder:IsShown(), "the border hidden")
+    -- red under: the icon skipped on the twin rather than laid out and hidden (Text.Apply's one path)
+    assertTrue(mam.icon:__joined("SetSize") ~= nil, "the main's icon is sized")
+    assertEqual(tam.icon:__joined("SetSize"), mam.icon:__joined("SetSize"), "the icon laid out")
+end)
+
+test("text glow: a twin takes no dispel tints and a dispel word with no color escape", function()
+    local c = text({ template = "$spellname$[ ($dispeltype$)]", dispelBackdrop = true, dispelEdge = true,
+        dispelTypeColor = true })
+    local main = dress(c, nil, true)
+    local twin = dress(c, nil, true, nil, 1)
+    assertTrue(main:__count("AddDispelTypeTexture") > 0, "the main hands its tints over")
+    -- red under: the twin handing its backdrop or edge to the engine (a tinted box under the glow)
+    assertEqual(twin:__count("AddDispelTypeTexture"), 0)
+    local mainMap = main:__last("SetDispelTypeText")[2].customDispelTextMap
+    local map = twin:__last("SetDispelTypeText")[2].customDispelTextMap
+    local colored = false
+    for _, word in pairs(mainMap) do colored = colored or word:find("|c", 1, true) ~= nil end
+    assertTrue(colored, "the main's words are colored")
+    for t, word in pairs(map) do
+        -- red under: the twin's map built from the line's palette (a |c escape paints the glow word)
+        assertTrue(word:find("|c", 1, true) == nil, t .. " plain")
+    end
+end)
+
+test("text glow: a twin's duration is bound with no time color and the plain binding, in the same format", function()
+    local c = text({ template = "$spellname$[ - $remainingduration$]", expiringColorOn = true,
+        expiringBlink = true })
+    local main = dress(c, nil, true)
+    local twin, tam = dress(c, nil, true, nil, 1)
+    local m, t = main:__last("SetDurationText"), twin:__last("SetDurationText")
+    assertTrue(m[2].textColor ~= nil, "the main's run turns red and blinks")
+    -- red under: the twin handed the line's curve (the engine would turn the glow red, and blink it)
+    assertNil(t[2].textColor)
+    -- red under: the blink's refreshing binding on the twin (it has no blink to refresh)
+    assertTrue(t[2].binding == tam.binding, "the plain binding")
+    -- red under: another text format on the twin (its digits would not match the main's)
+    assertTrue(t[2].textFormat == m[2].textFormat, "the same text format")
+    assertTrue(t[1] == pieces(tam)[2], "bound to the twin's own duration piece")
+end)
+
+test("text glow: a twin takes no mouse, cancels nothing and binds no tooltip", function()
+    local NS = E()
+    local c = text({ template = "$spellname$" })
+    c.unit, c.auraType = "player", "HELPFUL"
+    c.behavior.cancelOnRightClick = true
+    local main = dress(c, nil, true)
+    assertEqual(main:__joined("SetCancelAuraButtons"), "RightButtonUp", "the main cancels")
+    local twin = dress(c, nil, true, nil, 1)
+    -- red under: the twin dressed with Style.ApplyBehavior (it would hold the hover and the right-click)
+    assertEqual(twin:__joined("SetMouseMotionEnabled"), "false")
+    assertEqual(twin:__joined("SetMouseClickEnabled"), "false")
+    assertEqual(twin:__joined("SetCancelAuraButtons"), "nil")
+    assertEqual(twin:__count("SetTooltipAnchorPoint") + twin:__count("SetHideTooltipInCombat"), 0)
+    assertTrue(NS.Style.TakesHover(c), "the main's container takes the hover")
+end)
+
+test("text glow: a twin's pieces wear the glow (class color from the snapshot), a literal its text, the loop the main's", function()
+    local class = { r = 0.2, g = 0.4, b = 0.6 }
+    local c = text({ template = "$spellname$ :: $stacks$", justifyH = "LEFT", anim = "pulse", glowIntensity = 0.5,
+        useClassColorGlow = true, glowColor = { r = 1, g = 1, b = 1, a = 1 }, font = { fontFlags = "OUTLINE" } })
+    local _, am = dress(c, nil, true, class, 2)
+    for i, fs in ipairs(pieces(am)) do
+        -- red under: the twin dressed through Style.ApplyFont (the font color, with the outline), or
+        -- the class read off the player and not the container's snapshot
+        assertEqual(fs:__joined("SetTextColor"), "0.2,0.4,0.6,0.5", "piece " .. i)
+        assertEqual(fs:__last("SetFont")[3], "", "piece " .. i .. " flags")
+    end
+    -- red under: a literal skipped on the twin (the ring would miss the line's plain text)
+    assertEqual(pieces(am)[2]:__joined("SetText"), " :: ")
+    -- red under: no loop on the twin (the main pulses while its glow stands still)
+    assertEqual(am.pulseGroup:__count("Play"), 1)
+end)
+
+test("text glow: a main button keeps the font's outline and shadow with the glow on, and builds no copies", function()
+    local c = text({ template = "$spellname$ $stacks$", glow = true,
+        font = { fontFlags = "OUTLINE", fontShadow = true } })
+    local _, am = dress(c, nil, true)
+    for i, fs in ipairs(pieces(am)) do
+        -- red under: a glow that replaces the main's outline or shadow (owner: it adds to them)
+        assertEqual(fs:__last("SetFont")[3], "OUTLINE", "piece " .. i .. " outline")
+        assertEqual(fs:__joined("SetShadowOffset"), "1,-1", "piece " .. i .. " shadow")
+    end
+    -- red under: copy strings on a live button (it cannot copy the engine's secret text; its glow is
+    -- the twins')
+    assertNil(am.glow1, "no copies on an engine button")
+end)
+
+-- ── the preview copies (TG-10) ─────────────────────────────────────────────────────────────────
+
+local AURA = { name = "Renew", icon = 135953, remaining = 2, duration = 10, stacks = 3, dispel = "Magic" }
+
+--- Dress a placeholder for `c` and fill it with `aura`; the frame and its regions.
+local function preview(c, frame, aura, made)
+    local NS, m = E()
+    frame = frame or B.new(made or {})
+    B.during(m, made or {}, function()
+        NS.Style.Element(frame, c, false)
+        NS.Style.Text.FillPreview(frame, aura or AURA, c)
+    end)
+    return frame, frame.__am
+end
+
+test("text glow: a placeholder gets a ring of copies per piece on anim's BACKGROUND, under the icon", function()
+    local NS = E()
+    local C = NS.Constants
+    local c = text({ template = "$spellname$[ x$stacks$]", glow = true, icon = "LEFT" })
+    local _, am = preview(c)
+    for i = 1, am.pieceCount do
+        local set = am["glow" .. i]
+        -- red under: no copies built, or a count other than the twins' (the preview and the live look
+        -- would differ)
+        assertTrue(type(set) == "table", "piece " .. i .. " has copies")
+        assertEqual(#set, C.TEXT_GLOW_TWINS, "piece " .. i .. " copy count")
+        for j, copy in ipairs(set) do
+            local name = ("piece %d copy %d"):format(i, j)
+            -- red under: copies on the chain or the area (over the icon, cut at the text box) or above
+            -- BACKGROUND
+            assertTrue(copy.parent == am.anim, name .. " on anim")
+            assertEqual(copy.args[2], "BACKGROUND", name .. " created on BACKGROUND")
+            -- red under: the layer left to the create call (CreateFontString takes no sublevel; the
+            -- last string created would draw on top)
+            assertEqual(copy:__joined("SetDrawLayer"), "BACKGROUND,0", name .. " SetDrawLayer")
+            assertTrue(copy:IsShown(), name .. " shown")
         end
     end
-    assertEqual(rows, 2, "the name row and the duration row")
-    -- red under: a set on the stacks or dispel row, which the engine writes empty below 2 stacks or
-    -- with no type, and whose zero-width string the corners would ring as a glowing dot
-    assertNil(am.glow3, "no set for the stacks, dispel or literal rows")
-    c.text.justifyH = "LEFT"
-    dress(c, frame)
-    -- red under: the sets past the ones a dress uses left as the stacked dress drew them
-    assertSet(am.glow1, p[1], p[#p], 1, 1, 4, "back to a line")
-    assertTrue(allHidden(am.glow2), "the extra set hidden")
+    assertEqual(am.glowCount, am.pieceCount)
+    assertTrue(am.icon.parent == am.anim and am.icon.args[2] == "ARTWORK", "the icon a layer above")
 end)
 
-test("text glow: a line of only stacks or dispel fields gets no set, a duration-only line one (TG-05)", function()
-    for _, template in ipairs({ "$stacks$", "[x$stacks$]", "$dispeltype$", "$stacks$$dispeltype$" }) do
-        local c = text({ template = template, justifyH = "LEFT", glow = true })
-        local _, am = dress(c)
-        -- red under: a set around fields the engine writes empty (a glowing dot where no text is)
-        assertTrue(allHidden(am.glow1), template .. " draws no glow")
+test("text glow: copy j sits on its piece's rect moved by thickness x d_j + (X, Y), dressed as twin j", function()
+    local NS = E()
+    local C = NS.Constants
+    local c = text({ template = "$spellname$[ x$stacks$]", justifyH = "RIGHT", glow = true, glowThickness = 3,
+        glowX = 4, glowY = -5, glowIntensity = 0.5, glowColor = { r = 0.1, g = 0.2, b = 0.3, a = 0.8 } })
+    local _, am = preview(c)
+    for i, fs in ipairs(pieces(am)) do
+        for j, copy in ipairs(am["glow" .. i]) do
+            local d = C.TEXT_GLOW_RING[j]
+            local x, y = 3 * d[1] + 4, 3 * d[2] - 5
+            local pts = copy:__calls("SetPoint")
+            local name = ("piece %d copy %d"):format(i, j)
+            -- red under: copies anchored to the area or the chain (the box, not the letters), the ring
+            -- offset dropped, or the X/Y shift left out
+            assertEqual(#pts, 2, name .. " two points")
+            assertTrue(pts[1][2] == fs and pts[2][2] == fs, name .. " on its own piece")
+            assertEqual(("%s,%s,%s,%s"):format(pts[1][1], pts[1][3], pts[1][4], pts[1][5]),
+                ("TOPLEFT,TOPLEFT,%d,%d"):format(x, y), name .. " top left")
+            assertEqual(("%s,%s,%s,%s"):format(pts[2][1], pts[2][3], pts[2][4], pts[2][5]),
+                ("BOTTOMRIGHT,BOTTOMRIGHT,%d,%d"):format(x, y), name .. " bottom right")
+            -- red under: a copy justified otherwise than its piece (its text would sit apart)
+            assertEqual(copy:__joined("SetJustifyH"), "RIGHT", name .. " justify")
+            -- red under: copies dressed by other code than the twins' (GlowFont): the font's color
+            assertEqual(copy:__joined("SetTextColor"), "0.1,0.2,0.3,0.4", name .. " color")
+            assertEqual(copy:__joined("SetShadowOffset"), ("%d,%d"):format(-6 * d[1], -6 * d[2]), name .. " shadow")
+        end
     end
-    local c = text({ template = "$stacks$ stacks", justifyH = "LEFT", glow = true })
-    local _, am = dress(c)
-    -- red under: plain text beside a stacks field dropped with it (the literal always draws)
-    assertFalse(allHidden(am.glow1), "a literal beside the field keeps the set")
-    c = text({ template = "$remainingduration$", justifyH = "LEFT", glow = true })
-    _, am = dress(c)
-    -- red under: the duration skipped like the stacks (it is only empty on a timeless aura)
-    assertFalse(allHidden(am.glow1), "a duration-only line keeps the set")
 end)
 
-test("text glow: a new template shape re-anchors the set to the new chain's pieces", function()
-    local c = text({ template = "$spellname$ $stacks$", glow = true })
-    local frame, am = dress(c)
-    c.text.template = "$stacks$ - $spellname$ ($dispeltype$)"
-    dress(c, frame)
+test("text glow: copies take their piece's text, the dispel word uncolored, never the run color", function()
+    local c = text({ template = "$spellname$[ ($dispeltype$)][ - $remainingduration$]", glow = true,
+        dispelTypeColor = true, expiringColorOn = true, expiringThreshold = 5 })
+    local _, am = preview(c)
     local p = pieces(am)
-    -- red under: a set still anchored to the stashed chain's strings (hidden with it, so no glow)
-    assertSet(am.glow1, p[1], p[#p], 0, 0, 2, "new shape")
-end)
-
-test("text glow: each texture carries the halo's file, drawn with the Normal blend (TG-09)", function()
-    local c = text({ template = "$spellname$", glow = true })
-    local _, am = dress(c)
-    for _, part in ipairs(PARTS) do
-        local tex = am.glow1[part[1]]
-        -- red under: the file or blend still read from the removed C.TEXT_GLOW_TEXTURES and glowBlend
-        -- (an untextured box, or the dress erroring on a nil table)
-        assertEqual(tex:__joined("SetTexture"), HALO_FILE, part[1] .. " file")
-        assertEqual(tex:__joined("SetBlendMode"), "BLEND", part[1] .. " Normal")
+    for i, fs in ipairs(p) do
+        for j, copy in ipairs(am["glow" .. i]) do
+            local text1 = fs:__joined("SetText")
+            if i == 2 then
+                -- red under: the dispel copies given the colored word (a |c escape paints the glow)
+                assertTrue(text1:find("|c", 1, true) ~= nil, "the piece's word is colored")
+                assertEqual(copy:__joined("SetText"), text1:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", ""),
+                    "copy " .. j .. " plain word")
+            else
+                -- red under: a copy left without its piece's text (the preview would show no ring)
+                assertEqual(copy:__joined("SetText"), text1, ("piece %d copy %d"):format(i, j))
+            end
+        end
     end
+    -- red under: the run color applied to the copies (previewRunColor), as the live twin never has it
+    local glowColor = am.glow3[1]:__joined("SetTextColor")
+    assertTrue(p[3]:__joined("SetTextColor") ~= glowColor, "the piece took the running-out color")
+    for j, copy in ipairs(am.glow3) do assertEqual(copy:__count("SetTextColor"), 1, "copy " .. j) end
 end)
 
-test("text glow: the vertex color is the glow color, its alpha times the intensity", function()
-    local c = text({ template = "$spellname$", glow = true, glowIntensity = 0.5,
-        glowColor = { r = 0.1, g = 0.2, b = 0.3, a = 0.8 } })
-    local _, am = dress(c)
-    for _, part in ipairs(PARTS) do
-        -- red under: the intensity dropped (alpha 0.8) or applied to the color channels too
-        assertEqual(am.glow1[part[1]]:__joined("SetVertexColor"), "0.1,0.2,0.3,0.4", part[1])
+test("text glow: copies are hidden while off, on an engine button, past the pieces and on a stacked literal", function()
+    local NS = E()
+    local c = text({ template = "$spellname$ :: $stacks$ - $remainingduration$", justifyH = "LEFT", glow = true })
+    local frame, am = preview(c)
+    assertEqual(am.glowCount, 5)
+    c.text.glow = false
+    preview(c, frame)
+    for i = 1, 5 do
+        -- red under: an off dress that returns before hiding what an earlier dress drew
+        assertTrue(allHidden(am["glow" .. i]), "off: piece " .. i)
     end
+    c.text.glow = true
+    c.text.justifyH = "CENTER"
+    preview(c, frame)
+    for i, piece in ipairs(NS.Style.Text.Compiled(c.text).pieces) do
+        local hidden = allHidden(am["glow" .. i])
+        -- red under: copies left on a stacked line's hidden literal (a glowing " :: " with no text over it)
+        assertEqual(hidden, piece.kind == "literal", "stacked piece " .. i)
+    end
+    c.text.template = "$spellname$[ x$stacks$]"
+    preview(c, frame)
+    assertTrue(not allHidden(am.glow1) and not allHidden(am.glow2), "the new shape's pieces")
+    for i = 3, 5 do
+        -- red under: copies past the new pieceCount left as the old shape drew them
+        assertTrue(allHidden(am["glow" .. i]), "past the pieces: " .. i)
+    end
+    dress(c, frame, true)
+    -- red under: an engine dress that leaves a placeholder's copies shown (a pooled frame reused)
+    for i = 1, am.glowCount do assertTrue(allHidden(am["glow" .. i]), "engine: " .. i) end
 end)
 
-test("text glow: the class-color companion paints the container's class, its alpha kept", function()
-    local class = { r = 0.2, g = 0.4, b = 0.6 }
-    local c = text({ template = "$spellname$", glow = true, glowIntensity = 0.5, useClassColorGlow = true,
-        glowColor = { r = 1, g = 1, b = 1, a = 1 } })
-    local _, am = dress(c, nil, false, class)
-    -- red under: the companion ignored (white), or the class read off the player, not the snapshot
-    assertEqual(am.glow1.center:__joined("SetVertexColor"), "0.2,0.4,0.6,0.5")
+test("text glow: a new template shape re-anchors the copies to the new chain's strings", function()
+    local c = text({ template = "$spellname$ $stacks$", glow = true })
+    local frame, am = preview(c)
+    local old = am.piece1
+    c.text.template = "$stacks$ - $spellname$ ($dispeltype$)"
+    preview(c, frame)
+    assertTrue(am.piece1 ~= old, "a new chain")
+    for i, fs in ipairs(pieces(am)) do
+        for j, copy in ipairs(am["glow" .. i]) do
+            -- red under: copies still anchored to the stashed chain's strings (hidden with it)
+            assertTrue(copy:__last("SetPoint")[2] == fs, ("piece %d copy %d"):format(i, j))
+        end
+    end
 end)
 
 test("text glow: a container with only the glow's class-color companion on is class-colored", function()
@@ -359,25 +495,6 @@ test("text glow: a container with only the glow's class-color companion on is cl
     assertTrue(NS.Style.UsesClassColor(c), "the companion alone")
     c.text.useClassColorGlow = false
     assertFalse(NS.Style.UsesClassColor(c), "and nothing else in the block is")
-end)
-
-test("text glow: the font's outline and shadow are still applied with the glow on", function()
-    local c = text({ template = "$spellname$ $stacks$", glow = true,
-        font = { fontFlags = "OUTLINE", fontShadow = true } })
-    local _, am = dress(c)
-    for i, fs in ipairs(pieces(am)) do
-        -- red under: a glow that replaces the outline or the shadow (owner: it adds to them)
-        assertEqual(fs:__last("SetFont")[3], "OUTLINE", "piece " .. i .. " outline")
-        assertEqual(fs:__joined("SetShadowOffset"), "1,-1", "piece " .. i .. " shadow")
-    end
-    assertFalse(allHidden(am.glow1))
-end)
-
-test("text glow: the glow is dressed after the engine bindings, so a refused call cannot unbind a field", function()
-    local c = text({ template = "$spellname$", glow = true })
-    local frame, am = dress(c, nil, true)
-    -- red under: the glow dressed before Text.Bind (its client calls ahead of the engine's bindings)
-    assertTrue(am.glow1.center:__lastSeq("SetVertexColor") > frame:__lastSeq("SetSpellName"))
 end)
 
 test("text glow: the docs name every glow leaf on the Font tab row and the halo's limits", function()

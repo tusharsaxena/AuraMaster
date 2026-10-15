@@ -1,55 +1,46 @@
 local _, NS = ...
 
--- modules/Style_TextGlow.lua — the glow behind a Text container's text (text glow, owner 2026-10-15;
--- docs/superpowers/specs/2026-10-15-text-glow-design.md G3).
+-- modules/Style_TextGlow.lua — the glow behind a Text container's text: a ring of glow-colored copies
+-- of each letter (text glow, owner 2026-10-15; the glyph glow addendum,
+-- docs/superpowers/specs/2026-10-16-text-glow-addendum-glyph-glow.md, and the twins' design note,
+-- docs/superpowers/research/2026-10-16-text-glow-twins-design.md, sections 3 and 4).
 --
---      ┌─┬────────────────────────────┬─┐   nine textures, one radial file: each corner a quadrant
---      ├─┼────────────────────────────┼─┤   (r × r), each edge the center row or column stretched
---      │ │ Power Word: Fortitude x3   │ │   along its side, the center the center texel, so the fade
---      ├─┼────────────────────────────┼─┤   runs exactly r past the text at any line length
---      └─┴────────────────────────────┴─┘
+--          ·  ·  ·          each copy is the line again, in the glow color, moved thickness × d_k
+--        · Renew - 9s ·     (C.TEXT_GLOW_RING) and drawn under the main text; its shadow, in the same
+--          ·  ·  ·          color at −2 × thickness × d_k, is the ring's opposite point
 --
--- A HALO, NOT A GLYPH GLOW. Every field is engine-written into one font string of ours, and no addon
--- code can read the secret text to copy it into a second, glow-colored string behind the first; the
--- outline is black and the one shadow is the font's. So the glow is a set of textures hugging the
--- font strings' bounds: every anchor is on a font string, never a read, so the client follows the
--- engine's rewrites in combat with nothing called after the dress. It ADDS to the outline and shadow
--- (Style.ApplyFont is untouched).
+-- A GLYPH GLOW. The Slug outline is black and takes no color, and a halo of textures drew a box (owner
+-- smoke, 2026-10-15). What reads as a glow is the owner's probe ring: r = 2, eight copies at about 0.55
+-- alpha, the main on top. Under shadow pairing (C.TEXT_GLOW_PAIRED) each copy's shadow draws the
+-- opposite point, so C.TEXT_GLOW_TWINS = 4 copies make all eight (owner probe `/amgp twin4s`).
 --
--- ONE SET PER LINE, ONE PER STACKED ROW. A line's set runs from piece 1 (the leftmost, whatever the
--- justify: pieces are laid in template order) to the last piece. A stacked Center (Text.Stacked) gets
--- a set per name or duration row, and its hidden literals none. Every set past the ones a dress uses,
--- and every set while the glow is off, is hidden. Sets are built lazily, the first time a dress needs
--- one, and kept as `am.glow1`, `am.glow2`, …: a region never hides in a list the style suites cannot
--- see.
+-- WHO DRAWS THE COPIES. A live button's text is engine-written and secret, so no addon code can copy
+-- it: a live line's ring is C.TEXT_GLOW_TWINS twin engines, whose buttons Text.Apply dresses as the
+-- main's with a twin index (the glow dress: Text.GlowFont on every piece, the icon hidden, no tints,
+-- no time color, no mouse; Text.TwinBehavior). A placeholder writes its own text, so its ring is copy
+-- strings of ours (Text.GlowCopies), dressed by the same Text.GlowFont, so the preview shows the live
+-- look.
 --
--- NO SET AROUND A FIELD THAT CAN BE EMPTY. The engine writes "" for stacks below 2 and for an aura
--- with no dispel type, and an empty font string collapses to a point that the four corners still ring
--- as a glowing dot. No addon code can read the secret text to hide the set, and a texture cannot follow
--- a font string's visibility, so a stacks or dispel row gets no set, nor a line of only those fields. A
--- duration is empty only on a timeless aura, and keeps its set (docs/known-limitations.md).
+-- THE COPIES' LAYER. Copy strings sit on the animated frame's BACKGROUND, under the icon (that frame's
+-- ARTWORK) and under the text area and chain (child frames), the stacking a twin engine gets from its
+-- lower frame level. CreateFontString takes no sublevel, so the layer is set by SetDrawLayer (12.1
+-- probe). Under a hand-set Width and Height the element's clip frame cuts them at the box.
 --
--- LAYERS. The textures sit on the animated frame's BACKGROUND layer, under the icon (that frame's
--- ARTWORK), so a halo reaching past the text area runs behind the icon, never over it. The text area is
--- a child frame of `anim`, so its dispel backdrop and edge and the text draw over the glow. Under a
--- hand-set Width and Height the element's clip frame cuts the halo at the box (docs/known-limitations.md).
---
--- DRESSED AFTER THE BINDINGS. Text.Apply calls Text.Glow after Text.Bind, as it plays the loops: in
--- combat every call on a button's objects is refused, so a button built then must have its fields
+-- DRESSED AFTER THE BINDINGS. Text.Apply calls Text.GlowCopies after Text.Bind, as it plays the loops:
+-- in combat every call on a button's objects is refused, so a button built then must have its fields
 -- bound first. A change made in combat waits for the deferred restyle, like every other setting.
---
--- INTERIM (TG-09). The glyph glow addendum (docs/superpowers/specs/2026-10-16-text-glow-addendum-
--- glyph-glow.md) removed the halo's falloff, blend and radius leaves and C.TEXT_GLOW_TEXTURES. Until
--- TG-10 rewrites this module, the halo draws the one soft file with the Normal blend, glowThickness
--- deep.
 --
 -- LOAD-BEARING POSITION: after modules/Style_Text.lua, whose Style.Text this decorates at file scope.
 
 local Style = NS.Style
+local C = NS.Constants
 local D = NS.CONTAINER_TEMPLATE.text
 local Text = Style.Text
 
---- "glow1", "glow2", ...: the keys the sets sit under on `frame.__am`, built once each.
+-- The copies' sublevel on the animated frame's BACKGROUND: nothing else of ours draws there.
+local COPY_SUBLEVEL = 0
+
+--- "glow1", "glow2", ...: the keys piece i's copies sit under on `frame.__am`, built once each.
 local GLOW = setmetatable({}, { __index = function(t, i)
     local key = "glow" .. i
     t[i] = key
@@ -63,127 +54,131 @@ local PIECE = setmetatable({}, { __index = function(t, i)
     return key
 end })
 
--- The nine pieces of a set: each key, the slice of the texture it samples (left, right, top, bottom),
--- its anchors as { point, "L" or "R", that font string's point }, and how `r` sizes it ("corner" for
--- r × r, an edge's one setter, nothing for the center, which its anchors size).
-local PARTS = {
-    { "topLeft",     { 0, .5, 0, .5 },   { { "BOTTOMRIGHT", "L", "TOPLEFT" } }, "corner" },
-    { "topRight",    { .5, 1, 0, .5 },   { { "BOTTOMLEFT", "R", "TOPRIGHT" } }, "corner" },
-    { "bottomLeft",  { 0, .5, .5, 1 },   { { "TOPRIGHT", "L", "BOTTOMLEFT" } }, "corner" },
-    { "bottomRight", { .5, 1, .5, 1 },   { { "TOPLEFT", "R", "BOTTOMRIGHT" } }, "corner" },
-    { "top",    { .5, .5, 0, .5 }, { { "BOTTOMLEFT", "L", "TOPLEFT" }, { "BOTTOMRIGHT", "R", "TOPRIGHT" } }, "SetHeight" },
-    { "bottom", { .5, .5, .5, 1 }, { { "TOPLEFT", "L", "BOTTOMLEFT" }, { "TOPRIGHT", "R", "BOTTOMRIGHT" } }, "SetHeight" },
-    { "left",   { 0, .5, .5, .5 }, { { "TOPRIGHT", "L", "TOPLEFT" }, { "BOTTOMRIGHT", "L", "BOTTOMLEFT" } }, "SetWidth" },
-    { "right",  { .5, 1, .5, .5 }, { { "TOPLEFT", "R", "TOPRIGHT" }, { "BOTTOMLEFT", "R", "BOTTOMRIGHT" } }, "SetWidth" },
-    { "center", { .5, .5, .5, .5 }, { { "TOPLEFT", "L", "TOPLEFT" }, { "BOTTOMRIGHT", "R", "BOTTOMRIGHT" } } },
-}
-
--- The halo's file, a radial texture the client ships, so the addon ships no media for it (layout-§3:
--- a generic glow is not this addon's own art): GenericGlow64 (file 1063457), a linear radial alpha
--- fade to nothing at its edge. Every piece of a set samples it as a nine-slice.
-local FILE = "Interface\\GLUES\\Models\\UI_Draenei\\GenericGlow64"
-
 local function number(v, default)
     return tonumber(v) or default
 end
 
--- The piece kinds the engine may write as "" (stacks below 2, no dispel type): no set rings them.
-local MAY_BE_EMPTY = { stacks = true, dispel = true }
+-- The client flags a copy never takes: the outline is black whatever the color (12.1 probe).
+local OUTLINES = { OUTLINE = true, THICKOUTLINE = true }
 
---- Set `i` on `am`, built the first time it is asked for: nine textures on the animated frame's
---- BACKGROUND, under the icon.
-local function setAt(am, i)
+-- [client flags] = the same flags less the outline, built once each.
+local unoutlined = {}
+
+--- `flags` (Style.FontKey's client flag string) with OUTLINE and THICKOUTLINE dropped and the rest,
+--- MONOCHROME, kept: "MONOCHROME,OUTLINE" -> "MONOCHROME", "OUTLINE" -> "".
+local function withoutOutline(flags)
+    local hit = unoutlined[flags]
+    if hit then return hit end
+    local kept = {}
+    for flag in flags:gmatch("[^,%s]+") do
+        local n = #kept
+        if not OUTLINES[flag] then kept[n + 1] = flag end
+    end
+    hit = table.concat(kept, ",")
+    unoutlined[flags] = hit
+    return hit
+end
+
+--- How far the paired shadow sits from its copy along one axis: −2 × thickness × `v`, and a plain 0
+--- (never −0) on an axis the direction does not move.
+local function opposite(t, v)
+    if v == 0 then return 0 end
+    return -2 * t * v
+end
+
+--- Dress font string `fs` as the ring's copy `k` for text block `s`: the line's face and size with
+--- the outline dropped, the glow color (Style.Color, so a dress's class snapshot paints it) at its
+--- alpha × the intensity, and under shadow pairing a shadow in the same color at −2 × thickness ×
+--- d_k, the ring's opposite point; with pairing off, no shadow. The font's own shadow never reaches
+--- a copy. One function for a twin's pieces and a placeholder's copies, so the two cannot differ.
+function Text.GlowFont(fs, s, k)
+    local path, size, flags = Style.FontKey(s.font or D.font, D.font)
+    flags = withoutOutline(flags)
+    if not fs:SetFont(path, size, flags) then fs:SetFont(C.FALLBACK_FONT, size, flags) end
+    local r, g, b, a = Style.Color(s.glowColor or D.glowColor, s.useClassColorGlow)
+    a = (a or 1) * number(s.glowIntensity, D.glowIntensity)
+    fs:SetTextColor(r, g, b, a)
+    if not C.TEXT_GLOW_PAIRED then return fs:SetShadowOffset(0, 0) end
+    local t, d = number(s.glowThickness, D.glowThickness), C.TEXT_GLOW_RING[k]
+    fs:SetShadowColor(r, g, b, a)
+    fs:SetShadowOffset(opposite(t, d[1]), opposite(t, d[2]))
+end
+
+--- A twin button's mouse (twins design note, section 3): no hover, no click, no cancel and no tooltip
+--- binding. A twin is decoration under its main, whose button keeps all of them.
+function Text.TwinBehavior(frame)
+    if frame.SetMouseMotionEnabled then frame:SetMouseMotionEnabled(false) end
+    if frame.SetMouseClickEnabled then frame:SetMouseClickEnabled(false) end
+    Style.Bind(frame, "SetCancelAuraButtons", nil)
+end
+
+--- Piece `i`'s copies on `am`, built the first time they are asked for: C.TEXT_GLOW_TWINS single-line
+--- font strings on the animated frame's BACKGROUND, under the icon.
+local function copiesAt(am, i)
     local set = am[GLOW[i]]
     if set then return set end
     set = {}
-    for _, part in ipairs(PARTS) do set[part[1]] = am.anim:CreateTexture(nil, "BACKGROUND") end
+    for j = 1, C.TEXT_GLOW_TWINS do
+        local copy = am.anim:CreateFontString(nil, "BACKGROUND")
+        copy:SetDrawLayer("BACKGROUND", COPY_SUBLEVEL)
+        copy:SetWordWrap(false)
+        set[j] = copy
+    end
     am[GLOW[i]] = set
     am.glowCount = math.max(am.glowCount or 0, i)
     return set
 end
 
---- Hide every built set from `first` on.
+local function hideSet(set)
+    for _, copy in ipairs(set) do copy:Hide() end
+end
+
+--- Hide every built piece's copies from piece `first` on.
 local function hideFrom(am, first)
-    for i = first, am.glowCount or 0 do
-        local set = am[GLOW[i]]
-        for _, part in ipairs(PARTS) do set[part[1]]:Hide() end
+    for i = first, am.glowCount or 0 do hideSet(am[GLOW[i]]) end
+end
+
+--- Dress `set` around piece `fs`: copy j as the ring's copy j (Text.GlowFont), justified as its piece,
+--- on the piece's rect moved by thickness × d_j + (X, Y).
+local function dressSet(set, fs, s, justify)
+    local t = number(s.glowThickness, D.glowThickness)
+    local x, y = number(s.glowX, D.glowX), number(s.glowY, D.glowY)
+    for j, copy in ipairs(set) do
+        local d = C.TEXT_GLOW_RING[j]
+        local ox, oy = t * d[1] + x, t * d[2] + y
+        Text.GlowFont(copy, s, j)
+        copy:SetJustifyH(justify)
+        copy:ClearAllPoints()
+        copy:SetPoint("TOPLEFT", fs, "TOPLEFT", ox, oy)
+        copy:SetPoint("BOTTOMRIGHT", fs, "BOTTOMRIGHT", ox, oy)
+        copy:Show()
     end
 end
 
---- The look every texture of every set takes: the file, the blend mode, the color with its alpha ×
---- the intensity, and the depth (the thickness) and offset.
-local function lookFor(s)
-    local r, g, b, a = Style.Color(s.glowColor or D.glowColor, s.useClassColorGlow)
-    return { file = FILE, blend = "BLEND",
-        r = r, g = g, b = b, a = (a or 1) * number(s.glowIntensity, D.glowIntensity),
-        radius = number(s.glowThickness, D.glowThickness),
-        x = number(s.glowX, D.glowX), y = number(s.glowY, D.glowY) }
-end
-
---- Size piece `tex` of a set for radius `r` (PARTS' fourth field).
-local function sizePart(tex, how, r)
-    if how == "corner" then
-        tex:SetSize(r, r)
-    elseif how then
-        tex[how](tex, r)
-    end
-end
-
---- Dress set `set` around font strings `left` and `right` (the same one for a stacked row) in `look`.
-local function dressSet(set, left, right, look)
-    local ends = { L = left, R = right }
-    for _, part in ipairs(PARTS) do
-        local tex = set[part[1]]
-        tex:SetTexture(look.file)
-        tex:SetTexCoord(part[2][1], part[2][2], part[2][3], part[2][4])
-        tex:SetBlendMode(look.blend)
-        tex:SetVertexColor(look.r, look.g, look.b, look.a)
-        tex:ClearAllPoints()
-        for _, a in ipairs(part[3]) do tex:SetPoint(a[1], ends[a[2]], a[3], look.x, look.y) end
-        sizePart(tex, part[4], look.radius)
-        tex:Show()
-    end
-end
-
---- One set per name or duration row of a stacked line, in row order; how many sets were used.
-local function dressStack(am, compiled, look)
-    local used = 0
+--- A placeholder's ring (twins design note, section 4), after layoutChain has anchored its chain: per
+--- piece, its copies dressed on its current string (useChain swaps strings on a shape change), a
+--- literal's with its text; a stacked line's hidden literals, every piece past the chain's and all of
+--- them while off or on an engine button (whose ring is the twins') hidden. Text.FillPreview gives the
+--- field pieces' copies their text (Text.GlowText).
+function Text.GlowCopies(am, s, compiled, engine)
+    if engine or not s.glow then return hideFrom(am, 1) end
+    local stacked = Text.Stacked(s, compiled)
+    local justify = stacked and "CENTER" or (s.justifyH or D.justifyH)
     for i, piece in ipairs(compiled.pieces) do
-        if piece.kind ~= "literal" and not MAY_BE_EMPTY[piece.kind] then
-            used = used + 1
-            local fs = am[PIECE[i]]
-            dressSet(setAt(am, used), fs, fs, look)
+        local set = copiesAt(am, i)
+        if stacked and piece.kind == "literal" then
+            hideSet(set)
+        else
+            dressSet(set, am[PIECE[i]], s, justify)
+            if piece.kind == "literal" then Text.GlowText(am, i, piece.text) end
         end
     end
-    return used
+    hideFrom(am, #compiled.pieces + 1)
 end
 
---- Whether a line holds a piece that is never empty: a name, a duration or plain text.
-local function lineDraws(compiled)
-    for _, piece in ipairs(compiled.pieces) do
-        if not MAY_BE_EMPTY[piece.kind] then return true end
-    end
-    return false
-end
-
---- One set over a line, from piece 1 to the last; how many sets were used (none for a line of only
---- fields that may be empty).
-local function dressLine(am, compiled, look)
-    if not lineDraws(compiled) then return 0 end
-    dressSet(setAt(am, 1), am[PIECE[1]], am[PIECE[am.pieceCount]], look)
-    return 1
-end
-
---- Draw `s`'s glow on a dressed text element, after layoutChain has anchored its chain (Text.Apply):
---- hidden when off, else one set per line or per stacked row, and every set past those hidden.
-function Text.Glow(am, s, compiled)
-    local look = s.glow and lookFor(s)
-    if not look then return hideFrom(am, 1) end
-    local used
-    if Text.Stacked(s, compiled) then
-        used = dressStack(am, compiled, look)
-    else
-        used = dressLine(am, compiled, look)
-    end
-    hideFrom(am, used + 1)
+--- Write `text` into piece `i`'s copies, when it has any.
+function Text.GlowText(am, i, text)
+    local set = am[GLOW[i]]
+    if not set then return end
+    for _, copy in ipairs(set) do copy:SetText(text) end
 end

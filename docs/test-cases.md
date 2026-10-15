@@ -1517,25 +1517,30 @@ Total.
 - autosize: a placeholder with the long name is not cut in test mode
 - autosize: off, a hand-set width still cuts a long line at the box, and a toggle re-dress follows it
 
-### test_style_text_glow.lua (18)
+### test_style_text_glow.lua (23)
 
 - text glow: every leaf sits in the text template at its addendum default, the glow off
 - text glow: the halo's radius, blend and falloff are gone, leaves, tables and rows (TG-09)
 - text glow: the twins' ring is eight unit directions, four twins under shadow pairing (TG-09)
 - text glow: a container stored without the glow leaves is backfilled with the glow off
 - text glow: a stored glow left on survives the backfill (savedvariables-§5)
-- text glow: off builds no glow set; turned off after drawing, every set is hidden
-- text glow: a Left line gets one set from piece 1's edges to the last piece's, offset and r deep
-- text glow: Right and a one-piece Center line keep L = piece 1 and R = the last piece
-- text glow: a stacked Center line gets a set per name or duration row, none for stacks, dispel or literals
-- text glow: a line of only stacks or dispel fields gets no set, a duration-only line one (TG-05)
-- text glow: a new template shape re-anchors the set to the new chain's pieces
-- text glow: each texture carries the halo's file, drawn with the Normal blend (TG-09)
-- text glow: the vertex color is the glow color, its alpha times the intensity
-- text glow: the class-color companion paints the container's class, its alpha kept
+- text glow: GlowFont paints the glow color with its alpha times the intensity
+- text glow: GlowFont drops the outline and keeps MONOCHROME, in the font's own face and size
+- text glow: under pairing, copy k's shadow is the glow color at -2 x thickness x d_k
+- text glow: with pairing off, a copy draws no shadow
+- text glow: a twin is laid out as its main: the same size and the same piece points
+- text glow: a twin's icon is laid out but hidden and never bound; the main's is bound
+- text glow: a twin takes no dispel tints and a dispel word with no color escape
+- text glow: a twin's duration is bound with no time color and the plain binding, in the same format
+- text glow: a twin takes no mouse, cancels nothing and binds no tooltip
+- text glow: a twin's pieces wear the glow (class color from the snapshot), a literal its text, the loop the main's
+- text glow: a main button keeps the font's outline and shadow with the glow on, and builds no copies
+- text glow: a placeholder gets a ring of copies per piece on anim's BACKGROUND, under the icon
+- text glow: copy j sits on its piece's rect moved by thickness x d_j + (X, Y), dressed as twin j
+- text glow: copies take their piece's text, the dispel word uncolored, never the run color
+- text glow: copies are hidden while off, on an engine button, past the pieces and on a stacked literal
+- text glow: a new template shape re-anchors the copies to the new chain's strings
 - text glow: a container with only the glow's class-color companion on is class-colored
-- text glow: the font's outline and shadow are still applied with the glow on
-- text glow: the glow is dressed after the engine bindings, so a refused call cannot unbind a field
 - text glow: the docs name every glow leaf on the Font tab row and the halo's limits
 
 ### test_preview.lua (28)
@@ -2446,7 +2451,7 @@ Total.
 | test_style_icons.lua | 31 |
 | test_style_text.lua | 56 |
 | test_style_text_autosize.lua | 18 |
-| test_style_text_glow.lua | 18 |
+| test_style_text_glow.lua | 23 |
 | test_preview.lua | 28 |
 | test_render_coverage.lua | 3 |
 | test_blizzardframes.lua | 8 |
@@ -2490,4 +2495,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **2080** |
+| **Total** | **2085** |
