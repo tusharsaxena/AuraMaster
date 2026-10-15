@@ -65,15 +65,22 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   would put a copy under the wrong aura; the probe never saw one. A twin's loop starts when its own
   button is dressed, so a Pulse or Bounce can run a few frames out of phase with its main. A twin
   draws without the outline, so if the client widens an outlined string, a multi-piece line's later
-  copies sit that much off center (smoke TEXT-36). Under Size to fit nothing clips. Under a hand-set
-  Width and Height each twin clips at its own box, moved by its ring offset, so the ring is cut
-  wherever it reaches past the box, and the paired shadow, which draws twice the Thickness back from
-  its twin's text, outside that twin's box, is cut by up to twice the Thickness (12 px at 6). Offset
-  X and Y move the twin's box with its text and its shadow, so they add nothing to that cut. A
-  placeholder's copies are cut only by the element's own box, which does not move with them, so at
-  an edge the preview can show less of a copy pushed past it, and more of the ring's far side, than
-  a live line does. An empty field is empty on its twins too, so it draws no glow. Size to fit, the
-  element size and the drag strip ignore the ring, as they ignore the shadow.
+  copies sit that much off center (smoke TEXT-36). A twin's duration takes no curve, so under
+  Pandemic-window Blink the main's time blinks off while its glow stays lit, and in the off phase a
+  glow-colored ghost of the digits shows where the time was (smoke TEXT-34; the twins design note,
+  Q2, keeps the spec's no-curve default over a blink curve in the glow color). Under Size to fit
+  nothing clips. Under a hand-set Width and Height each twin clips at its own box, which moves with
+  its text, so a twin's own copy is never cut past where the main's text is cut. Only the paired
+  shadows, which draw twice the Thickness back from their twin's text, outside that twin's box, are
+  cut, by up to twice the Thickness (12 px at 6): the left, down, down-left and up-left points. So
+  the live trim is lopsided: with a Height of one line, the up and up-right copies stay whole above
+  the line while the up-left point is cut, and below it the down-right copy stays whole while the
+  down and down-left points are cut. Offset X and Y move the twin's box with its text and its
+  shadow, so they add nothing to that cut. A placeholder's copies are cut only by the element's own
+  box, which does not move with them, so at an edge the preview can show less of a copy pushed past
+  it, and more of the ring's far side, than a live line does. An empty field is empty on its twins
+  too, so it draws no glow. Size to fit, the element size and the drag strip ignore the ring, as
+  they ignore the shadow.
 - **A border style other than Solid redraws a live button only when the button is rebuilt.** Its
   backdrop does arithmetic on the button's size, which reads secret once the engine has laid the button
   out, so a new texture or thickness is applied on a new button, a rebuild or a `/reload`; its color

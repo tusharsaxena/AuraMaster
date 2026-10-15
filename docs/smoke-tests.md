@@ -2057,7 +2057,9 @@ off again. Result:
 
 **TEXT-33. The glow and the box.** Size to fit on → the glow draws in full, past the box. Untick it,
 with a Width wider than the line and a Height of about one font line → the text draws whole, and the
-glow is trimmed at the box's top and bottom edges. Set a Width narrower than the line → the text and
+glow is trimmed unevenly: above the line the up and up-right glow stays whole and only the up-left
+point is cut; below it the down-right glow stays whole and the down and down-left points are cut, by
+up to twice the Thickness (`docs/known-limitations.md`). Set a Width narrower than the line → the text and
 the glow are both cut at the box's side edges; at an edge the preview's glow may show less of a copy
 pushed past it, and more of the far side, than the live glow (`docs/known-limitations.md`).
 `/am test` → the placeholders draw the same glow as the live line, and so does the preview in the
@@ -2068,7 +2070,9 @@ and refresh debuffs, let stacks rise and fall and durations run out → the gold
 aura's name and time as auras come and go and the text grows and shrinks, with no Lua error and no
 drop in framerate. A timeless aura (a food buff) on a template with a duration → no glow where the
 empty duration sits. Pandemic → Pandemic-window time color with Blink, an aura in its last seconds →
-the time turns color and blinks on the text, and its glow stays the glow color. Animation Pulse, then
+the time turns color and blinks on the text, and its glow stays the glow color and stays lit: in the
+blink's off phase a glow-colored ghost of the digits shows where the time was (expected, the twins
+don't blink; `docs/known-limitations.md`). Animation Pulse, then
 Bounce → the glow fades and moves with the text, at most a few frames apart. On *Player buffs* with
 the glow on, in combat → hover still shows the tooltip and right-click still cancels a buff. In
 combat, `/am set container.text.glow false` (the page itself is locked in combat) → nothing changes

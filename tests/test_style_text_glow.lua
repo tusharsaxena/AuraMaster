@@ -522,7 +522,16 @@ test("text glow: the docs name every glow leaf on the Font tab row and the twins
     end
     -- red under: the paired shadow's cut said to grow with Offset X or Y (the offset moves the
     -- twin's box with its shadow, so the cut stays at twice the Thickness)
-    assertTrue(bullet:find("Thickness (12 px at 6) plus", 1, true) == nil, "the shadow's cut is 2t")
+    local flat = bullet:gsub("%s+", " ")
+    assertTrue(flat:find("Thickness (12 px at 6) plus", 1, true) == nil, "the shadow's cut is 2t")
+    -- red under: fd0a5a2's clip sentence, which said the shadow's cut grows by the offset and the ring
+    -- is cut wherever it reaches past the box (a twin's box moves with it, so only the paired shadows
+    -- are cut, and the live trim is lopsided)
+    assertTrue(flat:find("add nothing to that cut", 1, true) ~= nil, "the offsets add nothing to the cut")
+    assertTrue(flat:find("lopsided", 1, true) ~= nil, "the bullet says the live trim is lopsided")
+    -- red under: f1d31b0's bullet, silent on Blink (twins design note Q2: the glow stays lit)
+    assertTrue(flat:find("Blink", 1, true) ~= nil and flat:find("ghost of the digits", 1, true) ~= nil,
+        "the bullet says the glow stays lit under Blink")
     local limits = readDoc("docs/ARCHITECTURE.md"):match("\n## Known Limitations\n(.-)\n## ")
     -- red under: ARCHITECTURE's summary still calling the glow a halo around the text's bounds
     assertTrue(limits ~= nil and limits:find("twin engines", 1, true) ~= nil, "ARCHITECTURE names the twins")

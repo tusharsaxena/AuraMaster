@@ -437,7 +437,7 @@ slots or not (`ContainerClass:Flip`, which `ResetEnchants` calls), so it repaint
 as enchant names, and runs in combat and while auras are secret. `full` primes the fonts first and
 then asks for one system apply of every container, which re-dresses every button in place; that part
 is held like any apply while combat or aura secrecy lasts. Neither form retires or builds an engine:
-frames are never freed, so a rebuild per run would leak one engine frame per container.
+frames are never freed, so a rebuild per run would leak one engine frame per container, or five for a glowing Text container.
 
 ## Combat state: which question to ask
 

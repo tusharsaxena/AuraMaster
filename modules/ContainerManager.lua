@@ -543,8 +543,8 @@ end
 -- while an apply must wait (CM.MustDefer) it waits for the flush on the edge that lifts the hold,
 -- and the verb says so after its own line with the usual deferral notice, once per blocked stretch
 -- (CM.NoteDeferred; settings/Slash.lua). Neither form retires or builds an engine: a rebuild would
--- leak one engine frame per container per run, since frames are never freed. Each run writes one
--- [Apply] line.
+-- leak one engine frame per container per run, or five for a glowing Text container, since frames
+-- are never freed. Each run writes one [Apply] line.
 
 --- Flip every live instance now. Answers how many were flipped.
 local function flipAll()
