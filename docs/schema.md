@@ -183,7 +183,13 @@ false); the loop — `anim` (`"none"`, `"pulse"`, `"blink"`, `"bounce"`), `animS
 `animIntensity` (0.3, the lowest alpha), `animBounce` (3 px); the pandemic window — `expiringColorOn`
 (false), `expiringThreshold` (5), `expiringColor`, `expiringBlink` (false); by dispel type (feedback
 #7, each opt-in) — `dispelTypeColor` (false: the `$dispeltype$` word in the profile's `dispelColors`),
-`dispelBackdrop` (false), `dispelBackdropAlpha` (0.35), `dispelEdge` (false), `dispelEdgeSize` (1 px).
+`dispelBackdrop` (false), `dispelBackdropAlpha` (0.35), `dispelEdge` (false), `dispelEdgeSize` (1 px);
+the glow behind the text (text glow, owner 2026-10-15: off, and added to the font's outline and
+shadow, never in place of them) — `glow` (false), `glowColor` (gold, `{ 1, 0.82, 0, 1 }`),
+`useClassColorGlow` (false, the swatch's class-color companion), `glowIntensity` (0.6, 0.05 to 1,
+scaling the color's alpha), `glowRadius` (6, 1 to 24 px past the text), `glowBlend` (`"BLEND"`, Normal,
+or `"ADD"`, Additive: `C.TEXT_GLOW_BLENDS`), `glowFalloff` (`"soft"` or `"hard"`:
+`C.TEXT_GLOW_FALLOFFS`), `glowX` and `glowY` (0, -20 to 20 px).
 An existing container gains the block, and these leaves, by the ordinary backfill; there is no
 schema-version bump.
 

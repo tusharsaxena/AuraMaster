@@ -44,12 +44,13 @@ what each LibKa0s setup file publishes: `docs/module-map.md` → *Libraries*.
 ## Module Map
 
 Five source folders in the TOC's load order — `locales/` → `core/` → `defaults/` → `modules/` →
-`settings/` (layout-§1) — 59 authored Lua files under them: one locale, 17 core, 4 defaults, 22
+`settings/` (layout-§1) — 60 authored Lua files under them: one locale, 17 core, 4 defaults, 23
 modules and 15 settings. The load-bearing positions are annotated at their TOC lines:
 `core/MediaSetup.lua` before `core/Constants.lua` (the monospace face), `core/CoreSetup.lua` before
 anything that prints, `core/PerfSetup.lua` before every module that takes `NS.Perf` as an upvalue,
 `defaults/Categories.lua` before `defaults/Profile.lua` (the template's category states) and
 `defaults/UserCategories.lua` directly after it (the `NS.Categories` upvalue),
+`modules/Style_Text.lua` before `modules/Style_TextGlow.lua` (which decorates `NS.Style.Text` at file load),
 `modules/Anchors_Attach.lua` before `modules/Anchors.lua` (which binds `NS.AnchorsAttach` at file load),
 `modules/Anchors_Tooltip.lua` before `modules/Anchors.lua` (which binds `NS.AnchorsTooltip.Place` at file
 load as the strip's `tooltipPlace`),
@@ -302,7 +303,8 @@ what a Text line can do, which spell-id filters it honors, and when a non-Solid 
 handful of user-category trade-offs were accepted by the owner. A font a media addon registers
 after login is not primed until the next settings change or `/reload`. A container on a named frame
 cannot be dragged, and an attached one whose position reads secret jumps to the cursor when its drag
-starts. Every limitation, its cause and any
+starts. A Text line's glow is a halo around the text's bounds, not around each letter, and a hand-set
+Width cuts it at the box. Every limitation, its cause and any
 ruling: `docs/known-limitations.md`.
 
 ## Documentation map

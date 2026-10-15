@@ -357,3 +357,23 @@ test("text glow: the glow is dressed after the engine bindings, so a refused cal
     -- red under: the glow dressed before Text.Bind (its client calls ahead of the engine's bindings)
     assertTrue(am.glow1.center:__lastSeq("SetVertexColor") > frame:__lastSeq("SetSpellName"))
 end)
+
+test("text glow: the docs name every glow leaf on the Font tab row and the halo's limits", function()
+    local function read(path)
+        local f = assert(io.open(path, "r"), "cannot open " .. path)
+        local body = f:read("*a")
+        f:close()
+        return (body:gsub("\r", ""))
+    end
+    local fontRow = read("docs/settings-panel.md"):match("\n| Font | ([^\n]*)")
+    assertTrue(fontRow ~= nil, "docs/settings-panel.md has the Text section's Font row")
+    for _, key in ipairs(LEAVES) do
+        -- red under: the Font row without its Glow paths (spec G6)
+        assertTrue(fontRow:find("`" .. key .. "`", 1, true) ~= nil, "the Font row names " .. key)
+    end
+    local limits = read("docs/known-limitations.md")
+    -- red under: docs/known-limitations.md silent on the glow's shape or its clip (spec G6)
+    assertTrue(limits:find("glyph", 1, true) ~= nil, "no per-glyph glow, and why")
+    assertTrue(limits:find("halo", 1, true) ~= nil and limits:find("Size to fit", 1, true) ~= nil,
+        "the halo cut at the box under a hand-set Width")
+end)

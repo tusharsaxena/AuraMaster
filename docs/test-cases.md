@@ -1517,7 +1517,7 @@ Total.
 - autosize: a placeholder with the long name is not cut in test mode
 - autosize: off, a hand-set width still cuts a long line at the box, and a toggle re-dress follows it
 
-### test_style_text_glow.lua (16)
+### test_style_text_glow.lua (17)
 
 - text glow: every leaf sits in the text template at its G1 default, the glow off
 - text glow: the blend and falloff choices are labeled, and each default is one of them
@@ -1535,6 +1535,7 @@ Total.
 - text glow: a container with only the glow's class-color companion on is class-colored
 - text glow: the font's outline and shadow are still applied with the glow on
 - text glow: the glow is dressed after the engine bindings, so a refused call cannot unbind a field
+- text glow: the docs name every glow leaf on the Font tab row and the halo's limits
 
 ### test_preview.lua (28)
 
@@ -2285,7 +2286,7 @@ Total.
 - locale: no library-missing line joins a routed fragment
 - locale: no string a player reads names a retired sub-page; they are sections now (#23)
 
-### test_docs.lua (6)
+### test_docs.lua (7)
 
 - README.md carries no angle-bracket argument placeholders
 - every Tier 2 documentation-map row agrees with docs/
@@ -2293,6 +2294,7 @@ Total.
 - docs: every file:line citation names an existing file and a non-blank line inside it
 - docs: no file:line citation lands on a comment-only or blank line
 - docs: every file:line citation sits within 3 lines of a name its own sentence gives in backticks
+- docs: schema.md's `text` section names every leaf of NS.CONTAINER_TEMPLATE.text
 
 ### test_prose.lua (18)
 
@@ -2443,7 +2445,7 @@ Total.
 | test_style_icons.lua | 31 |
 | test_style_text.lua | 56 |
 | test_style_text_autosize.lua | 18 |
-| test_style_text_glow.lua | 16 |
+| test_style_text_glow.lua | 17 |
 | test_preview.lua | 28 |
 | test_render_coverage.lua | 3 |
 | test_blizzardframes.lua | 8 |
@@ -2477,7 +2479,7 @@ Total.
 | test_perf.lua | 8 |
 | test_debuglogsetup.lua | 9 |
 | test_locale.lua | 8 |
-| test_docs.lua | 6 |
+| test_docs.lua | 7 |
 | test_prose.lua | 18 |
 | test_surface_parity.lua | 7 |
 | test_vendor_sync.lua | 3 |
@@ -2487,4 +2489,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **2077** |
+| **Total** | **2079** |
