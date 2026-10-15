@@ -833,8 +833,10 @@ of ours (`docs/known-limitations.md`). Glow color is a swatch with alpha and its
 Normal or Additive) and `glowFalloff` (Falloff: Soft, a long fade, or Hard, a solid core with a short
 fade) set how it draws, and `glowX` and `glowY` (Offset X and Offset Y, -20 to 20 px) nudge it off the
 text. Every row but the color pair dims while `glow` is off; the composer never lets the swatch dim
-(options-ui-§17). A stacked Center line gets one halo per field row. The preview and the unlocked
-placeholders draw it too.
+(options-ui-§17). A stacked Center line gets one halo per name or duration row. A stacks or dispel
+type field gets none of its own, since the engine writes it empty below 2 stacks or with no type and
+an empty field would glow as a dot (`docs/known-limitations.md`). The halo draws behind the icon and
+under the dispel backdrop. The preview and the unlocked placeholders draw it too.
 
 **Dispel type** (Font, feedback #7; on the Animation tab until smoke batch 2, item 5 — the paths and
 stored values did not change) holds three opt-in stand-ins for "color the text by dispel

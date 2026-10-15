@@ -93,20 +93,23 @@ end)
 -- ── the render (TG-02, G3) ─────────────────────────────────────────────────────────────────────
 -- One environment with the client's text APIs as recording stand-ins (tests/text_apis.lua), built
 -- once, every element on tests/region_builder.lua's recorders, as tests/test_style_text.lua does.
--- The falloff files are planted on NS.Constants: the shipped textures wait on the owner's call
--- (TG-01), and the renderer reads C.TEXT_GLOW_TEXTURES at dress time, so a case sees its own names.
+-- The falloff files are the shipped C.TEXT_GLOW_TEXTURES, never planted ones (TG-05).
 
 local B = dofile("tests/region_builder.lua")
-local SOFT, HARD = "glow-soft-file", "glow-hard-file"
 
 local env
 local function E()
     if not env then
         local NS, m = fresh({ before = dofile("tests/text_apis.lua") })
-        NS.Constants.TEXT_GLOW_TEXTURES = { soft = SOFT, hard = HARD }
         env = { NS = NS, m = m }
     end
     return env.NS, env.m
+end
+
+--- The shipped file for falloff `key` ("soft" or "hard").
+local function file(key)
+    local files = E().Constants.TEXT_GLOW_TEXTURES
+    return files and files[key]
 end
 
 --- A Text container's settings, `over` merged onto the template's text block.
@@ -193,6 +196,24 @@ local function pieces(am)
     return out
 end
 
+test("text glow: each falloff names a texture the client ships, by an extensionless path (TG-05)", function()
+    local NS = E()
+    local files = NS.Constants.TEXT_GLOW_TEXTURES
+    -- red under: no C.TEXT_GLOW_TEXTURES in core/Constants.lua (every glow row draws nothing in game)
+    assertTrue(type(files) == "table", "C.TEXT_GLOW_TEXTURES is defined")
+    for _, key in ipairs(NS.Constants.TEXT_GLOW_FALLOFFS) do
+        local path = files[key]
+        -- red under: a falloff with no file (that choice hides the glow)
+        assertTrue(type(path) == "string" and path ~= "", "a file for " .. key)
+        -- red under: addon-owned media (layout-§3 keeps a generic texture out of media/), or a path
+        -- spelled with its extension
+        assertFalse(path:lower():find("interface\\addons\\", 1, true) ~= nil, key .. " is a client file")
+        assertFalse(path:lower():find("%.%a+$") ~= nil, key .. " has no extension")
+    end
+    assertEqual(files.soft, "Interface\\GLUES\\Models\\UI_Draenei\\GenericGlow64")
+    assertEqual(files.hard, "Interface\\CharacterFrame\\TempPortraitAlphaMask")
+end)
+
 test("text glow: off builds no glow set; turned off after drawing, every set is hidden", function()
     local c = text({ template = "$spellname$ - $stacks$" })
     local frame, am = dress(c)
@@ -218,10 +239,14 @@ test("text glow: a Left line gets one set from piece 1's edges to the last piece
     assertNil(am.glow2, "one set for a line")
     for _, part in ipairs(PARTS) do
         local tex = am.glow1[part[1]]
-        -- red under: the textures on the chain (above the text) or on BACKGROUND under the dispel tint
-        assertTrue(tex.parent == am.area, part[1] .. " is a texture of the text area")
-        assertEqual(tex.args[2], "ARTWORK", part[1] .. " on ARTWORK")
+        -- red under: the textures on the text area (a child frame of anim, so they draw over the icon)
+        -- or on the chain (over the text)
+        assertTrue(tex.parent == am.anim, part[1] .. " is a texture of the animated frame")
+        -- red under: ARTWORK or above, where the icon (anim's ARTWORK) no longer covers them
+        assertEqual(tex.args[2], "BACKGROUND", part[1] .. " on BACKGROUND")
     end
+    assertTrue(am.icon.parent == am.anim and am.icon.args[2] == "ARTWORK",
+        "the icon is anim's ARTWORK, a layer above the glow")
 end)
 
 test("text glow: Right and a one-piece Center line keep L = piece 1 and R = the last piece", function()
@@ -238,27 +263,46 @@ test("text glow: Right and a one-piece Center line keep L = piece 1 and R = the 
     assertNil(am.glow2)
 end)
 
-test("text glow: a stacked Center line gets one set per field row and none for its literals", function()
+test("text glow: a stacked Center line gets a set per name or duration row, none for stacks, dispel or literals", function()
     local NS = E()
-    local c = text({ template = "$spellname$ :: $stacks$[ - $remainingduration$]", justifyH = "CENTER",
-        glow = true, glowX = 1, glowY = 1, glowRadius = 4 })
+    local c = text({ template = "$spellname$ :: $stacks$ ($dispeltype$)[ - $remainingduration$]",
+        justifyH = "CENTER", glow = true, glowX = 1, glowY = 1, glowRadius = 4 })
     local frame, am = dress(c)
     local p = pieces(am)
     local rows = 0
     for i, piece in ipairs(NS.Style.Text.Compiled(c.text).pieces) do
-        if piece.kind ~= "literal" then
+        if piece.kind == "name" or piece.kind == "duration" then
             rows = rows + 1
             -- red under: one set over the whole stack (L = piece 1, R = the last) or a set per piece
             assertSet(am["glow" .. rows], p[i], p[i], 1, 1, 4, "row " .. rows)
         end
     end
-    assertEqual(rows, 3, "three field rows")
-    assertNil(am.glow4, "no set for the literal")
+    assertEqual(rows, 2, "the name row and the duration row")
+    -- red under: a set on the stacks or dispel row, which the engine writes empty below 2 stacks or
+    -- with no type, and whose zero-width string the corners would ring as a glowing dot
+    assertNil(am.glow3, "no set for the stacks, dispel or literal rows")
     c.text.justifyH = "LEFT"
     dress(c, frame)
     -- red under: the sets past the ones a dress uses left as the stacked dress drew them
     assertSet(am.glow1, p[1], p[#p], 1, 1, 4, "back to a line")
-    assertTrue(allHidden(am.glow2) and allHidden(am.glow3), "the extra sets hidden")
+    assertTrue(allHidden(am.glow2), "the extra set hidden")
+end)
+
+test("text glow: a line of only stacks or dispel fields gets no set, a duration-only line one (TG-05)", function()
+    for _, template in ipairs({ "$stacks$", "[x$stacks$]", "$dispeltype$", "$stacks$$dispeltype$" }) do
+        local c = text({ template = template, justifyH = "LEFT", glow = true })
+        local _, am = dress(c)
+        -- red under: a set around fields the engine writes empty (a glowing dot where no text is)
+        assertTrue(allHidden(am.glow1), template .. " draws no glow")
+    end
+    local c = text({ template = "$stacks$ stacks", justifyH = "LEFT", glow = true })
+    local _, am = dress(c)
+    -- red under: plain text beside a stacks field dropped with it (the literal always draws)
+    assertFalse(allHidden(am.glow1), "a literal beside the field keeps the set")
+    c = text({ template = "$remainingduration$", justifyH = "LEFT", glow = true })
+    _, am = dress(c)
+    -- red under: the duration skipped like the stacks (it is only empty on a timeless aura)
+    assertFalse(allHidden(am.glow1), "a duration-only line keeps the set")
 end)
 
 test("text glow: a new template shape re-anchors the set to the new chain's pieces", function()
@@ -277,7 +321,7 @@ test("text glow: each texture carries the falloff's file and the blend mode", fu
     for _, part in ipairs(PARTS) do
         local tex = am.glow1[part[1]]
         -- red under: the default falloff or blend not applied (a white box, or a blend left unset)
-        assertEqual(tex:__joined("SetTexture"), SOFT, part[1] .. " soft")
+        assertEqual(tex:__joined("SetTexture"), file("soft"), part[1] .. " soft")
         assertEqual(tex:__joined("SetBlendMode"), "BLEND", part[1] .. " Normal")
     end
     c.text.glowFalloff, c.text.glowBlend = "hard", "ADD"
@@ -285,17 +329,17 @@ test("text glow: each texture carries the falloff's file and the blend mode", fu
     for _, part in ipairs(PARTS) do
         local tex = am.glow1[part[1]]
         -- red under: the falloff or blend leaf ignored after the first dress
-        assertEqual(tex:__joined("SetTexture"), HARD, part[1] .. " hard")
+        assertEqual(tex:__joined("SetTexture"), file("hard"), part[1] .. " hard")
         assertEqual(tex:__joined("SetBlendMode"), "ADD", part[1] .. " Additive")
     end
     c.text.glowFalloff, c.text.glowBlend = "fuzzy", "MOD"
     dress(c, frame)
     -- red under: a hand-written choice outside the lists handed to the client as is
-    assertEqual(am.glow1.center:__joined("SetTexture"), SOFT, "an unknown falloff draws the default")
+    assertEqual(am.glow1.center:__joined("SetTexture"), file("soft"), "an unknown falloff draws the default")
     assertEqual(am.glow1.center:__joined("SetBlendMode"), "BLEND", "an unknown blend draws the default")
 end)
 
-test("text glow: with no file for the falloff (the textures not shipped), nothing is drawn", function()
+test("text glow: with no file for the falloff, nothing is drawn", function()
     local NS = E()
     local c = text({ template = "$spellname$", glow = true })
     local frame, am = dress(c)

@@ -18,13 +18,21 @@ local _, NS = ...
 --
 -- ONE SET PER LINE, ONE PER STACKED ROW. A line's set runs from piece 1 (the leftmost, whatever the
 -- justify: pieces are laid in template order) to the last piece. A stacked Center (Text.Stacked) gets
--- a set per field row, and its hidden literals none. Every set past the ones a dress uses, and every
--- set while the glow is off, is hidden. Sets are built lazily, the first time a dress needs one, and
--- kept as `am.glow1`, `am.glow2`, …: a region never hides in a list the style suites cannot see.
+-- a set per name or duration row, and its hidden literals none. Every set past the ones a dress uses,
+-- and every set while the glow is off, is hidden. Sets are built lazily, the first time a dress needs
+-- one, and kept as `am.glow1`, `am.glow2`, …: a region never hides in a list the style suites cannot
+-- see.
 --
--- LAYERS. The textures sit on the text area's ARTWORK layer: above the dispel backdrop (BACKGROUND)
--- and edge (BORDER), and below the text, whose chain is a child frame of the area. Under a hand-set
--- Width the area clips, and cuts the halo at the box as it cuts the text (docs/known-limitations.md).
+-- NO SET AROUND A FIELD THAT CAN BE EMPTY. The engine writes "" for stacks below 2 and for an aura
+-- with no dispel type, and an empty font string collapses to a point that the four corners still ring
+-- as a glowing dot. No addon code can read the secret text to hide the set, and a texture cannot follow
+-- a font string's visibility, so a stacks or dispel row gets no set, nor a line of only those fields. A
+-- duration is empty only on a timeless aura, and keeps its set (docs/known-limitations.md).
+--
+-- LAYERS. The textures sit on the animated frame's BACKGROUND layer, under the icon (that frame's
+-- ARTWORK), so a halo reaching past the text area runs behind the icon, never over it. The text area is
+-- a child frame of `anim`, so its dispel backdrop and edge and the text draw over the glow. Under a
+-- hand-set Width and Height the element's clip frame cuts the halo at the box (docs/known-limitations.md).
 --
 -- DRESSED AFTER THE BINDINGS. Text.Apply calls Text.Glow after Text.Bind, as it plays the loops: in
 -- combat every call on a button's objects is refused, so a button built then must have its fields
@@ -74,12 +82,16 @@ local function number(v, default)
     return tonumber(v) or default
 end
 
---- Set `i` on `am`, built the first time it is asked for: nine textures on the text area's ARTWORK.
+-- The piece kinds the engine may write as "" (stacks below 2, no dispel type): no set rings them.
+local MAY_BE_EMPTY = { stacks = true, dispel = true }
+
+--- Set `i` on `am`, built the first time it is asked for: nine textures on the animated frame's
+--- BACKGROUND, under the icon.
 local function setAt(am, i)
     local set = am[GLOW[i]]
     if set then return set end
     set = {}
-    for _, part in ipairs(PARTS) do set[part[1]] = am.area:CreateTexture(nil, "ARTWORK") end
+    for _, part in ipairs(PARTS) do set[part[1]] = am.anim:CreateTexture(nil, "BACKGROUND") end
     am[GLOW[i]] = set
     am.glowCount = math.max(am.glowCount or 0, i)
     return set
@@ -132,17 +144,33 @@ local function dressSet(set, left, right, look)
     end
 end
 
---- One set per field row of a stacked line, in row order; how many sets were used.
+--- One set per name or duration row of a stacked line, in row order; how many sets were used.
 local function dressStack(am, compiled, look)
     local used = 0
     for i, piece in ipairs(compiled.pieces) do
-        if piece.kind ~= "literal" then
+        if piece.kind ~= "literal" and not MAY_BE_EMPTY[piece.kind] then
             used = used + 1
             local fs = am[PIECE[i]]
             dressSet(setAt(am, used), fs, fs, look)
         end
     end
     return used
+end
+
+--- Whether a line holds a piece that is never empty: a name, a duration or plain text.
+local function lineDraws(compiled)
+    for _, piece in ipairs(compiled.pieces) do
+        if not MAY_BE_EMPTY[piece.kind] then return true end
+    end
+    return false
+end
+
+--- One set over a line, from piece 1 to the last; how many sets were used (none for a line of only
+--- fields that may be empty).
+local function dressLine(am, compiled, look)
+    if not lineDraws(compiled) then return 0 end
+    dressSet(setAt(am, 1), am[PIECE[1]], am[PIECE[am.pieceCount]], look)
+    return 1
 end
 
 --- Draw `s`'s glow on a dressed text element, after layoutChain has anchored its chain (Text.Apply):
@@ -155,8 +183,7 @@ function Text.Glow(am, s, compiled)
     if Text.Stacked(s, compiled) then
         used = dressStack(am, compiled, look)
     else
-        dressSet(setAt(am, 1), am[PIECE[1]], am[PIECE[am.pieceCount]], look)
-        used = 1
+        used = dressLine(am, compiled, look)
     end
     hideFrom(am, used + 1)
 end

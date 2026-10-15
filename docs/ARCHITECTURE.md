@@ -304,8 +304,9 @@ what a Text line can do, which spell-id filters it honors, and when a non-Solid 
 handful of user-category trade-offs were accepted by the owner. A font a media addon registers
 after login is not primed until the next settings change or `/reload`. A container on a named frame
 cannot be dragged, and an attached one whose position reads secret jumps to the cursor when its drag
-starts. A Text line's glow is a halo around the text's bounds, not around each letter, and under a
-hand-set Width and Height the box cuts it on every side. Every limitation, its cause and any ruling:
+starts. A Text line's glow is a halo around the text's bounds, not around each letter, under a
+hand-set Width and Height the box cuts it on every side, and a stacks or dispel field the engine may
+write empty gets none of its own. Every limitation, its cause and any ruling:
 `docs/known-limitations.md`.
 
 ## Documentation map

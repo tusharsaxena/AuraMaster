@@ -254,9 +254,6 @@ local function rig(style)
             return (last and tostring(last[1]):len() or 0) * 6 + 2
         end
         NS.Style.__measurer = function() return fs end
-        -- The glow's falloff files, planted as tests/test_style_text_glow.lua plants them: the shipped
-        -- textures wait on the owner's media call (TG-01), and with no file a glow draws nothing.
-        NS.Constants.TEXT_GLOW_TEXTURES = NS.Constants.TEXT_GLOW_TEXTURES or { soft = "glow-soft", hard = "glow-hard" }
     end
     return k
 end

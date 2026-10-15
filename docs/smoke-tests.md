@@ -2038,16 +2038,19 @@ outline and shadow and the icon and the box get none. Result:
 
 **TEXT-31. The glow sits behind the text.** #4 *Player cooldowns* with a live aura, Font Outline on
 and Shadow ticked: tick Glow behind the text → a soft gold halo hugs the line and reaches a few pixels
-past it, behind the letters; the outline and the shadow still draw on the letters. Icon position Left
-→ the icon gets no glow; Dispel type → Backdrop on with a Magic buff → the backdrop shows under the
-glow and the box gets no halo of its own. Justify Left, Right, and Center on a one-field template →
-the halo follows the line each time. Center on a three-field template → one halo per field row, none
+past it, behind the letters; the outline and the shadow still draw on the letters. Icon position Left,
+then Right, Radius 24 and Offset X -20 → the halo runs behind the icon and never draws over its art;
+Dispel type → Backdrop on with a Magic buff → the backdrop tints over the glow and the box gets no
+halo of its own. Justify Left, Right, and Center on a one-field template → the halo follows the line
+each time. Center on the default template (`$spellname$[ x$stacks$][ - $remainingduration$]`) → a
+halo on the name row and the duration row, none on the stacks row even at 3 or more stacks, and none
 where the literal text is not drawn. Result:
 
 **TEXT-32. The glow's settings.** With it on, each applies at once: Glow color → the new color;
 its class-color box → your class color; Intensity 5% → faint, 100% → full; Radius 1 → a thin rim, 24
 → a wide halo; Blend mode Additive over a bright spot of the world → it brightens what is behind it;
-Falloff Hard → a solid core with a short fade; Offset X 10 and Offset Y -10 → the halo moves off the
+Falloff Hard → a solid halo with a crisp, rounded rim, then back to Soft → a long fade (both are
+client textures: a falloff that draws nothing at all fails this check); Offset X 10 and Offset Y -10 → the halo moves off the
 text and the text stays put. `/am set container.text.glowRadius 12` → the panel row follows. The Text
 section's **Defaults** → the glow is off again. Result:
 
@@ -2059,8 +2062,10 @@ the preview in the panel. Result:
 
 **TEXT-34. The glow in combat.** Glow on, a target-debuff Text container, at a training dummy: apply
 and refresh debuffs, let stacks rise and fall and durations run out → the halo follows the text as
-it grows and shrinks, with no Lua error. Animation Pulse, then Bounce → the glow fades and moves
-with the text. In combat, `/am set container.text.glow false` (the page itself is locked in combat)
+it grows and shrinks, with no Lua error. A 1-stack aura on Center with the default template → no
+glowing dot in the empty stacks row. A timeless aura (a food buff) on a template with a duration → a
+small round dot where the empty duration sits (`docs/known-limitations.md`). Animation Pulse, then
+Bounce → the glow fades and moves with the text. In combat, `/am set container.text.glow false` (the page itself is locked in combat)
 → nothing changes until combat ends, then the glow goes. Result:
 
 ## Library-absent install

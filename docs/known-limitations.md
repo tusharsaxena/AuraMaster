@@ -57,11 +57,23 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   glow-colored font string behind the first; the outline is always black and the font's one shadow
   belongs to its Shadow row. So the glow is a soft rounded rectangle of textures anchored to the font
   strings' edges, which the client sizes to the live text with no addon read
-  (`modules/Style_TextGlow.lua`). Under Size to fit nothing clips, so the halo draws in full past the
-  box. Under a hand-set Width and Height the text area clips everything in it, so the halo is cut
-  wherever it reaches past the box, on every side, even when the text fits and is not cut at all; with
-  a Height of about one font line, that trims the halo above and below the line.
-  Size to fit, the element size and the drag strip ignore the halo, as they ignore the shadow.
+  (`modules/Style_TextGlow.lua`). The halo sits on the element's lowest layer, so it runs behind the
+  icon (never over it), and the dispel backdrop and edge draw over it. Under Size to fit nothing
+  clips, so the halo draws in full past the box. Under a hand-set Width and Height the element clips
+  everything in it, so the halo is cut wherever it reaches past the box, on every side, even when the
+  text fits and is not cut at all; with a Height of about one font line, that trims the halo above and
+  below the line. Size to fit, the element size and the drag strip ignore the halo, as they ignore the
+  shadow. Both falloffs are textures the client ships (`C.TEXT_GLOW_TEXTURES`); Soft's color dims with
+  its alpha, so under Normal blend its outer fade is a touch darker than the glow color.
+- **A Text field the engine may write empty gets no glow of its own, and an empty duration glows as
+  a dot** (text glow, TG-05). The engine writes nothing for stacks below 2, for an aura with no dispel
+  type and for the duration of a timeless aura. The empty font string collapses to a point, and the
+  halo's four corners still meet there as a round glowing dot about twice the Radius across. No addon
+  code can read the secret text to hide the halo, and a texture cannot follow a font string's
+  visibility. So a stacked Center's stacks and dispel type rows get no halo, nor does a line of only
+  those fields (`$stacks$`, `$dispeltype$`); a line with a name, a duration or plain text keeps its
+  one halo. A duration row, or a duration-only line, keeps its halo, and on a timeless aura that halo
+  is the dot. The timeless placeholders (Well Fed, Mortal Wounds) show it in the preview too.
 - **A border style other than Solid redraws a live button only when the button is rebuilt.** Its
   backdrop does arithmetic on the button's size, which reads secret once the engine has laid the button
   out, so a new texture or thickness is applied on a new button, a rebuild or a `/reload`; its color

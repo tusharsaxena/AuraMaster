@@ -280,6 +280,15 @@ C.TEXT_GLOW_BLENDS = { "BLEND", "ADD" }
 C.TEXT_GLOW_BLEND_LABELS = { BLEND = "Normal", ADD = "Additive" }
 C.TEXT_GLOW_FALLOFFS = { "soft", "hard" }
 C.TEXT_GLOW_FALLOFF_LABELS = { soft = "Soft", hard = "Hard" }
+-- Each falloff's file, a radial texture the client ships, so the addon ships no media for it
+-- (layout-§3: a generic glow is not this addon's own art). Every piece of a glow set samples it as a
+-- nine-slice (modules/Style_TextGlow.lua). Soft is GenericGlow64 (file 1063457): a linear radial
+-- alpha fade to nothing at its edge, its color dimming with its alpha. Hard is TempPortraitAlphaMask
+-- (file 130924): a white disc, opaque to a crisp, anti-aliased rim.
+C.TEXT_GLOW_TEXTURES = {
+    soft = "Interface\\GLUES\\Models\\UI_Draenei\\GenericGlow64",
+    hard = "Interface\\CharacterFrame\\TempPortraitAlphaMask",
+}
 
 -- The template's tokens, in cheat-sheet order. modules/TextTemplate.lua parses with this list and
 -- settings/Text.lua prints it. `kind` is the engine field that draws a token; a duration token also

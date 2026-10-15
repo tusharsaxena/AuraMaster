@@ -1517,19 +1517,21 @@ Total.
 - autosize: a placeholder with the long name is not cut in test mode
 - autosize: off, a hand-set width still cuts a long line at the box, and a toggle re-dress follows it
 
-### test_style_text_glow.lua (17)
+### test_style_text_glow.lua (19)
 
 - text glow: every leaf sits in the text template at its G1 default, the glow off
 - text glow: the blend and falloff choices are labeled, and each default is one of them
 - text glow: a container stored without the glow leaves is backfilled with the glow off
 - text glow: a stored glow left on survives the backfill (savedvariables-§5)
+- text glow: each falloff names a texture the client ships, by an extensionless path (TG-05)
 - text glow: off builds no glow set; turned off after drawing, every set is hidden
 - text glow: a Left line gets one set from piece 1's edges to the last piece's, offset and r deep
 - text glow: Right and a one-piece Center line keep L = piece 1 and R = the last piece
-- text glow: a stacked Center line gets one set per field row and none for its literals
+- text glow: a stacked Center line gets a set per name or duration row, none for stacks, dispel or literals
+- text glow: a line of only stacks or dispel fields gets no set, a duration-only line one (TG-05)
 - text glow: a new template shape re-anchors the set to the new chain's pieces
 - text glow: each texture carries the falloff's file and the blend mode
-- text glow: with no file for the falloff (the textures not shipped), nothing is drawn
+- text glow: with no file for the falloff, nothing is drawn
 - text glow: the vertex color is the glow color, its alpha times the intensity
 - text glow: the class-color companion paints the container's class, its alpha kept
 - text glow: a container with only the glow's class-color companion on is class-colored
@@ -2445,7 +2447,7 @@ Total.
 | test_style_icons.lua | 31 |
 | test_style_text.lua | 56 |
 | test_style_text_autosize.lua | 18 |
-| test_style_text_glow.lua | 17 |
+| test_style_text_glow.lua | 19 |
 | test_preview.lua | 28 |
 | test_render_coverage.lua | 3 |
 | test_blizzardframes.lua | 8 |
@@ -2489,4 +2491,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **2079** |
+| **Total** | **2081** |
