@@ -65,11 +65,11 @@ The Settings tree's order is the TOC's own registration order: General, then Con
 
 The engine-facing modules: `modules/FilterCompiler.lua` with `modules/FilterViews.lua` (settings →
 groups, pure), `modules/Container.lua` (one engine), `modules/ContainerManager.lua` (the registry and
-the deferred apply), `modules/Style.lua` with `Style_Bars.lua`, `Style_Icons.lua`, `Style_Text.lua` and
-`modules/TextTemplate.lua`, placement in `modules/Anchors.lua` with `Anchors_Attach.lua`,
-`Anchors_Snap.lua`, `Anchors_SnapRect.lua` and `Anchors_Tooltip.lua`, `modules/EmptyWatch.lua`,
-`modules/FontPrimer.lua` and `modules/Preview.lua` (the session-only test mode). How they place,
-attach, preview, unlock and drag a container: `docs/data-flow.md` →
+the deferred apply), `modules/Style.lua` with `Style_Bars.lua`, `Style_Icons.lua`, `Style_Text.lua`,
+`Style_TextGlow.lua` and `modules/TextTemplate.lua`, placement in `modules/Anchors.lua` with
+`Anchors_Attach.lua`, `Anchors_Snap.lua`, `Anchors_SnapRect.lua` and `Anchors_Tooltip.lua`,
+`modules/EmptyWatch.lua`, `modules/FontPrimer.lua` and `modules/Preview.lua` (the session-only test
+mode). How they place, attach, preview, unlock and drag a container: `docs/data-flow.md` →
 [*Placement, preview and drag in brief*](data-flow.md#placement-preview-and-drag-in-brief).
 
 Every non-vendored file, its responsibility and the full load order: `docs/module-map.md`.

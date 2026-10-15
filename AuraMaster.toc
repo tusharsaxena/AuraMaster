@@ -103,6 +103,9 @@ modules\Style.lua
 modules\Style_Bars.lua
 modules\Style_Icons.lua
 modules\Style_Text.lua
+# LOAD-BEARING: Style_Text before Style_TextGlow, which decorates NS.Style.Text at file scope and binds
+# NS.CONTAINER_TEMPLATE (defaults\Profile.lua) at file load, indexing its .text there.
+modules\Style_TextGlow.lua
 # LOAD-BEARING: Anchors_Attach before Anchors, which binds its join spec, edge parts and scale from
 # NS.AnchorsAttach at file load. Anchors_Attach binds NS.CONTAINER_TEMPLATE (defaults\Profile.lua) at
 # file load.

@@ -574,6 +574,7 @@ function Text.Apply(frame, cfg, engine)
     layoutChain(am, s, compiled, h)
     dressDispelTints(am, s)
     if engine then Text.Bind(frame, am, cfg, s, compiled) end
+    Text.Glow(am, s, compiled)   -- modules/Style_TextGlow.lua, after the bindings as the loops are
     applyLoops(am, s)
 end
 
