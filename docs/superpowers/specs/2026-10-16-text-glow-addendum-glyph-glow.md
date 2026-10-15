@@ -29,8 +29,9 @@ letter.
 - **A button with no size is never placed.** Size it (`frame:SetSize`) in `initializeFrame`, as
   `Text.Apply` already does. `GetSize` on an engine returns secret values, so it can never be logged
   as numbers.
-- **Still open (owner probe `/amgp twin4s`):** whether a twin's font string SHADOW, in the glow color
-  at offset −2d, can serve as the opposite copy. If it can, four twins draw the ring of eight.
+- **Shadow pairing works (owner probe `/amgp twin4s`, 2026-10-16):** four twins, each drawing +d with
+  its font string shadow in the glow color at offset −2d, look the same as eight twins. So
+  `C.TEXT_GLOW_TWINS = 4` with pairing is the shipped value.
 
 ## Why twins (G0 revised)
 
