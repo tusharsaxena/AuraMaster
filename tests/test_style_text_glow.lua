@@ -71,12 +71,16 @@ test("text glow: the twins' ring is eight unit directions, four twins under shad
         assertNil(seen[key], "direction " .. k .. " is new")
         seen[key] = k
     end
-    for k = 1, C.TEXT_GLOW_TWINS do
-        local d = ring[k]
-        local opposite = seen[("%d,%d"):format(-d[1], -d[2])]   -- %d: no "-0" key for a zero
-        -- red under: two opposite directions among the first four (a twin and its shadow would draw
-        -- the same two points, and one opposite pair of the ring would be missing)
-        assertTrue(opposite > C.TEXT_GLOW_TWINS, "twin " .. k .. "'s opposite is a shadow, not a twin")
+    -- Only under pairing do the twins' opposites belong to the shadows; with pairing off all eight
+    -- are twins, and the flip stays the pins above alone.
+    if C.TEXT_GLOW_PAIRED then
+        for k = 1, C.TEXT_GLOW_TWINS do
+            local d = ring[k]
+            local opposite = seen[("%d,%d"):format(-d[1], -d[2])]   -- %d: no "-0" key for a zero
+            -- red under: two opposite directions among the first four (a twin and its shadow would
+            -- draw the same two points, and one opposite pair of the ring would be missing)
+            assertTrue(opposite > C.TEXT_GLOW_TWINS, "twin " .. k .. "'s opposite is a shadow, not a twin")
+        end
     end
 end)
 
