@@ -26,7 +26,7 @@ check's number is not reused. Checks with no recorded pass, and checks new or co
 | LAYOUT-1 to LAYOUT-38 | Layout | Anchor modes, attaching, chains, growth, anchor points, seams, the name label, mouse and tooltips |
 | DRAG-1 to DRAG-18 | Layout | Drag to attach (issue #22): dropping a container on another, the highlight on the target's strip, the side a drop picks, Shift, loops, detaching and its leeway (green hold, snap back, red past it), the growth-conflict popup, combat, a parent holding auras, frame-attached containers, the strip's tooltip, a drop between pulls in a key, a dropped side surviving a growth change, a drag cut short, a before-side drop with the line between the two join dots, the strip edge following the mark |
 | STYLE-1 to STYLE-30 | Bars and Icons style, fonts | Bars and Icons tabs, the spark, borders, dispel colors, pandemic, the font primer |
-| TEXT-1 to TEXT-34 | Text style | Templates and tokens, justify, the icon, dispel type word, backdrop and edge, animation, Size to fit, the glow behind the text |
+| TEXT-1 to TEXT-36 | Text style | Templates and tokens, justify, the icon, dispel type word, backdrop and edge, animation, Size to fit, the glow behind the text |
 | DEGRADED-1 | Library-absent install | The launcher libraries missing |
 | LOC-1 to LOC-2 | Non-English client | Spell names from the client, adding a spell by its localized name |
 
@@ -2030,43 +2030,59 @@ container.text.autoSize true` (the page itself is locked in combat) → it appli
 apply at the stored size, then sized to fit. Result: pass (owner-marked 2026-10-10)
 
 **TEXT-30. The Glow rows.** Text → Font: a **Glow** subgroup under Font, above Countdown and Dispel
-type, with Glow behind the text, Glow color and its class-color box, Intensity, Radius (px), Blend
-mode, Falloff, Offset X and Offset Y. Glow behind the text is unticked on a new container and on one
-saved by an older build, and nothing is drawn behind its text. While it is unticked every row but the
-color pair is grayed out; tick it → they light up. The toggle's tooltip says the glow adds to the
+type, with Glow behind the text, Glow color and its class-color box, Intensity, Thickness (px),
+Offset X and Offset Y, and no other row. Glow behind the text is unticked on a new container and on
+one saved by an older build, and nothing is drawn behind its text. While it is unticked every row but
+the color pair is grayed out; tick it → they light up. The toggle's tooltip says the glow adds to the
 outline and shadow and the icon and the box get none. Result:
 
-**TEXT-31. The glow sits behind the text.** #4 *Player cooldowns* with a live aura, Font Outline on
-and Shadow ticked: tick Glow behind the text → a soft gold halo hugs the line and reaches a few pixels
-past it, behind the letters; the outline and the shadow still draw on the letters. Icon position Left,
-then Right, Radius 24 and Offset X -20 → the halo runs behind the icon and never draws over its art;
-Dispel type → Backdrop on with a Magic buff → the backdrop tints over the glow and the box gets no
-halo of its own. Justify Left, Right, and Center on a one-field template → the halo follows the line
-each time. Center on the default template (`$spellname$[ x$stacks$][ - $remainingduration$]`) → a
-halo on the name row and the duration row, none on the stacks row even at 3 or more stacks, and none
-where the literal text is not drawn. Result:
+**TEXT-31. The glow hugs each letter.** #4 *Player cooldowns* with a live aura, Font Outline on and
+Shadow ticked: tick Glow behind the text → a gold glow about 2 px wide hugs each letter, under the
+letters, with no box around the line; the black outline and the shadow still draw on the letters.
+Font size 36 → the glow is even all the way round, the corners of each letter included. Icon position
+Left, then Right → the glow never draws over the icon's art. Dispel type → Backdrop on with a Magic
+buff → the backdrop tints over the glow. Justify Left, Right, and Center on a one-field template →
+the glow follows the letters each time. Center on the default template
+(`$spellname$[ x$stacks$][ - $remainingduration$]`) → the name row and the duration row glow, the
+stacks row glows at 2 or more stacks and shows nothing at 1. Hover the text → the aura's tooltip;
+right-click a buff → it is canceled. `/am diagnostics` → this container's `[Cont]` line reads
+`twins=4`; untick the glow → `twins=0`. Result:
 
-**TEXT-32. The glow's settings.** With it on, each applies at once: Glow color → the new color;
-its class-color box → your class color; Intensity 5% → faint, 100% → full; Radius 1 → a thin rim, 24
-→ a wide halo; Blend mode Additive over a bright spot of the world → it brightens what is behind it;
-Falloff Hard → a solid halo with a crisp, rounded rim, then back to Soft → a long fade (both are
-client textures: a falloff that draws nothing at all fails this check); Offset X 10 and Offset Y -10 → the halo moves off the
-text and the text stays put. `/am set container.text.glowRadius 12` → the panel row follows. The Text
-section's **Defaults** → the glow is off again. Result:
+**TEXT-32. The glow's settings.** With it on, each applies at once, with no `/reload`: Glow color →
+the new color; its class-color box → your class color; Intensity 5% → faint, 100% → full; Thickness
+1 → a thin rim, 6 → a wide glow; Offset X 10 and Offset Y -10 → the glow moves off the text and the
+text stays put. Unlock and drag the container → the glow moves with it. `/am set
+container.text.glowThickness 4` → the panel row follows. The Text section's **Defaults** → the glow is
+off again. Result:
 
-**TEXT-33. The glow and the box.** Size to fit on → the halo draws in full, past the box. Untick it,
+**TEXT-33. The glow and the box.** Size to fit on → the glow draws in full, past the box. Untick it,
 with a Width wider than the line and a Height of about one font line → the text draws whole, and the
-halo is trimmed at the box's top and bottom edges. Set a Width narrower than the line → the text and
-the halo are both cut at the box's side edges. `/am test` → the placeholders draw the glow, and so does
-the preview in the panel. Result:
+glow is trimmed at the box's top and bottom edges. Set a Width narrower than the line → the text and
+the glow are both cut at the box's side edges; the live glow may be cut a little more on the far side
+than the preview's (`docs/known-limitations.md`). `/am test` → the placeholders draw the same glow as
+the live line, and so does the preview in the panel. Result:
 
 **TEXT-34. The glow in combat.** Glow on, a target-debuff Text container, at a training dummy: apply
-and refresh debuffs, let stacks rise and fall and durations run out → the halo follows the text as
-it grows and shrinks, with no Lua error. A 1-stack aura on Center with the default template → no
-glowing dot in the empty stacks row. A timeless aura (a food buff) on a template with a duration → a
-small round dot where the empty duration sits (`docs/known-limitations.md`). Animation Pulse, then
-Bounce → the glow fades and moves with the text. In combat, `/am set container.text.glow false` (the page itself is locked in combat)
-→ nothing changes until combat ends, then the glow goes. Result:
+and refresh debuffs, let stacks rise and fall and durations run out → the gold stays under the right
+aura's name and time as auras come and go and the text grows and shrinks, with no Lua error and no
+drop in framerate. A timeless aura (a food buff) on a template with a duration → no glow where the
+empty duration sits. Pandemic → Pandemic-window time color with Blink, an aura in its last seconds →
+the time turns color and blinks on the text, and its glow stays the glow color. Animation Pulse, then
+Bounce → the glow fades and moves with the text, at most a few frames apart. On *Player buffs* with
+the glow on, in combat → hover still shows the tooltip and right-click still cancels a buff. In
+combat, `/am set container.text.glow false` (the page itself is locked in combat) → nothing changes
+until combat ends, then the glow goes. Result:
+
+**TEXT-35. The glow stays under the text at any frame level.** Glow on, Icon position Left, Layout →
+Frame level 1, then 5 → the glow stays under the icon and under the text both times. Then, glow still
+on and without a `/reload`, Frame level 20 → the glow still stays under the text and the icon. Record
+the outcome in `docs/midnight-quirks.md` → *A glyph glow needs twin engines* (Not yet probed).
+Result:
+
+**TEXT-36. The glow on a long line.** Glow on, Font Outline on, Justify Left, a three-field template
+(`$spellname$ - $stacks$ - $remainingduration$`) on an aura with stacks → the glow on the last
+piece is centered on its letters, as it is on the first, and has not slid left or right of them.
+Record any drift in `docs/known-limitations.md`. Result:
 
 ## Library-absent install
 
@@ -2100,4 +2116,5 @@ On 2026-10-10 the owner marked every check in this file as passed, recorded on i
 `pass (owner-marked 2026-10-10)`; a check that already carried a dated owner pass keeps it. A check
 added or rewritten after that date is listed here until its `Result:` line records a pass:
 
-- TEXT-30 to TEXT-34 (the glow behind the text, added 2026-10-15).
+- TEXT-30 to TEXT-36 (the glow behind the text, added 2026-10-15 and rewritten 2026-10-16 for the
+  glyph glow).

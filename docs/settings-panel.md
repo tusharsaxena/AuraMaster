@@ -823,20 +823,20 @@ draws the icon and its border only on Left or Right. So every row but Icon posit
 position to show the icon." (smoke batch 2, item 6). Icon position redraws the page on a change, so
 the note and the dimming follow it at once.
 
-**Glow** (Font, text glow, owner 2026-10-15) sits under the Font subgroup, before Countdown and
-Dispel type. `glow` (Glow behind the text, off by default) draws a soft halo behind the text, in
-addition to the font's outline and shadow and never in place of them; the icon and the box get none.
-It hugs the text's bounds, not each letter, since the engine writes the text secret into a font string
-of ours (`docs/known-limitations.md`). Glow color is a swatch with alpha and its class-color companion
-(`glowColor`, `useClassColorGlow`). `glowIntensity` (Intensity, 5 to 100%) scales the color's alpha,
-`glowThickness` (Thickness (px), 1 to 6) is how far the glow reaches out from the text, and `glowX`
-and `glowY` (Offset X and Offset Y, -20 to 20 px) nudge it off the text. The glyph glow addendum
-(2026-10-16) removed the halo's Radius, Blend mode and Falloff rows. Every row but the color pair
-dims while `glow` is off; the composer never lets the swatch dim (options-ui-§17). A stacked Center
-line gets one halo per name or duration row. A stacks or dispel type field gets none of its own,
-since the engine writes it empty below 2 stacks or with no type and an empty field would glow as a
-dot (`docs/known-limitations.md`). The halo draws behind the icon and under the dispel backdrop. The
-preview and the unlocked placeholders draw it too.
+**Glow** (Font, text glow, owner 2026-10-15; glyph glow addendum 2026-10-16) sits under the Font
+subgroup, before Countdown and Dispel type. `glow` (Glow behind the text, off by default) draws a
+ring of glow-colored copies of each letter under the text, in addition to the font's outline and
+shadow and never in place of them; the icon and the box get none. A live line's copies come from
+`C.TEXT_GLOW_TWINS` twin engines that write the same secret text (`docs/known-limitations.md`), so
+the glow follows every field, and an empty field draws none. Glow color is a swatch with alpha and its
+class-color companion (`glowColor`, `useClassColorGlow`). `glowIntensity` (Intensity, 5 to 100%)
+scales the color's alpha on each copy, `glowThickness` (Thickness (px), 1 to 6) is the ring's radius,
+how far the glow reaches out from each letter, and `glowX` and `glowY` (Offset X and Offset Y, -20 to
+20 px) shift the whole ring off the text. Every row but the color pair dims while `glow` is off; the
+composer never lets the swatch dim (options-ui-§17). Turning the glow on or off rebuilds the
+container; Thickness and the offsets move the ring and build nothing, and the color and Intensity
+restyle in place. The glow draws under the icon and under the dispel backdrop. The preview and the
+unlocked placeholders draw it too, with copy strings of their own.
 
 **Dispel type** (Font, feedback #7; on the Animation tab until smoke batch 2, item 5 — the paths and
 stored values did not change) holds three opt-in stand-ins for "color the text by dispel

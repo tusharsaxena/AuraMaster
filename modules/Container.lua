@@ -1,7 +1,7 @@
 local _, NS = ...
 
--- modules/Container.lua — one live container: its anchor, its drag handle, and the Blizzard aura
--- engine that actually draws its auras.
+-- modules/Container.lua — one live container: its anchor, its drag handle, the Blizzard aura engine
+-- that draws its auras, and with a Text glow on, its twin engines (modules/Container_Twins.lua).
 --
 -- BUILD, UPDATE OR REBUILD. A container's settings compile (modules/FilterCompiler.lua) into a plan of
 -- aura groups. The engine lets most of a group change live — filter string, candidate filters,

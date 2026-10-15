@@ -51,30 +51,28 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   button in combat. The Text section offers three opt-in stand-ins instead (Font → Dispel type,
   feedback #7): the `$dispeltype$` word colored by a `|c` escape in the engine's own text map, and a
   backdrop and an edge the engine tints (`modules/Style_Text.lua`).
-- **A Text line's glow is a halo around the text, not a per-glyph glow around each letter** (text
-  glow, owner 2026-10-15). The engine writes every field into one font string of ours through a
-  `Set…` binding with one target, and no addon code can read the secret text to copy it into a second,
-  glow-colored font string behind the first; the outline is always black and the font's one shadow
-  belongs to its Shadow row. So the glow is a soft rounded rectangle of textures anchored to the font
-  strings' edges, which the client sizes to the live text with no addon read
-  (`modules/Style_TextGlow.lua`). The halo sits on the element's lowest layer, so it runs behind the
-  icon (never over it), and the dispel backdrop and edge draw over it. Under Size to fit nothing
-  clips, so the halo draws in full past the box. Under a hand-set Width and Height the element clips
-  everything in it, so the halo is cut wherever it reaches past the box, on every side, even when the
-  text fits and is not cut at all; with a Height of about one font line, that trims the halo above and
-  below the line. Size to fit, the element size and the drag strip ignore the halo, as they ignore the
-  shadow. The halo's texture is one the client ships (GenericGlow64, named in
-  `modules/Style_TextGlow.lua`); its color dims with its alpha, so its outer fade is a touch darker
-  than the glow color.
-- **A Text field the engine may write empty gets no glow of its own, and an empty duration glows as
-  a dot** (text glow, TG-05). The engine writes nothing for stacks below 2, for an aura with no dispel
-  type and for the duration of a timeless aura. The empty font string collapses to a point, and the
-  halo's four corners still meet there as a round glowing dot about twice the Thickness across. No addon
-  code can read the secret text to hide the halo, and a texture cannot follow a font string's
-  visibility. So a stacked Center's stacks and dispel type rows get no halo, nor does a line of only
-  those fields (`$stacks$`, `$dispeltype$`); a line with a name, a duration or plain text keeps its
-  one halo. A duration row, or a duration-only line, keeps its halo, and on a timeless aura that halo
-  is the dot. The timeless placeholders (Well Fed, Mortal Wounds) show it in the preview too.
+- **A glowing Text container runs extra aura engines, and its ring is a copy that can part from
+  its main** (text glow, glyph glow addendum 2026-10-16). The engine writes each field into one font
+  string of ours, through a binding with one target, from the secure side, and in combat the button's
+  strings refuse every addon call, so no addon code can copy the live, secret text. The Slug outline
+  is always black and takes no color. So a container with Glow on builds `C.TEXT_GLOW_TWINS` (4) twin
+  engines beside its main (`modules/Container_Twins.lua`), each with the main's unit, groups, view and
+  layout, moved by Thickness × a ring direction plus Offset X and Y and drawn under the main in the
+  glow color; each twin's shadow, in the same color, is the ring's opposite point. Each twin is a
+  whole engine with its own `UNIT_AURA` work, so a glowing container does five engines' work for one
+  line. The owner's probe ran eight twins with no framerate drop; a perf run on the shipped four is
+  still owed. A twin sorts with the same comparator as its main, so a sort tie broken differently
+  would put a copy under the wrong aura; the probe never saw one. A twin's loop starts when its own
+  button is dressed, so a Pulse or Bounce can run a few frames out of phase with its main. A twin
+  draws without the outline, so if the client widens an outlined string, a multi-piece line's later
+  copies sit that much off center (smoke TEXT-36). Under Size to fit nothing clips. Under a hand-set
+  Width and Height each twin clips at its own box, moved by its ring offset, so the ring is cut
+  wherever it reaches past the box, and the paired shadow, which draws twice the Thickness back from
+  its twin's text, outside that twin's box, is cut by up to twice the Thickness (12 px at 6) plus
+  Offset X or Y. A placeholder's copies are cut only by the element's own box, so the preview can
+  show more of the ring's far side than a live line does. An empty field is empty on its twins too,
+  so it draws no glow. Size to fit, the element size and the drag strip ignore the ring, as they
+  ignore the shadow.
 - **A border style other than Solid redraws a live button only when the button is rebuilt.** Its
   backdrop does arithmetic on the button's size, which reads secret once the engine has laid the button
   out, so a new texture or thickness is applied on a new button, a rebuild or a `/reload`; its color

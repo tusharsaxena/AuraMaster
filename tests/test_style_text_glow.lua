@@ -1,9 +1,9 @@
 -- tests/test_style_text_glow.lua — a Text container's glow behind its text (text glow, TG-01..):
--- the stored leaves and their defaults, the halo's leaves and tables gone and the twins' ring in
+-- the stored leaves and their defaults, the removed leaves and tables gone and the twins' ring in
 -- their place (TG-09), a container stored before the glow existed, which the load backfill brings up
 -- to the template with the glow off, and the glyph glow's dress (TG-10, modules/Style_TextGlow.lua):
 -- Text.GlowFont's color, flags and paired shadow, a twin button dressed through the same Text.Apply
--- as its main with only the look changed, and a placeholder's ring of copy strings.
+-- as its main with only the look changed, a placeholder's ring of copy strings, and the docs (TG-12).
 --
 -- Spec: docs/superpowers/specs/2026-10-16-text-glow-addendum-glyph-glow.md (Rendering), which
 -- supersedes the halo of docs/superpowers/specs/2026-10-15-text-glow-design.md; the design note is
@@ -34,7 +34,7 @@ test("text glow: every leaf sits in the text template at its addendum default, t
     assertEqual(c.r, 1); assertEqual(c.g, 0.82); assertEqual(c.b, 0); assertEqual(c.a, 1)
 end)
 
-test("text glow: the halo's radius, blend and falloff are gone, leaves, tables and rows (TG-09)", function()
+test("text glow: the old radius, blend and falloff are gone, leaves, tables and rows (TG-09)", function()
     local NS = fresh()
     local C, t = NS.Constants, NS.CONTAINER_TEMPLATE.text
     for _, key in ipairs({ "glowRadius", "glowBlend", "glowFalloff" }) do
@@ -497,26 +497,81 @@ test("text glow: a container with only the glow's class-color companion on is cl
     assertFalse(NS.Style.UsesClassColor(c), "and nothing else in the block is")
 end)
 
-test("text glow: the docs name every glow leaf on the Font tab row and the halo's limits", function()
-    local function read(path)
-        local f = assert(io.open(path, "r"), "cannot open " .. path)
-        local body = f:read("*a")
-        f:close()
-        return (body:gsub("\r", ""))
-    end
-    local fontRow = read("docs/settings-panel.md"):match("\n| Font | ([^\n]*)")
+--- `path`'s text with CR stripped, so a match never trips on the repo's CRLF.
+local function readDoc(path)
+    local f = assert(io.open(path, "r"), "cannot open " .. path)
+    local body = f:read("*a")
+    f:close()
+    return (body:gsub("\r", ""))
+end
+
+test("text glow: the docs name every glow leaf on the Font tab row and the twins' limits", function()
+    local fontRow = readDoc("docs/settings-panel.md"):match("\n| Font | ([^\n]*)")
     assertTrue(fontRow ~= nil, "docs/settings-panel.md has the Text section's Font row")
     for _, key in ipairs(LEAVES) do
         -- red under: the Font row without its Glow paths (spec G6)
         assertTrue(fontRow:find("`" .. key .. "`", 1, true) ~= nil, "the Font row names " .. key)
     end
-    local bullet = read("docs/known-limitations.md"):match("\n%- %*%*A Text line's glow(.-)\n%- ")
-    -- red under: docs/known-limitations.md without the glow's bullet (spec G6)
-    assertTrue(bullet ~= nil, "docs/known-limitations.md has the glow's bullet")
-    -- red under: the glow's bullet silent on its shape (no per-glyph glow, and why)
-    assertTrue(bullet:find("glyph", 1, true) ~= nil, "no per-glyph glow, and why")
-    for _, word in ipairs({ "hand-set", "Width", "Height", "wherever it reaches past the box" }) do
-        -- red under: the glow's bullet without its clip on every side under a hand-set Width and Height
-        assertTrue(bullet:find(word, 1, true) ~= nil, "the halo's clip names " .. word)
+    local bullet = readDoc("docs/known-limitations.md"):match("\n%- %*%*A glowing Text container(.-)\n%- ")
+    -- red under: docs/known-limitations.md still on the halo's bullet (the glyph glow addendum's limits)
+    assertTrue(bullet ~= nil, "docs/known-limitations.md has the twins' bullet")
+    -- red under: a limit of the addendum's four left out (twin cost, sort tie, loop phase, the clip)
+    for _, word in ipairs({ "C.TEXT_GLOW_TWINS", "UNIT_AURA", "perf", "sort", "phase", "hand-set", "Width",
+        "shadow" }) do
+        assertTrue(bullet:find(word, 1, true) ~= nil, "the twins' bullet names " .. word)
+    end
+    local limits = readDoc("docs/ARCHITECTURE.md"):match("\n## Known Limitations\n(.-)\n## ")
+    -- red under: ARCHITECTURE's summary still calling the glow a halo around the text's bounds
+    assertTrue(limits ~= nil and limits:find("twin engines", 1, true) ~= nil, "ARCHITECTURE names the twins")
+end)
+
+test("text glow: no living doc still describes the removed glow textures", function()
+    local docs = { "README.md" }
+    local p = io.popen("ls docs/*.md")
+    for path in p:lines() do
+        -- docs/test-cases.md is generated from case names, and a removal case names what it removed
+        if path ~= "docs/test-cases.md" then docs[#docs + 1] = path end
+    end
+    p:close()
+    -- red under: a glob that found nothing (the scan would pass blind)
+    assertTrue(#docs > 10, "docs/*.md listed")
+    local stale = { "halo", "nine-slice", "genericglow", "glowradius", "glowblend", "glowfalloff",
+        "text_glow_textures", "text_glow_blends", "text_glow_falloffs", "falloff", "blend mode" }
+    local hits = {}
+    for _, path in ipairs(docs) do
+        local n = 0
+        for line in (readDoc(path) .. "\n"):gmatch("([^\n]*)\n") do
+            n = n + 1
+            local low = line:lower()
+            for _, word in ipairs(stale) do
+                if low:find(word, 1, true) then hits[#hits + 1] = ("%s:%d %s"):format(path, n, word) end
+            end
+        end
+    end
+    -- red under: a doc still on the rejected halo (the glyph glow addendum removed it, TG-12)
+    assertEqual(table.concat(hits, ", "), "", "no doc describes the halo")
+end)
+
+test("text glow: docs/midnight-quirks.md records the 12.1 glow probe", function()
+    local section = readDoc("docs/midnight-quirks.md"):match("\n## A glyph glow needs twin engines(.-)\n## ")
+    -- red under: no section for the owner's AMGlowProbe facts (the glyph glow addendum)
+    assertTrue(section ~= nil, "docs/midnight-quirks.md has the glow section")
+    for _, word in ipairs({ "Slug", "black", "sublevel", "SetDrawLayer", "SetSize", "GetSize", "secret",
+        "shadow", "C.TEXT_GLOW_TWINS", "modules/Container_Twins.lua" }) do
+        -- red under: a probe fact left out (the outline's color, the layer, placement, secret size, pairing)
+        assertTrue(section:find(word, 1, true) ~= nil, "the glow section names " .. word)
+    end
+end)
+
+test("text glow: the glyph glow's smoke checks are written and wait for the owner", function()
+    local body = readDoc("docs/smoke-tests.md")
+    -- red under: the index or the pending list still ending at TEXT-34 (the twins' checks missing)
+    assertTrue(body:find("| TEXT-1 to TEXT-36 |", 1, true) ~= nil, "the index runs to TEXT-36")
+    assertTrue(body:find("\n- TEXT-30 to TEXT-36 ", 1, true) ~= nil, "TEXT-30 to TEXT-36 are pending")
+    for id = 30, 36 do
+        local check = body:match("\n%*%*TEXT%-" .. id .. "%. (.-)\n\n")
+        -- red under: a glow check missing, or marked passed before the owner ran it
+        assertTrue(check ~= nil, "TEXT-" .. id .. " is written")
+        assertTrue(check:match("Result:%s*$") ~= nil, "TEXT-" .. id .. " has an empty Result line")
     end
 end)

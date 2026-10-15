@@ -1552,10 +1552,10 @@ Total.
 - autosize: a placeholder with the long name is not cut in test mode
 - autosize: off, a hand-set width still cuts a long line at the box, and a toggle re-dress follows it
 
-### test_style_text_glow.lua (23)
+### test_style_text_glow.lua (26)
 
 - text glow: every leaf sits in the text template at its addendum default, the glow off
-- text glow: the halo's radius, blend and falloff are gone, leaves, tables and rows (TG-09)
+- text glow: the old radius, blend and falloff are gone, leaves, tables and rows (TG-09)
 - text glow: the twins' ring is eight unit directions, four twins under shadow pairing (TG-09)
 - text glow: a container stored without the glow leaves is backfilled with the glow off
 - text glow: a stored glow left on survives the backfill (savedvariables-§5)
@@ -1576,7 +1576,10 @@ Total.
 - text glow: copies are hidden while off, on an engine button, past the pieces and on a stacked literal
 - text glow: a new template shape re-anchors the copies to the new chain's strings
 - text glow: a container with only the glow's class-color companion on is class-colored
-- text glow: the docs name every glow leaf on the Font tab row and the halo's limits
+- text glow: the docs name every glow leaf on the Font tab row and the twins' limits
+- text glow: no living doc still describes the removed glow textures
+- text glow: docs/midnight-quirks.md records the 12.1 glow probe
+- text glow: the glyph glow's smoke checks are written and wait for the owner
 
 ### test_preview.lua (29)
 
@@ -2489,7 +2492,7 @@ Total.
 | test_style_icons.lua | 31 |
 | test_style_text.lua | 56 |
 | test_style_text_autosize.lua | 18 |
-| test_style_text_glow.lua | 23 |
+| test_style_text_glow.lua | 26 |
 | test_preview.lua | 29 |
 | test_render_coverage.lua | 3 |
 | test_blizzardframes.lua | 8 |
@@ -2533,4 +2536,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **2119** |
+| **Total** | **2122** |

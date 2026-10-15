@@ -52,7 +52,9 @@ replacement: the `AuraContainer` widget (`CustomAuraContainerTemplate`), which r
 itself, gathers auras against declared groups, and creates and fills `AuraButton`s in secure code.
 `SecureAuraHeaderTemplate` is no longer available on Retail.
 
-**What this addon does.** Every container is one `AuraContainer` engine (`modules/Container.lua:449`). The addon
+**What this addon does.** Every container is one main `AuraContainer` engine (`modules/Container.lua:449`). A Text
+container with Glow on adds `C.TEXT_GLOW_TWINS` twin engines with the same groups, which draw only
+its glow (*A glyph glow needs twin engines*, below). The addon
 declares groups — `AddAuraGroup(key, filterString, { candidateFilters, sortMethod, sortDirection,
 maxFrameCount, layout, initializeFrame })` — compiled from the settings by
 `modules/FilterCompiler.lua`, and dresses each button in `initializeFrame` (`modules/Style.lua`). The
@@ -687,6 +689,52 @@ Magic (1), Poison (4). Being cast by the player does not strip the type. The oth
 showing no `$dispeltype$` word and keeping the surface's color is correct. Out of combat none of the
 values was secret.
 
+## A glyph glow needs twin engines
+
+**The restriction.** The engine writes a button's name, stacks, dispel word and time from the secure
+side, through forbidden handles, each binding (`SetSpellName`, `SetApplicationCount`,
+`SetDispelTypeText`, the duration text binding) to exactly one font string. No hook sees the write,
+and in combat the button's strings refuse every addon call, so no addon code can copy the live,
+secret text into a second string. A frame of textures behind the line drew a solid box instead (owner
+smoke, 2026-10-15).
+
+**Measured in-game, client 12.1, 2026-10-16** (the owner's throwaway probe, `AMGlowProbe`):
+- **The Slug outline is always black.** `OUTLINE,SLUG`, `OUTLINE|SLUG`, `THICKOUTLINE,SLUG` and `SLUG`
+  all draw a black rim, and a colored shadow at offset 0 does not tint it.
+- **A ring of glow-colored copies reads as a glow.** The owner picked a radius of 2 px, eight copies
+  at alpha about 0.55, with the main text drawn on top.
+- **`CreateFontString` takes no sublevel argument.** The order within a layer needs
+  `SetDrawLayer(layer, sublevel)`; without it the last-created string draws on top.
+- **Twin engines work.** Nine `CustomAuraContainerTemplate` engines side by side, one main and eight
+  twins, each with the same unit, filter, sort and layout and each offset by a ring direction × 2 px:
+  every twin built the same buttons, the gold copies stayed under the right aura's name and timer as
+  auras came and went, the tooltip and right-click cancel on the main still worked, in and out of
+  combat, and the framerate did not drop.
+- **A button with no size is never placed.** A button `initializeFrame` leaves unsized is never laid
+  out, so it is sized there (`frame:SetSize`), as `Text.Apply` does for every Text button.
+- **An engine's size and points read secret.** `GetSize` on an engine returns secret values, and the
+  probe printed its points and a button's shown and visible state as `secret`, so none of them is
+  ever logged or compared as a number.
+- **Shadow pairing halves the twins** (`/amgp twin4s`). Four twins, each drawing at +d with its font
+  string's shadow in the glow color at −2d, look the same as eight.
+
+**What this addon does.** A Text container with Glow on builds `C.TEXT_GLOW_TWINS` twin engines
+(`core/Constants.lua:286`: 4 under shadow pairing, `C.TEXT_GLOW_PAIRED`, else 8) beside its main
+(`modules/Container_Twins.lua`). Each takes the main's unit, groups, view, enchant slots and flow
+through the same calls in the same order, hangs from a holder of ours at Thickness × its ring
+direction plus Offset X and Y, and sits three frame levels below the main, written before its first
+group. Its buttons are dressed by the same `Text.Apply` as the main's with a twin index: each piece in
+the glow color, the outline dropped, the shadow in the glow color at the ring's opposite point, the
+icon laid out but hidden, no dispel tints and no time color, and no mouse
+(`modules/Style_TextGlow.lua`). A placeholder writes its own text, so its ring is copy strings of
+ours, put under the icon with `SetDrawLayer("BACKGROUND", 0)`. The `[Cont]` line's `twins=` counts a
+container's twins (`docs/debug.md`).
+
+**Not yet probed** (smoke TEXT-35): `SetFrameLevel` on an engine before its first group, and whether
+the client re-bases an engine's level when an ancestor's level changes (a Frame level change with the
+glow on rebuilds nothing; `Twins.Place` re-levels the holders from the main's level on every apply).
+`SetSize` and `SetPoint` in that window are proven. Record the outcome here.
+
 ## Taint notes
 
 - **No secure template of our own.** The only protected machinery is Blizzard's aura engine. Each
@@ -714,6 +762,11 @@ values was secret.
   the parent's geometry, which may read secret.
 - **The engine is anchored before its first `AddAuraGroup`**; after that an addon can no longer
   anchor it (`modules/Container.lua:457-460`).
+- **A twin engine is moved only through its holder, and only out of combat.** A glow twin hangs from
+  a plain frame of ours pinned to the anchor (`modules/Container_Twins.lua`); a thickness or offset
+  change re-points the holder in `Apply`, which never runs under `MustDefer`, so an engine's
+  ancestry is never moved in combat. A twin button takes no mouse and binds no cancel or tooltip, so
+  the main's button keeps the only tooltip and right-click cancel.
 - **No structural work while auras are secret or under combat lockdown.** `ContainerManager.MustDefer`
   (`modules/ContainerManager.lua:217`) holds every build, update and restyle; aura buttons refuse addon
   access while auras are secret.

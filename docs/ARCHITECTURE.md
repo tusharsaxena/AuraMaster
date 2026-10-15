@@ -16,7 +16,9 @@ auras are secret — combat, encounters, Mythic+ and PvP (`core/Secrets.lua`, `d
 So this addon reads no aura at all. Every container is a Blizzard **AuraContainer**
 (`CreateFrame("AuraContainer", nil, anchor, "CustomAuraContainerTemplate")`,
 `modules/Container.lua:449`) that registers `UNIT_AURA` for its unit, gathers, sorts, lays out and
-animates its buttons in Blizzard's own code. The addon's job is to **declare** what each container
+animates its buttons in Blizzard's own code. A Text container with Glow on adds `C.TEXT_GLOW_TWINS`
+twin engines with the same content, offset around the main and dressed in the glow color
+(`modules/Container_Twins.lua`), since no addon code can copy the engine's secret text. The addon's job is to **declare** what each container
 shows and **dress** each button the engine creates:
 
 ```
@@ -66,7 +68,9 @@ before `settings/General.lua`, which registers their rows after its own.
 The Settings tree's order is the TOC's own registration order: General, then Containers, then Profiles. Filters, Layout, Bars, Icons and Text are sections of the Containers page (#6) with no tree entry; they load after `settings/OptionsSetup.lua` in any order, and the rail's order is `SECTION_ORDER` there.
 
 The engine-facing modules: `modules/FilterCompiler.lua` with `modules/FilterViews.lua` (settings →
-groups, pure), `modules/Container.lua` (one engine), `modules/ContainerManager.lua` (the registry and
+groups, pure), `modules/Container.lua` (one main engine) with `modules/Container_Twins.lua` (a glowing
+Text container's twin engines, right after it by convention only, resolving its peers at call time),
+`modules/ContainerManager.lua` (the registry and
 the deferred apply), `modules/Style.lua` with `Style_Bars.lua`, `Style_Icons.lua`, `Style_Text.lua`,
 `Style_TextGlow.lua` and `modules/TextTemplate.lua`, placement in `modules/Anchors.lua` with
 `Anchors_Attach.lua`, `Anchors_Snap.lua`, `Anchors_SnapRect.lua` and `Anchors_Tooltip.lua`,
@@ -239,8 +243,8 @@ optional. The full table and the reasons:
 | `PLAYER_REGEN_DISABLED`, `PLAYER_REGEN_ENABLED`, `ADDON_RESTRICTION_STATE_CHANGED` | `modules/TimedSpells.lua` (AceEvent, on its own target) — while a container uses "without a duration" and the addon is not suspended | `syncAuraListen`: `PLAYER_REGEN_DISABLED` closes the readable gate by itself (it fires before combat lockdown begins); the other two re-check it, dropping or restoring `UNIT_AURA`; reopening schedules one scan |
 | AceDB `OnProfileChanged` / `OnProfileCopied` / `OnProfileReset` | `core/Database.lua:273-277` | `NS.OnProfileChanged` / `NS.OnProfileCopied` / `NS.OnProfileReset` → re-prepare the registry, trace the event once in its own words (a switch `[Profile] changed -> X`; a copy or a reset one `[Set]` line, debug-logging-§10), rebuild, re-render |
 
-Each container's own `UNIT_AURA` belongs to the engine (`SetUnit`, `modules/Container.lua:443`) and
-is not addon code. The twelve `core/AuraMaster.lua` registrations are one module-level list,
+Each container's own `UNIT_AURA` belongs to its engine, and to each twin engine of a glowing Text
+container, which takes the same `SetUnit` (`modules/Container.lua:443`); none of it is addon code. The twelve `core/AuraMaster.lua` registrations are one module-level list,
 `LIFECYCLE_EVENTS`, which `RegisterLifecycleEvents` and `UnregisterLifecycleEvents` both walk, so the
 stand-down and the stand-up remove and restore the same list. With logging on, the world-entry, loading-screen, combat and
 restriction handlers each write one `[Event]` line before acting (`traceEvent`,
@@ -304,9 +308,9 @@ what a Text line can do, which spell-id filters it honors, and when a non-Solid 
 handful of user-category trade-offs were accepted by the owner. A font a media addon registers
 after login is not primed until the next settings change or `/reload`. A container on a named frame
 cannot be dragged, and an attached one whose position reads secret jumps to the cursor when its drag
-starts. A Text line's glow is a halo around the text's bounds, not around each letter, under a
-hand-set Width and Height the box cuts it on every side, and a stacks or dispel field the engine may
-write empty gets none of its own. Every limitation, its cause and any ruling:
+starts. A Text line's glow costs `C.TEXT_GLOW_TWINS` twin engines, each with its own `UNIT_AURA`
+work; a twin could break a sort tie differently from its main, runs its loop a few frames out of
+phase, and under a hand-set Width its ring and paired shadow are clipped at its own box. Every limitation, its cause and any ruling:
 `docs/known-limitations.md`.
 
 ## Documentation map

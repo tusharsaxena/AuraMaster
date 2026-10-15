@@ -88,6 +88,10 @@ Example (shortened):
 [Diag] ==== Ka0s Aura Master diagnostics end: 143 line(s) ====
 ```
 
+A `[Cont]` line's `twins=` is the number of twin engines a Text container with Glow on runs beside
+its main to draw the glow (`C.TEXT_GLOW_TWINS`, `modules/Container_Twins.lua`), and 0 for every other
+container. It counts engines, never auras.
+
 A container attached to another container prints its join after the target (batch 11 G7): the two
 points in effect, this container's (`point`) and its parent's (`relPoint`), each `(auto)` while
 Automatic or `(picked)`, and `join=`, the batch 9 side the pair is under the parent's growth
