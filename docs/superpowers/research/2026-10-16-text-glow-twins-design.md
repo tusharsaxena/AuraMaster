@@ -32,7 +32,7 @@ logged once and costs only that call, as on the main.
 | 399 | `applyFlow(engine, cfg)`: the five `SetFlowLayout*` calls (`:143-153`) | M. Same `flow` table, sent to each twin |
 | 400-402 | `EngineOffset` → `ClearAllPoints` → `SetPoint(flow.anchorPoint, anchor, flow.anchorPoint, ex, ey)`, before the first group | M. Same call with **holder k** in place of `anchor`. Same `ex, ey`, also before the twin's first group |
 | 406 | `SetSize(1, 1)` provisional rect | M |
-| (new) | none today | Frame level, set before the first group (section 2) |
+| (new) | none today, with glow on: the main's level is decided and written here, after `SetSize` and before its first group (section 2) | M. Each twin's level is set in the same window on that twin, from the main's decided level |
 | 408 | `init = function(frame) self:InitFrame(frame) end` | M with a twin init: `function(frame) self:InitTwinFrame(frame, k) end` |
 | 409-421 | `ResolveView`, then `AddAuraGroup(g.key, filter, { initializeFrame, candidateFilters, sortMethod, sortDirection, maxFrameCount, layout })` per group | M. Same `view`, same `viewOf(g, view)` values, same `groupLayout(cfg, i)`. Only `initializeFrame` differs |
 | 423-438 | Enchants: `SetItemEnchantmentSortMethod`, `SetItemEnchantmentLayout`, `AddItemEnchantment` per slot, frames kept in `self.enchantFrames` | M. The twin's enchant frames go in `self.twinEnchantFrames[k]`, never `self.enchantFrames` (whose count `ResetEnchants` and the `[Cont]` line read) |
@@ -40,8 +40,12 @@ logged once and costs only that call, as on the main.
 | 444-449 | `enchantDir`, `plan`, `structure`, `viewStale = nil`, `NoteView` | Shared container state, set once. It describes what every engine of the container holds |
 
 Order inside `Build`: the main is built completely first (create … `SetUnit`), then twin 1 … twin N.
-Each engine keeps its own order: anchored before its first group, its unit last. The main goes first
-so that its frame level is known before the twins' levels are derived from it (section 2).
+Each engine keeps its own order: anchored, sized and leveled before its first group, its unit last.
+The main's level is decided inside the main's own build, in the window before its first group, and
+never after: a live engine forbids untrusted layout work (`Build`'s anchoring comment, `:397-398`, and
+`Retire`'s, `:207-208`) and might
+refuse a level change (`ApplyBlocker`'s comment, `:228-231`). The main goes first so that this
+decided level exists before the twins' levels are derived from it (section 2).
 
 ### Updated in place (`ContainerClass:Update`, `modules/Container.lua:469-499`)
 
@@ -109,7 +113,7 @@ to the anchor by two points.
 
 | Where | Read | Twins |
 |---|---|---|
-| `ApplyBlocker` (`modules/Container.lua:232-247`) | `GetFrameLevel` (`:240`), `SetAllPoints(engine)` (`:245`) | N. The blocker closes the gaps between the **main's** buttons for the hover. Twin buttons take no mouse, so nothing needs blocking under them. The blocker sits at main level − 1, above every twin (section 2), and draws nothing |
+| `ApplyBlocker` (`modules/Container.lua:232-247`) | `GetFrameLevel` (`:240`), `SetAllPoints(engine)` (`:245`) | N. The blocker closes the gaps between the **main's** buttons for the hover. Twin buttons take no mouse, so nothing needs blocking under them. The blocker sits at main level − 1 (E − 1, section 2). That is above every twin engine frame (E − 3) and holder, but not above a twin's own frames: its button at E − 2, clip E − 1, anim E, area E + 1 and chain E + 2 sit at or above the blocker. This is harmless, because the blocker draws nothing and a twin button takes no mouse, so the blocker neither hides a twin nor loses a hover to one |
 | `Anchors.HangFrame` (`modules/Anchors.lua:143-148`) | `t.engine or t.anchor` | N. A twin is never a hang target (spec: never joins the attach chain's geometry). A twin's rect is the main's rect plus at most 26 px, so hanging from it would shift every follower |
 | `Anchors.Place` (`modules/Anchors.lua:324`) | `target == owner.engine` | N, same reason. `engineLead` (`modules/Anchors_Attach.lua:323`, `:369-370`) reads the main's lead |
 | Snap and drag (`modules/Anchors_Snap.lua`) | through `HangFrame` and the anchor | N. No engine read of its own (grep), so nothing to exclude |
@@ -154,8 +158,9 @@ ox_k = glowThickness × d_k.x + glowX        oy_k = glowThickness × d_k.y + glo
   and move with no call of ours.
 - `Twins.Place(self, cfg)` re-points every holder. It runs from `Apply` right after the
   Build-or-Update branch (`modules/Container.lua:558-563`), on every apply, so a thickness, X or Y change
-  re-places the ring with no rebuild. `Apply` never runs in lockdown, so a holder (the ancestry of an
-  aura engine) is never moved in combat (events-frames-taint-§2).
+  re-places the ring with no rebuild. It also re-levels the holders (section 2, frame levels).
+  `Apply` never runs in lockdown, so a holder (the ancestry of an aura engine) is never moved in combat
+  (events-frames-taint-§2).
 - A holder is created with `CreateFrame("Frame", nil, anchor, "DisableUntrustedLayoutScriptsTemplate")`,
   the anchor's own template (`:45-46`). An engine is pinned to the holder, and the template keeps the
   holder acceptable to the engine whatever Blizzard checks on the relative frame. One holder per k per
@@ -171,27 +176,65 @@ so it sits one above its parent. The offset between the main's tree and a twin's
 same at every depth: the gap between the two engines. For the twin's text (its chain, Bt+4) to draw
 under the main's icon (Bm+2), the gap must exceed 2. The gap is 3.
 
-`Twins.Build` sets the levels after the main is built and before each twin's first group, in the same
-window as the twin's `SetPoint` and `SetSize`:
+The level is decided in two places, each in the window before its engine's first group.
+
+**On the main, in `ContainerClass:Build`.** With glow on, right after the main's `SetSize(1, 1)` and
+before its first `AddAuraGroup`, `Build` calls `NS.ContainerTwins.LevelMain(self, engine, cfg)`. That
+is one call and no branch in `Build`. It returns E, or nil with glow off, and writes nothing then:
 
 ```
-A  = the anchor's level, NumberOr(anchor:GetFrameLevel(), stored layout.level)   (Apply sets it, :545)
-E0 = NumberOr(main:GetFrameLevel(), A + 1)
-if E0 <= GAP then main:SetFrameLevel(GAP + 1) end      -- only with glow on; layout.level min is 1
-E  = max(E0, GAP + 1)
+A  = guarded read of the anchor's level:                                (Apply sets it, :545)
+       local ok, v = pcall(anchor.GetFrameLevel, anchor)
+       A = ok and NumberOr(v, stored layout.level) or stored layout.level
+E  = max(A + 1, GAP + 1)                         -- layout.level min is 1, so E is 4 or more
+if not callEngine(main, "SetFrameLevel", E) then  -- pre-group, guarded and logged once
+    local ok, v = pcall(main.GetFrameLevel, main) -- the ApplyBlocker form (:240-242)
+    E = ok and NumberOr(v, A + 1) or A + 1
+end
+```
+
+The anchor read takes the `ApplyBlocker` form, `pcall` plus `NS.Secrets.NumberOr`, because a level
+is a `SecretAspect` on an attachable frame (`docs/midnight-quirks.md:555-563`). The stored-level
+fallback is the one `levelOf` uses (`modules/Anchors.lua:689-692`). The main's level is **written**
+with glow on, not read and trusted, so E does not rest on the mock's parent + 1 assumption
+(`tests/wow_mock.lua:186-195`). The write goes through `callEngine`, so a refusal costs that one call
+and is logged once. The only read of the main's level is the fallback after a refused write, and it is
+guarded the same way. With the default `layout.level` of 5, E = 6. At a stored level of 1 or 2,
+E = 4, which raises the main above A + 1. `ApplyBlocker` reads the main's current level
+and so follows it (`:240-243`). `Build` hands E to `Twins.Build`.
+
+**On each twin, in `Twins.Build`.** It only reads E. It never touches the main:
+
+```
 twin k:SetFrameLevel(E - GAP)        holder k:SetFrameLevel(max(0, E - GAP - 1))
 ```
 
-- With the default `layout.level` of 5, nothing is written to the main (E = 6, twins at 3). The main
-  is raised only for a stored level of 1 or 2, before its first group. `ApplyBlocker` reads the main's
-  current level and so follows any raise (`:240-243`).
+The twin's write lands in the same pre-group window as its `SetPoint` and `SetSize`, through
+`callEngine`. The holder is ours and takes a plain write.
+
 - **Strata.** The twins inherit the anchor's strata (`:544`). They are never set apart.
-- **A later `layout.level` change.** It re-levels the anchor (`:545`) without a rebuild. The main and
-  the twins are all descendants of the anchor, so whatever the client does to descendants applies to
-  both trees alike, and the gap holds.
-- The mock answers a child's level as its parent's + 1 at creation (`tests/wow_mock.lua`, the
-  `CreateFrame` note). The twin's level is set explicitly, so no test leans on that assumption for
-  the gap.
+- **A later `layout.level` change (unprobed risk).** It re-levels the anchor (`:545`) with no rebuild.
+  The two trees have **different depths**: the main engine is a child of the anchor, while twin k is a
+  grandchild (anchor → holder k → twin k). Nothing in this repo verifies whether the client re-bases
+  existing descendants on a re-level. The mock's note calls its answer an assumption
+  (`tests/wow_mock.lua:186-195`), and `ApplyBlocker`'s comment (`modules/Container.lua:225-228`) says
+  the engine does not follow the anchor. If the client does not re-base, every level stays where `Build`
+  put it and the gap holds. If it clamps each descendant to its parent + 1, raising `layout.level` from
+  5 to 20 puts the main at 21, holder k at 21 and twin k at 22, so the glow draws over the main's text
+  and icon.
+- **Decision: `Twins.Place` re-levels the holders on every apply.** It reads the main's current level
+  (the guarded `ApplyBlocker` form, skipped when unreadable) and sets each holder to
+  `max(0, level - GAP - 1)`, as `ApplyBlocker` re-levels the blocker. A holder is ours, so this is a
+  plain write. It never writes a twin engine, which is live by then. When the client re-bases nothing,
+  this changes nothing. When it re-bases on the anchor's change, the main's new level is read and the
+  holders are put back under it, so a twin that follows its holder is put back too. The case it cannot
+  mend is a client that re-bases on the anchor's change but not on a holder's. The R2 smoke step decides
+  it. If the glow then draws over the text, the fallback is to add `layout.level` to the structure key
+  while glow is on, so a level change rebuilds. That costs five engines per change and needs an owner
+  decision (Q4).
+- The mock answers a child's level as its parent's + 1 at creation. Every level the gap depends on is
+  written explicitly, so no test leans on that assumption. The re-level case is tested on the holders'
+  recorded writes, not on any re-base by the mock.
 
 ## 3. The glow dress through `Style.Element` → `Text.Apply` → `Text.Bind`
 
@@ -314,9 +357,9 @@ Each case is written test-first with a true `-- red under:` note.
 | TG-10 | `test_style_text_glow` (rewritten) | `GlowFont`: color × intensity; class color through the dress snapshot; flags with the outline dropped and MONOCHROME kept; the paired shadow at −2·t·d_k in the glow color; no shadow when unpaired (flip the constant in the case). Twin `Text.Apply`: same `SetSize` and same piece points as a main dressed from the same cfg; icon and border hidden and `SetIcon` never bound; no `AddDispelTypeTexture`; the dispel map holds no `\|c`; the duration bound with no `textColor` even with `expiringColorOn` and `expiringBlink` on; mouse off, `SetCancelAuraButtons` nil, no tooltip binds; a literal's text set; the main's loop played. Preview copies: count per piece, BACKGROUND on `anim`, the same text as their piece, the plain dispel word, no run color, hidden while off, past `pieceCount`, on a stacked literal and on an engine button; a re-dress after a shape change re-anchors them to the new strings |
 | TG-10 | `test_render_coverage` | the glow rows each move a copy's recorded state. `isGlowSet` and `glowParts` walk the copy arrays |
 | TG-10 | `test_preview` | a glowing text container's placeholders carry shown copies, and a non-glowing one's carry none |
-| TG-11 | **`test_container_twins`** (new, listed in `tests/run.lua`) | built only for a text container with glow on (none for bars or icons with a true leaf, and none with glow off). `C.TEXT_GLOW_TWINS` engines: each anchored to its holder before its first group, its unit last; the main's `AddAuraGroup` arguments with only `initializeFrame` different; the same flow calls and enchant slots. Holder k's two points at `t·d_k + (x, y)`, and the twin's own point equal to the main's `ex, ey`. Twin level E − 3, the main raised only at `layout.level` 1 or 2, and holder levels |
+| TG-11 | **`test_container_twins`** (new, listed in `tests/run.lua`) | built only for a text container with glow on (none for bars or icons with a true leaf, and none with glow off). `C.TEXT_GLOW_TWINS` engines: each anchored to its holder before its first group, its unit last; the main's `AddAuraGroup` arguments with only `initializeFrame` different; the same flow calls and enchant slots. Holder k's two points at `t·d_k + (x, y)`, and the twin's own point equal to the main's `ex, ey`. With glow on, the main's `SetFrameLevel(E)` recorded before its first `AddAuraGroup`, E = 6 at `layout.level` 5 and 4 at 1 or 2, and no main level write with glow off (red under: the raise taken in `Twins.Build`, after the main's groups). A refused main write falls back to the guarded read. Twin level E − 3 before each twin's first group, and holder levels E − 4 |
 | TG-11 | `test_container_twins` (mirroring) | a filter, sort, cap or layout change sends the main's calls to every twin; an enchant direction change reaches every twin (red under: recording `enchantDir` after the main); a unit change; `CM.ApplyViews` switching every twin; `CM.RefreshUnit`; `ApplyLive` through test mode, the stand-down, a zone, the Unit type gate and a disabled container; `Flip` (redraw light) and `ResetEnchants`; `Park`; delete → `Destroy` (twins disabled and hidden, `#inst.retired` unchanged by the twins, `retiredTwins` filled) |
-| TG-11 | `test_container_twins` (lifecycle) | the glow toggle rebuilds; a thickness, X or Y change re-points the holders and keeps the same engines; a color or intensity change re-dresses twin buttons in place; a glow toggle in combat or while secret waits for the flush |
+| TG-11 | `test_container_twins` (lifecycle) | the glow toggle rebuilds; a thickness, X or Y change re-points the holders and keeps the same engines; a `layout.level` change re-levels every holder from the main's current level, writes no engine level and keeps the same engines; a color or intensity change re-dresses twin buttons in place; a glow toggle in combat or while secret waits for the flush |
 | TG-11 | `test_container_twins` (kept apart) | twin buttons have the mouse off; `Anchors.HangFrame` is the main; `EmptyWatch` reads the main's pool only (a twin pool with frames changes nothing); the Diagnostics shown counts read the main; the blocker covers the main; the `[Cont]` line carries `twins=4` |
 | TG-11 | `test_diagnostics` | the `[Cont]` format with `twins=` |
 | TG-11 | `test_loadorder` | `modules\Container_Twins.lua` under its note, after `Container.lua` |
@@ -333,7 +376,7 @@ apart, it reads `inst.twins[k]` and never adds a mock field.
 | File | Now (lines) | After (estimate) | What changes |
 |---|---|---|---|
 | `modules/Container.lua` | 928 | ~990 | `updateEngine`, `restyleEngine` and enchant-send helpers; mirrored loops in `ApplyView`, `ApplyLive`, `Refresh`, `Flip`, `Park` and `Retire`; `InitTwinFrame`; `Twins.Build` and `Twins.Place` calls |
-| `modules/Container_Twins.lua` (new) | — | ~170 | `NS.ContainerTwins`: the ring offsets, holders (create, level, place), `Build(self, cfg, plan, view, flow)` per twin, `Each(self, fn, ...)`, `Retire(self)` and `Count(self)`. Peers resolved at call time; TOC right after `Container.lua` with a `# Conventional:` note |
+| `modules/Container_Twins.lua` (new) | — | ~170 | `NS.ContainerTwins`: the ring offsets, `LevelMain(self, engine, cfg)`, holders (create, level, place, re-level), `Build(self, cfg, plan, view, flow, level)` per twin, `Each(self, fn, ...)`, `Retire(self)` and `Count(self)`. Peers resolved at call time; TOC right after `Container.lua` with a `# Conventional:` note |
 | `modules/Style_TextGlow.lua` | 189 | ~150 | rewritten: the nine-slice sets go; it holds `GlowFont`, `TwinBehavior` and `GlowCopies`, plus a new header. It stays after `Style_Text.lua` (load-bearing, unchanged) |
 | `modules/Style_Text.lua` | 857 | ~885 | the `twin` threading in `Apply`, `Bind`, `BINDERS` and `dressPieces`; the copy fill in `FillPreview` |
 | `modules/Style.lua` | 1024 | ~1030 | `Style.Element`'s fifth argument; `StructureKey` with glow |
@@ -341,8 +384,8 @@ apart, it reads `inst.twins[k]` and never adds a mock field.
 | `core/Constants.lua` | — | ±0 | the ring, pairing, twins and gap constants replace the three removed tables |
 
 Every file stays well under the 1500 cap. CCN watch, from lizard at `dfc4150`: `ContainerClass:Apply`
-is 12 and gains one call with no branch. `Restyle` is 10, and its walk moves out. `Build` is 9: the twin
-loop lives in `Twins.Build`, so `Build` gains one call. `Update` is 8: its body moves to `updateEngine`.
+is 12 and gains one call with no branch. `Restyle` is 10, and its walk moves out. `Build` is 9: the level decision lives
+in `Twins.LevelMain` and the twin loop in `Twins.Build`, so `Build` gains two calls and no branch. `Update` is 8: its body moves to `updateEngine`.
 `Text.Apply` is 4 and gains two branches. `Text.Bind` is 5 and gains three, which is still well
 under 15. `Text.FillPreview` is 8 and gains one call. `Style.Element` is 5 and gains none.
 `layoutIconAndArea` (11) and `Preview.Show` (6) are untouched.
@@ -352,7 +395,8 @@ under 15. `Text.FillPreview` is 8 and gains one call. `Style.Element` is 5 and g
 `docs/data-flow.md:34, :47, :188, :192, :197`; `docs/midnight-quirks.md:55, :142, :163, :219, :314, :449, :588, :694, :716, :721, :801`;
 `docs/performance.md:111, :113`. `test_docs` fails on any stale one. The ARCHITECTURE module count
 ("23 modules") becomes 24. `docs/module-map.md` gains the new file. TG-12 also covers
-`docs/known-limitations.md` (the spec's four limits plus R1), `docs/midnight-quirks.md` (twin engines,
+`docs/known-limitations.md` (the spec's four limits, with the paired-shadow clip of R4 in the
+clipping entry, plus R1), `docs/midnight-quirks.md` (twin engines,
 `CreateFontString` takes no sublevel, a button is placed only once sized, the colorless Slug
 outline) and `docs/smoke-tests.md`.
 
@@ -379,14 +423,23 @@ outline) and `docs/smoke-tests.md`.
   colorless Slug outline) and accept a darker glow. That change would need an owner decision.
 - **R2. `SetFrameLevel` on an engine before its first group** has not been probed. `SetPoint` and
   `SetSize` in the same window are proven. Smoke: the glow stays under the icon and under the
-  main's text at `layout.level` 1 and at 5.
+  main's text at `layout.level` 1 and at 5. Then, with glow on and no rebuild, change Frame level
+  from 5 to 20 and check that the glow still stays under the main's text and icon. This decides the
+  re-level risk in section 2 (a client that re-bases descendants per parent would put the twins
+  above the main).
 - **R3. A holder as the engine's relative frame** has not been probed (the probe's twins hung from the
   same parent as the main). Smoke: a thickness slider moves the ring live, out of combat, with no
   `/reload`, and the ring follows a drag of the container.
 - **R4.** The spec's limits stand: N extra engines each with their own UNIT_AURA work (a perf run owed),
   sort ties broken differently, loop phase, and clipping under a hand-set Width. A twin's area clips at
   its own offset box, while a preview copy is clipped only by the element's `clip`. This is a 1-26 px
-  difference at the box edge under a hand-set Width only.
+  difference at the box edge under a hand-set Width only. **Under shadow pairing it is larger.** Each
+  twin's shadow lands at −2·t·d_k from the twin's own text, outside the twin's own clip and area box
+  (`applyClip`, `modules/Style_Text.lua:238-242`, turns clipping on when `autoSize` is off). With a
+  hand-set Width, the opposite copy is cut by up to 2·t (12 px at t = 6), plus the `glowX`/`glowY`
+  shift past the box edge. A preview copy's shadow is cut only by the element's `clip`, so the
+  preview shows more of the opposite side than the live twin does. With `autoSize` on, nothing clips
+  and the two agree. The known-limitations entry names this case.
 
 No deviation from the Ka0s WoW Addon Standard. The new module sits in `modules/` with a TOC note
 (layout-§1). Frames are made once and kept. Every combat-sensitive write stays behind
