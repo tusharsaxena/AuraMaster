@@ -367,8 +367,9 @@ NS.RegisterSchemaRows(H.FontGroup({
     prefix = P .. "font.", page = PAGE, group = G_FONT, subgroup = L["Font"], classColor = UNIT,
 }))
 -- The glow behind the text (text glow, spec G4): a halo hugging the text's bounds, drawn by
--- modules/Style_TextGlow.lua on top of the font's outline and shadow, never in place of them. Off by
--- default; its rows dim while it is off, except the color pair, which the composer never lets dim.
+-- modules/Style_TextGlow.lua in addition to the font's outline and shadow, behind the text, never in
+-- place of them. Off by default; its rows dim while it is off, except the color pair, which the
+-- composer never lets dim.
 NS.RegisterSchemaRows({
     { path = P .. "glow", page = PAGE, group = G_FONT, subgroup = S_GLOW, type = "bool", startsLine = true,
       label = L["Glow behind the text"],
