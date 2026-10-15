@@ -117,7 +117,7 @@ test("twins: a text container with the glow on builds C.TEXT_GLOW_TWINS twins be
 end)
 
 test("twins: a bars or icons container with a true glow leaf builds no twin and writes no main level", function()
-    local NS, mocks = fresh()
+    local NS = fresh()
     for _, id in ipairs({ 1, 2 }) do
         NS.Database.FindContainer(id).text.glow = true
         local inst = NS.ContainerManager.instances[id]
@@ -128,7 +128,6 @@ test("twins: a bars or icons container with a true glow leaf builds no twin and 
         -- red under: LevelMain writing the main's level whatever the style
         assertEqual(#inst.engine:__callsTo("SetFrameLevel"), 0, "container " .. id .. "'s main level")
     end
-    assertTrue(mocks ~= nil)
 end)
 
 test("twins: each twin is anchored, sized and leveled before its first group, its unit last", function()
@@ -291,6 +290,7 @@ test("twins: a refused main level write falls back to the main's level as read",
     -- red under: E kept at the computed 4 after the refusal (the twins then level against a main at 9)
     for k, t in ipairs(inst.twins) do
         assertEqual(t:__callsTo("SetFrameLevel")[1][2], 6, "twin " .. k .. " at 9 - 3")
+        -- red under: the same, with Twins.Place not re-leveling the holders after the build
         assertEqual(inst.holders[k].__level, 5, "holder " .. k .. " at 9 - 4")
     end
 end)
@@ -592,6 +592,28 @@ test("twins: a color or intensity change re-dresses each twin's buttons in place
     end
     -- red under: Restyle's count taking in the twins' buttons (perf's restyle figures)
     assertEqual(inst:Restyle(NS.Database.FindContainer(TEXT)), 1, "the main's count")
+end)
+
+test("twins: a color change re-dresses each twin's enchant frames in place as that twin", function()
+    local NS, mocks, inst = glowing(nil, 1)
+    local seen = {}
+    local element = NS.Style.Element
+    NS.Style.Element = function(frame, cfg, engine, classColor, twin)
+        seen[frame] = twin or 0
+        return element(frame, cfg, engine, classColor, twin)
+    end
+    assertTrue(NS.SetByPath("container.text.glowColor", { r = 0, g = 1, b = 0, a = 1 }, 1))
+    mocks.__fireTimers()
+    NS.Style.Element = element
+    for j, f in ipairs(inst.enchantFrames) do
+        assertEqual(seen[f], 0, "the main's enchant frame " .. j .. " as the main")
+    end
+    for k in ipairs(inst.twins) do
+        for j, f in ipairs(inst.twinEnchantFrames[k]) do
+            -- red under: Restyle walking the twins' group frames only (a twin's weapon names keep the old color)
+            assertEqual(seen[f], k, ("twin %d enchant frame %d re-dressed as twin %d"):format(k, j, k))
+        end
+    end
 end)
 
 test("twins: a glow toggle in combat or while auras are secret waits for the flush", function()

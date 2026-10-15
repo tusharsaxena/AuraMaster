@@ -574,7 +574,7 @@ Total.
 - unit type: the unit events stay on the view frames, nothing new is registered
 - unit type: a Unit type write takes effect at once, in combat too
 
-### test_container_twins.lua (31)
+### test_container_twins.lua (32)
 
 - twins: a text container with the glow on builds C.TEXT_GLOW_TWINS twins beside its main, none while off
 - twins: a bars or icons container with a true glow leaf builds no twin and writes no main level
@@ -601,6 +601,7 @@ Total.
 - twins: a thickness, X or Y change re-points the holders and builds nothing
 - twins: a frame level change re-levels every holder from the main's current level and writes no engine
 - twins: a color or intensity change re-dresses each twin's buttons in place as that twin
+- twins: a color change re-dresses each twin's enchant frames in place as that twin
 - twins: a glow toggle in combat or while auras are secret waits for the flush
 - twins: the structure key carries the glow, so a toggle rebuilds and nothing else of the glow does
 - twins: a twin's buttons take no mouse, no click and no cancel
@@ -2450,7 +2451,7 @@ Total.
 | test_container_situations.lua | 16 |
 | test_container_zones.lua | 8 |
 | test_container_unitfilter.lua | 14 |
-| test_container_twins.lua | 31 |
+| test_container_twins.lua | 32 |
 | test_containermanager.lua | 54 |
 | test_compat.lua | 37 |
 | test_secrets.lua | 6 |
@@ -2532,4 +2533,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **2118** |
+| **Total** | **2119** |
