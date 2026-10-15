@@ -247,6 +247,33 @@ test("text glow: a twin is laid out as its main: the same size and the same piec
     for i = 1, #ma do assertEqual(ta[i][4], ma[i][4], "area point " .. i .. " x") end
 end)
 
+test("text glow: a twin's chain is pulled back by the padding of the un-outlined font it draws", function()
+    -- A fresh environment (the padding cache is per load) measuring 6 per character plus a padding of
+    -- 4 per string in an outlined font and 1 without, so the outlined pull is 4 and the twin's 1.
+    local NS, m = fresh({ before = dofile("tests/text_apis.lua") })
+    local fs = R()
+    fs.__answer.GetStringWidth = function()
+        local flags = tostring(fs:__last("SetFont")[3])
+        return fs:__last("SetText")[1]:len() * 6 + (flags:find("OUTLINE") and 4 or 1)
+    end
+    NS.Style.__measurer = function() return fs end
+    local c = NS.Database.Merge(NS.Database.DeepCopy(NS.CONTAINER_TEMPLATE), { style = "text",
+        text = { template = "$spellname$ - $remainingduration$", justifyH = "LEFT", fontFlags = "OUTLINE" } })
+    local function chained(twin)
+        local frame = B.new({})
+        B.during(m, {}, function() NS.Style.Element(frame, c, true, nil, twin) end)
+        return pieces(frame.__am)
+    end
+    local main, twin = chained(nil), chained(1)
+    assertEqual(#twin, 3, "three pieces")
+    for i = 2, 3 do
+        assertEqual(main[i]:__last("SetPoint")[4], -4, "main piece " .. i .. ": the outlined padding")
+        -- red under: a twin pulled by the main's outlined padding (each piece off its main text by
+        -- the difference, accumulating along the line, twins design note risk R1)
+        assertEqual(twin[i]:__last("SetPoint")[4], -1, "twin piece " .. i .. ": the un-outlined padding")
+    end
+end)
+
 test("text glow: a twin's icon is laid out but hidden and never bound; the main's is bound", function()
     local c = text({ template = "$spellname$", icon = "LEFT", iconBorderShow = true })
     local main, mam = dress(c, nil, true)

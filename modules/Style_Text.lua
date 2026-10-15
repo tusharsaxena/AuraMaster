@@ -313,8 +313,9 @@ end
 --- Right-justified line, laid from the last piece back). A stacked line is laid out by layoutStack.
 --- Every piece is justified to the chain's side, and each chained piece is pulled back over the one
 --- before by the font's measured padding (Style.PiecePadding, smoke batch 2 item 8), so two pieces
---- sit flush instead of showing the client's padding on both sides of each.
-local function layoutChain(am, s, compiled, h)
+--- sit flush instead of showing the client's padding on both sides of each. A twin's pieces draw in
+--- the glow font, so its pull is that font's padding (Text.GlowPadding), not the main's.
+local function layoutChain(am, s, compiled, h, twin)
     if Text.Stacked(s, compiled) then return layoutStack(am, s, compiled, h) end
     local side = s.justifyH or D.justifyH
     local v = V_PREFIX[s.justifyV or D.justifyV] or ""
@@ -322,7 +323,8 @@ local function layoutChain(am, s, compiled, h)
     local n = am.pieceCount
     local first, last, step, near, far = 1, n, 1, "LEFT", "RIGHT"
     if side == "RIGHT" then first, last, step, near, far = n, 1, -1, "RIGHT", "LEFT" end
-    local pull = -step * Style.PiecePadding(s.font or D.font, D.font)
+    local pad = twin and Text.GlowPadding(s) or Style.PiecePadding(s.font or D.font, D.font)
+    local pull = -step * pad
     local head = am[PIECE[first]]
     head:ClearAllPoints()
     head:SetPoint(pointAt(v, side), am.area, pointAt(v, side), x, y)
@@ -595,7 +597,7 @@ function Text.Apply(frame, cfg, engine, twin)
     end
     applyClip(am, s)
     dressPieces(am, s, compiled, twin)
-    layoutChain(am, s, compiled, h)
+    layoutChain(am, s, compiled, h, twin)
     dressDispelTints(am, s)
     if engine then Text.Bind(frame, am, cfg, s, compiled, twin) end
     Text.GlowCopies(am, s, compiled, engine)   -- modules/Style_TextGlow.lua, after the bindings as the loops are

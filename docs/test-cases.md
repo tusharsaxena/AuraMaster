@@ -1552,7 +1552,7 @@ Total.
 - autosize: a placeholder with the long name is not cut in test mode
 - autosize: off, a hand-set width still cuts a long line at the box, and a toggle re-dress follows it
 
-### test_style_text_glow.lua (26)
+### test_style_text_glow.lua (27)
 
 - text glow: every leaf sits in the text template at its addendum default, the glow off
 - text glow: the old radius, blend and falloff are gone, leaves, tables and rows (TG-09)
@@ -1564,6 +1564,7 @@ Total.
 - text glow: under pairing, copy k's shadow is the glow color at -2 x thickness x d_k
 - text glow: with pairing off, a copy draws no shadow
 - text glow: a twin is laid out as its main: the same size and the same piece points
+- text glow: a twin's chain is pulled back by the padding of the un-outlined font it draws
 - text glow: a twin's icon is laid out but hidden and never bound; the main's is bound
 - text glow: a twin takes no dispel tints and a dispel word with no color escape
 - text glow: a twin's duration is bound with no time color and the plain binding, in the same format
@@ -2492,7 +2493,7 @@ Total.
 | test_style_icons.lua | 31 |
 | test_style_text.lua | 56 |
 | test_style_text_autosize.lua | 18 |
-| test_style_text_glow.lua | 26 |
+| test_style_text_glow.lua | 27 |
 | test_preview.lua | 29 |
 | test_render_coverage.lua | 3 |
 | test_blizzardframes.lua | 8 |
@@ -2536,4 +2537,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **2122** |
+| **Total** | **2123** |

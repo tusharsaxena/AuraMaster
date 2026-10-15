@@ -54,7 +54,7 @@ Every line is `HH:MM:SS | [Tag] message`. The tags:
 | `Cfg` | Non-default settings: the profile's own rows, then each container's (`#id non-default:`), filter rows left out because `Filt` prints them in full. A non-default value that does nothing for that container goes on its own `#id inert:` line instead (see below) |
 | `Unit` | One header per unit and filter with the aura count, or `none` / `unreadable` / `read failed` |
 | `Aura` | One aura: `player+` is a buff, `player-` a debuff; `inst`, `id`, name, `dispel`, `src`, `mine`, `dur`, `left`, `stacks`, `boss`, `steal` |
-| `Cont` | One container: id, name, unit, aura type, style, enabled, attach, then its live flags (engine, shows, parked, staleData, classStale, retired engines, enchant frames, dormant, retiring) |
+| `Cont` | One container: id, name, unit, aura type, style, enabled, attach, then its live flags (engine, shows, parked, staleData, classStale, retired engines, enchant frames, twin engines, dormant, retiring) |
 | `Filt` | The container's filters in full: cast by, duration, sort, max, the hidden categories, and the whitelist and blacklist by id and name |
 | `Plan` | The plan verdict, then one line per applied engine group (filter, candidate filters, sort, max, `frames=` and `shown=`), then the plan's warnings |
 | `Shown` | The shown buttons one by one, then a `predicted:` line per readable aura on the container's unit |

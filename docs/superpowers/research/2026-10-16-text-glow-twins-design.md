@@ -291,7 +291,8 @@ offsets and the loops are all identical, because they read only `cfg`, and `cfg`
 3. `dressPieces(am, s, compiled, twin)`: a twin's font goes through `Text.GlowFont(fs, s, k)`
    (section 3, below) in place of `Style.ApplyFont`. Literals take their text as on the main.
 4. `layoutChain`: unchanged. The chain pull is `Style.PiecePadding(s.font)` (`:325`), read from the
-   settings and not the font string, so the twin's pieces take the main's pull. (Risk R1.)
+   settings and not the font string, so the twin's pieces take the main's pull. (Risk R1.) TG-13
+   changed this: a twin's pull is its glow font's padding (`Text.GlowPadding`), see R1.
 5. `dressDispelTints`: unchanged. It hides the backdrop and the four strips on every dress.
 6. `Text.Bind(..., twin)` (engine only).
 7. **`Text.GlowCopies(am, s, compiled, engine)`** replaces the `Text.Glow` call (`:577`). It dresses the
@@ -455,6 +456,10 @@ outline) and `docs/smoke-tests.md`.
   one-piece line cannot drift. The smoke check: a three-piece Left line with OUTLINE, looked at on its
   last piece. If it drifts, the fallback is to keep the twin's outline flag (its rim is black, the
   colorless Slug outline) and accept a darker glow. That change would need an owner decision.
+  TG-13 closed the per-piece part: the padding is a non-secret measure per font, so a twin's chain
+  is pulled by its own un-outlined font's padding (`Text.GlowPadding`). Each twin piece then keeps
+  the main's glyph spacing, and only a uniform shift of half the difference is left on the whole
+  line, the shift the placeholder copies already have. TEXT-36 still checks it in game.
 - **R2. `SetFrameLevel` on an engine before its first group** has not been probed. `SetPoint` and
   `SetSize` in the same window are proven. Smoke: the glow stays under the icon and under the
   main's text at `layout.level` 1 and at 5. Then, with glow on and no rebuild, change Frame level

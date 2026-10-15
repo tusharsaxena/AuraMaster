@@ -321,7 +321,12 @@ end
 --- 0 when it cannot be measured (the pieces keep the client's gap then). Cached per font path, size
 --- and flags; a failed measure is not cached, so a later dress measures again.
 function Style.PiecePadding(t, tdef)
-    local path, size, flags = Style.FontKey(t, tdef)
+    return Style.PaddingOf(Style.FontKey(t, tdef))
+end
+
+--- Style.PiecePadding for a font already resolved to its file, size and client flags: a twin's glow
+--- font is the line's with the outline dropped (Text.GlowFontKey), and its padding is that font's.
+function Style.PaddingOf(path, size, flags)
     local key = ("%s|%s|%s"):format(path, size, flags)
     local pad = paddings[key]
     if pad then return pad end

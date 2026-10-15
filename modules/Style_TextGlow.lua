@@ -86,14 +86,27 @@ local function opposite(t, v)
     return -2 * t * v
 end
 
+--- The file, size and client flags a copy of text block `s` draws in: the line's (Style.FontKey) with
+--- the outline dropped. One resolution for Text.GlowFont and a twin chain's pull (Text.GlowPadding).
+function Text.GlowFontKey(s)
+    local path, size, flags = Style.FontKey(s.font or D.font, D.font)
+    return path, size, withoutOutline(flags)
+end
+
+--- The padding a twin's chained piece is pulled back by: the glow font's own (Style.PaddingOf), not the
+--- main's outlined one, so each twin piece's glyphs sit as far from the last as the main's do and the
+--- ring stays centered on a multi-piece line (twins design note, risk R1).
+function Text.GlowPadding(s)
+    return Style.PaddingOf(Text.GlowFontKey(s))
+end
+
 --- Dress font string `fs` as the ring's copy `k` for text block `s`: the line's face and size with
 --- the outline dropped, the glow color (Style.Color, so a dress's class snapshot paints it) at its
 --- alpha × the intensity, and under shadow pairing a shadow in the same color at −2 × thickness ×
 --- d_k, the ring's opposite point; with pairing off, no shadow. The font's own shadow never reaches
 --- a copy. One function for a twin's pieces and a placeholder's copies, so the two cannot differ.
 function Text.GlowFont(fs, s, k)
-    local path, size, flags = Style.FontKey(s.font or D.font, D.font)
-    flags = withoutOutline(flags)
+    local path, size, flags = Text.GlowFontKey(s)
     if not fs:SetFont(path, size, flags) then fs:SetFont(C.FALLBACK_FONT, size, flags) end
     local r, g, b, a = Style.Color(s.glowColor or D.glowColor, s.useClassColorGlow)
     a = (a or 1) * number(s.glowIntensity, D.glowIntensity)

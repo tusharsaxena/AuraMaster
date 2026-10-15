@@ -1,5 +1,8 @@
 # Text glow: design
 
+> Superseded in part by `docs/superpowers/specs/2026-10-16-text-glow-addendum-glyph-glow.md` (halo,
+> G1 leaves, G2 textures).
+
 **Owner request (2026-10-15).** Text containers get an optional glow behind the text: off by default,
 on the text element only (never the icon, never the container box), with its own color, intensity,
 blend mode, radius and whatever else is relevant. It adds to the font's outline and shadow and never

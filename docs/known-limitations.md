@@ -64,8 +64,9 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   still owed. A twin sorts with the same comparator as its main, so a sort tie broken differently
   would put a copy under the wrong aura; the probe never saw one. A twin's loop starts when its own
   button is dressed, so a Pulse or Bounce can run a few frames out of phase with its main. A twin
-  draws without the outline, so if the client widens an outlined string, a multi-piece line's later
-  copies sit that much off center (smoke TEXT-36). A twin's duration takes no curve, so under
+  draws without the outline and chains its pieces by that font's own padding, so its pieces keep the
+  main's spacing; if the client widens an outlined string, the whole ring sits half the difference
+  off center, the same on every piece (smoke TEXT-36). A twin's duration takes no curve, so under
   Pandemic-window Blink the main's time blinks off while its glow stays lit, and in the off phase a
   glow-colored ghost of the digits shows where the time was (smoke TEXT-34; the twins design note,
   Q2, keeps the spec's no-curve default over a blink curve in the glow color). Under Size to fit
