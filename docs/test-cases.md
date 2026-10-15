@@ -574,11 +574,12 @@ Total.
 - unit type: the unit events stay on the view frames, nothing new is registered
 - unit type: a Unit type write takes effect at once, in combat too
 
-### test_container_twins.lua (28)
+### test_container_twins.lua (31)
 
 - twins: a text container with the glow on builds C.TEXT_GLOW_TWINS twins beside its main, none while off
 - twins: a bars or icons container with a true glow leaf builds no twin and writes no main level
 - twins: each twin is anchored, sized and leveled before its first group, its unit last
+- twins: a twin that cannot be made ends the build, so no live twin is out of reach
 - twins: each twin takes the main's flow and groups, only the button init differing
 - twins: a glowing container with weapon enchants gives each twin the slots, kept apart from the main's
 - twins: holder k sits at thickness x d_k + (X, Y) from the anchor, twin k at the main's own point on it
@@ -592,6 +593,7 @@ Total.
 - twins: a view switch sends every twin the main's setters, and a twin's refusal keeps the view stale
 - twins: a unit refresh tells every twin to re-read its unit
 - twins: every hide path disables the twins with the main, and the show path enables them
+- twins: the Unit type gate disables the twins with the main on a unit it is set against
 - twins: a flip turns every twin off and on after the main, and ResetEnchants flips them too
 - twins: a park disables every twin
 - twins: a delete retires the twins apart from the main, disabled and hidden
@@ -603,6 +605,7 @@ Total.
 - twins: the structure key carries the glow, so a toggle rebuilds and nothing else of the glow does
 - twins: a twin's buttons take no mouse, no click and no cancel
 - twins: the hang frame and the mouse blocker are the main's, never a twin
+- twins: Diagnostics' frame, shown and button counts read the main, never a twin
 - twins: the empty watch reads the main's pool only
 
 ### test_containermanager.lua (54)
@@ -2339,7 +2342,7 @@ Total.
 
 - prose: no authored file carries a British spelling from localization-§5's published list
 - prose: the gate carries localization-§5's two lists whole, and nothing of its own
-- prose: the exclusions this repository declared suppressed 11 of 213 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (11): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, docs/spell-research/2026-09-24-logs/CORRECTIONS.md, docs/spell-research/2026-09-24-logs/CURRENT_CATEGORIES.md, docs/spell-research/2026-09-24-logs/DECISIONS.md, docs/spell-research/2026-09-24-logs/FLAGS.md, docs/spell-research/2026-09-24-logs/PROPOSED_ADDITIONS.md, docs/spell-research/2026-09-24-logs/REVIEW.md, docs/spell-research/2026-09-24-logs/SOURCES.md, docs/spell-research/2026-09-24-logs/dictionary/AURAS.md
+- prose: the exclusions this repository declared suppressed 11 of 215 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (11): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, docs/spell-research/2026-09-24-logs/CORRECTIONS.md, docs/spell-research/2026-09-24-logs/CURRENT_CATEGORIES.md, docs/spell-research/2026-09-24-logs/DECISIONS.md, docs/spell-research/2026-09-24-logs/FLAGS.md, docs/spell-research/2026-09-24-logs/PROPOSED_ADDITIONS.md, docs/spell-research/2026-09-24-logs/REVIEW.md, docs/spell-research/2026-09-24-logs/SOURCES.md, docs/spell-research/2026-09-24-logs/dictionary/AURAS.md
 - prose: no path this repository narrows the gate by is loaded by a TOC
 - prose: every path this repository narrows the gate by is one .pkgmeta keeps out of the zip
 - prose self-test: the carve-out suppresses the named generated folder, and only it
@@ -2447,7 +2450,7 @@ Total.
 | test_container_situations.lua | 16 |
 | test_container_zones.lua | 8 |
 | test_container_unitfilter.lua | 14 |
-| test_container_twins.lua | 28 |
+| test_container_twins.lua | 31 |
 | test_containermanager.lua | 54 |
 | test_compat.lua | 37 |
 | test_secrets.lua | 6 |
@@ -2529,4 +2532,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **2115** |
+| **Total** | **2118** |

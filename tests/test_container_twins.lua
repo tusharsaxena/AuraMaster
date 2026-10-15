@@ -6,16 +6,18 @@
 -- What is held: built only for a text container with the glow on; anchored, sized and leveled before
 -- the first group and given the unit last, like the main; the main's groups, flow and enchant slots
 -- with only the button init different; every update path the main takes mirrored in the same pass
--- (an update, a view switch, a unit refresh, every hide path through ApplyLive, a flip, a park and a
--- delete); a toggle rebuilds, a thickness or offset change re-points the holders and builds nothing,
--- and a toggle in combat or while secret waits for the flush; and the twins kept off every
--- interactive and geometry path (the mouse, the hang frame, the empty watch, the blocker).
+-- (an update, a view switch, a unit refresh, every hide path through ApplyLive with the Unit type
+-- gate among them, a flip, a park and a delete); a toggle rebuilds, a thickness or offset change
+-- re-points the holders and builds nothing, and a toggle in combat or while secret waits for the
+-- flush; a twin that cannot be made ends the build; and the twins kept off every interactive,
+-- geometry and count path (the mouse, the hang frame, the empty watch, the blocker, the Diagnostics
+-- counts).
 --
 -- Spec: docs/superpowers/specs/2026-10-16-text-glow-addendum-glyph-glow.md (Rendering, Live: twin
 -- engines); design note: docs/superpowers/research/2026-10-16-text-glow-twins-design.md, sections 1,
 -- 2, 5 and 6. The engine recorder (tests/wow_mock.lua) records each engine's level and size in its
--- call order, stamps every frame's creation and level write on one clock, and logs a plain frame's
--- points, so a holder and its twin can be told apart in time.
+-- call order, stamps every frame's creation, level write and logged engine call on one clock, and
+-- logs a plain frame's points, so a holder and its twin can be told apart in time.
 
 local T = _G.AM_TEST
 local test, assertEqual, assertTrue, assertFalse =
@@ -39,6 +41,9 @@ local function glowing(opts, id)
 end
 
 local function twinsOf(inst) return inst.twins or {} end
+
+--- The [Cont] line's twin count.
+local function Count(NS, inst) return NS.ContainerTwins.Count(inst) end
 
 --- The main engine, then each twin.
 local function enginesOf(inst)
@@ -141,9 +146,43 @@ test("twins: each twin is anchored, sized and leveled before its first group, it
         assertEqual(t:__callsTo("SetUnit")[1][2], "player")
         assertEqual(sends(t, "SetSize"), "{1=1,2=1}", "the main's provisional size")
     end
-    -- The main is complete before the first twin is made.
-    assertTrue(inst.engine:__firstCall("SetUnit") ~= nil)
-    assertTrue(inst.engine.__bornAt < inst.twins[1].__bornAt)
+    -- The main is complete, its unit sent last, before the first twin is made.
+    local mainUnit = inst.engine:__callsTo("SetUnit")[1]
+    -- red under: Twins.Build called before the main's populate (twin 1 made before the main's unit)
+    assertTrue(mainUnit ~= nil and mainUnit.at < inst.twins[1].__bornAt, "the main's unit before twin 1")
+end)
+
+test("twins: a twin that cannot be made ends the build, so no live twin is out of reach", function()
+    local made, fail = 0, nil
+    local NS, mocks = fresh({ before = function(m)
+        local create = m.CreateFrame
+        m.CreateFrame = function(frameType, ...)
+            if frameType == "AuraContainer" and fail then
+                made = made + 1
+                if made == fail then return nil end
+            end
+            return create(frameType, ...)
+        end
+    end })
+    -- The main is creation 1 under the toggle's rebuild, so creation 3 is twin 2.
+    fail = 3
+    assertTrue(NS.SetByPath("container.text.glow", true, TEXT))
+    mocks.__fireTimers()
+    local inst = NS.ContainerManager.instances[TEXT]
+    -- red under: Twins.Build going on past the failed twin (twins 3 and 4 live behind a hole)
+    assertEqual(made, 3, "no engine made after the failure")
+    assertEqual(#twinsOf(inst), 1, "twin 1 alone")
+    assertEqual(Count(NS, inst), 1, "the [Cont] count")
+    local held = 0
+    for _, e in ipairs(mocks.__engines) do
+        for _, h in ipairs(inst.holders) do
+            if e.__parent == h then
+                held = held + 1
+                assertTrue(e == inst.twins[1], "every twin engine made is reachable")
+            end
+        end
+    end
+    assertEqual(held, 1, "one twin engine made")
 end)
 
 test("twins: each twin takes the main's flow and groups, only the button init differing", function()
@@ -409,6 +448,22 @@ test("twins: every hide path disables the twins with the main, and the show path
     allEnabled(inst, true, "resumed")
 end)
 
+test("twins: the Unit type gate disables the twins with the main on a unit it is set against", function()
+    -- Player debuffs as a glowing target container: no enchant slots, so the unit change keeps the shape.
+    local NS, mocks, inst = glowing(nil, 2)
+    assertTrue(NS.SetByPath("container.unit", "target", 2))
+    mocks.__fireTimers()
+    mocks.__unitExists.target, mocks.__isPlayer.target, mocks.__reaction.target = true, false, 2
+    mocks.__fireEvent("PLAYER_TARGET_CHANGED")
+    allEnabled(inst, true, "an NPC under All")
+    assertTrue(NS.SetByPath("container.filter.unitFilter.kind", "player", 2))
+    -- red under: ApplyLive disabling the main only (the twins draw a hidden container's glow)
+    allEnabled(inst, false, "Players on an NPC")
+    mocks.__isPlayer.target, mocks.__reaction.target = true, 1
+    mocks.__fireEvent("PLAYER_TARGET_CHANGED")
+    allEnabled(inst, true, "Players on a player")
+end)
+
 test("twins: a flip turns every twin off and on after the main, and ResetEnchants flips them too", function()
     local _, _, inst = glowing(nil, 1)
     forget(inst)
@@ -592,6 +647,28 @@ test("twins: the hang frame and the mouse blocker are the main's, never a twin",
     assertTrue(NS.Anchors.HangFrame(inst) == inst.engine)
     assertTrue(inst.blocker.__allPointsTo == inst.engine, "the blocker covers the main")
     assertEqual(inst.blocker.__level, inst.engine.__level - 1, "one below the main")
+end)
+
+test("twins: Diagnostics' frame, shown and button counts read the main, never a twin", function()
+    local NS, mocks, inst = glowing()
+    local key = inst.plan.groups[1].key
+    local a, b, hidden = mocks.__stubFrame(), mocks.__stubFrame(), mocks.__stubFrame()
+    hidden:Hide()
+    inst.engine.__frames[key] = { a, b, hidden }
+    for _, t in ipairs(inst.twins) do
+        t.__frames[key] = { mocks.__stubFrame(), mocks.__stubFrame(), mocks.__stubFrame(), mocks.__stubFrame(),
+            mocks.__stubFrame() }
+    end
+    local out = NS.DebugLog:BuildDiagnostics()
+    local plan, buttons = nil, 0
+    for _, l in ipairs(out.lines) do
+        if l[1] == "Plan" and l[2]:find("#" .. TEXT .. " " .. key .. " ", 1, true) then plan = l[2] end
+        if l[1] == "Shown" and l[2]:find("#" .. TEXT .. " " .. key .. " btn", 1, true) then buttons = buttons + 1 end
+    end
+    -- red under: frameCounts reading a twin's pool (a twin's five buttons reported as the group's)
+    assertTrue(plan ~= nil and plan:find("frames=3 shown=2", 1, true) ~= nil, tostring(plan))
+    -- red under: groupButtons reading a twin's pool (a twin's buttons listed as shown auras)
+    assertEqual(buttons, 2, "the main's two shown buttons")
 end)
 
 test("twins: the empty watch reads the main's pool only", function()

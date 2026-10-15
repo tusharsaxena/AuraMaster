@@ -47,11 +47,15 @@ return function()
     -- Every recorded engine call goes through here. `__counts` (calls by name) is always kept and
     -- allocates nothing once a name has been seen; the `__calls` log allocates a table per call, so
     -- tests/perf.lua sets `M.__countOnly` around its measured loops to keep the mock's own garbage
-    -- out of the addon's bytes-per-iteration figure.
+    -- out of the addon's bytes-per-iteration figure. Each logged call is stamped `at` on the frames'
+    -- one clock (CreateFrame's `__tick`), so a case can order an engine call against a frame's birth.
     local function record(self, name, ...)
         self.__counts[name] = (self.__counts[name] or 0) + 1
         if not M.__countOnly then
-            self.__calls[#self.__calls + 1] = { name, ... }
+            M.__tick = M.__tick + 1
+            local c = { name, ... }
+            c.at = M.__tick
+            self.__calls[#self.__calls + 1] = c
         end
     end
 
@@ -209,9 +213,9 @@ return function()
         -- Anything that must hold across a later re-level (Container.lua's ApplyBlocker) reads the
         -- other frame's CURRENT level itself rather than trusting this default to still apply.
         f.__level = (parent and parent.__level or 0) + 1
-        -- One clock for every creation and level write, so a case can tell which came first across
-        -- frames (a glow holder is leveled before its twin engine is created under it). `__levels`
-        -- logs each write as { level, tick }; neither allocates while `__countOnly` is set.
+        -- One clock for every creation, level write and logged engine call, so a case can tell which
+        -- came first across frames (a glow holder is leveled before its twin engine is created under
+        -- it). `__levels` logs each write as { level, tick }; neither allocates while `__countOnly` is set.
         M.__tick = M.__tick + 1
         f.__bornAt = M.__tick
         function f:SetFrameLevel(v)

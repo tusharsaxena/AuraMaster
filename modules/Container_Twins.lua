@@ -13,7 +13,8 @@ local _, NS = ...
 -- every addon call. So the only way to get a second copy of the live, secret text is a second engine
 -- that writes it. A container with the glow on builds C.TEXT_GLOW_TWINS of them beside its main, each
 -- with the main's unit, groups, view, enchant slots and flow, sent through the same calls in the same
--- order (ContainerClass:Build, Update, ApplyView, Restyle and every SetEnabled path mirror them).
+-- order (ContainerClass:Build, Update, ApplyView, Refresh, Restyle and every SetEnabled path mirror
+-- them).
 -- Their buttons are dressed in the glow (Style.Element with the twin index k) and take no mouse.
 --
 -- DECORATION ONLY. A twin is never the hang frame, a snap or drag target, the frame picker's focus, or
@@ -102,14 +103,15 @@ end
 
 --- Build twin k, in the order its holder and the engine need: the holder lowered first, then the twin
 --- made under it, leveled, flowed, anchored and sized before its first group, its unit last
---- (Container.Populate).
+--- (Container.Populate). Answers false when the twin could not be made.
+--- @return boolean
 local function buildTwin(self, k, cfg, plan, view, flow, level)
     local Container, gap = NS.Container, NS.Constants.TEXT_GLOW_LEVEL_GAP
     local h = holderFor(self, k)
     h:SetFrameLevel(math.max(0, level - gap - 1))
     pin(self, h, cfg, k)
     local twin = CreateFrame("AuraContainer", nil, h, "CustomAuraContainerTemplate")
-    if not twin then return end
+    if not twin then return false end
     Container.CallEngine(twin, "SetFrameLevel", math.max(0, level - gap))
     Container.ApplyFlow(twin, cfg)
     local ex, ey = Container.EngineOffset(flow.growH, flow.growV)
@@ -119,15 +121,18 @@ local function buildTwin(self, k, cfg, plan, view, flow, level)
     local frames = {}
     Container.Populate(twin, cfg, plan, view, function(frame) self:InitTwinFrame(frame, k) end, frames)
     self.twins[k], self.twinEnchantFrames[k] = twin, frames
+    return true
 end
 
 --- Build the twins of a main engine just built (ContainerClass:Build), with its plan, view and flow
---- and the level LevelMain decided for it. None while the glow is off.
+--- and the level LevelMain decided for it. None while the glow is off. A twin that cannot be made
+--- ends the build: every walk below is an ipairs, so a twin built past a hole would draw on with no
+--- update, view switch, hide or retire ever reaching it.
 function Twins.Build(self, cfg, plan, view, flow, level)
     self.twins, self.twinEnchantFrames = {}, {}
     if not (level and Twins.On(cfg)) then return end
     for k = 1, NS.Constants.TEXT_GLOW_TWINS do
-        buildTwin(self, k, cfg, plan, view, flow, level)
+        if not buildTwin(self, k, cfg, plan, view, flow, level) then return end
     end
 end
 
