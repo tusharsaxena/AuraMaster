@@ -52,8 +52,8 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   feedback #7): the `$dispeltype$` word colored by a `|c` escape in the engine's own text map, and a
   backdrop and an edge the engine tints (`modules/Style_Text.lua`).
 - **A Text line's glow is a halo around the text, not a per-glyph glow around each letter** (text
-  glow, owner 2026-10-15). The engine writes every field into one font string of ours through a `Set…` binding
-  with one target, and no addon code can read the secret text to copy it into a second,
+  glow, owner 2026-10-15). The engine writes every field into one font string of ours through a
+  `Set…` binding with one target, and no addon code can read the secret text to copy it into a second,
   glow-colored font string behind the first; the outline is always black and the font's one shadow
   belongs to its Shadow row. So the glow is a soft rounded rectangle of textures anchored to the font
   strings' edges, which the client sizes to the live text with no addon read
