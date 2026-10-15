@@ -33,10 +33,11 @@ naming what resolves at load (toc-file-§5); the rest are conventional and free 
    `NS.AnchorsAttach`'s pair table and flow growth and `NS.AnchorsSnapRect`'s rect readers at file
    load and extends `NS.Anchors` as `Anchors.Snap`. Eight modules bind `NS.CONTAINER_TEMPLATE`
    (`defaults/Profile.lua`) at file load, so their position below `defaults/` is load-bearing too:
-   `Style.lua`, `Style_Bars.lua`, `Style_Icons.lua`, `Style_Text.lua` and `Style_TextGlow.lua` (which
-   both index its `.text` there), `Anchors_Attach.lua`, `Anchors.lua` and `Container.lua`, whose fallback it is for every
-   unset layout and label leaf. The rest reach each other only at call time, binding nothing at
-   load beyond what `core/` publishes (`NS.Constants`, `NS.L`, `NS.Perf`, `NS.NewBusTarget`).
+   `Style.lua`, `Style_Bars.lua`, `Style_Icons.lua`, `Style_Text.lua` and `Style_TextGlow.lua`
+   (which both index its `.text` there), `Anchors_Attach.lua`, `Anchors.lua` and `Container.lua`,
+   whose fallback it is for every unset layout and label leaf. The rest reach each other only at
+   call time, binding nothing at load beyond what `core/` publishes (`NS.Constants`, `NS.L`,
+   `NS.Perf`, `NS.NewBusTarget`).
 6. **`settings/`** — last. `Schema.lua` first (every page registers into it), `Slash.lua`, then
    `OptionsSetup.lua` before every page file, because the pages call the composers
    (`NS.Helpers.ColorPair`, `FontGroup`, `BorderGroup`, `BarGroup`, `MasterControls`) inside

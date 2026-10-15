@@ -332,7 +332,8 @@ test("text glow: a container with only the glow's class-color companion on is cl
     local NS = E()
     local c = text({ useClassColorGlow = true })
     c.text.font.useClassColorFont = false
-    -- red under: a companion key outside `^useClassColor` (a unit swap would never re-dress the glow)
+    -- red under: a UsesClassColor that skipped the text block's own flags (a unit swap would never
+    -- re-dress the glow); this pins existing Style behavior, so it is green before TG-02 too
     assertTrue(NS.Style.UsesClassColor(c), "the companion alone")
     c.text.useClassColorGlow = false
     assertFalse(NS.Style.UsesClassColor(c), "and nothing else in the block is")
