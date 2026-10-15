@@ -49,6 +49,10 @@ end
 -- enchantSlots (schema v3, B3) got its rows in B7 (settings/GeneralSpells.lua's ENCHANT_ROWS), so it
 -- is no longer exempted here.
 local CARVE_OUTS = set({ "filter.whitelist", "filter.blacklist" })
+-- The text glow's leaves (TG-01) land one task ahead of their rows. TG-03 registers them on the Text
+-- section's Font tab (settings/Text.lua) and deletes this set in the same commit.
+local GLOW_STAGED = set({ "text.glow", "text.glowColor", "text.useClassColorGlow", "text.glowIntensity",
+    "text.glowRadius", "text.glowBlend", "text.glowFalloff", "text.glowX", "text.glowY" })
 -- userCategories and userCategoryOrder (issue #10 checkpoint 3) join categorySpells here for the
 -- same reason: they are maps the PLAYER fills, written by defaults/UserCategories.lua's create and
 -- rename acts rather than by a settings row, so there is no row for a row-shaped test to find.
@@ -272,7 +276,7 @@ test("defaults: every leaf of the container template is edited by a settings row
     for _, leaf in ipairs(leaves(NS.CONTAINER_TEMPLATE, "")) do
         local p = leaf[1]
         -- red under: a template key no row reaches (a default the player can never change or reset)
-        if not CARVE_OUTS[p] and not NS.FindSchemaRow("container." .. p) then
+        if not CARVE_OUTS[p] and not GLOW_STAGED[p] and not NS.FindSchemaRow("container." .. p) then
             orphans[#orphans + 1] = p
         end
     end

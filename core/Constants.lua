@@ -274,6 +274,13 @@ C.TEXT_ICON_POSITION_LABELS = { NONE = "Hidden", LEFT = "Left of the text", RIGH
 C.TEXT_ANIMS = { "none", "pulse", "blink", "bounce" }
 C.TEXT_ANIM_LABELS = { none = "None", pulse = "Pulse", blink = "Blink", bounce = "Bounce" }
 
+-- The glow behind the text (text glow, docs/superpowers/specs/2026-10-15-text-glow-design.md G1):
+-- the blend mode its textures draw with, and how the halo's edge fades.
+C.TEXT_GLOW_BLENDS = { "BLEND", "ADD" }
+C.TEXT_GLOW_BLEND_LABELS = { BLEND = "Normal", ADD = "Additive" }
+C.TEXT_GLOW_FALLOFFS = { "soft", "hard" }
+C.TEXT_GLOW_FALLOFF_LABELS = { soft = "Soft", hard = "Hard" }
+
 -- The template's tokens, in cheat-sheet order. modules/TextTemplate.lua parses with this list and
 -- settings/Text.lua prints it. `kind` is the engine field that draws a token; a duration token also
 -- names the Enum.DurationTextBindingProperty member it reads, and whether it is a time or a percent.

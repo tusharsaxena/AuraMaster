@@ -1517,6 +1517,13 @@ Total.
 - autosize: a placeholder with the long name is not cut in test mode
 - autosize: off, a hand-set width still cuts a long line at the box, and a toggle re-dress follows it
 
+### test_style_text_glow.lua (4)
+
+- text glow: every leaf sits in the text template at its G1 default, the glow off
+- text glow: the blend and falloff choices are labeled, and each default is one of them
+- text glow: a container stored without the glow leaves is backfilled with the glow off
+- text glow: a stored glow left on survives the backfill (savedvariables-§5)
+
 ### test_preview.lua (28)
 
 - preview: every placeholder aura is drawn, each where Preview.Offset puts it against the anchor
@@ -2421,6 +2428,7 @@ Total.
 | test_style_icons.lua | 31 |
 | test_style_text.lua | 56 |
 | test_style_text_autosize.lua | 18 |
+| test_style_text_glow.lua | 4 |
 | test_preview.lua | 28 |
 | test_render_coverage.lua | 3 |
 | test_blizzardframes.lua | 8 |
@@ -2464,4 +2472,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **2058** |
+| **Total** | **2062** |

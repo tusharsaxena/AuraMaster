@@ -284,6 +284,16 @@ NS.CONTAINER_TEMPLATE = {
         dispelTypeColor = false,
         dispelBackdrop = false, dispelBackdropAlpha = 0.35,
         dispelEdge = false, dispelEdgeSize = 1,
+
+        -- The glow behind the text (text glow, owner 2026-10-15): off, a soft gold halo when turned on.
+        -- It adds to the font's outline and shadow and never replaces them. glowIntensity scales the
+        -- color's alpha; glowRadius is how far the halo reaches past the text, glowX/glowY nudge it.
+        glow = false,
+        glowColor = color(1, 0.82, 0, 1), useClassColorGlow = false,
+        glowIntensity = 0.6, glowRadius = 6,
+        glowBlend = "BLEND",   -- C.TEXT_GLOW_BLENDS
+        glowFalloff = "soft",  -- C.TEXT_GLOW_FALLOFFS
+        glowX = 0, glowY = 0,
     },
 }
 

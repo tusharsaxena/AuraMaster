@@ -136,6 +136,7 @@ Kit.run{
         "test_style_icons",
         "test_style_text",
         "test_style_text_autosize",
+        "test_style_text_glow",
         "test_preview",
         "test_render_coverage",
         "test_blizzardframes",
