@@ -52,7 +52,9 @@ replacement: the `AuraContainer` widget (`CustomAuraContainerTemplate`), which r
 itself, gathers auras against declared groups, and creates and fills `AuraButton`s in secure code.
 `SecureAuraHeaderTemplate` is no longer available on Retail.
 
-**What this addon does.** Every container is one `AuraContainer` engine (`modules/Container.lua:391`). The addon
+**What this addon does.** Every container is one main `AuraContainer` engine (`modules/Container.lua:449`). A Text
+container with Glow on adds `C.TEXT_GLOW_TWINS` twin engines with the same groups, which draw only
+its glow (*A glyph glow needs twin engines*, below). The addon
 declares groups — `AddAuraGroup(key, filterString, { candidateFilters, sortMethod, sortDirection,
 maxFrameCount, layout, initializeFrame })` — compiled from the settings by
 `modules/FilterCompiler.lua`, and dresses each button in `initializeFrame` (`modules/Style.lua`). The
@@ -139,7 +141,7 @@ addon can no longer anchor it. Another frame may only anchor **to** an aura cont
 their geometry can be secret.
 
 **What this addon does.** The engine is anchored to its container's anchor frame *before* the first
-`AddAuraGroup` (`modules/Container.lua:399-402`). Every anchor frame, and the frame picker's outline,
+`AddAuraGroup` (`modules/Container.lua:457-460`). Every anchor frame, and the frame picker's outline,
 inherits `DisableUntrustedLayoutScriptsTemplate`, so a container can attach to another container's
 engine (`modules/Anchors.lua`) and the picker can outline one. Positions are computed from settings,
 never read back off an engine frame; the anchor is sized to one element from config.
@@ -160,7 +162,7 @@ where that rect reads secret.
 **What this addon does.** A plan of the same shape (group count, enchant slots and their
 hide-permanent flag, style, growth corner —
 `FilterCompiler.StructureKey`) is applied in place, calling only the setters whose values changed;
-candidate filters are compared with `FilterCompiler.Signature` first (`modules/Container.lua:327-330`). A
+candidate filters are compared with `FilterCompiler.Signature` first (`modules/Container.lua:341-344`). A
 new shape disables, hides and retires the old engine and builds a new one (`Container:Retire`).
 
 ## Spell-id filters apply only where Blizzard's predicate allows them
@@ -216,7 +218,7 @@ spell category is not drawn in the blizzard view. The empty-container prediction
 ids, so a container whose only aura is a blacklisted `NeverSecret` one (a blacklisted Sated on a
 debuff container) is predicted not empty while the engine draws nothing. That costs only a
 placeholder hang on an unlocked container, and is accepted.
-`ContainerClass:ApplyView` (`modules/Container.lua:366`) sends `SetAuraGroupFilterString` and
+`ContainerClass:ApplyView` (`modules/Container.lua:380`) sends `SetAuraGroupFilterString` and
 `SetAuraGroupCandidateFilters` only where the two views differ. Blizzard's Lua checks neither combat
 nor secrecy in either setter and both end in `UpdateAllAuras`, so the switch runs in combat. It runs at
 every build and update, on `PLAYER_TARGET_CHANGED` and `PLAYER_FOCUS_CHANGED` before the refresh, and
@@ -311,7 +313,7 @@ field's brackets (`$spellname$[-$stacks$]`) goes with the field, and the Text se
 **The restriction.** `AddDispelTypeTexture` and `AddPandemicRegion` append to the button.
 
 **What this addon does.** Every live restyle empties both lists FIRST, before any other binding,
-through `Style.ClearAdditiveBindings` (`modules/Style.lua:552`), and then adds again
+through `Style.ClearAdditiveBindings` (`modules/Style.lua:557`), and then adds again
 (`modules/Style_Bars.lua:319-326`, `modules/Style_Icons.lua:175`). The order matters: every `Set*` /
 `Add*` binding re-runs the engine's whole apply pass, which re-tints, shows or hides each dispel
 texture still listed, while `ClearDispelTypeTextures` itself touches no region. A clear made after
@@ -435,7 +437,7 @@ slots or not (`ContainerClass:Flip`, which `ResetEnchants` calls), so it repaint
 as enchant names, and runs in combat and while auras are secret. `full` primes the fonts first and
 then asks for one system apply of every container, which re-dresses every button in place; that part
 is held like any apply while combat or aura secrecy lasts. Neither form retires or builds an engine:
-frames are never freed, so a rebuild per run would leak one engine frame per container.
+frames are never freed, so a rebuild per run would leak one engine frame per container, or five for a glowing Text container.
 
 ## Combat state: which question to ask
 
@@ -446,7 +448,7 @@ frames are never freed, so a rebuild per run would leak one engine frame per con
   creating a container, and tearing one down. A container that leaves the registry in combat is
   parked (engine disabled, anchor untouched) and destroyed once combat ends.
 - **Visibility in combat is the engine's `SetEnabled`**, not `Show`/`Hide` on an ancestry holding
-  aura buttons (`modules/Container.lua:697`).
+  aura buttons (`modules/Container.lua:764`).
 
 ## An unknown event name raises
 
@@ -585,7 +587,7 @@ The restyle stopped at the border, after `Style.ClearAdditiveBindings` had empti
 and before `Icons.Bind` could add it back: that is the lost highlight.
 
 **What this addon does.** No aura-button border reads a size (`Style.ApplyBorder`,
-`modules/Style.lua:490`):
+`modules/Style.lua:495`):
 - **Solid**, the default, is four strip textures of our own on the border frame, each anchored between
   two corners, its thickness a plain setting (the pattern of a Text line's dispel edge). Nothing is
   read, so a Solid border redraws on every restyle.
@@ -687,11 +689,61 @@ Magic (1), Poison (4). Being cast by the player does not strip the type. The oth
 showing no `$dispeltype$` word and keeping the surface's color is correct. Out of combat none of the
 values was secret.
 
+## A glyph glow needs twin engines
+
+**The restriction.** The engine writes a button's name, stacks, dispel word and time from the secure
+side, through forbidden handles, each binding (`SetSpellName`, `SetApplicationCount`,
+`SetDispelTypeText`, the duration text binding) to exactly one font string. No hook sees the write,
+and in combat the button's strings refuse every addon call, so no addon code can copy the live,
+secret text into a second string. A frame of textures behind the line drew a solid box instead (owner
+smoke, 2026-10-15).
+
+**Measured in-game, client 12.1, 2026-10-16** (the owner's throwaway probe, `AMGlowProbe`):
+- **The Slug outline is always black.** `OUTLINE,SLUG`, `OUTLINE|SLUG`, `THICKOUTLINE,SLUG` and `SLUG`
+  all draw a black rim, and a colored shadow at offset 0 does not tint it.
+- **A ring of glow-colored copies reads as a glow.** The owner picked a radius of 2 px, eight copies
+  at alpha about 0.55, with the main text drawn on top.
+- **`CreateFontString` takes no sublevel argument.** The order within a layer needs
+  `SetDrawLayer(layer, sublevel)`; without it the last-created string draws on top.
+- **Twin engines work.** Nine `CustomAuraContainerTemplate` engines side by side, one main and eight
+  twins, each with the same unit, filter, sort and layout and each offset by a ring direction × 2 px:
+  every twin built the same buttons, the gold copies stayed under the right aura's name and timer as
+  auras came and went, the tooltip and right-click cancel on the main still worked, in and out of
+  combat, and the framerate did not drop.
+- **A button with no size is never placed.** A button `initializeFrame` leaves unsized is never laid
+  out, so it is sized there (`frame:SetSize`), as `Text.Apply` does for every Text button.
+- **An engine's size and points read secret.** `GetSize` on an engine returns secret values, and the
+  probe printed its points and a button's shown and visible state as `secret`, so none of them is
+  ever logged or compared as a number.
+- **Shadow pairing halves the twins** (`/amgp twin4s`). Four twins, each drawing at +d with its font
+  string's shadow in the glow color at −2d, look the same as eight.
+
+**What this addon does.** A Text container with Glow on builds `C.TEXT_GLOW_TWINS` twin engines
+(`core/Constants.lua:286`: 4 under shadow pairing, `C.TEXT_GLOW_PAIRED`, else 8) beside its main
+(`modules/Container_Twins.lua`). Each takes the main's unit, groups, view, enchant slots and flow
+through the same calls in the same order, hangs from a holder of ours at Thickness × its ring
+direction plus Offset X and Y, and sits three frame levels below the main, written before its first
+group. Its buttons are dressed by the same `Text.Apply` as the main's with a twin index: each piece in
+the glow color, the outline dropped, the shadow in the glow color at the ring's opposite point, the
+icon laid out but hidden, no dispel tints and no time color, and no mouse
+(`modules/Style_TextGlow.lua`). A placeholder writes its own text, so its ring is copy strings of
+ours, put under the icon with `SetDrawLayer("BACKGROUND", 0)`. The `[Cont]` line's `twins=` counts a
+container's twins (`docs/debug.md`).
+
+**Not yet probed** (smoke TEXT-35): `SetFrameLevel` on an engine before its first group, and whether
+the client re-bases an engine's level when an ancestor's level changes (a Frame level change with the
+glow on rebuilds nothing; `Twins.Place` re-levels the holders from the main's level on every apply).
+`SetSize` and `SetPoint` in that window are proven. Also open: whether `SetFixedFrameLevel(true)` on
+the holders, which the addon does not set, keeps a raised anchor from lifting a holder and its twin
+over the main. It is the design's fallback before a rebuild on every level change
+(`docs/superpowers/research/2026-10-16-text-glow-twins-design.md`, R2), so the smoke step runs
+without and with it. Record both outcomes here.
+
 ## Taint notes
 
 - **No secure template of our own.** The only protected machinery is Blizzard's aura engine. Each
   container's anchor (`AuraMasterAnchor<id>`) inherits `DisableUntrustedLayoutScriptsTemplate`,
-  Blizzard's opt-in for a frame anchored to an aura container (`modules/Container.lua:45-46`).
+  Blizzard's opt-in for a frame anchored to an aura container (`modules/Container.lua:49-50`).
 - **Nothing under an anchor may own a tooltip.** The template's restriction reaches every frame
   anchored under the anchor, the drag handle and its help mark included, and the client refuses
   `GameTooltip:SetOwner` on any of them ("Anchoring disallowed as dependent object would inherit
@@ -713,12 +765,17 @@ values was secret.
   #22) hangs it from `UIParent` before it moves, out of combat only, so the move never starts from
   the parent's geometry, which may read secret.
 - **The engine is anchored before its first `AddAuraGroup`**; after that an addon can no longer
-  anchor it (`modules/Container.lua:399-402`).
+  anchor it (`modules/Container.lua:457-460`).
+- **A twin engine is moved only through its holder, and only out of combat.** A glow twin hangs from
+  a plain frame of ours pinned to the anchor (`modules/Container_Twins.lua`); a thickness or offset
+  change re-points the holder in `Apply`, which never runs under `MustDefer`, so an engine's
+  ancestry is never moved in combat. A twin button takes no mouse and binds no cancel or tooltip, so
+  the main's button keeps the only tooltip and right-click cancel.
 - **No structural work while auras are secret or under combat lockdown.** `ContainerManager.MustDefer`
   (`modules/ContainerManager.lua:217`) holds every build, update and restyle; aura buttons refuse addon
   access while auras are secret.
 - **Visibility in combat goes through the engine's `SetEnabled`**, never `Show`/`Hide` on an aura
-  button's ancestry (`modules/Container.lua:697`).
+  button's ancestry (`modules/Container.lua:764`).
 - **The font primer's frame hangs from `UIParent`, not from any anchor**, so nothing it does reaches
   an aura engine's ancestry. Its one engine call, the follow-up `UpdateAllAuras`, is not protected,
   reads no aura, and skips a disabled engine, which it would clear (`modules/FontPrimer.lua`).
@@ -798,7 +855,7 @@ values was secret.
   only while `Compat.AurasAreSecret()` is false, and through the `core/Secrets.lua` gates; chat and
   debug lines go through `NS.SafeToString`.
 - **Right-click cancel uses one click phase** (`RightButtonUp`) so a button reassigned between press
-  and release cannot cancel the wrong aura (`modules/Style.lua:898`).
+  and release cannot cancel the wrong aura (`modules/Style.lua:908`).
 - **Animations on engine buttons are set up at dress time only.** `modules/Style_Text.lua` builds its
   three AnimationGroups with the regions and calls `Stop`/`Play` only in a dress (initializeFrame or a
   restyle while auras are readable), each through `Style.Bind`, so a refusal costs one call and is

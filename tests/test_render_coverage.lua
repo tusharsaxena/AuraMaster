@@ -11,10 +11,17 @@
 -- why, when the other side cannot show it by nature. An exemption is checked too: a row that does
 -- reach the side it is exempt from has an exemption it no longer needs. Any other gap is a failure.
 --
--- THE BASELINE turns on the toggles that gate other rows (the two borders, the running-out color),
--- so the rows they gate can show a change; each gate is itself tested by turning it off. The mock
--- formatter and curves record their inputs as plain data, so a binding handed one carries what it
--- was built from.
+-- THE BASELINE turns on the toggles that gate other rows (the two borders, the running-out color, the
+-- text glow), so the rows they gate can show a change; each gate is itself tested by turning it off.
+-- The mock formatter and curves record their inputs as plain data, so a binding handed one carries
+-- what it was built from. A text glow set is a plain array of copy strings, each swapped and read as
+-- a region of its own.
+--
+-- A TEXT CONTAINER'S LIVE SIDE is its main button and one twin button (the glyph glow's twin engines,
+-- modules/Style_TextGlow.lua), the twin dressed here as twin 1 until the container builds its twins
+-- (TG-11). Three glow rows reach the live side only through the twin ENGINES themselves, not a twin
+-- button's dress: `glow` rebuilds them and `glowX` / `glowY` move their holders. They are listed in
+-- TWIN_ENGINE_ONLY below, held to exactly that list.
 
 local T = _G.AM_TEST
 local test, assertTrue, assertEqual = T.test, T.assertTrue, T.assertEqual
@@ -148,24 +155,49 @@ local function ownedBy(r)
     return out
 end
 
---- Every recorder that belongs to one dressed element: the element, its regions and what they own.
+--- Whether `k`, `v` on `__am` is one of the text glow's sets (modules/Style_TextGlow.lua): a plain
+--- array of one piece's copy strings under `glow1`, `glow2`, ..., each copy a region of its own.
+local function isGlowSet(k, v)
+    return type(k) == "string" and k:match("^glow%d+$") ~= nil and type(v) == "table" and not isRecorder(v)
+end
+
+--- A glow set's copies, in ring order, each as { suffix, recorder }.
+local function glowParts(set)
+    local out = {}
+    for j, r in ipairs(set) do
+        if isRecorder(r) then push(out, { "." .. j, r }) end
+    end
+    return out
+end
+
+--- Every recorder that belongs to one dressed element: the element, its regions and what they own,
+--- and the copies of its glow sets.
 local function recordersOf(frame)
     local list = { frame }
-    for _, r in pairs(frame.__am or {}) do
+    for k, r in pairs(frame.__am or {}) do
         if isRecorder(r) then
             push(list, r)
             for _, o in ipairs(ownedBy(r)) do push(list, o[2]) end
+        elseif isGlowSet(k, r) then
+            for _, o in ipairs(glowParts(r)) do push(list, o[2]) end
         end
     end
     return list
 end
 
 --- Swap each region of a dressed element for a recorder, in place (the table stays the one
---- Style.RegionsFor knows), and name every recorder for the serializer.
+--- Style.RegionsFor knows), and name every recorder for the serializer. A glow set stays the set it
+--- is, and each of its copies is swapped instead.
 local function adopt(frame, prefix, names)
     names[frame] = prefix
     for k, v in pairs(frame.__am) do
-        if type(v) == "table" then
+        if isGlowSet(k, v) then
+            for part in pairs(v) do
+                local r = R()
+                v[part] = r
+                names[r] = prefix .. "." .. k .. "." .. part
+            end
+        elseif type(v) == "table" then
             local r = R()
             frame.__am[k] = r
             names[r] = prefix .. "." .. k
@@ -173,11 +205,17 @@ local function adopt(frame, prefix, names)
     end
 end
 
---- What one element recorded, as one string, regions in a fixed order.
+--- What one element recorded, as one string, regions in a fixed order, a glow set's copies each
+--- under its set's key.
 local function signature(frame, names)
     local keys = {}
     for k, v in pairs(frame.__am or {}) do
-        if isRecorder(v) then
+        if isGlowSet(k, v) then
+            for _, o in ipairs(glowParts(v)) do
+                if not names[o[2]] then names[o[2]] = k .. o[1] end
+                push(keys, k .. o[1])
+            end
+        elseif isRecorder(v) then
             push(keys, k)
             for _, o in ipairs(ownedBy(v)) do
                 if not names[o[2]] then names[o[2]] = names[v] .. o[1] end
@@ -187,7 +225,8 @@ local function signature(frame, names)
     table.sort(keys)
     local parts = { "frame:" .. serLog(frame, names) }
     for _, k in ipairs(keys) do
-        local r = frame.__am[k]
+        local set, part = k:match("^(glow%d+)%.(.+)$")
+        local r = set and frame.__am[set][tonumber(part)] or frame.__am[k]
         push(parts, k .. ":" .. serLog(r, names))
         for _, o in ipairs(ownedBy(r)) do push(parts, k .. o[1] .. ":" .. serLog(o[2], names)) end
     end
@@ -207,7 +246,8 @@ local function rig(style)
     end
     assertTrue(c ~= nil, "a starter container drawn as " .. style)
     local inst = NS.ContainerManager.instances[c.id]
-    local k = { NS = NS, c = c, inst = inst, style = style, names = {}, button = R() }
+    local k = { NS = NS, c = c, inst = inst, style = style, names = {}, button = R(),
+        twin = style == "text" and R() or nil }
     inst.previewFactory = function() return R() end
     if style == "text" then
         -- A measurer that reads, so Size to fit can size the line (the harness's own font string
@@ -234,14 +274,28 @@ local function placeholders(k)
     return k.inst.previewPools[k.style].active
 end
 
---- One apply, then one preview dress. Raises when the apply raised or the engine was rebuilt (the
---- button would then be dressed by nobody, and every row would read as reaching nothing).
+--- Whether structure key `s` has the text glow on (Style.StructureKey).
+local function glowsIn(s)
+    return tostring(s):find(":glow", 1, true) ~= nil
+end
+
+--- One apply, then one preview dress. Raises when the apply raised or the engine was rebuilt for
+--- anything but the glow toggle (the button would then be dressed by nobody, and every row would read
+--- as reaching nothing). The toggle rebuilds by design (its twins, modules/Container_Twins.lua): the
+--- new engine dresses each button it creates, which handing the button to it and restyling stands for.
 local function applyAndDress(k)
     local NS = k.NS
     local engine = plant(k)
+    local was = k.inst.structure
     NS.ContainerManager.RequestApply(k.c.id)
     NS.ContainerManager.FlushPending()
-    assertTrue(k.inst.engine == engine, "the engine was updated, not rebuilt")
+    if k.inst.engine ~= engine and glowsIn(was) ~= glowsIn(k.inst.structure) then
+        plant(k)
+        k.inst:Restyle(k.c)
+    end
+    assertTrue(k.inst.engine == engine or glowsIn(was) ~= glowsIn(k.inst.structure),
+        "the engine was updated, not rebuilt")
+    if k.twin then NS.Style.Element(k.twin, k.c, true, k.inst.classColor, 1) end
     k.inst.previewDirty = true
     NS.Preview.Show(k.inst)
 end
@@ -250,11 +304,12 @@ end
 local function prime(k)
     applyAndDress(k)
     adopt(k.button, "live", k.names)
+    if k.twin then adopt(k.twin, "twin", k.names) end
     for i, f in ipairs(placeholders(k)) do adopt(f, "preview" .. i, k.names) end
 end
 
 local function clearLogs(k)
-    local frames = { k.button }
+    local frames = { k.button, k.twin }
     for _, f in ipairs(placeholders(k)) do push(frames, f) end
     for _, f in ipairs(frames) do
         for _, r in ipairs(recordersOf(f)) do r.__log = {} end
@@ -267,6 +322,7 @@ local function record(k)
     applyAndDress(k)
     local live = signature(k.button, k.names)
     assertTrue(live:find("SetSize", 1, true) ~= nil, "the live button was dressed")
+    if k.twin then live = live .. "\n--twin--\n" .. signature(k.twin, k.names) end
     local prev = {}
     for i, f in ipairs(placeholders(k)) do prev[i] = signature(f, k.names) end
     return live, table.concat(prev, "\n--\n")
@@ -315,10 +371,18 @@ local GATES = {
     -- Right, so Center (a multi-piece template stacks in rows, feedback #1) still moves the chain;
     -- an icon, so its rows reach one; a $dispeltype$ piece, so coloring its word has a word to color
     -- (feedback #7). Size to fit off, so Width and Height reach the element; turning it on then shows
-    -- through the measurer rig() installs (batch 8, AS-1).
+    -- through the measurer rig() installs (batch 8, AS-1). The glow on, so its rows reach its sets
+    -- (TG-03).
     text = { autoSize = false, icon = "LEFT", iconBorderShow = true, expiringColorOn = true, justifyH = "RIGHT",
+        glow = true,
         template = "$spellname$[ x$stacks$][ ($dispeltype$)][ - $remainingduration$]" },
 }
+
+-- The glow rows that reach the live side through the twin engines alone, never a button's dress (the
+-- header's TEXT CONTAINER'S LIVE SIDE): no live gap is reported for them, and one whose write does move
+-- a live button is reported, so the list cannot outlive its reason.
+local TWIN_ENGINE_ONLY = { ["container.text.glow"] = true, ["container.text.glowX"] = true,
+    ["container.text.glowY"] = true }
 
 --- Every row of `page` whose write leaves a side unchanged, as "<path> (<side>)", plus exemptions
 --- the row no longer needs.
@@ -345,7 +409,9 @@ local function gaps(page)
         local cov = row.coverage
         assertTrue(cov == nil or cov == "engine-only" or cov == "preview-only", row.path .. ": a known coverage")
         local liveMoved, prevMoved = liveA ~= liveB, prevA ~= prevB
-        if not liveMoved and cov ~= "preview-only" then push(out, row.path .. " (live)") end
+        local twinOnly = TWIN_ENGINE_ONLY[row.path]
+        if twinOnly and liveMoved then push(out, row.path .. " (moves a live button; drop TWIN_ENGINE_ONLY)") end
+        if not liveMoved and cov ~= "preview-only" and not twinOnly then push(out, row.path .. " (live)") end
         if not prevMoved and cov ~= "engine-only" then push(out, row.path .. " (preview)") end
         if cov == "engine-only" and prevMoved then push(out, row.path .. " (reaches the preview; drop engine-only)") end
         if cov == "preview-only" and liveMoved then push(out, row.path .. " (reaches the engine; drop preview-only)") end

@@ -1,6 +1,6 @@
 -- tests/test_docs.lua — the shipped prose is checkable, so it is checked.
 --
--- Six rules about text that no code path enforces and no reviewer reliably catches:
+-- Seven rules about text that no code path enforces and no reviewer reliably catches:
 --
 --   1. Angle-bracket argument placeholders must not appear in README.md. CurseForge's renderer treats
 --      `<path>` as an unknown HTML tag and strips it — inside backticks too — so a command that reads
@@ -22,6 +22,8 @@
 --      reviewer's job.
 --   6. No such citation lands on a comment-only or blank line: a citation's first line is code, so
 --      a line that slid under it from a doc comment above fails even when rule 5's slack forgives it.
+--   7. docs/schema.md's `text` section names every leaf of the Text style's template block, so a leaf
+--      added to `NS.CONTAINER_TEMPLATE.text` (the text glow's nine, 2026-10-15) cannot ship undocumented.
 --
 -- Out of scope, named rather than inferred (localization-§5): `libs/` and `tests/_kit/` (vendored),
 -- the frozen bundles under `docs/audits/`, `docs/reviews/` and `docs/automated-tests/<run>/`,
@@ -368,4 +370,21 @@ test("docs: every file:line citation sits within 3 lines of a name its own sente
   assertTrue(checked > 50, "matched only " .. checked .. " citations -- the pattern or the split broke")
   assertEqual(#offenders, 0, #offenders .. " citations drifted from their sentence:\n  "
     .. table.concat(offenders, "\n  "))
+end)
+
+-- ── 7. docs/schema.md names every leaf of the Text style's block ───────────────────────────────
+
+test("docs: schema.md's `text` section names every leaf of NS.CONTAINER_TEMPLATE.text", function()
+  -- red under: dropping `glowThickness` from docs/schema.md's ### `text` paragraph.
+  local body = readFile("docs/schema.md"):gsub("\r", "")
+  local section = body:match("\n### `text`\n(.-)\n##")
+  assertTrue(section ~= nil, "docs/schema.md has a ### `text` section")
+  local missing = {}
+  for key in pairs(T.NS.CONTAINER_TEMPLATE.text) do
+    if not section:find("`" .. key .. "`", 1, true) then
+      missing[#missing + 1] = key
+    end
+  end
+  table.sort(missing)
+  assertEqual(#missing, 0, "not named in docs/schema.md: " .. table.concat(missing, ", "))
 end)

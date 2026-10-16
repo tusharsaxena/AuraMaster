@@ -627,6 +627,18 @@ test("diag: [Cont] prints both points in effect, whether each is automatic, and 
     assertTrue(line:find(want, 1, true) ~= nil, want .. " in " .. line)
 end)
 
+test("diag: [Cont] counts a container's text glow twins, 0 while the glow is off (TG-11)", function()
+    local NS, mocks = fresh()
+    assertTrue(NS.SetByPath("container.text.glow", true, 4))
+    mocks.__fireTimers()
+    local lines = build(NS)
+    local glowing, plain = has(lines, "[Cont] #4 ") or "", has(lines, "[Cont] #1 ") or ""
+    -- red under: instFlags without twins= (a smoke run cannot see that the twins exist)
+    local want = ("enchantFrames=0 twins=%d dormant="):format(NS.Constants.TEXT_GLOW_TWINS)
+    assertTrue(glowing:find(want, 1, true) ~= nil, want .. " in " .. glowing)
+    assertTrue(plain:find(" twins=0 ", 1, true) ~= nil, "twins=0 in " .. plain)
+end)
+
 -- ── robustness and the caps (DG-3, DG-4) ──────────────────────────────────────────────────────
 
 test("diag: a failing section is reported and the next container still reports", function()

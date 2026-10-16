@@ -50,6 +50,8 @@ test("loadorder: the load-bearing pairs are in order, and the TOC says why", fun
         { "modules/Style.lua", "modules/Style_Bars.lua" },
         { "modules/Style.lua", "modules/Style_Text.lua" },
         { "modules/TextTemplate.lua", "modules/Style_Text.lua" },
+        -- Style_TextGlow decorates NS.Style.Text at file scope (text glow, TG-02).
+        { "modules/Style_Text.lua", "modules/Style_TextGlow.lua" },
         -- FilterCompiler binds NS.FilterViews at file load (spell-list views, SV-01).
         { "modules/FilterViews.lua", "modules/FilterCompiler.lua" },
         -- Anchors binds NS.AnchorsAttach at file load (AM-ATS-04).

@@ -378,10 +378,11 @@ local function instFlags(x)
     local retiredList, enchantList = inst.retired or {}, inst.enchantFrames or {}
     local retired = #retiredList
     local enchants = #enchantList
+    -- twins= is the text glow's twin engines (modules/Container_Twins.lua), never a count of auras.
     return ("engine=%s shows=%s parked=%s staleData=%s classStale=%s retired=%s enchantFrames=%s "
-        .. "dormant=%s retiring=%s"):format(yesno(inst.engine), ok and yesno(show) or "?",
+        .. "twins=%s dormant=%s retiring=%s"):format(yesno(inst.engine), ok and yesno(show) or "?",
         yesno(inst.parked), yesno(inst.staleData), yesno(inst.classStale), retired, enchants,
-        yesno(CM.__dormant()[x.id]), yesno(CM.__retiring()[x.id]))
+        NS.ContainerTwins.Count(inst), yesno(CM.__dormant()[x.id]), yesno(CM.__retiring()[x.id]))
 end
 
 local function contLine(out, x)

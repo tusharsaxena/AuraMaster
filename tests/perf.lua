@@ -170,13 +170,36 @@ if textCfg then
         ("restyleText: a same-settings re-dress measured %d string(s)"):format(measured - measuredBefore))
     -- red under: useChain rebuilding the chain on every dress
     assert_(frames == 0, ("restyleText: a same-shape re-dress built %d frame(s)"):format(frames))
+
+    -- 4c. The same text starter with the glow on: ten live buttons on the main and on each of its
+    --     C.TEXT_GLOW_TWINS twin engines (modules/Container_Twins.lua), each re-dressed per restyle.
+    NS.SetByPath("container.text.glow", true, textCfg.id)
+    mocks.__fireTimers()
+    local twins = NS.ContainerTwins.Count(instText)
+    assert_(twins == NS.Constants.TEXT_GLOW_TWINS,
+        ("restyleTextGlow: %d twin(s) built, expected %d"):format(twins, NS.Constants.TEXT_GLOW_TWINS))
+    local glowKey = instText.plan.groups[1].key
+    for _, engine in ipairs({ instText.engine, unpack(instText.twins or {}) }) do
+        engine.__frames[glowKey] = {}
+        for i = 1, 10 do engine.__frames[glowKey][i] = mocks.__stubFrame() end
+    end
+    instText:Restyle(textCfg)
+    frames = 0
+    mocks.CreateFrame = function(...) frames = frames + 1; return create(...) end
+    measure("restyleTextGlow", 200, function() instText:Restyle(textCfg) end)
+    mocks.CreateFrame = create
+    -- red under: a twin's re-dress building its glow regions again on every pass
+    assert_(frames == 0, ("restyleTextGlow: a same-shape re-dress built %d frame(s)"):format(frames))
 end
 
 -- 5. The visibility pass every combat transition runs.
+--    One SetEnabled per engine: each container's, and each twin of the glowing text starter (4c).
+local engines = containers
+for _, inst in pairs(CM.instances) do engines = engines + NS.ContainerTwins.Count(inst) end
 local visibility = measure("visibilityPass", 1000, function() CM.ApplyVisibility() end)
-assert_(visibility.apiPerIter == containers,
-    ("visibilityPass makes %.1f engine calls, expected %d (one SetEnabled per container)")
-        :format(visibility.apiPerIter, containers))
+assert_(visibility.apiPerIter == engines,
+    ("visibilityPass makes %.1f engine calls, expected %d (one SetEnabled per engine)")
+        :format(visibility.apiPerIter, engines))
 
 -- 6. A target swap: the one path ordinary combat activity drives.
 local targets = 0

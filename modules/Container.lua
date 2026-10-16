@@ -1,7 +1,7 @@
 local _, NS = ...
 
--- modules/Container.lua — one live container: its anchor, its drag handle, and the Blizzard aura
--- engine that actually draws its auras.
+-- modules/Container.lua — one live container: its anchor, its drag handle, the Blizzard aura engine
+-- that draws its auras, and with a Text glow on, its twin engines (modules/Container_Twins.lua).
 --
 -- BUILD, UPDATE OR REBUILD. A container's settings compile (modules/FilterCompiler.lua) into a plan of
 -- aura groups. The engine lets most of a group change live — filter string, candidate filters,
@@ -26,6 +26,7 @@ local D = NS.CONTAINER_TEMPLATE
 local HUGE = math.huge
 -- The unlocked outline's opacity: faint enough to read as a guide, never as a border (B1).
 local OUTLINE_ALPHA = 0.35
+local EMPTY = {}
 
 local function callEngine(engine, method, ...)
     local fn = engine and engine[method]
@@ -35,6 +36,9 @@ local function callEngine(engine, method, ...)
     if not ok and NS.DebugOnce then NS.DebugOnce("Engine", method, err) end
     return ok
 end
+--- The guarded engine call, shared with modules/Container_Twins.lua, which builds a glowing text
+--- container's twin engines through the same sends.
+NS.Container.CallEngine = callEngine
 
 --- A new live container for stored container `id`. Builds the anchor and the handle; the engine is
 --- built by the first Apply.
@@ -151,6 +155,7 @@ local function applyFlow(engine, cfg)
     callEngine(engine, "SetFlowLayoutMaximumLineSize", flow.maxLineSize)
     return flow
 end
+NS.Container.ApplyFlow = applyFlow
 
 -- ---------------------------------------------------------------------------
 -- Engine build / update
@@ -159,6 +164,13 @@ end
 function ContainerClass:InitFrame(frame)
     local cfg = self:Cfg()
     if cfg then NS.Style.Element(frame, cfg, true, self.classColor) end
+end
+
+--- A glow twin's button init (modules/Container_Twins.lua): the main's dress, as twin `k`, which
+--- Style.Text dresses in the glow and leaves without mouse.
+function ContainerClass:InitTwinFrame(frame, k)
+    local cfg = self:Cfg()
+    if cfg then NS.Style.Element(frame, cfg, true, self.classColor, k) end
 end
 
 -- ---------------------------------------------------------------------------
@@ -211,6 +223,8 @@ function ContainerClass:Retire()
     -- a retired frame until Build re-anchors it to the replacement.
     if self.blocker then self.blocker:Hide() end
     self.retired[#self.retired + 1] = engine
+    -- Its glow twins go with it, onto their own list (Twins.Retire).
+    NS.ContainerTwins.Retire(self)
     self.engine, self.structure, self.plan, self.enchantDir = nil, nil, nil, nil
     self.enchantFrames = {}
 end
@@ -375,18 +389,62 @@ function ContainerClass:ApplyView()
     end
     -- A refused setter (callEngine logs it once) leaves the view STALE: recorded as the one asked for,
     -- so the report says which, and resent in full at the next switch, since what the engine holds
-    -- after a partial send is not known.
+    -- after a partial send is not known. Every glow twin holds the same plan in the same view, so it
+    -- takes the same sends, and its refusal leaves the view stale too.
     local ok = true
     for _, g in ipairs(plan.groups) do
         ok = sendGroupView(engine, g, view, g, was, stale) and ok
+        for _, twin in NS.ContainerTwins.Each(self) do
+            ok = sendGroupView(twin, g, view, g, was, stale) and ok
+        end
     end
     self.viewStale = (not ok) or nil
     self:NoteView(view, unit, auraType, situation)
     return true
 end
 
-function ContainerClass:Build(cfg, plan, structure)
+--- The weapon-enchant slots of a new engine, its frames appended to `frames`.
+local function addEnchants(engine, cfg, plan, init, frames)
     local Compat = NS.Compat
+    local layout = groupLayout(cfg, #plan.groups + 1)
+    layout.placement = Compat.EnchantPlacementAfter()
+    callEngine(engine, "SetItemEnchantmentSortMethod", Compat.EnchantSortByDuration(),
+        Compat.SortDirection(cfg.filter and cfg.filter.sortDirection))
+    callEngine(engine, "SetItemEnchantmentLayout", layout)
+    for _, slot in ipairs(plan.enchants.slots) do
+        local ok, frame = pcall(engine.AddItemEnchantment, engine, Compat.EnchantSlot(slot), {
+            initializeFrame = init, hidePermanent = plan.enchants.hidePermanent,
+        })
+        if ok and frame then
+            frames[#frames + 1] = frame
+        end
+    end
+end
+
+--- Give a new, anchored engine its content: every group of `plan` in `view`, its buttons dressed by
+--- `init`, then the enchant slots (frames appended to `frames`), then the unit. A glow twin takes the
+--- same content through this same function (modules/Container_Twins.lua).
+local function populate(engine, cfg, plan, view, init, frames)
+    local Compat = NS.Compat
+    for i, g in ipairs(plan.groups) do
+        local filter, cand = viewOf(g, view)
+        callEngine(engine, "AddAuraGroup", g.key, filter, {
+            initializeFrame  = init,
+            candidateFilters = cand,
+            sortMethod       = Compat.SortMethod(g.sortMethod),
+            sortDirection    = Compat.SortDirection(g.sortDirection),
+            maxFrameCount    = g.maxFrameCount,
+            layout           = groupLayout(cfg, i),
+        })
+    end
+    if plan.enchants then addEnchants(engine, cfg, plan, init, frames) end
+    -- The unit LAST, once every group exists, so the engine registers UNIT_AURA for a container that
+    -- already knows what it is looking for.
+    callEngine(engine, "SetUnit", cfg.unit)
+end
+NS.Container.Populate = populate
+
+function ContainerClass:Build(cfg, plan, structure)
     local anchor = self.anchor
     local engine = CreateFrame("AuraContainer", nil, anchor, "CustomAuraContainerTemplate")
     if not engine then return end
@@ -404,42 +462,15 @@ function ContainerClass:Build(cfg, plan, structure)
     -- while visible, so it needs a renderable rect from its first dirty mark. Every layout pass then
     -- replaces the size with the real one (CustomAuraContainerFlowLayoutMixin:OnLayoutComplete).
     engine:SetSize(1, 1)
+    -- With the text glow on, the main's level, written in the same pre-group window; nil otherwise.
+    local level = NS.ContainerTwins.LevelMain(self, engine, cfg)
 
-    local init = function(frame) self:InitFrame(frame) end
     local auraType = auraTypeOf(cfg)
     local view, situation = self:ResolveView(cfg.unit, auraType, cfg)
-    for i, g in ipairs(plan.groups) do
-        local filter, cand = viewOf(g, view)
-        callEngine(engine, "AddAuraGroup", g.key, filter, {
-            initializeFrame  = init,
-            candidateFilters = cand,
-            sortMethod       = Compat.SortMethod(g.sortMethod),
-            sortDirection    = Compat.SortDirection(g.sortDirection),
-            maxFrameCount    = g.maxFrameCount,
-            layout           = groupLayout(cfg, i),
-        })
-    end
-
     self.enchantFrames = {}
-    if plan.enchants then
-        local layout = groupLayout(cfg, #plan.groups + 1)
-        layout.placement = Compat.EnchantPlacementAfter()
-        callEngine(engine, "SetItemEnchantmentSortMethod", Compat.EnchantSortByDuration(),
-            Compat.SortDirection(cfg.filter and cfg.filter.sortDirection))
-        callEngine(engine, "SetItemEnchantmentLayout", layout)
-        for _, slot in ipairs(plan.enchants.slots) do
-            local ok, frame = pcall(engine.AddItemEnchantment, engine, Compat.EnchantSlot(slot), {
-                initializeFrame = init, hidePermanent = plan.enchants.hidePermanent,
-            })
-            if ok and frame then
-                self.enchantFrames[#self.enchantFrames + 1] = frame
-            end
-        end
-    end
-
-    -- The unit LAST, once every group exists, so the engine registers UNIT_AURA for a container that
-    -- already knows what it is looking for.
-    callEngine(engine, "SetUnit", cfg.unit)
+    populate(engine, cfg, plan, view, function(frame) self:InitFrame(frame) end, self.enchantFrames)
+    -- The glow twins, once the main is complete, each with the main's content (none while off).
+    NS.ContainerTwins.Build(self, cfg, plan, view, flow, level)
     self.unit = cfg.unit
     self.enchantDir = cfg.filter and cfg.filter.sortDirection
     self.plan, self.structure = plan, structure
@@ -450,34 +481,30 @@ function ContainerClass:Build(cfg, plan, structure)
 end
 
 --- The enchant slots on a live engine: the layout every time, the sort only when the direction moved
---- (recorded, so later updates do not re-send it). hidePermanent cannot change here; it is part of
---- the structure key, so toggling it rebuilds.
-local function updateEnchants(self, engine, cfg, plan)
+--- (`dirMoved`, decided once by Update for every engine). hidePermanent cannot change here; it is part
+--- of the structure key, so toggling it rebuilds.
+local function updateEnchants(engine, cfg, plan, dirMoved)
     if not plan.enchants then return end
     local Compat = NS.Compat
     local layout = groupLayout(cfg, #plan.groups + 1)
     layout.placement = Compat.EnchantPlacementAfter()
     callEngine(engine, "SetItemEnchantmentLayout", layout)
-    local dir = cfg.filter and cfg.filter.sortDirection
-    if dir ~= self.enchantDir then
+    if dirMoved then
         callEngine(engine, "SetItemEnchantmentSortMethod", Compat.EnchantSortByDuration(),
-            Compat.SortDirection(dir))
-        self.enchantDir = dir
+            Compat.SortDirection(cfg.filter and cfg.filter.sortDirection))
     end
 end
 
-function ContainerClass:Update(cfg, plan)
+--- Send one live engine the groups of `plan`, against `old` held in `oldView` (`stale` resends both
+--- view setters). Answers whether every view send went through.
+--- @return boolean
+local function updateGroups(engine, cfg, plan, old, view, oldView, stale)
     local Compat = NS.Compat
-    local engine = self.engine
-    local old = self.plan
-    local auraType = auraTypeOf(cfg)
-    local view, situation = self:ResolveView(cfg.unit, auraType, cfg)
-    applyFlow(engine, cfg)
-    local ok, stale = true, self.viewStale
+    local ok = true
     for i, g in ipairs(plan.groups) do
         local o = old.groups[i]
         -- What the engine holds is the last plan in the view it was sent in.
-        ok = sendGroupView(engine, g, view, o, self.view, stale) and ok
+        ok = sendGroupView(engine, g, view, o, oldView, stale) and ok
         if o.sortMethod ~= g.sortMethod or o.sortDirection ~= g.sortDirection then
             callEngine(engine, "SetAuraGroupSortMethod", g.key, Compat.SortMethod(g.sortMethod),
                 Compat.SortDirection(g.sortDirection))
@@ -487,11 +514,36 @@ function ContainerClass:Update(cfg, plan)
         end
         callEngine(engine, "SetAuraGroupLayout", g.key, groupLayout(cfg, i))
     end
-    updateEnchants(self, engine, cfg, plan)
-    if self.unit ~= cfg.unit then
-        callEngine(engine, "SetUnit", cfg.unit)
-        self.unit = cfg.unit
+    return ok
+end
+
+--- Update one live engine in place: the flow, the groups, the enchant slots and, when it moved, the
+--- unit. The main and each glow twin go through this with the same decisions.
+--- @return boolean
+local function updateEngine(engine, cfg, plan, old, view, oldView, stale, dirMoved, unitMoved)
+    applyFlow(engine, cfg)
+    local ok = updateGroups(engine, cfg, plan, old, view, oldView, stale)
+    updateEnchants(engine, cfg, plan, dirMoved)
+    if unitMoved then callEngine(engine, "SetUnit", cfg.unit) end
+    return ok
+end
+
+function ContainerClass:Update(cfg, plan)
+    local auraType = auraTypeOf(cfg)
+    local view, situation = self:ResolveView(cfg.unit, auraType, cfg)
+    -- Decided ONCE, before any engine is sent, and recorded after the last: the glow twins hold what
+    -- the main holds, and a direction or unit recorded after the main's send would read unchanged to
+    -- every twin after it.
+    local dir = cfg.filter and cfg.filter.sortDirection
+    local dirMoved = plan.enchants ~= nil and dir ~= self.enchantDir
+    local unitMoved = self.unit ~= cfg.unit
+    local old, oldView, stale = self.plan, self.view, self.viewStale
+    local ok = updateEngine(self.engine, cfg, plan, old, view, oldView, stale, dirMoved, unitMoved)
+    for _, twin in NS.ContainerTwins.Each(self) do
+        ok = updateEngine(twin, cfg, plan, old, view, oldView, stale, dirMoved, unitMoved) and ok
     end
+    if dirMoved then self.enchantDir = dir end
+    self.unit = cfg.unit
     self.plan = plan
     self.viewStale = (not ok) or nil
     self:NoteView(view, cfg.unit, auraType, situation)
@@ -500,29 +552,41 @@ end
 
 --- Re-dress one live button, guarded: a dress that raises costs that button and is reported
 --- (Style.ReportError, smoke batch 2 item 7), never swallowed and never the rest of the restyle.
-local function redress(frame, cfg, classColor)
-    local ok, err = pcall(NS.Style.Element, frame, cfg, true, classColor)
+--- `twin` is a glow twin's index on a twin's button, nil on the main's.
+local function redress(frame, cfg, classColor, twin)
+    local ok, err = pcall(NS.Style.Element, frame, cfg, true, classColor, twin)
     if not ok then NS.Style.ReportError("restyle", err) end
 end
 
---- Re-dress every button the engine has created, from the current settings.
-function ContainerClass:Restyle(cfg)
-    local engine = self.engine
-    if not (engine and self.plan) then return end
+--- Re-dress every button `engine` has created for `plan`, and its enchant `frames`. Answers how many.
+local function restyleEngine(engine, plan, frames, cfg, classColor, twin)
     local count = 0
-    for _, g in ipairs(self.plan.groups) do
+    for _, g in ipairs(plan.groups) do
         local ok, n = pcall(engine.GetAuraGroupFrameCount, engine, g.key)
         for i = 1, (ok and n or 0) do
             local okF, frame = pcall(engine.GetAuraGroupFrame, engine, g.key, i)
             if okF and frame then
-                redress(frame, cfg, self.classColor)
+                redress(frame, cfg, classColor, twin)
                 count = count + 1
             end
         end
     end
-    for _, frame in ipairs(self.enchantFrames) do
-        redress(frame, cfg, self.classColor)
+    for _, frame in ipairs(frames or EMPTY) do
+        redress(frame, cfg, classColor, twin)
         count = count + 1
+    end
+    return count
+end
+
+--- Re-dress every button the engine has created, from the current settings, then each glow twin's
+--- as that twin. Answers the MAIN's count: the twins' buttons are decoration, never auras shown.
+function ContainerClass:Restyle(cfg)
+    local engine, plan = self.engine, self.plan
+    if not (engine and plan) then return end
+    local count = restyleEngine(engine, plan, self.enchantFrames, cfg, self.classColor)
+    local twinFrames = self.twinEnchantFrames or EMPTY
+    for k, twin in NS.ContainerTwins.Each(self) do
+        restyleEngine(twin, plan, twinFrames[k], cfg, self.classColor, k)
     end
     return count
 end
@@ -561,6 +625,8 @@ function ContainerClass:Apply()
             self:Retire()
             self:Build(cfg, plan, structure)
         end
+        -- The glow ring follows its leaves with no rebuild: the twins' holders re-pointed and re-leveled.
+        NS.ContainerTwins.Place(self, cfg)
         self:ApplyBlocker(cfg)
     end
     -- After SnapshotClass (its class color is the tracked unit's) and outside the engine branch: the
@@ -692,9 +758,11 @@ function ContainerClass:ApplyAnchorShown()
     return false
 end
 
---- The engine's enable and the mouse blocker, which follow one rule: shown and not previewing.
+--- The engine's enable and the mouse blocker, which follow one rule: shown and not previewing. The
+--- glow twins follow their main, so every hide path reaches them through this one call.
 function ContainerClass:ApplyLive(on)
     if self.engine then callEngine(self.engine, "SetEnabled", on) end
+    NS.ContainerTwins.Send(self, "SetEnabled", on)
     if self.blocker then self.blocker:SetShown(on) end
 end
 
@@ -851,9 +919,11 @@ function ContainerClass:ApplyVisibility()
     return show, previewing, deferred
 end
 
---- Tell the engine its unit may now be someone else (target / focus / pet changed).
+--- Tell the engine, and its glow twins, that its unit may now be someone else (target / focus / pet
+--- changed).
 function ContainerClass:Refresh()
     if self.engine then callEngine(self.engine, "UpdateAllAuras") end
+    NS.ContainerTwins.Send(self, "UpdateAllAuras")
 end
 
 --- Turn a LIVE engine off and on again (SP-AMX-01): a disabled engine clears its aura and enchant
@@ -869,6 +939,9 @@ function ContainerClass:Flip()
     if not show or previewing then return false end
     callEngine(engine, "SetEnabled", false)
     callEngine(engine, "SetEnabled", true)
+    -- The glow twins after their main, so a twin drops what the main dropped.
+    NS.ContainerTwins.Send(self, "SetEnabled", false)
+    NS.ContainerTwins.Send(self, "SetEnabled", true)
     return true
 end
 
@@ -891,6 +964,7 @@ end
 --- id comes back first.
 function ContainerClass:Park()
     if self.engine then callEngine(self.engine, "SetEnabled", false) end
+    NS.ContainerTwins.Send(self, "SetEnabled", false)
     if self.blocker then self.blocker:Hide() end
     if self.outline then self.outline:Hide() end
     NS.Preview.Hide(self)

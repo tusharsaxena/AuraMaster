@@ -42,15 +42,20 @@ return function()
     M.CustomAuraContainerItemEnchantmentPlacement = { AfterAuraGroups = 1 }
 
     M.__engines = {}
+    M.__tick = 0
 
     -- Every recorded engine call goes through here. `__counts` (calls by name) is always kept and
     -- allocates nothing once a name has been seen; the `__calls` log allocates a table per call, so
     -- tests/perf.lua sets `M.__countOnly` around its measured loops to keep the mock's own garbage
-    -- out of the addon's bytes-per-iteration figure.
+    -- out of the addon's bytes-per-iteration figure. Each logged call is stamped `at` on the frames'
+    -- one clock (CreateFrame's `__tick`), so a case can order an engine call against a frame's birth.
     local function record(self, name, ...)
         self.__counts[name] = (self.__counts[name] or 0) + 1
         if not M.__countOnly then
-            self.__calls[#self.__calls + 1] = { name, ... }
+            M.__tick = M.__tick + 1
+            local c = { name, ... }
+            c.at = M.__tick
+            self.__calls[#self.__calls + 1] = c
         end
     end
 
@@ -68,6 +73,18 @@ return function()
         function f:SetEnabled(v)
             record(self, "SetEnabled", v)
             self.__enabled = not not v
+            return self
+        end
+        -- The level and the provisional size are written in the same pre-group window as the anchor
+        -- (a text glow's main and twin engines, modules/Container_Twins.lua), so both are recorded in
+        -- that order too; the level is still tracked for GetFrameLevel, and stamped (CreateFrame).
+        local setLevel = f.SetFrameLevel
+        function f:SetFrameLevel(v)
+            record(self, "SetFrameLevel", v)
+            return setLevel(self, v)
+        end
+        function f:SetSize(w, h)
+            record(self, "SetSize", w, h)
             return self
         end
         function f:AddItemEnchantment(slot, opts)
@@ -196,8 +213,33 @@ return function()
         -- Anything that must hold across a later re-level (Container.lua's ApplyBlocker) reads the
         -- other frame's CURRENT level itself rather than trusting this default to still apply.
         f.__level = (parent and parent.__level or 0) + 1
-        function f:SetFrameLevel(v) self.__level = v; return self end
+        -- One clock for every creation, level write and logged engine call, so a case can tell which
+        -- came first across frames (a glow holder is leveled before its twin engine is created under
+        -- it). `__levels` logs each write as { level, tick }; neither allocates while `__countOnly` is set.
+        M.__tick = M.__tick + 1
+        f.__bornAt = M.__tick
+        function f:SetFrameLevel(v)
+            self.__level = v
+            M.__tick = M.__tick + 1
+            if not M.__countOnly then
+                local log = self.__levels or {}
+                self.__levels = log
+                log[#log + 1] = { v, M.__tick }
+            end
+            return self
+        end
         function f:GetFrameLevel() return self.__level end
+        -- Points since the last ClearAllPoints, each call's arguments in order (`__pointLog`). An
+        -- engine records its own in `__calls` instead (makeEngine, below, replaces both).
+        function f:SetPoint(...)
+            if not M.__countOnly then
+                local log = self.__pointLog or {}
+                self.__pointLog = log
+                log[#log + 1] = { ... }
+            end
+            return self
+        end
+        function f:ClearAllPoints() self.__pointLog = nil; return self end
         -- The client's layout cache: recorded so a test can see an anchor opt out of it.
         function f:SetDontSavePosition(v) self.__dontSavePosition = v; return self end
         -- The container's mouse blocker (modules/Container.lua's ApplyBlocker) covers whatever engine

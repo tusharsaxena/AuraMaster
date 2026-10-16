@@ -274,6 +274,21 @@ C.TEXT_ICON_POSITION_LABELS = { NONE = "Hidden", LEFT = "Left of the text", RIGH
 C.TEXT_ANIMS = { "none", "pulse", "blink", "bounce" }
 C.TEXT_ANIM_LABELS = { none = "None", pulse = "Pulse", blink = "Blink", bounce = "Bounce" }
 
+-- The glow around the text's glyphs (text glow, docs/superpowers/specs/2026-10-16-text-glow-addendum-
+-- glyph-glow.md): a ring of glow-colored copies of the text, each `glowThickness` px out along one of
+-- the ring's unit directions. Live, each copy is a twin engine of the container's own; on the preview,
+-- an addon-written copy string. Under shadow pairing a copy's font string shadow, in the glow color,
+-- draws the opposite point of the ring, so four copies draw all eight (owner probe `/amgp twin4s`,
+-- 2026-10-16). The first four directions hold one of each opposite pair; the last four are the
+-- shadows' under pairing, and copies of their own without it. Flipping the flag is the one-line change.
+C.TEXT_GLOW_RING = { { 1, 0 }, { 0, 1 }, { 1, 1 }, { 1, -1 }, { -1, 0 }, { 0, -1 }, { -1, -1 }, { -1, 1 } }
+C.TEXT_GLOW_PAIRED = true
+C.TEXT_GLOW_TWINS = C.TEXT_GLOW_PAIRED and 4 or 8
+-- How far below the main engine its twins sit. A text button nests our frames up to four deep (the
+-- text's chain at the button's level + 4, the icon at + 2, modules/Style_Text.lua), so a twin's text
+-- draws under the main's icon only with a gap above 2 (the twins design note, section 2).
+C.TEXT_GLOW_LEVEL_GAP = 3
+
 -- The template's tokens, in cheat-sheet order. modules/TextTemplate.lua parses with this list and
 -- settings/Text.lua prints it. `kind` is the engine field that draws a token; a duration token also
 -- names the Enum.DurationTextBindingProperty member it reads, and whether it is a time or a percent.

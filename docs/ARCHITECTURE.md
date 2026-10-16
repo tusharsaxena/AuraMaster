@@ -9,15 +9,17 @@ Ka0s Aura Master draws player-built aura **containers**. A container is one unit
 `target`, `focus`, `pet` — `core/Constants.lua:39`), one aura type (`HELPFUL` or `HARMFUL` — `:45`;
 the player's temporary weapon enchants are the buff category `weaponEnchants`, schema v5) and one style (`bars`, `icons` or
 `text` — `:49`), plus its filters, placement and look. A profile holds any number of them; a fresh
-profile is seeded with four (`NS.STARTER_CONTAINERS`, `defaults/Profile.lua:294`).
+profile is seeded with four (`NS.STARTER_CONTAINERS`, `defaults/Profile.lua:303`).
 
 **The design is dictated by one client fact.** On Retail 12.1 an addon cannot read aura data while
 auras are secret — combat, encounters, Mythic+ and PvP (`core/Secrets.lua`, `docs/midnight-quirks.md`).
 So this addon reads no aura at all. Every container is a Blizzard **AuraContainer**
 (`CreateFrame("AuraContainer", nil, anchor, "CustomAuraContainerTemplate")`,
-`modules/Container.lua:391`) that registers `UNIT_AURA` for its unit, gathers, sorts, lays out and
-animates its buttons in Blizzard's own code. The addon's job is to **declare** what each container
-shows and **dress** each button the engine creates:
+`modules/Container.lua:449`) that registers `UNIT_AURA` for its unit, gathers, sorts, lays out and
+animates its buttons in Blizzard's own code. A Text container with Glow on adds `C.TEXT_GLOW_TWINS`
+twin engines with the same content, offset around the main and dressed in the glow color
+(`modules/Container_Twins.lua`), since no addon code can copy the engine's secret text. The addon's
+job is to **declare** what each container shows and **dress** each button the engine creates:
 
 ```
 settings row ─► NS.SetByPath ─► CONFIG_CHANGED ─► ContainerManager.RequestApply (next frame, coalesced)
@@ -44,12 +46,14 @@ what each LibKa0s setup file publishes: `docs/module-map.md` → *Libraries*.
 ## Module Map
 
 Five source folders in the TOC's load order — `locales/` → `core/` → `defaults/` → `modules/` →
-`settings/` (layout-§1) — 59 authored Lua files under them: one locale, 17 core, 4 defaults, 22
+`settings/` (layout-§1) — 61 authored Lua files under them: one locale, 17 core, 4 defaults, 24
 modules and 15 settings. The load-bearing positions are annotated at their TOC lines:
 `core/MediaSetup.lua` before `core/Constants.lua` (the monospace face), `core/CoreSetup.lua` before
 anything that prints, `core/PerfSetup.lua` before every module that takes `NS.Perf` as an upvalue,
 `defaults/Categories.lua` before `defaults/Profile.lua` (the template's category states) and
 `defaults/UserCategories.lua` directly after it (the `NS.Categories` upvalue),
+`modules/Style_Text.lua` before `modules/Style_TextGlow.lua` (which decorates `NS.Style.Text` at file
+load),
 `modules/Anchors_Attach.lua` before `modules/Anchors.lua` (which binds `NS.AnchorsAttach` at file load),
 `modules/Anchors_Tooltip.lua` before `modules/Anchors.lua` (which binds `NS.AnchorsTooltip.Place` at file
 load as the strip's `tooltipPlace`),
@@ -64,12 +68,14 @@ before `settings/General.lua`, which registers their rows after its own.
 The Settings tree's order is the TOC's own registration order: General, then Containers, then Profiles. Filters, Layout, Bars, Icons and Text are sections of the Containers page (#6) with no tree entry; they load after `settings/OptionsSetup.lua` in any order, and the rail's order is `SECTION_ORDER` there.
 
 The engine-facing modules: `modules/FilterCompiler.lua` with `modules/FilterViews.lua` (settings →
-groups, pure), `modules/Container.lua` (one engine), `modules/ContainerManager.lua` (the registry and
-the deferred apply), `modules/Style.lua` with `Style_Bars.lua`, `Style_Icons.lua`, `Style_Text.lua` and
-`modules/TextTemplate.lua`, placement in `modules/Anchors.lua` with `Anchors_Attach.lua`,
-`Anchors_Snap.lua`, `Anchors_SnapRect.lua` and `Anchors_Tooltip.lua`, `modules/EmptyWatch.lua`,
-`modules/FontPrimer.lua` and `modules/Preview.lua` (the session-only test mode). How they place,
-attach, preview, unlock and drag a container: `docs/data-flow.md` →
+groups, pure), `modules/Container.lua` (one main engine) with `modules/Container_Twins.lua` (a glowing
+Text container's twin engines, right after it by convention only, resolving its peers at call time),
+`modules/ContainerManager.lua` (the registry and
+the deferred apply), `modules/Style.lua` with `Style_Bars.lua`, `Style_Icons.lua`, `Style_Text.lua`,
+`Style_TextGlow.lua` and `modules/TextTemplate.lua`, placement in `modules/Anchors.lua` with
+`Anchors_Attach.lua`, `Anchors_Snap.lua`, `Anchors_SnapRect.lua` and `Anchors_Tooltip.lua`,
+`modules/EmptyWatch.lua`, `modules/FontPrimer.lua` and `modules/Preview.lua` (the session-only test
+mode). How they place, attach, preview, unlock and drag a container: `docs/data-flow.md` →
 [*Placement, preview and drag in brief*](data-flow.md#placement-preview-and-drag-in-brief).
 
 Every non-vendored file, its responsibility and the full load order: `docs/module-map.md`.
@@ -237,13 +243,15 @@ optional. The full table and the reasons:
 | `PLAYER_REGEN_DISABLED`, `PLAYER_REGEN_ENABLED`, `ADDON_RESTRICTION_STATE_CHANGED` | `modules/TimedSpells.lua` (AceEvent, on its own target) — while a container uses "without a duration" and the addon is not suspended | `syncAuraListen`: `PLAYER_REGEN_DISABLED` closes the readable gate by itself (it fires before combat lockdown begins); the other two re-check it, dropping or restoring `UNIT_AURA`; reopening schedules one scan |
 | AceDB `OnProfileChanged` / `OnProfileCopied` / `OnProfileReset` | `core/Database.lua:273-277` | `NS.OnProfileChanged` / `NS.OnProfileCopied` / `NS.OnProfileReset` → re-prepare the registry, trace the event once in its own words (a switch `[Profile] changed -> X`; a copy or a reset one `[Set]` line, debug-logging-§10), rebuild, re-render |
 
-Each container's own `UNIT_AURA` belongs to the engine (`SetUnit`, `modules/Container.lua:442`) and
-is not addon code. The twelve `core/AuraMaster.lua` registrations are one module-level list,
-`LIFECYCLE_EVENTS`, which `RegisterLifecycleEvents` and `UnregisterLifecycleEvents` both walk, so the
-stand-down and the stand-up remove and restore the same list. With logging on, the world-entry, loading-screen, combat and
-restriction handlers each write one `[Event]` line before acting (`traceEvent`,
-`core/AuraMaster.lua:100`; `docs/debug.md` -> *The event trace*); the unit swaps, `ADDON_LOADED`, the two item events and
-`ZONE_CHANGED_NEW_AREA` (a border crossing, which fires on every zone border) do not. The weapon-enchant reset writes one `[Apply]` line when it fires.
+Each container's own `UNIT_AURA` belongs to its engine, and to each twin engine of a glowing Text
+container, which takes the same `SetUnit` (`modules/Container.lua:443`); none of it is addon code.
+The twelve `core/AuraMaster.lua` registrations are one module-level list, `LIFECYCLE_EVENTS`, which
+`RegisterLifecycleEvents` and `UnregisterLifecycleEvents` both walk, so the stand-down and the
+stand-up remove and restore the same list. With logging on, the world-entry, loading-screen, combat
+and restriction handlers each write one `[Event]` line before acting (`traceEvent`,
+`core/AuraMaster.lua:100`; `docs/debug.md` -> *The event trace*); the unit swaps, `ADDON_LOADED`,
+the two item events and `ZONE_CHANGED_NEW_AREA` (a border crossing, which fires on every zone
+border) do not. The weapon-enchant reset writes one `[Apply]` line when it fires.
 
 The font primer (`modules/FontPrimer.lua`) registers no event of its own. It runs from
 `CM.StartListening` (the login's `CM.Init` and every stand-up, before the first build), from the
@@ -302,8 +310,10 @@ what a Text line can do, which spell-id filters it honors, and when a non-Solid 
 handful of user-category trade-offs were accepted by the owner. A font a media addon registers
 after login is not primed until the next settings change or `/reload`. A container on a named frame
 cannot be dragged, and an attached one whose position reads secret jumps to the cursor when its drag
-starts. Every limitation, its cause and any
-ruling: `docs/known-limitations.md`.
+starts. A Text line's glow costs `C.TEXT_GLOW_TWINS` twin engines, each with its own `UNIT_AURA`
+work; a twin could break a sort tie differently from its main, runs its loop a few frames out of
+phase, and under a hand-set Width its ring and paired shadow are clipped at its own box. Every
+limitation, its cause and any ruling: `docs/known-limitations.md`.
 
 ## Documentation map
 

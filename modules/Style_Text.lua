@@ -313,8 +313,9 @@ end
 --- Right-justified line, laid from the last piece back). A stacked line is laid out by layoutStack.
 --- Every piece is justified to the chain's side, and each chained piece is pulled back over the one
 --- before by the font's measured padding (Style.PiecePadding, smoke batch 2 item 8), so two pieces
---- sit flush instead of showing the client's padding on both sides of each.
-local function layoutChain(am, s, compiled, h)
+--- sit flush instead of showing the client's padding on both sides of each. A twin's pieces draw in
+--- the glow font, so its pull is that font's padding (Text.GlowPadding), not the main's.
+local function layoutChain(am, s, compiled, h, twin)
     if Text.Stacked(s, compiled) then return layoutStack(am, s, compiled, h) end
     local side = s.justifyH or D.justifyH
     local v = V_PREFIX[s.justifyV or D.justifyV] or ""
@@ -322,7 +323,8 @@ local function layoutChain(am, s, compiled, h)
     local n = am.pieceCount
     local first, last, step, near, far = 1, n, 1, "LEFT", "RIGHT"
     if side == "RIGHT" then first, last, step, near, far = n, 1, -1, "RIGHT", "LEFT" end
-    local pull = -step * Style.PiecePadding(s.font or D.font, D.font)
+    local pad = twin and Text.GlowPadding(s) or Style.PiecePadding(s.font or D.font, D.font)
+    local pull = -step * pad
     local head = am[PIECE[first]]
     head:ClearAllPoints()
     head:SetPoint(pointAt(v, side), am.area, pointAt(v, side), x, y)
@@ -335,12 +337,17 @@ local function layoutChain(am, s, compiled, h)
     end
 end
 
---- Every piece in the line's font; a literal also takes its text now, since nothing else writes it.
-local function dressPieces(am, s, compiled)
+--- Every piece in the line's font, or on twin `twin` in the glow (Text.GlowFont); a literal also takes
+--- its text now, since nothing else writes it.
+local function dressPieces(am, s, compiled, twin)
     local font = s.font or D.font
     for i, piece in ipairs(compiled.pieces) do
         local fs = am[PIECE[i]]
-        Style.ApplyFont(fs, font, D.font)
+        if twin then
+            Text.GlowFont(fs, s, twin)
+        else
+            Style.ApplyFont(fs, font, D.font)
+        end
         if piece.kind == "literal" then fs:SetText(piece.text) end
         fs:Show()
     end
@@ -517,26 +524,37 @@ local function bindingFor(am, blink)
     return am[key]
 end
 
--- How each kind of piece is handed to the engine. A literal is bound to nothing.
+-- A twin's duration run (the glow dress): no running-out color and no blink, so runTextColor answers
+-- nil and the glow color Text.GlowFont set stands. The engine's curve never turns the glow red.
+local NO_RUN = {}
+
+-- How each kind of piece is handed to the engine. A literal is bound to nothing. `twin` is the twin
+-- index on a twin button (modules/Style_TextGlow.lua), whose dispel word takes no palette and whose
+-- duration takes no curve; the field and the format are the main's.
 local BINDERS = {
     name = function(frame, fs) Style.Bind(frame, "SetSpellName", fs) end,
     stacks = function(frame, fs, piece) Style.Bind(frame, "SetApplicationCount", fs, stackOptionsFor(piece)) end,
-    dispel = function(frame, fs, piece, s) Style.Bind(frame, "SetDispelTypeText", fs, dispelOptionsFor(piece, s)) end,
-    duration = function(frame, fs, piece, s, am)
+    dispel = function(frame, fs, piece, s, _, twin)
+        Style.Bind(frame, "SetDispelTypeText", fs, dispelOptionsFor(piece, not twin and s or nil))
+    end,
+    duration = function(frame, fs, piece, s, am, twin)
+        local textFormat = Style.DurationTextFormat(piece, s.timeFormat)
+        if twin then return Style.BindDurationFormat(frame, fs, textFormat, bindingFor(am, false), NO_RUN, D) end
         local font = s.font or D.font
-        Style.BindDurationFormat(frame, fs, Style.DurationTextFormat(piece, s.timeFormat),
-            bindingFor(am, s.expiringBlink and true or false), s, D,
+        Style.BindDurationFormat(frame, fs, textFormat, bindingFor(am, s.expiringBlink and true or false), s, D,
             Style.CurveColor(font.fontColor, font.useClassColorFont))
     end,
 }
 
---- Hand the pieces and the icon to the engine, each through its own binding (Style.Bind).
-function Text.Bind(frame, am, cfg, s, compiled)
-    if (s.icon or D.icon) ~= "NONE" then Style.Bind(frame, "SetIcon", am.icon) end
+--- Hand the pieces and the icon to the engine, each through its own binding (Style.Bind). A twin
+--- (`twin` its index) binds its pieces only: no icon, no dispel tints, and no mouse (Text.TwinBehavior).
+function Text.Bind(frame, am, cfg, s, compiled, twin)
+    if not twin and (s.icon or D.icon) ~= "NONE" then Style.Bind(frame, "SetIcon", am.icon) end
     for i, piece in ipairs(compiled.pieces) do
         local bind = BINDERS[piece.kind]
-        if bind then bind(frame, am[PIECE[i]], piece, s, am) end
+        if bind then bind(frame, am[PIECE[i]], piece, s, am, twin) end
     end
+    if twin then return Text.TwinBehavior(frame) end
     dispelTints(frame, am, s)
     Style.ApplyBehavior(frame, cfg)
 end
@@ -559,7 +577,11 @@ function Text.Compiled(s)
     return compiled
 end
 
-function Text.Apply(frame, cfg, engine)
+--- Dress one element. `twin` is nil, or the index of the twin engine whose button this is (the glow
+--- dress, modules/Style_TextGlow.lua): the same size, chain, layout and loops as its main, so its text
+--- sits exactly under the main's, with only the look changed. Its icon is laid out, so the text keeps
+--- its place, and then hidden (guarded, as layoutIconAndArea guards the icon).
+function Text.Apply(frame, cfg, engine, twin)
     local s = cfg.text or {}
     local w, h = Style.ElementSize(cfg)
     local am = Style.RegionsFor(frame, "text", build)
@@ -569,11 +591,16 @@ function Text.Apply(frame, cfg, engine)
     local compiled = Text.Compiled(s)
     useChain(frame, am, compiled)
     layoutIconAndArea(am, s, compiled, h)
+    if twin then
+        pcall(am.icon.Hide, am.icon)
+        pcall(am.iconBorder.Hide, am.iconBorder)
+    end
     applyClip(am, s)
-    dressPieces(am, s, compiled)
-    layoutChain(am, s, compiled, h)
+    dressPieces(am, s, compiled, twin)
+    layoutChain(am, s, compiled, h, twin)
     dressDispelTints(am, s)
-    if engine then Text.Bind(frame, am, cfg, s, compiled) end
+    if engine then Text.Bind(frame, am, cfg, s, compiled, twin) end
+    Text.GlowCopies(am, s, compiled, engine)   -- modules/Style_TextGlow.lua, after the bindings as the loops are
     applyLoops(am, s)
 end
 
@@ -666,8 +693,12 @@ function Text.FillPreview(frame, aura, cfg)
     for i, piece in ipairs(compiled.pieces) do
         if piece.kind ~= "literal" then
             local fs = am[PIECE[i]]
-            fs:SetText(PIECE_TEXT[piece.kind](piece, aura, s))
+            local text = PIECE_TEXT[piece.kind](piece, aura, s)
+            fs:SetText(text)
             if piece.kind == "duration" then previewRunColor(fs, aura, s) end
+            -- The glow's copies (modules/Style_TextGlow.lua): the same text, a dispel word uncolored
+            -- as a live twin's is, and never the run color.
+            Text.GlowText(am, i, piece.kind == "dispel" and PIECE_TEXT.dispel(piece, aura, nil) or text)
         end
     end
     previewTints(am, aura, s)

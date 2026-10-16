@@ -19,7 +19,7 @@ is a defect in this doc (documentation-§3).
 | Containers → Layout (rail) | Frame · Anchor · Growth · Mouse · Label | Scale, opacity, strata and frame level; where the container sits (the screen, another container or a named frame, with only what the mode reads drawn) and the frame picker; growth direction and spacing, the flow inherited from the parent while attached to a container; tooltips, cancel, click-through; the optional name label |
 | Containers → Bar (rail, a container drawn as bars) | General · Background & border · Name text · Time text · Stack text · Icon · Pandemic | The look of a container drawn as bars |
 | Containers → Icon (rail, a container drawn as icons) | Size · Border · Cooldown · Time text · Stack text · Pandemic | The look of a container drawn as icons |
-| Containers → Text (rail, a container drawn as text) | General · Font · Icon · Pandemic · Animation | The look of a container drawn as text: what each line says, its font and its optional icon, its pandemic-window color and blink, its loop, and its opt-in dispel type colors |
+| Containers → Text (rail, a container drawn as text) | General · Font · Icon · Pandemic · Animation | The look of a container drawn as text: what each line says, its font, its optional glow and its optional icon, its pandemic-window color and blink, its loop, and its opt-in dispel type colors |
 | Profiles | — untabbed, drawn by AceConfigDialog (options-ui-§3) | Choose, create, copy, reset and delete profiles |
 
 Filters, Layout, Bars, Icons and Text are **sections of the Containers page** (#6), not pages: they
@@ -823,6 +823,21 @@ draws the icon and its border only on Left or Right. So every row but Icon posit
 position to show the icon." (smoke batch 2, item 6). Icon position redraws the page on a change, so
 the note and the dimming follow it at once.
 
+**Glow** (Font, text glow, owner 2026-10-15; glyph glow addendum 2026-10-16) sits under the Font
+subgroup, before Countdown and Dispel type. `glow` (Glow behind the text, off by default) draws a
+ring of glow-colored copies of each letter under the text, in addition to the font's outline and
+shadow and never in place of them; the icon and the box get none. A live line's copies come from
+`C.TEXT_GLOW_TWINS` twin engines that write the same secret text (`docs/known-limitations.md`), so
+the glow follows every field, and an empty field draws none. Glow color is a swatch with alpha and its
+class-color companion (`glowColor`, `useClassColorGlow`). `glowIntensity` (Intensity, 5 to 100%)
+scales the color's alpha on each copy, `glowThickness` (Thickness (px), 1 to 6) is the ring's radius,
+how far the glow reaches out from each letter, and `glowX` and `glowY` (Offset X and Offset Y, -20 to
+20 px) shift the whole ring off the text. Every row but the color pair dims while `glow` is off; the
+composer never lets the swatch dim (options-ui-§17). Turning the glow on or off rebuilds the
+container; Thickness and the offsets move the ring and build nothing, and the color and Intensity
+restyle in place. The glow draws under the icon and under the dispel backdrop. The preview and the
+unlocked placeholders draw it too, with copy strings of their own.
+
 **Dispel type** (Font, feedback #7; on the Animation tab until smoke batch 2, item 5 — the paths and
 stored values did not change) holds three opt-in stand-ins for "color the text by dispel
 type", all off by default, since no engine binding colors a font string by the aura's type
@@ -842,7 +857,7 @@ This section is on the rail only for a container drawn as text (#6); another sty
 | Tab | Rows (all under `container.text.`) |
 |---|---|
 | General | Size: `autoSize` (Size to fit; `width` and `height` dim under a note while it is on, batch 8 AS-1), `width`, `height`. Text Template: the Template dropdown, `template` (Custom only; + the Preview box and the Tokens/Rules cheat sheet). Placement: `justifyH`, `justifyV` (+ the Justify note), `x`, `y` (+ the centering note) |
-| Font | the composed font block under `font.`; Countdown: `timeFormat`. Dispel type: `dispelTypeColor`, `dispelBackdrop`, `dispelBackdropAlpha`, `dispelEdge`, `dispelEdgeSize` |
+| Font | the composed font block under `font.`; Glow: `glow`, `glowColor` · `useClassColorGlow`, `glowIntensity`, `glowThickness`, `glowX`, `glowY`; Countdown: `timeFormat`. Dispel type: `dispelTypeColor`, `dispelBackdrop`, `dispelBackdropAlpha`, `dispelEdge`, `dispelEdgeSize` |
 | Icon | `icon`, `iconSize`, `iconGap`, `iconZoom`; the composed icon-border block |
 | Pandemic | Time color: `expiringColorOn` (Recolor the time in the pandemic window), `expiringThreshold` (Pandemic window (seconds left)), `expiringColor` (Pandemic-window time color), `expiringBlink` (Blink in the pandemic window; engine-only) (+ the duration-token note) |
 | Animation | Loop: `anim`, `animSpeed`, `animIntensity`, `animBounce` |

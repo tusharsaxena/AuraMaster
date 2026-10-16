@@ -284,6 +284,15 @@ NS.CONTAINER_TEMPLATE = {
         dispelTypeColor = false,
         dispelBackdrop = false, dispelBackdropAlpha = 0.35,
         dispelEdge = false, dispelEdgeSize = 1,
+
+        -- The glow around the text (text glow, owner 2026-10-15; glyph glow addendum 2026-10-16): off, a
+        -- black ring of copies hugging each letter when turned on. It adds to the font's outline and
+        -- shadow and never replaces them. glowIntensity scales the color's alpha; glowThickness is the
+        -- ring's radius in px, glowX/glowY shift the whole ring (owner's defaults, 2026-10-16).
+        glow = false,
+        glowColor = color(0, 0, 0, 1), useClassColorGlow = false,
+        glowIntensity = 0.5, glowThickness = 4,
+        glowX = -4, glowY = 0,
     },
 }
 
