@@ -15,7 +15,7 @@ marked as such rather than listed as a requirement.
 
 ## Runtime (in-game) — what a player needs
 
-- **World of Warcraft (Retail).** Single `## Interface: 120100` line in `AuraMaster.toc:1` — Retail
+- **World of Warcraft (Retail).** Single `## Interface: 120105` line in `AuraMaster.toc:1` — Retail
   only. The addon needs the 12.1 aura container engine: `CM.Init` asks
   `Compat.EnsureAuraContainer` (`core/Compat.lua:34`), which loads Blizzard's on-demand aura
   container and then checks for it (`Compat.HasAuraContainer`, `core/Compat.lua:25`). On a client

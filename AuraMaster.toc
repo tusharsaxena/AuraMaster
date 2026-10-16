@@ -1,4 +1,4 @@
-## Interface: 120100
+## Interface: 120105
 ## Title: Ka0s Aura Master
 ## Notes: Build your own buff, debuff and weapon enchant displays for player, target, focus and pet, as bars, icons or lines of text.
 ## Author: add1kted2ka0s

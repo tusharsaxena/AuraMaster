@@ -48,7 +48,7 @@ client. The player-facing contract is the README; the engineering boundary is th
 - **Profiles** through AceDB, with a Profiles sub-page.
 - **A full CLI** — every schema row is reachable through `/am get|set|reset`, and the registry through
   `/am containers|select|new|delete`.
-- **Retail only**, Interface 120100 (Midnight 12.1), English as the source locale.
+- **Retail only**, Interface 120105 (Midnight 12.1.5), English as the source locale.
 
 ## What it deliberately does not do
 
