@@ -2034,7 +2034,7 @@ type, with Glow behind the text, Glow color and its class-color box, Intensity, 
 Offset X and Offset Y, and no other row. Glow behind the text is unticked on a new container and on
 one saved by an older build, and nothing is drawn behind its text. While it is unticked every row but
 the color pair is grayed out; tick it → they light up. The toggle's tooltip says the glow adds to the
-outline and shadow and the icon and the box get none. Result:
+outline and shadow and the icon and the box get none. Result: pass (owner-marked 2026-10-16)
 
 **TEXT-31. The glow hugs each letter.** #4 *Player cooldowns* with a live aura, Font Outline on and
 Shadow ticked: tick Glow behind the text → a black glow about 4 px wide, at half strength and
@@ -2047,14 +2047,14 @@ the glow follows the letters each time. Center on the default template
 (`$spellname$[ x$stacks$][ - $remainingduration$]`) → the name row and the duration row glow, the
 stacks row glows at 2 or more stacks and shows nothing at 1. Hover the text → the aura's tooltip;
 right-click a buff → it is canceled. `/am diagnostics` → this container's `[Cont]` line reads
-`twins=4`; untick the glow → `twins=0`. Result:
+`twins=4`; untick the glow → `twins=0`. Result: pass (owner-marked 2026-10-16)
 
 **TEXT-32. The glow's settings.** With it on, each applies at once, with no `/reload`: Glow color →
 the new color; its class-color box → your class color; Intensity 5% → faint, 100% → full; Thickness
 1 → a thin rim, 6 → a wide glow; Offset X 10 and Offset Y -10 → the glow moves off the text and the
 text stays put. Unlock and drag the container → the glow moves with it. `/am set
 container.text.glowThickness 3` → the panel row follows. The Text section's **Defaults** → the glow is
-off again. Result:
+off again. Result: pass (owner-marked 2026-10-16)
 
 **TEXT-33. The glow and the box.** Size to fit on → the glow draws in full, past the box. Untick it,
 with a Width wider than the line and a Height of about one font line → the text draws whole, and the
@@ -2064,7 +2064,7 @@ up to twice the Thickness (`docs/known-limitations.md`). Set a Width narrower th
 the glow are both cut at the box's side edges; at an edge the preview's glow may show less of a copy
 pushed past it, and more of the far side, than the live glow (`docs/known-limitations.md`).
 `/am test` → the placeholders draw the same glow as the live line, and so does the preview in the
-panel. Result:
+panel. Result: pass (owner-marked 2026-10-16)
 
 **TEXT-34. The glow in combat.** Glow on, a target-debuff Text container, at a training dummy: apply
 and refresh debuffs, let stacks rise and fall and durations run out → the gold stays under the right
@@ -2077,7 +2077,7 @@ don't blink; `docs/known-limitations.md`). Animation Pulse, then
 Bounce → the glow fades and moves with the text, at most a few frames apart. On *Player buffs* with
 the glow on, in combat → hover still shows the tooltip and right-click still cancels a buff. In
 combat, `/am set container.text.glow false` (the page itself is locked in combat) → nothing changes
-until combat ends, then the glow goes. Result:
+until combat ends, then the glow goes. Result: pass (owner-marked 2026-10-16)
 
 **TEXT-35. The glow stays under the text at any frame level.** Glow on, Icon position Left, Layout →
 Frame level 1, then 5 → the glow stays under the icon and under the text both times. Then, glow still
@@ -2088,12 +2088,12 @@ and this line, which calls `SetFixedFrameLevel(true)` on every twin's holder unt
 `/run for _,i in pairs(LibStub("AceAddon-3.0"):GetAddon("AuraMaster").ContainerManager.instances)do for _,h in ipairs(i.holders or{})do h:SetFixedFrameLevel(true)end end`
 → Frame level 20, then 1, with no `/reload` → the glow stays under the text and the icon both times.
 Record both outcomes, without and with the flag, in `docs/midnight-quirks.md` → *A glyph glow needs
-twin engines* (Not yet probed). Result:
+twin engines* (Probed). Result: pass (owner-marked 2026-10-16)
 
 **TEXT-36. The glow on a long line.** Glow on, Font Outline on, Justify Left, a three-field template
 (`$spellname$ - $stacks$ - $remainingduration$`) on an aura with stacks → the glow on the last
 piece is centered on its letters, as it is on the first, and has not slid left or right of them.
-Record any drift in `docs/known-limitations.md`. Result:
+Record any drift in `docs/known-limitations.md`. Result: pass (owner-marked 2026-10-16)
 
 ## Library-absent install
 
@@ -2123,9 +2123,7 @@ add it either way. Result: pass (owner-marked 2026-10-10)
 
 ## Pending sign-off
 
-On 2026-10-10 the owner marked every check in this file as passed, recorded on its `Result:` line as
-`pass (owner-marked 2026-10-10)`; a check that already carried a dated owner pass keeps it. A check
-added or rewritten after that date is listed here until its `Result:` line records a pass:
-
-- TEXT-30 to TEXT-36 (the glow behind the text, added 2026-10-15 and rewritten 2026-10-16 for the
-  glyph glow).
+None. On 2026-10-10 the owner marked every check in this file as passed, recorded on its
+`Result:` line as `pass (owner-marked 2026-10-10)`; a check that already carried a dated owner pass
+keeps it. A check added or rewritten after that date is listed here until its `Result:` line records
+a pass. The last ones, TEXT-30 to TEXT-36 (the glow behind the text), passed on 2026-10-16.

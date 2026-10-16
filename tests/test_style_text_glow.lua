@@ -600,23 +600,27 @@ test("text glow: docs/midnight-quirks.md records the 12.1 glow probe", function(
         -- red under: a probe fact left out (the outline's color, the layer, placement, secret size, pairing)
         assertTrue(section:find(word, 1, true) ~= nil, "the glow section names " .. word)
     end
-    local open = (section .. "\n"):match("\n%*%*Not yet probed%*%*(.-)\n\n")
-    -- red under: the open questions without the fixed-level holders the design note names (twins
-    -- design R2: the outcome of SetFixedFrameLevel on the holders is recorded here)
-    assertTrue(open ~= nil and open:find("SetFixedFrameLevel", 1, true) ~= nil,
-        "the fixed flag is open")
+    local probed = (section .. "\n"):match("\n%*%*Probed in%-game, 2026%-10%-16%*%*(.-)\n\n")
+    -- red under: the TEXT-35 outcome not recorded, or recorded without the fixed-level holders the
+    -- design note names (twins design R2: SetFixedFrameLevel on the holders, without and with)
+    assertTrue(probed ~= nil and probed:find("SetFixedFrameLevel", 1, true) ~= nil,
+        "the fixed flag's outcome is recorded")
+    -- red under: the level questions still listed as open after the owner's TEXT-35 pass
+    assertNil(section:find("Not yet probed", 1, true), "nothing about the twins is left unprobed")
 end)
 
-test("text glow: the glyph glow's smoke checks are written and wait for the owner", function()
+test("text glow: the glyph glow's smoke checks are written and signed off by the owner", function()
     local body = readDoc("docs/smoke-tests.md")
-    -- red under: the index or the pending list still ending at TEXT-34 (the twins' checks missing)
+    -- red under: the index still ending at TEXT-34 (the twins' checks missing)
     assertTrue(body:find("| TEXT-1 to TEXT-36 |", 1, true) ~= nil, "the index runs to TEXT-36")
-    assertTrue(body:find("\n- TEXT-30 to TEXT-36 ", 1, true) ~= nil, "TEXT-30 to TEXT-36 are pending")
+    -- red under: TEXT-30 to TEXT-36 still listed as pending after the owner's 2026-10-16 pass
+    assertNil(body:find("\n- TEXT-30 to TEXT-36 ", 1, true), "TEXT-30 to TEXT-36 are no longer pending")
     for id = 30, 36 do
         local check = body:match("\n%*%*TEXT%-" .. id .. "%. (.-)\n\n")
-        -- red under: a glow check missing, or marked passed before the owner ran it
+        -- red under: a glow check missing, or its Result line without the owner's pass
         assertTrue(check ~= nil, "TEXT-" .. id .. " is written")
-        assertTrue(check:match("Result:%s*$") ~= nil, "TEXT-" .. id .. " has an empty Result line")
+        assertTrue(check:match("Result: pass %(owner%-marked 2026%-10%-16%)%s*$") ~= nil,
+            "TEXT-" .. id .. " records the owner's pass")
     end
     local level = body:match("\n%*%*TEXT%-35%. (.-)\n\n")
     -- red under: TEXT-35 running only the re-level path (twins design R2: with and without the

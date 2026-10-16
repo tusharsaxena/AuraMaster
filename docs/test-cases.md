@@ -1580,7 +1580,7 @@ Total.
 - text glow: the docs name every glow leaf on the Font tab row and the twins' limits
 - text glow: no living doc still describes the removed glow textures
 - text glow: docs/midnight-quirks.md records the 12.1 glow probe
-- text glow: the glyph glow's smoke checks are written and wait for the owner
+- text glow: the glyph glow's smoke checks are written and signed off by the owner
 
 ### test_preview.lua (29)
 
