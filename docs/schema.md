@@ -187,10 +187,11 @@ false); the loop — `anim` (`"none"`, `"pulse"`, `"blink"`, `"bounce"`), `animS
 the glow behind the text (text glow, owner 2026-10-15; glyph glow addendum 2026-10-16: a ring of
 glow-colored copies of each letter, drawn live by `C.TEXT_GLOW_TWINS` twin engines; off, and added to
 the font's outline and shadow, never in place of them) — `glow` (false; on or off is part of the
-structure key, so it builds or retires the twins), `glowColor` (gold, `{ 1, 0.82, 0, 1 }`),
-`useClassColorGlow` (false, the swatch's class-color companion), `glowIntensity` (0.55, 0.05 to 1:
-each copy's alpha is the color's alpha × it), `glowThickness` (2, 1 to 6 px: the ring's radius),
-`glowX` and `glowY` (0, -20 to 20 px, shifting the whole ring).
+structure key, so it builds or retires the twins), `glowColor` (black, `{ 0, 0, 0, 1 }`),
+`useClassColorGlow` (false, the swatch's class-color companion), `glowIntensity` (0.5, 0.05 to 1:
+each copy's alpha is the color's alpha × it), `glowThickness` (4, 1 to 6 px: the ring's radius),
+`glowX` (-4) and `glowY` (0), -20 to 20 px, shifting the whole ring; the defaults are the owner's
+(2026-10-16).
 An existing container gains the block, and these leaves, by the ordinary backfill; there is no
 schema-version bump.
 

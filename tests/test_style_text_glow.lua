@@ -23,15 +23,15 @@ test("text glow: every leaf sits in the text template at its addendum default, t
     -- red under: any leaf missing from CONTAINER_TEMPLATE.text, or the glow on by default
     assertEqual(t.glow, false, "off by default (owner, 2026-10-15)")
     assertEqual(t.useClassColorGlow, false)
-    -- red under: the halo's intensity (0.6) kept, or no glowThickness (the owner's r = 2 ring, TG-09)
-    assertEqual(t.glowIntensity, 0.55)
-    assertEqual(t.glowThickness, 2)
-    assertEqual(t.glowX, 0)
+    -- red under: any leaf off the owner's defaults (2026-10-16: 50%, 4 px, X -4, Y 0)
+    assertEqual(t.glowIntensity, 0.5)
+    assertEqual(t.glowThickness, 4)
+    assertEqual(t.glowX, -4)
     assertEqual(t.glowY, 0)
     local c = t.glowColor
-    -- red under: a color without alpha (the swatch has no opacity to edit) or a color other than gold
+    -- red under: a color without alpha (the swatch has no opacity to edit) or a color other than black
     assertTrue(type(c) == "table", "glowColor is a stored color")
-    assertEqual(c.r, 1); assertEqual(c.g, 0.82); assertEqual(c.b, 0); assertEqual(c.a, 1)
+    assertEqual(c.r, 0); assertEqual(c.g, 0); assertEqual(c.b, 0); assertEqual(c.a, 1)
 end)
 
 test("text glow: the old radius, blend and falloff are gone, leaves, tables and rows (TG-09)", function()

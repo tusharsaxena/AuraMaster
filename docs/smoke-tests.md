@@ -2037,8 +2037,9 @@ the color pair is grayed out; tick it → they light up. The toggle's tooltip sa
 outline and shadow and the icon and the box get none. Result:
 
 **TEXT-31. The glow hugs each letter.** #4 *Player cooldowns* with a live aura, Font Outline on and
-Shadow ticked: tick Glow behind the text → a gold glow about 2 px wide hugs each letter, under the
-letters, with no box around the line; the black outline and the shadow still draw on the letters.
+Shadow ticked: tick Glow behind the text → a black glow about 4 px wide, at half strength and
+shifted 4 px to the left, hugs each letter, under the letters, with no box around the line; the
+black outline and the shadow still draw on the letters.
 Font size 36 → the glow is even all the way round, the corners of each letter included. Icon position
 Left, then Right → the glow never draws over the icon's art. Dispel type → Backdrop on with a Magic
 buff → the backdrop tints over the glow. Justify Left, Right, and Center on a one-field template →
@@ -2052,7 +2053,7 @@ right-click a buff → it is canceled. `/am diagnostics` → this container's `[
 the new color; its class-color box → your class color; Intensity 5% → faint, 100% → full; Thickness
 1 → a thin rim, 6 → a wide glow; Offset X 10 and Offset Y -10 → the glow moves off the text and the
 text stays put. Unlock and drag the container → the glow moves with it. `/am set
-container.text.glowThickness 4` → the panel row follows. The Text section's **Defaults** → the glow is
+container.text.glowThickness 3` → the panel row follows. The Text section's **Defaults** → the glow is
 off again. Result:
 
 **TEXT-33. The glow and the box.** Size to fit on → the glow draws in full, past the box. Untick it,

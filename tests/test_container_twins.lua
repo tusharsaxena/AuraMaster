@@ -234,7 +234,8 @@ test("twins: holder k sits at thickness x d_k + (X, Y) from the anchor, twin k a
     local mp = inst.engine:__callsTo("SetPoint")[1]
     for k, h in ipairs(inst.holders) do
         local d = C.TEXT_GLOW_RING[k]
-        local x, y = 2 * d[1] + 3, 2 * d[2] - 1
+        local th = NS.CONTAINER_TEMPLATE.text.glowThickness
+        local x, y = th * d[1] + 3, th * d[2] - 1
         local log = h.__pointLog or {}
         -- red under: a holder pinned at the anchor's rect with no ring offset, or by one point only
         assertEqual(#log, 2, "holder " .. k .. " is pinned by two points")
