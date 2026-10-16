@@ -482,7 +482,7 @@ test("compat: GetMouseFocus answers from GetMouseFoci and has no pre-11.0 rung",
     local legacy = {}
     with({ { "GetMouseFoci", nil }, { "GetMouseFocus", function() return legacy end } }, function(NS)
         -- red under: the _G.GetMouseFocus fallback
-        assertNil(NS.Compat.GetMouseFocus(), "the 120100 TOC has no client without GetMouseFoci")
+        assertNil(NS.Compat.GetMouseFocus(), "the 120105 TOC has no client without GetMouseFoci")
     end)
 end)
 
