@@ -4,7 +4,7 @@
 ![CurseForge Version](https://img.shields.io/curseforge/v/1698345)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-2123%2F2123_passing-green)
+![Tests](https://img.shields.io/badge/Tests-2124%2F2124_passing-green)
 
 Ka0s Aura Master lets you build your own buff and debuff displays. Each one is a container. You pick
 whose auras it shows (yours, your target's, your focus's or your pet's), whether it shows buffs,
@@ -186,6 +186,7 @@ a timer so the rest can be shown on their own, both come from [TinyBuffBars](htt
 under the MIT license.
 
 The debug console uses [JetBrains Mono](https://www.jetbrains.com/lp/mono/), licensed under the SIL
-Open Font License 1.1, and the **?** and **X** on each container's handle are drawn from
-[Open Iconic](https://github.com/iconic/open-iconic) (MIT). Both ship inside the bundled LibKa0s
-payload, with their license text beside them.
+Open Font License 1.1. The **?** and **X** on each container's handle, the debug console's close,
+copy and clear buttons, and the help marks in the settings are drawn from
+[Open Iconic](https://github.com/iconic/open-iconic) by Waybury (MIT). Both ship with their license
+text beside them.

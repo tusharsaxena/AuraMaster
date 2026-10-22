@@ -61,6 +61,38 @@ test("media: icons and the monospace face resolve inside this addon's folder", f
     assertTrue(mono ~= NS.Constants.FALLBACK_FONT)
 end)
 
+-- The art ships pruned to CLAUDE.md's `LibKa0s icons:` line (kit revision 40), and a pruned icon still
+-- resolves to a path, so an undeclared mark draws blank in game with nothing raised and no other gate
+-- sees it. The set this addon draws is its own NS.Icon calls plus what the library draws for the
+-- surfaces it wires: close, copy and clear on the debug console (core/DebugLogSetup.lua passes
+-- addonName), close on the perf panel, and info on every O.IdList help mark (no list passes helpIcon).
+-- red under: a new NS.Icon("x") call site with x undeclared, or a stale extra name on the line.
+test("media: the LibKa0s icons line declares exactly the marks this addon and its library hosts draw", function()
+    local want = { close = true, copy = true, clear = true, info = true }
+    local p = io.popen("grep -rhoE 'NS\\.Icon\\(\"[^\"]+\"\\)' --include='*.lua' core modules settings")
+    local calls = 0
+    for line in p:lines() do
+        local name = line:match('NS%.Icon%("([^"]+)"%)')
+        if name then
+            want[name] = true
+            calls = calls + 1
+        end
+    end
+    p:close()
+    assertTrue(calls > 0, "the grep found the NS.Icon call sites")
+    local cf = assert(io.open("CLAUDE.md", "rb"))
+    local doc = cf:read("*a")
+    cf:close()
+    local decl, why = dofile("tests/_kit/vendor_sync.lua").iconDeclaration(doc)
+    assertTrue(decl ~= nil, "CLAUDE.md carries a well-formed LibKa0s icons line: " .. tostring(why))
+    assertEqual(decl and decl.mode, "list", "the line is a list of names")
+    local wanted = {}
+    for name in pairs(want) do wanted[#wanted + 1] = name end
+    table.sort(wanted)
+    assertEqual(table.concat(decl and decl.names or {}, ", "), table.concat(wanted, ", "),
+        "declared == drawn")
+end)
+
 -- ── Env ───────────────────────────────────────────────────────────────────────────────────────
 
 test("env: the version falls back to NS.version where the TOC cannot be read", function()

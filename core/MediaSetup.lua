@@ -2,8 +2,10 @@
 -- monospace face and the bar textures (library-stack-§8).
 --
 -- The art ships inside the vendored payload at libs/LibKa0s/media/, so this addon carries no copy of
--- any of it (layout-§3, anti-pattern #63). What this file does is the three lines of real work: tell
--- the library our folder name, and register its faces and textures with LibSharedMedia.
+-- any of it (layout-§3, anti-pattern #63). Its icons are pruned to the names CLAUDE.md's
+-- `LibKa0s icons:` line declares (library-stack-§7, the icon subset), so a new NS.Icon name must be
+-- declared there or it draws blank. What this file does is the three lines of real work: tell the
+-- library our folder name, and register its faces and textures with LibSharedMedia.
 --
 -- LOAD-BEARING POSITION: core/Constants.lua resolves FONT_MONO from NS.MediaFont at FILE LOAD, so this
 -- file must precede it. A Constants that loaded first would resolve the debug console's face to the
@@ -20,7 +22,9 @@ local Media = LibStub and LibStub("LibKa0s-Media-1.0", true)
 --- The texture path for one shipped icon (extensionless, by the library's contract), or nil. The
 --- addon's own draws use two marks, both on the unlock handle (modules/Anchors.lua): "help", its help
 --- icon, and "close", the X that disables the container. Each falls back to a Blizzard texture when
---- this answers nil.
+--- this answers nil. The vendored copy ships only the names on CLAUDE.md's `LibKa0s icons:` line,
+--- and a pruned name still answers a path that draws blank, so a new name is declared there first
+--- (tests/test_setups.lua holds the line to the calls).
 --- @param name string  an entry of the library's ICONS catalog, e.g. "help"
 --- @return string|nil
 function NS.Icon(name)

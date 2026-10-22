@@ -462,8 +462,23 @@ test("options: the descriptor names the addon's folder as addonName, from the fi
     assertTrue(body:find("\n%s*addonName%s*=%s*addonName,") ~= nil, "the descriptor passes addonName = addonName")
 end)
 
-test("options: the info art the descriptor routes to is vendored on disk", function()
-    -- The library's loaded-addon guard cannot catch a host whose vendored copy lacks the file.
+test("options: the info art the descriptor routes to is declared on the LibKa0s icons line and vendored on disk", function()
+    -- The library's loaded-addon guard cannot catch a host whose vendored copy lacks the file, and
+    -- since kit revision 40 the copy ships only what CLAUDE.md's `LibKa0s icons:` line declares: the
+    -- prune deletes an undeclared `info`, and every IdList help mark then draws blank with nothing
+    -- raised. The kit's own parser reads the line; this addon writes no second one.
+    -- red under: `info` dropped from the `LibKa0s icons:` line.
+    local cf = assert(io.open("CLAUDE.md", "rb"))
+    local doc = cf:read("*a")
+    cf:close()
+    local decl, why = dofile("tests/_kit/vendor_sync.lua").iconDeclaration(doc)
+    assertTrue(decl ~= nil, "CLAUDE.md carries a well-formed LibKa0s icons line: " .. tostring(why))
+    assertEqual(decl and decl.mode, "list", "the line is a list of names")
+    local declared = false
+    for _, name in ipairs(decl and decl.names or {}) do
+        if name == "info" then declared = true end
+    end
+    assertTrue(declared, "`info` is declared on the LibKa0s icons line")
     local fh = io.open("libs/LibKa0s/media/icons/info.tga", "rb")
     assertTrue(fh ~= nil, "libs/LibKa0s/media/icons/info.tga exists")
     if fh then fh:close() end
