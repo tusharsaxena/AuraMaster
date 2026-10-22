@@ -21,12 +21,13 @@ Total.
 - loadorder: the offline perf runner and the degraded list derive from the TOC too
 - loadorder: the library registered — NS.Perf is the real probe, not the stub
 
-### test_setups.lua (14)
+### test_setups.lua (15)
 
 - core: NS.Print is reclaimed from AceConsole and prints with the cyan [AM] tag
 - core: NS.Printf is reclaimed from AceConsole and formats inside the secret-safe printer
 - core: every close control goes through the one NS.MakeCloseButton wrapper
 - media: icons and the monospace face resolve inside this addon's folder
+- media: the LibKa0s icons line declares exactly the marks this addon and its library hosts draw
 - env: the version falls back to NS.version where the TOC cannot be read
 - env: the metadata reader never calls the deprecated global
 - debug: the logging flag is ours, session-only, and never written to the profile
@@ -1582,7 +1583,7 @@ Total.
 - text glow: docs/midnight-quirks.md records the 12.1 glow probe
 - text glow: the glyph glow's smoke checks are written and signed off by the owner
 
-### test_preview.lua (29)
+### test_preview.lua (32)
 
 - preview: every placeholder aura is drawn, each where Preview.Offset puts it against the anchor
 - preview: the per-group cap limits the placeholders
@@ -1613,6 +1614,9 @@ Total.
 - preview: the debuff set covers every dispel type plus one with none, and runs out, stacks and lasts forever (TD-2)
 - preview: a container showing only Weapon enchants previews the enchant set, one per slot (SEP-4)
 - preview: a Text container's Size to fit measures the enchant names too, so an enchant placeholder fits its box
+- preview: a LOCKED test mode marks every previewing container with a TEST text over its placeholders (preview-mode marker)
+- preview: an UNLOCKED test mode leaves the TEST tag to the strip, and the marker returns when it locks again
+- preview: a parked container hides its TEST marker with its placeholders
 
 ### test_render_coverage.lua (3)
 
@@ -1896,7 +1900,7 @@ Total.
 - options: the degraded stub completes the load — every page's rows still register
 - options: the library-absent schema is the full one minus exactly the composed rows (options-ui-§1)
 - options: the descriptor names the addon's folder as addonName, from the file's first vararg
-- options: the info art the descriptor routes to is vendored on disk
+- options: the info art the descriptor routes to is declared on the LibKa0s icons line and vendored on disk
 - options: a Filters Overrides help mark draws the library's info art, not the client glyph
 - options: a General spell-categories help mark draws the library's info art, not the client glyph
 
@@ -2437,7 +2441,7 @@ Total.
 | Suite | Cases |
 |-------|------:|
 | test_loadorder.lua | 10 |
-| test_setups.lua | 14 |
+| test_setups.lua | 15 |
 | test_launcher.lua | 30 |
 | test_database.lua | 73 |
 | test_database_categories.lua | 28 |
@@ -2494,7 +2498,7 @@ Total.
 | test_style_text.lua | 56 |
 | test_style_text_autosize.lua | 18 |
 | test_style_text_glow.lua | 27 |
-| test_preview.lua | 29 |
+| test_preview.lua | 32 |
 | test_render_coverage.lua | 3 |
 | test_blizzardframes.lua | 8 |
 | test_framepicker.lua | 15 |
@@ -2537,4 +2541,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **2123** |
+| **Total** | **2127** |

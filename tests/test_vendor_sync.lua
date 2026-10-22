@@ -7,6 +7,8 @@
 -- WHAT IT CHECKS: that libs/LibKa0s/ and tests/_kit/ are exactly what the LibKa0s repo published at
 -- the tag THIS repo's CLAUDE.md names in its `Bundles [LibKa0s](…) vX.Y.Z (MIT).` provenance line. The
 -- line is an INPUT, not a constant: bump it and the bytes in the same commit.
+-- Since kit revision 40, media/icons/ is held to the CLAUDE.md `LibKa0s icons:` declaration directly
+-- under that line (declared present and identical, undeclared absent) rather than to the whole tag.
 --
 -- ONE NORMALIZATION, AND ONLY ONE: `git show` hands back the LF blob while the working tree is CRLF
 -- (`.gitattributes` pins `* text=auto eol=crlf`), so CR is stripped from the working-tree side. A real

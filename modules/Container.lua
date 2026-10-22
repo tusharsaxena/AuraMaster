@@ -913,6 +913,8 @@ function ContainerClass:ApplyVisibility()
     -- Before the strip, which moves out past a shown label (D6).
     self:ApplyLabelShown(cfg, show)
     NS.Anchors.UpdateHandle(self, unlocked)
+    -- The TEST marker, wherever the strip (which carries its own TEST tag) is not up (preview-mode).
+    NS.Preview.ApplyMarker(self, show and previewing and not (self.handle and self.stripShown))
     -- After the strip and the label: a follower's own seam makes their room (batch 10 F2).
     NS.Anchors.RefreshSeam(self)
     NS.Anchors.PlaceAttached(self)

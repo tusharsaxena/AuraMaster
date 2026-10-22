@@ -604,3 +604,67 @@ test("preview: a Text container's Size to fit measures the enchant names too, so
     end
     assertTrue(found, "measured: " .. P.ENCHANT[1].name)
 end)
+
+-- ── the TEST marker on the display (preview-mode, anti-pattern #97) ───────────────────────────────
+
+--- Every container drawing placeholders, with how many there are (at least one, or the case proves nothing).
+local function previewing(NS2)
+    local out = {}
+    for _, inst in ipairs(NS2.ContainerManager.instances) do
+        if inst.previewShown then out[#out + 1] = inst end
+    end
+    assertTrue(#out > 0, "some container previews")
+    return out
+end
+
+test("preview: a LOCKED test mode marks every previewing container with a TEST text over its placeholders (preview-mode marker)", function()
+    local NS2, mocks = fresh()
+    assertTrue(NS2.db.profile.locked, "locked, the default")
+    NS2.Preview.SetTestMode(true)
+    mocks.__fireTimers()
+    for _, inst in ipairs(previewing(NS2)) do
+        assertFalse(inst.handle ~= nil and inst.handle:IsShown(), "a locked container shows no strip")
+        -- red under: the TEST tag riding the drag strip alone, which a locked container hides, so the
+        -- placeholders drew with nothing on the display saying they are test data
+        assertTrue(inst.testMarker ~= nil and inst.testMarker:IsShown(), "container " .. inst.id .. " is marked")
+    end
+    local inst = previewing(NS2)[1]
+    local texts = {}
+    rawset(inst.testMarkerText, "SetText", function(_, s) texts[#texts + 1] = s end)
+    NS2.Preview.SetTestMode(false)
+    mocks.__fireTimers()
+    -- red under: a marker left behind once test mode ends
+    assertFalse(inst.testMarker:IsShown(), "the marker goes when test mode does")
+    NS2.Preview.SetTestMode(true)
+    mocks.__fireTimers()
+    -- the localized word, in the strip tag's orange
+    assertEqual(texts[#texts], "|c" .. NS2.Constants.TEST_TAG_COLOR .. NS2.L["TEST"] .. "|r")
+end)
+
+test("preview: an UNLOCKED test mode leaves the TEST tag to the strip, and the marker returns when it locks again", function()
+    local NS2, mocks = fresh()
+    NS2.Preview.SetTestMode(true)
+    NS2.SetByPath("locked", false)
+    mocks.__fireTimers()
+    for _, inst in ipairs(previewing(NS2)) do
+        assertTrue(inst.handle ~= nil and inst.handle:IsShown(), "the strip, with its TEST tag, is up")
+        -- red under: two TEST markers on one container, the strip's and the marker
+        assertFalse(inst.testMarker ~= nil and inst.testMarker:IsShown(), "no second marker")
+    end
+    NS2.SetByPath("locked", true)
+    mocks.__fireTimers()
+    for _, inst in ipairs(previewing(NS2)) do
+        assertTrue(inst.testMarker ~= nil and inst.testMarker:IsShown(), "marked again once locked")
+    end
+end)
+
+test("preview: a parked container hides its TEST marker with its placeholders", function()
+    local NS2, mocks = fresh()
+    NS2.Preview.SetTestMode(true)
+    mocks.__fireTimers()
+    local inst = previewing(NS2)[1]
+    assertTrue(inst.testMarker:IsShown())
+    inst:Park()
+    -- red under: Preview.Hide parking the placeholders and leaving their marker on screen
+    assertFalse(inst.testMarker:IsShown())
+end)
