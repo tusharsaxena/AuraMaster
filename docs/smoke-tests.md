@@ -21,7 +21,7 @@ check's number is not reused. Checks with no recorded pass, and checks new or co
 | STATE-1 to STATE-5 | Master switch | Enable and disable, visibility, the inert disabled addon |
 | COMBAT-1 to COMBAT-7 | Combat and restrictions | Deferred changes, the settings lock, resets in combat, Mythic+ keys |
 | DIAG-1 to DIAG-22 | Debug, diagnostics, perf | The debug console, bulk `[Set]` lines, `/am diagnostics`, `/am perf`, the event trace, resizing the console, its copy window and the perf panel, the console's Diagnostics link, diagnostics turning logging on, the library's own lines (a slash refusal, a stand-down edge, the launcher's at-enable line) |
-| CONT-1 to CONT-26 | Containers | Create, duplicate, delete, rename, copy; handles, strips and the close mark; test mode; unit swaps; empty placeholders |
+| CONT-1 to CONT-27 | Containers | Create, duplicate, delete, rename, copy; handles, strips and the close mark; test mode and its TEST marker; unit swaps; empty placeholders |
 | FILT-1 to FILT-64 | Filters and spell categories | Cast by, the category grids, Overrides, the add-a-spell box, aura ids, your own categories, weapon enchants and their names, the help marks' art, where spell lists apply, the Situations tab, its zones and its Unit type gate |
 | LAYOUT-1 to LAYOUT-38 | Layout | Anchor modes, attaching, chains, growth, anchor points, seams, the name label, mouse and tooltips |
 | DRAG-1 to DRAG-18 | Layout | Drag to attach (issue #22): dropping a container on another, the highlight on the target's strip, the side a drop picks, Shift, loops, detaching and its leeway (green hold, snap back, red past it), the growth-conflict popup, combat, a parent holding auras, frame-attached containers, the strip's tooltip, a drop between pulls in a key, a dropped side surviving a growth change, a drag cut short, a before-side drop with the line between the two join dots, the strip edge following the mark |
@@ -764,6 +764,15 @@ run out → the outline comes back within a second of it lapsing. Result: pass (
 **CONT-26. The handle's marks survive the prune.** `/am unlock` → every container's handle draws its
 **?** help mark and its **X** close mark, neither blank. Hover the X → its tooltip is unchanged.
 Result: pending (added 2026-10-22, the LibKa0s v1.75.0 re-vendor)
+
+**CONT-27. A locked test mode says TEST on the display.** Locked, `/am test` → every container that
+fills with placeholders carries an orange **TEST** over its placeholder block, at the corner the first
+placeholder starts from, readable without hovering, with no outline drawn: check a bar container, an
+icon container growing left and a Text container. Hover a placeholder → the world under it behaves as
+before (the word takes no mouse). `/am unlock` → the word goes and each strip reads its name, then
+**TEST** (CONT-17), never both; `/am lock` → the word is back. `/am test off` → it goes with the
+placeholders. On a non-English client the word is the client's. (Run bundle id SM-AM-1.)
+Result: pending (added 2026-10-22, the preview-mode marker rule)
 
 ## Filters and spell categories
 
@@ -2146,10 +2155,11 @@ add it either way. Result: pass (owner-marked 2026-10-10)
 
 ## Pending sign-off
 
-Five checks, listed at the end of this section. On 2026-10-10 the owner marked every check in this
+Six checks, listed at the end of this section. On 2026-10-10 the owner marked every check in this
 file as passed, recorded on its `Result:` line as `pass (owner-marked 2026-10-10)`; a check that already carried a dated owner pass
 keeps it. A check added or rewritten after that date is listed here until its `Result:` line records
 a pass. The last ones, TEXT-30 to TEXT-36 (the glow behind the text), passed on 2026-10-16.
 
 Pending since 2026-10-22 (the LibKa0s v1.75.0 re-vendor and its pruned icon folder): INSTALL-10,
 DIAG-21, DIAG-22, CONT-26 and FILT-64.
+Pending since 2026-10-22 (the preview-mode test marker): CONT-27.

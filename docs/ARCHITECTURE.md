@@ -160,7 +160,9 @@ A bare `/am` runs `config`, opening the settings panel on its landing page (slas
 help` prints the list.
 `/am test` is the test mode's verb (preview-mode): unlocking no longer previews, so the placeholders
 have a switch of their own, shared with the Master controls *Test mode* checkbox and the launcher
-menu's *Test mode* entry.
+menu's *Test mode* entry. While it is on, every previewing container says so on the display
+(preview-mode's marker): unlocked, its strip reads its name and then an orange TEST; locked, where no
+strip shows, `Preview.ApplyMarker` draws the same localized TEST over its placeholder block.
 
 | Command | What it does |
 |---|---|

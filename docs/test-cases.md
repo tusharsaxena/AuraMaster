@@ -1583,7 +1583,7 @@ Total.
 - text glow: docs/midnight-quirks.md records the 12.1 glow probe
 - text glow: the glyph glow's smoke checks are written and signed off by the owner
 
-### test_preview.lua (29)
+### test_preview.lua (32)
 
 - preview: every placeholder aura is drawn, each where Preview.Offset puts it against the anchor
 - preview: the per-group cap limits the placeholders
@@ -1614,6 +1614,9 @@ Total.
 - preview: the debuff set covers every dispel type plus one with none, and runs out, stacks and lasts forever (TD-2)
 - preview: a container showing only Weapon enchants previews the enchant set, one per slot (SEP-4)
 - preview: a Text container's Size to fit measures the enchant names too, so an enchant placeholder fits its box
+- preview: a LOCKED test mode marks every previewing container with a TEST text over its placeholders (preview-mode marker)
+- preview: an UNLOCKED test mode leaves the TEST tag to the strip, and the marker returns when it locks again
+- preview: a parked container hides its TEST marker with its placeholders
 
 ### test_render_coverage.lua (3)
 
@@ -2495,7 +2498,7 @@ Total.
 | test_style_text.lua | 56 |
 | test_style_text_autosize.lua | 18 |
 | test_style_text_glow.lua | 27 |
-| test_preview.lua | 29 |
+| test_preview.lua | 32 |
 | test_render_coverage.lua | 3 |
 | test_blizzardframes.lua | 8 |
 | test_framepicker.lua | 15 |
@@ -2538,4 +2541,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **2124** |
+| **Total** | **2127** |

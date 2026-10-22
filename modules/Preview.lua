@@ -238,8 +238,62 @@ function Preview.Extent(container, count)
     return extent
 end
 
---- Remove one container's placeholders, of every style.
+--- THE TEST MARKER (preview-mode, anti-pattern #97): while test mode is on, a display drawing
+--- placeholder data says so on the display, in visible localized text, in every layout it draws
+--- them in. Unlocked, the drag strip carries it (Anchors' handleParts: the name, then an orange
+--- TEST); but the strip shows only while unlocked, and a LOCKED test mode drew its placeholders
+--- with nothing on them saying they were test data (it draws no outline either: Container's
+--- ApplyOutline). So whenever a container previews and its strip is not up, this marker is: the
+--- same orange TEST, in a plain frame of ours over the placeholder block (the preview extent),
+--- inset at the corner the first placeholder starts from. It takes no mouse, so the hover and
+--- every click still reach what they reached, and it moves nothing: a follower hangs from the
+--- extent, never from this. Test mode never runs in combat, and the frame is our own besides.
+local MARKER_INSET = 2
+local MARKER_LEVEL = 40   -- above every region a placeholder dresses, below the strip (HANDLE_LEVEL 50)
+
+local markerText
+--- The marker's text: the localized TEST in the strip tag's orange (C.TEST_TAG_COLOR), built once.
+function Preview.MarkerText()
+    markerText = markerText or ("|c%s%s|r"):format(C.TEST_TAG_COLOR, NS.L["TEST"])
+    return markerText
+end
+
+--- Show the marker over `container`'s placeholder block, or hide it (`on` false). Built on the first
+--- show; placed on every show, since the block's start corner follows the layout's growth.
+function Preview.ApplyMarker(container, on)
+    local m = container.testMarker
+    local cfg = on and container:Cfg()
+    local block = container.previewExtent
+    if not (cfg and block) then
+        if m then m:Hide() end
+        return
+    end
+    local wasShown = m and m:IsShown()
+    if not m then
+        m = CreateFrame("Frame", nil, container.anchor)
+        m:EnableMouse(false)
+        local fs = m:CreateFontString(nil, "OVERLAY")
+        local font = NS.CONTAINER_TEMPLATE.label.font
+        NS.Style.ApplyFont(fs, font, font)
+        fs:SetWordWrap(false)
+        container.testMarker, container.testMarkerText = m, fs
+    end
+    local fs = container.testMarkerText
+    m:SetFrameLevel(NS.Secrets.NumberOr(container.anchor:GetFrameLevel(), 0) + MARKER_LEVEL)
+    m:ClearAllPoints()
+    m:SetAllPoints(block)
+    local corner = Preview.Offset(cfg, 1)
+    local x = corner:find("LEFT", 1, true) and MARKER_INSET or -MARKER_INSET
+    local y = corner:find("TOP", 1, true) and -MARKER_INSET or MARKER_INSET
+    fs:ClearAllPoints()
+    fs:SetPoint(corner, m, corner, x, y)
+    if not wasShown then fs:SetText(Preview.MarkerText()) end
+    m:Show()
+end
+
+--- Remove one container's placeholders, of every style, and their marker.
 function Preview.Hide(container)
     if container.previewPools then releaseAll(container.previewPools) end
     container.previewShown = false
+    if container.testMarker then container.testMarker:Hide() end
 end
