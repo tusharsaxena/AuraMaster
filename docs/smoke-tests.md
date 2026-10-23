@@ -125,7 +125,7 @@ Lua error. `/am help`, `/am diagnostics` and the settings panel (`/am`) open as 
 installed folder, `Interface/AddOns/AuraMaster/libs/LibKa0s/media/icons/` holds only `clear.tga`,
 `close.tga`, `copy.tga`, `help.tga`, `info.tga` and `LICENSE-open-iconic.txt`, with no `phosphor/` or
 `game-icons/` folder, and the packaged zip is about 28 MB smaller than an unpruned v1.75.0 copy would
-make it. Result: pending (added 2026-10-22, the LibKa0s v1.75.0 re-vendor)
+make it. Result: pass (owner-marked 2026-10-23)
 
 ## Slash commands
 
@@ -610,10 +610,10 @@ change a setting on it → no second one. Press the console's **Clear**, then ch
 
 **DIAG-21. The console's icons survive the prune.** `/am debug on`, then open the console → its
 title-bar close X, **COPY** and **CLEAR** buttons each draw an icon, not a blank square (the
-declared `close`, `copy` and `clear`). Result: pending (added 2026-10-22, the LibKa0s v1.75.0 re-vendor)
+declared `close`, `copy` and `clear`). Result: pass (owner-marked 2026-10-23)
 
 **DIAG-22. The perf panel's close mark.** `/am perf start`, then open the perf panel → its close X
-draws an icon, not a blank square. Result: pending (added 2026-10-22, the LibKa0s v1.75.0 re-vendor)
+draws an icon, not a blank square. Result: pass (owner-marked 2026-10-23)
 
 ## Containers
 
@@ -763,7 +763,7 @@ run out → the outline comes back within a second of it lapsing. Result: pass (
 
 **CONT-26. The handle's marks survive the prune.** `/am unlock` → every container's handle draws its
 **?** help mark and its **X** close mark, neither blank. Hover the X → its tooltip is unchanged.
-Result: pending (added 2026-10-22, the LibKa0s v1.75.0 re-vendor)
+Result: pass (owner-marked 2026-10-23)
 
 **CONT-27. A locked test mode says TEST on the display.** Locked, `/am test` → every container that
 fills with placeholders carries an orange **TEST** over its placeholder block, at the corner the first
@@ -772,7 +772,7 @@ icon container growing left and a Text container. Hover a placeholder → the wo
 before (the word takes no mouse). `/am unlock` → the word goes and each strip reads its name, then
 **TEST** (CONT-17), never both; `/am lock` → the word is back. `/am test off` → it goes with the
 placeholders. On a non-English client the word is the client's. (Run bundle id SM-AM-1.)
-Result: pending (added 2026-10-22, the preview-mode marker rule)
+Result: pass (owner-marked 2026-10-23)
 
 ## Filters and spell categories
 
@@ -1211,7 +1211,7 @@ Players / Friendly. Result: pass (owner, 2026-10-02)
 **FILT-64. The help marks draw the library's info art after the prune.** On Settings → Containers →
 Filters → Overrides, with a blacklisted spell that a category claims, and on General → Spell
 Categories, on a claimed spell → the entry's help mark draws the library's info art: not blank, and
-not the client's blue disc. Result: pending (added 2026-10-22, the LibKa0s v1.75.0 re-vendor)
+not the client's blue disc. Result: pass (owner-marked 2026-10-23)
 
 ## Layout
 
@@ -2155,11 +2155,8 @@ add it either way. Result: pass (owner-marked 2026-10-10)
 
 ## Pending sign-off
 
-Six checks, listed at the end of this section. On 2026-10-10 the owner marked every check in this
+None. On 2026-10-10 the owner marked every check in this
 file as passed, recorded on its `Result:` line as `pass (owner-marked 2026-10-10)`; a check that already carried a dated owner pass
 keeps it. A check added or rewritten after that date is listed here until its `Result:` line records
-a pass. The last ones, TEXT-30 to TEXT-36 (the glow behind the text), passed on 2026-10-16.
-
-Pending since 2026-10-22 (the LibKa0s v1.75.0 re-vendor and its pruned icon folder): INSTALL-10,
-DIAG-21, DIAG-22, CONT-26 and FILT-64.
-Pending since 2026-10-22 (the preview-mode test marker): CONT-27.
+a pass. The last ones, INSTALL-10, DIAG-21, DIAG-22, CONT-26 and FILT-64 (the LibKa0s v1.75.0 re-vendor)
+and CONT-27 (the preview-mode test marker), passed on 2026-10-23.
