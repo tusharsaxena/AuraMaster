@@ -56,3 +56,21 @@ All run through `dev-copilot/bin/ka0s-bounded`.
 | vendor parity | `diff -r` against the tag empty for both payloads before the prune |
 
 No in-game smoke is added: nothing AuraMaster draws changed.
+
+## Addendum: the tag moved (AM-RV2, LK-91)
+
+The local tag v1.76.0 was moved before release to carry LK-91 (step-panel labels bounded before the
+command column), from commit `9949368` to `7e81ff7` (tag object `2949c78`). AM-RV2 re-vendored both
+payloads whole from the moved tag and re-ran the tag's `tools/prune-icons.lua` (5 icons declared, kept
+6 files, removed 5,834). The provenance line already read v1.76.0 and is unchanged.
+
+Only two payload files changed: `libs/LibKa0s/PerfPanel.lua` (panel minor 7 -> 8: the step label is
+anchored LEFT and RIGHT, `LABEL_GAP` short of the command, word wrap off) and
+`libs/LibKa0s/SimPanel.lua` (the same bound via `anchorLabel` in `paintRow`; `SIM_PANEL_MINOR` stays
+5). `tests/_kit/` is byte-identical. AuraMaster hosts no simulator, but its `/am perf` step panel
+(`core/PerfSetup.lua`) gets the bound for free (class A). The change is additive layout inside the
+panel, so no host or test change and no 3g blocker.
+
+Gates: `luacheck .` 0/0 in 178 files; `lua tests/run.lua` 2127 passed, 0 failed, 1 skipped
+(vendor-sync against the moved tag passes); largest authored `.lua` 1344 lines; `diff -r` against
+the tag shows only the pruned icons.
