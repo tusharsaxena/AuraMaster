@@ -235,7 +235,7 @@ test("containers: Delete keeps the band's picker and New through both refreshes,
         if key == "containers" then renders = renders + 1 end
         return render(ctx, key, ...)
     end
-    P.find(ws, "Button", NS.L["Delete container"]):__fire("OnClick")
+    P.find(ws, "Button", NS.L["Delete container…"]):__fire("OnClick")
     local after = P.during(function()
         m.StaticPopupDialogs.AURAMASTER_DELETE_CONTAINER.OnAccept(popups[1], popups[1].data)
         m.__fireTimers()   -- CONTAINERS_CHANGED's coalesced next-frame refresh
@@ -523,7 +523,7 @@ test("containers: Delete asks first, naming the container, and deletes it only o
     local popups = P.popups()
     NS.Helpers.SelectContainer(2)
     local ws = P.rerender("Containers")
-    P.find(ws, "Button", NS.L["Delete container"]):__fire("OnClick")
+    P.find(ws, "Button", NS.L["Delete container…"]):__fire("OnClick")
     -- red under: doDelete deleting without the popup, or the popup not carrying the id
     assertEqual(#popups, 1)
     assertEqual(popups[1].which, "AURAMASTER_DELETE_CONTAINER")
@@ -578,7 +578,7 @@ test("containers: the acts and the copy choice name what they act on (AUR-L-new5
     -- red under: the bare Enabled / Duplicate / Delete labels, or Delete not last on its line
     assertTrue(P.row(ws, "container.enabled").labelText == NS.L["Enable this container"], "the checkbox names its object")
     local dup = P.find(ws, "Button", NS.L["Duplicate container"])
-    local del = P.find(ws, "Button", NS.L["Delete container"])
+    local del = P.find(ws, "Button", NS.L["Delete container…"])
     assertTrue(dup ~= nil and del ~= nil, "both acts drew")
     local at = {}
     for i, w in ipairs(ws) do at[w] = i end
@@ -598,7 +598,7 @@ test("containers: with one container the page offers Duplicate and Delete but no
     NS.ContainerManager.Delete(4)
     local ws = P.rerender("Containers")
     assertTrue(P.find(ws, "Button", NS.L["Duplicate container"]) ~= nil)
-    assertTrue(P.find(ws, "Button", NS.L["Delete container"]) ~= nil)
+    assertTrue(P.find(ws, "Button", NS.L["Delete container…"]) ~= nil)
     -- red under: afterRows drawing the copy block with nothing to copy from
     assertNil(P.find(ws, "Dropdown", NS.L["Source container"]))
     assertNil(P.find(ws, "Button", NS.L["Copy onto this container"]))

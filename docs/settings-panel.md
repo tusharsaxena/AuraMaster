@@ -86,7 +86,7 @@ band holds **the picker itself** (options-ui-§14):
   picker and **New container** on one row: `Helpers.ContainerBanner` with the page's own tooltip and
   New container as the library's `PageBanner` `action` (feedback #2, 2026-09-19; the picker+create
   band, LibKa0s v1.56.0). The acts on the selected container (Name, Enable this container, Duplicate
-  container, Delete container, Copy settings from) are the rail's General section, whose one tab options-ui-§14 names **General**. The band is
+  container, Delete container…, Copy settings from) are the rail's General section, whose one tab options-ui-§14 names **General**. The band is
   drawn on every render, so a Delete's two refreshes cannot lose it; the library releases the band's
   widgets of the render before once the new band exists, and refuses New container in combat as it
   refuses the picker's selection. **New container lands on General** (owner, 2026-09-26): once the
@@ -251,7 +251,7 @@ them off. What it draws:
 
 - **A category the player made:** a **Rename this category** box, pre-filled from the store on every
   render and committing on Enter (never per keystroke — that would write a record, re-run the sync and
-  rebuild every schema row per character), and **Delete this category** in the right half of the same
+  rebuild every schema row per character), and **Delete this category…** in the right half of the same
   line, the column Restore sits in above. A rename keeps the key, so the spells and every container's
   Show or Hide survive it, and the answer line says the OLD name back, which is a rename's only undo.
   Delete asks first, through `AURAMASTER_DELETE_CATEGORY`: the confirmation names what is lost — the
@@ -268,7 +268,7 @@ them off. What it draws:
   here — `Cat.RenameUserCategory` and `Cat.DeleteUserCategory` enforce it.
 - **Only while the profile holds a record the sync cannot read:** a line saying how many there are,
   that nothing is using them and that they cannot be repaired from here, and a **Forget unreadable
-  categories** button behind its own confirmation. Both read at a count of one, through two whole
+  categories…** button behind its own confirmation. Both read at a count of one, through two whole
   strings and a branch (the idiom `settings/Text.lua`'s `centerNote` already uses). Without this a
   record with an unusable aura type, name or key was permanently stuck: the sync refuses to
   materialize it, so it is in no dropdown and no Delete could reach it.
@@ -413,7 +413,7 @@ re-choosing the same style keeps a Fill set by hand (B5). A new container (**New
 `/am new … icons`) starts with the Fill its style suits by the same rule; a duplicate keeps its
 source's.
 
-Then **Duplicate container** and **Delete container** (asks first; Delete last on its line), and —
+Then **Duplicate container** and **Delete container…** (asks first; Delete last on its line), and —
 with more than one container — **Copy settings from**: a source dropdown (every other container, by
 name), a "what to copy" dropdown (everything, or one of Filters, Layout: scale, strata and growth,
 Mouse, Label, Bar style, Icon style, Text style) and **Copy onto this container**. Name and position

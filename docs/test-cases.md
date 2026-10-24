@@ -2353,14 +2353,16 @@ Total.
 - debuglog: without the library the diagnostics members answer with one honest line and write nothing
 - debuglog: without the library the console row is honest — never checked, and its tooltip says why
 
-### test_locale.lua (8)
+### test_locale.lua (10)
 
 - locale: every L[...] subscript in the source is defined in enUS.lua
 - locale: every key enUS.lua defines is used somewhere in the source
 - locale: no key is defined twice in enUS.lua
 - locale: every enUS value is its own key, so the English build shows the source string
 - locale: every string routed by value has its key — Constants labels, categories, filter warnings
-- locale: every value is ASCII, the em dash excepted (T-1)
+- locale: every value is ASCII, the em dash and the ellipsis excepted (T-1, widened 2026-10-24)
+- locale: T-1 allows only the em dash and the ellipsis, nothing else non-ASCII
+- locale: the three buttons that open a confirmation end in the ellipsis (options-ui-§21)
 - locale: no library-missing line joins a routed fragment
 - locale: no string a player reads names a retired sub-page; they are sections now (#23)
 
@@ -2559,7 +2561,7 @@ Total.
 | test_defaults.lua | 31 |
 | test_perf.lua | 8 |
 | test_debuglogsetup.lua | 9 |
-| test_locale.lua | 8 |
+| test_locale.lua | 10 |
 | test_docs.lua | 7 |
 | test_prose.lua | 18 |
 | test_surface_parity.lua | 7 |
@@ -2570,4 +2572,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **2148** |
+| **Total** | **2150** |

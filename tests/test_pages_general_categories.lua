@@ -24,7 +24,7 @@ local spells, YOURS_COLOR, marked, ownedName, entry, entryTooltip, entryHelp, en
 local function manage(NS, ws, P)
     return {
         name   = P.find(ws, "EditBox", NS.L["Rename this category"]),
-        delete = P.find(ws, "Button", NS.L["Delete this category"]),
+        delete = P.find(ws, "Button", NS.L["Delete this category…"]),
         newName = P.find(ws, "EditBox", NS.L["New category's name"]),
         auraType = P.find(ws, "Dropdown", NS.L["Aura type"]),
         create = P.find(ws, "Button", NS.L["Create category"]),
@@ -403,7 +403,7 @@ test("general → spell categories: a saved record the sync cannot read can be f
     assertEqual(#NS.Categories.UnusableUserRecords(NS.db.profile), 2, "both are unreadable")
 
     local ws = P.rerender("General")
-    local btn = P.find(ws, "Button", NS.L["Forget unreadable categories"])
+    local btn = P.find(ws, "Button", NS.L["Forget unreadable categories…"])
     -- red under: no way out at all, which is what "left on disk for the player to fix or delete"
     -- amounted to while nothing in the panel could reach them.
     assertTrue(btn ~= nil, "the panel offers a way out")
@@ -421,7 +421,7 @@ test("general → spell categories: a saved record the sync cannot read can be f
     assertEqual(NS.GetSetting("container.filter.categories.healing", id), "hide")
     assertTrue(NS.Categories.Find("HELPFUL", "healing") ~= nil)
     assertEqual(NS.ValidateSchema(), 0)
-    assertNil(P.find(P.rerender("General"), "Button", NS.L["Forget unreadable categories"]),
+    assertNil(P.find(P.rerender("General"), "Button", NS.L["Forget unreadable categories…"]),
         "and the line goes with them")
 end)
 
@@ -640,7 +640,7 @@ test("general → spell categories: one unreadable record reads in the singular"
     assertFalse(P.hasText(ws, "so they are in no list"), "and does not also say the plural")
 
     local popups = P.popups()
-    P.find(ws, "Button", NS.L["Forget unreadable categories"]):__fire("OnClick")
+    P.find(ws, "Button", NS.L["Forget unreadable categories…"]):__fire("OnClick")
     local dialog = m.StaticPopupDialogs.AURAMASTER_FORGET_BROKEN_CATEGORIES
     assertEqual(dialog.text, NS.L["Forget the saved category Aura Master cannot read? It is in no list and cannot be repaired from here, and whatever it held is discarded. Your other categories are not affected."])
     dialog.OnAccept()
@@ -652,7 +652,7 @@ test("general → spell categories: one unreadable record reads in the singular"
     NS.Categories.SyncUserCategories(NS.db.profile)
     local ws2 = P.rerender("General")
     assertTrue(P.hasText(ws2, "so they are in no list and nothing is using them"))
-    P.find(ws2, "Button", NS.L["Forget unreadable categories"]):__fire("OnClick")
+    P.find(ws2, "Button", NS.L["Forget unreadable categories…"]):__fire("OnClick")
     assertEqual(#popups, 2, "both presses asked first")
     assertTrue(dialog.text:find("the %d saved categories", 1, true) ~= nil, "the plural sentence is back")
     dialog.OnAccept()

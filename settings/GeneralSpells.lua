@@ -9,7 +9,7 @@ local _, NS = ...
 --                       -- one of the eleven shipped spell lists, Weapon enchants, or one the
 --                          player made -- which reads "(yours)" and is drawn no Restore. Every
 --                          entry is marked [Buffs] green or [Debuffs] red, "(yours)" gold
---                       [Rename this category][ Delete this category ]   <- a category you made,
+--                       [Rename this category][ Delete this category… ]  <- a category you made,
 --                          straight under the picker and under no heading; a shipped one draws
 --                          nothing here at all
 --                       "Created 'Affixes', empty. Add spells to it below..." <- the answer line
