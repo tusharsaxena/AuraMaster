@@ -231,8 +231,9 @@ orange warning above every tab (`identityWarning`, `modules/FilterCompiler.lua:4
 the container hides a category or has an Overrides list, and naming only the Overrides lists when it
 hides nothing), a NOTE under the Spell categories
 heading and at the head of Overrides on every container whose mode is not "always", each ending
-"(see Situations)", and the Situations tab itself, which names the same units, holds the setting and
-says what the every view cannot honor there: spell categories, Uncategorized, the Overrides lists
+"(see above)" on Spell categories and "(see Categories)" on Overrides since item 020, and the Where
+spell lists don't apply section at the top of the Categories tab (the Situations tab's until then),
+which names the same units, holds the setting and says what the every view cannot honor there: spell categories, Uncategorized, the Overrides lists
 and "Without a duration", all built from the spell ids Blizzard drops (`settings/Filters.lua`).
 
 ## There is no "no duration" filter, and `maxDuration` drops permanent auras

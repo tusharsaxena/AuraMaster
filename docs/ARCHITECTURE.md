@@ -313,7 +313,7 @@ Blizzard own. The tiers:
 - **Cursor (T9).** The frame picker sits at Tooltip, because it labels the frame under the cursor,
   and that frame's own tooltip would otherwise cover the label.
 
-The Strata row's tooltip is the library's `O.StrataTooltip`. A player can still pick Dialog, so the
+The Frame strata row's tooltip (Layout → Scale and strata) is the library's `O.StrataTooltip`. A player can still pick Dialog, so the
 tooltip says what Dialog covers.
 
 ## Taint Notes

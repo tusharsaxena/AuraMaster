@@ -107,8 +107,8 @@ the unit's player-ness is not knowable and the stricter setting was taken, or `-
 A trailing `stale=yes` means the engine refused one of the switch's setters (an `[Engine]` line says
 which): the view named is the one asked for, and the next switch resends every group in full. Each
 group line after it prints that view's filter string and candidate filters, not always the ids view's.
-The setting is the container's Filters → Situations tab (On NPCs, On players, or Your own and your
-pet's debuffs), and a write there moves the view at once when it changes what the container's current
+The setting is the container's Filters → Categories → Where spell lists don't apply section (On NPCs,
+On players, or Your own and your pet's debuffs), and a write there moves the view at once when it changes what the container's current
 unit draws, logging one `[Filter]` line (none when the view holds).
 See the `[Filter]` tag below for each switch.
 
@@ -233,7 +233,7 @@ A container's `Cfg` lines list only the settings that differ from the defaults. 
 nothing for that container right now is kept off the `non-default:` line and printed on an `inert:`
 line of its own, which is left out when there is none:
 
-- a setting in a Layout > Anchor subsection that is not the one in use: the screen position of a
+- a setting in a Layout > Position and growth attach subsection that is not the one in use: the screen position of a
   container attached to another, or the attach target and offsets of a container on the screen;
 - a setting in a style section that is not the container's style: the Text section's Size to fit on a bars
   or icons container.

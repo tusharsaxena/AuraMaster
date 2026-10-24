@@ -17,7 +17,7 @@ otherwise (`docs/profiles.md`).
 | `enabled` | bool | `true` | Enable Aura Master — gates every container |
 | `visibility` | string | `"always"` | General visibility: `always` / `inCombat` / `outOfCombat` / `never` |
 | `scale` | number | `1.0` | Master scale, multiplied into each container's own |
-| `alpha` | number | `1.0` | Master alpha, multiplied into each container's own |
+| `alpha` | number | `1.0` | Master opacity (the row's label; the path stays `alpha`), multiplied into each container's own |
 | `locked` | bool | `true` | Lock frame; unlocked shows the drag handles and an outline; live auras keep drawing |
 | `hideBlizzardBuffs` | bool | `false` | Reparent `BuffFrame` away (out of combat) |
 | `hideBlizzardDebuffs` | bool | `false` | Reparent `DebuffFrame` away (out of combat) |

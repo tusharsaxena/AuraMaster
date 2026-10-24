@@ -100,7 +100,7 @@ one group is emitted (the base minus the whitelist) — a Show cannot rescue any
 hiding, so the extra groups would be pure cost. Once anything is Hidden, one group per Shown category
 is emitted, followed by a catch-all group that draws an aura in no category at all (rank 5). A
 container with anything Hidden therefore compiles to roughly 15 groups on buffs and 18 on debuffs,
-not one, and the "Max auras"
+not one, and the "Maximum auras per group"
 cap applies **per group**, not to the container as a whole (`container.filter.maxAuras`,
 `docs/schema.md`). The catch-all is skipped instead of joined whenever an `uncategorized` category
 exists for the aura type (batch 7 `U-1`..`U-5`; both HELPFUL and HARMFUL carry one as of fix round 3)
@@ -162,7 +162,7 @@ priority*, above, states (`FC.ExplainSpell` answers the same question for one sp
   test: `Cat.HARMFUL` has carried spell lists since issue #11 (`hardCC`, `ccRoot`, `ccSnare`), so a debuff union is no
   longer empty — what stops the group is that the engine may throw its one `excludeSpellIDs` away. A
   container with anything Hidden this way compiles to roughly 15 groups on buffs and 18 on debuffs,
-  not one, and the "Max auras"
+  not one, and the "Maximum auras per group"
   cap (`maxFrameCount`) applies to each group separately.
 - **A category applies by kind**: a token adds `TOKEN` or `!TOKEN`; a flag sets a boolean candidate
   filter (`isBossAura`, `isRoleAura`, `isPriorityAura`, `isStealable`, `isFromPlayerOrPlayerPet`); a

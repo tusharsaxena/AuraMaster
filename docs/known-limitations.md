@@ -57,7 +57,7 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   strings refuse every addon call, so no addon code can copy the live, secret text. The Slug outline
   is always black and takes no color. So a container with Glow on builds `C.TEXT_GLOW_TWINS` (4) twin
   engines beside its main (`modules/Container_Twins.lua`), each with the main's unit, groups, view and
-  layout, moved by Thickness × a ring direction plus Offset X and Y and drawn under the main in the
+  layout, moved by Thickness × a ring direction plus X offset and Y offset and drawn under the main in the
   glow color; each twin's shadow, in the same color, is the ring's opposite point. Each twin is a
   whole engine with its own `UNIT_AURA` work, so a glowing container does five engines' work for one
   line. The owner's probe ran eight twins with no framerate drop; a perf run on the shipped four is
@@ -76,7 +76,7 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   cut, by up to twice the Thickness (12 px at 6): the left, down, down-left and up-left points. So
   the live trim is lopsided: with a Height of one line, the up and up-right copies stay whole above
   the line while the up-left point is cut, and below it the down-right copy stays whole while the
-  down and down-left points are cut. Offset X and Y move the twin's box with its text and its
+  down and down-left points are cut. X offset and Y offset move the twin's box with its text and its
   shadow, so they add nothing to that cut. A placeholder's copies are cut only by the element's own
   box, which does not move with them, so at an edge the preview can show less of a copy pushed past
   it, and more of the ring's far side, than a live line does. An empty field is empty on its twins
@@ -96,23 +96,24 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   change made in combat applies with the deferred restyle (`docs/midnight-quirks.md`).
 - **Spell-id filters apply only to buffs on units you can assist and debuffs on units you cannot**
   (Blizzard's `CanApplyIdentityCandidateFilters`). Where they do not, a container draws the view its
-  Situations setting picks (filter situations, 2026-10-02): every aura once (the default), honoring
-  Cast by, Duration, Max duration and the Blizzard, Dispel and Who cast it rows set to Hide, or only the
+  Where spell lists don't apply setting picks (filter situations, 2026-10-02; at the top of the
+  Categories tab since item 020): every aura once (the default), honoring
+  Cast by, Duration, Maximum duration and the Blizzard, Dispel and Who cast it rows set to Hide, or only the
   Blizzard categories set to Show. Neither applies spell categories, Uncategorized or the Overrides
   lists. With "Only Blizzard categories" a container built only on spell categories shows nothing on
   a hostile target, and a `NeverSecret` aura (Sated, Exhaustion) claimed only by a spell category is
   not drawn there either, although Blizzard would apply its id. "These filters can never match
-  anything" speaks for the spell-list views only: it never reads the Situations settings, so a target
+  anything" speaks for the spell-list views only: it never reads the Where spell lists don't apply settings, so a target
   or focus container it warns about can still draw every aura once where spell lists don't apply. `FilterCompiler` emits a warning per
   container where that bites (`identityWarning`, `modules/FilterCompiler.lua:418`), rendered in orange
-  in the Filters section, Categories and Overrides carry a NOTE pointing to the Situations tab, and
-  that tab says what the every view cannot honor (`docs/midnight-quirks.md`).
+  in the Filters section, Categories and Overrides carry a NOTE pointing to Where spell lists don't
+  apply, at the top of the Categories tab, and that section says what the every view cannot honor (`docs/midnight-quirks.md`).
 - **Every aura, once draws nothing extra in "Only auras without a duration" mode.** That mode is
   built from spell ids, which Blizzard drops where spell lists don't apply, so a target or focus buff
   container in it that hides a category gets a remainder group that matches nothing there (filter
   situations S1), and its other groups keep their blizzard view: Every aura, once draws exactly what
   Only my Blizzard categories set to Show draws (SI-06). Both Who cast it rows set to Hide do the same.
-  Its Situations tab says so.
+  Its Where spell lists don't apply section says so.
 - **On a target or focus BUFF container, Uncategorized set to Show no longer rescues an unlisted
   aura.** That row's group carries an `excludeSpellIDs` of the categorized union as its only
   constraint whenever another category is Hidden, and a target's hostility is dynamic while the plan
@@ -228,7 +229,7 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   strip further out by the label's height plus the gap (D6); both count in the clamp, so the push
   grows with them.
 - **A container attached to a named frame cannot be dragged** (issue #22, out of scope). It follows
-  its frame; move it with the X/Y offsets on Layout > Anchor, or set Attach to back to Screen. A
+  its frame; move it with the X/Y offsets on Layout > Position and growth, or set Attach to back to Screen. A
   screen container and one attached to another container drag, out of combat only; no drag starts in
   combat, and one under way when combat starts attaches nothing at the drop (an attached one goes back
   to its parent once combat ends).
@@ -266,7 +267,7 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   third, so letting go there picks the start pair, and placed by the start pair (left edges flush) it
   picks the end pair. A child up to a third wider than its parent has its center over the middle third
   either way, and picks the middle pair. Drop it with its center over the third of the pair you want,
-  or set the pair on Layout > Anchor. Picked up and let go where it rests, it keeps its pair either way.
+  or set the pair on Layout > Position and growth. Picked up and let go where it rests, it keeps its pair either way.
 - **The dots mark the strips, not always the exact join** (issue #22, addenda A8, A10, A11). The
   side, its third, both dots and the leeway are measured on each container's drag-handle strip (or,
   where the strip is hidden or does not read, its block with its name label), the parent's strip with
@@ -285,7 +286,7 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
     off such a parent, its own, is measured on the parent's strip alone (the first element is not
     where it hangs), so below that parent another pair is picked only within about 24 px of the
     strip's bottom, and let go further down it snaps back; its other sides re-pair as usual. Set the
-    pair on Layout > Anchor, or drag it in test mode.
+    pair on Layout > Position and growth, or drag it in test mode.
   - **Across the before side, one element off, and overlapping.** A drop above a parent growing down
     gives a free pair (BOTTOM to TOP, say) that Place sets on the child's ANCHOR, its first element,
     pushed past the parent's strip and label. The child's dot was on the bottom of its own strip, which
@@ -297,7 +298,7 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
     pair the child can land sideways of what the dots showed: by half the difference between the two
     overhangs for the middle pair, by all of it for the end pair (a 36 px icon parent whose strip runs 64
     past its block, under a 36 px icon child whose strip runs 44 past, lands 10 px or 20 px off). The
-    start pair, between two containers whose strips fit their blocks, lands in line with the dots. Nudge it with X/Y on Layout > Anchor. Joining on the strips, or
+    start pair, between two containers whose strips fit their blocks, lands in line with the dots. Nudge it with X/Y on Layout > Position and growth. Joining on the strips, or
     measuring on the blocks while drawing on the strips, is a change to attach geometry for the owner to
     decide.
 - **In test mode, a container attached to another hangs from that container's preview extent.** A
@@ -322,10 +323,10 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   G3's default: a Text follower justified Center, or to the end its lines grow toward, moves to its
   parent's center or that end, and an Icons or Bars follower under a Text parent justified Center
   moves to the center. Any other side was converted to the points it sat on and does not move. Pick
-  the two points on Layout > Anchor to put one back (`docs/schema.md`, v11).
+  the two points on Layout > Position and growth to put one back (`docs/schema.md`, v11).
 - **Nothing on screen marks where two containers join** (batch 11 G6). Batch 9's gold diamond at the
   join is gone at the owner's request. The join is named by the strip's tooltip while unlocked
-  ("Joined to the *point* of '*parent*'") and by the Layout > Anchor joins line, and
+  ("Joined to the *point* of '*parent*'") and by the Layout > Position and growth joins line, and
   `/am diagnostics` prints the two points and the side they make (`join=`).
 - **A chain spreads out while its strips show, and closes up when they hide** (batch 10 F1, F2).
   Every strip sits above its own block (below it growing up), in its own column, so a follower
@@ -347,10 +348,10 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   narrower than the marks, the pads and 40 px of label (one icon, for example) keeps the strip's
   natural width instead, so its name still reads, and that strip runs past the element.
 - **The strip's X turns a container off at once, with no confirmation.** One left click writes
-  `container.enabled = false` (batch 8 CX-3); the tooltip and a chat line point at its Enabled
+  `container.enabled = false` (batch 8 CX-3); the tooltip and a chat line point at its Enable this container
   checkbox on the Containers page (`/am set container.enabled true`, with it selected, works too). There is
   no undo on the strip itself, and a container that others are attached to takes its followers with
-  it, as unticking Enabled does. A drag that starts on the X moves nothing.
+  it, as unticking Enable this container does. A drag that starts on the X moves nothing.
 - **The name label is not clamped to the screen.** Only the drag strip is (batch 8 NL-2). Clamping the
   label would move the container whenever the label is turned on, so a locked container flush with
   the edge on the label's side can show its label partly off screen. On a container attached to

@@ -28,6 +28,7 @@ check's number is not reused. Checks with no recorded pass, and checks new or co
 | STYLE-1 to STYLE-30 | Bars and Icons style, fonts | Bars and Icons tabs, the spark, borders, dispel colors, pandemic, the font primer |
 | TEXT-1 to TEXT-36 | Text style | Templates and tokens, justify, the icon, dispel type word, backdrop and edge, animation, Size to fit, the glow behind the text |
 | LAYER-1 to LAYER-6 | Frame layering | Bar borders over the fill, the outline and the name label over the auras, the snap highlight over a Dialog container, the strip at low opacity, the Strata tooltip |
+| SETLAYOUT-1 to SETLAYOUT-8 | Settings layout (item 020) | Every settings page item 020 moved, regrouped or relabeled, read as `docs/settings-panel.md` describes, with no setting lost, moved or reset |
 | DEGRADED-1 | Library-absent install | The launcher libraries missing |
 | LOC-1 to LOC-2 | Non-English client | Spell names from the client, adding a spell by its localized name |
 
@@ -2164,6 +2165,91 @@ layer as the Settings window). It then warns that Dialog and above also cover co
 debug console and the Settings window. The choices are still Background, Low, Medium, High and Dialog.
 Result:
 
+## Settings layout (item 020)
+
+Item 020 (2026-10-24) moved, regrouped and relabeled settings rows and changed no stored setting.
+Older checks in this file name the layout they were written against; read their paths through this
+map: General → Display is **General → Blizzard frames**; Filters → Sorting is **Filters → General →
+Order and cap**; the Situations tab's *Where spell lists don't apply* is at the **top of Filters →
+Categories**, and its *Unit type* heading is **Which units**; Layout → Frame is **Layout → Scale and
+strata**; Layout → Anchor and Layout → Growth are one tab, **Layout → Position and growth** (Growth a
+subsection); the rail's Bar / Icon / Text are **Bar style / Icon style / Text style**; Icons → Size and
+Icons → Cooldown are **Icon style → General**; Text → Font → Countdown → Time format is **Text style →
+General → Text template**. Labels: *Max duration* → *Maximum duration (seconds, 0 = no limit)*, *Max
+auras per group* → *Maximum auras per group*, *Strata* → *Frame strata*, *Scale* / *Opacity* →
+*Container scale* / *Container opacity*, *Point* / *Relative point* / *X* / *Y* (Screen) → *This
+container anchor point* / *Screen anchor point* / *X position* / *Y position*, *Enabled* → *Enable
+this container*, *Duplicate* / *Delete* → *Duplicate container* / *Delete container*, Placement's
+*Anchor* → *Anchor point*, Glow's *Offset X* / *Offset Y* → *X offset* / *Y offset*.
+
+Start each from a fresh profile's starter set, note a few values you change on each page, and
+`/reload` at the end of each check.
+
+**SETLAYOUT-1. The General page.** General → the strip reads **[ Master controls ][ Blizzard frames ][
+Spell categories ][ Dispel colors ]**, sentence case. Blizzard frames holds Hide Blizzard buffs | Hide
+Blizzard debuffs with no heading over them; each still hides its Blizzard frame out of combat. Master
+controls reads Master opacity beside Master scale. `/reload` → both Hide rows and every Master row keep
+what you set. Result:
+
+**SETLAYOUT-2. Containers → General (rail).** The rail reads General · Filters · Layout · **Bar
+style** (Icon style on #2, Text style on #4). The General tab reads Name | **Enable this container**,
+then *What it shows, and how*, then **Duplicate container** | **Delete container** (Delete on the
+right; it still asks first). Hover the page's **Defaults** → "Restore every tab of the entry selected
+on the left, for the container in the band, to its defaults. On General: Enable this container, Unit,
+Aura type and Style; its name is kept." With two containers, What to copy offers **Layout: scale,
+strata and growth**, and copying it moves Scale, Strata and Growth only, never the position. Hover
+Style → "...Each has its own style section on this page's rail." Hover a container's strip X → it
+names Enable this container. `/reload` → nothing changed. Result:
+
+**SETLAYOUT-3. Containers → Filters.** The strip reads **[ General ][ Categories ][ Overrides ][
+Situations ]**. General: *What to show* (Cast by | Duration / **Maximum duration (seconds, 0 = no
+limit)** | Preset), then *Order and cap* (Sort by | Direction / **Maximum auras per group (0 = no
+limit)**), then one paragraph about engine groups, then *Filter priority logic*. Hover Sort
+by, Direction and Maximum auras per group → one sentence each, ending "see the note below". On #3
+(target debuffs): Categories opens with **Where spell lists don't apply** (the unit line, On NPCs |
+On players, the honor line), then Blizzard categories, Spell categories, Dispel types, Who cast it;
+the Spell categories NOTE ends "(see above)", Overrides' NOTE ends "(see Categories)", and the orange
+warning above every tab ends "Where spell lists don't apply, at the top of the Categories tab, picks
+what draws there." Situations opens with **Which units** (Unit type | Reaction), then Show in. Set
+On NPCs to *Only my Blizzard categories*, change Sort by and Maximum auras, `/reload` → all kept, and
+the container draws as before. Result:
+
+**SETLAYOUT-4. Containers → Layout.** The strip reads **[ Scale and strata ][ Position and growth ][
+Mouse ][ Label ]**. Scale and strata: **Container scale** | **Container opacity** / **Frame strata** |
+Frame level; hover Container scale → "...Multiplied by Master scale on the General page > Master
+controls.", Container opacity the same with Master opacity. Position and growth on a screen container:
+**Screen anchor point** | **This container anchor point** / **X position** | **Y position**, then
+*Growth* (Fill ... Line spacing). On a container attached to another, *Growth* opens with the gold
+"Fill and growth follow ..." line under its heading. Attach one to a named frame with a bottom anchor
+point and Grow vertically Down → the gray hint above *Growth* opens "This container anchor point is
+..." and ends "Set Grow vertically to Up below instead."; set Grow vertically to Up → the hint goes at
+once. Hover a follower's strip → "...Change the anchor points on Layout > Position and growth." Mouse:
+Click-through first, then *Tooltips* (Show tooltips | Tooltips in combat / Tooltip position), then
+*Clicks* (Right-click to cancel). `/am list` → [layout] lists the screen point rows in the new order
+with the same values. `/reload` → every value kept, every container where it was. Result:
+
+**SETLAYOUT-5. Bar style.** On #1 the strip reads General · **Background and border** · Name text ·
+Time text · Stack text · Icon · Pandemic. Each text tab opens with **Show** alone on its line and no
+heading over it, then *Font*, then *Placement* (Justify | **Anchor point** / X offset | Y offset).
+Untick Show on Name text → the names go; `/reload` → still off. Result:
+
+**SETLAYOUT-6. Icon style.** On #2 the strip reads **General** · Border · Time text · Stack text ·
+Pandemic. General holds *Size* (Width | Height / Icon zoom) then *Cooldown* (the five swipe rows);
+hover **Blizzard countdown numbers** → it ends "Needs Show cooldown swipe." and the row is not dimmed.
+Time text and Stack text open on Show, as on Bar style, with Placement's **Anchor point**. Change a
+Size and a Cooldown row, `/reload` → kept. Result:
+
+**SETLAYOUT-7. Text style.** On #4 General reads *Size* (+ the fit note), *Text template* (Template,
+Custom template when Custom, **Time format**, Preview), *Placement* (+ its notes), then *Template
+reference* (Tokens, Rules) last. Change Time format → the Preview's time changes under it. Font holds
+Font, *Glow* (with **X offset** | **Y offset**) and *Dispel type*, and no Countdown. `/reload` → Time
+format and the glow offsets kept. Result:
+
+**SETLAYOUT-8. Nothing lost.** With the values changed in SETLAYOUT-1 to 7 still set, `/reload`, then
+`/am list` → every value reads as you left it, on the same paths. Each page's **Defaults** restores its
+own rows (Time format with Text style's, the Order and cap rows with Filters') and nothing else. No
+Lua error on any page. Result:
+
 ## Library-absent install
 
 **DEGRADED-1. Without the launcher libraries.** Rename `libs/LibDBIcon-1.0` aside, `/reload` → one
@@ -2198,4 +2284,5 @@ keeps it. A check added or rewritten after that date is listed here until its `R
 a pass. The last ones, INSTALL-10, DIAG-21, DIAG-22, CONT-26 and FILT-64 (the LibKa0s v1.75.0 re-vendor)
 and CONT-27 (the preview-mode test marker), passed on 2026-10-23.
 
-Awaiting sign-off: LAYER-1 to LAYER-6 (frame layering, 2026-10-24).
+Awaiting sign-off: LAYER-1 to LAYER-6 (frame layering, 2026-10-24); SETLAYOUT-1 to SETLAYOUT-8 (settings
+layout, item 020, 2026-10-24).

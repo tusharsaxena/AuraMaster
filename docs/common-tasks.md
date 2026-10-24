@@ -36,7 +36,7 @@ Example: a bar option.
 
 1. Add the key and default to `NS.defaults.profile` in `defaults/Profile.lua`.
 2. Add the row to `settings/General.lua` with an absolute `path` and `page = "general"`. Put it on the
-   **Display** tab, or on a new tab after it; never inside **Master controls**, whose rows are the
+   **Blizzard frames** tab, or on a new tab after it; never inside **Master controls**, whose rows are the
    composer's canonical set (options-ui-§15).
 3. Give it an `onChange` if its effect is not a container re-apply — a visibility row calls
    `NS.ContainerManager.ApplyVisibility()`, which is legal in combat.

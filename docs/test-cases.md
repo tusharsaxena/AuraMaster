@@ -293,6 +293,10 @@ Total.
 - schema paths: a session row's validate still guards it
 - schema paths: a session row with no get reads nil, never the profile
 
+### test_settings_pin.lua (1)
+
+- settings pin: every stored path, default, range and choice set is the snapshot's
+
 ### test_filtercompiler.lua (85)
 
 - filter: an unfiltered buff container is one HELPFUL group with no candidate filters
@@ -1938,7 +1942,7 @@ Total.
 - options descriptor: OpenOptionsPage opens a registered page's category, a section's through Containers, and falls back to the panel otherwise
 - options descriptor: every stub composer answers an empty row list
 
-### test_pages_general.lua (35)
+### test_pages_general.lua (36)
 
 - general: the Enable checkbox writes the master switch through the seam
 - general: the four show-or-hide master rows are visibility passes; Master scale re-applies
@@ -1948,6 +1952,7 @@ Total.
 - general: a Test mode start in combat is refused and the checkbox reads false again (B1)
 - general: combat starting ends test mode, and Reset all settings ends it too (B1)
 - general: Hide Blizzard buffs reparents BuffFrame away, and back to where it was
+- general: the Blizzard frames tab draws its two rows under no heading of its own (AUR-L01b)
 - general: the Blizzard-frame rows re-apply no container
 - general: Reset position puts every container back on the screen
 - general: Reset all settings asks first and resets nothing until the answer
@@ -1955,7 +1960,7 @@ Total.
 - general: the Reset-all popup carries options-ui-§12's wording and cannot be clicked through
 - general: Defaults restores the General rows of the profile and no container setting, now that Containers is its own page
 - general: the page's Defaults tooltip no longer mentions a container's identity (N-1: Containers is its own page)
-- general: the tab strip reads Master controls, Display, Spell categories, Dispel colors — Containers is gone from it
+- general: the tab strip reads Master controls, Blizzard frames, Spell categories, Dispel colors — Containers is gone from it
 - general → spell categories: the list is ordered by name, case-insensitively, ids the client cannot name last (owner 2026-09-20)
 - general → spell categories: the list draws two columns, filled row-major, in the by-name order (owner 2026-09-20)
 - general → spell categories: a dropdown of the fifteen spell categories plus Weapon enchants, opening on the first
@@ -2011,7 +2016,7 @@ Total.
 - general → spell categories: Restore sits above the Add line and clears that category's edits and no other's (B2)
 - general → spell categories: Restore sits on the Category dropdown's line, to its right (feedback #3)
 
-### test_pages_containers.lua (33)
+### test_pages_containers.lua (34)
 
 - containers: registers its own top-level Blizzard category, with one tab, General (N-1, options-ui-§14)
 - containers: Unit, Aura type and Style sit under their own subsection; Name and Enabled do not
@@ -2043,17 +2048,19 @@ Total.
 - containers: Delete asks first, naming the container, and deletes it only on Yes
 - containers: the copy block offers every other container and copies only the chosen section
 - containers: copying Everything takes what the source is, never its name or position
+- containers: the acts and the copy choice name what they act on (AUR-L-new5, AUR-L30, AUR-L22)
 - containers: with one container the page offers Duplicate and Delete but no copy block
 - containers: Defaults restores Enabled, Unit, Aura type and Style, and never the name
 - containers: the page's Defaults tooltip names the section on screen and the kept name
 
-### test_pages_filters.lua (52)
+### test_pages_filters.lua (53)
 
 - filters: Cast by writes the selected container's filter and no other
 - filters: a buff container's Categories tab offers the weapon-enchant rows; a debuff container's does not
 - filters: hidePermanentEnchants draws right under the Spell categories grid, tied to Weapon enchants by name, ahead of the Uncategorized note (T-3)
-- filters: the max-auras description tells the truth about a group being per-shown-category, not the whole container
-- filters: the sort-by and direction descriptions tell the truth about a group being per-shown-category, not the whole container
+- filters: Sort by, Direction and Maximum auras each say in one sentence that they work per engine group, and point at the note
+- filters: the engine-group note is drawn once, after the Order and cap rows and before the priority block
+- filters: General opens with What to show, then Order and cap (AUR-L02)
 - filters: a max-duration preset writes the same path as the slider
 - filters: a stored max-duration matching no preset leaves the preset dropdown blank
 - filters: the max-duration description says there is no minimum
@@ -2074,7 +2081,7 @@ Total.
 - filters: the priority block is a heading, a lead-in and five separate rank lines (T-2, batch 8)
 - filters: the priority block is drawn under the General rows, not above them (batch 8)
 - filters: the priority ranks read at the same size as the Overrides notes (2026-09-20)
-- filters: the five tabs read General, Categories, Overrides, Sorting, Situations (batch 8, SI-05)
+- filters: the four tabs read General, Categories, Overrides, Situations (batch 8, SI-05, AUR-L02)
 - filters: the retired 'Only these categories' row is gone — no such control on the Categories tab
 - filters: a grid checkbox stores show or hide for the selected container and re-syncs its line
 - filters: /am get and /am list print a category's state as Show or Hide
@@ -2104,8 +2111,8 @@ Total.
 
 ### test_pages_situations.lua (11)
 
-- situations tab: the Filters strip reads General, Categories, Overrides, Sorting, Situations
-- situations tab: a target or focus buff container draws its unit line, On NPCs and On players, and the honor line
+- situations tab: the Filters strip reads General, Categories, Overrides, Situations
+- situations tab: a target or focus buff container draws its unit line, On NPCs and On players, and the honor line at the top of Categories
 - situations tab: a target debuff container names units you can assist
 - situations tab: a player or pet debuff container draws one dropdown, the players setting, relabeled
 - situations tab: a player or pet buff container says spell lists always apply, and draws no dropdown
@@ -2113,12 +2120,12 @@ Total.
 - situations tab: the timeless note keys on the effective mode, timeless buffs only
 - situations tab: Show in draws the six zone checkboxes in order, all ticked, each writing its zone
 - situations tab: On NPCs writes the npcs setting
-- situations tab: Unit type is the first section, above the spell-list section, with Unit type and Reaction on a target or focus
+- situations tab: Which units is the first section, with Unit type and Reaction on a target or focus, then Show in
 - situations tab: a player or pet container says it is always your own character or pet, with no Unit type dropdowns
 
-### test_pages_layout.lua (47)
+### test_pages_layout.lua (52)
 
-- layout: the tabs are Frame, Anchor, Growth, Mouse, Label, in that order
+- layout: the tabs are Scale and strata, Position and growth, Mouse, Label, in that order (AUR-L09, AUR-L10)
 - layout: the Label rows write the selected container's label, dimmed while it is off but the swatch (NL-4)
 - layout: Label > Justify shows the justify in effect with no pick, stores a pick, and Defaults clears it (B9 LJ-1)
 - layout: the Label Justify row is dimmed while the label is off
@@ -2142,7 +2149,7 @@ Total.
 - layout: an attached container's Fill and growth are dimmed and show its parent's
 - layout: a screen or frame container's growth rows are its own and live, with no follow line
 - layout: the follow line is dim gold, says why, and has a gap below it (F6)
-- layout: the follow line is drawn on the Growth tab only
+- layout: the follow line is drawn under the Growth heading only, above the first Growth row
 - layout: Another container names the derived points and the container it is attached to
 - layout: the attachment line names the points in effect, picked or Automatic (batch 11 G2)
 - layout: Another container draws the two anchor-point dropdowns, each Automatic (<in effect>) then the nine points (G1)
@@ -2165,8 +2172,13 @@ Total.
 - layout: /am set attaches without asking and prints one line; a differing detach prints one
 - layout: a chain root's Growth tab says how many containers follow its fill and growth
 - layout: Named frame reads Named frame anchor point on the left and This container anchor point on the right (owner, 2026-09-26)
+- layout: the facing-growth hint sits after the attach rows and above the Growth subsection it points down at (AUR-L09)
+- layout: a growth pick redraws the tab, so the hint beside it cannot go stale (AUR-L09)
+- layout: Screen mode reads Screen anchor point, This container anchor point, then X position, Y position (AUR-L08)
+- layout: Mouse opens on Click-through, unheaded, then Tooltips and Clicks (AUR-L11)
+- layout: Scale and strata names the container and says what multiplies it (AUR-L-new3, AUR-L-new4, AUR-L25)
 
-### test_pages_bars.lua (11)
+### test_pages_bars.lua (13)
 
 - bars: the Icon tab holds the icon's four rows, then the composed icon-border block (B-1)
 - bars: the General tab's Spark subsection turns the spark off on auras without a duration (B-3)
@@ -2176,13 +2188,16 @@ Total.
 - bars: a confirmed fill color is stored on the selected container, as a table of its own
 - bars: Pandemic carries no dispel swatches, and Color by points at the General page > Dispel colors (B-6)
 - bars: the Pandemic tab holds the time color and the highlight, in pandemic-window words, paths unchanged (B2-1)
-- bars: Background & border offers Color by beside the background, writing bgColorMode (feedback #7)
+- bars: Background and border offers Color by beside the background, writing bgColorMode (feedback #7)
 - pages: every Border style row says Solid redraws at once and another texture after a /reload (B2-3)
 - bars: Defaults restores the selected container's bar look and leaves its icon look alone
+- pages: every text-element tab opens on its Show switch, alone and unheaded, ahead of the Font block (AUR-L12, AUR-L13)
+- bars: the Name text tab draws Show above the Font heading, with no heading over it (AUR-L12)
 
-### test_pages_icons.lua (5)
+### test_pages_icons.lua (6)
 
-- icons: the six tabs are drawn in order
+- icons: the five tabs are drawn in order, General first as on Bar style and Text style (AUR-L15)
+- icons: General holds Size, then Cooldown, each under its heading (AUR-L15, AUR-L16)
 - icons: Width on the Icons page writes the icon width, never the bar width
 - icons: the Cooldown rows write the selected container's swipe
 - icons: the Pandemic tab holds the time color and the highlight, in pandemic-window words, paths unchanged (B2-1)
@@ -2191,7 +2206,7 @@ Total.
 ### test_pages_text.lua (32)
 
 - text page: the five tabs are drawn in order, Pandemic before Animation (B2-1)
-- text page: General holds Size, the Template dropdown and box, the cheat sheet, then Placement
+- text page: General holds Size, the Template dropdown, box, Time format and Preview, then Placement, then the cheat sheet (AUR-L17, AUR-L19)
 - text page: the section is named Text template (Task 20, owner: rename this section)
 - text page: the Preview is a disabled EditBox labeled Preview, PrettyChat's own shape (Task 20)
 - text page: the Preview box refreshes after a template change (Task 20)
@@ -2204,7 +2219,7 @@ Total.
 - text page: without a duration token the pandemic-window rows dim, except the swatch, under a note
 - text page: the Pandemic tab holds the time color and the blink, in pandemic-window words, paths unchanged (B2-1)
 - text page: with Icon position None every Icon row but the position dims, the swatch excepted, under a note (item 6)
-- text page: the blink row is engine-only, and the Font tab carries the composed font block, Glow, time format and Dispel type
+- text page: the blink row is engine-only, and the Font tab carries the composed font block, Glow and Dispel type
 - text page: Defaults restores the selected container's text look and nothing else
 - text page: the Template dropdown lists the aura type's built-ins, then Custom (feedback #5)
 - text page: picking a built-in writes its template, and the centered one Center; the box stays hidden (feedback #5)
@@ -2363,7 +2378,7 @@ Total.
 
 - prose: no authored file carries a British spelling from localization-§5's published list
 - prose: the gate carries localization-§5's two lists whole, and nothing of its own
-- prose: the exclusions this repository declared suppressed 11 of 215 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (11): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, docs/spell-research/2026-09-24-logs/CORRECTIONS.md, docs/spell-research/2026-09-24-logs/CURRENT_CATEGORIES.md, docs/spell-research/2026-09-24-logs/DECISIONS.md, docs/spell-research/2026-09-24-logs/FLAGS.md, docs/spell-research/2026-09-24-logs/PROPOSED_ADDITIONS.md, docs/spell-research/2026-09-24-logs/REVIEW.md, docs/spell-research/2026-09-24-logs/SOURCES.md, docs/spell-research/2026-09-24-logs/dictionary/AURAS.md
+- prose: the exclusions this repository declared suppressed 11 of 219 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (11): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, docs/spell-research/2026-09-24-logs/CORRECTIONS.md, docs/spell-research/2026-09-24-logs/CURRENT_CATEGORIES.md, docs/spell-research/2026-09-24-logs/DECISIONS.md, docs/spell-research/2026-09-24-logs/FLAGS.md, docs/spell-research/2026-09-24-logs/PROPOSED_ADDITIONS.md, docs/spell-research/2026-09-24-logs/REVIEW.md, docs/spell-research/2026-09-24-logs/SOURCES.md, docs/spell-research/2026-09-24-logs/dictionary/AURAS.md
 - prose: no path this repository narrows the gate by is loaded by a TOC
 - prose: every path this repository narrows the gate by is one .pkgmeta keeps out of the zip
 - prose self-test: the carve-out suppresses the named generated folder, and only it
@@ -2460,6 +2475,7 @@ Total.
 | test_migrations.lua | 29 |
 | test_schema.lua | 38 |
 | test_schema_paths.lua | 38 |
+| test_settings_pin.lua | 1 |
 | test_filtercompiler.lua | 85 |
 | test_filtercompiler_categories.lua | 9 |
 | test_filterviews.lua | 14 |
@@ -2525,14 +2541,14 @@ Total.
 | test_debug_library_lines.lua | 11 |
 | test_optionssetup.lua | 21 |
 | test_options_descriptor.lua | 19 |
-| test_pages_general.lua | 35 |
+| test_pages_general.lua | 36 |
 | test_pages_general_categories.lua | 32 |
-| test_pages_containers.lua | 33 |
-| test_pages_filters.lua | 52 |
+| test_pages_containers.lua | 34 |
+| test_pages_filters.lua | 53 |
 | test_pages_situations.lua | 11 |
-| test_pages_layout.lua | 47 |
-| test_pages_bars.lua | 11 |
-| test_pages_icons.lua | 5 |
+| test_pages_layout.lua | 52 |
+| test_pages_bars.lua | 13 |
+| test_pages_icons.lua | 6 |
 | test_pages_text.lua | 32 |
 | test_pages_tabs.lua | 6 |
 | test_pages_rail.lua | 20 |
@@ -2554,4 +2570,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **2136** |
+| **Total** | **2148** |
