@@ -235,10 +235,10 @@ and its one writer (the library's `P.Save`, behind `/am perf finish`) are named 
 
 ## Settings schema, registries and named non-setting state
 
-`NS.Schema` holds **269** rows across seven pages: General 18 (its Dispel colors tab's five and its
+`NS.Schema` holds **276** rows across seven pages: General 18 (its Dispel colors tab's five and its
 Spell categories tab's three `enchantSlots` rows among them), Containers 5 (`N-1`, batch 7 — split
 out of General's own tab), Filters 57, Layout 38 (the Label tab's ten among them, batch 8 and B9 LJ-1; batch 9's Side row replaced by batch 11's two anchor-point rows),
-Bars 72, Icons 42 and Text 37 (its `autoSize` among them). The
+Bars 72, Icons 42 and Text 44 (its `autoSize` among them). The
 AceConfig-drawn Profiles page carries none. That is the count on a profile with no categories of the
 player's own; **the schema is a live table, not a frozen one**, and each user category adds one
 `container.filter.categories.<key>` row at runtime (`NS.RegisterSchemaRows(rows, beforePath)` inserts

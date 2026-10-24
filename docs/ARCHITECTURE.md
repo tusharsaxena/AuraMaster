@@ -82,8 +82,8 @@ Every non-vendored file, its responsibility and the full load order: `docs/modul
 
 ## Settings Schema
 
-`NS.Schema` holds **269** rows across seven pages (General 18, Containers 5, Filters 57, Layout 38,
-Bars 72, Icons 42, Text 37), plus one runtime row per user category. It drives the panel,
+`NS.Schema` holds **276** rows across seven pages (General 18, Containers 5, Filters 57, Layout 38,
+Bars 72, Icons 42, Text 44), plus one runtime row per user category. It drives the panel,
 `/am list|get|set|reset` and the resets through one write seam, `NS.SetByPath`.
 
 - **Containers registry** (architecture-§5): keys `containers`, `containerOrder`, `nextContainerId`,
