@@ -107,3 +107,38 @@ declared diagnostics opt-out), 2137 total (16 shards); `luacheck .` 0 warnings /
 files; complexity suite green, max CCN 15, 5633 functions; largest authored `.lua` is
 `defaults/Categories.lua`, 1344 lines; `diff -r` against the tag empty for both payloads before the
 prune.
+
+## Re-vendor after the tag moved again (one key button)
+
+Item `AM-RV3` (M3, the owner's one-key-button follow-up to 015). The run's LK-96 moved the local
+annotated tag v1.77.0 again, to carry OptionsKeybinds minor 4, so the AM-RV2 copy no longer
+matched it. Both payloads were copied whole again from
+`git -C ../LibKa0s archive v1.77.0 LibKa0s testkit tools`, and `media/icons/` was pruned again with
+that tag's `tools/prune-icons.lua` to the same declaration
+(`LibKa0s icons: clear, close, copy, help, info.`: 6 files kept, 5,834 removed; the kept files are
+byte-identical to the earlier copy). As before, no new bundle and no `CLAUDE.md` change: the
+provenance line stays v1.77.0.
+
+| | Tag object | Commit (`v1.77.0^{}`) |
+|---|---|---|
+| Old (AM-RV2, after LK-95) | `b2b8ee25c5f9fa26db146254bf786b366dec986b` | `afae2f75cb7ff61c57156d9a3d8a6b2b9f4c5e10` |
+| New (after LK-96) | `e9b126d961c2970e5b14d0566480f7c1d8b5e5e8` | `2f2b2e22b4c9219cd8a4101d7e894681c7aea16e` |
+
+**Per-file minors that moved:** one payload file. `OptionsKeybinds.lua` 3 -> **4**: one key button
+and Clear per row on the in-addon Keybindings tab (the button binds slot 1 and reads
+"<first key> +N" when the action holds more; its tooltip names every key). The `KEY1` / `KEY2`
+strings are gone; `KEY`, `KEY_MORE`, `KEYS_ALL` and `KEYS_OTHER` are new, and `CLEAR_TIP` says every
+key. In the kit, `bindings_xml.lua` and `README.md` changed: `Kit.keybindThroughTab` drives slot 2
+on a one-button row through `lib.__keybindSet`. The kit stays at revision 42. No file was added or
+removed upstream.
+
+**Contract:** no new public Options instance member (the new words live in
+`lib.KEYBIND_STRINGS`), so the degradation stub in `settings/OptionsSetup.lua` is unchanged and
+`Kit.assertSurfaceParity` stays green. AuraMaster ships no `Bindings.xml` and no Keybindings tab, so
+nothing here is adopted and no code or test of its own reads the strings that went.
+
+Gates (all through `ka0s-bounded`): `lua tests/run.lua` 2148 passed, 0 failed, 1 skipped (the
+declared diagnostics opt-out), 2149 total (16 shards), equal to the README badge and
+`docs/test-cases.md`; `luacheck .` 0 warnings / 0 errors in 182 files; largest authored `.lua` is
+`defaults/Categories.lua`, 1344 lines; `diff -r` against the tag (icons excluded) empty for both
+payloads.
