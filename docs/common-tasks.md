@@ -17,6 +17,8 @@ Example: a bar option.
    (`H.FontGroup`, `H.BorderGroup`, `H.BarGroup`, `H.ColorPair`) — extra rows go *after* the block,
    and a color row gets its class-color companion unless it is a palette swatch (options-ui-§16/§17).
 3. **The strings.** Add the label and desc to `locales/enUS.lua` as `L["…"] = "…"`, in US English.
+   Keep the value ASCII apart from the em dash (—) and the ellipsis (…), which the owner's font draws
+   (ruling T-1, widened 2026-10-24); `tests/test_locale.lua` fails any other non-ASCII glyph.
 4. **The behavior.** Read the key in `modules/Style_Bars.lua` (`Bars.Apply` for the look,
    `Bars.Bind` for an engine binding), and paint it on the placeholder too (`Bars.FillPreview`).
    Nothing else: the write seam already sends `CONFIG_CHANGED`, which re-applies that container and

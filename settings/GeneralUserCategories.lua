@@ -134,12 +134,12 @@ end
 --
 --     [ Category v ]                    [ Restore this category's starter list ]
 --     -- a category the player made; one of Aura Master's own draws nothing here --
---     [ Rename this category ____ ]     [ Delete this category ]
+--     [ Rename this category ____ ]     [ Delete this category… ]
 --     -- whatever the last act of this block answered, when there was one --
 --     "Renamed 'Frist draft' to 'First draft'. To undo it, type 'Frist draft' back into the box."
 --     -- only while the profile holds a record the sync cannot read --
 --     "Aura Master cannot read 1 of this profile's saved categories..."
---     [ Forget unreadable categories ]
+--     [ Forget unreadable categories… ]
 --     ---- Make a new category ------------------------------------------------
 --     [ New category's name _____ ]     [ Create category ]
 --     [ Aura type v ]
@@ -292,13 +292,13 @@ StaticPopupDialogs["AURAMASTER_DELETE_CATEGORY"] = {
 local function deleteCell(def)
     return { make = function(_, parent)
         local btn = NS.AceGUI:Create("Button")
-        btn:SetText(L["Delete this category"])
+        btn:SetText(L["Delete this category…"])
         btn:SetRelativeWidth(H.BUTTON_PAIR_REL)
         btn:SetCallback("OnClick", function()
             local popup = StaticPopup_Show("AURAMASTER_DELETE_CATEGORY", Cat.LabelOf(def))
             if popup then popup.data = def.key end
         end)
-        H.AttachTooltip(btn, L["Delete this category"],
+        H.AttachTooltip(btn, L["Delete this category…"],
             L["Discards this category, the spells you put in it, and every container's Show or Hide for it. Your other categories are not affected."])
         parent:AddChild(btn)
         return btn
@@ -359,7 +359,7 @@ local function renderBroken(ctx)
         :format(count))
     H.RenderGrid(ctx, { { make = function(_, parent)
         local btn = NS.AceGUI:Create("Button")
-        btn:SetText(L["Forget unreadable categories"])
+        btn:SetText(L["Forget unreadable categories…"])
         btn:SetRelativeWidth(H.BUTTON_PAIR_REL)
         btn:SetCallback("OnClick", function()
             StaticPopupDialogs["AURAMASTER_FORGET_BROKEN_CATEGORIES"].text = count == 1
@@ -367,7 +367,7 @@ local function renderBroken(ctx)
                 or L["Forget the %d saved categories Aura Master cannot read? They are in no list and cannot be repaired from here, and whatever they held is discarded. Your other categories are not affected."]
             StaticPopup_Show("AURAMASTER_FORGET_BROKEN_CATEGORIES", count)
         end)
-        H.AttachTooltip(btn, L["Forget unreadable categories"],
+        H.AttachTooltip(btn, L["Forget unreadable categories…"],
             L["Discards the saved categories Aura Master cannot read, and any spell lists or container decisions left under their keys. Asks first."])
         parent:AddChild(btn)
         return btn

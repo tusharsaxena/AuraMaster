@@ -154,24 +154,56 @@ test("locale: every string routed by value has its key — Constants labels, cat
     assertEqual(#missing, 0, "routed but not defined: " .. table.concat(missing, "; "))
 end)
 
-test("locale: every value is ASCII, the em dash excepted (T-1)", function()
-    -- red under: a non-ASCII byte (an arrow, an ellipsis, a middot, a section mark, ...) reappearing
-    -- in a locale VALUE. The owner's font draws most such glyphs as a box (screenshot, batch 7 T-1):
-    -- "General -> Spell Categories" (as it read then) rendered as "General [box] Spell Categories". The em dash (U+2014,
-    -- UTF-8 bytes 0xE2 0x80 0x94) is the ONE exemption — it renders correctly in the owner's own
-    -- screenshots, so it is intentionally excluded rather than silently allowed: every other
-    -- multi-byte (>= 0x80) sequence in a value fails this test.
-    local EM_DASH = "\226\128\148"
+-- Owner ruling T-1 (batch 7), widened by the owner's call of 2026-10-24 ("Widen T1", item AM-OC1):
+-- a locale VALUE is ASCII apart from exactly two glyphs that draw correctly in the owner's font --
+-- the em dash (U+2014, UTF-8 0xE2 0x80 0x94) and the horizontal ellipsis (U+2026, UTF-8 0xE2 0x80
+-- 0xA6), the second so that a button opening a confirmation can end in '…' (options-ui-§21). Every
+-- other multi-byte (>= 0x80) sequence fails: the font draws most such glyphs as a box (screenshot,
+-- batch 7 T-1): "General -> Spell Categories" (as it read then) rendered as "General [box] Spell
+-- Categories".
+local T1_ALLOWED = { "\226\128\148", "\226\128\166" }
+
+--- True when `value` carries a non-ASCII byte outside T-1's allowed glyphs.
+local function breaksT1(value)
+    for _, glyph in ipairs(T1_ALLOWED) do
+        value = value:gsub(glyph, "")
+    end
+    return value:find("[\128-\255]") ~= nil
+end
+
+test("locale: every value is ASCII, the em dash and the ellipsis excepted (T-1, widened 2026-10-24)", function()
+    -- red under: a non-ASCII byte (an arrow, a middot, a section mark, ...) reappearing in a locale
+    -- VALUE. The two allowed glyphs are excluded on purpose, not silently allowed.
     local bad = {}
     for _, d in ipairs(definitions()) do
-        if d.value then
-            local scrubbed = d.value:gsub(EM_DASH, "")
-            if scrubbed:find("[\128-\255]") then
-                bad[#bad + 1] = ("line %d: %s"):format(d.line, d.key)
-            end
+        if d.value and breaksT1(d.value) then
+            bad[#bad + 1] = ("line %d: %s"):format(d.line, d.key)
         end
     end
-    assertEqual(#bad, 0, "non-ASCII byte outside the em dash: " .. table.concat(bad, "; "))
+    assertEqual(#bad, 0, "non-ASCII byte outside the em dash and the ellipsis: " .. table.concat(bad, "; "))
+end)
+
+test("locale: T-1 allows only the em dash and the ellipsis, nothing else non-ASCII", function()
+    -- red under: the allowed set growing past the owner's two glyphs, or the scrub eating more than them
+    assertTrue(not breaksT1("Delete container\226\128\166"), "the ellipsis is allowed")
+    assertTrue(not breaksT1("a \226\128\148 b"), "the em dash is allowed")
+    for _, glyph in ipairs({ "\226\134\146", "\194\183", "\194\167", "\226\128\147", "\195\169",
+        "\226\128\153", "\226\128" }) do
+        assertTrue(breaksT1("x" .. glyph .. "y"), "still refused: byte sequence of #" .. #glyph)
+    end
+end)
+
+test("locale: the three buttons that open a confirmation end in the ellipsis (options-ui-§21)", function()
+    -- red under: one of the labels losing its '…' (U+2026), or its enUS line going missing
+    local keys = defined()
+    for _, label in ipairs({ "Delete container\226\128\166", "Delete this category\226\128\166",
+        "Forget unreadable categories\226\128\166" }) do
+        assertTrue(keys[label] == true, "enUS defines " .. label)
+        assertEqual(label:sub(-3), "\226\128\166", "ends in U+2026")
+    end
+    for _, plain in ipairs({ "Delete container", "Delete this category", "Forget unreadable categories" }) do
+        assertTrue(not keys[plain], "the bare label is gone: " .. plain)
+    end
 end)
 
 test("locale: no library-missing line joins a routed fragment", function()

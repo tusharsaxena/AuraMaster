@@ -7,7 +7,7 @@ local _, NS = ...
 --               | Filters |  [Name] [Enable this container]
 --               | Layout  |  -- What it shows, and how --       <- subsection (options-ui-§7)
 --               | <style> |  [Unit] [Aura type] / [Style]
---                            [Duplicate container] [Delete container]   <- acts on the selected container
+--                            [Duplicate container] [Delete container…]  <- acts on the selected container
 --                            -- Copy settings from --  [Source v] [What v] [Copy]
 --
 -- A TOP-LEVEL PAGE (N-1, batch 7), and since #6 the one page per container: the band on top, a
@@ -19,7 +19,7 @@ local _, NS = ...
 -- through Helpers.ContainerBanner in settings/OptionsSetup.lua): the identity controls
 -- options-ui-§14 puts there, on one row, and the page's ONLY picker. The rail beside it chooses
 -- which part of the container is shown, never which container. The acts on the selected container
--- — Name, Enable this container, Duplicate container, Delete container, Copy settings from — are the rail's General section, whose one
+-- — Name, Enable this container, Duplicate container, Delete container…, Copy settings from — are the rail's General section, whose one
 -- tab options-ui-§14 names General. This retired the page's options-ui-§14 deviation
 -- (docs/ARCHITECTURE.md). The band is drawn anew on every render, so a Delete's two refreshes cannot
 -- lose it; the library gives the widgets of the band before back to AceGUI once the new band
@@ -217,7 +217,7 @@ end
 local function afterRows(ctx)
     H.InlineButtonPair(ctx,
         { text = L["Duplicate container"], tooltip = L["Make a copy of this container with every setting."], onClick = doDuplicate },
-        { text = L["Delete container"], tooltip = L["Delete this container. Asks first."], onClick = doDelete })
+        { text = L["Delete container…"], tooltip = L["Delete this container. Asks first."], onClick = doDelete })
     local count = #NS.Database.GetContainers()
     if count > 1 then renderCopy(ctx) end
 end

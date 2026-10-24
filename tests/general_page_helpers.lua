@@ -77,7 +77,8 @@ end
 local function marked(NS, key, auraType)
     auraType = auraType or NS.Categories.AuraTypeOf(key)
     local def = NS.Categories.Find(auraType, key)
-    -- Byte length is character length here: the locale guard already holds enUS to ASCII.
+    -- Byte length is character length here: the locale guard holds enUS to ASCII
+    -- apart from the em dash and the ellipsis (T-1), and no aura type word carries either.
     local widest = 0
     for _, word in pairs(NS.Constants.AURA_TYPE_LABELS) do
         local n = #NS.L[word]

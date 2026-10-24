@@ -28,7 +28,7 @@ check's number is not reused. Checks with no recorded pass, and checks new or co
 | STYLE-1 to STYLE-30 | Bars and Icons style, fonts | Bars and Icons tabs, the spark, borders, dispel colors, pandemic, the font primer |
 | TEXT-1 to TEXT-36 | Text style | Templates and tokens, justify, the icon, dispel type word, backdrop and edge, animation, Size to fit, the glow behind the text |
 | LAYER-1 to LAYER-6 | Frame layering | Bar borders over the fill, the outline and the name label over the auras, the snap highlight over a Dialog container, the strip at low opacity, the Strata tooltip |
-| SETLAYOUT-1 to SETLAYOUT-8 | Settings layout (item 020) | Every settings page item 020 moved, regrouped or relabeled, read as `docs/settings-panel.md` describes, with no setting lost, moved or reset |
+| SETLAYOUT-1 to SETLAYOUT-9 | Settings layout (item 020) | Every settings page item 020 moved, regrouped or relabeled, read as `docs/settings-panel.md` describes, with no setting lost, moved or reset; the confirm buttons' ellipsis |
 | DEGRADED-1 | Library-absent install | The launcher libraries missing |
 | LOC-1 to LOC-2 | Non-English client | Spell names from the client, adding a spell by its localized name |
 
@@ -1011,7 +1011,7 @@ General → Display and back keeps it. Result: pass (owner-marked 2026-10-10)
 a name, and the box snaps back to the stored name. Create a second category with a name you already
 used → both are kept, the line says so, and the dropdown shows two entries reading the same. Result: pass (owner-marked 2026-10-10)
 
-**FILT-38. Delete it.** Pick the second category, **Delete this category** → the confirmation names it
+**FILT-38. Delete it.** Pick the second category, **Delete this category…** → the confirmation names it
 and says the spell list goes, every container in every profile forgets whether it showed or hid it,
 and anything it hid becomes visible again through Uncategorized. **No** → nothing changes. **Yes** →
 the tab shows another category, a line says which was deleted and that the tab moved, the Filters
@@ -2179,7 +2179,7 @@ General → Text template**. Labels: *Max duration* → *Maximum duration (secon
 auras per group* → *Maximum auras per group*, *Strata* → *Frame strata*, *Scale* / *Opacity* →
 *Container scale* / *Container opacity*, *Point* / *Relative point* / *X* / *Y* (Screen) → *This
 container anchor point* / *Screen anchor point* / *X position* / *Y position*, *Enabled* → *Enable
-this container*, *Duplicate* / *Delete* → *Duplicate container* / *Delete container*, Placement's
+this container*, *Duplicate* / *Delete* → *Duplicate container* / *Delete container…*, Placement's
 *Anchor* → *Anchor point*, Glow's *Offset X* / *Offset Y* → *X offset* / *Y offset*.
 
 Start each from a fresh profile's starter set, note a few values you change on each page, and
@@ -2193,7 +2193,7 @@ what you set. Result:
 
 **SETLAYOUT-2. Containers → General (rail).** The rail reads General · Filters · Layout · **Bar
 style** (Icon style on #2, Text style on #4). The General tab reads Name | **Enable this container**,
-then *What it shows, and how*, then **Duplicate container** | **Delete container** (Delete on the
+then *What it shows, and how*, then **Duplicate container** | **Delete container…** (Delete on the
 right; it still asks first). Hover the page's **Defaults** → "Restore every tab of the entry selected
 on the left, for the container in the band, to its defaults. On General: Enable this container, Unit,
 Aura type and Style; its name is kept." With two containers, What to copy offers **Layout: scale,
@@ -2250,6 +2250,12 @@ format and the glow offsets kept. Result:
 own rows (Time format with Text style's, the Order and cap rows with Filters') and nothing else. No
 Lua error on any page. Result:
 
+**SETLAYOUT-9. The confirm buttons end in an ellipsis.** Containers → General (rail) → the button
+reads **Delete container…**. General → Spell categories, pick a category you made → **Delete this
+category…**; with a saved category Aura Master cannot read, **Forget unreadable categories…**. In each
+the trailing … draws as one ellipsis glyph in your font, not a box or three dots squeezed together, and
+each button still asks first. (Owner call of 2026-10-24 widening T-1; run bundle id SM-AM-OC1.) Result:
+
 ## Library-absent install
 
 **DEGRADED-1. Without the launcher libraries.** Rename `libs/LibDBIcon-1.0` aside, `/reload` → one
@@ -2285,4 +2291,4 @@ a pass. The last ones, INSTALL-10, DIAG-21, DIAG-22, CONT-26 and FILT-64 (the Li
 and CONT-27 (the preview-mode test marker), passed on 2026-10-23.
 
 Awaiting sign-off: LAYER-1 to LAYER-6 (frame layering, 2026-10-24); SETLAYOUT-1 to SETLAYOUT-8 (settings
-layout, item 020, 2026-10-24).
+layout, item 020, 2026-10-24); SETLAYOUT-9 (the confirm buttons' ellipsis, 2026-10-24).
