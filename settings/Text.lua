@@ -507,7 +507,7 @@ local function pandemicNote(ctx)
     H.TextRow(ctx, GRAY:format(L["The pandemic window needs a duration token, such as $remainingduration$, in the template."]), SMALL)
 end
 
-NS.RegisterContainerSection(PAGE, L["Text"], {
+NS.RegisterContainerSection(PAGE, L["Text style"], {
     tabs       = { { key = G_GENERAL, label = G_GENERAL, render = renderGeneral } },
     afterGroup = { [G_ICON] = iconNote, [G_PANDEMIC] = pandemicNote },
     style      = "text",

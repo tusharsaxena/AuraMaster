@@ -4,10 +4,10 @@ local _, NS = ...
 --
 --     band      [Container v picker ][ New container ]         <- above the rail AND the strip (options-ui-§14)
 --     rail      | General |  [ General ]                        <- the rail's first entry, and its one tab
---               | Filters |  [Name] [Enabled]
+--               | Filters |  [Name] [Enable this container]
 --               | Layout  |  -- What it shows, and how --       <- subsection (options-ui-§7)
 --               | <style> |  [Unit] [Aura type] / [Style]
---                            [Duplicate] [Delete]               <- acts on the selected container
+--                            [Duplicate container] [Delete container]   <- acts on the selected container
 --                            -- Copy settings from --  [Source v] [What v] [Copy]
 --
 -- A TOP-LEVEL PAGE (N-1, batch 7), and since #6 the one page per container: the band on top, a
@@ -19,7 +19,7 @@ local _, NS = ...
 -- through Helpers.ContainerBanner in settings/OptionsSetup.lua): the identity controls
 -- options-ui-§14 puts there, on one row, and the page's ONLY picker. The rail beside it chooses
 -- which part of the container is shown, never which container. The acts on the selected container
--- — Name, Enabled, Duplicate, Delete, Copy settings from — are the rail's General section, whose one
+-- — Name, Enable this container, Duplicate container, Delete container, Copy settings from — are the rail's General section, whose one
 -- tab options-ui-§14 names General. This retired the page's options-ui-§14 deviation
 -- (docs/ARCHITECTURE.md). The band is drawn anew on every render, so a Delete's two refreshes cannot
 -- lose it; the library gives the widgets of the band before back to AceGUI once the new band
@@ -70,7 +70,7 @@ local ROWS = {
     },
     {
         path = "container.enabled", page = PAGE, group = GROUP, type = "bool",
-        label = L["Enabled"], desc = L["Draw this container. A disabled container keeps its settings."], effect = "visibility",
+        label = L["Enable this container"], desc = L["Draw this container. A disabled container keeps its settings."], effect = "visibility",
     },
     {
         path = "container.unit", page = PAGE, group = GROUP, subgroup = S_SHOWS, type = "string",
@@ -87,7 +87,7 @@ local ROWS = {
     {
         path = "container.style", page = PAGE, group = GROUP, subgroup = S_SHOWS, type = "string",
         values = NS.Choices(C.STYLES, C.STYLE_LABELS, C.STYLE_COLORS), label = L["Style"],
-        desc = L["Draw each aura as a bar, an icon or a line of text. Bars, Icons and Text each have their own section on this page."],
+        desc = L["Draw each aura as a bar, an icon or a line of text. Each has its own style section on this page's rail."],
         -- B5: a new style resets Fill (Layout -> Growth) to the one it suits, through the one write
         -- seam and for the same container, then the panel rebuilds once. Only on a real change: the
         -- seam hands onChange the value it replaced. A duplicate, a copy-from's own layout, a profile
@@ -157,8 +157,10 @@ end
 local copySource, copySection = nil, "all"
 
 local SECTION_KEYS = { "all", "filter", "layout", "behavior", "label", "bars", "icons", "text" }
+-- "layout" copies `container.layout` alone: the Scale and strata rows and the Growth subsection,
+-- never where the container sits or what it attaches to, so its label says which half (AUR-L30).
 local SECTION_LABELS = {
-    all = "Everything (what it shows and how it looks)", filter = "Filters", layout = "Layout",
+    all = "Everything (what it shows and how it looks)", filter = "Filters", layout = "Layout: scale, strata and growth",
     behavior = "Mouse", label = "Label", bars = "Bar style", icons = "Icon style", text = "Text style",
 }
 
@@ -214,8 +216,8 @@ end
 
 local function afterRows(ctx)
     H.InlineButtonPair(ctx,
-        { text = L["Duplicate"], tooltip = L["Make a copy of this container with every setting."], onClick = doDuplicate },
-        { text = L["Delete"], tooltip = L["Delete this container. Asks first."], onClick = doDelete })
+        { text = L["Duplicate container"], tooltip = L["Make a copy of this container with every setting."], onClick = doDuplicate },
+        { text = L["Delete container"], tooltip = L["Delete this container. Asks first."], onClick = doDelete })
     local count = #NS.Database.GetContainers()
     if count > 1 then renderCopy(ctx) end
 end
@@ -268,7 +270,7 @@ local function build(mainCategory)
     local ctx = H.CreatePanel("AuraMasterContainersPanel", L["Containers"], {
         pageKey         = PAGE,
         defaultsButton  = true,
-        defaultsTooltip = L["Restore the selected container's settings in the section on screen to their addon defaults. On General: Enabled, Unit, Aura type and Style; its name is kept."],
+        defaultsTooltip = L["Restore every tab of the entry selected on the left, for the container in the band, to its defaults. On General: Enable this container, Unit, Aura type and Style; its name is kept."],
     })
     -- The ACTIVE section's rows, read at click time: the button is built once, on the first show
     -- (O.EnsureDefaultsButton), so a section captured here would be General's for good (#6, spec §3).

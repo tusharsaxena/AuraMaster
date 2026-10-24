@@ -582,7 +582,7 @@ local function disableContainer(container)
         if err then NS.Print(err) end
         return
     end
-    NS.Printf(NS.L["%s disabled. Turn Enabled back on for it on the Containers page to bring it back."], name)
+    NS.Printf(NS.L["%s disabled. Turn Enable this container back on for it on the Containers page to bring it back."], name)
 end
 
 --- The close mark's own tooltip: the container's name (a function, read on every hover, so a rename
@@ -595,7 +595,7 @@ local function closeTooltipSpec(container)
             return cfg and cfg.name or NS.L["Container"]
         end,
         body = {
-            NS.L["Click to disable this container. Its settings are kept; turn Enabled back on for it on the Containers page to bring it back."],
+            NS.L["Click to disable this container. Its settings are kept; turn Enable this container back on for it on the Containers page to bring it back."],
         },
     }
 end

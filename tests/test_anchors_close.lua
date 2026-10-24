@@ -97,7 +97,7 @@ test("close: a left click disables THIS container through the write seam and say
     assertEqual(#lines, 1, table.concat(lines, " | "))
     local name = NS.Database.FindContainer(2).name
     assertTrue(lines[1]:find(name, 1, true) ~= nil, "the line names the container: " .. lines[1])
-    assertTrue(lines[1]:find(NS.L["Enabled"], 1, true) ~= nil, "and how to turn it back on: " .. lines[1])
+    assertTrue(lines[1]:find(NS.L["Enable this container"], 1, true) ~= nil, "and how to turn it back on: " .. lines[1])
 end)
 
 test("close: a right click on the X opens the settings like the strip and the ?, and disables nothing", function()
@@ -152,7 +152,7 @@ test("close: the X's tooltip names the container (following a rename) and says h
     h.close:__fire("OnEnter")
     assertEqual(lines[1], "Renamed Close", "the title is read on every hover")
     -- red under: the X falling back to the strip's own tooltip (its body is the drag hint)
-    assertEqual(lines[2], NS.L["Click to disable this container. Its settings are kept; turn Enabled back on for it on the Containers page to bring it back."])
+    assertEqual(lines[2], NS.L["Click to disable this container. Its settings are kept; turn Enable this container back on for it on the Containers page to bring it back."])
     -- The anchor inherits DisableUntrustedLayoutScriptsTemplate: SetOwner on the X would error. The
     -- placement beside the strip (tests/test_anchors_tooltip.lua) owns by UIParent with no anchor;
     -- the mock's tooltip scale and screen edge do not read, so it declines and the widget re-owns at
