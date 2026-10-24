@@ -63,11 +63,18 @@ local function build(frame)
     am.text = CreateFrame("Frame", nil, frame)
     am.text:SetAllPoints(frame)
 
-    -- Sibling frames made at one level stack in no promised order, so set it: the spark's frame over
-    -- the bar, the texts over the spark. Once, here, where every level is a fresh frame's own.
-    local level = am.bar:GetFrameLevel()
-    am.sparkClip:SetFrameLevel(level + 1)
-    am.text:SetFrameLevel(level + 2)
+    -- Sibling frames made at one level stack in no promised order, so set it, bottom to top, each over
+    -- the element root (core/Constants.lua's layers table, AUR-Z02): the bar, the spark's frame, the
+    -- borders (their Solid strips lie inside the frame edge, over the bar's fill, which covers the
+    -- whole bar area), the texts. Once, here, where every level is a fresh frame's own. The root's
+    -- level is read off the fresh, unanchored bar (born at its parent + 1), never off the button,
+    -- which the engine anchors and whose level can read secret (docs/midnight-quirks.md).
+    local level, V = am.bar:GetFrameLevel() - 1, C.LAYERS.LEVEL
+    am.bar:SetFrameLevel(level + V.FILL)
+    am.sparkClip:SetFrameLevel(level + V.SPARK)
+    am.border:SetFrameLevel(level + V.BORDER)
+    am.iconBorder:SetFrameLevel(level + V.BORDER)
+    am.text:SetFrameLevel(level + V.OVERLAY)
     am.name = am.text:CreateFontString(nil, "OVERLAY")
     am.time = am.text:CreateFontString(nil, "OVERLAY")
     am.stacks = am.text:CreateFontString(nil, "OVERLAY")

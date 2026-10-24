@@ -1653,6 +1653,18 @@ Total.
 - picker: a new pick waits for the buttons to be released again before it can pick
 - framepicker: PickFor refuses in combat, refuses with no container, and makes exactly the two attach writes
 
+### test_layers.lua (9)
+
+- layers: one table, NS.Constants.LAYERS, with the standard's tier keys and this addon's bands
+- layers: no literal strata and no absolute level in core, modules or settings (frame-layering-§3, §5)
+- layers: an unlocked container's chrome sits at its named bands over the anchor; the strip ignores the container's alpha
+- layers: the TEST marker sits at the marker band, under the strip's band
+- layers: a bar's fill, spark, borders and texts each sit at their own band over the element (AUR-Z02)
+- layers: an icon's swipe, border, dispel edge and texts each sit at their own band over the element (AUR-Z02)
+- layers: the frame picker's overlay is in the cursor tier
+- layers: the drag-time snap highlight is in the popup tier, under tooltips (AUR-Z05)
+- layers: the Strata row's tooltip is the library's O.StrataTooltip over the row's own values (AUR-Z07)
+
 ### test_disabled.lua (18)
 
 - disabled: enabled, the addon registers a non-empty set
@@ -2502,6 +2514,7 @@ Total.
 | test_render_coverage.lua | 3 |
 | test_blizzardframes.lua | 8 |
 | test_framepicker.lua | 15 |
+| test_layers.lua | 9 |
 | test_disabled.lua | 18 |
 | test_slash.lua | 35 |
 | test_slash_verbs.lua | 55 |
@@ -2541,4 +2554,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **2127** |
+| **Total** | **2136** |

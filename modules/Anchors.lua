@@ -468,9 +468,10 @@ local placeTooltip = NS.AnchorsTooltip.Place
 
 -- The strip's height, the gap it leaves and what it keeps clear each side of its label are the
 -- widget's numbers (`lib.DRAG_HANDLE`), read through DRAG rather than copied back here: a copy is a
--- second set to keep in step. This number is OURS, because nothing in the widget knows what an aura
--- engine stacks above its anchor.
-local HANDLE_LEVEL = 50   -- how far above its anchor the strip sits: over every element it holds
+-- second set to keep in step. The strip's level is OURS, because nothing in the widget knows what an
+-- aura engine stacks above its anchor: the HANDLE band of the layers table (core/Constants.lua),
+-- over every element and every other piece of chrome the container shows.
+local LEVEL = C.LAYERS.LEVEL
 
 -- The strip's height and gap as the name label (batch 8 NL-2) reads them: the label takes the strip's
 -- spot and is as tall as the strip, and it still draws on a build without the widget, so the widget's
@@ -656,7 +657,11 @@ end
 --- NS.Secrets.NumberOr for the same reason, so a measured width that reads secret falls back to the
 --- element instead of raising. The widget hides the strip at birth, exactly as this file did.
 ---
---- THE LEVEL IS OURS and is set after the build: the widget never places, sizes or shows the strip.
+--- THE LEVEL IS OURS: the widget sets it at birth from `level` (the HANDLE band over the anchor,
+--- DragHandle minor 5), before it builds the marks, so they are born at the strip's level + 1, and
+--- placeHandle re-sets it wherever the strip is placed. The strip ignores the anchor's alpha
+--- (`ignoreParentAlpha`, AUR-Z12, frame-layering-§2): a container faded by its layout opacity and
+--- Master opacity must still show the strip a player drags it by.
 --- @return table|nil  nil without LibKa0s-Widgets-1.0, and in a client that cannot make the frame
 function Anchors.BuildHandle(container)
     if not (KW and KW.DragHandle) then return nil end
@@ -676,9 +681,10 @@ function Anchors.BuildHandle(container)
         tooltipOwner = "cursor",
         edge         = NS.Style.DrawEdge,
         number       = NS.Secrets.NumberOr,
+        level        = LEVEL.HANDLE,
+        ignoreParentAlpha = true,
     })
     if not handle then return nil end
-    handle:SetFrameLevel(NS.Secrets.NumberOr(anchor:GetFrameLevel(), 0) + HANDLE_LEVEL)
     return handle
 end
 
@@ -699,18 +705,18 @@ end
 --- A container attached to another puts it there too, in its own column (batch 10 F1): its seam
 --- makes the room (seamRoom).
 --- The strip's frame level, set wherever it is placed, since the first apply sets its anchor's level
---- after BuildHandle ran: HANDLE_LEVEL above its anchor. A container attached to another also clears
+--- after BuildHandle ran: the HANDLE band above its anchor. A container attached to another also clears
 --- that one's placeholders (L-4), which its strip can still meet where the two blocks sit side by
 --- side; every placeholder, inner frames included, stacks under that container's own strip,
---- HANDLE_LEVEL above its anchor.
+--- the HANDLE band above its anchor, so the child's strip goes HOP over that.
 --- Levels order frames within one strata only: a target in a higher strata still draws on top.
 --- Every level is read through levelOf (feedback E).
 local function handleLevel(container, cfg)
-    local level = levelOf(container.anchor, cfg) + HANDLE_LEVEL
+    local level = levelOf(container.anchor, cfg) + LEVEL.HANDLE
     local at = cfg.attach
     local target = at and at.mode == "container" and targetContainer(container, at)
     if target then
-        level = math.max(level, levelOf(target.anchor, target:Cfg()) + HANDLE_LEVEL + 1)
+        level = math.max(level, levelOf(target.anchor, target:Cfg()) + LEVEL.HANDLE + LEVEL.HOP)
     end
     return level
 end
@@ -812,7 +818,9 @@ function Anchors.PlaceLabel(container, cfg)
     local host, fs = container.label, container.labelText
     if not (host and fs and cfg) then return end
     local lc = cfg.label or D.label
-    host:SetFrameLevel(levelOf(container.anchor, cfg) + 1)
+    -- The LABEL band (AUR-Z04): over the block a nudged label may overlap, under the outline, the
+    -- marker and the strip.
+    host:SetFrameLevel(levelOf(container.anchor, cfg) + LEVEL.LABEL)
     local point, rel, x, y = Anchors.StripPoints(cfg)
     host:ClearAllPoints()
     host:SetPoint(point, container.anchor, rel, x + (tonumber(lc.x) or 0), y + (tonumber(lc.y) or 0))

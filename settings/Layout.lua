@@ -363,7 +363,9 @@ NS.RegisterSchemaRows({
     {
         path = "container.layout.strata", page = PAGE, group = G_FRAME, type = "string",
         values = NS.Choices(C.STRATA, C.STRATA_LABELS), label = L["Strata"],
-        desc = L["Which layer of the interface the container draws in."],
+        -- The library's one strata tooltip over the row's own values (frame-layering-§1, AUR-Z07): it
+        -- adds what Dialog covers, since this row still offers it. The value set is unchanged.
+        desc = H.StrataTooltip(C.STRATA),
     },
     {
         path = "container.layout.level", page = PAGE, group = G_FRAME, type = "number", min = 1, max = 100, step = 1,

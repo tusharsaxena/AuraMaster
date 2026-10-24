@@ -252,7 +252,7 @@ remaining). Driven by remaining time, a permanent aura has none and draws empty.
 
 **What this addon does.** The status bar runs on **elapsed** time with an invisible texture, and the
 addon's own `fill` texture stretches from the bar's start to that texture's moving edge
-(`modules/Style_Bars.lua:158`). Zero elapsed is a full bar; a timed aura drains. The technique is
+(`modules/Style_Bars.lua:165`). Zero elapsed is a full bar; a timed aura drains. The technique is
 TinyBuffBars' (MIT).
 
 ## Nothing tells a region whether an aura has a duration
@@ -263,7 +263,7 @@ nor resets the bar for a permanent aura.
 
 **What this addon does.** With Bars → General → **Show the spark on auras without a duration** off, a
 live bar's spark rides a clip frame (`SetClipsChildren`) bounded by the elapsed region, the engine's
-status-bar texture, and sits wholly on that side of the moving edge (`modules/Style_Bars.lua:141`).
+status-bar texture, and sits wholly on that side of the moving edge (`modules/Style_Bars.lua:148`).
 A timeless aura has zero elapsed, so the clip frame has no width and the spark is clipped away. A
 timed bar's spark sits just inside its edge rather than centered on it. This rests on the client
 leaving a zero-duration bar's texture at zero width, which is an in-game check (smoke check STYLE-3). The
@@ -314,7 +314,7 @@ field's brackets (`$spellname$[-$stacks$]`) goes with the field, and the Text se
 
 **What this addon does.** Every live restyle empties both lists FIRST, before any other binding,
 through `Style.ClearAdditiveBindings` (`modules/Style.lua:557`), and then adds again
-(`modules/Style_Bars.lua:319-326`, `modules/Style_Icons.lua:175`). The order matters: every `Set*` /
+(`modules/Style_Bars.lua:326-333`, `modules/Style_Icons.lua:178`). The order matters: every `Set*` /
 `Add*` binding re-runs the engine's whole apply pass, which re-tints, shows or hides each dispel
 texture still listed, while `ClearDispelTypeTextures` itself touches no region. A clear made after
 the bindings let a bar switched away from Color by → Dispel type keep the tint (B-4). For the same
@@ -564,9 +564,11 @@ handle's label is measured on a detached font string the strip's own widget keep
 frame level or offset read on an attachable frame (the anchor, an attach target's anchor, an engine)
 goes through `NS.Secrets.NumberOr`, falling back to the stored level or 0, or through
 `NS.Secrets.CanAccess` (`Anchors.SavePosition`, which only stores a drag when every field it read is
-readable, never a fallback number). The two exceptions D-E leaves alone are `modules/Style_Bars.lua:68`
-and `modules/Style_Icons.lua:66`, which call `GetFrameLevel` on a frame `initializeFrame` itself just
-created, not one anchored to anything, and have run unguarded in combat builds since batch 1.
+readable, never a fallback number). The two exceptions D-E leaves alone are the element builds in
+`modules/Style_Bars.lua` and `modules/Style_Icons.lua`, which call `GetFrameLevel` on a frame
+`initializeFrame` itself just created (the bar, the cooldown), not one anchored to anything, and take
+the button's level as that minus one rather than reading the engine-anchored button; they have run
+unguarded in combat builds since batch 1.
 
 ## A backdrop on an engine button reads a secret size (B2-3)
 
@@ -719,7 +721,7 @@ smoke, 2026-10-15).
   string's shadow in the glow color at −2d, look the same as eight.
 
 **What this addon does.** A Text container with Glow on builds `C.TEXT_GLOW_TWINS` twin engines
-(`core/Constants.lua:286`: 4 under shadow pairing, `C.TEXT_GLOW_PAIRED`, else 8) beside its main
+(`core/Constants.lua:362`: 4 under shadow pairing, `C.TEXT_GLOW_PAIRED`, else 8) beside its main
 (`modules/Container_Twins.lua`). Each takes the main's unit, groups, view, enchant slots and flow
 through the same calls in the same order, hangs from a holder of ours at Thickness × its ring
 direction plus Offset X and Y, and sits three frame levels below the main, written before its first

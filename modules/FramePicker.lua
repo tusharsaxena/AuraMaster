@@ -87,7 +87,9 @@ end
 local function build()
     overlay = CreateFrame("Frame", "AuraMasterFramePicker", UIParent)
     overlay:SetAllPoints(UIParent)
-    overlay:SetFrameStrata("TOOLTIP")
+    -- The cursor tier (core/Constants.lua's layers table): the label and outline are drawn over the
+    -- frame under the cursor, whose own GameTooltip (TOOLTIP) would cover them from any lower strata.
+    overlay:SetFrameStrata(NS.Constants.LAYERS.STRATA.CURSOR)
     overlay:EnableMouse(false)
     overlay:EnableKeyboard(true)
     if overlay.SetPropagateKeyboardInput then overlay:SetPropagateKeyboardInput(true) end

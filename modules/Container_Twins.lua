@@ -75,7 +75,8 @@ function Twins.LevelMain(self, engine, cfg)
     if not Twins.On(cfg) then return nil end
     local stored = tonumber((cfg.layout or EMPTY).level) or NS.CONTAINER_TEMPLATE.layout.level
     local a = levelOf(self.anchor, stored)
-    local level = math.max(a + 1, NS.Constants.TEXT_GLOW_LEVEL_GAP + 1)
+    local V = NS.Constants.LAYERS.LEVEL
+    local level = math.max(a + V.CONTENT, V.GLOW_GAP + 1)
     if NS.Container.CallEngine(engine, "SetFrameLevel", level) then return level end
     return levelOf(engine, a + 1)
 end
@@ -106,13 +107,13 @@ end
 --- (Container.Populate). Answers false when the twin could not be made.
 --- @return boolean
 local function buildTwin(self, k, cfg, plan, view, flow, level)
-    local Container, gap = NS.Container, NS.Constants.TEXT_GLOW_LEVEL_GAP
+    local Container, V = NS.Container, NS.Constants.LAYERS.LEVEL
     local h = holderFor(self, k)
-    h:SetFrameLevel(math.max(0, level - gap - 1))
+    h:SetFrameLevel(math.max(0, level - V.GLOW_GAP + V.GLOW_HOLDER))
     pin(self, h, cfg, k)
     local twin = CreateFrame("AuraContainer", nil, h, "CustomAuraContainerTemplate")
     if not twin then return false end
-    Container.CallEngine(twin, "SetFrameLevel", math.max(0, level - gap))
+    Container.CallEngine(twin, "SetFrameLevel", math.max(0, level - V.GLOW_GAP))
     Container.ApplyFlow(twin, cfg)
     local ex, ey = Container.EngineOffset(flow.growH, flow.growV)
     twin:ClearAllPoints()
@@ -142,10 +143,10 @@ end
 function Twins.Place(self, cfg)
     if not (self.engine and Twins.On(cfg)) then return end
     local main = levelOf(self.engine, nil)
-    local gap = NS.Constants.TEXT_GLOW_LEVEL_GAP
+    local V = NS.Constants.LAYERS.LEVEL
     for k, h in ipairs(self.holders or EMPTY) do
         pin(self, h, cfg, k)
-        if main then h:SetFrameLevel(math.max(0, main - gap - 1)) end
+        if main then h:SetFrameLevel(math.max(0, main - V.GLOW_GAP + V.GLOW_HOLDER)) end
     end
 end
 

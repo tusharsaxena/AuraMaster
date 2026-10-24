@@ -142,6 +142,7 @@ Kit.run{
         "test_render_coverage",
         "test_blizzardframes",
         "test_framepicker",
+        "test_layers",
         "test_disabled",
         "test_slash",
         "test_slash_verbs",

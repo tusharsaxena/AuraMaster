@@ -254,7 +254,7 @@ function ContainerClass:ApplyBlocker(cfg)
     local ok, engineLevel = pcall(engine.GetFrameLevel, engine)
     -- Guarded (feedback E): an engine's level can read secret, and arithmetic on it raises.
     local level = ok and NS.Secrets.NumberOr(engineLevel, 0) or 0
-    blocker:SetFrameLevel(math.max(0, level - 1))
+    blocker:SetFrameLevel(math.max(0, level + NS.Constants.LAYERS.LEVEL.BLOCKER))
     blocker:ClearAllPoints()
     blocker:SetAllPoints(engine)
     NS.Style.ApplyBlockerBehavior(blocker, cfg)
@@ -798,6 +798,10 @@ function ContainerClass:ApplyOutline(cfg, on, block)
         o:EnableMouse(false)
         self.outline = o
     end
+    -- Over the placeholders and live auras it outlines, under the marker and the strip (AUR-Z03):
+    -- read guarded, as the strip's level is (Anchors.lua's levelOf, feedback E).
+    local stored = tonumber(cfg and cfg.layout and cfg.layout.level) or D.layout.level
+    o:SetFrameLevel(NS.Secrets.NumberOr(self.anchor:GetFrameLevel(), stored) + NS.Constants.LAYERS.LEVEL.OUTLINE)
     o:ClearAllPoints()
     if block then
         o:SetAllPoints(block)

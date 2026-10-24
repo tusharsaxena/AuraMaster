@@ -27,6 +27,7 @@ check's number is not reused. Checks with no recorded pass, and checks new or co
 | DRAG-1 to DRAG-18 | Layout | Drag to attach (issue #22): dropping a container on another, the highlight on the target's strip, the side a drop picks, Shift, loops, detaching and its leeway (green hold, snap back, red past it), the growth-conflict popup, combat, a parent holding auras, frame-attached containers, the strip's tooltip, a drop between pulls in a key, a dropped side surviving a growth change, a drag cut short, a before-side drop with the line between the two join dots, the strip edge following the mark |
 | STYLE-1 to STYLE-30 | Bars and Icons style, fonts | Bars and Icons tabs, the spark, borders, dispel colors, pandemic, the font primer |
 | TEXT-1 to TEXT-36 | Text style | Templates and tokens, justify, the icon, dispel type word, backdrop and edge, animation, Size to fit, the glow behind the text |
+| LAYER-1 to LAYER-6 | Frame layering | Bar borders over the fill, the outline and the name label over the auras, the snap highlight over a Dialog container, the strip at low opacity, the Strata tooltip |
 | DEGRADED-1 | Library-absent install | The launcher libraries missing |
 | LOC-1 to LOC-2 | Non-English client | Spell names from the client, adding a spell by its localized name |
 
@@ -2127,6 +2128,42 @@ twin engines* (Probed). Result: pass (owner-marked 2026-10-16)
 piece is centered on its letters, as it is on the first, and has not slid left or right of them.
 Record any drift in `docs/known-limitations.md`. Result: pass (owner-marked 2026-10-16)
 
+## Frame layering
+
+The layers table (`NS.Constants.LAYERS`, docs/ARCHITECTURE.md → *Frame layering*) gave several
+frames a level or strata of their own on 2026-10-24 (item 030). These checks look at what changed on
+screen. Each one also expects no Lua error.
+
+**LAYER-1. A bar's border draws over its fill.** Starter #1 (bars), Bars → Border on, style Solid,
+size 2, a bright color. Try three bar textures, the default included → on a full bar the border shows
+on all four sides, over the fill, never under it. The icon's border, if on, does the same. On an
+icon container (#2), with the border and the dispel colors on: the swipe sits under the border, the
+dispel edge sits over the border, and the countdown and stacks sit over both, as before. Result:
+
+**LAYER-2. The unlocked outline draws over the auras.** Unlock (`/am unlock`) with a container
+showing live auras, then `/am test` → the thin white outline is visible over the live buttons and over
+the placeholders where they meet it. The TEST marker and the strip still draw over the outline. Result:
+
+**LAYER-3. A nudged name label draws over the block.** Layout → Label on, then set its Y offset so the
+label sits over the first aura → the name reads on top of the aura, and under the strip while
+unlocked. Result:
+
+**LAYER-4. The snap highlight shows over a Dialog container.** Set a container to Layout → Frame →
+Strata **Dialog**, unlock, and drag another container next to it → the green dots, the line and the
+repainted strip edge all show over the Dialog container. Hover a strip mid-drag, or hover any frame
+with a tooltip just after the drop → the tooltip draws over the highlight. Put the strata back to
+Medium. Result:
+
+**LAYER-5. The strip stays solid at low opacity.** Set a container's Layout → Opacity to 10% (or the
+General page's Master alpha to 10%) and unlock → the auras fade, and the strip, its ? mark and its
+X mark stay fully opaque and can be grabbed. Put the opacity back. Result:
+
+**LAYER-6. The Strata row's tooltip.** Hover Layout → Frame → Strata → the tooltip explains the layers
+(Background and Low under most of the interface, Medium the default, High over other windows, the same
+layer as the Settings window). It then warns that Dialog and above also cover confirmation dialogs, the
+debug console and the Settings window. The choices are still Background, Low, Medium, High and Dialog.
+Result:
+
 ## Library-absent install
 
 **DEGRADED-1. Without the launcher libraries.** Rename `libs/LibDBIcon-1.0` aside, `/reload` → one
@@ -2155,8 +2192,10 @@ add it either way. Result: pass (owner-marked 2026-10-10)
 
 ## Pending sign-off
 
-None. On 2026-10-10 the owner marked every check in this
+On 2026-10-10 the owner marked every check in this
 file as passed, recorded on its `Result:` line as `pass (owner-marked 2026-10-10)`; a check that already carried a dated owner pass
 keeps it. A check added or rewritten after that date is listed here until its `Result:` line records
 a pass. The last ones, INSTALL-10, DIAG-21, DIAG-22, CONT-26 and FILT-64 (the LibKa0s v1.75.0 re-vendor)
 and CONT-27 (the preview-mode test marker), passed on 2026-10-23.
+
+Awaiting sign-off: LAYER-1 to LAYER-6 (frame layering, 2026-10-24).

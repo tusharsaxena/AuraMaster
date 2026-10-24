@@ -466,7 +466,7 @@ local function backdropHost(frame)
     if mixin and mix then mix(host, mixin) end
     host:SetAllPoints(frame)
     local ok, level = pcall(frame.GetFrameLevel, frame)
-    if ok and NS.Secrets.IsReadableNumber(level) then host:SetFrameLevel(level) end
+    if ok and NS.Secrets.IsReadableNumber(level) then host:SetFrameLevel(level + C.LAYERS.LEVEL.SUNK) end
     frame.__amBackdrop = host
     return host
 end
