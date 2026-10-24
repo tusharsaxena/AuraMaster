@@ -49,8 +49,8 @@ local STRIPS = {
     { "Containers", "containers", "General=General" },
     { "Filters",    "filters",    "General=General | Categories=Categories | overrides=Overrides | Situations=Situations" },
     { "Layout",     "layout",     "Scale and strata=Scale and strata | Position and growth=Position and growth | Mouse=Mouse | Label=Label" },
-    { "Bars",       "bars",       "General=General | Background & border=Background & border | Name text=Name text | Time text=Time text | Stack text=Stack text | Icon=Icon | Pandemic=Pandemic" },
-    { "Icons",      "icons",      "Size=Size | Border=Border | Cooldown=Cooldown | Time text=Time text | Stack text=Stack text | Pandemic=Pandemic" },
+    { "Bars",       "bars",       "General=General | Background and border=Background and border | Name text=Name text | Time text=Time text | Stack text=Stack text | Icon=Icon | Pandemic=Pandemic" },
+    { "Icons",      "icons",      "General=General | Border=Border | Time text=Time text | Stack text=Stack text | Pandemic=Pandemic" },
     { "Text",       "text",       "General=General | Font=Font | Icon=Icon | Pandemic=Pandemic | Animation=Animation" },
 }
 

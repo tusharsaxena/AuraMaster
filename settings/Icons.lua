@@ -3,16 +3,19 @@ local _, NS = ...
 -- settings/Icons.lua — how a container drawn as ICONS looks (modules/Style_Icons.lua draws it).
 --
 --     band   [Container ▾]
---     [ Size ][ Border ][ Cooldown ][ Time text ][ Stack text ][ Pandemic ]
+--     [ General ][ Border ][ Time text ][ Stack text ][ Pandemic ]
 --
 -- Same rules as settings/Bars.lua: composed font and border blocks, a class-color companion on every
 -- color, resolved to the class of the container's unit and snapshotted per apply, and palette
 -- swatches (the pandemic window's time and highlight colors) exempt.
 --
--- S-1: Bars folded its Size tab (two sliders) into a renamed General tab. This page's tab set has no
--- Bar-shaped tab to rename, and its Size tab (width, height, zoom) is a coherent "the icon's box"
--- group that would land arbitrarily inside Border or Cooldown if folded anywhere -- so Size stays a
--- tab of its own here; the two pages are deliberately not made to match shape-for-shape.
+-- S-1: Bars folded its Size tab (two sliders) into a renamed General tab. This page kept a Size tab of
+-- its own (width, height, zoom), because folded into Border or Cooldown it would have landed
+-- arbitrarily. Item 020 (AUR-L15) answers that worry with a subsection instead: the first tab is
+-- General, as on Bar style and Text style, holding Size and then Cooldown, each under its own heading,
+-- so the icon's box and its swipe, the icon's core look, are one tab. It is a GROUP change only: the
+-- library partitions a section's strip by group, so the Cooldown rows keep their declaration place
+-- after Border and still draw under Size.
 
 local L = NS.L
 local H = NS.Helpers
@@ -22,7 +25,8 @@ local PAGE = "icons"
 local P = "container.icons."
 local UNIT = { source = "unit" }
 
-local G_SIZE, G_BORDER, G_CD = L["Size"], L["Border"], L["Cooldown"]
+local G_GENERAL, G_BORDER = L["General"], L["Border"]
+local S_SIZE, S_CD = L["Size"], L["Cooldown"]
 local G_TIME, G_STACK, G_PANDEMIC = L["Time text"], L["Stack text"], L["Pandemic"]
 local S_TIME, S_HIGHLIGHT = L["Time color"], L["Highlight"]
 
@@ -30,11 +34,11 @@ local POINTS = NS.Choices(C.POINTS, C.POINT_LABELS)
 local JUSTIFY = NS.Choices(C.JUSTIFY, C.JUSTIFY_LABELS)
 
 NS.RegisterSchemaRows({
-    { path = P .. "width", page = PAGE, group = G_SIZE, type = "number", min = 8, max = 128, step = 1,
+    { path = P .. "width", page = PAGE, group = G_GENERAL, subgroup = S_SIZE, type = "number", min = 8, max = 128, step = 1,
       label = L["Width (px)"], desc = L["The width of one icon."] },
-    { path = P .. "height", page = PAGE, group = G_SIZE, type = "number", min = 8, max = 128, step = 1,
+    { path = P .. "height", page = PAGE, group = G_GENERAL, subgroup = S_SIZE, type = "number", min = 8, max = 128, step = 1,
       label = L["Height (px)"], desc = L["The height of one icon. A non-square icon is cropped, never squashed."] },
-    { path = P .. "zoom", page = PAGE, group = G_SIZE, type = "number", min = 0, max = 0.3, step = 0.01,
+    { path = P .. "zoom", page = PAGE, group = G_GENERAL, subgroup = S_SIZE, type = "number", min = 0, max = 0.3, step = 0.01,
       label = L["Icon zoom"], desc = L["Crop the icon's border art."] },
 })
 
@@ -53,30 +57,38 @@ end
 NS.RegisterSchemaRows(border)
 
 NS.RegisterSchemaRows({
-    { path = P .. "cooldown", page = PAGE, group = G_CD, type = "bool",
+    { path = P .. "cooldown", page = PAGE, group = G_GENERAL, subgroup = S_CD, type = "bool",
       label = L["Show cooldown swipe"], desc = L["Shade the icon as the aura runs out."] },
-    { path = P .. "cooldownReverse", page = PAGE, group = G_CD, type = "bool",
+    { path = P .. "cooldownReverse", page = PAGE, group = G_GENERAL, subgroup = S_CD, type = "bool",
       label = L["Reverse the swipe"], desc = L["Shade what has elapsed rather than what remains."] },
-    { path = P .. "cooldownEdge", page = PAGE, group = G_CD, type = "bool",
+    { path = P .. "cooldownEdge", page = PAGE, group = G_GENERAL, subgroup = S_CD, type = "bool",
       label = L["Draw the swipe's edge"], desc = L["A bright line along the swipe's edge."] },
-    { path = P .. "swipeAlpha", page = PAGE, group = G_CD, type = "number", min = 0, max = 1, step = 0.05,
+    { path = P .. "swipeAlpha", page = PAGE, group = G_GENERAL, subgroup = S_CD, type = "number", min = 0, max = 1, step = 0.05,
       isPercent = true, label = L["Swipe darkness"], desc = L["How dark the shaded part is."] },
-    { path = P .. "blizzardNumbers", page = PAGE, group = G_CD, type = "bool",
-      label = L["Blizzard countdown numbers"], desc = L["Also show the game's own countdown on the icon, as well as the time text."] },
+    { path = P .. "blizzardNumbers", page = PAGE, group = G_GENERAL, subgroup = S_CD, type = "bool",
+      label = L["Blizzard countdown numbers"],
+      -- The numbers are drawn by the swipe's own Cooldown frame, which Show cooldown swipe hides
+      -- (modules/Style_Icons.lua), so the row says what it needs (AUR-L16). Wording only: no disabledIf.
+      desc = L["Also show the game's own countdown on the icon, as well as the time text. Needs Show cooldown swipe."] },
 })
 
 local function textRows(leaf, group, extras)
     local prefix = P .. leaf .. "."
+    -- The Show switch first, alone on its line and unheaded, above the rows it governs (item 020,
+    -- AUR-L12; Layout > Label already led with Show name label). Declared ahead of the composed Font
+    -- block, which stays contiguous (options-ui-§16).
+    NS.RegisterSchemaRows({
+        { path = prefix .. "show", page = PAGE, group = group, type = "bool", solo = true,
+          label = L["Show"], desc = L["Draw this text."] },
+    })
     NS.RegisterSchemaRows(H.FontGroup({
         prefix = prefix, page = PAGE, group = group, subgroup = L["Font"], classColor = UNIT,
     }))
     local rows = {
-        { path = prefix .. "show", page = PAGE, group = group, subgroup = L["Placement"], type = "bool",
-          label = L["Show"], desc = L["Draw this text."] },
         { path = prefix .. "justify", page = PAGE, group = group, subgroup = L["Placement"], type = "string",
           values = JUSTIFY, label = L["Justify"], desc = L["How the text lines up within its space."] },
         { path = prefix .. "point", page = PAGE, group = group, subgroup = L["Placement"], type = "string",
-          values = POINTS, label = L["Anchor"], desc = L["Where on the icon the text is anchored."] },
+          values = POINTS, label = L["Anchor point"], desc = L["Where on the icon the text is anchored."] },
         { path = prefix .. "x", page = PAGE, group = group, subgroup = L["Placement"], type = "number",
           min = -100, max = 100, step = 1, startsLine = true, label = L["X offset"], desc = L["Horizontal nudge, in pixels."] },
         { path = prefix .. "y", page = PAGE, group = group, subgroup = L["Placement"], type = "number",

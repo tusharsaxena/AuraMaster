@@ -73,7 +73,7 @@ test("text page: the five tabs are drawn in order, Pandemic before Animation (B2
         table.concat({ L["General"], L["Font"], L["Icon"], L["Pandemic"], L["Animation"] }, ","))
 end)
 
-test("text page: General holds Size, the Template dropdown and box, the cheat sheet, then Placement", function()
+test("text page: General holds Size, the Template dropdown, box, Time format and Preview, then Placement, then the cheat sheet (AUR-L17, AUR-L19)", function()
     local NS, m, P, ws = textPage()
     local L = NS.L
     ws = pick(NS, m, P, ws, "custom")
@@ -97,14 +97,22 @@ test("text page: General holds Size, the Template dropdown and box, the cheat sh
     assertTrue(P.hasText(ws, L["[[[$stacks$]]] shows [3] only when stacked."]))
     -- red under: the cheat sheet without the bracketed-duration example (feedback #5)
     assertTrue(P.hasText(ws, "[ ($remainingpercent$%)] hides with the time"))
-    -- The cheat sheet sits between the Template box and the Placement rows.
+    -- The cheat sheet is the tab's last subsection, Template reference, under every control.
     local at = {}
     for i, w in ipairs(ws) do
         if w == box then at.box = i end
         if w.type == "Label" and w.text and w.text:find("$spellname$", 1, true) and not at.sheet then at.sheet = i end
         if w.labelText == NS.FindSchemaRow(P_ .. "justifyH").label then at.justify = i end
+        if w.labelText == L["Time format"] then at.format = i end
+        if w.labelText == L["Preview"] then at.preview = i end
+        if w.labelText == NS.FindSchemaRow(P_ .. "y").label then at.y = i end
+        if w.type == "Heading" and w.text == L["Template reference"] then at.reference = i end
     end
-    assertTrue(at.box < at.sheet and at.sheet < at.justify, "box, then cheat sheet, then Placement")
+    -- red under: Time format left on Font, or drawn outside the template block
+    assertTrue(at.box < at.format and at.format < at.preview, "box, then Time format, then Preview")
+    -- red under: the cheat sheet back between the template and Placement
+    assertTrue(at.preview < at.justify and at.y < at.reference and at.reference < at.sheet,
+        "Preview, then Placement, then Template reference and the sheet")
     local dd = picker(NS, P, ws)
     for i, w in ipairs(ws) do
         if w == dd then at.picker = i end
@@ -360,7 +368,7 @@ test("text page: with Icon position None every Icon row but the position dims, t
     end
 end)
 
-test("text page: the blink row is engine-only, and the Font tab carries the composed font block, Glow, time format and Dispel type", function()
+test("text page: the blink row is engine-only, and the Font tab carries the composed font block, Glow and Dispel type", function()
     local NS = textPage()
     local L = NS.L
     assertEqual(NS.FindSchemaRow(P_ .. "expiringBlink").coverage, "engine-only")
@@ -371,13 +379,13 @@ test("text page: the blink row is engine-only, and the Font tab carries the comp
             paths[n + 1] = row.path
         end
     end
-    -- red under: the font block on a prefix other than text.font., the time format elsewhere, the
-    -- Dispel type subsection not after them (smoke batch 2, item 5), or the Glow subgroup anywhere but
-    -- between the font block and Countdown (TG-03)
+    -- red under: the font block on a prefix other than text.font., the time format back on Font (it is
+    -- General's since AUR-L17), the Dispel type subsection not after them (smoke batch 2, item 5), or
+    -- the Glow subgroup anywhere but between the font block and Dispel type (TG-03)
     assertEqual(table.concat(paths, ","), table.concat({ P_ .. "font.font", P_ .. "font.fontSize",
         P_ .. "font.fontColor", P_ .. "font.useClassColorFont", P_ .. "font.fontFlags",
         P_ .. "font.fontShadow", P_ .. "glow", P_ .. "glowColor", P_ .. "useClassColorGlow",
-        P_ .. "glowIntensity", P_ .. "glowThickness", P_ .. "glowX", P_ .. "glowY", P_ .. "timeFormat",
+        P_ .. "glowIntensity", P_ .. "glowThickness", P_ .. "glowX", P_ .. "glowY",
         P_ .. "dispelTypeColor", P_ .. "dispelBackdrop", P_ .. "dispelBackdropAlpha", P_ .. "dispelEdge",
         P_ .. "dispelEdgeSize" }, ","))
     assertEqual(NS.FindSchemaRow(P_ .. "font.fontColor").classColorSource, "unit")
