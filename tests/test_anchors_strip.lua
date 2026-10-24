@@ -135,8 +135,9 @@ test("strip: the tooltip of a container joined to another names the parent's poi
     local lines = {}
     rawset(mocks.GameTooltip, "AddLine", function(_, s) table.insert(lines, s) end)
     NS.ContainerManager.instances[2].handle:__fire("OnEnter")
-    local want = NS.L["Joined to the %s of '%s'. Change the anchor points on Layout > Anchor."]
-        :format(NS.L["Bottom"], NS.Database.FindContainer(1).name)
+    -- AUR-L28: the location is built from the Layout tab's own group constant, so a rename carries it
+    local want = NS.L["Joined to the %s of '%s'. Change the anchor points on %s."]
+        :format(NS.L["Bottom"], NS.Database.FindContainer(1).name, NS.L["Layout"] .. " > " .. NS.L["Position and growth"])
     -- red under: the generic "Attached" line
     assertEqual(lines[2], want)
     -- red under: "Anchored to '%s', so it cannot be dragged" on a follower a drag now moves: away to

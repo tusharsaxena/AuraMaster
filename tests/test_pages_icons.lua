@@ -15,12 +15,30 @@ local function icons(opts)
     return NS, m, P, P.show("Icons")
 end
 
-test("icons: the six tabs are drawn in order", function()
+test("icons: the five tabs are drawn in order, General first as on Bar style and Text style (AUR-L15)", function()
     local NS, _, P = icons()
     local L = NS.L
-    -- red under: a row landing in a group of its own (a stray seventh tab), or tabs reordered
-    assertEqual(table.concat(P.tabKeys("icons"), ","), table.concat({ L["Size"], L["Border"],
-        L["Cooldown"], L["Time text"], L["Stack text"], L["Pandemic"] }, ","))
+    -- red under: a row landing in a group of its own (a stray tab), Size or Cooldown left a tab of its
+    -- own, or tabs reordered
+    assertEqual(table.concat(P.tabKeys("icons"), ","), table.concat({ L["General"], L["Border"],
+        L["Time text"], L["Stack text"], L["Pandemic"] }, ","))
+end)
+
+test("icons: General holds Size, then Cooldown, each under its heading (AUR-L15, AUR-L16)", function()
+    local NS, _, _, ws = icons()
+    local L = NS.L
+    local at, heads = {}, {}
+    for i, w in ipairs(ws) do
+        if w.type == "Heading" then heads[#heads + 1] = w.text; at[w.text] = i end
+        if w.labelText then at[w.labelText] = at[w.labelText] or i end
+    end
+    -- red under: the Cooldown rows still a group of their own, or drawn above Size
+    assertEqual(table.concat(heads, "|"), L["Size"] .. "|" .. L["Cooldown"])
+    assertTrue(at[L["Size"]] < at[L["Width (px)"]] and at[L["Icon zoom"]] < at[L["Cooldown"]], "Size's rows under Size")
+    assertTrue(at[L["Cooldown"]] < at[L["Show cooldown swipe"]], "the swipe rows under Cooldown")
+    -- red under: the countdown row not saying it needs the swipe it is drawn by
+    assertTrue(NS.FindSchemaRow("container.icons.blizzardNumbers").desc:find("Needs Show cooldown swipe.", 1, true) ~= nil)
+    assertTrue(NS.FindSchemaRow("container.icons.blizzardNumbers").disabledIf == nil, "wording only: no new dim")
 end)
 
 test("icons: Width on the Icons page writes the icon width, never the bar width", function()
@@ -34,8 +52,7 @@ test("icons: Width on the Icons page writes the icon width, never the bar width"
 end)
 
 test("icons: the Cooldown rows write the selected container's swipe", function()
-    local NS, _, P = icons()
-    local ws = P.tab("icons", NS.L["Cooldown"])
+    local NS, _, P, ws = icons()   -- General, the first tab, holds the Cooldown subsection (AUR-L15)
     P.row(ws, "container.icons.cooldown"):__fire("OnValueChanged", false)
     local swipe = P.row(ws, "container.icons.swipeAlpha")
     assertTrue(swipe.isPercent, "darkness reads as a percentage")

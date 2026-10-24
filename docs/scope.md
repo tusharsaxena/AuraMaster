@@ -29,7 +29,7 @@ client. The player-facing contract is the README; the engineering boundary is th
   (editable, and shared by every container in the profile), sort method and direction, and a
   per-group cap.
 - **Categories the player makes** (issue #10). A name, a buff-or-debuff choice and a spell list of
-  its own, created on General → Spell Categories and stored per profile (`userCategories`,
+  its own, created on General → Spell categories and stored per profile (`userCategories`,
   `userCategoryOrder`, schema v6). A created category is materialized into the same two lists the
   shipped ones live in, so it gets a Show/Hide row on every container's Filters → Categories, joins
   the categorized union `Uncategorized` is the complement of, and answers `/am get|set` like any
@@ -145,7 +145,7 @@ These are not declined; the game forbids them, and a request for one is answered
   needs either the Overrides whitelist, or the **Uncategorized** category set to Hide (batch 7,
   `U-1`..`U-5`; the retired per-container "only these categories" toggle meant exactly this and is
   gone, fix round 2 of that effort) — `uncategorized` on a buff container, `uncategorizedDebuffs` on a
-  debuff one, both on the Categories tab's Spell Categories grid.
+  debuff one, both on the Categories tab's Spell categories grid.
 - **A player's category is a shipped category in every way but who made it.** `Cat.SyncUserCategories`
   materializes each stored record into `Cat.HELPFUL` or `Cat.HARMFUL` as an ordinary `spells`-kind
   definition and registers its schema row, rather than giving user categories a parallel path through

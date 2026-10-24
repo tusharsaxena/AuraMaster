@@ -14,7 +14,7 @@ local pages = dofile("tests/page_helpers.lua")
 
 test("sections: Filters, Layout, Bars, Icons and Text register as sections under their page keys", function()
     local NS = T.NS
-    local LABELS = { filters = "Filters", layout = "Layout", bars = "Bar", icons = "Icon", text = "Text" }
+    local LABELS = { filters = "Filters", layout = "Layout", bars = "Bar style", icons = "Icon style", text = "Text style" }   -- AUR-L22
     for key, label in pairs(LABELS) do
         local s = NS.ContainerSection(key)
         -- red under: a page file registering a Blizzard sub-page and no section
@@ -72,7 +72,7 @@ test("rail: Containers draws General, Filters, Layout and the selected container
     assertEqual(railKeys(P, ctx), "containers,filters,layout,bars")
     local labels = {}
     for i, e in ipairs(P.drawnRail(ctx).entries) do labels[i] = e.label end
-    assertEqual(table.concat(labels, ","), table.concat({ L["General"], L["Filters"], L["Layout"], L["Bar"] }, ","))
+    assertEqual(table.concat(labels, ","), table.concat({ L["General"], L["Filters"], L["Layout"], L["Bar style"] }, ","))
     NS.Helpers.SelectContainer(2)                   -- icons
     P.show("Containers")
     assertEqual(railKeys(P, ctx), "containers,filters,layout,icons")
@@ -140,13 +140,13 @@ test("rail: each section keeps its own tab: Filters, Categories, Layout, back to
     assertEqual(ctx.activeTab, L["Categories"])
     P.rail("layout")
     assertEqual(ctx.activeTab, P.tabKeys("containers")[1], "Layout opens on its first tab")
-    P.tab("containers", L["Anchor"])
+    P.tab("containers", L["Position and growth"])
     P.rail("filters")
     -- red under: the tab kept only in the scalar ctx.activeTab (Filters reopens on its first tab),
     -- or stashed only on a host render (the strip click above never reaches the host)
     assertEqual(ctx.activeTab, L["Categories"])
     P.rail("layout")
-    assertEqual(ctx.activeTab, L["Anchor"])
+    assertEqual(ctx.activeTab, L["Position and growth"])
     P.rail("containers")
     P.rail("filters")
     assertEqual(ctx.activeTab, L["Categories"], "and through General too")
@@ -256,13 +256,13 @@ test("rail: SelectTab on a section key selects the section and its tab; on the G
     NS.Helpers.SelectContainer(1)
     P.show("Containers")
     -- red under: the call reaching the library's SelectTab, which finds no "filters" page to hold it
-    assertTrue(NS.Helpers.SelectTab("filters", L["Sorting"]))
+    assertTrue(NS.Helpers.SelectTab("filters", L["Situations"]))
     P.show("Containers")
     assertEqual(ctx.activeSection, "filters")
-    assertEqual(ctx.activeTab, L["Sorting"])
+    assertEqual(ctx.activeTab, L["Situations"])
     P.show("General")
-    assertTrue(NS.Helpers.SelectTab("general", L["Spell Categories"]), "the addon page is the library's")
-    assertEqual(NS.Helpers.__pageCtx.general.activeTab, L["Spell Categories"])
+    assertTrue(NS.Helpers.SelectTab("general", L["Spell categories"]), "the addon page is the library's")
+    assertEqual(NS.Helpers.__pageCtx.general.activeTab, L["Spell categories"])
 end)
 
 test("rail: selecting a section is refused in combat and moves nothing", function()
@@ -300,7 +300,7 @@ end)
 test("rail: the Defaults tooltip names the section on screen and the kept name", function()
     local NS, m = env()
     assertEqual(m.__subcategories.Containers.defaultsTooltip,
-        NS.L["Restore the selected container's settings in the section on screen to their addon defaults. On General: Enabled, Unit, Aura type and Style; its name is kept."])
+        NS.L["Restore every tab of the entry selected on the left, for the container in the band, to its defaults. On General: Enable this container, Unit, Aura type and Style; its name is kept."])
 end)
 
 -- ── New container lands on General (owner, 2026-09-26) ──────────────────────────────────────

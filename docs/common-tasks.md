@@ -36,7 +36,7 @@ Example: a bar option.
 
 1. Add the key and default to `NS.defaults.profile` in `defaults/Profile.lua`.
 2. Add the row to `settings/General.lua` with an absolute `path` and `page = "general"`. Put it on the
-   **Display** tab, or on a new tab after it; never inside **Master controls**, whose rows are the
+   **Blizzard frames** tab, or on a new tab after it; never inside **Master controls**, whose rows are the
    composer's canonical set (options-ui-§15).
 3. Give it an `onChange` if its effect is not a container re-apply — a visibility row calls
    `NS.ContainerManager.ApplyVisibility()`, which is legal in combat.
@@ -74,7 +74,7 @@ Example: a bar option.
 A shipped category is the recipe above. A player's own category takes no code at all — this is the
 path it walks, for when something about it has to be changed or debugged.
 
-1. **In game:** General → **Spell Categories** → *Make a new category* → a name, an aura type,
+1. **In game:** General → **Spell categories** → *Make a new category* → a name, an aura type,
    **Create category**. The tab selects the new category, and its spell list is the ordinary ID list
    below.
 2. **What is stored:** one record in `profile.userCategories[key]` (`{ key, name, auraType }`) and the

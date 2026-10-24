@@ -203,9 +203,9 @@ whitelisted one is not excluded by the group that would otherwise draw it. Every
 group count, so switching never rebuilds the engine. A container with a category Hidden on a unit
 whose ids are not always applied also ends in one remainder group, NEVER in the ids and blizzard
 views, which is the whole every view: every aura passing the base and in no Hidden Blizzard, Dispel
-or Who Cast It category, once (`FV.AppendRemainder`;
+or Who cast it category, once (`FV.AppendRemainder`;
 docs/superpowers/specs/2026-10-02-filter-situations-design.md S1). Where the remainder cannot draw
-(both Who Cast It rows Hidden, or "Only auras without a duration" on buffs) the other groups keep
+(both Who cast it rows Hidden, or "Only auras without a duration" on buffs) the other groups keep
 their blizzard view, so the every view is the blizzard view (SI-06). `FC.IdsMode` pins buffs on the
 player and the pet to the ids view and their debuffs to the view their Players setting picks; for a
 target or focus, `Compat.IdsApply` (`core/Compat.lua:330`) asks steps 2 to 4 above and answers false
@@ -229,10 +229,11 @@ A Situations write switches the view the same way, at once (the rows' `view` eff
 and `/am diagnostics` prints each container's mode, view and situation. The Filters section says so four times: the
 orange warning above every tab (`identityWarning`, `modules/FilterCompiler.lua:418`, printed only when
 the container hides a category or has an Overrides list, and naming only the Overrides lists when it
-hides nothing), a NOTE under the Spell Categories
+hides nothing), a NOTE under the Spell categories
 heading and at the head of Overrides on every container whose mode is not "always", each ending
-"(see Situations)", and the Situations tab itself, which names the same units, holds the setting and
-says what the every view cannot honor there: spell categories, Uncategorized, the Overrides lists
+"(see above)" on Spell categories and "(see Categories)" on Overrides since item 020, and the Where
+spell lists don't apply section at the top of the Categories tab (the Situations tab's until then),
+which names the same units, holds the setting and says what the every view cannot honor there: spell categories, Uncategorized, the Overrides lists
 and "Without a duration", all built from the spell ids Blizzard drops (`settings/Filters.lua`).
 
 ## There is no "no duration" filter, and `maxDuration` drops permanent auras
@@ -252,7 +253,7 @@ remaining). Driven by remaining time, a permanent aura has none and draws empty.
 
 **What this addon does.** The status bar runs on **elapsed** time with an invisible texture, and the
 addon's own `fill` texture stretches from the bar's start to that texture's moving edge
-(`modules/Style_Bars.lua:158`). Zero elapsed is a full bar; a timed aura drains. The technique is
+(`modules/Style_Bars.lua:165`). Zero elapsed is a full bar; a timed aura drains. The technique is
 TinyBuffBars' (MIT).
 
 ## Nothing tells a region whether an aura has a duration
@@ -263,7 +264,7 @@ nor resets the bar for a permanent aura.
 
 **What this addon does.** With Bars → General → **Show the spark on auras without a duration** off, a
 live bar's spark rides a clip frame (`SetClipsChildren`) bounded by the elapsed region, the engine's
-status-bar texture, and sits wholly on that side of the moving edge (`modules/Style_Bars.lua:141`).
+status-bar texture, and sits wholly on that side of the moving edge (`modules/Style_Bars.lua:148`).
 A timeless aura has zero elapsed, so the clip frame has no width and the spark is clipped away. A
 timed bar's spark sits just inside its edge rather than centered on it. This rests on the client
 leaving a zero-duration bar's texture at zero width, which is an in-game check (smoke check STYLE-3). The
@@ -314,7 +315,7 @@ field's brackets (`$spellname$[-$stacks$]`) goes with the field, and the Text se
 
 **What this addon does.** Every live restyle empties both lists FIRST, before any other binding,
 through `Style.ClearAdditiveBindings` (`modules/Style.lua:557`), and then adds again
-(`modules/Style_Bars.lua:319-326`, `modules/Style_Icons.lua:175`). The order matters: every `Set*` /
+(`modules/Style_Bars.lua:326-333`, `modules/Style_Icons.lua:178`). The order matters: every `Set*` /
 `Add*` binding re-runs the engine's whole apply pass, which re-tints, shows or hides each dispel
 texture still listed, while `ClearDispelTypeTextures` itself touches no region. A clear made after
 the bindings let a bar switched away from Color by → Dispel type keep the tint (B-4). For the same
@@ -564,9 +565,11 @@ handle's label is measured on a detached font string the strip's own widget keep
 frame level or offset read on an attachable frame (the anchor, an attach target's anchor, an engine)
 goes through `NS.Secrets.NumberOr`, falling back to the stored level or 0, or through
 `NS.Secrets.CanAccess` (`Anchors.SavePosition`, which only stores a drag when every field it read is
-readable, never a fallback number). The two exceptions D-E leaves alone are `modules/Style_Bars.lua:68`
-and `modules/Style_Icons.lua:66`, which call `GetFrameLevel` on a frame `initializeFrame` itself just
-created, not one anchored to anything, and have run unguarded in combat builds since batch 1.
+readable, never a fallback number). The two exceptions D-E leaves alone are the element builds in
+`modules/Style_Bars.lua` and `modules/Style_Icons.lua`, which call `GetFrameLevel` on a frame
+`initializeFrame` itself just created (the bar, the cooldown), not one anchored to anything, and take
+the button's level as that minus one rather than reading the engine-anchored button; they have run
+unguarded in combat builds since batch 1.
 
 ## A backdrop on an engine button reads a secret size (B2-3)
 
@@ -657,7 +660,7 @@ debuffs usually have none; bleeds carry `Bleed`). The blue is most likely the ba
 close to the Magic swatch, which a typeless aura keeps.
 
 **What this addon does.** Nothing changes in code: a typeless aura keeps the surface's own color and
-draws no type word, backdrop or edge. The Bars section's Color by tooltips and General -> Dispel Colors
+draws no type word, backdrop or edge. The Bars section's Color by tooltips and the General page > Dispel colors
 say that buffs and many debuffs have no type, rather than citing one rare debuff.
 
 **The probe.** Out of combat, with a target carrying the debuffs, paste the three lines one at a time.
@@ -719,7 +722,7 @@ smoke, 2026-10-15).
   string's shadow in the glow color at −2d, look the same as eight.
 
 **What this addon does.** A Text container with Glow on builds `C.TEXT_GLOW_TWINS` twin engines
-(`core/Constants.lua:286`: 4 under shadow pairing, `C.TEXT_GLOW_PAIRED`, else 8) beside its main
+(`core/Constants.lua:362`: 4 under shadow pairing, `C.TEXT_GLOW_PAIRED`, else 8) beside its main
 (`modules/Container_Twins.lua`). Each takes the main's unit, groups, view, enchant slots and flow
 through the same calls in the same order, hangs from a holder of ours at Thickness × its ring
 direction plus Offset X and Y, and sits three frame levels below the main, written before its first
@@ -785,7 +788,7 @@ does not set the flag.
 - **Blizzard's `BuffFrame` and `DebuffFrame` are reparented, never hidden**, and only out of combat
   (`modules/BlizzardFrames.lua`, events-frames-taint-§3).
 - **Protected opens are refused, not deferred.** The options panel (the library, options-ui-§2),
-  `NS.OpenOptionsPage` (`settings/OptionsSetup.lua:367`), the frame picker and a handle drag all
+  `NS.OpenOptionsPage` (`settings/OptionsSetup.lua:372`), the frame picker and a handle drag all
   refuse under `InCombatLockdown()`.
 - **A settings page shown in combat is locked, never closed** (LibKa0s v1.46.1, options-ui-§2). A
   page reached in combat (the AddOns sidebar), or open when combat starts, is covered whole — header

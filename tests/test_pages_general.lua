@@ -1,10 +1,10 @@
 -- tests/test_pages_general.lua — settings/General.lua, GeneralSpells.lua and GeneralDispel.lua, driven
 -- through their widgets: what each Master control and Display row writes, what each one's effect is,
--- the two buttons the composer adds, the page's Defaults, the Spell Categories ID list and its
--- restore, and the Dispel Colors rows. The top-level Containers page — its picker and New container
+-- the two buttons the composer adds, the page's Defaults, the Spell categories ID list and its
+-- restore, and the Dispel colors rows. The top-level Containers page — its picker and New container
 -- in the band above the strip (options-ui-§14), its identity rows and the acts on the selected
 -- container (Duplicate, Delete, Copy settings from) — moved out to its own page (N-1, batch 7) and is
--- tests/test_pages_containers.lua's now. The Spell Categories tab's editing flows (the 'Your
+-- tests/test_pages_containers.lua's now. The Spell categories tab's editing flows (the 'Your
 -- categories' block, the overlap guardrail and the add line's suggestions) are
 -- tests/test_pages_general_categories.lua's (issue #19), and the page readers both suites use live in
 -- tests/general_page_helpers.lua. Every case builds a fresh environment, because every case clicks
@@ -126,7 +126,7 @@ test("general: Hide Blizzard buffs reparents BuffFrame away, and back to where i
         rawset(f, "SetParent", function(self, p) self.__parent = p end)
         rawset(f, "GetParent", function(self) return self.__parent end)
     end
-    local ws = tab(NS.L["Display"])
+    local ws = tab(NS.L["Blizzard frames"])
     P.row(ws, "hideBlizzardBuffs"):__fire("OnValueChanged", true)
     -- red under: dropping applyBlizzardFrames from the row's onChange
     assertTrue(NS.db.profile.hideBlizzardBuffs)
@@ -136,9 +136,17 @@ test("general: Hide Blizzard buffs reparents BuffFrame away, and back to where i
     assertEqual(buffs.__parent, original, "unticking puts it back where it was")
 end)
 
+test("general: the Blizzard frames tab draws its two rows under no heading of its own (AUR-L01b)", function()
+    local NS, _, P, _, tab = general()
+    local ws = tab(NS.L["Blizzard frames"])
+    -- red under: the rows keeping `subgroup = Blizzard frames`, a heading that only repeats the tab
+    assertEqual(#P.all(ws, "Heading"), 0, "no heading on the tab")
+    assertTrue(P.row(ws, "hideBlizzardBuffs") ~= nil and P.row(ws, "hideBlizzardDebuffs") ~= nil)
+end)
+
 test("general: the Blizzard-frame rows re-apply no container", function()
     local NS, _, P, _, tab = general()
-    local ws = tab(NS.L["Display"])
+    local ws = tab(NS.L["Blizzard frames"])
     local calls = spyApply(NS)
     P.row(ws, "hideBlizzardBuffs"):__fire("OnValueChanged", true)
     P.row(ws, "hideBlizzardDebuffs"):__fire("OnValueChanged", true)
@@ -224,12 +232,12 @@ test("general: the page's Defaults tooltip no longer mentions a container's iden
         NS.L["Restore every General setting on this profile to its addon default. The Minimap button is left alone — whether the button is shown is a per-installation preference, like where you dragged it. The spell categories' lists are not rows; each category has its own restore."])
 end)
 
-test("general: the tab strip reads Master controls, Display, Spell Categories, Dispel Colors — Containers is gone from it", function()
+test("general: the tab strip reads Master controls, Blizzard frames, Spell categories, Dispel colors — Containers is gone from it", function()
     local NS, m, P = general()
     local keys = P.tabKeys("general")
     -- red under: the Containers tab left behind on General after N-1's move, or dropped without the
-    -- Spell Categories / Dispel Colors tabs shifting up to take its old place
-    assertEqual(table.concat(keys, ","), "Master controls,Display,Spell Categories,Dispel Colors")
+    -- Spell categories / Dispel colors tabs shifting up to take its old place
+    assertEqual(table.concat(keys, ","), "Master controls,Blizzard frames,Spell categories,Dispel colors")
     local seen = {}
     for _, k in ipairs(keys) do
         assertNil(seen[k], "tab " .. k .. " drawn twice")
@@ -248,7 +256,7 @@ test("general: the tab strip reads Master controls, Display, Spell Categories, D
     assertTrue(m.__subcategories.Containers ~= nil, "the Containers page registers on its own")
 end)
 
--- ── the Spell Categories tab (G-2) ────────────────────────────────────────────────────────────
+-- ── the Spell categories tab (G-2) ────────────────────────────────────────────────────────────
 
 -- Owner, 2026-09-20: the list came out in id order, so it read Frost Nova (122), Entangling Roots
 -- (339), Hamstring (1715) -- no order at all to someone looking for a spell by name.
@@ -532,7 +540,7 @@ test("general → spell categories: choosing Weapon enchants draws slot toggles,
     assertTrue(P.row(ws, "enchantSlots.offHand") ~= nil, "the Off hand toggle is drawn")
     assertTrue(P.row(ws, "enchantSlots.ranged") ~= nil, "the Ranged toggle is drawn")
     assertNil(P.find(ws, "EditBox", NS.L["Add a spell"]), "no add line for a category with no spell list")
-    assertTrue(P.hasText(ws, "Filters -> Categories"), "says where the per-container switch lives")
+    assertTrue(P.hasText(ws, "Filters > Categories"), "says where the per-container switch lives")
 end)
 
 test("general → spell categories: the Weapon enchants entry explains the all-slots fallback", function()
@@ -555,7 +563,7 @@ test("general → spell categories: unticking a weapon slot writes the profile, 
     assertEqual(NS.db.profile.enchantSlots.mainHand, true, "another slot is untouched")
 end)
 
-test("general: Select moves the Spell Categories tab onto the given category, and ignores a key it cannot draw", function()
+test("general: Select moves the Spell categories tab onto the given category, and ignores a key it cannot draw", function()
     local NS, _, P = general()
     NS.GeneralSpells.Select("raidCDs")
     local ws = P.rerender("General")
@@ -574,27 +582,27 @@ test("general: Select accepts the enchant key too, and lands the tab on it", fun
     assertTrue(P.row(ws, "enchantSlots.mainHand") ~= nil, "the tab moved and drew the slot toggles")
 end)
 
-test("general → spell categories: the tab and Dispel Colors are drawn with no container at all", function()
+test("general → spell categories: the tab and Dispel colors are drawn with no container at all", function()
     local NS, _, P = general()
     for _, c in ipairs(NS.Database.GetContainers()) do NS.ContainerManager.Delete(c.id) end
     P.rerender("General")
     -- red under: the tabs gated on a container (they edit the profile, which exists regardless)
-    local ws = P.tab("general", NS.L["Spell Categories"])
+    local ws = P.tab("general", NS.L["Spell categories"])
     assertTrue(P.find(ws, "Dropdown", NS.L["Category"]) ~= nil)
-    ws = P.tab("general", NS.L["Dispel Colors"])
+    ws = P.tab("general", NS.L["Dispel colors"])
     assertTrue(P.row(ws, "dispelColors.Magic") ~= nil)
 end)
 
--- ── the Dispel Colors tab (G-3) ───────────────────────────────────────────────────────────────
+-- ── the Dispel colors tab (G-3) ───────────────────────────────────────────────────────────────
 
 test("general → dispel colors: five profile-wide swatches, no None, no class-color companion, under a line saying they drive bars and text", function()
     local NS, _, P, _, tab = general()
-    local ws = tab(NS.L["Dispel Colors"])
+    local ws = tab(NS.L["Dispel colors"])
     for _, name in ipairs(NS.Constants.DISPEL_TYPES) do
         local row = NS.FindSchemaRow("dispelColors." .. name)
         -- red under: the rows left on the Bars page's Highlights tab
         assertEqual(row.page, "general", name)
-        assertEqual(row.group, NS.L["Dispel Colors"], name)
+        assertEqual(row.group, NS.L["Dispel colors"], name)
         local cp = P.row(ws, "dispelColors." .. name)
         assertTrue(cp ~= nil and cp.type == "ColorPicker", "a swatch for " .. name)
     end
@@ -609,7 +617,7 @@ test("general → dispel colors: five profile-wide swatches, no None, no class-c
     -- 2026-09-20: the one paragraph is now a lead-in and four bullets, each its own Label line
     -- (settings/Filters.lua's priority block, same shape). The FACTS are unchanged.
     assertTrue(P.hasText(ws, NS.L["One color per dispel type, shared by every container:"]))
-    assertTrue(P.hasText(ws, "- " .. NS.L["Read by bars colored by dispel type, and by a text line's dispel type word, backdrop or edge (Text -> Font)."]))
+    assertTrue(P.hasText(ws, "- " .. NS.L["Read by bars colored by dispel type, and by a text line's dispel type word, backdrop or edge (Text style > Font)."]))
     -- Split in two: at panel width the single ~170-char fact wrapped, and its second line landed
     -- flush under the "- " with no hanging indent, so the block read 1/2/1 lines instead of 1/1/1.
     assertTrue(P.hasText(ws, "- " .. NS.L["Buffs and many debuffs have no dispel type at all, class debuffs such as Judgment or Consecration included."]))
@@ -624,7 +632,7 @@ end)
 
 test("general → dispel colors: a swatch writes its own type's color and re-applies every container", function()
     local NS, _, P, _, tab = general()
-    local ws = tab(NS.L["Dispel Colors"])
+    local ws = tab(NS.L["Dispel colors"])
     local calls = spyApply(NS)
     P.row(ws, "dispelColors.Poison"):__fire("OnValueConfirmed", 1, 0, 1, 1)
     local dc = NS.db.profile.dispelColors

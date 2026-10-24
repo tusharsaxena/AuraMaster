@@ -1,6 +1,6 @@
 local _, NS = ...
 
--- settings/GeneralUserCategories.lua — General → Spell Categories' own-category block: the rename
+-- settings/GeneralUserCategories.lua — General → Spell categories' own-category block: the rename
 -- and Delete under the picker, the way out of a record the sync cannot read, and 'Make a new
 -- category' (issue #10 checkpoints 6 and 7), plus the answer line every act of that block sets.
 -- Peeled whole out of settings/GeneralSpells.lua along its 'Make a new category' seam (AM-ATS-03,
@@ -441,7 +441,7 @@ function doCreate()
         -- accident and would otherwise wonder which of the two the dropdown is showing them.
         say(L["There is already a category called '%s'. Both were kept — they are separate categories with separate spell lists."]:format(clean))
     else
-        say(L["Created '%s', empty. Add spells to it below, then set it to Show or Hide on each container's Filters -> Categories tab."]:format(clean))
+        say(L["Created '%s', empty. Add spells to it below, then set it to Show or Hide on each container's Filters > Categories tab."]:format(clean))
     end
     newName = ""
     reapplyAll()
@@ -457,7 +457,7 @@ local function createCell()
         btn:SetRelativeWidth(H.BUTTON_PAIR_REL)
         btn:SetCallback("OnClick", doCreate)
         H.AttachTooltip(btn, L["Create category"],
-            L["Makes a category of your own, empty. Fill it from the list below, then set it to Show or Hide on each container's Filters -> Categories tab like any other category."])
+            L["Makes a category of your own, empty. Fill it from the list below, then set it to Show or Hide on each container's Filters > Categories tab like any other category."])
         parent:AddChild(btn)
         return btn
     end }

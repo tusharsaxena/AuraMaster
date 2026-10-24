@@ -140,7 +140,7 @@ local _, NS = ...
 -- (token, flag, dispel) Show categories draw, each aura once; the every view draws through one
 -- trailing remainder group (filter situations, S1). The owner's rule: where Blizzard will not apply
 -- spell ids, spell categories and the Overrides lists are not applied. `FC.WARN.IDS_*`
--- (`identityWarning`) and the NOTE lines on Filters -> Categories and Overrides say so.
+-- (`identityWarning`) and the NOTE lines on Filters > Categories and Overrides say so.
 --
 -- A Hide's `excludeSpellIDs` still ships even where the engine ignores it (only the union itself is
 -- skipped there, since the gate is its one reader): an ignored exclude costs nothing, suppressing it would change no outcome, and
@@ -175,14 +175,14 @@ local FC = NS.FilterCompiler
 -- through NS.L (settings/OptionsSetup.lua's RenderWarnings), so each must be a single literal the
 -- locale file can list and tests/test_locale.lua can find.
 FC.WARN = {
-    MAX_WITH_TIMELESS = "Max duration is ignored while showing only auras without a duration.",
+    MAX_WITH_TIMELESS = "Maximum duration is ignored while showing only auras without a duration.",
     NEVER_MATCHES    = "These filters can never match anything.",
     TIMELESS_BUFFS_ONLY = "Only auras without a duration works for buffs only; this container shows every duration.",
-    IDS_OWN_DEBUFFS  = "On your own and your pet's debuffs, spell categories and Overrides are not applied. The Situations tab picks what draws there.",
-    IDS_UNASSISTABLE = "On units you can't assist (hostile or neutral), spell categories and Overrides are not applied. The Situations tab picks what draws there.",
-    IDS_ASSISTABLE   = "On units you can assist, spell categories and Overrides are not applied. The Situations tab picks what draws there.",
+    IDS_OWN_DEBUFFS  = "On your own and your pet's debuffs, spell categories and Overrides are not applied. Where spell lists don't apply, at the top of the Categories tab, picks what draws there.",
+    IDS_UNASSISTABLE = "On units you can't assist (hostile or neutral), spell categories and Overrides are not applied. Where spell lists don't apply, at the top of the Categories tab, picks what draws there.",
+    IDS_ASSISTABLE   = "On units you can assist, spell categories and Overrides are not applied. Where spell lists don't apply, at the top of the Categories tab, picks what draws there.",
     -- The same three where no category is Hidden and only an Overrides list is in use: the R-3 group
-    -- draws everything there in either view, so pointing at the Situations tab would mislead (SV-05).
+    -- draws everything there in either view, so pointing at Where spell lists don't apply would mislead (SV-05).
     IDS_OWN_DEBUFFS_LISTS  = "On your own and your pet's debuffs, the Overrides lists are not applied.",
     IDS_UNASSISTABLE_LISTS = "On units you can't assist (hostile or neutral), the Overrides lists are not applied.",
     IDS_ASSISTABLE_LISTS   = "On units you can assist, the Overrides lists are not applied.",
@@ -454,7 +454,7 @@ end
 local ENCHANT_SLOTS = { "mainHand", "offHand", "ranged" }
 
 --- The enchant block: which weapon slots the container draws, and whether a permanent enchant is
---- skipped. The slots are the profile's (General -> Spell Categories); a profile with none, or with
+--- skipped. The slots are the profile's (the General page > Spell categories); a profile with none, or with
 --- every slot unticked, falls back to all three, because a container showing enchants and no slots
 --- would draw nothing with nothing to explain it.
 local function enchantBlock(filter, enchantSlots)
@@ -668,7 +668,7 @@ local function addCatchAllGroup(plan, base, cats, look)
 end
 
 --- The remainder (filter situations, S1; `FV.AppendRemainder`): the base minus every Hidden Blizzard,
---- Dispel or Who Cast It category, drawn only in the every view. Both Who rows Hidden (a conflict)
+--- Dispel or Who cast it category, drawn only in the every view. Both Who rows Hidden (a conflict)
 --- and Timeless buffs (`cats.timeless`, built from spell ids) leave it NEVER there, but present.
 local function addRemainderGroup(plan, base, cats, look)
     local con = cloneCon(base)

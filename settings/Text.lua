@@ -6,12 +6,12 @@ local _, NS = ...
 --     band   [Container ▾]
 --     [ General ][ Font ][ Icon ][ Pandemic ][ Animation ]
 --     General   Size (Size to fit, then Width and Height, dimmed under a note while it is on),
---               then -- Text Template --: [Template ▾] (a built-in, or Custom), the Custom
---               template box (Custom only), a read-only Preview EditBox (the line on a sample aura,
---               PrettyChat's shape), the Tokens/Rules cheat sheet; then Placement and the centering
---               note
+--               then -- Text template --: [Template ▾] (a built-in, or Custom), the Custom
+--               template box (Custom only), Time format, a read-only Preview EditBox (the line on a
+--               sample aura, PrettyChat's shape); then Placement and its two notes; then
+--               -- Template reference --: the Tokens/Rules cheat sheet, last (item 020, AUR-L19)
 --     Font      Font, Glow (around the text, never the icon or the box; off, and every row
---               but the toggle and the color pair dims while it is), Countdown, then Dispel type
+--               but the toggle and the color pair dims while it is), then Dispel type
 --               (feedback #7: the word's color, a backdrop, an edge, each opt-in and off; moved here
 --               from Animation, smoke batch 2 item 5)
 --     Icon      Icon (position, size, gap, zoom), Icon border; every row but the position (and the
@@ -20,8 +20,8 @@ local _, NS = ...
 --               "Running out" on Animation; smoke batch 2, B2-1) and its note
 --     Animation Loop
 --
--- General is drawn bespoke (its `tabs` entry below) to put the built-in picker, the preview and two
--- read-only blocks between its rows: the token cheat sheet, and the centering note under Placement.
+-- General is drawn bespoke (its `tabs` entry below) to put the built-in picker, the preview and the
+-- read-only text among its rows: the notes under Placement, and the token cheat sheet at its foot.
 -- Its rows are still ordinary schema rows, drawn by the flow engine, so the panel, `/am set`, the
 -- Defaults button and the resets all reach them through the one write seam. The Template dropdown is
 -- not a row: it writes the template (and, for the centered built-in, Justify) through that seam
@@ -123,7 +123,7 @@ NS.RegisterSchemaRows({
     { path = P .. "height", page = PAGE, group = G_GENERAL, subgroup = L["Size"], type = "number", min = 8, max = 80, step = 1,
       disabledIf = sizedToFit,
       label = L["Height (px)"], desc = L["The height of one line. Center stacks a line of several fields in rows, and the box grows to fit them. Grayed out while Size to fit is on: the height then follows the content, and this value is used only if it cannot be measured."] },
-    { path = P .. "template", page = PAGE, group = G_GENERAL, subgroup = L["Text Template"], type = "string",
+    { path = P .. "template", page = PAGE, group = G_GENERAL, subgroup = L["Text template"], type = "string",
       dialogControl = "EditBox", maxLetters = C.TEXT_TEMPLATE_MAX, wide = true, label = L["Custom template"],
       desc = L["What each line says, built from the tokens listed below. Press Enter to apply."],
       validate = TT.Validate, onChange = structural },
@@ -164,7 +164,7 @@ local function example(ctx, text)
     H.TextRow(ctx, "    " .. token(text), SMALL)
 end
 
---- The token cheat sheet, under the Template box: a **Tokens** list (one gold `$token$` bullet each,
+--- The token cheat sheet, the General tab's last subsection (Template reference): a **Tokens** list (one gold `$token$` bullet each,
 --- its meaning in plain text), then a **Rules** list (bracket hiding, the two escapes, how an odd run
 --- of [ combines with one, why a duration belongs in brackets -- feedback #5: text outside them
 --- shows on a timeless aura too -- and why a separator does -- smoke batch 2 item 8: an empty field's
@@ -305,6 +305,15 @@ local function previewBox(cfg)
     end }
 end
 
+--- A per-render copy of `row` without its subgroup, for a row drawn inside a subsection whose heading
+--- is already on screen. The schema row keeps its subgroup for `/am list` and the descriptor.
+local function withoutSubgroup(row)
+    local copy = {}
+    for k, v in pairs(row) do copy[k] = v end
+    copy.subgroup = nil
+    return copy
+end
+
 --- A copy of `row` the flow engine draws nothing for but its subsection heading (RenderRows emits a
 --- subgroup's heading before it looks at skipRender).
 local function headingOnly(row)
@@ -314,19 +323,20 @@ local function headingOnly(row)
     return copy
 end
 
---- Text Template: the subsection heading, the Template dropdown, the Custom template box (Custom
---- only), the Preview box on the aura type's sample aura, then the cheat sheet.
+--- Text template: the subsection heading, the Template dropdown, the Custom template box (Custom
+--- only), Time format, then the Preview box on the aura type's sample aura. The cheat sheet is the
+--- tab's last subsection now (renderGeneral).
 ---
 --- The dropdown and the box are widgets, and dim with the page on their own. The Preview's text and
 --- the cheat sheet are free-standing text, and are dimmed by hand (`dim`/`token`) so the whole
 --- subsection goes quiet together, as Placement's notes always have (owner, 2026-09-20).
-local function renderTemplate(ctx, cfg, row)
+local function renderTemplate(ctx, cfg, row, formatRow)
     local _, id = NS.ActiveContainer()
     if row then H.RenderRows(ctx, { headingOnly(row) }, nil, nil, { noHeadings = true }) end
     H.RenderGrid(ctx, { templatePicker(cfg, id) })
     if row and isCustom(cfg, id) then H.RenderRows(ctx, { row }, nil, nil, { noHeadings = true }) end
+    if formatRow then H.RenderRows(ctx, { withoutSubgroup(formatRow) }, nil, nil, { noHeadings = true }) end
     H.RenderGrid(ctx, { previewBox(cfg) })
-    cheatSheet(ctx)
 end
 
 --- Under Size, while Size to fit is on: why Width and Height are dimmed, and when they still count.
@@ -338,13 +348,17 @@ end
 -- The Placement rows drawn above the Justify note (the justify pair); the offsets follow it.
 local JUSTIFY_ROWS = { [P .. "justifyH"] = true, [P .. "justifyV"] = true }
 
---- The General tab: Size, then what each line says (renderTemplate), then Placement: the justify
---- pair, the Justify note (item 3), the offsets and the centering note.
+--- The General tab (item 020, AUR-L19): Size and its fit note, then what each line says
+--- (renderTemplate), then Placement: the justify pair, the Justify note (item 3), the offsets and the
+--- centering note; then the Tokens/Rules cheat sheet, last, under Template reference, so no control is
+--- pushed below a screen of reference text.
 local function renderGeneral(ctx, cfg, rows)
-    local size, justify, tail, templateRow = {}, {}, {}, nil
+    local size, justify, tail, templateRow, formatRow = {}, {}, {}, nil, nil
     for _, row in ipairs(rows or {}) do
         if row.path == P .. "template" then
             templateRow = row
+        elseif row.path == P .. "timeFormat" then
+            formatRow = row
         else
             local list = size
             if row.subgroup == S_PLACEMENT then list = JUSTIFY_ROWS[row.path] and justify or tail end
@@ -354,11 +368,13 @@ local function renderGeneral(ctx, cfg, rows)
     end
     H.RenderRows(ctx, size, nil, nil, { noHeadings = true })
     fitNote(ctx)
-    renderTemplate(ctx, cfg, templateRow)
+    renderTemplate(ctx, cfg, templateRow, formatRow)
     H.RenderRows(ctx, justify, nil, nil, { noHeadings = true })
     justifyNote(ctx)
     H.RenderRows(ctx, tail, nil, nil, { noHeadings = true })
     centerNote(ctx, cfg)
+    H.Section(ctx, L["Template reference"])
+    cheatSheet(ctx)
 end
 
 -- ── Font ──────────────────────────────────────────────────────────────────────────────────────
@@ -388,13 +404,16 @@ NS.RegisterSchemaRows({
       label = L["Thickness (px)"], desc = L["How far the glow reaches out from each letter."] },
     { path = P .. "glowX", page = PAGE, group = G_FONT, subgroup = S_GLOW, type = "number",
       min = -20, max = 20, step = 1, disabledIf = unlessOn("glow"), startsLine = true,
-      label = L["Offset X"], desc = L["Nudge the glow off the text, sideways, in pixels."] },
+      label = L["X offset"], desc = L["Nudge the glow off the text, sideways, in pixels."] },
     { path = P .. "glowY", page = PAGE, group = G_FONT, subgroup = S_GLOW, type = "number",
       min = -20, max = 20, step = 1, disabledIf = unlessOn("glow"),
-      label = L["Offset Y"], desc = L["Nudge the glow off the text, up or down, in pixels."] },
+      label = L["Y offset"], desc = L["Nudge the glow off the text, up or down, in pixels."] },
 })
 NS.RegisterSchemaRows({
-    { path = P .. "timeFormat", page = PAGE, group = G_FONT, subgroup = L["Countdown"], type = "string",
+    -- Time format shapes the template's duration tokens, so it is General's, under Text template, drawn
+    -- by renderGeneral between the Custom template box and the Preview it shows in (item 020,
+    -- AUR-L17). A group change only: same path, same page, so Defaults and Copy are unchanged.
+    { path = P .. "timeFormat", page = PAGE, group = G_GENERAL, subgroup = L["Text template"], type = "string",
       values = NS.Choices(C.TIME_FORMATS, C.TIME_FORMAT_LABELS), label = L["Time format"],
       desc = L["How the duration tokens write a time."] },
     -- Color by dispel type (feedback #7): three opt-in stand-ins, all off, since no engine binding
@@ -403,16 +422,16 @@ NS.RegisterSchemaRows({
     { path = P .. "dispelTypeColor", page = PAGE, group = G_FONT, subgroup = S_DISPEL, type = "bool",
       startsLine = true, disabledIf = noDispel,
       label = L["Color the dispel type"],
-      desc = L["Write $dispeltype$ in its type's color from General -> Dispel Colors. The rest of the line keeps the font color. Needs $dispeltype$ in the template."] },
+      desc = L["Write $dispeltype$ in its type's color from the General page > Dispel colors. The rest of the line keeps the font color. Needs $dispeltype$ in the template."] },
     { path = P .. "dispelBackdrop", page = PAGE, group = G_FONT, subgroup = S_DISPEL, type = "bool",
       startsLine = true, label = L["Backdrop in the dispel color"],
-      desc = L["Fill the line's box, behind the text, with the aura's dispel type color from General -> Dispel Colors. An aura with no dispel type gets none."] },
+      desc = L["Fill the line's box, behind the text, with the aura's dispel type color from the General page > Dispel colors. An aura with no dispel type gets none."] },
     { path = P .. "dispelBackdropAlpha", page = PAGE, group = G_FONT, subgroup = S_DISPEL, type = "number",
       min = 0.05, max = 1, step = 0.05, isPercent = true, disabledIf = unlessOn("dispelBackdrop"),
       label = L["Backdrop opacity"], desc = L["How strongly the backdrop shows behind the text."] },
     { path = P .. "dispelEdge", page = PAGE, group = G_FONT, subgroup = S_DISPEL, type = "bool",
       startsLine = true, label = L["Edge in the dispel color"],
-      desc = L["Outline the line's box in the aura's dispel type color from General -> Dispel Colors. An aura with no dispel type gets none."] },
+      desc = L["Outline the line's box in the aura's dispel type color from the General page > Dispel colors. An aura with no dispel type gets none."] },
     { path = P .. "dispelEdgeSize", page = PAGE, group = G_FONT, subgroup = S_DISPEL, type = "number",
       min = 1, max = 4, step = 1, disabledIf = unlessOn("dispelEdge"),
       label = L["Edge thickness (px)"], desc = L["How thick the edge is."] },
@@ -507,7 +526,7 @@ local function pandemicNote(ctx)
     H.TextRow(ctx, GRAY:format(L["The pandemic window needs a duration token, such as $remainingduration$, in the template."]), SMALL)
 end
 
-NS.RegisterContainerSection(PAGE, L["Text"], {
+NS.RegisterContainerSection(PAGE, L["Text style"], {
     tabs       = { { key = G_GENERAL, label = G_GENERAL, render = renderGeneral } },
     afterGroup = { [G_ICON] = iconNote, [G_PANDEMIC] = pandemicNote },
     style      = "text",

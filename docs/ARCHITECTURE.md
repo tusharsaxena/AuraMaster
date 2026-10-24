@@ -82,8 +82,8 @@ Every non-vendored file, its responsibility and the full load order: `docs/modul
 
 ## Settings Schema
 
-`NS.Schema` holds **269** rows across seven pages (General 18, Containers 5, Filters 57, Layout 38,
-Bars 72, Icons 42, Text 37), plus one runtime row per user category. It drives the panel,
+`NS.Schema` holds **276** rows across seven pages (General 18, Containers 5, Filters 57, Layout 38,
+Bars 72, Icons 42, Text 44), plus one runtime row per user category. It drives the panel,
 `/am list|get|set|reset` and the resets through one write seam, `NS.SetByPath`.
 
 - **Containers registry** (architecture-§5): keys `containers`, `containerOrder`, `nextContainerId`,
@@ -116,7 +116,7 @@ Every group carries three views: ids, blizzard and every (`group.views`). Where 
 spell ids to the container's unit and aura type, the engine holds the ids view, exactly as compiled. Where it does not (debuffs on the player or
 the pet always; buffs on a target or focus you cannot assist, and debuffs on one you can), it holds
 the view the container's Situations setting picks (`filter.situations`): the every view, every aura
-passing the base and in no Hidden Blizzard, Dispel or Who Cast It category, once, through the
+passing the base and in no Hidden Blizzard, Dispel or Who cast it category, once, through the
 trailing remainder slot (the default), or the blizzard view (`modules/FilterViews.lua`), where spell
 categories, Uncategorized, the Overrides lists and the catch-all match nothing and only the Blizzard
 categories set to Show draw, each aura once. Player and pet debuffs follow the Players setting; a
@@ -145,7 +145,7 @@ pass on.
 
 | Message | Sender | Payload | Consumers |
 |---|---|---|---|
-| `Ka0s_AuraMaster_ContainersChanged` (`NS.MSG.CONTAINERS_CHANGED`) | `modules/ContainerManager.lua` — create, delete, rename, duplicate, profile change (copy-from and reset positions are settings writes, announced by `CONFIG_CHANGED`) | none | `settings/OptionsSetup.lua:405` — `NS.RequestPanelRefresh`, a coalesced panel re-render (every banner lists containers); `modules/TimedSpells.lua:204` — `TS.Sync`, which starts or stops the timed-spell scan (a container added or removed can change whether any needs it) |
+| `Ka0s_AuraMaster_ContainersChanged` (`NS.MSG.CONTAINERS_CHANGED`) | `modules/ContainerManager.lua` — create, delete, rename, duplicate, profile change (copy-from and reset positions are settings writes, announced by `CONFIG_CHANGED`) | none | `settings/OptionsSetup.lua:410` — `NS.RequestPanelRefresh`, a coalesced panel re-render (every banner lists containers); `modules/TimedSpells.lua:204` — `TS.Sync`, which starts or stops the timed-spell scan (a container added or removed can change whether any needs it) |
 | `Ka0s_AuraMaster_ConfigChanged` (`NS.MSG.CONFIG_CHANGED`) | `settings/Schema.lua:603` — the write seam, once per write; never for a session row | `{ section, containerId, path }`; `containerId` nil for an addon-wide row, `path` the row written | `modules/ContainerManager.lua:866` — first `FontPrimer.PrimeAll` (a new font is drawn before anything is applied in it), then by the row's `effect`: `"visibility"` (the master enable, visibility, lock and alpha, a container's enable, its six `filter.zones` rows and its two `filter.unitFilter` rows) runs `ApplyVisibility()` at once, `"none"` queues nothing, `"view"` (the two `filter.situations` rows) runs `CM.ApplyViews` for that container at once, in combat too and never held, otherwise `RequestApply(containerId)` (nil re-applies all), a write to a flow or attachment path also re-applies every container following that one (`Anchors.Followers`), and a write to a container's attach points, mode or target also re-applies the container it attaches to (`requestParents`); `modules/TimedSpells.lua:203` — `TS.Sync`, the same re-sync (a filter write can change whether any container needs the scan) |
 | `Ka0s_AuraMaster_VisibilityChanged` (`NS.MSG.VISIBILITY_CHANGED`) | `core/AuraMaster.lua` — entering the world, combat start and end; `modules/Preview.lua` — `Preview.SetTestMode`, when test mode switches on or off | none | `modules/ContainerManager.lua:879` — `ApplyVisibility()` over every container |
 | `Ka0s_AuraMaster_TimedSpellsChanged` (`NS.MSG.TIMED_SPELLS_CHANGED`) | `modules/TimedSpells.lua` — a scan learned timed spells, or `/am forgettimed` emptied the set | none from a scan; `{ byPlayer = true }` from `/am forgettimed` | `modules/ContainerManager.lua` `CM.Init` — `RequestApply(nil, system)` over every container (their excluded ids moved); a scan's request is the addon's own, so a deferral of it prints no notice |
@@ -291,6 +291,31 @@ frames back, finishing the combat-restricted half on `PLAYER_REGEN_ENABLED`; sta
 from current state. What stands down, what survives and the library-absent path:
 `docs/data-flow.md` → *The disabled state*.
 
+## Frame layering
+
+Strata picks a frame's tier and frame level orders it within the tier (frame-layering-§1 to §5). The
+one layers table, `NS.Constants.LAYERS` in `core/Constants.lua`, names every strata and level band
+the addon writes, and its header comment states the whole stack, including the tiers the library and
+Blizzard own. The tiers:
+
+- **HUD content (T1p).** Each container draws in the strata its player picked (`layout.strata`,
+  default Medium) over its anchor's level `L` (`layout.level`). The engine and its buttons sit at
+  `L+1` and up, and the name label at `L+20`. Inside one element, every frame is counted from the
+  button: fill, spark, border, dispel edge, then the texts.
+- **Edit chrome (T2).** The chrome stays in the container's strata. The unlocked outline sits at
+  `L+30`, the TEST marker at `L+40` and the drag strip at `L+50`. The strip ignores the
+  container's opacity.
+- **Modals (T6) and their child window (T7).** These belong to the library and Blizzard: the debug
+  console, the perf panel and the StaticPopups at Dialog, and the console's copy window at
+  Fullscreen.
+- **Popups (T8).** The drag-time snap highlight sits at Fullscreen Dialog, alongside the library's
+  menus and suggestion lists and the AceGUI pullouts.
+- **Cursor (T9).** The frame picker sits at Tooltip, because it labels the frame under the cursor,
+  and that frame's own tooltip would otherwise cover the label.
+
+The Frame strata row's tooltip (Layout → Scale and strata) is the library's `O.StrataTooltip`. A player can still pick Dialog, so the
+tooltip says what Dialog covers.
+
 ## Taint Notes
 
 No secure template of our own: the only protected machinery is Blizzard's aura engine, and each
@@ -371,6 +396,8 @@ span bundle is `<date>-v<A>-v<B>/`, and the one untagged bundle is `docs/revendo
 | Rule | What differs | Why | Decided | Re-check trigger |
 |---|---|---|---|---|
 | `options-ui-§17` | The "One resolver" clause: a unit-scoped container caches another unit's class. Each apply snapshots it (`ContainerClass:SnapshotClass` / `ResolveUnitClass`) and `Style.Color` paints from that snapshot, so after a target, focus or pet swap while auras are secret or under combat lockdown the container keeps the previous unit's class until it re-applies. Under lockdown alone (open world, auras readable) `ReapplyStaleClass` catches up on `PLAYER_REGEN_ENABLED`; while auras are secret it catches up when the restriction lifts (`ADDON_RESTRICTION_STATE_CHANGED`) | While auras are secret a re-dress is impossible: the engine dresses buttons in initializeFrame and forbids restyling them (DenyTaintedAccessWhenAurasAreSecret). Under combat lockdown alone, with auras readable, the wait is the addon's choice: `ContainerManager.MustDefer` holds every apply until combat ends, because an apply re-places the anchor and may retire and rebuild the engine, structural work that events-frames-taint-§2 keeps out of combat. Conforming there would take a second, restyle-only path that runs in combat beside the deferred apply, only to repaint a swatch that `ReapplyStaleClass` corrects on `PLAYER_REGEN_ENABLED`; audit docs/audits/2026-09-11 AM-03. Ratified by the owner 2026-09-12. | 2026-09-12 | The secret-auras half ends when the aura engine offers a class-color binding it resolves per button itself, or addon restyling of engine buttons becomes legal while auras are secret; the lockdown-only half ends when a restyle-only path may run under combat lockdown (`ContainerManager.MustDefer` stops holding a class-only re-dress). The row is retired when both halves have ended |
+| `frame-layering-§3` | Two levels are counted from a sibling, not the parent. The mouse blocker sits `LAYERS.LEVEL.BLOCKER` under the engine's current level (`ContainerClass:ApplyBlocker`). Each text-glow twin sits `GLOW_GAP` under the main engine, and its holder `GLOW_HOLDER` under that (`modules/Container_Twins.lua`). With `L = 5` a holder sits below the anchor. | A later `layout.level` raises the anchor, but the engine does not follow it, so only the engine's own current level keeps the blocker under it. The twins must sit under the main's whole text-and-icon stack, which is a fixed gap below the main and not a band over the anchor. The holders carry glow copies only. | 2026-10-24, the owner accepted AUR-Z10 (the frame-layering run, item 030). The values are unchanged and named in `NS.Constants.LAYERS`. | The engine follows its anchor's level, or the glow stops using twin engines. |
+| `options-ui-§21` | The ellipsis clause: the three buttons that open a confirmation, *Delete container* (the Containers page, General rail entry), *Delete this category* and *Forget unreadable categories* (the General page > Spell categories), do not end in '…' (U+2026). *Delete container* and *Forget unreadable categories* say so in their tooltips instead ("Asks first."). | Owner ruling T-1 (batch 7): the owner's font draws non-ASCII glyphs other than the em dash as a box, and tests/test_locale.lua fails any locale value carrying one. The two rules cannot both hold for these labels. Item 020 (AUR-L-new5) named the label *Delete container* exactly; the conflict was raised in commit d897be3 and by the AM-LY review. | **Pending: the owner's call, not yet ratified.** Either this row is accepted, or T-1 is widened to allow U+2026 and the three labels gain '…'. | The owner rules on it, or T-1 allows U+2026. |
 
 ### Files over the 1500-line cap
 

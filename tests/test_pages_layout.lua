@@ -8,13 +8,14 @@ local test, assertEqual, assertTrue, assertFalse, assertNil =
 local fresh = dofile("tests/fresh_env.lua")
 local pages = dofile("tests/page_helpers.lua")
 
---- A fresh environment with the Layout page drawn and its Anchor tab open (Frame is the first tab,
---- so the attach rows are one click away). Answers what the Anchor tab drew.
+--- A fresh environment with the Layout page drawn and its Position and growth tab open (Scale and
+--- strata is the first tab, so the attach rows are one click away). Answers what that tab drew. The
+--- tab was Anchor, and Growth a tab of its own, until item 020 merged them (AUR-L09).
 local function layout(opts)
     local NS, m = fresh(opts)
     local P = pages(NS, m)
     P.show("Layout")
-    return NS, m, P, P.tab("layout", NS.L["Anchor"])
+    return NS, m, P, P.tab("layout", NS.L["Position and growth"])
 end
 
 --- The attach-target dropdown, labeled "Parent container" (the banner keeps "Container").
@@ -30,10 +31,18 @@ local function layoutIn(mode)
     m.__fireTimers()
     local P = pages(NS, m)
     P.show("Layout")
-    return NS, m, P, P.tab("layout", NS.L["Anchor"])
+    return NS, m, P, P.tab("layout", NS.L["Position and growth"])
 end
 
--- The Anchor tab's subsections and the rows each one holds, in drawing order.
+--- The Position and growth tab drawn now: a click on the tab already open draws nothing, so that
+--- one is drawn again instead (layout() opens it, and a P.show keeps it).
+local function positionTab(NS, P)
+    local key = NS.L["Position and growth"]
+    if NS.Helpers.__pageCtx.layout.activeTab == key then return P.rerender("Layout") end
+    return P.tab("layout", key)
+end
+
+-- The Position and growth tab's attach subsections and the rows each one holds, in drawing order.
 local SUBSECTIONS = {
     { key = "Screen", paths = { "container.position.point", "container.position.relativePoint",
                                 "container.position.x", "container.position.y" } },
@@ -91,12 +100,13 @@ local ON = {
     frame     = { ["Named frame"] = true, Offset = true },
 }
 
-test("layout: the tabs are Frame, Anchor, Growth, Mouse, Label, in that order", function()
+test("layout: the tabs are Scale and strata, Position and growth, Mouse, Label, in that order (AUR-L09, AUR-L10)", function()
     local NS, _, P = layout()
     local L = NS.L
-    -- red under: the Position rows declared before the Frame rows (tab order is first-seen group order)
+    -- red under: the Position rows declared before the Scale and strata rows (tab order is first-seen
+    -- group order), or Growth left a tab of its own
     assertEqual(table.concat(P.tabKeys("layout"), ","),
-        table.concat({ L["Frame"], L["Anchor"], L["Growth"], L["Mouse"], L["Label"] }, ","))
+        table.concat({ L["Scale and strata"], L["Position and growth"], L["Mouse"], L["Label"] }, ","))
 end)
 
 test("layout: the Label rows write the selected container's label, dimmed while it is off but the swatch (NL-4)", function()
@@ -107,7 +117,7 @@ test("layout: the Label rows write the selected container's label, dimmed while 
     assertFalse(P.row(ws, "container.label.font.fontColor").disabled and true or false, "a swatch is never grayed")
     P.row(ws, "container.label.show"):__fire("OnValueChanged", true)
     m.__fireTimers()
-    P.tab("layout", NS.L["Frame"])
+    P.tab("layout", NS.L["Scale and strata"])
     ws = P.tab("layout", NS.L["Label"])
     assertFalse(P.row(ws, "container.label.x").disabled and true or false, "live once it is on")
     P.row(ws, "container.label.y"):__fire("OnMouseUp", 6)
@@ -136,7 +146,7 @@ test("layout: Label > Justify shows the justify in effect with no pick, stores a
     NS.SetByPath("container.style", "icons", 1)
     NS.SetByPath("container.layout.growH", "left", 1)
     m.__fireTimers()
-    P.tab("layout", L["Frame"])
+    P.tab("layout", L["Scale and strata"])
     ws = P.tab("layout", L["Label"])
     assertEqual(P.row(ws, "container.label.justifyH").value, "RIGHT", "icons growing left, no pick")
     NS.SetByPath("container.label.justifyH", "CENTER", 1)
@@ -153,10 +163,11 @@ end)
 
 test("layout: the Anchor tab draws only the chosen mode's subsections, each under its heading (feedback #4)", function()
     local L = T.NS.L
+    -- Growth closes the tab in every mode since the merge (AUR-L09).
     local want = {
-        screen    = L["Screen"],
-        container = L["Another container"] .. "," .. L["Offset"],
-        frame     = L["Named frame"] .. "," .. L["Offset"],
+        screen    = L["Screen"] .. "," .. L["Growth"],
+        container = L["Another container"] .. "," .. L["Offset"] .. "," .. L["Growth"],
+        frame     = L["Named frame"] .. "," .. L["Offset"] .. "," .. L["Growth"],
     }
     for mode, heads in pairs(want) do
         local _, _, _, ws = layoutIn(mode)
@@ -313,7 +324,7 @@ test("layout: a Growth write re-applies only the selected container", function()
     local NS, _, P = layout()
     NS.Helpers.SelectContainer(2)
     P.show("Layout")
-    local ws = P.tab("layout", NS.L["Growth"])
+    local ws = positionTab(NS, P)
     local calls = {}
     local real = NS.ContainerManager.RequestApply
     NS.ContainerManager.RequestApply = function(id, ...)
@@ -332,7 +343,7 @@ end)
 test("layout: Strata offers the five layers in order and stores the one chosen", function()
     local NS, _, P = layout()
     P.show("Layout")
-    local ws = P.tab("layout", NS.L["Frame"])
+    local ws = P.tab("layout", NS.L["Scale and strata"])
     local dd = P.row(ws, "container.layout.strata")
     assertEqual(table.concat(dd.order, ","), table.concat(NS.Constants.STRATA, ","))
     assertEqual(dd.value, "MEDIUM")
@@ -374,12 +385,12 @@ test("layout: after the banner moves, the page draws the newly selected containe
     local NS, _, P = layout()
     NS.SetByPath("container.layout.scale", 1.5, 3)
     P.show("Layout")
-    local ws = P.tab("layout", NS.L["Frame"])
+    local ws = P.tab("layout", NS.L["Scale and strata"])
     assertEqual(P.row(ws, "container.layout.scale").value, 1, "container 1's scale")
     P.banner(NS.Helpers.__pageCtx.layout):__fire("OnValueChanged", 3)
     ws = P.show("Layout")
     -- red under: the page caching the container it first drew, or losing its tab on the switch
-    assertEqual(NS.Helpers.__pageCtx.layout.activeTab, NS.L["Frame"], "the tab survives the switch")
+    assertEqual(NS.Helpers.__pageCtx.layout.activeTab, NS.L["Scale and strata"], "the tab survives the switch")
     assertEqual(P.row(ws, "container.layout.scale").value, 1.5)
 end)
 
@@ -401,7 +412,7 @@ local INHERITED = { axis = "vertical", growH = "right", growV = "up" }
 
 test("layout: an attached container's Fill and growth are dimmed and show its parent's", function()
     local NS, _, P = attachedChild()
-    local ws = P.tab("layout", NS.L["Growth"])
+    local ws = positionTab(NS, P)
     for key, want in pairs(INHERITED) do
         local w = P.row(ws, "container.layout." .. key)
         -- red under: the inherited rows without their disabledIf
@@ -425,7 +436,7 @@ test("layout: a screen or frame container's growth rows are its own and live, wi
         local NS, _, P = attachedChild()
         NS.SetByPath("container.attach.mode", mode, 2)
         P.show("Layout")
-        local ws = P.tab("layout", NS.L["Growth"])
+        local ws = positionTab(NS, P)
         local axis = P.row(ws, "container.layout.axis")
         -- red under: the inherited-row predicate dimming every attached mode
         assertFalse(axis.disabled and true or false, mode .. ": Fill is live")
@@ -437,7 +448,7 @@ end)
 test("layout: the follow line is dim gold, says why, and has a gap below it (F6)", function()
     local NS, _, P = attachedChild()
     local H = NS.Helpers
-    P.tab("layout", NS.L["Growth"])
+    positionTab(NS, P)
     local want = "|c" .. NS.Constants.SECONDARY_GOLD
         .. NS.L["Fill and growth follow '%s' because this container is attached to it."]:format("Player buffs") .. "|r"
     -- red under: the gold as the addon's muted secondary gold, not the bright heading gold
@@ -455,23 +466,31 @@ test("layout: the follow line is dim gold, says why, and has a gap below it (F6)
     assertEqual(spacer and spacer.height, H.ROW_VSPACER)
 end)
 
-test("layout: the follow line is drawn on the Growth tab only", function()
+test("layout: the follow line is drawn under the Growth heading only, above the first Growth row", function()
     local NS, _, P = attachedChild()
     local line = NS.L["Fill and growth follow '%s' because this container is attached to it."]:format("Player buffs")
-    for _, key in ipairs({ NS.L["Frame"], NS.L["Anchor"], NS.L["Mouse"] }) do
+    for _, key in ipairs({ NS.L["Scale and strata"], NS.L["Mouse"], NS.L["Label"] }) do
         local ws = (NS.Helpers.__pageCtx.layout.activeTab == key) and P.rerender("Layout") or P.tab("layout", key)
         assertTrue(#ws > 0, key .. " drew")
         -- red under: the intro drawn above every tab
         assertFalse(P.hasText(ws, line), key .. " carries no follow line")
     end
-    assertTrue(P.hasText(P.tab("layout", NS.L["Growth"]), line), "Growth does")
+    local ws = positionTab(NS, P)
+    local heading, at, fill
+    for i, w in ipairs(ws) do
+        if w.type == "Heading" and w.text == NS.L["Growth"] then heading = i end
+        if w.text == "|c" .. NS.Constants.SECONDARY_GOLD .. line .. "|r" then at = i end
+        if w == P.row(ws, "container.layout.axis") then fill = i end
+    end
+    -- red under: the note drawn above the attach rows (the old section intro), or below Fill
+    assertTrue(heading and at and fill and heading < at and at < fill, "Growth's note sits under its heading")
 end)
 
 test("layout: Another container names the derived points and the container it is attached to", function()
     local NS, m, P = attachedChild()
     -- layout() opened the Anchor tab and the show kept it, and a click on the active tab draws
     -- nothing: draw it again instead.
-    assertEqual(NS.Helpers.__pageCtx.layout.activeTab, NS.L["Anchor"])
+    assertEqual(NS.Helpers.__pageCtx.layout.activeTab, NS.L["Position and growth"])
     local ws = P.rerender("Layout")
     assertTrue(#ws > 0, "the Anchor tab drew")
     local PL = NS.Constants.POINT_LABELS
@@ -676,8 +695,9 @@ end)
 test("layout: the hint names the growth to pick instead, one line per facing axis", function()
     local L = T.NS.L
     local PL, GV, GH = T.NS.Constants.POINT_LABELS, T.NS.Constants.GROW_V_LABELS, T.NS.Constants.GROW_H_LABELS
-    local V = L["Point is %s and Grow vertically is %s, so the auras grow back over the frame this container is attached to. Set Grow vertically to %s on the Growth tab instead."]
-    local H = L["Point is %s and Grow horizontally is %s, so the auras grow back over the frame this container is attached to. Set Grow horizontally to %s on the Growth tab instead."]
+    -- AUR-L27: the hint names the row Named frame mode draws; AUR-L09: the growth rows are below it
+    local V = L["This container anchor point is %s and Grow vertically is %s, so the auras grow back over the frame this container is attached to. Set Grow vertically to %s below instead."]
+    local H = L["This container anchor point is %s and Grow horizontally is %s, so the auras grow back over the frame this container is attached to. Set Grow horizontally to %s below instead."]
     local _, ws, _, P = hintFor("BOTTOMLEFT", "left", "down")
     -- red under: one combined line, or the growth to pick named wrong
     assertTrue(P.hasText(ws, V:format(PL.BOTTOMLEFT, GV.down, GV.up)), "the vertical line")
@@ -863,7 +883,7 @@ test("layout: a chain root's Growth tab says how many containers follow its fill
     local NS, _, P = layout()
     NS.SetByPath("container.attach.container", 1, 2)
     NS.SetByPath("container.attach.mode", "container", 2)
-    local ws = P.tab("layout", NS.L["Growth"])
+    local ws = positionTab(NS, P)
     -- red under: growthIntro silent on a root
     assertTrue(P.hasText(ws, NS.L["%d container(s) attached to this one follow its fill and growth."]:format(1)))
 end)
@@ -881,4 +901,80 @@ test("layout: Named frame reads Named frame anchor point on the left and This co
     assertTrue(line ~= nil, "the two share a line")
     -- red under: Point drawn first (this container on the left)
     assertTrue(line.children[1] == rel and line.children[2] == own, "the named frame's point on the left")
+end)
+
+-- ── item 020 (settings layout) ───────────────────────────────────────────────────────────────
+
+test("layout: the facing-growth hint sits after the attach rows and above the Growth subsection it points down at (AUR-L09)", function()
+    local _, ws, NS = hintFor("BOTTOMLEFT", "right", "down")
+    local hint, heading
+    for i, w in ipairs(ws) do
+        if type(w.text) == "string" and w.text:find("grow back over", 1, true) and not hint then hint = i end
+        if w.type == "Heading" and w.text == NS.L["Growth"] then heading = i end
+    end
+    -- red under: the hint drawn under the growth rows, where "below" would point at nothing
+    assertTrue(hint ~= nil and heading ~= nil and hint < heading, "the hint, then Growth")
+end)
+
+test("layout: a growth pick redraws the tab, so the hint beside it cannot go stale (AUR-L09)", function()
+    local NS, m, P = layoutIn("frame")
+    NS.SetByPath("container.attach.point", "BOTTOMLEFT", 1)
+    NS.SetByPath("container.layout.growV", "up", 1)
+    local ws = P.rerender("Layout")
+    NS.Helpers.__pageCtx.layout.panel:Show()
+    P.during(function() m.__fireTimers() end)
+    assertFalse(P.hasText(ws, "grow back over"), "growing up, away from the frame")
+    P.row(ws, "container.layout.growV"):__fire("OnValueChanged", "down")
+    local redrawn = P.during(function() m.__fireTimers() end)
+    -- red under: Grow vertically without its UI-only refresh onChange (the hint stays as it was)
+    assertTrue(P.hasText(redrawn, "grow back over"))
+    assertEqual(NS.FindSchemaRow("container.layout.growH").onChange, NS.FindSchemaRow("container.layout.growV").onChange,
+        "both growth rows refresh the same way")
+end)
+
+test("layout: Screen mode reads Screen anchor point, This container anchor point, then X position, Y position (AUR-L08)", function()
+    local NS, _, P, ws = layoutIn("screen")
+    local L = NS.L
+    local rel, own = P.row(ws, "container.position.relativePoint"), P.row(ws, "container.position.point")
+    -- red under: the old Point / Relative point names, or this container drawn first
+    assertEqual(rel.labelText, L["Screen anchor point"])
+    assertEqual(own.labelText, L["This container anchor point"])
+    local line
+    for _, w in ipairs(ws) do
+        if w.children and w.children[1] == rel then line = w end
+    end
+    assertTrue(line ~= nil and line.children[2] == own, "the screen's point on the left, this container's on the right")
+    assertEqual(P.row(ws, "container.position.x").labelText, L["X position"])
+    assertEqual(P.row(ws, "container.position.y").labelText, L["Y position"])
+    assertTrue(NS.FindSchemaRow("container.position.point").desc:find("measured from the screen anchor point", 1, true) ~= nil)
+    assertTrue(NS.FindSchemaRow("container.position.relativePoint").desc:find("measured from", 1, true) ~= nil)
+end)
+
+test("layout: Mouse opens on Click-through, unheaded, then Tooltips and Clicks (AUR-L11)", function()
+    local NS, _, P = layout()
+    local L = NS.L
+    local ws = P.tab("layout", L["Mouse"])
+    local at = {}
+    for i, w in ipairs(ws) do
+        if w.type == "Heading" then at[w.text] = i end
+        if w.labelText then at[w.labelText] = at[w.labelText] or i end
+    end
+    -- red under: Click-through last again, or the tab without its two subsections
+    assertTrue(at[L["Click-through"]] < at[L["Tooltips"]], "Click-through above every heading")
+    assertTrue(at[L["Tooltips"]] < at[L["Show tooltips"]] and at[L["Tooltip position"]] < at[L["Clicks"]], "the tooltip rows under Tooltips")
+    assertTrue(at[L["Clicks"]] < at[L["Right-click to cancel"]], "the click row under Clicks")
+end)
+
+test("layout: Scale and strata names the container and says what multiplies it (AUR-L-new3, AUR-L-new4, AUR-L25)", function()
+    local NS, _, P = layout()
+    local L = NS.L
+    local ws = P.tab("layout", L["Scale and strata"])
+    -- red under: the bare Scale / Opacity / Strata labels
+    assertEqual(P.row(ws, "container.layout.scale").labelText, L["Container scale"])
+    assertEqual(P.row(ws, "container.layout.alpha").labelText, L["Container opacity"])
+    assertEqual(P.row(ws, "container.layout.strata").labelText, L["Frame strata"])
+    assertEqual(NS.FindSchemaRow("container.layout.scale").desc,
+        L["This container's scale. Multiplied by Master scale on the General page > Master controls."])
+    assertEqual(NS.FindSchemaRow("container.layout.alpha").desc,
+        L["This container's opacity. Multiplied by Master opacity on the General page > Master controls."])
 end)

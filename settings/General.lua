@@ -2,21 +2,21 @@ local _, NS = ...
 
 -- settings/General.lua — the addon-wide page.
 --
---     [ Master controls ][ Display ][ Spell Categories ][ Dispel Colors ]
+--     [ Master controls ][ Blizzard frames ][ Spell categories ][ Dispel colors ]
 --
 --     Master controls  [Enable Aura Master]  [General visibility]
---                      [Master scale]        [Master alpha]
+--                      [Master scale]        [Master opacity]
 --                      [Lock frame]          [Debug console]
 --                      [Minimap button]      [Test mode]
 --                      [Reset position]      [Reset all settings]     <- afterGroup button pair
---     Display          -- Blizzard frames --  [Hide Blizzard buffs]  [Hide Blizzard debuffs]
---     Spell Categories settings/GeneralSpells.lua: one spell category's list, profile-wide
---     Dispel Colors    settings/GeneralDispel.lua: one color per dispel type, profile-wide
+--     Blizzard frames  [Hide Blizzard buffs]  [Hide Blizzard debuffs]   <- no heading: the tab names it
+--     Spell categories settings/GeneralSpells.lua: one spell category's list, profile-wide
+--     Dispel colors    settings/GeneralDispel.lua: one color per dispel type, profile-wide
 --
 -- A container's OWN identity — create, name, enable, unit, aura type, style, duplicate, delete,
 -- copy — is the top-level Containers page's (`settings/Containers.lua`, N-1, batch 7). It used to
 -- be this page's third tab; the owner moved it out to its own page, so General is left with only the
--- addon-wide rows: Master controls, Display, and General → Spell Categories / Dispel Colors, which
+-- addon-wide rows: Master controls, Blizzard frames, and General → Spell categories / Dispel colors, which
 -- edit profile-wide lists rather than one container.
 --
 -- MASTER CONTROLS LEADS AND IS COMPOSED (options-ui-§15): H.MasterControls emits the canonical
@@ -138,14 +138,14 @@ NS.RegisterSchemaRows(masterRows)
 
 NS.RegisterSchemaRows({
     {
-        path = "hideBlizzardBuffs", page = "general", group = L["Display"], subgroup = L["Blizzard frames"],
+        path = "hideBlizzardBuffs", page = "general", group = L["Blizzard frames"],
         type = "bool", startsLine = true,
         label = L["Hide Blizzard buffs"],
         desc  = L["Hide the default buff frame (your weapon enchants go with it). Applied out of combat."],
         onChange = applyBlizzardFrames, effect = "none",
     },
     {
-        path = "hideBlizzardDebuffs", page = "general", group = L["Display"], subgroup = L["Blizzard frames"],
+        path = "hideBlizzardDebuffs", page = "general", group = L["Blizzard frames"],
         type = "bool",
         label = L["Hide Blizzard debuffs"],
         desc  = L["Hide the default debuff frame. Applied out of combat."],
@@ -153,8 +153,9 @@ NS.RegisterSchemaRows({
     },
 })
 
--- After the Display rows, the enchant-slot rows, so Spell Categories (their group) takes the third
--- place; the Dispel Colors rows after those, so theirs is last.
+-- After the Blizzard frames rows (item 020 renamed the tab from Display and dropped its one
+-- subsection, which only repeated the tab, AUR-L01b), the enchant-slot rows, so Spell categories (their group) takes the third
+-- place; the Dispel colors rows after those, so theirs is last.
 NS.RegisterSchemaRows(GS.ENCHANT_ROWS)
 NS.RegisterSchemaRows(GD.ROWS)
 
@@ -178,8 +179,8 @@ StaticPopupDialogs["AURAMASTER_RESET_ALL"] = {
     end,
 }
 
--- The page's tabs: its schema groups, with Spell Categories (settings/GeneralSpells.lua) and
--- Dispel Colors (settings/GeneralDispel.lua) as its bespoke ones. `addonWide`: every tab is drawn whether or not a
+-- The page's tabs: its schema groups, with Spell categories (settings/GeneralSpells.lua) and
+-- Dispel colors (settings/GeneralDispel.lua) as its bespoke ones. `addonWide`: every tab is drawn whether or not a
 -- container exists.
 local PAGE_SPEC = {
     addonWide  = true,
@@ -193,7 +194,7 @@ local function build(mainCategory)
     local ctx = H.CreatePanel("AuraMasterGeneralPanel", L["General"], {
         pageKey         = "general",
         defaultsButton  = true,
-        -- Page-wide (options-ui-§13): the Dispel Colors rows are this page's, so Defaults takes them
+        -- Page-wide (options-ui-§13): the Dispel colors rows are this page's, so Defaults takes them
         -- back too. The spell categories' lists are not rows; each has its own restore. And the
         -- Minimap button row is exempt (settings/OptionsSetup.lua's `vetoedFromPanelReset`,
         -- launcher-§3) -- it is on this page, so the tooltip says so rather than letting a press

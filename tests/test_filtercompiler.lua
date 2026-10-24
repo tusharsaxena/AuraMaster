@@ -119,7 +119,7 @@ test("filter: 'only timeless' excludes every learned timed spell and ignores a m
     local g = plan.groups[1]
     assertEqual(setOf(g.candidateFilters.excludeSpellIDs), "100,200")
     assertNil(g.candidateFilters.maxDuration)
-    assertTrue(hasWarning(plan, "Max duration is ignored"), "the ignored limit is reported")
+    assertTrue(hasWarning(plan, "Maximum duration is ignored"), "the ignored limit is reported")
 end)
 
 test("filter: 'only timeless' on a debuff container is reported and treated as any duration", function()
@@ -1022,7 +1022,7 @@ local RICH_SIGNATURES = {
     .. "filter=string:HELPFUL|!PLAYER|!IMPORTANT|!BIG_DEFENSIVE|!RAID},"
     .. "every={candidateFilters={includeDispelTypes={}},"
     .. "filter=string:HELPFUL|!PLAYER|!IMPORTANT|!BIG_DEFENSIVE|!RAID}}}},"
-    .. "warnings={1=string:Max duration is ignored while showing only auras without a duration.}}",
+    .. "warnings={1=string:Maximum duration is ignored while showing only auras without a duration.}}",
 
     -- magic and boss (rank 3, shown) each get their own group; crowdControl (rank 4, hidden) only
     -- narrows the catch-all, which also excludes magic and boss so they are not drawn twice.
@@ -1051,7 +1051,7 @@ local RICH_SIGNATURES = {
     .. "filter=string:HARMFUL|PLAYER|!CROWD_CONTROL}}}},"
     .. "warnings={1=string:Only auras without a duration works for buffs only; this container shows every duration.,"
     .. "2=string:On units you can assist,"
-    .. " spell categories and Overrides are not applied. The Situations tab picks what draws there.}}",
+    .. " spell categories and Overrides are not applied. Where spell lists don't apply, at the top of the Categories tab, picks what draws there.}}",
 
     -- No category is Hidden here, so R-3 still applies: bigDefensive (show) buys its own group only
     -- when something else is hiding, and nothing is — one whitelist group, one catch-all.

@@ -60,13 +60,16 @@ local function build(frame)
     am.pandemic:SetBlendMode("ADD")
     am.pandemic:Hide()
 
-    -- Sibling frames made at one level stack in no promised order, so set it, bottom to top: the
-    -- cooldown swipe, our border, the dispel border, the texts. Once, here, where every level is a
-    -- fresh frame's own number.
-    local level = am.cd:GetFrameLevel()
-    am.border:SetFrameLevel(level + 1)
-    am.dispelHost:SetFrameLevel(level + 2)
-    am.text:SetFrameLevel(level + 3)
+    -- Sibling frames made at one level stack in no promised order, so set it, bottom to top, each over
+    -- the element root (core/Constants.lua's layers table, AUR-Z02): the cooldown swipe, our border,
+    -- the dispel border, the texts. Once, here, where every level is a fresh frame's own number. The
+    -- root's level is read off the fresh cooldown (born at its parent + 1), never off the button,
+    -- which the engine anchors and whose level can read secret (docs/midnight-quirks.md).
+    local level, V = am.cd:GetFrameLevel() - 1, C.LAYERS.LEVEL
+    am.cd:SetFrameLevel(level + V.FILL)
+    am.border:SetFrameLevel(level + V.BORDER)
+    am.dispelHost:SetFrameLevel(level + V.DISPEL)
+    am.text:SetFrameLevel(level + V.OVERLAY)
     return am
 end
 
@@ -107,7 +110,7 @@ end
 -- AddDispelTypeTexture's options for the dispel edge, built on first use (the enum may not exist at
 -- load): debuffs with a dispel type only, our white strip kept and tinted (PreserveAsset), and NO
 -- customDispelColorMap, so the engine paints AuraUtil.SetAuraBorderColor, Blizzard's own color for
--- the type (DB-2; owner 2026-09-13: General -> Dispel Colors do not drive icons).
+-- the type (DB-2; owner 2026-09-13: the General page > Dispel colors do not drive icons).
 local dispelOptions
 local function dispelOptionsFor()
     if not dispelOptions then

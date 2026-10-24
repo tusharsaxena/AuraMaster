@@ -3,7 +3,7 @@ local _, NS = ...
 -- settings/Bars.lua — how a container drawn as BARS looks (modules/Style_Bars.lua draws it).
 --
 --     band   [Container ▾]
---     [ General ][ Background & border ][ Name text ][ Time text ][ Stack text ][ Icon ][ Pandemic ]
+--     [ General ][ Background and border ][ Name text ][ Time text ][ Stack text ][ Icon ][ Pandemic ]
 --
 -- A section of the Containers page (#6): its nav rail lists Bars only for a container drawn as bars,
 -- so these rows are never drawn for a container whose style leaves them unused.
@@ -14,7 +14,7 @@ local _, NS = ...
 -- snapshotted once per apply (modules/Container.lua's SnapshotClass, modules/Style.lua's
 -- Style.Color), so a player container reads the player's. The two pandemic-window swatches are PALETTE
 -- definitions — one color per state — and carry no companion, the one exemption options-ui-§17 makes. The
--- dispel type colors are the profile's, on General → Dispel Colors (settings/GeneralSpells.lua).
+-- dispel type colors are the profile's, on General → Dispel colors (settings/GeneralSpells.lua).
 
 local L = NS.L
 local H = NS.Helpers
@@ -24,7 +24,7 @@ local PAGE = "bars"
 local P = "container.bars."
 local UNIT = { source = "unit" }
 
-local G_GENERAL, G_ICON, G_BG = L["General"], L["Icon"], L["Background & border"]
+local G_GENERAL, G_ICON, G_BG = L["General"], L["Icon"], L["Background and border"]
 local G_NAME, G_TIME, G_STACK, G_PANDEMIC = L["Name text"], L["Time text"], L["Stack text"], L["Pandemic"]
 local S_TIME, S_HIGHLIGHT = L["Time color"], L["Highlight"]
 
@@ -47,7 +47,7 @@ NS.RegisterSchemaRows(H.BarGroup({
     prefix = P, page = PAGE, group = G_GENERAL, subgroup = L["Fill"], classColor = UNIT,
     extra = {
         { path = P .. "colorMode", type = "string", values = NS.Choices(C.BAR_COLOR_MODES, C.BAR_COLOR_MODE_LABELS),
-          label = L["Color by"], desc = L["One color, or each debuff's dispel type (colors on General -> Dispel Colors). Buffs and many debuffs have no dispel type, class debuffs such as Judgment or Consecration included: those keep the bar color."] },
+          label = L["Color by"], desc = L["One color, or each debuff's dispel type (colors on the General page > Dispel colors). Buffs and many debuffs have no dispel type, class debuffs such as Judgment or Consecration included: those keep the bar color."] },
         { path = P .. "drain", type = "string", values = NS.Choices(C.DRAIN_DIRECTIONS, C.DRAIN_DIRECTION_LABELS),
           label = L["Drains toward"], desc = L["Which end the bar empties toward as the aura runs out. A permanent aura draws a full bar."] },
         -- engine-only: it eases the engine's timer between its updates; a placeholder's fill is drawn
@@ -75,7 +75,7 @@ NS.RegisterSchemaRows({
       desc = L["A permanent aura's bar is full and never moves. Turn this off to hide its spark; a timed bar's spark then sits just inside its moving edge."] },
 })
 
--- ── Background & border ───────────────────────────────────────────────────────────────────────
+-- ── Background and border ─────────────────────────────────────────────────────────────────────
 
 -- The background is a bar group, not options-ui-§16's "group over a background": that clause is for
 -- a surface with no texture, and this one has a live texture (modules/Style_Bars.lua paints it). The
@@ -95,7 +95,7 @@ local BG_TOOLTIPS = {
     [P .. "bgAlpha"] = L["How opaque the background texture is."],
     [P .. "bgColor"] = L["The background color."] .. (H.CLASS_COLOR_NOTE and (" " .. H.CLASS_COLOR_NOTE) or ""),
     [P .. "useClassColorBg"] = L["Draw the background in the class color instead of the swatch beside it."],
-    [P .. "bgColorMode"] = L["One color, or each debuff's dispel type (colors on General -> Dispel Colors). Buffs and many debuffs have no dispel type, class debuffs such as Judgment or Consecration included: those keep the background color."],
+    [P .. "bgColorMode"] = L["One color, or each debuff's dispel type (colors on the General page > Dispel colors). Buffs and many debuffs have no dispel type, class debuffs such as Judgment or Consecration included: those keep the background color."],
 }
 for _, row in ipairs(bg) do row.tooltip = BG_TOOLTIPS[row.path] end
 NS.RegisterSchemaRows(bg)
@@ -109,19 +109,24 @@ NS.RegisterSchemaRows(border)
 
 -- ── Text ──────────────────────────────────────────────────────────────────────────────────────
 
---- One text element's tab: the composed font block, then where the text sits.
+--- One text element's tab: its Show switch, the composed font block, then where the text sits.
 local function textRows(leaf, group, extras)
     local prefix = P .. leaf .. "."
+    -- The Show switch first, alone on its line and unheaded, above the rows it governs (item 020,
+    -- AUR-L12; Layout > Label already led with Show name label). Declared ahead of the composed Font
+    -- block, which stays contiguous (options-ui-§16).
+    NS.RegisterSchemaRows({
+        { path = prefix .. "show", page = PAGE, group = group, type = "bool", solo = true,
+          label = L["Show"], desc = L["Draw this text."] },
+    })
     NS.RegisterSchemaRows(H.FontGroup({
         prefix = prefix, page = PAGE, group = group, subgroup = L["Font"], classColor = UNIT,
     }))
     local rows = {
-        { path = prefix .. "show", page = PAGE, group = group, subgroup = L["Placement"], type = "bool",
-          label = L["Show"], desc = L["Draw this text."] },
         { path = prefix .. "justify", page = PAGE, group = group, subgroup = L["Placement"], type = "string",
           values = JUSTIFY, label = L["Justify"], desc = L["How the text lines up within its space."] },
         { path = prefix .. "point", page = PAGE, group = group, subgroup = L["Placement"], type = "string",
-          values = POINTS, label = L["Anchor"], desc = L["Where on the bar the text is anchored."] },
+          values = POINTS, label = L["Anchor point"], desc = L["Where on the bar the text is anchored."] },
         { path = prefix .. "x", page = PAGE, group = group, subgroup = L["Placement"], type = "number",
           min = -100, max = 100, step = 1, startsLine = true, label = L["X offset"], desc = L["Horizontal nudge, in pixels."] },
         { path = prefix .. "y", page = PAGE, group = group, subgroup = L["Placement"], type = "number",
@@ -203,7 +208,7 @@ NS.RegisterSchemaRows({
       label = L["Pandemic-window highlight color"], desc = L["The highlight's color."] },
 })
 
-NS.RegisterContainerSection(PAGE, L["Bar"], {
+NS.RegisterContainerSection(PAGE, L["Bar style"], {
     style   = "bars",
     tooltip = L["How this container's bars look."],
 })

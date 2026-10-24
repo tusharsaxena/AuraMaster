@@ -88,6 +88,11 @@ Suites worth knowing by name:
   opens the panel; its right-click menu grays *Locked* and *Test mode*, and a grayed entry clicked
   anyway writes nothing. The negative steps carry testing-§12
   falsification comments.
+- **`tests/test_settings_pin.lua`** — the settings-layout guard (item 020). Every schema row's stored
+  path, type, default, range and choice keys, and every leaf of the shipped profile defaults and the
+  container template, must equal `tests/settings_pin.lua`, a snapshot `tests/settings_pin_snapshot.lua`
+  renders. A layout pass moves, regroups and relabels rows and changes none of these. A change that
+  means to (a migration, a new setting) regenerates the snapshot in its own commit.
 - **`tests/test_docs.lua`** — no angle-bracket placeholder in `README.md` (CurseForge strips them),
   US spelling in every authored file against localization-§5's published lists, and the
   `## Documentation map` agreeing with `docs/` in both directions, and every `file:line` citation in

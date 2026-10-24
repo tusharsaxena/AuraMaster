@@ -57,7 +57,7 @@ test("bars: the seven tabs are drawn in order, whatever the container shows (S-1
     -- red under: Size still a tab of its own, or Icon back among the bar's own look (it moved to
     -- second-last, ahead of Pandemic, on 2026-09-20 -- a tab's place is where its group is FIRST
     -- declared, the library's O.RenderTabbedSchema)
-    local want = table.concat({ L["General"], L["Background & border"], L["Name text"],
+    local want = table.concat({ L["General"], L["Background and border"], L["Name text"],
         L["Time text"], L["Stack text"], L["Icon"], L["Pandemic"] }, ",")
     assertEqual(table.concat(P.tabKeys("bars"), ","), want)
     NS.SetByPath("container.auraType", "HARMFUL", 1)
@@ -115,7 +115,7 @@ test("bars: a confirmed fill color is stored on the selected container, as a tab
     assertEqual(NS.Database.FindContainer(2).bars.barColor.r, NS.CONTAINER_TEMPLATE.bars.barColor.r)
 end)
 
-test("bars: Pandemic carries no dispel swatches, and Color by points at General -> Dispel Colors (B-6)", function()
+test("bars: Pandemic carries no dispel swatches, and Color by points at the General page > Dispel colors (B-6)", function()
     local NS, _, P = bars()
     P.show("Bars")
     local ws = P.tab("bars", NS.L["Pandemic"])
@@ -124,9 +124,9 @@ test("bars: Pandemic carries no dispel swatches, and Color by points at General 
         assertEqual(NS.FindSchemaRow("dispelColors." .. name).page, "general", name)
     end
     assertEqual(#P.all(ws, "ColorPicker"), 2, "the pandemic-window time and highlight colors only")
-    -- red under: the tooltip sending the player to a tab rather than General -> Dispel Colors
+    -- red under: the tooltip sending the player to a tab rather than the General page > Dispel colors
     local desc = NS.FindSchemaRow("container.bars.colorMode").desc
-    assertTrue(desc:find("General -> Dispel Colors", 1, true) ~= nil, desc)
+    assertTrue(desc:find("the General page > Dispel colors", 1, true) ~= nil, desc)
     -- red under: the tooltip implying a typeless debuff is rare, citing Mystic Touch alone (feedback #7,
     -- smoke batch 2 item 2: many class debuffs have no dispel type)
     assertTrue(desc:find("many debuffs have no dispel type", 1, true) ~= nil, desc)
@@ -174,15 +174,15 @@ test("bars: the Pandemic tab holds the time color and the highlight, in pandemic
     assertEqual(NS.Database.FindContainer(1).bars.expiringThreshold, 7)
 end)
 
-test("bars: Background & border offers Color by beside the background, writing bgColorMode (feedback #7)", function()
+test("bars: Background and border offers Color by beside the background, writing bgColorMode (feedback #7)", function()
     local NS, _, P = bars()
     P.show("Bars")
-    local ws = P.tab("bars", NS.L["Background & border"])
+    local ws = P.tab("bars", NS.L["Background and border"])
     local row = NS.FindSchemaRow("container.bars.bgColorMode")
     -- red under: no bgColorMode row
     assertTrue(row ~= nil and row.subgroup == NS.L["Background"], "a Background row")
     local dd
-    for _, w in ipairs(P.rowWidgets(ws, "bars", NS.L["Background & border"])) do
+    for _, w in ipairs(P.rowWidgets(ws, "bars", NS.L["Background and border"])) do
         if w.type == "Dropdown" and w.labelText == row.label then dd = w end
     end
     assertTrue(dd ~= nil, "drawn on the tab")
@@ -218,4 +218,49 @@ test("bars: Defaults restores the selected container's bar look and leaves its i
     assertEqual(c1.bars.width, NS.CONTAINER_TEMPLATE.bars.width)
     assertEqual(c1.bars.name.fontSize, NS.CONTAINER_TEMPLATE.bars.name.fontSize)
     assertEqual(c1.icons.width, 50)
+end)
+
+-- ── item 020 (settings layout) ───────────────────────────────────────────────────────────────
+
+test("pages: every text-element tab opens on its Show switch, alone and unheaded, ahead of the Font block (AUR-L12, AUR-L13)", function()
+    local NS = fresh()
+    local L = NS.L
+    local TABS = {
+        bars  = { ["name"] = L["Name text"], ["time"] = L["Time text"], ["stacks"] = L["Stack text"] },
+        icons = { ["time"] = L["Time text"], ["stacks"] = L["Stack text"] },
+    }
+    for page, leaves in pairs(TABS) do
+        for leaf, group in pairs(leaves) do
+            local first
+            for _, row in ipairs(NS.Schema) do
+                if row.page == page and row.group == group then first = first or row end
+            end
+            local where = page .. " " .. leaf
+            -- red under: Show left as the seventh row, under the font rows it governs
+            assertEqual(first.path, ("container.%s.%s.show"):format(page, leaf), where .. ": Show first")
+            assertTrue(first.subgroup == nil and first.solo == true, where .. ": alone on its line, unheaded")
+            -- red under: Placement's Anchor still sharing the Layout tab's old name
+            assertEqual(NS.FindSchemaRow(("container.%s.%s.point"):format(page, leaf)).label, L["Anchor point"], where)
+        end
+    end
+    -- AUR-L20: the glow's nudges read like every other offset in the addon
+    assertEqual(NS.FindSchemaRow("container.text.glowX").label, L["X offset"])
+    assertEqual(NS.FindSchemaRow("container.text.glowY").label, L["Y offset"])
+end)
+
+test("bars: the Name text tab draws Show above the Font heading, with no heading over it (AUR-L12)", function()
+    local NS, m = fresh()
+    local P = pages(NS, m)
+    NS.Helpers.SelectContainer(1)
+    P.show("Bars")
+    local ws = P.tab("bars", NS.L["Name text"])
+    local show, font, firstHeading
+    for i, w in ipairs(ws) do
+        if w == P.row(ws, "container.bars.name.show") then show = i end
+        if w.type == "Heading" then
+            firstHeading = firstHeading or i
+            if w.text == NS.L["Font"] then font = i end
+        end
+    end
+    assertTrue(show ~= nil and font ~= nil and show < font and show < firstHeading, "Show, then the Font heading")
 end)

@@ -45,12 +45,12 @@ end
 
 -- The seven pages by display name and key, and the strip each draws for container 1 (buffs, bars).
 local STRIPS = {
-    { "General",    "general",    "Master controls=Master controls | Display=Display | Spell Categories=Spell Categories | Dispel Colors=Dispel Colors" },
+    { "General",    "general",    "Master controls=Master controls | Blizzard frames=Blizzard frames | Spell categories=Spell categories | Dispel colors=Dispel colors" },
     { "Containers", "containers", "General=General" },
-    { "Filters",    "filters",    "General=General | Categories=Categories | overrides=Overrides | Sorting=Sorting | Situations=Situations" },
-    { "Layout",     "layout",     "Frame=Frame | Anchor=Anchor | Growth=Growth | Mouse=Mouse | Label=Label" },
-    { "Bars",       "bars",       "General=General | Background & border=Background & border | Name text=Name text | Time text=Time text | Stack text=Stack text | Icon=Icon | Pandemic=Pandemic" },
-    { "Icons",      "icons",      "Size=Size | Border=Border | Cooldown=Cooldown | Time text=Time text | Stack text=Stack text | Pandemic=Pandemic" },
+    { "Filters",    "filters",    "General=General | Categories=Categories | overrides=Overrides | Situations=Situations" },
+    { "Layout",     "layout",     "Scale and strata=Scale and strata | Position and growth=Position and growth | Mouse=Mouse | Label=Label" },
+    { "Bars",       "bars",       "General=General | Background and border=Background and border | Name text=Name text | Time text=Time text | Stack text=Stack text | Icon=Icon | Pandemic=Pandemic" },
+    { "Icons",      "icons",      "General=General | Border=Border | Time text=Time text | Stack text=Stack text | Pandemic=Pandemic" },
     { "Text",       "text",       "General=General | Font=Font | Icon=Icon | Pandemic=Pandemic | Animation=Animation" },
 }
 
@@ -97,8 +97,8 @@ test("tabs: a container switch that takes the active tab away heals the strip to
     P.show("Filters")
     -- red under: the render keeping a pointer at a tab it no longer draws (an empty page under a strip)
     -- red under: the Situations rows or tab without their auraTypes guard (an empty tab)
-    assertEqual(strip(P, ctx), "Sorting=Sorting", "the strip without Categories, Overrides and Situations")
-    assertEqual(ctx.activeTab, "Sorting", "healed to the first tab drawn")
+    assertEqual(strip(P, ctx), "General=General", "the strip without Categories, Overrides and Situations")
+    assertEqual(ctx.activeTab, "General", "healed to the first tab drawn")
 end)
 
 test("tabs: the Filters page draws the engine's warnings above the tab's rows", function()

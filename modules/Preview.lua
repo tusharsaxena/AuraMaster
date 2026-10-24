@@ -249,7 +249,9 @@ end
 --- every click still reach what they reached, and it moves nothing: a follower hangs from the
 --- extent, never from this. Test mode never runs in combat, and the frame is our own besides.
 local MARKER_INSET = 2
-local MARKER_LEVEL = 40   -- above every region a placeholder dresses, below the strip (HANDLE_LEVEL 50)
+-- The MARKER band (core/Constants.lua's layers table): above every region a placeholder dresses and
+-- the unlocked outline, below the strip's HANDLE band.
+local MARKER_LEVEL = C.LAYERS.LEVEL.MARKER
 
 local markerText
 --- The marker's text: the localized TEST in the strip tag's orange (C.TEST_TAG_COLOR), built once.

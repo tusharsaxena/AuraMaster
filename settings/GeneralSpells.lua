@@ -1,11 +1,11 @@
 local _, NS = ...
 
--- settings/GeneralSpells.lua — General → Spell Categories: the spell lists every container shares
--- (schema v2 made them the profile's). Its sibling set, General → Dispel Colors, is
+-- settings/GeneralSpells.lua — General → Spell categories: the spell lists every container shares
+-- (schema v2 made them the profile's). Its sibling set, General → Dispel colors, is
 -- settings/GeneralDispel.lua (issue #16).
 --
---     [ Master controls ][ Display ][ Containers ][ Spell Categories ][ Dispel Colors ]
---     Spell Categories  [Category ▾]  [Restore this category's starter list]
+--     [ Master controls ][ Blizzard frames ][ Spell categories ][ Dispel colors ]
+--     Spell categories  [Category ▾]  [Restore this category's starter list]
 --                       -- one of the eleven shipped spell lists, Weapon enchants, or one the
 --                          player made -- which reads "(yours)" and is drawn no Restore. Every
 --                          entry is marked [Buffs] green or [Debuffs] red, "(yours)" gold
@@ -25,7 +25,7 @@ local _, NS = ...
 --                    -- OR, when the category is Weapon enchants --
 --                       ---- Weapon slots ----------------------------------------------------
 --                       [x] Main hand   [x] Off hand   [x] Ranged
---     Dispel Colors     settings/GeneralDispel.lua
+--     Dispel colors     settings/GeneralDispel.lua
 --
 -- SPELL CATEGORIES is bespoke: the category dropdown, the restore, then the library's IdList over that
 -- category's edits, drawn with an X at the left of every entry (`removeStyle = "icon"`, LibKa0s
@@ -63,7 +63,7 @@ local _, NS = ...
 --
 -- EVERY ACT OF THAT BLOCK ANSWERS IN THE PANEL as well as in chat -- one line under the controls,
 -- `notice` -- and a category the player made is marked "(yours)" wherever it is listed, here
--- and on Filters -> Categories. Restore is not drawn for one at all: see the note above
+-- and on Filters > Categories. Restore is not drawn for one at all: see the note above
 -- `restoreStarters` for why an empty starter list makes that button a silent delete.
 --
 -- THAT BLOCK IS ITS OWN FILE, settings/GeneralUserCategories.lua (AM-ATS-03, peeled along the 'Make
@@ -73,8 +73,8 @@ local _, NS = ...
 --
 -- This file registers no SCHEMA ROWS of its own and no StaticPopupDialogs entry -- the delete
 -- confirmation is settings/GeneralUserCategories.lua's. settings/General.lua registers ENCHANT_ROWS
--- after the Display rows and settings/GeneralDispel.lua's rows after those, so Spell Categories
--- takes the third strip position and Dispel Colors the fourth, and draws this tab through TABS. It
+-- after the Blizzard frames rows and settings/GeneralDispel.lua's rows after those, so Spell categories
+-- takes the third strip position and Dispel colors the fourth, and draws this tab through TABS. It
 -- loads after settings/GeneralUserCategories.lua, whose table it reads at file load; before
 -- GeneralDispel.lua, which reads BULLET and BULLET_GAP from here, and before General.lua for the
 -- rows; and before settings/Filters.lua, whose Overrides lists read `candidates`, `ID_STRINGS` and
@@ -98,9 +98,9 @@ local UC = NS.GeneralUserCategories
 local rerender, say, endVisit, renderManage = UC.Rerender, UC.Say, UC.EndVisit, UC.Render
 
 local PAGE = "general"
-local SPELLS = L["Spell Categories"]
--- Only for the Spell Categories tab's `before`: the tab itself is settings/GeneralDispel.lua's.
-local DISPEL = L["Dispel Colors"]
+local SPELLS = L["Spell categories"]
+-- Only for the Spell categories tab's `before`: the tab itself is settings/GeneralDispel.lua's.
+local DISPEL = L["Dispel colors"]
 
 -- One bullet's marker, prefixed at draw so the locale keys stay plain prose (settings/Text.lua's
 -- cheat sheet does the same). Published on NS.GeneralSpells for settings/GeneralDispel.lua.
@@ -116,7 +116,7 @@ local BULLET_GAP = 4
 local SECTION_GAP = UC.SECTION_GAP
 
 -- ---------------------------------------------------------------------------
--- Spell Categories
+-- Spell categories
 -- ---------------------------------------------------------------------------
 
 --- Whether `def` is a row this tab can draw: a spell list of either aura type, or the weapon-enchant
@@ -157,7 +157,7 @@ end
 
 --- The client's name for spell `id`, lowercased for sorting, or nil while it has none. The lookup is
 --- `NS.Compat.GetSpellInfo`, deliberately the same C_Spell call the library's own entry label reads
---- (`libs/LibKa0s/OptionsIds.lua:50-58`), so a list can never sort on one name and draw
+--- (`libs/LibKa0s/OptionsIds.lua:52-60`), so a list can never sort on one name and draw
 --- another.
 local function sortName(id)
     local name = NS.Compat.GetSpellInfo(id)
@@ -181,7 +181,7 @@ end
 ---
 --- The list does NOT reorder itself a moment later. O.IdList's re-ask-and-redraw (five asks, 0.4 s
 --- a window) is the ITEM path: `loadEntry` returns at once unless the kind declares `loads = true`,
---- which only "item" does (`OptionsIdList.lua:349-354`, and the candidate rule at `OptionsIds.lua:382`). A
+--- which only "item" does (`OptionsIdList.lua:349-354`, and the candidate rule at `OptionsIds.lua:384`). A
 --- spell's name is client data with no load step, so an id that is unnamed at this draw is an id
 --- the client does not know at all, and it stays unnamed and last until a re-render — no visible
 --- settling, and nothing here to mistake for a bug.
@@ -335,7 +335,7 @@ local ID_TOOLTIP = (L["Type a spell id or a name and pick from the list, or shif
 -- THE WORDS ARE NOT OURS TO CHOOSE. `C.AURA_TYPE_LABELS` is what the panel already calls these two
 -- things everywhere a player meets them: the container's own Aura type dropdown
 -- (settings/Containers.lua:82), the gray summary behind every container in the picker
--- (settings/OptionsSetup.lua:416) and the `/am list` line (settings/Slash.lua:216) -- those three
+-- (settings/OptionsSetup.lua:421) and the `/am list` line (settings/Slash.lua:216) -- those three
 -- are its readers, and the Filters section is not among them; its category rows are labeled from the
 -- category, not from the aura type. So the marker reads the table rather than defining a second
 -- vocabulary here. Read, not copied: a translation that moves those two labels moves the markers
@@ -372,7 +372,7 @@ local ID_TOOLTIP = (L["Type a spell id or a name and pick from the list, or shif
 -- are not the subject of the row, so each is a dimmed version of its hue rather than the saturated
 -- one a status light would use. The panel already has a register for chrome of this kind -- the
 -- drag handle's gold label at (1, 0.82, 0) and its help mark at (0.7, 0.7, 0.72),
--- libs/LibKa0s/WidgetsDragHandle.lua:492 and :168 -- and these three sit inside it:
+-- libs/LibKa0s/WidgetsDragHandle.lua:495 and :171 -- and these three sit inside it:
 --
 --     Buffs    (0.45, 0.75, 0.50) = 73bf80   muted green
 --     Debuffs  (0.80, 0.45, 0.45) = cc7373   muted red
@@ -703,14 +703,14 @@ end
 --- `noun`, `plural` and name color, so the list draws exactly as it did.
 ---
 --- `resolve` DELEGATES back to the library. A based kind does not inherit the client's name lookup
---- (`BASE_FIELDS`, `libs/LibKa0s/OptionsIds.lua:124`), so without this line typing "Renewing Mist" into the add box would stop
+--- (`BASE_FIELDS`, `libs/LibKa0s/OptionsIds.lua:126`), so without this line typing "Renewing Mist" into the add box would stop
 --- resolving; handing the text to `O.ResolveId("spell", ...)` is the library's own documented way
 --- back to the spellbook lookup and the shared-name check, rather than a second copy of either.
 ---
 --- AND THE SUGGESTIONS COME WITH THE BASE. The library keys its client sources off its own kind
 --- tables, but reads that table through `decorKind`, so a kind declaring `base = "spell"` wears the
 --- spell row -- the spellbook, and the rank a shared name is checked against (`suggestRow`,
---- `libs/LibKa0s/OptionsIds.lua:522-524`). A spell that is in the spellbook and on no list of
+--- `libs/LibKa0s/OptionsIds.lua:524-526`). A spell that is in the spellbook and on no list of
 --- this addon is therefore still offered as you type, as well as still resolving by name, by id or
 --- by link. Under LibKa0s v1.49.0 that lookup was keyed by the kind TABLE ITSELF, a host table
 --- joined no row, and this tab bought its tooltip at the price of its autocomplete; v1.49.1 is the
@@ -745,7 +745,7 @@ local function sayOverlap(def, id)
 end
 
 -- ---------------------------------------------------------------------------
--- Weapon enchants (the Spell Categories tab's non-list entry)
+-- Weapon enchants (the Spell categories tab's non-list entry)
 -- ---------------------------------------------------------------------------
 
 -- The slots, in the order a player reads them off their character. Profile-wide, like the spell
@@ -794,14 +794,14 @@ local function renderEnchant(ctx)
     local scroll = H.EnsureScroll(ctx)
     if scroll then H.AddSpacer(scroll, SECTION_GAP) end
     H.Section(ctx, L["Weapon slots"])
-    H.TextRow(ctx, L["Which weapon slots your temporary enchants are read from, shared by every container. Whether a container shows them at all is that container's own Filters -> Categories row."])
-    H.TextRow(ctx, L["Untick every slot here and all three are read anyway — to show no enchants at all, set Weapon enchants to Hide on that container's Filters -> Categories tab instead."])
+    H.TextRow(ctx, L["Which weapon slots your temporary enchants are read from, shared by every container. Whether a container shows them at all is that container's own Filters > Categories row."])
+    H.TextRow(ctx, L["Untick every slot here and all three are read anyway — to show no enchants at all, set Weapon enchants to Hide on that container's Filters > Categories tab instead."])
     local rows = {}
     for i, row in ipairs(ENCHANT_ROWS) do rows[i] = forRender(row) end
     H.RenderRows(ctx, rows, nil, nil, { noHeadings = true })
 end
 
---- The Spell Categories tab: the category dropdown, then either the ID list over the chosen
+--- The Spell categories tab: the category dropdown, then either the ID list over the chosen
 --- category's spells, or (Weapon enchants) the slot toggles.
 local function renderSpells(ctx)
     endVisit(ctx)
@@ -847,8 +847,8 @@ local function renderSpells(ctx)
     -- is the inconsistency the owner asked to close rather than a new one to open.
     --
     -- The 10 is a LITERAL on purpose: the library republishes `ROW_VSPACER` to hosts and deliberately
-    -- keeps `SECTION_TOP_SPACER` internal (`libs/LibKa0s/Options.lua:45-83`, and the scalar list at
-    -- `:513-519`), so `H.SECTION_TOP_SPACER` does not exist and reading it would silently be nil.
+    -- keeps `SECTION_TOP_SPACER` internal (`libs/LibKa0s/Options.lua:46-84`, and the scalar list at
+    -- `:514-520`), so `H.SECTION_TOP_SPACER` does not exist and reading it would silently be nil.
     -- Matching the number is the honest way to match the look; if the library ever republishes it,
     -- this is the line that takes it.
     local gridScroll = H.EnsureScroll(ctx)
@@ -873,7 +873,7 @@ local function renderSpells(ctx)
         -- gray `(id)` and the `(also in N)` suffix sit at the tail -- so a long spell name in a
         -- narrow panel loses its suffix first, then its id, then the end of its own name. Hovering
         -- the row still names the spell AND names the categories. docs/settings-panel.md says this
-        -- where it describes the Spell Categories tab.
+        -- where it describes the Spell categories tab.
         --
         -- AND IT DOES NOT ALWAYS FIT, at the narrowest width this list is drawn at. The label is
         -- `0.43` of the content width in the icon style at two columns and an entry spends 16px of
@@ -950,7 +950,7 @@ local function renderSpells(ctx)
 end
 
 local TABS = {
-    -- Ahead of Dispel Colors (settings/GeneralDispel.lua's tab): every schema group's tab is
+    -- Ahead of Dispel colors (settings/GeneralDispel.lua's tab): every schema group's tab is
     -- collected before any bespoke one.
     { key = SPELLS, label = SPELLS, render = renderSpells, before = DISPEL },
 }
@@ -970,7 +970,7 @@ NS.GeneralSpells = {
 
 --- Point this tab at one category. For the Filters section's per-row link (settings/Filters.lua, B5).
 --- A key this tab cannot draw is ignored rather than stored: a stale link must never leave the tab
---- on a category with no editor. Moves the General page's active tab to Spell Categories too, so the
+--- on a category with no editor. Moves the General page's active tab to Spell categories too, so the
 --- link actually lands the player where the category is shown.
 function NS.GeneralSpells.Select(key)
     local def = Cat.Find("HELPFUL", key) or Cat.Find("HARMFUL", key)

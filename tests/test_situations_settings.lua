@@ -239,7 +239,7 @@ test("situations settings: the rows are the Situations group, declared last, and
     end
     -- red under: the rows still in the General group (SI-02's interim home), or declared before Sorting
     assertEqual(table.concat(groups, ","),
-        table.concat({ NS.L["General"], NS.L["Categories"], NS.L["Sorting"], NS.L["Situations"] }, ","))
+        table.concat({ NS.L["General"], NS.L["Categories"], NS.L["Situations"] }, ","))
     for _, path in ipairs({ "container.filter.situations.npcs", "container.filter.zones.raid" }) do
         local row = NS.FindSchemaRow(path)
         -- red under: SI-02's skipRender kept (the tab's own RenderRows would draw nothing)

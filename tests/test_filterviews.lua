@@ -244,11 +244,11 @@ end)
 test("views: each mode prints the new sentence where a category is Hidden", function()
     -- red under: the old "Spell lists only apply while the unit is ..." sentences.
     local cases = {
-        { "target", "HELPFUL", "On units you can't assist (hostile or neutral), spell categories and Overrides are not applied. The Situations tab picks what draws there." },
-        { "focus", "HELPFUL", "On units you can't assist (hostile or neutral), spell categories and Overrides are not applied. The Situations tab picks what draws there." },
-        { "target", "HARMFUL", "On units you can assist, spell categories and Overrides are not applied. The Situations tab picks what draws there." },
-        { "player", "HARMFUL", "On your own and your pet's debuffs, spell categories and Overrides are not applied. The Situations tab picks what draws there." },
-        { "pet", "HARMFUL", "On your own and your pet's debuffs, spell categories and Overrides are not applied. The Situations tab picks what draws there." },
+        { "target", "HELPFUL", "On units you can't assist (hostile or neutral), spell categories and Overrides are not applied. Where spell lists don't apply, at the top of the Categories tab, picks what draws there." },
+        { "focus", "HELPFUL", "On units you can't assist (hostile or neutral), spell categories and Overrides are not applied. Where spell lists don't apply, at the top of the Categories tab, picks what draws there." },
+        { "target", "HARMFUL", "On units you can assist, spell categories and Overrides are not applied. Where spell lists don't apply, at the top of the Categories tab, picks what draws there." },
+        { "player", "HARMFUL", "On your own and your pet's debuffs, spell categories and Overrides are not applied. Where spell lists don't apply, at the top of the Categories tab, picks what draws there." },
+        { "pet", "HARMFUL", "On your own and your pet's debuffs, spell categories and Overrides are not applied. Where spell lists don't apply, at the top of the Categories tab, picks what draws there." },
     }
     for _, c in ipairs(cases) do
         local hide = (c[2] == "HELPFUL") and { important = "hide" } or { crowdControl = "hide" }

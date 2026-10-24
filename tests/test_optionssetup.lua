@@ -133,7 +133,8 @@ test("options: a container page's tabs are its schema groups, with a bespoke tab
     local ctx = NS2.Helpers.__pageCtx.filters
     NS2.State.SetActiveContainer(1)
     assertTrue(NS2.Helpers.SelectSection("filters"), "filters is on the rail"); NS2.Helpers.__pageCtx.containers.panel:__fire("OnShow")
-    -- Batch 8: the Filters page's `overrides` tab carries `before = Sorting`, so it is INSERTED
+    -- Batch 8: the Filters page's `overrides` tab carries `before` (Situations since item 020's AUR-L02
+    -- folded Sorting into General), so it is INSERTED
     -- ahead of that group rather than appended after every group (the library places it). A bespoke tab with no
     -- `before` still lands last; this page no longer has one to prove it with, so the expectation
     -- below is the insertion, derived from the schema rather than written out.
@@ -141,7 +142,7 @@ test("options: a container page's tabs are its schema groups, with a bespoke tab
     for _, row in ipairs(NS2.SchemaForPage("filters")) do
         if not seen[row.group] then
             seen[row.group] = true
-            if row.group == NS2.L["Sorting"] then
+            if row.group == NS2.L["Situations"] then
                 want[#want + 1] = "overrides"
             end
             want[#want + 1] = row.group
@@ -436,7 +437,7 @@ end)
 -- The Options descriptor's `addonName` is the folder name LibKa0s-Options-1.0's IdList hands
 -- LibKa0s-Media-1.0 for its `info` art (libs/LibKa0s/OptionsIdList.lua, idHelpIcon). Without it
 -- every help mark falls to the client's blue information disc. AuraMaster is the one host whose
--- IdList entries carry help (Filters → Overrides, General → Spell Categories), so it is the one
+-- IdList entries carry help (Filters → Overrides, General → Spell categories), so it is the one
 -- host where the change is visible. The headless kit stubs no IsAddOnLoaded, so the name is trusted
 -- here; in the client the library checks it against the loaded-addon list.
 

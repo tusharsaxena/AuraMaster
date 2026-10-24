@@ -308,6 +308,8 @@ if not lib then
         "AddSpacer", "TextRow", "TabStrip", "SubTabStrip", "PageHeader", "PageBanner",
         "InlineButtonPair", "SessionCheckbox", "AttachTooltip", "ChoiceGrid", "ResolveId", "IdInput",
         "IdList", "Drawer", "UnnamedCandidates", "SelectTab", "NavRail", "SelectSection",
+        -- Keybindings tab, strata and Reset-all tooltips (OptionsKeybinds 2, OptionsCompose 8 and 11)
+        "KeybindingsTab", "KeybindRows", "StrataTooltip", "ResetAllTooltip",
         -- this addon's decorations on the live instance (defined below the `return`)
         "SelectContainer", "ContainerBanner", "RenderWarnings", "RenderPage", "RenderContainerPage",
         "LandOnGeneral",
@@ -317,6 +319,9 @@ if not lib then
     -- The one table member the ID widgets add: the hint strings a host tooltip may quote. The host
     -- keeps its own localized copy, so an empty table is the inert answer.
     Helpers.ID_NAME_HINT = {}
+    -- The Defaults-tooltip line the Keybindings tab adds (OptionsKeybinds 2): empty, since a build
+    -- without the library draws no tooltip to end with it.
+    Helpers.KEYBINDS_UNCHANGED = ""
     -- The gap RenderWarnings leaves under its orange lines: a zero placeholder, never a plausible
     -- figure, since nothing is drawn without the library (RenderWarnings is a no-op above).
     Helpers.WARNINGS_GAP = 0

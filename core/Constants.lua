@@ -185,6 +185,82 @@ C.STRATA = { "BACKGROUND", "LOW", "MEDIUM", "HIGH", "DIALOG" }
 C.STRATA_LABELS = { BACKGROUND = "Background", LOW = "Low", MEDIUM = "Medium", HIGH = "High", DIALOG = "Dialog" }
 
 -- ---------------------------------------------------------------------------
+-- Frame layering (frame-layering-§5): the addon's whole stack, once
+-- ---------------------------------------------------------------------------
+--
+-- Strata picks the tier; within a container everything is a named offset over a base frame's level.
+-- Every SetFrameStrata and SetFrameLevel in core/, modules/ and settings/ reads this table
+-- (tests/test_layers.lua pins it), except the two the player sets: a container anchor's strata and
+-- level are `layout.strata` (C.STRATA, default MEDIUM, STRATA.HUD) and `layout.level`, the base L
+-- every container band below counts from.
+--
+--   tier                 strata                 frames
+--   T0 non-visual        none                   BlizzardFrames' hidden parent, the font primer, the
+--                                               time-text measurer, event drivers
+--   T1p HUD (player)     layout.strata          the anchor at L; the mouse blocker one under the
+--                                               engine; the engine, live buttons and preview
+--                                               placeholders at L+1 (buttons L+2); the glow twins
+--                                               under the main (GLOW_* below); the name label L+20
+--   T2 edit chrome       the container's        unlocked outline L+30, TEST marker L+40, drag handle
+--                                               L+50 (+HOP over an attach parent's strip)
+--   T6 modal             DIALOG (library)       LibKa0s debug console and perf panel; Blizzard's
+--                                               StaticPopups (reset all, delete, attach flow, ...)
+--   T7 child             FULLSCREEN (library)   the debug console's copy window
+--   T8 popup             FULLSCREEN_DIALOG      the drag-time snap highlight (STRATA.POPUP); the
+--                                               library's menus, autocomplete and ID suggestions;
+--                                               AceGUI pullouts and the color picker
+--   T9 cursor            TOOLTIP                the frame picker (STRATA.CURSOR): it labels the frame
+--                                               under the cursor, whose own GameTooltip would cover
+--                                               it from any lower tier; GameTooltip; LSM pullouts
+--
+-- Library bands this addon relies on: the DragHandle's help and close marks at handle + 1 (Widgets
+-- DragHandle minor 5, born there through `spec.level`) and the Options combat cover over its page.
+-- A player can pick DIALOG for a container (a value shipped before frame-layering-§1); the Strata
+-- row's tooltip (O.StrataTooltip) says what it then covers.
+--
+-- Inside one element (an engine button, frame-layering-§3), counted from the element root, never
+-- from a sibling: FILL (the bar's StatusBar, the cooldown swipe) < SPARK (the bar's spark clip) <
+-- BORDER (our border, the bar's icon border) < DISPEL (the icon's dispel edge) < OVERLAY (the texts,
+-- and the pandemic wash on them). The Text style's frames nest instead (each its parent + 1).
+--
+-- Two documented exceptions, both counted from a frame that is not the parent:
+--   * The mouse blocker sits BLOCKER under the engine's CURRENT level (Container:ApplyBlocker),
+--     because a later layout.level raises the anchor without the engine following it.
+--   * The text-glow twins (modules/Container_Twins.lua) sit under the main engine. A text button
+--     nests our frames up to four deep (the text's chain at the button's level + 4, the icon at + 2,
+--     modules/Style_Text.lua), so a twin's text draws under the main's icon only with a gap above 2
+--     (the twins design note, section 2): the main is raised to at least GLOW_GAP + 1, each twin
+--     sits at main - GLOW_GAP and its holder GLOW_HOLDER under that. With L = 5 a holder sits at 2,
+--     below the anchor: legal and harmless, since the holders carry glow copies only.
+C.LAYERS = {
+    STRATA = {
+        HUD    = "MEDIUM",              -- T1: the default of every container's layout.strata
+        POPUP  = "FULLSCREEN_DIALOG",   -- T8: the snap highlight, over every strata a player can pick
+        CURSOR = "TOOLTIP",             -- T9: the frame picker's overlay
+    },
+    LEVEL = {
+        -- one container, over its anchor's level L
+        BLOCKER = -1,    -- under the engine's current level (see above)
+        CONTENT = 1,     -- the engine, the preview placeholders and extent (implicit, anchor + 1)
+        LABEL   = 20,
+        OUTLINE = 30,
+        MARKER  = 40,
+        HANDLE  = 50,
+        HOP     = 1,     -- a child's strip over its attach parent's strip
+        -- inside one element, over the element root
+        SUNK    = 0,     -- a backdrop host sunk to its border frame's level (modules/Style.lua)
+        FILL    = 1,
+        SPARK   = 2,
+        BORDER  = 3,
+        DISPEL  = 4,
+        OVERLAY = 5,
+        -- the text-glow twins (see above)
+        GLOW_GAP    = 3,
+        GLOW_HOLDER = -1,
+    },
+}
+
+-- ---------------------------------------------------------------------------
 -- How elements look
 -- ---------------------------------------------------------------------------
 
@@ -220,7 +296,7 @@ C.TEST_TAG_COLOR = "ffff8000"
 
 -- The panel's muted gold for secondary text (batch 10 F6): the drag handle's gold dimmed toward its
 -- help mark, the same (0.85, 0.72, 0.38) settings/GeneralSpells.lua marks a player's own category
--- with. The Growth tab's inherited note reads in it. The AARRGGBB body of a "|c" escape.
+-- with. The Growth subsection's inherited-flow note reads in it. The AARRGGBB body of a "|c" escape.
 C.SECONDARY_GOLD = "ffd9b861"
 -- The strip name of a container attached to another container or a named frame: a warm gray, the
 -- strip's gold with the color drained out, so at a glance it reads as attached (the owner,
@@ -284,10 +360,7 @@ C.TEXT_ANIM_LABELS = { none = "None", pulse = "Pulse", blink = "Blink", bounce =
 C.TEXT_GLOW_RING = { { 1, 0 }, { 0, 1 }, { 1, 1 }, { 1, -1 }, { -1, 0 }, { 0, -1 }, { -1, -1 }, { -1, 1 } }
 C.TEXT_GLOW_PAIRED = true
 C.TEXT_GLOW_TWINS = C.TEXT_GLOW_PAIRED and 4 or 8
--- How far below the main engine its twins sit. A text button nests our frames up to four deep (the
--- text's chain at the button's level + 4, the icon at + 2, modules/Style_Text.lua), so a twin's text
--- draws under the main's icon only with a gap above 2 (the twins design note, section 2).
-C.TEXT_GLOW_LEVEL_GAP = 3
+-- How far below the main engine its twins sit is C.LAYERS.LEVEL.GLOW_GAP (the layers table above).
 
 -- The template's tokens, in cheat-sheet order. modules/TextTemplate.lua parses with this list and
 -- settings/Text.lua prints it. `kind` is the engine field that draws a token; a duration token also

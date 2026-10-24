@@ -379,7 +379,9 @@ local DRIVER_PERIOD = 0.03   -- seconds between two snap reads while a drag is l
 local EDGE = 2               -- the repainted strip edge's and the box's thickness, px (A5: the strip's own is 1)
 local MARKER = 10            -- each join dot's side, px (A1: 6 read too small in game)
 local LINE = 2               -- the line between the two dots, px
-local HIGHLIGHT_STRATA = "TOOLTIP"   -- over every container, whatever strata its layout picked
+-- The popup tier (core/Constants.lua's layers table, AUR-Z05): over every container, whatever strata
+-- its layout picked (Dialog included), and under the tooltips, which keep TOOLTIP to themselves.
+local HIGHLIGHT_STRATA = C.LAYERS.STRATA.POPUP
 
 local live        -- the live container being dragged, or nil
 local elapsed = 0 -- seconds since the driver last read the snap
@@ -437,8 +439,8 @@ end
 --- the holder, Snap.marker the target's dot, Snap.childMarker the dragged one's, Snap.line, Snap.box:
 --- published for the headless suite), painted in C.SNAP_COLOR. The holder covers UIParent and takes
 --- no mouse (a plain frame never enables it), so it only carries its parts' visibility and strata; the
---- TOOLTIP strata puts the dots, the line and the box over any container, whatever strata its layout
---- picked. Hidden at birth; shown only while a pair is.
+--- The popup strata (FULLSCREEN_DIALOG) puts the dots, the line and the box over any container,
+--- whatever strata its layout picked. Hidden at birth; shown only while a pair is.
 local function buildHighlight()
     if Snap.highlight then return Snap.highlight end
     local hl = CreateFrame("Frame", nil, UIParent)

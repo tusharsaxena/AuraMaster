@@ -84,7 +84,7 @@ test("containers: the subsection heading is drawn between Enabled and Unit, not 
     local at, enabled, unit
     for i, w in ipairs(ws) do
         if w.type == "Heading" and w.text == NS.L["What it shows, and how"] then at = i end
-        if w.labelText == NS.L["Enabled"] then enabled = i end
+        if w.labelText == NS.L["Enable this container"] then enabled = i end
         if w.labelText == NS.L["Unit"] then unit = i end
     end
     assertTrue(at ~= nil and enabled ~= nil and unit ~= nil, "all three drew")
@@ -235,7 +235,7 @@ test("containers: Delete keeps the band's picker and New through both refreshes,
         if key == "containers" then renders = renders + 1 end
         return render(ctx, key, ...)
     end
-    P.find(ws, "Button", NS.L["Delete"]):__fire("OnClick")
+    P.find(ws, "Button", NS.L["Delete container"]):__fire("OnClick")
     local after = P.during(function()
         m.StaticPopupDialogs.AURAMASTER_DELETE_CONTAINER.OnAccept(popups[1], popups[1].data)
         m.__fireTimers()   -- CONTAINERS_CHANGED's coalesced next-frame refresh
@@ -337,11 +337,11 @@ test("containers: changing the aura type redraws an open Filters page for the ne
     P.show("Filters")
     P.tab("filters", NS.L["Categories"])
     NS.Helpers.__pageCtx.filters.panel:Show()   -- on screen, so only a STRUCTURAL refresh re-renders it
-    -- The Categories tab is the redraw signal: a debuff container's grids include Dispel Types, a buff
+    -- The Categories tab is the redraw signal: a debuff container's grids include Dispel types, a buff
     -- container's do not.
     local function drewDispelTypes(widgets)
         for _, w in ipairs(widgets) do
-            if w.type == "Heading" and w.text == NS.L["Dispel Types"] then return true end
+            if w.type == "Heading" and w.text == NS.L["Dispel types"] then return true end
         end
         return false
     end
@@ -350,7 +350,7 @@ test("containers: changing the aura type redraws an open Filters page for the ne
     assertFalse(drewDispelTypes(during), "never inside the dropdown's own callback")
     local redrawn = P.during(function() m.__fireTimers() end)
     -- red under: the aura type row losing its structural onChange (the tab keeps a buff container's grids)
-    assertTrue(drewDispelTypes(redrawn), "redrawn with the debuff container's Dispel Types")
+    assertTrue(drewDispelTypes(redrawn), "redrawn with the debuff container's Dispel types")
 end)
 
 test("containers: Unit, Aura type and Style draw every value in a color of its own", function()
@@ -487,7 +487,7 @@ test("containers: in combat the library refuses Duplicate and New container; not
     local NS, m, P, ws = containers()
     local lines = P.chat()
     m.__lockdown = true
-    P.find(ws, "Button", NS.L["Duplicate"]):__fire("OnClick")
+    P.find(ws, "Button", NS.L["Duplicate container"]):__fire("OnClick")
     -- LibKa0s v1.46.1 (options-ui-§2): a library-drawn button is refused by the settings combat lock
     -- first, on its own gray line, once per combat; doDuplicate never runs.
     -- red under: the library's write seam not refusing the button pair in combat
@@ -508,7 +508,7 @@ test("containers: Duplicate copies the selected container and selects the copy",
     NS.SetByPath("container.icons.width", 44, 2)
     NS.Helpers.SelectContainer(2)
     local ws = P.rerender("Containers")
-    P.find(ws, "Button", NS.L["Duplicate"]):__fire("OnClick")
+    P.find(ws, "Button", NS.L["Duplicate container"]):__fire("OnClick")
     local _, id = NS.ActiveContainer()
     -- red under: doDuplicate copying something other than the selection, or not selecting the copy
     assertEqual(#NS.Database.GetContainers(), #NS.STARTER_CONTAINERS + 1)
@@ -523,7 +523,7 @@ test("containers: Delete asks first, naming the container, and deletes it only o
     local popups = P.popups()
     NS.Helpers.SelectContainer(2)
     local ws = P.rerender("Containers")
-    P.find(ws, "Button", NS.L["Delete"]):__fire("OnClick")
+    P.find(ws, "Button", NS.L["Delete container"]):__fire("OnClick")
     -- red under: doDelete deleting without the popup, or the popup not carrying the id
     assertEqual(#popups, 1)
     assertEqual(popups[1].which, "AURAMASTER_DELETE_CONTAINER")
@@ -573,14 +573,32 @@ test("containers: copying Everything takes what the source is, never its name or
     assertEqual(c1.position.x, -240, "the position stays")
 end)
 
+test("containers: the acts and the copy choice name what they act on (AUR-L-new5, AUR-L30, AUR-L22)", function()
+    local NS, _, P, ws = containers()
+    -- red under: the bare Enabled / Duplicate / Delete labels, or Delete not last on its line
+    assertTrue(P.row(ws, "container.enabled").labelText == NS.L["Enable this container"], "the checkbox names its object")
+    local dup = P.find(ws, "Button", NS.L["Duplicate container"])
+    local del = P.find(ws, "Button", NS.L["Delete container"])
+    assertTrue(dup ~= nil and del ~= nil, "both acts drew")
+    local at = {}
+    for i, w in ipairs(ws) do at[w] = i end
+    assertTrue(at[dup] < at[del], "Delete container is the last act on its line")
+    -- red under: the Layout choice promising the whole Layout entry
+    local what = P.find(ws, "Dropdown", NS.L["What to copy"])
+    assertEqual(what.list.layout, NS.L["Layout: scale, strata and growth"])
+    -- red under: the Style tooltip naming sections the rail no longer labels that way
+    local style = NS.FindSchemaRow("container.style")
+    assertTrue(style.desc:find("its own style section on this page's rail", 1, true) ~= nil, style.desc)
+end)
+
 test("containers: with one container the page offers Duplicate and Delete but no copy block", function()
     local NS, _, P = containers()
     NS.ContainerManager.Delete(2)
     NS.ContainerManager.Delete(3)
     NS.ContainerManager.Delete(4)
     local ws = P.rerender("Containers")
-    assertTrue(P.find(ws, "Button", NS.L["Duplicate"]) ~= nil)
-    assertTrue(P.find(ws, "Button", NS.L["Delete"]) ~= nil)
+    assertTrue(P.find(ws, "Button", NS.L["Duplicate container"]) ~= nil)
+    assertTrue(P.find(ws, "Button", NS.L["Delete container"]) ~= nil)
     -- red under: afterRows drawing the copy block with nothing to copy from
     assertNil(P.find(ws, "Dropdown", NS.L["Source container"]))
     assertNil(P.find(ws, "Button", NS.L["Copy onto this container"]))
@@ -608,5 +626,5 @@ test("containers: the page's Defaults tooltip names the section on screen and th
     local NS, m = containers()
     -- red under: the tooltip still describing a page of profile rows, or naming General
     assertEqual(m.__subcategories.Containers.defaultsTooltip,
-        NS.L["Restore the selected container's settings in the section on screen to their addon defaults. On General: Enabled, Unit, Aura type and Style; its name is kept."])
+        NS.L["Restore every tab of the entry selected on the left, for the container in the band, to its defaults. On General: Enable this container, Unit, Aura type and Style; its name is kept."])
 end)
