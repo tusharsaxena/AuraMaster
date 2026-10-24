@@ -766,7 +766,7 @@ function ContainerClass:ApplyLive(on)
     if self.blocker then self.blocker:SetShown(on) end
 end
 
---- The anchor's alpha: the container's own times Master alpha.
+--- The anchor's alpha: the container's own times Master opacity (the `alpha` setting).
 function ContainerClass:ApplyAlpha(cfg, p)
     local L = cfg and cfg.layout or {}
     self.anchor:SetAlpha((tonumber(L.alpha) or 1) * (tonumber(p and p.alpha) or 1))

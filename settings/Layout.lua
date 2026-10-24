@@ -3,14 +3,26 @@ local _, NS = ...
 -- settings/Layout.lua — where a container sits and how its auras are arranged.
 --
 --     band      [Container ▾]
---     [ Frame ][ Anchor ][ Growth ][ Mouse ][ Label ]
---     Anchor  [Attach to]
---             -- Screen --            [Point] [Relative point] / [X] [Y]
---             -- Another container -- [Container] | joins line / [Parent container anchor point] [This container anchor point]
---             -- Named frame --       [Frame name] [Pick a frame...]   <- pairWith / [Point] [Relative point]
+--     [ Scale and strata ][ Position and growth ][ Mouse ][ Label ]
+--     Scale and strata     [Container scale] [Container opacity] / [Frame strata] [Frame level]
+--     Position and growth  [Attach to]
+--             -- Screen --            [Screen anchor point] [This container anchor point] / [X position] [Y position]
+--             -- Another container -- [Parent container] | joins line / [Parent container anchor point] [This container anchor point]
+--             -- Named frame --       [Frame name] [Pick a frame...]   <- pairWith / [Named frame anchor point] [This container anchor point]
 --             -- Offset --            [X offset] [Y offset]
---             (Named frame only: a gray hint when Point faces the growth; growsBackNote, below)
+--             (Named frame only: a gray hint when the anchor point faces the growth; growsBackNote, below)
+--             -- Growth --            (the inherited-flow note) [Fill] [Per row or column] / [Grow horizontally]
+--                                     [Grow vertically] / [Spacing (px)] [Line spacing (px)]
+--     Mouse       [Click-through] / -- Tooltips -- [Show tooltips] [Tooltips in combat] / [Tooltip position]
+--                 / -- Clicks -- [Right-click to cancel]
 --     Label       [Show name label] / [X offset] [Y offset] / -- Font -- (the six font leaves)
+--
+-- ITEM 020 (settings layout, AUR-L09/L10/L11): Anchor and Growth were two tabs editing one thing,
+-- where the block starts and which way it runs, and each sent the player to the other ("on the Growth
+-- tab", "as the Growth tab says"). They are one tab now, Growth a subsection under the attach rows;
+-- the tab is drawn by its own renderer (renderPosition) so the inherited-flow note can sit under the
+-- Growth heading. Frame is Scale and strata (it clashed with Named frame and Frame name on the next
+-- tab), and Mouse leads with Click-through, which overrides every other row of the tab.
 --
 -- A container attaches to the screen, to another container (following it as it grows) or to any
 -- named frame (modules/Anchors.lua). Only the subsections the chosen mode reads are DRAWN (feedback
@@ -27,9 +39,16 @@ local C = NS.Constants
 
 local PAGE = "layout"
 -- Declared in this order because the tab strip is the groups' first-seen order.
-local G_FRAME, G_ANCHOR, G_GROW, G_MOUSE = L["Frame"], L["Anchor"], L["Growth"], L["Mouse"]
+local G_FRAME, G_POSITION, G_MOUSE = L["Scale and strata"], L["Position and growth"], L["Mouse"]
 local G_LABEL = L["Label"]
 local S_SCREEN, S_CONTAINER, S_FRAME, S_OFFSET = L["Screen"], L["Another container"], L["Named frame"], L["Offset"]
+local S_GROW = L["Growth"]
+local S_TIPS, S_CLICKS = L["Tooltips"], L["Clicks"]
+
+-- The tab names, for a player-facing string outside this file that has to name one (the drag
+-- handle's tooltip, modules/Anchors.lua): built from these, never retyped, so a rename carries it
+-- (AUR-L28, options-ui-§21's location strings).
+NS.LayoutTabs = { section = L["Layout"], position = G_POSITION }
 local POINTS = NS.Choices(C.POINTS, C.POINT_LABELS)
 
 -- The switched subsections under Attach to (LibKa0s-Options-1.0 `shownWhen`, W22): each row is
@@ -344,7 +363,7 @@ end
 --- (modules/ContainerManager.lua's PARENT_PATHS, modules/Anchors.lua's FLOW_PATHS).
 local function pointRow(path, half, label, desc, startsLine)
     return {
-        path = path, page = PAGE, group = G_ANCHOR, subgroup = S_CONTAINER, shownWhen = CONTAINER_ONLY,
+        path = path, page = PAGE, group = G_POSITION, subgroup = S_CONTAINER, shownWhen = CONTAINER_ONLY,
         type = "string", values = pointChoices(half), startsLine = startsLine, label = label, desc = desc,
         nilAs = AUTO_POINT, validate = validPoint, normalize = storedPoint, cliParse = foldPoint,
         onChange = structural,
@@ -354,15 +373,15 @@ end
 NS.RegisterSchemaRows({
     {
         path = "container.layout.scale", page = PAGE, group = G_FRAME, type = "number", min = 0.5, max = 3, step = 0.05,
-        label = L["Scale"], desc = L["This container's scale. Multiplied by Master scale on the General page."],
+        label = L["Container scale"], desc = L["This container's scale. Multiplied by Master scale on the General page > Master controls."],
     },
     {
         path = "container.layout.alpha", page = PAGE, group = G_FRAME, type = "number", min = 0, max = 1, step = 0.05,
-        isPercent = true, label = L["Opacity"], desc = L["This container's opacity. Multiplied by Master alpha on the General page."],
+        isPercent = true, label = L["Container opacity"], desc = L["This container's opacity. Multiplied by Master opacity on the General page > Master controls."],
     },
     {
         path = "container.layout.strata", page = PAGE, group = G_FRAME, type = "string",
-        values = NS.Choices(C.STRATA, C.STRATA_LABELS), label = L["Strata"],
+        values = NS.Choices(C.STRATA, C.STRATA_LABELS), label = L["Frame strata"],
         -- The library's one strata tooltip over the row's own values (frame-layering-§1, AUR-Z07): it
         -- adds what Dialog covers, since this row still offers it. The value set is unchanged.
         desc = H.StrataTooltip(C.STRATA),
@@ -376,31 +395,35 @@ NS.RegisterSchemaRows({
         -- The selector of the switched subsections below: the library redraws the tab when it
         -- changes, from the panel, `/am set` or a reset alike. Its onChange only starts or ends an
         -- attachment (the new one's default side, E5).
-        path = MODE, page = PAGE, group = G_ANCHOR, type = "string", onChange = modeChanged,
+        path = MODE, page = PAGE, group = G_POSITION, type = "string", onChange = modeChanged,
         -- Asks first when a stored target would change how it flows (GC-1): panel only.
         confirmWrite = confirmMode,
         values = NS.Choices(C.ATTACH_MODES, C.ATTACH_MODE_LABELS), label = L["Attach to"],
         desc = L["The screen (drag it anywhere), another container (it follows that container as it grows; while unlocked, drop it on one to attach it there, or drag it away to put it back on the screen), or any named frame — a unit frame, an action bar. Only the settings for your choice are shown below."],
     },
+    -- The screen's point on the left and this container's on the right (AUR-L08): the same order and
+    -- names as the two attached modes' anchor-point rows, so the three modes read one way. The X and Y
+    -- here are positions, where the attached modes' are nudges, and the labels say so.
     {
-        path = "container.position.point", page = PAGE, group = G_ANCHOR, subgroup = S_SCREEN, shownWhen = SCREEN_ONLY,
-        type = "string", values = POINTS, label = L["Point"],
-        desc = L["The corner of the container's first aura that is placed on the screen. The other auras grow away from it as the Growth tab says. Dragging the container sets these for you."],
+        path = "container.position.relativePoint", page = PAGE, group = G_POSITION, subgroup = S_SCREEN, shownWhen = SCREEN_ONLY,
+        type = "string", values = POINTS, label = L["Screen anchor point"],
+        desc = L["The point of the screen the container's first aura is placed from. X position and Y position are measured from the screen anchor point."],
     },
     {
-        path = "container.position.relativePoint", page = PAGE, group = G_ANCHOR, subgroup = S_SCREEN, shownWhen = SCREEN_ONLY,
-        type = "string", values = POINTS, label = L["Relative point"], desc = L["The screen corner the first aura's point is measured from."],
+        path = "container.position.point", page = PAGE, group = G_POSITION, subgroup = S_SCREEN, shownWhen = SCREEN_ONLY,
+        type = "string", values = POINTS, label = L["This container anchor point"],
+        desc = L["The corner of the container's first aura that is placed at the position measured from the screen anchor point. The other auras grow away from it as Growth below says. Dragging the container sets these for you."],
     },
     {
-        path = "container.position.x", page = PAGE, group = G_ANCHOR, subgroup = S_SCREEN, shownWhen = SCREEN_ONLY,
-        type = "number", min = -2000, max = 2000, step = 1, label = L["X"], desc = L["Horizontal position, in pixels."],
+        path = "container.position.x", page = PAGE, group = G_POSITION, subgroup = S_SCREEN, shownWhen = SCREEN_ONLY,
+        type = "number", min = -2000, max = 2000, step = 1, label = L["X position"], desc = L["Horizontal position, in pixels, measured from the screen anchor point."],
     },
     {
-        path = "container.position.y", page = PAGE, group = G_ANCHOR, subgroup = S_SCREEN, shownWhen = SCREEN_ONLY,
-        type = "number", min = -2000, max = 2000, step = 1, label = L["Y"], desc = L["Vertical position, in pixels."],
+        path = "container.position.y", page = PAGE, group = G_POSITION, subgroup = S_SCREEN, shownWhen = SCREEN_ONLY,
+        type = "number", min = -2000, max = 2000, step = 1, label = L["Y position"], desc = L["Vertical position, in pixels, measured from the screen anchor point."],
     },
     {
-        path = "container.attach.container", page = PAGE, group = G_ANCHOR, subgroup = S_CONTAINER,
+        path = "container.attach.container", page = PAGE, group = G_POSITION, subgroup = S_CONTAINER,
         shownWhen = CONTAINER_ONLY, type = "number", values = attachTargets, label = L["Parent container"],
         desc = L["The container to attach to when 'Another container' is chosen. This one continues its flow: fill and growth follow it, the two anchor points below say where it joins it (below it, Automatic), and the gap to it is this container's own spacing. The X and Y offsets nudge it from there. A chain that would loop falls back to the screen."],
         -- Structural: the attachment line beside it (attachedLine) names the target.
@@ -420,31 +443,31 @@ NS.RegisterSchemaRows({
         L["The point of this container's first aura that joins the parent's anchor point. Automatic picks one from the two containers' types and the way the chain grows. Any point can be picked."]),
     {
         -- Half width, so Pick a frame... (pairWith, below) can take the line's right half.
-        path = "container.attach.frame", page = PAGE, group = G_ANCHOR, subgroup = S_FRAME, shownWhen = FRAME_ONLY,
+        path = "container.attach.frame", page = PAGE, group = G_POSITION, subgroup = S_FRAME, shownWhen = FRAME_ONLY,
         type = "string", dialogControl = "EditBox", maxLetters = 120, label = L["Frame name"],
         desc = L["The global name of the frame to attach to when 'Named frame' is chosen — or use Pick a frame... beside it. /fstack shows frame names."],
     },
     -- The named frame's point on the left and this container's on the right, as the owner asked
     -- (2026-09-26): the same order and names as Another container's two anchor-point rows.
     {
-        path = "container.attach.relativePoint", page = PAGE, group = G_ANCHOR, subgroup = S_FRAME, shownWhen = FRAME_ONLY,
+        path = "container.attach.relativePoint", page = PAGE, group = G_POSITION, subgroup = S_FRAME, shownWhen = FRAME_ONLY,
         type = "string", values = POINTS, startsLine = true, label = L["Named frame anchor point"],
         desc = L["The corner of the target the first aura's point is attached to."],
     },
     {
-        path = "container.attach.point", page = PAGE, group = G_ANCHOR, subgroup = S_FRAME, shownWhen = FRAME_ONLY,
+        path = "container.attach.point", page = PAGE, group = G_POSITION, subgroup = S_FRAME, shownWhen = FRAME_ONLY,
         type = "string", values = POINTS, label = L["This container anchor point"],
-        desc = L["The corner of the container's first aura that is attached — the container's full size is secret, so it cannot be anchored itself. The other auras grow away from it as the Growth tab says."],
-        -- Structural: the facing-growth hint under the tab (growsBackNote) reads it.
+        desc = L["The corner of the container's first aura that is attached — the container's full size is secret, so it cannot be anchored itself. The other auras grow away from it as Growth below says."],
+        -- Structural: the facing-growth hint above the Growth subsection (growsBackNote) reads it.
         onChange = structural,
     },
     {
-        path = "container.attach.x", page = PAGE, group = G_ANCHOR, subgroup = S_OFFSET, shownWhen = ATTACHED_ONLY,
+        path = "container.attach.x", page = PAGE, group = G_POSITION, subgroup = S_OFFSET, shownWhen = ATTACHED_ONLY,
         type = "number", min = -500, max = 500, step = 1,
         label = L["X offset"], desc = L["Horizontal offset from the attachment point, in pixels. Attached to another container, it nudges this one from the gap its Spacing leaves."],
     },
     {
-        path = "container.attach.y", page = PAGE, group = G_ANCHOR, subgroup = S_OFFSET, shownWhen = ATTACHED_ONLY,
+        path = "container.attach.y", page = PAGE, group = G_POSITION, subgroup = S_OFFSET, shownWhen = ATTACHED_ONLY,
         type = "number", min = -500, max = 500, step = 1,
         label = L["Y offset"], desc = L["Vertical offset from the attachment point, in pixels. Attached to another container, it nudges this one from the gap its Spacing leaves."],
     },
@@ -452,57 +475,65 @@ NS.RegisterSchemaRows({
     -- Fill and both growth rows are dimmed, showing the inherited values, while the container follows
     -- another's flow (L-6); per row, spacing and line spacing stay its own and stay live.
     {
-        path = "container.layout.axis", page = PAGE, group = G_GROW, type = "string",
+        path = "container.layout.axis", page = PAGE, group = G_POSITION, subgroup = S_GROW, type = "string",
         values = NS.Choices(C.AXES, C.AXIS_LABELS), label = L["Fill"],
         desc = L["Lay auras out in rows or in columns. Bars usually stack in a column."],
         disabledIf = inherits, panelGet = inherited("axis"),
     },
     {
-        path = "container.layout.perLine", page = PAGE, group = G_GROW, type = "number", min = 0, max = 40, step = 1,
+        path = "container.layout.perLine", page = PAGE, group = G_POSITION, subgroup = S_GROW, type = "number", min = 0, max = 40, step = 1,
         label = L["Per row or column (0 = one line)"],
         desc = L["Start a new row (or column) after this many auras."],
     },
     {
-        path = "container.layout.growH", page = PAGE, group = G_GROW, type = "string",
+        path = "container.layout.growH", page = PAGE, group = G_POSITION, subgroup = S_GROW, type = "string",
         values = NS.Choices(C.GROW_H, C.GROW_H_LABELS), label = L["Grow horizontally"],
         desc = L["Which way new auras are added across."],
         disabledIf = inherits, panelGet = inherited("growH"),
+        -- UI-ONLY (item 020, AUR-L09): the facing-growth hint reads this row and now sits on the same
+        -- tab, just above it, so a pick redraws the panel or the hint goes stale. A panel refresh, no
+        -- setting change: the write's CONFIG_CHANGED still re-places the container as before.
+        onChange = structural,
     },
     {
-        path = "container.layout.growV", page = PAGE, group = G_GROW, type = "string",
+        path = "container.layout.growV", page = PAGE, group = G_POSITION, subgroup = S_GROW, type = "string",
         values = NS.Choices(C.GROW_V, C.GROW_V_LABELS), label = L["Grow vertically"],
         desc = L["Which way new auras are added down or up."],
         disabledIf = inherits, panelGet = inherited("growV"),
+        -- UI-only, as Grow horizontally's (AUR-L09).
+        onChange = structural,
     },
     {
-        path = "container.layout.spacing", page = PAGE, group = G_GROW, type = "number", min = 0, max = 40, step = 1,
+        path = "container.layout.spacing", page = PAGE, group = G_POSITION, subgroup = S_GROW, type = "number", min = 0, max = 40, step = 1,
         label = L["Spacing (px)"], desc = L["The gap between two auras in a line."],
     },
     {
-        path = "container.layout.lineSpacing", page = PAGE, group = G_GROW, type = "number", min = 0, max = 40, step = 1,
+        path = "container.layout.lineSpacing", page = PAGE, group = G_POSITION, subgroup = S_GROW, type = "number", min = 0, max = 40, step = 1,
         label = L["Line spacing (px)"], desc = L["The gap between two rows or columns."],
     },
 
+    -- Click-through first and unheaded (AUR-L11): it overrides every other row of the tab. Then the
+    -- tooltip rows and the click row, each under its own subsection (options-ui-§7).
     {
-        path = "container.behavior.tooltips", page = PAGE, group = G_MOUSE, type = "bool",
+        path = "container.behavior.clickThrough", page = PAGE, group = G_MOUSE, type = "bool",
+        label = L["Click-through"], desc = L["Let the mouse pass through this container: no tooltips and no clicks. This is the escape hatch for tooltips' whole-rect mouse capture — turn it on if this container sits over a unit frame or open ground and mouseover targeting or a mouseover macro needs to reach through it."],
+    },
+    {
+        path = "container.behavior.tooltips", page = PAGE, group = G_MOUSE, subgroup = S_TIPS, type = "bool",
         label = L["Show tooltips"], desc = L["Show an aura's tooltip when hovering it. On, the whole container's rect — padding included, not just the aura buttons — captures the mouse to make that possible, which also blocks mouseover targeting and mouseover macros anywhere under it; if this container overlaps a unit frame or sits over open ground you mouseover-target through, turn Click-through on there, or turn this off so the hover reaches what is behind the container instead."],
     },
     {
-        path = "container.behavior.tooltipInCombat", page = PAGE, group = G_MOUSE, type = "bool",
+        path = "container.behavior.tooltipInCombat", page = PAGE, group = G_MOUSE, subgroup = S_TIPS, type = "bool",
         label = L["Tooltips in combat"], desc = L["Keep showing tooltips while you are in combat."],
     },
     {
-        path = "container.behavior.tooltipAnchor", page = PAGE, group = G_MOUSE, type = "string",
+        path = "container.behavior.tooltipAnchor", page = PAGE, group = G_MOUSE, subgroup = S_TIPS, type = "string",
         values = NS.Choices(C.TOOLTIP_ANCHORS, C.TOOLTIP_ANCHOR_LABELS), label = L["Tooltip position"],
         desc = L["Where the tooltip appears."],
     },
     {
-        path = "container.behavior.cancelOnRightClick", page = PAGE, group = G_MOUSE, type = "bool",
+        path = "container.behavior.cancelOnRightClick", page = PAGE, group = G_MOUSE, subgroup = S_CLICKS, type = "bool",
         label = L["Right-click to cancel"], desc = L["Right-click one of your own buffs or weapon enchants to cancel it."],
-    },
-    {
-        path = "container.behavior.clickThrough", page = PAGE, group = G_MOUSE, type = "bool",
-        label = L["Click-through"], desc = L["Let the mouse pass through this container: no tooltips and no clicks. This is the escape hatch for tooltips' whole-rect mouse capture — turn it on if this container sits over a unit frame or open ground and mouseover targeting or a mouseover macro needs to reach through it."],
     },
 })
 
@@ -609,12 +640,13 @@ local function attachedLine(_, line)
     return label
 end
 
---- Above the Growth tab of a container that follows another: whose flow it follows. Named by the
---- chain root, because that is where the values come from. Above a chain root's: how many follow it
---- (GC-1), since a Growth change there moves them too, with no popup. The follower's note says why,
+--- Under the Growth heading of a container that follows another: whose flow it follows. Named by
+--- the chain root, because that is where the values come from. Under a chain root's: how many follow
+--- it (GC-1), since a Growth change there moves them too, with no popup. The follower's note says why,
 --- in the panel's muted gold for secondary text, with a row gap before the Growth rows (batch 10 F6).
-local function growthIntro(ctx, cfg)
-    if ctx.activeTab ~= G_GROW then return end
+--- It was the section intro of the Growth tab until item 020 merged that tab into Position and
+--- growth (AUR-L09); renderPosition draws it now.
+local function growthNote(ctx, cfg)
     local root = NS.Anchors.FlowRoot(cfg)
     if root then
         local note = L["Fill and growth follow '%s' because this container is attached to it."]
@@ -668,19 +700,20 @@ local function growsBackLines(cfg)
     local growH, growV = NS.Container.Growth(NS.Anchors.EffectiveLayout(cfg) or {})
     local pointLabel = L[C.POINT_LABELS[point]]
     if facesV(point, growV) then
-        out[1] = L["Point is %s and Grow vertically is %s, so the auras grow back over the frame this container is attached to. Set Grow vertically to %s on the Growth tab instead."]:format(
+        out[1] = L["This container anchor point is %s and Grow vertically is %s, so the auras grow back over the frame this container is attached to. Set Grow vertically to %s below instead."]:format(
             pointLabel, L[C.GROW_V_LABELS[growV]], L[C.GROW_V_LABELS[OPPOSITE[growV]]])
     end
     if facesH(point, growH) then
         local n = #out
-        out[n + 1] = L["Point is %s and Grow horizontally is %s, so the auras grow back over the frame this container is attached to. Set Grow horizontally to %s on the Growth tab instead."]:format(
+        out[n + 1] = L["This container anchor point is %s and Grow horizontally is %s, so the auras grow back over the frame this container is attached to. Set Grow horizontally to %s below instead."]:format(
             pointLabel, L[C.GROW_H_LABELS[growH]], L[C.GROW_H_LABELS[OPPOSITE[growH]]])
     end
     return out
 end
 
---- After the Anchor tab's rows (afterGroup): the facing-growth hint, when it applies. Point's own
---- onChange redraws the tab; a growth change is made on the Growth tab, and coming back draws it.
+--- After the attach rows, above the Growth subsection: the facing-growth hint, when it applies. It
+--- names "This container anchor point", the row Named frame mode draws (AUR-L27), and points at the
+--- growth rows right under it ("below"). The anchor-point row and both growth rows redraw the tab.
 local function growsBackNote(ctx)
     local cfg = NS.ActiveContainer()
     if not cfg then return end
@@ -689,17 +722,46 @@ local function growsBackNote(ctx)
     end
 end
 
---- The Anchor tab's notes, in order.
-local function anchorNotes(ctx)
+-- The Position and growth tab's paired widgets (the flow engine's pairWith seam, options-ui-§6).
+local PAIR_WITH = {
+    ["container.attach.container"] = attachedLine,
+    ["container.attach.frame"] = pickButton,
+}
+
+--- A per-render copy of `row` without its subgroup, for a block whose heading renderPosition draws
+--- itself. The schema row keeps `subgroup = Growth`, so `/am list`, Defaults and the descriptor see
+--- it unchanged.
+local function withoutSubgroup(row)
+    local copy = {}
+    for k, v in pairs(row) do copy[k] = v end
+    copy.subgroup = nil
+    return copy
+end
+
+--- The Position and growth tab (item 020, AUR-L09): Attach to and the chosen mode's subsections, the
+--- facing-growth hint, then the Growth subsection with the inherited-flow note under its heading and
+--- above its rows. Keyed by its group, so `rows` is the group's: one flow call for the attach rows,
+--- whose Attach to selector the library watches, and one for the growth rows after the note.
+local function renderPosition(ctx, cfg, rows)
+    local placement, growth = {}, {}
+    for _, row in ipairs(rows or {}) do
+        if row.subgroup == S_GROW then
+            growth[#growth + 1] = withoutSubgroup(row)
+        else
+            placement[#placement + 1] = row
+        end
+    end
+    H.RenderRows(ctx, placement, nil, PAIR_WITH, { noHeadings = true })
     growsBackNote(ctx)
+    if not growth[1] then return end
+    H.Section(ctx, S_GROW)
+    growthNote(ctx, cfg)
+    H.RenderRows(ctx, growth, nil, nil, { noHeadings = true })
 end
 
 NS.RegisterContainerSection(PAGE, L["Layout"], {
-    tooltip = L["Where this container sits, what it attaches to, which way it grows, and how it answers the mouse."],
-    intro = growthIntro,
-    afterGroup = { [G_ANCHOR] = anchorNotes },
-    pairWith = {
-        ["container.attach.container"] = attachedLine,
-        ["container.attach.frame"] = pickButton,
+    tooltip = L["Its scale and strata, where it sits and what it attaches to, which way it grows, how it answers the mouse, and its name label."],
+    tabs = {
+        { key = G_POSITION, label = G_POSITION, render = renderPosition },
     },
 })

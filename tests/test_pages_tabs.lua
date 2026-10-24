@@ -48,7 +48,7 @@ local STRIPS = {
     { "General",    "general",    "Master controls=Master controls | Blizzard frames=Blizzard frames | Spell categories=Spell categories | Dispel colors=Dispel colors" },
     { "Containers", "containers", "General=General" },
     { "Filters",    "filters",    "General=General | Categories=Categories | overrides=Overrides | Situations=Situations" },
-    { "Layout",     "layout",     "Frame=Frame | Anchor=Anchor | Growth=Growth | Mouse=Mouse | Label=Label" },
+    { "Layout",     "layout",     "Scale and strata=Scale and strata | Position and growth=Position and growth | Mouse=Mouse | Label=Label" },
     { "Bars",       "bars",       "General=General | Background & border=Background & border | Name text=Name text | Time text=Time text | Stack text=Stack text | Icon=Icon | Pandemic=Pandemic" },
     { "Icons",      "icons",      "Size=Size | Border=Border | Cooldown=Cooldown | Time text=Time text | Stack text=Stack text | Pandemic=Pandemic" },
     { "Text",       "text",       "General=General | Font=Font | Icon=Icon | Pandemic=Pandemic | Animation=Animation" },

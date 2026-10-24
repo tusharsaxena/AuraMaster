@@ -5,7 +5,7 @@ local _, NS = ...
 --     [ Master controls ][ Blizzard frames ][ Spell categories ][ Dispel colors ]
 --
 --     Master controls  [Enable Aura Master]  [General visibility]
---                      [Master scale]        [Master alpha]
+--                      [Master scale]        [Master opacity]
 --                      [Lock frame]          [Debug console]
 --                      [Minimap button]      [Test mode]
 --                      [Reset position]      [Reset all settings]     <- afterGroup button pair

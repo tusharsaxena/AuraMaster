@@ -296,7 +296,7 @@ C.TEST_TAG_COLOR = "ffff8000"
 
 -- The panel's muted gold for secondary text (batch 10 F6): the drag handle's gold dimmed toward its
 -- help mark, the same (0.85, 0.72, 0.38) settings/GeneralSpells.lua marks a player's own category
--- with. The Growth tab's inherited note reads in it. The AARRGGBB body of a "|c" escape.
+-- with. The Growth subsection's inherited-flow note reads in it. The AARRGGBB body of a "|c" escape.
 C.SECONDARY_GOLD = "ffd9b861"
 -- The strip name of a container attached to another container or a named frame: a warm gray, the
 -- strip's gold with the color drained out, so at a glance it reads as attached (the owner,
