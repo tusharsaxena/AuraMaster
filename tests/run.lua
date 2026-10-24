@@ -88,6 +88,7 @@ Kit.run{
         "test_migrations",
         "test_schema",
         "test_schema_paths",
+        "test_settings_pin",
         "test_filtercompiler",
         "test_filtercompiler_categories",
         "test_filterviews",
