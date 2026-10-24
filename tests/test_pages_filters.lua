@@ -177,40 +177,52 @@ test("filters: hidePermanentEnchants draws right under the Spell categories grid
     assertEqual(cb.type, "CheckBox", "still a plain checkbox, not a grid cell (regression guard)")
 end)
 
-test("filters: the max-auras description tells the truth about a group being per-shown-category, not the whole container", function()
-    -- red under: the description still claiming the cap draws "at most this many auras in this
-    -- container" — false the moment one category is Hidden, since modules/FilterCompiler.lua's
-    -- lookOf stamps maxFrameCount on EVERY group and the engine applies it per group, not once.
+-- The three Order and cap tooltips used to repeat one ~70-word paragraph about engine groups each.
+-- Item 020 (AUR-L06) cuts each to one sentence pointing at a note drawn ONCE on the tab.
+test("filters: Sort by, Direction and Maximum auras each say in one sentence that they work per engine group, and point at the note", function()
     local NS = fresh()
-    local desc = NS.FindSchemaRow("container.filter.maxAuras").desc
-    assertTrue(desc:find("own group", 1, true) ~= nil, "says the cap is per-group: " .. tostring(desc))
-    assertTrue(desc:find("EACH", 1, true) ~= nil or desc:find("each", 1, true) ~= nil,
-        "says the cap applies to each group separately: " .. tostring(desc))
-    -- Fix round 2 of batch 7 retired the "Only these categories" toggle (D8): "something is Hidden"
-    -- is once again the ONLY multi-group condition (as it was before the toggle existed), so the
-    -- description no longer needs to name it, and must not — a dangling mention of a control that no
-    -- longer exists would be its own bug.
-    assertTrue(desc:find("Only these categories", 1, true) == nil,
-        "does not name a retired toggle: " .. tostring(desc))
+    for _, path in ipairs({ "container.filter.sortMethod", "container.filter.sortDirection", "container.filter.maxAuras" }) do
+        local desc = NS.FindSchemaRow(path).desc
+        -- red under: the paragraph left in the tooltip (three copies in three hovers)
+        assertTrue(desc:find("within each engine group", 1, true) ~= nil, path .. ": per group: " .. desc)
+        assertTrue(desc:sub(-#"see the note below.") == "see the note below.", path .. ": points at the note: " .. desc)
+        assertEqual(select(2, desc:gsub("%. ", "")), 0, path .. " is one sentence: " .. desc)
+    end
 end)
 
-test("filters: the sort-by and direction descriptions tell the truth about a group being per-shown-category, not the whole container", function()
-    -- red under: the descriptions still claiming the sort/direction order the whole container's
-    -- draw order — false the moment one category is Hidden, since modules/FilterCompiler.lua's
-    -- lookOf stamps sortMethod/sortDirection on EVERY group and the engine sorts within each group,
-    -- laying groups out by layoutIndex.
-    local NS = fresh()
-    for _, path in ipairs({ "container.filter.sortMethod", "container.filter.sortDirection" }) do
-        local desc = NS.FindSchemaRow(path).desc
-        assertTrue(desc:find("own group", 1, true) ~= nil,
-            path .. " says the sort is per-group: " .. tostring(desc))
-        assertTrue(desc:find("EACH", 1, true) ~= nil or desc:find("each", 1, true) ~= nil,
-            path .. " says it applies to each group separately: " .. tostring(desc))
-        -- Fix round 2 of batch 7 retired the "Only these categories" toggle (D8): a dangling mention
-        -- of a control that no longer exists would be its own bug.
-        assertTrue(desc:find("Only these categories", 1, true) == nil,
-            path .. " does not name a retired toggle: " .. tostring(desc))
+-- The engine-group note tells the truth about a group being per-shown-category, not the whole
+-- container: modules/FilterCompiler.lua's lookOf stamps sortMethod, sortDirection and maxFrameCount
+-- on EVERY group and the engine applies each within a group, laying groups out by layoutIndex.
+test("filters: the engine-group note is drawn once, after the Order and cap rows and before the priority block", function()
+    local NS, _, _, ws = filters()
+    local L = NS.L
+    local note, count, lastRow, priority
+    for i, w in ipairs(ws) do
+        if type(w.text) == "string" and w.text:find("work within each engine group", 1, true) then
+            note, count = note or i, (count or 0) + 1
+        end
+        if w.labelText == L["Maximum auras per group (0 = no limit)"] or w.labelText == L["Direction"] then lastRow = i end
+        if w.type == "Heading" and w.text == L["Filter priority logic"] then priority = i end
     end
+    -- red under: the note missing, drawn twice, or drawn above the rows it explains
+    assertEqual(count, 1, "drawn once")
+    assertTrue(lastRow < note and note < priority, "under Order and cap, ahead of Filter priority logic")
+    local text = ws[note].text
+    assertTrue(text:find("own group", 1, true) ~= nil and text:find("separately", 1, true) ~= nil, text)
+    -- Fix round 2 of batch 7 retired the "Only these categories" toggle (D8): a dangling mention of a
+    -- control that no longer exists would be its own bug.
+    assertTrue(text:find("Only these categories", 1, true) == nil, text)
+end)
+
+test("filters: General opens with What to show, then Order and cap (AUR-L02)", function()
+    local NS, _, _, ws = filters()
+    local L = NS.L
+    local heads = headings(ws)
+    -- red under: the Sorting rows left on a tab of their own, or the subsections missing
+    assertEqual(table.concat(heads, "|"), L["What to show"] .. "|" .. L["Order and cap"] .. "|" .. L["Filter priority logic"])
+    assertEqual(NS.FindSchemaRow("container.filter.sortMethod").group, L["General"])
+    assertEqual(NS.FindSchemaRow("container.filter.maxDuration").label, L["Maximum duration (seconds, 0 = no limit)"], "AUR-L07")
+    assertEqual(NS.FindSchemaRow("container.filter.maxAuras").label, L["Maximum auras per group (0 = no limit)"], "AUR-L-new1")
 end)
 
 -- ── B8: Max duration presets ─────────────────────────────────────────────────────────────────
@@ -253,7 +265,8 @@ test("filters: a buff container's Categories tab is two grids, Blizzard categori
     -- red under: the rows drawn by the flow engine (each subgroup heading repeats as the kinds
     -- interleave), or the grids drawn in the wrong order. F-1: the heading reads Spell categories,
     -- not Custom Categories.
-    assertEqual(table.concat(headings(ws), "|"), L["Blizzard categories"] .. "|" .. L["Spell categories"])
+    -- AUR-L03: the spell-list section opens the tab, above the grids it decides for
+    assertEqual(table.concat(headings(ws), "|"), L["Where spell lists don't apply"] .. "|" .. L["Blizzard categories"] .. "|" .. L["Spell categories"])
     assertNil(P.find(ws, "Dropdown", NS.FindSchemaRow("container.filter.categories.defensives").label),
         "a category is a grid line, not a dropdown")
     assertTrue(gridLine(NS, ws, "defensives") ~= nil, "a custom category has a grid line")
@@ -269,7 +282,7 @@ test("filters: a debuff container's Categories tab is Blizzard categories, Spell
     -- with the buff row (Hide reproduces the retired toggle; Show is inert — defaults/Categories.lua's
     -- KINDS doc, modules/FilterCompiler.lua's `hasUnion` gate).
     -- red under: a grid key mapping dispel or who-cast-it rows into the Blizzard grid
-    assertEqual(table.concat(headings(ws), "|"),
+    assertEqual(table.concat(headings(ws), "|"), L["Where spell lists don't apply"] .. "|" ..
         L["Blizzard categories"] .. "|" .. L["Spell categories"] .. "|" .. L["Dispel types"] .. "|" .. L["Who cast it"])
     assertTrue(gridLine(NS, ws, "magic") ~= nil)
     assertTrue(gridLine(NS, ws, "fromPlayers") ~= nil)
@@ -362,8 +375,8 @@ test("filters: a debuff container's Categories tab says its spell lists only mat
         "the debuff grid carries the spell-list note")
     -- red under: the note promising only the Blizzard Show categories there, which the every view
     -- (the default) made false (SI-06)
-    assertTrue(P2.hasText(debuffWs, "the Situations tab picks what draws there"),
-        "and points where the lists match nothing to the Situations tab")
+    assertTrue(P2.hasText(debuffWs, "Where spell lists don't apply, at the top of the Categories tab, picks what draws there"),
+        "and points where the lists match nothing to the section that decides it (AUR-L29)")
     assertFalse(P2.hasText(debuffWs, "leaves only the Blizzard categories set to Show"),
         "and no longer promises only the Blizzard Show categories")
     local _, _, P, buffWs = categories(1)
@@ -414,11 +427,11 @@ end
 
 test("filters: the Spell categories NOTE names where spell categories are not applied, per unit (SV-04)", function()
     local cases = {
-        { id = 2, unit = nil,      note = "NOTE: on your own debuffs, these spell categories are not applied (see Situations)." },
-        { id = 2, unit = "pet",    note = "NOTE: on your pet's debuffs, these spell categories are not applied (see Situations)." },
-        { id = 3, unit = nil,      note = "NOTE: on units you can assist, these spell categories are not applied (see Situations)." },
-        { id = 1, unit = "target", note = "NOTE: on units you can't assist, these spell categories are not applied (see Situations)." },
-        { id = 1, unit = "focus",  note = "NOTE: on units you can't assist, these spell categories are not applied (see Situations)." },
+        { id = 2, unit = nil,      note = "NOTE: on your own debuffs, these spell categories are not applied (see above)." },
+        { id = 2, unit = "pet",    note = "NOTE: on your pet's debuffs, these spell categories are not applied (see above)." },
+        { id = 3, unit = nil,      note = "NOTE: on units you can assist, these spell categories are not applied (see above)." },
+        { id = 1, unit = "target", note = "NOTE: on units you can't assist, these spell categories are not applied (see above)." },
+        { id = 1, unit = "focus",  note = "NOTE: on units you can't assist, these spell categories are not applied (see above)." },
     }
     for _, c in ipairs(cases) do
         local NS, _, _, ws = categoriesOn(c.id, c.unit)
@@ -563,8 +576,9 @@ test("filters: the priority block is drawn under the General rows, not above the
     local NS, _, _, ws = filters()
     local lastRow, firstRankLine
     for i, w in ipairs(ws) do
-        if w.labelText == NS.L["Max duration"] or w.labelText == NS.L["Cast by"]
-            or w.labelText == NS.L["Duration"] then
+        if w.labelText == NS.L["Maximum duration (seconds, 0 = no limit)"] or w.labelText == NS.L["Cast by"]
+            or w.labelText == NS.L["Duration"] or w.labelText == NS.L["Sort by"]
+            or w.labelText == NS.L["Maximum auras per group (0 = no limit)"] then
             lastRow = i
         end
         if not firstRankLine and type(w.text) == "string"
@@ -608,13 +622,13 @@ end)
 -- BATCH 8: Overrides moved up to sit beside Categories — the two halves of one decision — and
 -- Sorting, which only orders whatever survived them, follows. SI-05: Situations, which says what
 -- draws where the spell lists cannot, is the last tab, after Sorting.
-test("filters: the five tabs read General, Categories, Overrides, Sorting, Situations (batch 8, SI-05)", function()
+test("filters: the four tabs read General, Categories, Overrides, Situations (batch 8, SI-05, AUR-L02)", function()
     local NS, _, P = filters()
     local L = NS.L
     -- red under: the overrides tab appended after Sorting again (its `before` dropped), or the first
     -- tab back at "What to show" (renamed 2026-09-20), or Situations anywhere but last
     assertEqual(table.concat(P.tabKeys("filters"), ","),
-        table.concat({ L["General"], L["Categories"], "overrides", L["Sorting"], L["Situations"] }, ","))
+        table.concat({ L["General"], L["Categories"], "overrides", L["Situations"] }, ","))
     -- red under: tabs keyed globally rather than per page, which would fuse this General with the
     -- Text and Bars pages' own General tabs (the library's O.RenderTabbedSchema builds a strip
     -- out of NS.SchemaForPage(pageKey) alone, so the name is the PAGE's)
@@ -723,10 +737,10 @@ end)
 -- spell-id exclusion are gone in the blizzard view, so on those units the lists do nothing.
 test("filters: the Overrides NOTE heads the tab on every container whose spell lists can be off (SV-04)", function()
     local cases = {
-        { id = 2, unit = nil,      note = "NOTE: on your own debuffs, these Overrides are not applied (see Situations)." },
-        { id = 2, unit = "pet",    note = "NOTE: on your pet's debuffs, these Overrides are not applied (see Situations)." },
-        { id = 3, unit = nil,      note = "NOTE: on units you can assist, these Overrides are not applied (see Situations)." },
-        { id = 1, unit = "target", note = "NOTE: on units you can't assist, these Overrides are not applied (see Situations)." },
+        { id = 2, unit = nil,      note = "NOTE: on your own debuffs, these Overrides are not applied (see Categories)." },
+        { id = 2, unit = "pet",    note = "NOTE: on your pet's debuffs, these Overrides are not applied (see Categories)." },
+        { id = 3, unit = nil,      note = "NOTE: on units you can assist, these Overrides are not applied (see Categories)." },
+        { id = 1, unit = "target", note = "NOTE: on units you can't assist, these Overrides are not applied (see Categories)." },
     }
     for _, c in ipairs(cases) do
         local NS, _, P = filters()
@@ -895,7 +909,7 @@ test("filters: every tab opens with what the engine will not honor here, in oran
     ws = P.rerender("Filters")
     -- red under: the page's intro not calling RenderWarnings
     assertTrue(P.hasText(ws, warning), "General")
-    ws = P.tab("filters", NS.L["Sorting"])
+    ws = P.tab("filters", NS.L["Situations"])
     assertTrue(P.hasText(ws, warning), "and every other tab")
 end)
 

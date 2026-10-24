@@ -175,14 +175,14 @@ local FC = NS.FilterCompiler
 -- through NS.L (settings/OptionsSetup.lua's RenderWarnings), so each must be a single literal the
 -- locale file can list and tests/test_locale.lua can find.
 FC.WARN = {
-    MAX_WITH_TIMELESS = "Max duration is ignored while showing only auras without a duration.",
+    MAX_WITH_TIMELESS = "Maximum duration is ignored while showing only auras without a duration.",
     NEVER_MATCHES    = "These filters can never match anything.",
     TIMELESS_BUFFS_ONLY = "Only auras without a duration works for buffs only; this container shows every duration.",
-    IDS_OWN_DEBUFFS  = "On your own and your pet's debuffs, spell categories and Overrides are not applied. The Situations tab picks what draws there.",
-    IDS_UNASSISTABLE = "On units you can't assist (hostile or neutral), spell categories and Overrides are not applied. The Situations tab picks what draws there.",
-    IDS_ASSISTABLE   = "On units you can assist, spell categories and Overrides are not applied. The Situations tab picks what draws there.",
+    IDS_OWN_DEBUFFS  = "On your own and your pet's debuffs, spell categories and Overrides are not applied. Where spell lists don't apply, at the top of the Categories tab, picks what draws there.",
+    IDS_UNASSISTABLE = "On units you can't assist (hostile or neutral), spell categories and Overrides are not applied. Where spell lists don't apply, at the top of the Categories tab, picks what draws there.",
+    IDS_ASSISTABLE   = "On units you can assist, spell categories and Overrides are not applied. Where spell lists don't apply, at the top of the Categories tab, picks what draws there.",
     -- The same three where no category is Hidden and only an Overrides list is in use: the R-3 group
-    -- draws everything there in either view, so pointing at the Situations tab would mislead (SV-05).
+    -- draws everything there in either view, so pointing at Where spell lists don't apply would mislead (SV-05).
     IDS_OWN_DEBUFFS_LISTS  = "On your own and your pet's debuffs, the Overrides lists are not applied.",
     IDS_UNASSISTABLE_LISTS = "On units you can't assist (hostile or neutral), the Overrides lists are not applied.",
     IDS_ASSISTABLE_LISTS   = "On units you can assist, the Overrides lists are not applied.",

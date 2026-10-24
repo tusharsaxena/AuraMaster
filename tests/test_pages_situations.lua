@@ -1,10 +1,11 @@
--- tests/test_pages_situations.lua — filter situations S4 (SI-05): the Situations tab, the last tab of
--- the Filters page, driven through its widgets. Section "Where spell lists don't apply": the unit
+-- tests/test_pages_situations.lua — filter situations S4 (SI-05), driven through the widgets. The
+-- section "Where spell lists don't apply" opens the Categories tab since item 020 (AUR-L03): the unit
 -- wording, then the dropdowns the container's FC.IdsMode calls for (On NPCs and On players on a
 -- target or focus; one "Your own and your pet's debuffs" on a player or pet debuff container; none,
--- and a note, on a player or pet buff container), the honor line, and the timeless note. Section
--- "Show in": the six zone checkboxes. Section "Unit type" (S6, the addendum), FIRST: Unit type and
--- Reaction on a target or focus container, a note on a player or pet one. The Spell categories and Overrides NOTE lines that point here
+-- and a note, on a player or pet buff container), the honor line, and the timeless note. The
+-- Situations tab, last on the Filters strip: section "Which units" (S6, the addendum; headed "Unit
+-- type" until AUR-L04), FIRST: Unit type and Reaction on a target or focus container, a note on a
+-- player or pet one; then section "Show in": the six zone checkboxes. The Spell categories and Overrides NOTE lines that point here
 -- are tests/test_pages_filters.lua's; the rows' data is tests/test_situations_settings.lua's.
 -- Spec: docs/superpowers/specs/2026-10-02-filter-situations-design.md S4.
 
@@ -14,20 +15,26 @@ local test, assertEqual, assertTrue, assertFalse =
 local fresh = dofile("tests/fresh_env.lua")
 local pages = dofile("tests/page_helpers.lua")
 
-local HONOR = "Every aura still honors Cast by, Duration, Max duration and the Blizzard, Dispel and Who cast it rows you set to Hide; spell categories, Uncategorized and Overrides do not apply there."
+local HONOR = "Every aura still honors Cast by, Duration, Maximum duration and the Blizzard, Dispel and Who cast it rows you set to Hide; spell categories, Uncategorized and Overrides do not apply there."
 local ALWAYS = "Spell lists always apply to your own and your pet's buffs."
 local TIMELESS = "Every aura draws nothing extra here: 'Without a duration' is built from spell lists."
 local ZONES = { "Open world", "Dungeons", "Scenarios and delves", "Raids", "Battlegrounds", "Arenas" }
 
---- The Situations tab of container `id`, on `unit` when given; `setup(NS)` runs before the draw.
-local function situations(id, unit, setup)
+--- Filters tab `tabKey` (default Situations) of container `id`, on `unit` when given; `setup(NS)`
+--- runs before the draw.
+local function situations(id, unit, setup, tabKey)
     local NS, m = fresh()
     local P = pages(NS, m)
     if unit then assertTrue(NS.SetByPath("container.unit", unit, id)) end
     if setup then setup(NS) end
     NS.Helpers.SelectContainer(id)
     P.show("Filters")
-    return NS, P, P.tab("filters", NS.L["Situations"])
+    return NS, P, P.tab("filters", tabKey or NS.L["Situations"])
+end
+
+--- The Categories tab of container `id`, whose first section is "Where spell lists don't apply".
+local function spellLists(id, unit, setup)
+    return situations(id, unit, setup, "Categories")
 end
 
 --- The texts of the section headings a render drew, in order.
@@ -56,33 +63,33 @@ local function dropdowns(ws)
     return table.concat(out, "|")
 end
 
-test("situations tab: the Filters strip reads General, Categories, Overrides, Sorting, Situations", function()
+test("situations tab: the Filters strip reads General, Categories, Overrides, Situations", function()
     for _, id in ipairs({ 1, 2, 3 }) do
         local NS, m = fresh()
         local P = pages(NS, m)
         local L = NS.L
         NS.Helpers.SelectContainer(id)
         P.show("Filters")
-        -- red under: the Situations rows declared before Sorting's (a `before` on the tab does not
-        -- move it: collectTabs gives a group-keyed tab its group's slot)
+        -- red under: a Sorting tab left behind after its rows joined General (AUR-L02), or Overrides
+        -- placed anywhere but after Categories
         assertEqual(table.concat(P.tabKeys("filters"), ","),
-            table.concat({ L["General"], L["Categories"], "overrides", L["Sorting"], L["Situations"] }, ","),
+            table.concat({ L["General"], L["Categories"], "overrides", L["Situations"] }, ","),
             "container " .. id)
     end
 end)
 
-test("situations tab: a target or focus buff container draws its unit line, On NPCs and On players, and the honor line", function()
+test("situations tab: a target or focus buff container draws its unit line, On NPCs and On players, and the honor line at the top of Categories", function()
     for _, unit in ipairs({ "target", "focus" }) do
-        local NS, P, ws = situations(1, unit)
+        local NS, P, ws = spellLists(1, unit)
         local L = NS.L
-        -- red under: the tab drawn as a plain group (no sections), or the zone section missing
-        -- red under: Unit type drawn anywhere but first (the owner moved it to the top, 2026-10-02)
-        assertEqual(headings(ws), L["Unit type"] .. "|" .. L["Where spell lists don't apply"] .. "|" .. L["Show in"], unit)
+        -- red under: the section left on Situations, or drawn anywhere on Categories but first (AUR-L03)
+        assertEqual(headings(ws):match("^[^|]*"), L["Where spell lists don't apply"], unit)
+        assertTrue(at(ws, L["Where spell lists don't apply"]) < at(ws, L["Blizzard categories"]), unit .. ": above the grids")
         -- red under: a unit line in another wording than the Spell categories NOTE's
         local line = at(ws, L["On units you can't assist, spell lists don't apply to this container."])
         assertTrue(line ~= nil, unit .. ": the unit line")
         -- red under: the dropdowns gated on anything but FC.IdsMode "dynamic"
-        assertEqual(dropdowns(ws), L["Unit type"] .. "|" .. L["Reaction"] .. "|" .. L["On NPCs"] .. "|" .. L["On players"], unit)
+        assertEqual(dropdowns(ws), L["On NPCs"] .. "|" .. L["On players"], unit)
         local honor = at(ws, L[HONOR])
         assertTrue(honor ~= nil and honor > at(ws, L["On players"]), unit .. ": the honor line under the dropdowns")
         assertTrue(line < at(ws, L["On NPCs"]), unit .. ": the unit line above them")
@@ -92,10 +99,10 @@ test("situations tab: a target or focus buff container draws its unit line, On N
 end)
 
 test("situations tab: a target debuff container names units you can assist", function()
-    local NS, _, ws = situations(3)
+    local NS, _, ws = spellLists(3)
     -- red under: the unit line ignoring the aura type (debuffs lose spell lists on assistable units)
     assertTrue(at(ws, NS.L["On units you can assist, spell lists don't apply to this container."]) ~= nil)
-    assertEqual(dropdowns(ws), NS.L["Unit type"] .. "|" .. NS.L["Reaction"] .. "|" .. NS.L["On NPCs"] .. "|" .. NS.L["On players"])
+    assertEqual(dropdowns(ws), NS.L["On NPCs"] .. "|" .. NS.L["On players"])
 end)
 
 test("situations tab: a player or pet debuff container draws one dropdown, the players setting, relabeled", function()
@@ -104,7 +111,7 @@ test("situations tab: a player or pet debuff container draws one dropdown, the p
         { unit = "pet", line = "On your pet's debuffs, spell lists don't apply to this container." },
     }
     for _, c in ipairs(cases) do
-        local NS, _, ws = situations(2, c.unit)
+        local NS, _, ws = spellLists(2, c.unit)
         local L = NS.L
         local where = tostring(c.unit or "player")
         assertTrue(at(ws, L[c.line]) ~= nil, where .. ": the unit line")
@@ -122,7 +129,7 @@ end)
 
 test("situations tab: a player or pet buff container says spell lists always apply, and draws no dropdown", function()
     for _, unit in ipairs({ "player", "pet" }) do
-        local NS, P, ws = situations(1, unit)
+        local NS, P, ws = spellLists(1, unit)
         local L = NS.L
         -- red under: the dropdowns drawn where spell lists always apply (they would change nothing)
         assertEqual(dropdowns(ws), "", unit)
@@ -134,7 +141,8 @@ test("situations tab: a player or pet buff container says spell lists always app
         NS.SetByPath("container.filter.durationMode", "timeless", 1)
         ws = P.rerender("Filters")
         assertFalse(P.hasText(ws, L[TIMELESS]), unit .. ": no timeless note where ids always apply")
-        -- and the zones still draw
+        -- and the zones still draw, on Situations
+        ws = P.tab("filters", L["Situations"])
         assertEqual(#P.all(ws, "CheckBox"), #ZONES, unit .. ": the six zone checkboxes")
     end
 end)
@@ -142,7 +150,7 @@ end)
 test("situations tab: the player and pet debuff dropdown carries its own tooltip, not the On players one", function()
     for _, unit in ipairs({ "player", "pet" }) do
         local descs = {}
-        local NS = situations(2, unit ~= "player" and unit or nil, function(NS)
+        local NS = spellLists(2, unit ~= "player" and unit or nil, function(NS)
             local render = NS.Helpers.RenderRows
             NS.Helpers.RenderRows = function(ctx, rows, ...)
                 for _, r in ipairs(rows or {}) do descs[r.label or "?"] = r.desc end
@@ -162,11 +170,11 @@ test("situations tab: the timeless note keys on the effective mode, timeless buf
     local timeless = function(id)
         return function(NS) assertTrue(NS.SetByPath("container.filter.durationMode", "timeless", id)) end
     end
-    local NS, P, ws = situations(1, "target", timeless(1))
+    local NS, P, ws = spellLists(1, "target", timeless(1))
     -- red under: no timeless note on a target buff container in 'Without a duration' mode
     assertTrue(P.hasText(ws, NS.L[TIMELESS]), "target buffs, timeless")
     assertTrue(at(ws, NS.L[TIMELESS]) > at(ws, NS.L[HONOR]), "under the honor line")
-    NS, P, ws = situations(3, nil, timeless(3))
+    NS, P, ws = spellLists(3, nil, timeless(3))
     -- red under: the note keyed on the literal setting (timeless on debuffs compiles as 'any')
     assertFalse(P.hasText(ws, NS.L[TIMELESS]), "target debuffs: timeless is not effective")
 end)
@@ -190,7 +198,7 @@ test("situations tab: Show in draws the six zone checkboxes in order, all ticked
 end)
 
 test("situations tab: On NPCs writes the npcs setting", function()
-    local NS, P, ws = situations(1, "target")
+    local NS, P, ws = spellLists(1, "target")
     P.find(ws, "Dropdown", NS.L["On NPCs"]):__fire("OnValueChanged", "blizzard")
     local s = NS.Database.FindContainer(1).filter.situations
     -- red under: the dropdown drawn from a row with no path
@@ -211,17 +219,17 @@ local function lastWithText(ws)
     return nil
 end
 
-test("situations tab: Unit type is the first section, above the spell-list section, with Unit type and Reaction on a target or focus", function()
+test("situations tab: Which units is the first section, with Unit type and Reaction on a target or focus, then Show in", function()
     for _, unit in ipairs({ "target", "focus" }) do
         local NS, P, ws = situations(1, unit)
         local L = NS.L
-        local heading = at(ws, L["Unit type"])
-        -- red under: no Unit type section, or one drawn after the spell-list section
-        assertTrue(heading ~= nil and heading < at(ws, L["Where spell lists don't apply"]), unit .. ": first on the tab")
+        -- red under: the heading still repeating its first row's label (AUR-L04), or the spell-list
+        -- section still on this tab (AUR-L03)
+        assertEqual(headings(ws), L["Which units"] .. "|" .. L["Show in"], unit)
         local kind = P.find(ws, "Dropdown", L["Unit type"])
         local reaction = P.find(ws, "Dropdown", L["Reaction"])
         assertTrue(kind ~= nil and reaction ~= nil, unit .. ": both dropdowns")
-        assertTrue(at(ws, L["Reaction"]) < at(ws, L["Where spell lists don't apply"]), unit .. ": Reaction above the spell-list section")
+        assertTrue(at(ws, L["Reaction"]) < at(ws, L["Show in"]), unit .. ": Reaction above the zones")
         assertEqual(lastWithText(ws), P.find(ws, "CheckBox", L["Arenas"]), unit .. ": the zone checkboxes close the tab")
         assertFalse(P.hasText(ws, L[OWN]), unit .. ": no own-character note")
         kind:__fire("OnValueChanged", "npc")
@@ -238,13 +246,13 @@ test("situations tab: a player or pet container says it is always your own chara
         local NS, P, ws = situations(c.id, c.unit)
         local L = NS.L
         local where = "#" .. c.id .. " " .. tostring(c.unit or "player")
-        local heading = at(ws, L["Unit type"])
+        local heading = at(ws, L["Which units"])
         assertTrue(heading ~= nil, where .. ": the section heading")
         -- red under: the dropdowns drawn where the gate is ignored (they would change nothing)
         assertTrue(P.find(ws, "Dropdown", L["Reaction"]) == nil, where .. ": no Reaction dropdown")
         local note = at(ws, L[OWN])
         assertTrue(note ~= nil and note > heading, where .. ": the note under the heading")
         -- red under: the note left at the foot of the tab after the section moved to the top
-        assertTrue(note < at(ws, L["Where spell lists don't apply"]), where .. ": the note sits in the first section")
+        assertTrue(note < at(ws, L["Show in"]), where .. ": the note sits in the first section")
     end
 end)

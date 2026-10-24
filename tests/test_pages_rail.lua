@@ -256,10 +256,10 @@ test("rail: SelectTab on a section key selects the section and its tab; on the G
     NS.Helpers.SelectContainer(1)
     P.show("Containers")
     -- red under: the call reaching the library's SelectTab, which finds no "filters" page to hold it
-    assertTrue(NS.Helpers.SelectTab("filters", L["Sorting"]))
+    assertTrue(NS.Helpers.SelectTab("filters", L["Situations"]))
     P.show("Containers")
     assertEqual(ctx.activeSection, "filters")
-    assertEqual(ctx.activeTab, L["Sorting"])
+    assertEqual(ctx.activeTab, L["Situations"])
     P.show("General")
     assertTrue(NS.Helpers.SelectTab("general", L["Spell categories"]), "the addon page is the library's")
     assertEqual(NS.Helpers.__pageCtx.general.activeTab, L["Spell categories"])

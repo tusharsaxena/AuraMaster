@@ -3,9 +3,15 @@ local _, NS = ...
 -- settings/Filters.lua — what a container shows.
 --
 --     band          [Container ▾]
---     [ General ][ Categories ][ Overrides ][ Sorting ][ Situations ]
---     General       the rows, then the priority block (spec §6) at the foot of the tab
---     Categories    Blizzard categories   [Show all][Hide all], then Show · Hide · Category, plus an
+--     [ General ][ Categories ][ Overrides ][ Situations ]
+--     General       -- What to show --  Cast by, Duration, Maximum duration (+ its preset)
+--                   -- Order and cap --  Sort by, Direction, Maximum auras per group
+--                   then the engine-group note and the priority block (spec §6), the tab's tail
+--     Categories    Where spell lists don't apply   the unit line, then On NPCs [▾] On players [▾]
+--                                   (target, focus), Your own and your pet's debuffs [▾] (player and
+--                                   pet debuffs) or a note (player and pet buffs), the honor line,
+--                                   and the timeless note
+--                   Blizzard categories   [Show all][Hide all], then Show · Hide · Category, plus an
 --                                         info icon (N-5)
 --                   Spell categories      NOTE (containers whose FC.IdsMode is not "always"), then
 --                                         [Show all][Hide all], the same grid, plus a `See spells`
@@ -15,11 +21,7 @@ local _, NS = ...
 --     Overrides     NOTE (the same containers), then
 --                   Whitelist  [Add a spell ____________][ Add ]  <icon> Name (id)  [Remove]
 --                   Blacklist  the same
---     Situations    Unit type       Unit type [▾] Reaction [▾] (target, focus), or a note (player, pet)
---                   Where spell lists don't apply   the unit line, then On NPCs [▾] On players [▾]
---                                   (target, focus), Your own and your pet's debuffs [▾] (player and
---                                   pet debuffs) or a note (player and pet buffs), the honor line,
---                                   and the timeless note
+--     Situations    Which units     Unit type [▾] Reaction [▾] (target, focus), or a note (player, pet)
 --                   Show in         Open world, Dungeons, Scenarios and delves, Raids, Battlegrounds,
 --                                   Arenas
 --
@@ -58,27 +60,34 @@ local BUFFS_DEBUFFS = { HELPFUL = true, HARMFUL = true }
 -- per SECTION — the library's O.RenderTabbedSchema builds a section's strip out of the groups of
 -- NS.SchemaForPage(pageKey) alone — so it does not meet the General groups of the Text and Bars
 -- sections.
-local G_SHOW, G_CATS, G_SORT, G_SIT = L["General"], L["Categories"], L["Sorting"], L["Situations"]
+local G_SHOW, G_CATS, G_SIT = L["General"], L["Categories"], L["Situations"]
+
+-- ITEM 020 (AUR-L02): the Sorting tab's three rows joined General, so one tab answers which auras
+-- survive, how many and in what order. Their GROUP changed and their schema order did not: the
+-- library partitions a section's strip by group, so the Order and cap rows still declare after the
+-- category rows and still draw under the What to show ones. Neither subsection repeats its tab
+-- (options-ui-§7): the tab keeps the owner's 2026-09-20 name, General.
+local S_SHOW, S_ORDER = L["What to show"], L["Order and cap"]
 
 NS.RegisterSchemaRows({
     {
-        path = "container.filter.castBy", page = PAGE, group = G_SHOW, auraTypes = BUFFS_DEBUFFS,
+        path = "container.filter.castBy", page = PAGE, group = G_SHOW, subgroup = S_SHOW, auraTypes = BUFFS_DEBUFFS,
         type = "string", values = NS.Choices(C.CAST_BY, C.CAST_BY_LABELS), label = L["Cast by"],
         desc = L["Show every aura, only yours (and your pet's), or only other people's."],
     },
     {
-        path = "container.filter.durationMode", page = PAGE, group = G_SHOW, auraTypes = BUFFS_DEBUFFS,
+        path = "container.filter.durationMode", page = PAGE, group = G_SHOW, subgroup = S_SHOW, auraTypes = BUFFS_DEBUFFS,
         type = "string", values = NS.Choices(C.DURATION_MODES, C.DURATION_MODE_LABELS), label = L["Duration"],
         desc = L["Only timed auras, only permanent ones, or both. 'Without a duration' learns which buffs are timed while you are out of combat; a new one may show once before it is learned."],
     },
     {
-        path = "container.filter.maxDuration", page = PAGE, group = G_SHOW, auraTypes = BUFFS_DEBUFFS,
-        type = "number", min = 0, max = 3600, step = 5, label = L["Max duration"],
+        path = "container.filter.maxDuration", page = PAGE, group = G_SHOW, subgroup = S_SHOW, auraTypes = BUFFS_DEBUFFS,
+        type = "number", min = 0, max = 3600, step = 5, label = L["Maximum duration (seconds, 0 = no limit)"],
         desc = L["Hide auras whose full duration is longer than this — a 60 keeps short cooldowns and drops hour-long buffs. 0 is no limit, and permanent auras are hidden while a limit is set. There is no minimum: the engine can cap a duration but cannot require one."],
     },
 })
 
--- The preset dropdown beside Max duration (pairWith, below). Not a separate setting: it writes the
+-- The preset dropdown beside Maximum duration (pairWith, below). Not a separate setting: it writes the
 -- SAME path the slider does, so there is one stored value and the two controls can never disagree.
 -- A stored value matching no preset leaves the dropdown blank rather than snapping the slider to
 -- the nearest one — silently changing a player's stored number is worse than a blank dropdown.
@@ -88,7 +97,7 @@ local MAX_DURATION_LABELS = {
     [300] = L["5 minutes"], [600] = L["10 minutes"], [1800] = L["30 minutes"],
 }
 
---- Max duration's right half (pairWith): a dropdown over the same presets, writing the same path
+--- Maximum duration's right half (pairWith): a dropdown over the same presets, writing the same path
 --- through NS.SetByPath so the slider and the dropdown share one stored value.
 local function maxDurationPresets(_, line)
     local list, order = {}, {}
@@ -184,40 +193,48 @@ NS.RegisterSchemaRows({
     },
 })
 
--- ── Sorting ───────────────────────────────────────────────────────────────────────────────────
+-- ── Order and cap (the Sorting tab until item 020) ───────────────────────────────────────────────
+--
+-- Each tooltip is one sentence (AUR-L06); the engine-group paragraph the three used to repeat is
+-- drawn once, at the head of the General tab's tail (ENGINE_NOTE, below).
 
 NS.RegisterSchemaRows({
     {
-        path = "container.filter.sortMethod", page = PAGE, group = G_SORT, auraTypes = BUFFS_DEBUFFS,
+        path = "container.filter.sortMethod", page = PAGE, group = G_SHOW, subgroup = S_ORDER, auraTypes = BUFFS_DEBUFFS,
         type = "string", values = NS.Choices(C.SORT_METHODS, C.SORT_METHOD_LABELS), label = L["Sort by"],
-        desc = L["This sorts WITHIN each engine group, not the whole container; groups are laid out one after another by category, each sorted internally. With nothing on Categories Hidden, this container is one group, so this sorts the whole thing together. Otherwise — something is Hidden — each category set to Show gets its own group (the Uncategorized row is the exception: it only ever gets its own group on a container showing your own or your pet's buffs, where Blizzard is certain to honor the spell list that group is built from), and EACH of those groups is sorted separately before its block is laid out. 'Grouped' variants keep permanent auras together within a group."],
+        desc = L["The order within each engine group, not the whole container; see the note below."],
     },
     {
-        path = "container.filter.sortDirection", page = PAGE, group = G_SORT,
+        path = "container.filter.sortDirection", page = PAGE, group = G_SHOW, subgroup = S_ORDER,
         type = "string", values = NS.Choices(C.SORT_DIRECTIONS, C.SORT_DIRECTION_LABELS), label = L["Direction"],
-        desc = L["Reverses the order within each engine group (see Sort by), not the whole container. With nothing on Categories Hidden, this container is one group, so this reverses the whole thing. Otherwise — something is Hidden — each category set to Show gets its own group (the Uncategorized row is the exception: it only ever gets its own group on a container showing your own or your pet's buffs, where Blizzard is certain to honor the spell list that group is built from), and EACH of those groups is reversed separately; the groups' own layout order does not change."],
+        desc = L["Reverses the order within each engine group, not the whole container; see the note below."],
     },
     {
-        path = "container.filter.maxAuras", page = PAGE, group = G_SORT, auraTypes = BUFFS_DEBUFFS,
-        type = "number", min = 0, max = 40, step = 1, label = L["Max auras per group (0 = no limit)"],
-        desc = L["The cap applies to each engine group, not the whole container. With nothing on Categories Hidden, this container is one group, so the cap is the container's. Otherwise — something is Hidden — each category set to Show gets its own group (the Uncategorized row is the exception: it only ever gets its own group on a container showing your own or your pet's buffs, where Blizzard is certain to honor the spell list that group is built from), and the cap applies to EACH of those groups separately."],
+        path = "container.filter.maxAuras", page = PAGE, group = G_SHOW, subgroup = S_ORDER, auraTypes = BUFFS_DEBUFFS,
+        type = "number", min = 0, max = 40, step = 1, label = L["Maximum auras per group (0 = no limit)"],
+        desc = L["The cap applies within each engine group, not the whole container; see the note below."],
     },
 })
 
 -- ── Situations (S5) ───────────────────────────────────────────────────────────────────────────
 --
--- The data behind the Situations tab: where Blizzard won't apply spell lists, what NPCs and players
+-- The data behind Where spell lists don't apply (Categories) and the Situations tab: where Blizzard won't apply spell lists, what NPCs and players
 -- draw (`filter.situations`), the instance types the container shows in (`filter.zones`), and the
 -- units a target or focus container shows for (`filter.unitFilter`, S6). All three live under `filter` in the container template, so Copy settings from -> Filters, Duplicate, this
 -- page's Defaults and a profile reset carry them, and the load backfill stamps them into every
 -- stored container. Every row validates, so a whole-section write (a copy) refuses a bad leaf.
 --
--- THE LAST TAB (owner, 2026-10-02). The rows are the Situations group, declared here, after Sorting's,
--- so the strip reads General | Categories | Overrides | Sorting | Situations: the library builds it
+-- THE LAST TAB (owner, 2026-10-02). The zone and Unit type rows are the Situations group, declared
+-- here, last, so the strip reads General | Categories | Overrides | Situations: the library builds it
 -- from the groups in declaration order, and the bespoke tab below is keyed by the group, so it takes
 -- the group's place rather than carrying a `before`. Each row keeps `auraTypes`, so a container of no
 -- known aura type has no rows in the group and no empty tab. The tab draws the rows itself
 -- (renderSituations), through the flow engine, so none carries `skipRender`.
+--
+-- THE TWO SITUATION ROWS ARE THE CATEGORIES GROUP'S since item 020 (AUR-L03): "Where spell lists
+-- don't apply" is the other half of the decision the Categories grids make, so it opens that tab
+-- (renderCategories draws it) rather than sitting two tabs to the right. Same section, same page key,
+-- so Defaults, Copy settings from > Filters and the resets carry them exactly as before.
 --
 -- The zone and Unit type rows take the combat-legal visibility pass. The situation rows take the `view` effect:
 -- modules/ContainerManager.lua runs CM.ApplyViews for that container at once, in combat too, never
@@ -248,7 +265,7 @@ local function situationRows()
     local rows, values = {}, NS.Choices(C.SITUATION_MODES, C.SITUATION_MODE_LABELS)
     for _, s in ipairs(SITUATION_ROWS) do
         rows[#rows + 1] = {
-            path = "container.filter.situations." .. s.key, page = PAGE, group = G_SIT,
+            path = "container.filter.situations." .. s.key, page = PAGE, group = G_CATS,
             auraTypes = BUFFS_DEBUFFS,
             type = "string", values = values, label = s.label, desc = s.desc,
             validate = validSituation, effect = "view",
@@ -410,6 +427,11 @@ local CATEGORY_EXTRA = {
 --
 -- The WORDING of the ranks is untouched, and is still verified rank by rank against
 -- modules/FilterCompiler.lua's own header comment (same five ranks, same order).
+-- ITEM 020 (AUR-L06): the engine-group paragraph Sort by, Direction and Maximum auras per group each
+-- repeated in their tooltips, drawn ONCE at the head of the General tab's tail, under Order and cap
+-- (the tab's last subsection, so no new seam is needed) and ahead of the priority block.
+local ENGINE_NOTE = L["Sort by, Direction and Maximum auras per group work within each engine group, not the whole container. With nothing on Categories set to Hide, this container is one group, so they apply to the whole thing. Otherwise each category set to Show gets its own group (the Uncategorized row is the exception: it only ever gets its own group on a container showing your own or your pet's buffs, where Blizzard is certain to honor the spell list that group is built from), and each group is sorted, reversed and capped separately; the groups' own layout order does not change. 'Grouped' sort variants keep permanent auras together within a group."]
+
 local PRIORITY_HEADING = L["Filter priority logic"]
 local PRIORITY_LEAD = L["Highest priority first:"]
 local PRIORITY_RANKS = {
@@ -440,6 +462,13 @@ local function renderPriorityBlurb(ctx)
     end
 end
 
+--- The General tab's tail (afterGroup): the engine-group note first, under the Order and cap rows it
+--- explains (AUR-L06), then the priority block.
+local function renderGeneralTail(ctx)
+    H.TextRow(ctx, ENGINE_NOTE)
+    renderPriorityBlurb(ctx)
+end
+
 -- U-1..U-5/item 7: the cost of Uncategorized's default (Show) is not obvious from the grid alone —
 -- hiding a Blizzard category does little on its own while it is Show, since most auras are unlisted
 -- and Uncategorized keeps rescuing them under rank 3. Drawn right under the Spell categories grid, in
@@ -468,7 +497,7 @@ local UNCATEGORIZED_NOTE = L["Uncategorized defaults to Show, which rescues any 
 -- it. The per-container orange warning above every tab (FC.WARN.IDS_ASSISTABLE / IDS_OWN_DEBUFFS)
 -- is the other half: it says the same thing for the container's actual unit, this says it for the
 -- rows regardless of unit.
-local SPELL_LIST_DEBUFF_NOTE = L["The CC lists and Racials only match on a target or focus you can't assist. On your own, your pet's or an assistable unit's debuffs they match nothing, and the Situations tab picks what draws there."]
+local SPELL_LIST_DEBUFF_NOTE = L["The CC lists and Racials only match on a target or focus you can't assist. On your own, your pet's or an assistable unit's debuffs they match nothing, and Where spell lists don't apply, at the top of the Categories tab, picks what draws there."]
 
 -- SV-04 (spell-list views, V4): where Blizzard does not apply spell ids, a container draws its blizzard
 -- view (modules/FilterViews.lua), in which every spell category's group, the whitelist and the
@@ -476,20 +505,22 @@ local SPELL_LIST_DEBUFF_NOTE = L["The CC lists and Racials only match on a targe
 -- surfaces that view switches off, on every container whose `FC.IdsMode` is not "always", in the
 -- words of the units it is about. One whole sentence per unit wording, so each is a single locale key.
 -- "always" (buffs on the player or the pet) has no entry: ids always apply there. The two NOTEs point
--- to the Situations tab (SI-05), which says what draws there instead; its own unit line is the third
--- surface, in the same words.
+-- to the Where spell lists don't apply section (SI-05), which says what draws there instead; its own
+-- unit line is the third surface, in the same words. Since item 020 (AUR-L03) that section opens the
+-- Categories tab, so the Spell categories NOTE says "(see above)" and the Overrides one "(see
+-- Categories)".
 local VIEW_NOTES = {
     categories = {
-        own          = L["NOTE: on your own debuffs, these spell categories are not applied (see Situations)."],
-        pet          = L["NOTE: on your pet's debuffs, these spell categories are not applied (see Situations)."],
-        assistable   = L["NOTE: on units you can assist, these spell categories are not applied (see Situations)."],
-        unassistable = L["NOTE: on units you can't assist, these spell categories are not applied (see Situations)."],
+        own          = L["NOTE: on your own debuffs, these spell categories are not applied (see above)."],
+        pet          = L["NOTE: on your pet's debuffs, these spell categories are not applied (see above)."],
+        assistable   = L["NOTE: on units you can assist, these spell categories are not applied (see above)."],
+        unassistable = L["NOTE: on units you can't assist, these spell categories are not applied (see above)."],
     },
     overrides = {
-        own          = L["NOTE: on your own debuffs, these Overrides are not applied (see Situations)."],
-        pet          = L["NOTE: on your pet's debuffs, these Overrides are not applied (see Situations)."],
-        assistable   = L["NOTE: on units you can assist, these Overrides are not applied (see Situations)."],
-        unassistable = L["NOTE: on units you can't assist, these Overrides are not applied (see Situations)."],
+        own          = L["NOTE: on your own debuffs, these Overrides are not applied (see Categories)."],
+        pet          = L["NOTE: on your pet's debuffs, these Overrides are not applied (see Categories)."],
+        assistable   = L["NOTE: on units you can assist, these Overrides are not applied (see Categories)."],
+        unassistable = L["NOTE: on units you can't assist, these Overrides are not applied (see Categories)."],
     },
     situations = {
         own          = L["On your own debuffs, spell lists don't apply to this container."],
@@ -660,7 +691,8 @@ end
 --- Grid key -> its drawer; a key not listed draws as `renderPlainGrid`.
 local GRID_RENDER = { custom = renderCustomGrid }
 
---- The Categories tab: a grid each (the priority blurb is the General tab's now, F-4). The Spell categories grid (kind
+--- The Categories tab: the Where spell lists don't apply section first (AUR-L03), then a grid each
+--- (the priority blurb is the General tab's now, F-4). The Spell categories grid (kind
 --- `custom`) carries F-2's blurb, A3's `SPELL_LIST_DEBUFF_NOTE` and `UNCATEGORIZED_NOTE` — three
 --- separate gates, deliberately, because the three sentences stopped being true together the moment
 --- `Cat.HARMFUL` gained spell lists: the blurb asks whether this grid holds an editable list (T-2, now
@@ -670,7 +702,12 @@ local GRID_RENDER = { custom = renderCustomGrid }
 --- F-3's `See spells` link, and F-5's hidePermanentEnchants — a plain bool, not a Show/Hide choice —
 --- drawn right under that grid (T-3), tied by name to the weaponEnchants row it governs since
 --- ChoiceGrid draws its rows atomically and cannot host it inline.
+-- The Where spell lists don't apply section, defined with the Situations helpers below.
+local renderSpellListSection
+
 local function renderCategories(ctx, cfg, rows)
+    -- First, above the grids it decides for (item 020, AUR-L03).
+    renderSpellListSection(ctx, cfg, rows)
     local hideRow = rowAt(rows, "container.filter.hidePermanentEnchants")
     local auraType = cfg and cfg.auraType or "HELPFUL"
     for _, g in ipairs(GRIDS) do
@@ -883,11 +920,11 @@ local function renderOverrides(ctx, cfg)
         L["These spells are never shown in this container, unless the whitelist also names them — the whitelist wins."])
 end
 
--- ── Situations: where spell lists don't apply, and the zones (S4) ────────────────────────────
+-- ── Where spell lists don't apply (the Categories tab's head), and Situations: the units and zones ─
 
 -- Under the dropdowns: what "Every aura, once" still honors, and what it cannot (Blizzard drops the
 -- spell ids there, so nothing built from them applies).
-local SITUATIONS_HONOR = L["Every aura still honors Cast by, Duration, Max duration and the Blizzard, Dispel and Who cast it rows you set to Hide; spell categories, Uncategorized and Overrides do not apply there."]
+local SITUATIONS_HONOR = L["Every aura still honors Cast by, Duration, Maximum duration and the Blizzard, Dispel and Who cast it rows you set to Hide; spell categories, Uncategorized and Overrides do not apply there."]
 -- A player or pet buff container: FC.IdsMode "always", no every view, nothing to choose.
 local SITUATIONS_ALWAYS = L["Spell lists always apply to your own and your pet's buffs."]
 -- The EFFECTIVE mode, as the compiler reads it (FilterCompiler.lua's `timeless`): "Without a
@@ -919,18 +956,11 @@ local function zoneRows(rows)
     return out
 end
 
---- The Situations tab, last on the strip: Unit type and Reaction first (target and focus) or the
---- own-character note (the owner moved the section to the top, 2026-10-02), then the unit line, the
---- dropdowns and the two notes (or the always note alone), then the six zone checkboxes. Keyed by its
---- group, so `rows` is the group's, already filtered to the container's aura type.
-local function renderSituations(ctx, cfg, rows)
-    H.Section(ctx, L["Unit type"])
-    if C.UNIT_FILTER_UNITS[cfg.unit] then
-        H.RenderRows(ctx, { rowAt(rows, "container.filter.unitFilter.kind"),
-            rowAt(rows, "container.filter.unitFilter.reaction") }, nil, nil, { noHeadings = true })
-    else
-        H.TextRow(ctx, L["Always your own character or pet."])
-    end
+--- The Where spell lists don't apply section, at the top of the Categories tab since item 020
+--- (AUR-L03; it was the Situations tab's second section): the unit line, the dropdowns and the two
+--- notes, or the always note alone. `rows` is the Categories group's, which holds the two situation
+--- rows, already filtered to the container's aura type.
+function renderSpellListSection(ctx, cfg, rows)
     H.Section(ctx, L["Where spell lists don't apply"])
     local which, mode = viewWhich(cfg)
     if which then
@@ -943,29 +973,45 @@ local function renderSituations(ctx, cfg, rows)
     else
         H.TextRow(ctx, SITUATIONS_ALWAYS)
     end
+end
+
+--- The Situations tab, last on the strip: Which units first, Unit type and Reaction (target and
+--- focus) or the own-character note (the owner moved the section to the top, 2026-10-02; headed
+--- "Unit type" until item 020's AUR-L04, which stopped it repeating its first row's label), then the
+--- six zone checkboxes. Keyed by its group, so `rows` is the group's, already filtered to the
+--- container's aura type.
+local function renderSituations(ctx, cfg, rows)
+    H.Section(ctx, L["Which units"])
+    if C.UNIT_FILTER_UNITS[cfg.unit] then
+        H.RenderRows(ctx, { rowAt(rows, "container.filter.unitFilter.kind"),
+            rowAt(rows, "container.filter.unitFilter.reaction") }, nil, nil, { noHeadings = true })
+    else
+        H.TextRow(ctx, L["Always your own character or pet."])
+    end
     H.Section(ctx, L["Show in"])
     H.RenderRows(ctx, zoneRows(rows), nil, nil, { noHeadings = true })
 end
 
 NS.RegisterContainerSection(PAGE, L["Filters"], {
-    tooltip = L["Which auras this container shows, and in what order."],
+    tooltip = L["Which auras this container shows, in what order, and where it shows at all."],
     intro = function(ctx, cfg) H.RenderWarnings(ctx, cfg) end,
     pairWith = {
         ["container.filter.maxDuration"] = maxDurationPresets,
     },
-    -- The priority block is drawn after the last General row, not above the first (see
-    -- PRIORITY_RANKS).
+    -- The engine-group note and the priority block are drawn after the last General row, not above
+    -- the first (see ENGINE_NOTE and PRIORITY_RANKS).
     afterGroup = {
-        [G_SHOW] = renderPriorityBlurb,
+        [G_SHOW] = renderGeneralTail,
     },
     tabs = {
         -- Keyed by its group, so it takes the group's place and is handed the group's rows.
         { key = G_CATS, label = G_CATS, auraTypes = BUFFS_DEBUFFS, render = renderCategories },
-        -- `before` the Sorting group: Overrides is the other half of the Categories decision, so it
-        -- sits next to it, and Sorting — which orders whatever survived — follows (batch 8).
-        { key = "overrides", label = L["Overrides"], auraTypes = BUFFS_DEBUFFS, before = G_SORT,
+        -- `before` the Situations group, so it sits right after Categories: Overrides is the other
+        -- half of the Categories decision (batch 8). Sorting, which it used to precede, is General's
+        -- Order and cap since item 020 (AUR-L02).
+        { key = "overrides", label = L["Overrides"], auraTypes = BUFFS_DEBUFFS, before = G_SIT,
           render = renderOverrides },
-        -- Keyed by its group, declared after Sorting's, and no `before`: the last tab (SI-05).
+        -- Keyed by its group, declared last, and no `before`: the last tab (SI-05).
         { key = G_SIT, label = G_SIT, auraTypes = BUFFS_DEBUFFS, render = renderSituations },
     },
 })
