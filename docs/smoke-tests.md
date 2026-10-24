@@ -2139,31 +2139,31 @@ screen. Each one also expects no Lua error.
 size 2, a bright color. Try three bar textures, the default included → on a full bar the border shows
 on all four sides, over the fill, never under it. The icon's border, if on, does the same. On an
 icon container (#2), with the border and the dispel colors on: the swipe sits under the border, the
-dispel edge sits over the border, and the countdown and stacks sit over both, as before. Result:
+dispel edge sits over the border, and the countdown and stacks sit over both, as before. Result: pass (owner-marked 2026-10-24)
 
 **LAYER-2. The unlocked outline draws over the auras.** Unlock (`/am unlock`) with a container
 showing live auras, then `/am test` → the thin white outline is visible over the live buttons and over
-the placeholders where they meet it. The TEST marker and the strip still draw over the outline. Result:
+the placeholders where they meet it. The TEST marker and the strip still draw over the outline. Result: pass (owner-marked 2026-10-24)
 
 **LAYER-3. A nudged name label draws over the block.** Layout → Label on, then set its Y offset so the
 label sits over the first aura → the name reads on top of the aura, and under the strip while
-unlocked. Result:
+unlocked. Result: pass (owner-marked 2026-10-24)
 
 **LAYER-4. The snap highlight shows over a Dialog container.** Set a container to Layout → Frame →
 Strata **Dialog**, unlock, and drag another container next to it → the green dots, the line and the
 repainted strip edge all show over the Dialog container. Hover a strip mid-drag, or hover any frame
 with a tooltip just after the drop → the tooltip draws over the highlight. Put the strata back to
-Medium. Result:
+Medium. Result: pass (owner-marked 2026-10-24)
 
 **LAYER-5. The strip stays solid at low opacity.** Set a container's Layout → Opacity to 10% (or the
 General page's Master alpha to 10%) and unlock → the auras fade, and the strip, its ? mark and its
-X mark stay fully opaque and can be grabbed. Put the opacity back. Result:
+X mark stay fully opaque and can be grabbed. Put the opacity back. Result: pass (owner-marked 2026-10-24)
 
 **LAYER-6. The Strata row's tooltip.** Hover Layout → Frame → Strata → the tooltip explains the layers
 (Background and Low under most of the interface, Medium the default, High over other windows, the same
 layer as the Settings window). It then warns that Dialog and above also cover confirmation dialogs, the
 debug console and the Settings window. The choices are still Background, Low, Medium, High and Dialog.
-Result:
+Result: pass (owner-marked 2026-10-24)
 
 ## Settings layout (item 020)
 
@@ -2189,7 +2189,7 @@ Start each from a fresh profile's starter set, note a few values you change on e
 Spell categories ][ Dispel colors ]**, sentence case. Blizzard frames holds Hide Blizzard buffs | Hide
 Blizzard debuffs with no heading over them; each still hides its Blizzard frame out of combat. Master
 controls reads Master opacity beside Master scale. `/reload` → both Hide rows and every Master row keep
-what you set. Result:
+what you set. Result: pass (owner-marked 2026-10-24)
 
 **SETLAYOUT-2. Containers → General (rail).** The rail reads General · Filters · Layout · **Bar
 style** (Icon style on #2, Text style on #4). The General tab reads Name | **Enable this container**,
@@ -2199,7 +2199,7 @@ on the left, for the container in the band, to its defaults. On General: Enable 
 Aura type and Style; its name is kept." With two containers, What to copy offers **Layout: scale,
 strata and growth**, and copying it moves Scale, Strata and Growth only, never the position. Hover
 Style → "...Each has its own style section on this page's rail." Hover a container's strip X → it
-names Enable this container. `/reload` → nothing changed. Result:
+names Enable this container. `/reload` → nothing changed. Result: pass (owner-marked 2026-10-24)
 
 **SETLAYOUT-3. Containers → Filters.** The strip reads **[ General ][ Categories ][ Overrides ][
 Situations ]**. General: *What to show* (Cast by | Duration / **Maximum duration (seconds, 0 = no
@@ -2212,7 +2212,7 @@ the Spell categories NOTE ends "(see above)", Overrides' NOTE ends "(see Categor
 warning above every tab ends "Where spell lists don't apply, at the top of the Categories tab, picks
 what draws there." Situations opens with **Which units** (Unit type | Reaction), then Show in. Set
 On NPCs to *Only my Blizzard categories*, change Sort by and Maximum auras, `/reload` → all kept, and
-the container draws as before. Result:
+the container draws as before. Result: pass (owner-marked 2026-10-24)
 
 **SETLAYOUT-4. Containers → Layout.** The strip reads **[ Scale and strata ][ Position and growth ][
 Mouse ][ Label ]**. Scale and strata: **Container scale** | **Container opacity** / **Frame strata** |
@@ -2226,35 +2226,35 @@ point and Grow vertically Down → the gray hint above *Growth* opens "This cont
 once. Hover a follower's strip → "...Change the anchor points on Layout > Position and growth." Mouse:
 Click-through first, then *Tooltips* (Show tooltips | Tooltips in combat / Tooltip position), then
 *Clicks* (Right-click to cancel). `/am list` → [layout] lists the screen point rows in the new order
-with the same values. `/reload` → every value kept, every container where it was. Result:
+with the same values. `/reload` → every value kept, every container where it was. Result: pass (owner-marked 2026-10-24)
 
 **SETLAYOUT-5. Bar style.** On #1 the strip reads General · **Background and border** · Name text ·
 Time text · Stack text · Icon · Pandemic. Each text tab opens with **Show** alone on its line and no
 heading over it, then *Font*, then *Placement* (Justify | **Anchor point** / X offset | Y offset).
-Untick Show on Name text → the names go; `/reload` → still off. Result:
+Untick Show on Name text → the names go; `/reload` → still off. Result: pass (owner-marked 2026-10-24)
 
 **SETLAYOUT-6. Icon style.** On #2 the strip reads **General** · Border · Time text · Stack text ·
 Pandemic. General holds *Size* (Width | Height / Icon zoom) then *Cooldown* (the five swipe rows);
 hover **Blizzard countdown numbers** → it ends "Needs Show cooldown swipe." and the row is not dimmed.
 Time text and Stack text open on Show, as on Bar style, with Placement's **Anchor point**. Change a
-Size and a Cooldown row, `/reload` → kept. Result:
+Size and a Cooldown row, `/reload` → kept. Result: pass (owner-marked 2026-10-24)
 
 **SETLAYOUT-7. Text style.** On #4 General reads *Size* (+ the fit note), *Text template* (Template,
 Custom template when Custom, **Time format**, Preview), *Placement* (+ its notes), then *Template
 reference* (Tokens, Rules) last. Change Time format → the Preview's time changes under it. Font holds
 Font, *Glow* (with **X offset** | **Y offset**) and *Dispel type*, and no Countdown. `/reload` → Time
-format and the glow offsets kept. Result:
+format and the glow offsets kept. Result: pass (owner-marked 2026-10-24)
 
 **SETLAYOUT-8. Nothing lost.** With the values changed in SETLAYOUT-1 to 7 still set, `/reload`, then
 `/am list` → every value reads as you left it, on the same paths. Each page's **Defaults** restores its
 own rows (Time format with Text style's, the Order and cap rows with Filters') and nothing else. No
-Lua error on any page. Result:
+Lua error on any page. Result: pass (owner-marked 2026-10-24)
 
 **SETLAYOUT-9. The confirm buttons end in an ellipsis.** Containers → General (rail) → the button
 reads **Delete container…**. General → Spell categories, pick a category you made → **Delete this
 category…**; with a saved category Aura Master cannot read, **Forget unreadable categories…**. In each
 the trailing … draws as one ellipsis glyph in your font, not a box or three dots squeezed together, and
-each button still asks first. (Owner call of 2026-10-24 widening T-1; run bundle id SM-AM-OC1.) Result:
+each button still asks first. (Owner call of 2026-10-24 widening T-1; run bundle id SM-AM-OC1.) Result: pass (owner-marked 2026-10-24)
 
 ## Library-absent install
 
@@ -2290,5 +2290,6 @@ keeps it. A check added or rewritten after that date is listed here until its `R
 a pass. The last ones, INSTALL-10, DIAG-21, DIAG-22, CONT-26 and FILT-64 (the LibKa0s v1.75.0 re-vendor)
 and CONT-27 (the preview-mode test marker), passed on 2026-10-23.
 
-Awaiting sign-off: LAYER-1 to LAYER-6 (frame layering, 2026-10-24); SETLAYOUT-1 to SETLAYOUT-8 (settings
-layout, item 020, 2026-10-24); SETLAYOUT-9 (the confirm buttons' ellipsis, 2026-10-24).
+On 2026-10-24 the owner reported that every check of the keybindings, settings layout and frame
+layering run passed: LAYER-1 to LAYER-6, SETLAYOUT-1 to SETLAYOUT-8 and SETLAYOUT-9, each recorded
+on its `Result:` line as `pass (owner-marked 2026-10-24)`. No sign-off is owed.
