@@ -337,11 +337,11 @@ test("containers: changing the aura type redraws an open Filters page for the ne
     P.show("Filters")
     P.tab("filters", NS.L["Categories"])
     NS.Helpers.__pageCtx.filters.panel:Show()   -- on screen, so only a STRUCTURAL refresh re-renders it
-    -- The Categories tab is the redraw signal: a debuff container's grids include Dispel Types, a buff
+    -- The Categories tab is the redraw signal: a debuff container's grids include Dispel types, a buff
     -- container's do not.
     local function drewDispelTypes(widgets)
         for _, w in ipairs(widgets) do
-            if w.type == "Heading" and w.text == NS.L["Dispel Types"] then return true end
+            if w.type == "Heading" and w.text == NS.L["Dispel types"] then return true end
         end
         return false
     end
@@ -350,7 +350,7 @@ test("containers: changing the aura type redraws an open Filters page for the ne
     assertFalse(drewDispelTypes(during), "never inside the dropdown's own callback")
     local redrawn = P.during(function() m.__fireTimers() end)
     -- red under: the aura type row losing its structural onChange (the tab keeps a buff container's grids)
-    assertTrue(drewDispelTypes(redrawn), "redrawn with the debuff container's Dispel Types")
+    assertTrue(drewDispelTypes(redrawn), "redrawn with the debuff container's Dispel types")
 end)
 
 test("containers: Unit, Aura type and Style draw every value in a color of its own", function()

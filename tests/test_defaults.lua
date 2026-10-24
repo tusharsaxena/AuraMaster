@@ -523,7 +523,7 @@ test("defaults: a user category materializes among the spell lists, above Weapon
     assertEqual(def.auraType, "HELPFUL")
     assertTrue(def.userCategory, "the one marker that tells a user definition from a shipped one")
     assertEqual(next(def.spells), nil, "an EMPTY starter list: the list IS categorySpells[key]")
-    assertTrue(C2.IsSpellCategory(keys[1]), "so General -> Spell Categories can edit it")
+    assertTrue(C2.IsSpellCategory(keys[1]), "so the General page > Spell categories can edit it")
     assertEqual(C2.DefaultStates()[keys[1]], "show")
     -- The debuff one landed on the other list, and only on the other list.
     assertTrue(C2.Find("HARMFUL", keys[2]) ~= nil)

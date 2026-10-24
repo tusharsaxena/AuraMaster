@@ -151,7 +151,7 @@ priority*, above, states (`FC.ExplainSpell` answers the same question for one sp
   under the first) and minus the whitelist — followed by the **catch-all**: the base minus every
   Hidden and every Shown category and the whitelist, which is what draws an aura in no category at
   all (rank 5). The per-container "Only these categories" toggle that used to drop the catch-all is
-  RETIRED (batch 7 fix round 2); an addon-defined `uncategorized` category in the Spell Categories grid (batch 7, `U-1`..`U-5`) does
+  RETIRED (batch 7 fix round 2); an addon-defined `uncategorized` category in the Spell categories grid (batch 7, `U-1`..`U-5`) does
   that instead — Hide always suppresses the catch-all (on either aura type, reproducing the retired
   toggle exactly, fix round 3); Show suppresses it too, but only where `FC.IdsMode(unit,
   auraType)` is `"always"` — buffs on the `player` and `pet` — because only there is the category's own group

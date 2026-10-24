@@ -4,7 +4,7 @@
 -- target or focus; one "Your own and your pet's debuffs" on a player or pet debuff container; none,
 -- and a note, on a player or pet buff container), the honor line, and the timeless note. Section
 -- "Show in": the six zone checkboxes. Section "Unit type" (S6, the addendum), FIRST: Unit type and
--- Reaction on a target or focus container, a note on a player or pet one. The Spell Categories and Overrides NOTE lines that point here
+-- Reaction on a target or focus container, a note on a player or pet one. The Spell categories and Overrides NOTE lines that point here
 -- are tests/test_pages_filters.lua's; the rows' data is tests/test_situations_settings.lua's.
 -- Spec: docs/superpowers/specs/2026-10-02-filter-situations-design.md S4.
 
@@ -14,7 +14,7 @@ local test, assertEqual, assertTrue, assertFalse =
 local fresh = dofile("tests/fresh_env.lua")
 local pages = dofile("tests/page_helpers.lua")
 
-local HONOR = "Every aura still honors Cast by, Duration, Max duration and the Blizzard, Dispel and Who Cast It rows you set to Hide; spell categories, Uncategorized and Overrides do not apply there."
+local HONOR = "Every aura still honors Cast by, Duration, Max duration and the Blizzard, Dispel and Who cast it rows you set to Hide; spell categories, Uncategorized and Overrides do not apply there."
 local ALWAYS = "Spell lists always apply to your own and your pet's buffs."
 local TIMELESS = "Every aura draws nothing extra here: 'Without a duration' is built from spell lists."
 local ZONES = { "Open world", "Dungeons", "Scenarios and delves", "Raids", "Battlegrounds", "Arenas" }
@@ -78,7 +78,7 @@ test("situations tab: a target or focus buff container draws its unit line, On N
         -- red under: the tab drawn as a plain group (no sections), or the zone section missing
         -- red under: Unit type drawn anywhere but first (the owner moved it to the top, 2026-10-02)
         assertEqual(headings(ws), L["Unit type"] .. "|" .. L["Where spell lists don't apply"] .. "|" .. L["Show in"], unit)
-        -- red under: a unit line in another wording than the Spell Categories NOTE's
+        -- red under: a unit line in another wording than the Spell categories NOTE's
         local line = at(ws, L["On units you can't assist, spell lists don't apply to this container."])
         assertTrue(line ~= nil, unit .. ": the unit line")
         -- red under: the dropdowns gated on anything but FC.IdsMode "dynamic"

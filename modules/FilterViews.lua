@@ -34,12 +34,12 @@ local _, NS = ...
 --
 -- The every view of a role is its blizzard view. `FV.AppendRemainder` then changes that for an R-4
 -- plan on a unit whose ids are not always applied (`FC.IdsMode` not "always"): it appends ONE trailing
--- REMAINDER group, the base minus every Hidden category on the Blizzard Categories, Dispel Types and
--- Who Cast It grids (`FV.BLIZZARD_GRID`), and makes every other group NEVER in the every view. So the
+-- REMAINDER group, the base minus every Hidden category on the Blizzard categories, Dispel types and
+-- Who cast it grids (`FV.BLIZZARD_GRID`), and makes every other group NEVER in the every view. So the
 -- every view is one live group: every aura passing the base and in no Hidden Blizzard-grid category,
 -- drawn once. The remainder is NEVER in the ids and blizzard views, so both draw exactly what they drew
 -- before it existed; its filter string is the same in all three, so a switch sends candidates only.
--- It is NEVER in the every view too where it cannot mean what it says: both Who Cast It rows Hidden
+-- It is NEVER in the every view too where it cannot mean what it says: both Who cast it rows Hidden
 -- (a real contradiction), or "Without a duration" on buffs (built from spell ids Blizzard drops).
 -- There the other groups keep their blizzard view in the every view (SI-06), so the every view is
 -- the blizzard view and never draws less than it.
@@ -90,7 +90,7 @@ local function stripIds(cand, baseIds)
     return out
 end
 
---- The kinds drawn in the Blizzard Categories, Dispel Types and Who Cast It grids: what Blizzard
+--- The kinds drawn in the Blizzard categories, Dispel types and Who cast it grids: what Blizzard
 --- evaluates without spell ids, so the only Hides the every view's remainder can honor.
 FV.BLIZZARD_GRID = { token = true, flag = true, dispel = true }
 

@@ -370,10 +370,10 @@ test("options descriptor: a bespoke tab with `before` is drawn ahead of the tab 
         return table.concat(keys, ",")
     end
     -- red under: RenderPage dropping `before` (every bespoke tab appended after the schema groups)
-    assertEqual(strip("Display"), "Master controls,Extra,Display,Spell Categories,Dispel Colors")
+    assertEqual(strip("Blizzard frames"), "Master controls,Extra,Blizzard frames,Spell categories,Dispel colors")
     -- red under: a tab whose `before` names nothing this render draws being dropped
-    assertEqual(strip("No such tab"), "Master controls,Display,Spell Categories,Dispel Colors,Extra")
-    assertEqual(strip(nil), "Master controls,Display,Spell Categories,Dispel Colors,Extra")
+    assertEqual(strip("No such tab"), "Master controls,Blizzard frames,Spell categories,Dispel colors,Extra")
+    assertEqual(strip(nil), "Master controls,Blizzard frames,Spell categories,Dispel colors,Extra")
 end)
 
 test("options descriptor: RenderWarnings draws one orange line per thing the engine will not do", function()

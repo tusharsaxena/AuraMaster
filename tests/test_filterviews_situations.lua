@@ -5,7 +5,7 @@
 -- Every group now carries `views = { blizzard, every }` beside its own (ids) fields. Where Blizzard
 -- will not apply spell ids, a container sends either the Blizzard view (only the Blizzard categories
 -- set to Show draw, as master does) or the every view (every aura once, minus the Blizzard, Dispel and
--- Who Cast It categories set to Hide). An R-4 plan on a unit whose ids are not always applied gains
+-- Who cast it categories set to Hide). An R-4 plan on a unit whose ids are not always applied gains
 -- one trailing group that is NEVER in the ids and Blizzard views and is the whole every view.
 --
 -- The no-duplicate proof is a brute force over Blizzard's own candidate-filter rules
@@ -120,9 +120,9 @@ test("situations: a player buff plan (ids always applied) is unchanged, every re
     end
 end)
 
-test("situations: the remainder subtracts Hidden Dispel Types and one Hidden Who Cast It row", function()
+test("situations: the remainder subtracts Hidden Dispel types and one Hidden Who cast it row", function()
     -- red under: a remainder built from the Blizzard grid's kinds alone (token, flag), missing dispel
-    -- and the Who Cast It flag.
+    -- and the Who cast it flag.
     local plan = compile({ unit = "player", auraType = "HARMFUL", filter = {
         categories = { magic = "hide", poison = "hide", boss = "hide", fromNonPlayers = "hide", hardCC = "hide" } } })
     local f, c = viewOf(last(plan), "every")
@@ -133,7 +133,7 @@ test("situations: the remainder subtracts Hidden Dispel Types and one Hidden Who
     assertEqual(c.isFromPlayerOrPlayerPet, true, "From non-players Hidden: only player-cast debuffs remain")
 end)
 
-test("situations: both Who Cast It rows Hidden make the remainder NEVER in every view", function()
+test("situations: both Who cast it rows Hidden make the remainder NEVER in every view", function()
     -- red under: dropping the conflicting remainder (the plan's group count, and so its structure,
     -- would then follow a Who row), or drawing through it.
     local plan = compile({ unit = "target", auraType = "HARMFUL", filter = {
@@ -258,7 +258,7 @@ test("situations: every container of the owner's real profile keeps master's ids
     assertEqual(checked, 42, "every group master compiled for the profile")
     assertEqual(table.concat(grew, ","), "18,22,27,28,29",
         "the R-4 target containers gain the remainder; player buffs and the R-3 containers do not")
-    -- "Target Bar CC (All)" Hides both Who Cast It rows: its remainder draws nothing in any view, so
+    -- "Target Bar CC (All)" Hides both Who cast it rows: its remainder draws nothing in any view, so
     -- its every view is its blizzard view (SI-06), never an empty container.
     assertTrue(isNeverIn(last(plans[18]), "every"), "#18: both Who rows Hidden")
     for i = 1, #plans[18].groups - 1 do

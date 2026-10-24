@@ -76,8 +76,8 @@ General → Reset all settings (PROFILE-4). Result: pass (owner-marked 2026-10-1
 starter spell in *Core healing* and add a spell to *Lesser healing* on one container; add a spell to
 *Defensive cooldowns* on a second container; set a bar container's **Color by** to dispel type and
 change its Magic color; leave a container's strata at Medium. Log in on this build → no Lua error.
-General → Spell Categories lists one *Healing* category (no Core or Lesser healing) holding the added
-spell, with the starter unticked; *Defensive cooldowns* holds the other added spell. Dispel Colors →
+General → Spell categories lists one *Healing* category (no Core or Lesser healing) holding the added
+spell, with the starter unticked; *Defensive cooldowns* holds the other added spell. Dispel colors →
 Magic shows the color you set. Layout → Frame → Strata reads High where it was Medium. Switch to the
 other profile → the same. Result: pass (owner-marked 2026-10-10)
 
@@ -112,12 +112,12 @@ found". `/reload`, then `/am debug on` → nothing has moved, and the `[Init]` l
 
 **INSTALL-9. Soft CC splits into CC Root and CC Snare (schema v12).** On the old build, in two
 profiles: set a debuff container's **Soft CC (roots & snares)** to **Hide** in one, and leave another
-container's at **Show**; on General → Spell Categories remove **Entangling Roots** and **Hamstring**
+container's at **Show**; on General → Spell categories remove **Entangling Roots** and **Hamstring**
 from Soft CC and add a spell id of your own. Log in on this build, then `/am debug on` → the
-`[Init]` line reads `schema v12`. On Filters → Categories the Spell Categories grid holds **CC Loss
+`[Init]` line reads `schema v12`. On Filters → Categories the Spell categories grid holds **CC Loss
 of Control**, **CC Root**, **CC Snare** and **Racials**, with no Soft CC row; the container that hid
 Soft CC has **both** CC Root and CC Snare on **Hide**, the other has both on **Show**, in each
-profile. On General → Spell Categories, **CC Root** lacks Entangling Roots, **CC Snare** lacks
+profile. On General → Spell categories, **CC Root** lacks Entangling Roots, **CC Snare** lacks
 Hamstring, and your added id is on **both**. Root a dummy with Entangling Roots → a CC Root container
 draws it and a CC Snare one does not; Hamstring it → the other way round. Result: pass (owner-marked 2026-10-10)
 
@@ -195,8 +195,8 @@ Master**: the logo, the Notes line, the Slash Commands list matching `/am help`,
 The tree under it reads **General · Containers · Profiles**, with no Filters, Layout, Bars, Icons or
 Text entry, indented or not. Result: pass (owner-marked 2026-10-10)
 
-**PANEL-2. The General page.** General → the strip **[ Master controls ][ Display ][ Spell Categories
-][ Dispel Colors ]**, and no Container picker above it. Master controls reads, two per line: Enable
+**PANEL-2. The General page.** General → the strip **[ Master controls ][ Display ][ Spell categories
+][ Dispel colors ]**, and no Container picker above it. Master controls reads, two per line: Enable
 Aura Master | General visibility / Master scale | Master alpha / Lock frame | Debug console, with the
 **Test mode** row beside **Minimap button**, then **Reset position** and **Reset all settings**.
 Result: pass (owner-marked 2026-10-10)
@@ -385,7 +385,7 @@ Container 1 draws nothing in combat, never focus auras under the reset container
 combat ends it draws the new container 1 (player buffs). Result: pass (owner-marked 2026-10-10)
 
 **PROFILE-13. Your categories belong to the profile.** Make a category (FILT-31), then Profiles →
-create and switch to a second profile → General → Spell Categories does not list it, and the Filters
+create and switch to a second profile → General → Spell categories does not list it, and the Filters
 grid has no row for it. Switch back → it is there, with its spells and its Show or Hide. `/reload` on
 each profile → no Lua error, and no `/am list` row for a category the loaded profile does not have.
 Result: pass (owner-marked 2026-10-10)
@@ -738,7 +738,7 @@ debuff container → only Shadow Word: Pain, Hex and Frost Fever. Result: pass (
 **CONT-21. Weapon enchant placeholders.** A container showing only Weapon enchants (`/am new
 enchants`), before applying a real enchant, `/am test` → it previews weapon enchants (Windfury Weapon,
 Flametongue Weapon running out, Instant Poison with no timer), not buffs: one placeholder per slot
-ticked under General → Spell Categories → *Weapon enchants* (Main hand, Off hand and Ranged, all
+ticked under General → Spell categories → *Weapon enchants* (Main hand, Off hand and Ranged, all
 ticked by default, so three). Untick **Ranged**, then `/am test off` and `/am test` → two
 placeholders; tick it again. A Player buffs container with Weapon enchants also on still previews
 buffs. A Text container of enchants under Size to fit sizes to those names. Result: pass (owner-marked 2026-10-10)
@@ -790,19 +790,19 @@ Overrides carry no lead-in or rank line: Categories opens on its first grid, Ove
 **Whitelist**. A narrower WoW window → each line still wraps cleanly on its own. Result: pass (owner-marked 2026-10-10)
 
 **FILT-3. The category grids.** On a buff container, Filters → **Categories** opens straight onto two
-grids, **Blizzard Categories** then **Spell Categories** (its last row **Uncategorized**), each headed
+grids, **Blizzard categories** then **Spell categories** (its last row **Uncategorized**), each headed
 once, with columns **Show · Hide** and the category name (hover it for its description). Click
 **Hide** on a line → `/am get container.filter.categories.<key>` prints `Hide`. Right under the grid
 sits **Hide enchants without a duration**, tied by name to the **Weapon enchants** row above it.
 Result: pass (owner-marked 2026-10-10)
 
 **FILT-4. A debuff container's Categories.** Switch the container's aura type to Debuffs → four
-grids, **Blizzard Categories**, **Spell Categories**, **Dispel Types** and **Who Cast It**. Above the
-Spell Categories grid the line reads "These are the lists on General -> Spell Categories, shared by
+grids, **Blizzard categories**, **Spell categories**, **Dispel types** and **Who cast it**. Above the
+Spell categories grid the line reads "These are the lists on the General page > Spell categories, shared by
 every container."; the grid holds **CC Loss of Control**, **CC Root**, **CC Snare** and
 **Racials**, each with a **See spells** link, then **Uncategorized** with none (plus any debuff
 category of your own); under it a note reads "The CC lists and Racials only match on a target or
-focus you can't assist. …". On a *player* container, straight under the **Spell Categories** heading and above its
+focus you can't assist. …". On a *player* container, straight under the **Spell categories** heading and above its
 **Show all** / **Hide all**, a line reads "NOTE: on your own debuffs, these spell categories are not
 applied." Result: pass (owner-marked 2026-10-10)
 
@@ -820,7 +820,7 @@ is also in *Cancelable* (left at Show) → it still shows (rank 3: a Show elsewh
 every category to **Hide**, Uncategorized included, with the whitelist empty → the container goes
 empty and shows "These filters can never match anything."; set *Defensive cooldowns* back to Show →
 only defensive cooldowns appear. Set every category back to Show except *Uncategorized* → a
-cancelable buff in none of the profile's Spell Categories lists disappears too. Result: pass (owner-marked 2026-10-10)
+cancelable buff in none of the profile's Spell categories lists disappears too. Result: pass (owner-marked 2026-10-10)
 
 **FILT-7. Many groups, nothing lost.** On a *player debuffs* container, set one debuff category (say
 *Dispellable by anyone*) to **Hide** and leave the rest at **Show** → the container compiles to one
@@ -833,27 +833,27 @@ has live spells (the client capping `AddAuraGroup` calls). Set Sort by to Time R
 ordered category block by category block, each block sorted, not one run across the container, as
 the Sorting row's description says. Result: pass (owner-marked 2026-10-10)
 
-**FILT-8. Who Cast It covers every debuff.** On a debuff container set both *From any player* and
+**FILT-8. Who cast it covers every debuff.** On a debuff container set both *From any player* and
 *From non-players* to **Hide**. Apply a debuff to the dummy → it disappears. Have a pet, an NPC or
 another player apply a different debuff to you or the dummy → it disappears too. Any debuff that still shows
 with both Hidden reports its `isFromPlayerOrPlayerPet` as neither true nor false: report it, with the
 spell. Result: pass (owner-marked 2026-10-10)
 
 **FILT-9. Show all and Hide all.** Filters → Categories on a buff container → **Show all** and **Hide
-all** under each grid's heading. Hide all on Spell Categories → every row reads Hide, and the
-container empties at once, in one pass with no flicker per row. On Player debuffs → the Dispel Types
-and Who Cast It headings each have the pair too; hover one → "Set every category in this section to
-Show (Hide), for this container.". Hide all under Dispel Types → only its rows read Hide; Hide all
-under Who Cast It → only its two rows; Show all on each → back. #3's rows were never touched. A buff
+all** under each grid's heading. Hide all on Spell categories → every row reads Hide, and the
+container empties at once, in one pass with no flicker per row. On Player debuffs → the Dispel types
+and Who cast it headings each have the pair too; hover one → "Set every category in this section to
+Show (Hide), for this container.". Hide all under Dispel types → only its rows read Hide; Hide all
+under Who cast it → only its two rows; Show all on each → back. #3's rows were never touched. A buff
 container shows only its two pairs. Result: pass (owner-marked 2026-10-10)
 
-**FILT-10. See spells lands on its own category.** Filters → Categories → Spell Categories, click
-**See spells** on a row that is not the first (*Support* or *Utility*) → General → Spell Categories
+**FILT-10. See spells lands on its own category.** Filters → Categories → Spell categories, click
+**See spells** on a row that is not the first (*Support* or *Utility*) → General → Spell categories
 opens with that category selected in the **Category** dropdown. From a different category on a
 different container (*Racials*) → it lands on Racials. **See spells** on the **Weapon enchants** row →
 Weapon enchants selected, showing the three slot toggles. Result: pass (owner-marked 2026-10-10)
 
-**FILT-11. The Spell Categories tab.** General → **Spell Categories** → the **Category** dropdown
+**FILT-11. The Spell categories tab.** General → **Spell categories** → the **Category** dropdown
 with **Restore this category's starter list** on the dropdown's line, right half. On a category of yours,
 the rename box and **Delete** sit directly under the picker, with no heading between them, then
 **Make a new category**, then **Spells in this category** with the library's rule under it, then the
@@ -892,11 +892,11 @@ too. The same on Filters → Overrides → Whitelist. Result: pass (owner-marked
 
 **FILT-16. A name the lists know resolves without the spellbook.** Type the full name of a category
 starter your character does not have (*Ironbark* on a non-druid), Enter → it is added. Add a spell by
-id to Filters → Overrides → Blacklist, then type its name on General → Spell Categories → it resolves
+id to Filters → Overrides → Blacklist, then type its name on General → Spell categories → it resolves
 too. Result: pass (owner-marked 2026-10-10)
 
 **FILT-17. A shared name is refused until picked.** Add two spells sharing a name by id to the
-Overrides Whitelist (the *Blood Fury* racials 20572 and 33697), then on General → Spell Categories
+Overrides Whitelist (the *Blood Fury* racials 20572 and 33697), then on General → Spell categories
 type `Blood Fury` and Enter without picking → nothing is added, the line under the box reads "Several
 spells are named 'Blood Fury' — pick one from the list, or use the id.", and the dropdown lists each.
 Pick one → only it is added. Result: pass (owner-marked 2026-10-10)
@@ -964,11 +964,11 @@ Filters shows the orange "On your own and your pet's debuffs, the Overrides list
 line; set any category to **Hide** → it becomes "On your own and your pet's debuffs, spell categories
 and Overrides are not applied. The Situations tab picks what draws there." On a *target buffs*
 container → "On units you can't assist (hostile or neutral), ...". Set every category to **Hide** but *Defensive cooldowns*, then on
-General → Spell Categories remove every *Defensive cooldowns* spell → "These filters can never match
+General → Spell categories remove every *Defensive cooldowns* spell → "These filters can never match
 anything."; Restore afterward. Result: pass (owner-marked 2026-10-10)
 
 **FILT-31. Make a category.** FILT-31 to FILT-39 run in order, on a player-buff bar container and a
-target-debuff container. General → **Spell Categories** → under **Make a new category**, type
+target-debuff container. General → **Spell categories** → under **Make a new category**, type
 `Cooldowns I watch`, leave **Aura type** on *Buffs*, click **Create category** → the dropdown jumps to
 **[Buffs] Cooldowns I watch (yours)**, `[Buffs]` in muted green and `(yours)` in muted gold; a line
 under the rename box and in chat says it was created, empty, and where to set it to Show or Hide. The
@@ -1041,7 +1041,7 @@ blank, run `/dump C_Item.GetItemName(ItemLocation:CreateFromEquipmentSlot(16))` 
 prints on this line. Result: pass (owner-marked 2026-10-10)
 
 **FILT-43. The help marks draw the library's info art.** On the buff container, blacklist a spell that
-a Show category holds, so Filters → **Overrides** marks it; and on General → **Spell Categories** add
+a Show category holds, so Filters → **Overrides** marks it; and on General → **Spell categories** add
 to your own category a spell a shipped category already holds, so the list marks it. Each mark is the
 white `info` glyph tinted by its level (gold, amber or red), not Blizzard's blue information disc, and
 no mark is a green or empty square. Result: pass (owner-marked 2026-10-10)
@@ -1050,19 +1050,19 @@ no mark is a green or empty square. Result: pass (owner-marked 2026-10-10)
 help lines. Move off it → it returns to its own level's color, not to gold. Result: pass (owner-marked 2026-10-10)
 
 **FILT-45. No help-art complaint in the console.** `/am debug on`, then open Filters → Overrides and
-General → Spell Categories with those marks drawn → the console shows no `[Cfg] help art:` line.
+General → Spell categories with those marks drawn → the console shows no `[Cfg] help art:` line.
 Result: pass (owner-marked 2026-10-10)
 
 FILT-46 to FILT-52 check the spell-list views (2026-10-02). Blizzard applies spell ids to buffs on a
 unit you can assist and to debuffs on a unit you cannot. Elsewhere a container that sets any category
-to Hide draws only the categories set to Show on its Blizzard Categories, Dispel Types and Who Cast It
+to Hide draws only the categories set to Show on its Blizzard categories, Dispel types and Who cast it
 grids, each aura once. Turn logging on (`/am debug on`) for the checks that read `[Filter]` lines.
 Since filter situations (S2), that is the blizzard view, which a container draws there only with its
 Situations settings at "Only my Blizzard categories set to Show"; FILT-46 to FILT-52 assume both
 settings (NPCs and players) at that value, on every container they use.
 
 **FILT-46. The Mythic+ repro: one bar per aura.** Make a *target buffs* bar container: every Blizzard
-category **Hide**, at least five Spell Categories **Show** (Defensive cooldowns, Offensive cooldowns,
+category **Hide**, at least five Spell categories **Show** (Defensive cooldowns, Offensive cooldowns,
 Healing, Support, Utility and so on), **Uncategorized** **Hide**, **Max duration** `30`. In a Mythic+
 key or a dungeon, target an enemy NPC that carries a short buff (the report was *Brutal Slams*,
 stacked twice) → no bar is drawn more than once, and on this container nothing draws at all, since
@@ -1091,12 +1091,12 @@ When the duel ends the lines flip back. Nothing draws twice at any point. Result
 **FILT-50. A player debuff container with several spell categories.** On *Player debuffs* set
 *CC Loss of Control*, *CC Root*, *CC Snare* and *Racials* to **Show**, *Dispellable by anyone* to **Hide**, and every other
 category to **Show**. Take a stun or root from a dungeon mob or a training partner → each debuff
-draws once, from the Blizzard Categories, Dispel Types or Who Cast It rows set to Show; the four
-spell categories add nothing and duplicate nothing. Set every Blizzard Categories, Dispel Types and
-Who Cast It row to **Hide** → the container stays empty whatever you take, since spell ids never apply
+draws once, from the Blizzard categories, Dispel types or Who cast it rows set to Show; the four
+spell categories add nothing and duplicate nothing. Set every Blizzard categories, Dispel types and
+Who cast it row to **Hide** → the container stays empty whatever you take, since spell ids never apply
 to your own debuffs. Result: pass (owner-marked 2026-10-10)
 
-**FILT-51. The notes.** Filters → **Categories** → straight under the **Spell Categories** heading:
+**FILT-51. The notes.** Filters → **Categories** → straight under the **Spell categories** heading:
 *Player buffs* → no NOTE; *Player debuffs* → "NOTE: on your own debuffs, these spell categories are
 not applied (see Situations)."; *Target debuffs (mine)* → "NOTE: on units you can assist, …"; a
 *target buffs* container → "NOTE: on units you can't assist, …"; a *pet debuffs* container → "NOTE:
@@ -1142,7 +1142,7 @@ buff draws twice; `/am diagnostics` reads `view=blizzard situation=players`. Tar
 Hide (Cancelable here) draw, once each (`view=every situation=npcs`). Result: pass (owner, 2026-10-02)
 
 **FILT-55. A friendly target is unchanged.** Same container, target a friendly player or a party
-member → it filters exactly as before filter situations: the Spell Categories set to Show draw,
+member → it filters exactly as before filter situations: the Spell categories set to Show draw,
 *Cancelable* buffs no other category claims stay hidden, nothing draws twice, and `/am diagnostics`
 reads `view=ids situation=-` whatever the two dropdowns say. Result: pass (owner, 2026-10-02)
 
@@ -1169,7 +1169,7 @@ Categories, Overrides, Sorting, Situations, with Situations last, and on every t
 separates the orange warning lines from the first section. A *target buffs* container → under
 **Unit type** (the first section), **Where spell lists don't apply** opens with "On units you can't assist, spell lists don't apply to
 this container.", then **On NPCs** and **On players**, then the line "Every aura still honors Cast
-by, Duration, Max duration and the Blizzard, Dispel and Who Cast It rows you set to Hide; …"; set
+by, Duration, Max duration and the Blizzard, Dispel and Who cast it rows you set to Hide; …"; set
 its **Duration** to *Only auras without a duration* → a further line "Every aura draws nothing extra here: 'Without
 a duration' is built from spell lists." *Target debuffs (mine)* → "On units you can assist, …" and
 the same two dropdowns. *Player debuffs* → "On your own debuffs, …" and one dropdown, **Your own and
@@ -1338,7 +1338,7 @@ below A's last element. Set A's Grow vertically to Up → B moves above A, none 
 changed, and without a reload B's own auras stack up from its first element too. B's Growth tab →
 above the dimmed Fill, Grow horizontally and Grow vertically rows, which show A's values, it reads
 "Fill and growth follow '<A's name>' because this container is attached to it." in dim gold (the gold
-of "(yours)" on General → Spell Categories), with a row's gap before Fill; Spacing stays live. A's
+of "(yours)" on General → Spell categories), with a row's gap before Fill; Spacing stays live. A's
 Growth tab shows its follower-count line. Set B's Attach to back to *Screen* → B's own flow returns.
 Result: pass (owner-marked 2026-10-10)
 
@@ -1736,7 +1736,7 @@ any difference, citing this check. Result: pass (owner-marked 2026-10-10)
 down → the bars' background fades while the fill stays as it was. Result: pass (owner-marked 2026-10-10)
 
 **STYLE-6. The fill by dispel type.** A bar container showing debuffs, Bars → General → **Color by**
-dispel type → each bar's fill takes its type's General → Dispel Colors color; a debuff with no type
+dispel type → each bar's fill takes its type's General → Dispel colors color; a debuff with no type
 keeps the bar color. Set it back to one color → the fill returns to the bar color at once. Enter combat
 with the aura still up → the fill keeps the bar color. In test mode on a debuff container → each
 placeholder takes its type's color, Mortal Wounds the bar color; change the Poison swatch → the Deadly
@@ -1756,13 +1756,13 @@ region alpha: report it. Result: pass (owner-marked 2026-10-10)
 Consecration and run the three `/run` lines in `docs/midnight-quirks.md` → "Many debuffs carry no
 dispel type"; copy the output there. On a bar container colored by dispel type, say whether those
 debuffs' background is dark (typeless) or blue (the engine reports a type; the probe's `dispelName`
-column says which). The Bars **Color by** tooltips and General → Dispel Colors say buffs and many
+column says which). The Bars **Color by** tooltips and General → Dispel colors say buffs and many
 debuffs have no dispel type, naming class debuffs such as Judgment or Consecration. Result: pass (owner-marked 2026-10-10)
 
-**STYLE-9. The Dispel Colors tab.** General → **Dispel Colors** → above the five swatches (no None
+**STYLE-9. The Dispel colors tab.** General → **Dispel colors** → above the five swatches (no None
 swatch), "One color per dispel type, shared by every container:" on its own line, then four lines
 each opening with "- ": where the colors are read (bars by dispel type, and a text line's dispel
-type word, backdrop or edge, ending "(Text -> Font)"), that buffs and many debuffs have no dispel
+type word, backdrop or edge, ending "(Text style > Font)"), that buffs and many debuffs have no dispel
 type, class debuffs such as Judgment or Consecration included, how those look, and that an icon's
 dispel border keeps Blizzard's own colors. A hairline gap between the bullets, none sharing a line,
 nothing cut off or scrolling sideways. Set Magic to pure red → a bar container colored by dispel
@@ -1985,7 +1985,7 @@ appears. Result: pass (owner-marked 2026-10-10)
 
 **TEXT-19. The dispel type word in color.** A Text container on the target's debuffs, template Name,
 type, time, Text → Font → Dispel type → **Color the dispel type** on → a Magic debuff reads `Name
-(Magic) - 12s` with only `Magic` in the Magic color from General → Dispel Colors, the brackets and the
+(Magic) - 12s` with only `Magic` in the Magic color from General → Dispel colors, the brackets and the
 rest in the font color; a Curse in its color. Change the Magic swatch → the word follows after the
 re-apply. In combat the word keeps its color as auras come and go. If the word shows raw `|cff…`
 characters, report it. With a template without `$dispeltype$` the toggle is dimmed. The Dispel type
@@ -2019,7 +2019,7 @@ the container grows to hold them, but the icon keeps its configured size. Set **
 height)** to 0 → the icon is one row's height (the font size), not the height of the whole stack.
 Justify Left with size 0 → the icon is the box's height again. Result: pass (owner-marked 2026-10-10)
 
-**TEXT-24. The Text Template section.** Text → General → the subsection is titled **Text Template**.
+**TEXT-24. The Text template section.** Text → General → the subsection is titled **Text template**.
 Under the Custom template box, **Preview** is a disabled edit box holding the rendered line in the
 container's font color, a colored dispel word riding live in it when that option is on. Under it, the
 cheat sheet: two headed, bulleted lists with a gap before each heading, **Tokens** (one gold `$token$`
@@ -2178,14 +2178,14 @@ non-English account).
 
 **LOC-1. Spell names come from the client.** Log in with the starter set → no Lua error. `/am test`
 → the placeholders show their spells' names in the client's language, each with its real icon. General
-→ Spell Categories → *Defensive cooldowns* → the starter spells read in the client's language, sorted
+→ Spell categories → *Defensive cooldowns* → the starter spells read in the client's language, sorted
 by name with case ignored for the plain letters A to Z; a name that starts with an accented or
 non-Latin letter sorts after every name that starts with a plain one (the list sorts the lowercased
 names byte by byte, not by the language's alphabet). A Text container on your buffs shows the live aura names in the client's
 language. The addon's own labels, chat lines and the `$dispeltype$` word are English, with no raw key
 and no blank label. Result: pass (owner-marked 2026-10-10)
 
-**LOC-2. Adding a spell by its localized name.** On General → Spell Categories → **Add a spell**, type
+**LOC-2. Adding a spell by its localized name.** On General → Spell categories → **Add a spell**, type
 the client-language name of a spell in your spellbook → it is suggested, and Enter adds it with its
 icon. Type the same spell's English name → record whether it resolves. Its id and a shift-clicked link
 add it either way. Result: pass (owner-marked 2026-10-10)

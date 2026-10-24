@@ -45,7 +45,7 @@ end
 
 -- The seven pages by display name and key, and the strip each draws for container 1 (buffs, bars).
 local STRIPS = {
-    { "General",    "general",    "Master controls=Master controls | Display=Display | Spell Categories=Spell Categories | Dispel Colors=Dispel Colors" },
+    { "General",    "general",    "Master controls=Master controls | Blizzard frames=Blizzard frames | Spell categories=Spell categories | Dispel colors=Dispel colors" },
     { "Containers", "containers", "General=General" },
     { "Filters",    "filters",    "General=General | Categories=Categories | overrides=Overrides | Sorting=Sorting | Situations=Situations" },
     { "Layout",     "layout",     "Frame=Frame | Anchor=Anchor | Growth=Growth | Mouse=Mouse | Label=Label" },

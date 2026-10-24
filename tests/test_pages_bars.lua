@@ -115,7 +115,7 @@ test("bars: a confirmed fill color is stored on the selected container, as a tab
     assertEqual(NS.Database.FindContainer(2).bars.barColor.r, NS.CONTAINER_TEMPLATE.bars.barColor.r)
 end)
 
-test("bars: Pandemic carries no dispel swatches, and Color by points at General -> Dispel Colors (B-6)", function()
+test("bars: Pandemic carries no dispel swatches, and Color by points at the General page > Dispel colors (B-6)", function()
     local NS, _, P = bars()
     P.show("Bars")
     local ws = P.tab("bars", NS.L["Pandemic"])
@@ -124,9 +124,9 @@ test("bars: Pandemic carries no dispel swatches, and Color by points at General 
         assertEqual(NS.FindSchemaRow("dispelColors." .. name).page, "general", name)
     end
     assertEqual(#P.all(ws, "ColorPicker"), 2, "the pandemic-window time and highlight colors only")
-    -- red under: the tooltip sending the player to a tab rather than General -> Dispel Colors
+    -- red under: the tooltip sending the player to a tab rather than the General page > Dispel colors
     local desc = NS.FindSchemaRow("container.bars.colorMode").desc
-    assertTrue(desc:find("General -> Dispel Colors", 1, true) ~= nil, desc)
+    assertTrue(desc:find("the General page > Dispel colors", 1, true) ~= nil, desc)
     -- red under: the tooltip implying a typeless debuff is rare, citing Mystic Touch alone (feedback #7,
     -- smoke batch 2 item 2: many class debuffs have no dispel type)
     assertTrue(desc:find("many debuffs have no dispel type", 1, true) ~= nil, desc)

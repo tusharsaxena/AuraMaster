@@ -110,7 +110,7 @@ end
 -- AddDispelTypeTexture's options for the dispel edge, built on first use (the enum may not exist at
 -- load): debuffs with a dispel type only, our white strip kept and tinted (PreserveAsset), and NO
 -- customDispelColorMap, so the engine paints AuraUtil.SetAuraBorderColor, Blizzard's own color for
--- the type (DB-2; owner 2026-09-13: General -> Dispel Colors do not drive icons).
+-- the type (DB-2; owner 2026-09-13: the General page > Dispel colors do not drive icons).
 local dispelOptions
 local function dispelOptionsFor()
     if not dispelOptions then

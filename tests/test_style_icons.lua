@@ -187,7 +187,7 @@ test("icons: the dispel border is our four strips, tinted by the engine (Preserv
     end
 end)
 
-test("icons: the dispel border keeps Blizzard's own colors; Dispel Colors drive bars only (G-3, DB-2)", function()
+test("icons: the dispel border keeps Blizzard's own colors; Dispel colors drive bars only (G-3, DB-2)", function()
     local NS2 = enumEnv()
     local c = enumCfg(NS2, { dispelBorder = true })
     NS2.db.profile.dispelColors.Magic = { r = 1, g = 0, b = 0, a = 1 }

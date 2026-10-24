@@ -436,7 +436,7 @@ end)
 -- The Options descriptor's `addonName` is the folder name LibKa0s-Options-1.0's IdList hands
 -- LibKa0s-Media-1.0 for its `info` art (libs/LibKa0s/OptionsIdList.lua, idHelpIcon). Without it
 -- every help mark falls to the client's blue information disc. AuraMaster is the one host whose
--- IdList entries carry help (Filters → Overrides, General → Spell Categories), so it is the one
+-- IdList entries carry help (Filters → Overrides, General → Spell categories), so it is the one
 -- host where the change is visible. The headless kit stubs no IsAddOnLoaded, so the name is trusted
 -- here; in the client the library checks it against the loaded-addon list.
 

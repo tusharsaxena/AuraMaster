@@ -56,7 +56,7 @@ local USER_KEY_LENGTH = 10
 -- player's own text. If this ever needs to name the category it must be a format string taking the
 -- name as a `%s` ARGUMENT, never a concatenation: a name is data, and a `%` inside it read as a
 -- directive is the same class of bug as the `|` the sanitizer below strips.
-local USER_DESC = "Your own category. Edit its spells on General -> Spell Categories."
+local USER_DESC = "Your own category. Edit its spells on the General page > Spell categories."
 
 -- Long enough for "Mythic+ affixes I care about", short enough that a grid row stays a row.
 local NAME_MAX = 40
@@ -280,7 +280,7 @@ end
 
 --- A category definition's label AS IT IS SHOWN: a shipped label is a locale key and goes through
 --- `NS.L`, a user label is the player's own text and never does. EVERY site that draws a category
---- name asks this rather than indexing `NS.L` itself -- the settings grids, the Spell Categories
+--- name asks this rather than indexing `NS.L` itself -- the settings grids, the Spell categories
 --- dropdown and modules/FilterCompiler.lua's `ExplainSpell` notes.
 ---
 --- Not a tidiness rule. `NS.L` answers its own miss path, handing back any key it has no line for,
@@ -606,7 +606,7 @@ end
 --- container template and registers the schema row, so `/am get container.filter.categories.<key>`
 --- answers at once and the next compile counts its spells. Its spell list needs no creation of its
 --- own -- it is `profile.categorySpells[key]`, empty until the player adds to it on General ->
---- Spell Categories, exactly like every other category's edits.
+--- Spell categories, exactly like every other category's edits.
 ---
 --- THE STORED CONTAINERS GET THE KEY HERE TOO, as HIDE (`seedExistingHidden`, above), before
 --- Database.PrepareProfile's ordinary backfill runs; the backfill fills only a missing key, so it

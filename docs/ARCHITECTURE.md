@@ -116,7 +116,7 @@ Every group carries three views: ids, blizzard and every (`group.views`). Where 
 spell ids to the container's unit and aura type, the engine holds the ids view, exactly as compiled. Where it does not (debuffs on the player or
 the pet always; buffs on a target or focus you cannot assist, and debuffs on one you can), it holds
 the view the container's Situations setting picks (`filter.situations`): the every view, every aura
-passing the base and in no Hidden Blizzard, Dispel or Who Cast It category, once, through the
+passing the base and in no Hidden Blizzard, Dispel or Who cast it category, once, through the
 trailing remainder slot (the default), or the blizzard view (`modules/FilterViews.lua`), where spell
 categories, Uncategorized, the Overrides lists and the catch-all match nothing and only the Blizzard
 categories set to Show draw, each aura once. Player and pet debuffs follow the Players setting; a

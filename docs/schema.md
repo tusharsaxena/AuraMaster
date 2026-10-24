@@ -21,8 +21,8 @@ otherwise (`docs/profiles.md`).
 | `locked` | bool | `true` | Lock frame; unlocked shows the drag handles and an outline; live auras keep drawing |
 | `hideBlizzardBuffs` | bool | `false` | Reparent `BuffFrame` away (out of combat) |
 | `hideBlizzardDebuffs` | bool | `false` | Reparent `DebuffFrame` away (out of combat) |
-| `categorySpells` | map | `{}` | `[categoryKey] = { [spellId] = true (added) \| false (removed) }`, layered over `defaults/Categories.lua`'s starter lists and shared by every container (schema v2) and edited on General → Spell Categories. Written whole through the `categorySpells` carve-out |
-| `dispelColors` | map | the palette below | One color per dispel type (`Magic`, `Curse`, `Disease`, `Poison`, `Bleed`; no `None` since schema v5, feedback #7) for a bar's fill or background colored by dispel type (an icon's dispel border keeps Blizzard's own colors); shared by every container (schema v2) and edited on General → Dispel Colors |
+| `categorySpells` | map | `{}` | `[categoryKey] = { [spellId] = true (added) \| false (removed) }`, layered over `defaults/Categories.lua`'s starter lists and shared by every container (schema v2) and edited on General → Spell categories. Written whole through the `categorySpells` carve-out |
+| `dispelColors` | map | the palette below | One color per dispel type (`Magic`, `Curse`, `Disease`, `Poison`, `Bleed`; no `None` since schema v5, feedback #7) for a bar's fill or background colored by dispel type (an icon's dispel border keeps Blizzard's own colors); shared by every container (schema v2) and edited on General → Dispel colors |
 | `enchantSlots` | map | `{ mainHand = true, offHand = true, ranged = true }` | Which weapon slots the `weaponEnchants` category draws (schema v3, B3); shared by every container, like `categorySpells`. A container showing enchants with every slot off falls back to all three |
 | `userCategories` | map | `{}` | `[categoryKey] = { key =, name =, auraType = "HELPFUL" \| "HARMFUL" }` — one record per category the player made (schema v6, issue #10). The key is `user` plus ten base-36 characters, minted by `Cat.NewUserKey` and never moved again, so a rename is a `name` write alone. `Cat.SyncUserCategories` materializes each record into `Cat.HELPFUL`/`Cat.HARMFUL`, the container template and the schema; a record whose key falls outside the reserved `user` namespace, or whose aura type or name is unusable, is SKIPPED and left on disk (`Cat.UnusableUserRecords` is what the panel offers to forget). The spell list is not here — it is `categorySpells[key]`, like every other category's |
 | `userCategoryOrder` | array | `{}` | The user categories' declaration order, and their only ordering source (`pairs` over the records varies between logins, and the compiler emits one engine group per shown category in declaration order). Reconciled against the records on every sync, exactly as `containerOrder` is against `containers`: dangling keys dropped, duplicates dropped, records with no entry appended in key order |
@@ -235,8 +235,8 @@ and its one writer (the library's `P.Save`, behind `/am perf finish`) are named 
 
 ## Settings schema, registries and named non-setting state
 
-`NS.Schema` holds **269** rows across seven pages: General 18 (its Dispel Colors tab's five and its
-Spell Categories tab's three `enchantSlots` rows among them), Containers 5 (`N-1`, batch 7 — split
+`NS.Schema` holds **269** rows across seven pages: General 18 (its Dispel colors tab's five and its
+Spell categories tab's three `enchantSlots` rows among them), Containers 5 (`N-1`, batch 7 — split
 out of General's own tab), Filters 57, Layout 38 (the Label tab's ten among them, batch 8 and B9 LJ-1; batch 9's Side row replaced by batch 11's two anchor-point rows),
 Bars 72, Icons 42 and Text 37 (its `autoSize` among them). The
 AceConfig-drawn Profiles page carries none. That is the count on a profile with no categories of the

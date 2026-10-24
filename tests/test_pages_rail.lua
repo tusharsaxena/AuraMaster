@@ -261,8 +261,8 @@ test("rail: SelectTab on a section key selects the section and its tab; on the G
     assertEqual(ctx.activeSection, "filters")
     assertEqual(ctx.activeTab, L["Sorting"])
     P.show("General")
-    assertTrue(NS.Helpers.SelectTab("general", L["Spell Categories"]), "the addon page is the library's")
-    assertEqual(NS.Helpers.__pageCtx.general.activeTab, L["Spell Categories"])
+    assertTrue(NS.Helpers.SelectTab("general", L["Spell categories"]), "the addon page is the library's")
+    assertEqual(NS.Helpers.__pageCtx.general.activeTab, L["Spell categories"])
 end)
 
 test("rail: selecting a section is refused in combat and moves nothing", function()

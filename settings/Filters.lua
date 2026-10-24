@@ -5,13 +5,13 @@ local _, NS = ...
 --     band          [Container ▾]
 --     [ General ][ Categories ][ Overrides ][ Sorting ][ Situations ]
 --     General       the rows, then the priority block (spec §6) at the foot of the tab
---     Categories    Blizzard Categories   [Show all][Hide all], then Show · Hide · Category, plus an
+--     Categories    Blizzard categories   [Show all][Hide all], then Show · Hide · Category, plus an
 --                                         info icon (N-5)
---                   Spell Categories      NOTE (containers whose FC.IdsMode is not "always"), then
+--                   Spell categories      NOTE (containers whose FC.IdsMode is not "always"), then
 --                                         [Show all][Hide all], the same grid, plus a `See spells`
 --                                         link; hidePermanentEnchants beneath it (buffs), and the
 --                                         spell-list note beneath it (debuffs)
---                   Dispel Types · Who Cast It  (debuffs) [Show all][Hide all], the same grid
+--                   Dispel types · Who cast it  (debuffs) [Show all][Hide all], the same grid
 --     Overrides     NOTE (the same containers), then
 --                   Whitelist  [Add a spell ____________][ Add ]  <icon> Name (id)  [Remove]
 --                   Blacklist  the same
@@ -36,7 +36,7 @@ local _, NS = ...
 -- show tab states the whole order, Overrides included, and is the only place that does. The rows stay in the
 -- schema, so `/am get|set|list`, Defaults and the resets see them, but carry `skipRender`: the
 -- Categories tab, bespoke and keyed by the group's name, draws them as one ChoiceGrid per `grid`.
--- Which spells a spell category matches is the profile's, edited on General → Spell Categories
+-- Which spells a spell category matches is the profile's, edited on General → Spell categories
 -- (settings/GeneralSpells.lua); each spells/enchant row's grid line carries a `See spells` link
 -- there (F-3).
 --
@@ -119,7 +119,7 @@ local STATES = NS.Choices(C.CATEGORY_STATES, C.CATEGORY_STATE_LABELS)
 -- Which grid a category is drawn in, by its kind. Who cast it is a flag with a grid of its own.
 -- weaponEnchants (kind "enchant") shares "custom" with hidePermanentEnchants below, so B5's tab finds
 -- both together. `uncategorized` (U-1) shares it too and is drawn last (Cat.For's declaration order,
--- which categoryRows preserves) — it is the Spell Categories grid's complement row, not a list of its
+-- which categoryRows preserves) — it is the Spell categories grid's complement row, not a list of its
 -- own, but it belongs beside the lists it is defined against.
 local GRID_BY_KIND = { spells = "custom", token = "blizzard", flag = "blizzard", dispel = "dispel", enchant = "custom", uncategorized = "custom" }
 
@@ -286,13 +286,13 @@ NS.RegisterSchemaRows(situationRows())
 
 -- The grids in the order they are drawn; one with no row for this aura type is not drawn at all.
 -- F-1: the "custom" grid — spells-kind categories plus the weaponEnchants row (F-5) — is headed
--- Spell Categories, not Custom Categories: that is what General → Spell Categories calls the same
+-- Spell categories, not Custom Categories: that is what General → Spell categories calls the same
 -- lists (settings/GeneralSpells.lua).
 local GRIDS = {
-    { key = "blizzard", heading = L["Blizzard Categories"] },
-    { key = "custom",   heading = L["Spell Categories"] },
-    { key = "dispel",   heading = L["Dispel Types"] },
-    { key = "who",      heading = L["Who Cast It"] },
+    { key = "blizzard", heading = L["Blizzard categories"] },
+    { key = "custom",   heading = L["Spell categories"] },
+    { key = "dispel",   heading = L["Dispel types"] },
+    { key = "who",      heading = L["Who cast it"] },
 }
 
 local COLUMNS = {}
@@ -338,8 +338,8 @@ local BLIZZARD_INFO = {
     dispellable = L["Blizzard flags this debuff as dispellable by any class. Illustrative examples: a common Magic effect, a widespread Curse effect."],
 }
 
--- F-3/N-4/N-5: the Spell Categories AND Blizzard Categories grids' shared extra column — a `See
--- spells` link to that row's list on General → Spell Categories for a `spells`-kind row and the
+-- F-3/N-4/N-5: the Spell categories AND Blizzard categories grids' shared extra column — a `See
+-- spells` link to that row's list on General → Spell categories for a `spells`-kind row and the
 -- `enchant` row (weaponEnchants), because that tab can draw both (NS.GeneralSpells.Select); an
 -- info icon for a `token`- or `flag`-kind row (N-5); blank for every other kind (dispel, the "who
 -- cast it" flag rows, uncategorized — the caster-identity flag rows draw in their own "who" grid
@@ -355,11 +355,11 @@ local CATEGORY_EXTRA = {
         if def.kind == "spells" or def.kind == "enchant" then
             return {
                 text = LINK_COLOR .. L["See spells"] .. COLOR_END,
-                tooltip = L["Opens General -> Spell Categories with this category's list selected."],
+                tooltip = L["Opens the General page > Spell categories with this category's list selected."],
                 onClick = function()
                     NS.GeneralSpells.Select(key)
                     NS.OpenOptionsPage("general")
-                    H.SelectTab("general", L["Spell Categories"])
+                    H.SelectTab("general", L["Spell categories"])
                 end,
             }
         end
@@ -442,7 +442,7 @@ end
 
 -- U-1..U-5/item 7: the cost of Uncategorized's default (Show) is not obvious from the grid alone —
 -- hiding a Blizzard category does little on its own while it is Show, since most auras are unlisted
--- and Uncategorized keeps rescuing them under rank 3. Drawn right under the Spell Categories grid, in
+-- and Uncategorized keeps rescuing them under rank 3. Drawn right under the Spell categories grid, in
 -- the tab's own text rather than a tooltip only the row's own label would carry.
 --
 -- PRINTED ONLY WHERE THE RESCUE CAN HAPPEN, which since issue #11's A2 is a question about the UNIT,
@@ -519,9 +519,9 @@ local function viewNote(surface, cfg)
     return which and VIEW_NOTES[surface][which] or nil
 end
 
--- T-2 (batch 7, readability): "These are the lists on General -> Spell Categories..."
+-- T-2 (batch 7, readability): "These are the lists on the General page > Spell categories..."
 -- claims the grid holds EDITABLE lists. True wherever the grid carries a `spells`-kind row or the
--- `weaponEnchants` row, both of which own a list on General -> Spell Categories — which since issue
+-- `weaponEnchants` row, both of which own a list on the General page > Spell categories — which since issue
 -- #11 is BOTH aura types' grids, not the buff one alone (`Cat.HARMFUL` carries `hardCC`, `ccRoot`
 -- and `ccSnare`, and settings/GeneralSpells.lua offers every `spells`-kind row of either type). It stays
 -- false for a grid whose only row is `uncategorized`, a Show/Hide flag over the catch-all rather
@@ -553,7 +553,7 @@ local function forRenderRows(row)
 end
 
 --- `rows` for DRAW, with a category the player made marked as theirs -- in the words the General ->
---- Spell Categories dropdown uses, read from there (`NS.GeneralSpells.MarkedName`) rather than
+--- Spell categories dropdown uses, read from there (`NS.GeneralSpells.MarkedName`) rather than
 --- formatted again here, so the two surfaces cannot come to say it differently. `Cat.LabelOf` stays
 --- the labeling rule underneath it.
 ---
@@ -621,7 +621,7 @@ local function bulkButtons(ctx, rows, gridKey)
           onClick = function() setGrid(rows, "hide", gridKey) end })
 end
 
---- The Spell Categories grid (kind `custom`): heading, bulk buttons, the editable-list blurb, the
+--- The Spell categories grid (kind `custom`): heading, bulk buttons, the editable-list blurb, the
 --- grid with its extra column, hidePermanentEnchants under it and the two gated notes.
 local function renderCustomGrid(ctx, g, mine, cfg, auraType, hideRow)
     H.Section(ctx, g.heading)
@@ -629,7 +629,7 @@ local function renderCustomGrid(ctx, g, mine, cfg, auraType, hideRow)
     if note then H.TextRow(ctx, note) end
     bulkButtons(ctx, mine, g.key)
     if customGridHasEditableList(mine) then
-        H.TextRow(ctx, L["These are the lists on General -> Spell Categories, shared by every container."])
+        H.TextRow(ctx, L["These are the lists on the General page > Spell categories, shared by every container."])
     end
     H.ChoiceGrid(ctx, { rows = markedRows(mine), columns = COLUMNS, labelHeader = L["Category"], extraColumn = CATEGORY_EXTRA })
     if hideRow then
@@ -646,8 +646,8 @@ end
 
 --- Every other grid: heading, bulk buttons, then the grid. Its heading is drawn here rather than by
 --- ChoiceGrid, so Show all / Hide all sit between the heading and the grid (feedback #10; Dispel
---- Types and Who Cast It too since B11-T10). N-5: only Blizzard Categories gets the extra column;
---- Dispel Types and Who Cast It pass no extraColumn at all, so they draw no 4th cell, blank or
+--- Types and Who cast it too since B11-T10). N-5: only Blizzard categories gets the extra column;
+--- Dispel types and Who cast it pass no extraColumn at all, so they draw no 4th cell, blank or
 --- otherwise (unlike passing CATEGORY_EXTRA and letting every cell() call answer nil), which keeps
 --- their rows the width they always were.
 local function renderPlainGrid(ctx, g, mine)
@@ -660,7 +660,7 @@ end
 --- Grid key -> its drawer; a key not listed draws as `renderPlainGrid`.
 local GRID_RENDER = { custom = renderCustomGrid }
 
---- The Categories tab: a grid each (the priority blurb is the General tab's now, F-4). The Spell Categories grid (kind
+--- The Categories tab: a grid each (the priority blurb is the General tab's now, F-4). The Spell categories grid (kind
 --- `custom`) carries F-2's blurb, A3's `SPELL_LIST_DEBUFF_NOTE` and `UNCATEGORIZED_NOTE` — three
 --- separate gates, deliberately, because the three sentences stopped being true together the moment
 --- `Cat.HARMFUL` gained spell lists: the blurb asks whether this grid holds an editable list (T-2, now
@@ -810,7 +810,7 @@ local function overrideList(ctx, cfg, key, heading, blurb)
         kind       = "spell",
         -- Every spell list in the addon draws its remove control the same way (B2).
         removeStyle = "icon",
-        -- TWO TO A ROW, as the Spell Categories list draws (LibKa0s v1.47.0's `columns`,
+        -- TWO TO A ROW, as the Spell categories list draws (LibKa0s v1.47.0's `columns`,
         -- OptionsWidgets minor 24; fitted to the canvas since v1.50.0, minor 27).
         --
         -- THIS IS A CONSISTENCY CALL, NOT A SCROLL-LENGTH ONE, and it is worth saying which.
@@ -840,7 +840,7 @@ local function overrideList(ctx, cfg, key, heading, blurb)
                 -- first note moot -- an id no aura carries has no verdict to explain. Joined
                 -- rather than chosen between, so neither is silently dropped.
                 --
-                -- THEY GO IN THE "?" MARK, NOT IN A `note`, for the reason the Spell Categories
+                -- THEY GO IN THE "?" MARK, NOT IN A `note`, for the reason the Spell categories
                 -- list moved them there (LibKa0s v1.51.0; modules/CastAura.lua's CA.Help): a note
                 -- is a full-width second line, so the library gives a noted entry a row of ITS
                 -- OWN whatever the column count (`entryNoted`,
@@ -853,7 +853,7 @@ local function overrideList(ctx, cfg, key, heading, blurb)
                 -- tooltip's own title rather than something these sentences ever carried.
                 --
                 -- AND NO SEVERITY IS PASSED for the verdict line. Red is for an entry that can
-                -- never match and yellow for the Spell Categories guardrail's "also in"; an
+                -- never match and yellow for the Spell categories guardrail's "also in"; an
                 -- override verdict is neither -- it is this list doing exactly its job -- so such
                 -- a mark keeps the library's own gold. CA.Help still reddens the mark by itself
                 -- when the never-matches line is one of the two.
@@ -861,7 +861,7 @@ local function overrideList(ctx, cfg, key, heading, blurb)
             end
             return out
         end,
-        -- The same cast -> aura seam the Spell Categories tab takes (issue #15): an id the data
+        -- The same cast -> aura seam the Spell categories tab takes (issue #15): an id the data
         -- resolves to an aura is stored as that aura and said so, anything else is stored as
         -- typed. Both add boxes have the same problem, so they take the same answer rather than
         -- each growing a copy of the reasoning.
@@ -887,7 +887,7 @@ end
 
 -- Under the dropdowns: what "Every aura, once" still honors, and what it cannot (Blizzard drops the
 -- spell ids there, so nothing built from them applies).
-local SITUATIONS_HONOR = L["Every aura still honors Cast by, Duration, Max duration and the Blizzard, Dispel and Who Cast It rows you set to Hide; spell categories, Uncategorized and Overrides do not apply there."]
+local SITUATIONS_HONOR = L["Every aura still honors Cast by, Duration, Max duration and the Blizzard, Dispel and Who cast it rows you set to Hide; spell categories, Uncategorized and Overrides do not apply there."]
 -- A player or pet buff container: FC.IdsMode "always", no every view, nothing to choose.
 local SITUATIONS_ALWAYS = L["Spell lists always apply to your own and your pet's buffs."]
 -- The EFFECTIVE mode, as the compiler reads it (FilterCompiler.lua's `timeless`): "Without a

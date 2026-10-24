@@ -113,12 +113,12 @@ test("text page: General holds Size, the Template dropdown and box, the cheat sh
     assertTrue(at.picker < at.box, "the Template dropdown, then the box")
 end)
 
-test("text page: the section is named Text Template (Task 20, owner: rename this section)", function()
+test("text page: the section is named Text template (Task 20, owner: rename this section)", function()
     local NS, _, P, ws = textPage()
     -- red under: the subgroup still reading "What each line says"
-    assertEqual(NS.FindSchemaRow(P_ .. "template").subgroup, NS.L["Text Template"])
+    assertEqual(NS.FindSchemaRow(P_ .. "template").subgroup, NS.L["Text template"])
     -- the subgroup heading is an AceGUI Heading, not a Label, so P.hasText (Label-only) misses it
-    assertTrue(P.find(ws, "Heading", NS.L["Text Template"]) ~= nil, "the heading reads Text Template")
+    assertTrue(P.find(ws, "Heading", NS.L["Text template"]) ~= nil, "the heading reads Text template")
     assertTrue(P.find(ws, "Heading", "What each line says") == nil, "the old heading is gone")
 end)
 

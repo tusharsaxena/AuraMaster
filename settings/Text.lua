@@ -6,7 +6,7 @@ local _, NS = ...
 --     band   [Container ▾]
 --     [ General ][ Font ][ Icon ][ Pandemic ][ Animation ]
 --     General   Size (Size to fit, then Width and Height, dimmed under a note while it is on),
---               then -- Text Template --: [Template ▾] (a built-in, or Custom), the Custom
+--               then -- Text template --: [Template ▾] (a built-in, or Custom), the Custom
 --               template box (Custom only), a read-only Preview EditBox (the line on a sample aura,
 --               PrettyChat's shape), the Tokens/Rules cheat sheet; then Placement and the centering
 --               note
@@ -123,7 +123,7 @@ NS.RegisterSchemaRows({
     { path = P .. "height", page = PAGE, group = G_GENERAL, subgroup = L["Size"], type = "number", min = 8, max = 80, step = 1,
       disabledIf = sizedToFit,
       label = L["Height (px)"], desc = L["The height of one line. Center stacks a line of several fields in rows, and the box grows to fit them. Grayed out while Size to fit is on: the height then follows the content, and this value is used only if it cannot be measured."] },
-    { path = P .. "template", page = PAGE, group = G_GENERAL, subgroup = L["Text Template"], type = "string",
+    { path = P .. "template", page = PAGE, group = G_GENERAL, subgroup = L["Text template"], type = "string",
       dialogControl = "EditBox", maxLetters = C.TEXT_TEMPLATE_MAX, wide = true, label = L["Custom template"],
       desc = L["What each line says, built from the tokens listed below. Press Enter to apply."],
       validate = TT.Validate, onChange = structural },
@@ -314,7 +314,7 @@ local function headingOnly(row)
     return copy
 end
 
---- Text Template: the subsection heading, the Template dropdown, the Custom template box (Custom
+--- Text template: the subsection heading, the Template dropdown, the Custom template box (Custom
 --- only), the Preview box on the aura type's sample aura, then the cheat sheet.
 ---
 --- The dropdown and the box are widgets, and dim with the page on their own. The Preview's text and
@@ -403,16 +403,16 @@ NS.RegisterSchemaRows({
     { path = P .. "dispelTypeColor", page = PAGE, group = G_FONT, subgroup = S_DISPEL, type = "bool",
       startsLine = true, disabledIf = noDispel,
       label = L["Color the dispel type"],
-      desc = L["Write $dispeltype$ in its type's color from General -> Dispel Colors. The rest of the line keeps the font color. Needs $dispeltype$ in the template."] },
+      desc = L["Write $dispeltype$ in its type's color from the General page > Dispel colors. The rest of the line keeps the font color. Needs $dispeltype$ in the template."] },
     { path = P .. "dispelBackdrop", page = PAGE, group = G_FONT, subgroup = S_DISPEL, type = "bool",
       startsLine = true, label = L["Backdrop in the dispel color"],
-      desc = L["Fill the line's box, behind the text, with the aura's dispel type color from General -> Dispel Colors. An aura with no dispel type gets none."] },
+      desc = L["Fill the line's box, behind the text, with the aura's dispel type color from the General page > Dispel colors. An aura with no dispel type gets none."] },
     { path = P .. "dispelBackdropAlpha", page = PAGE, group = G_FONT, subgroup = S_DISPEL, type = "number",
       min = 0.05, max = 1, step = 0.05, isPercent = true, disabledIf = unlessOn("dispelBackdrop"),
       label = L["Backdrop opacity"], desc = L["How strongly the backdrop shows behind the text."] },
     { path = P .. "dispelEdge", page = PAGE, group = G_FONT, subgroup = S_DISPEL, type = "bool",
       startsLine = true, label = L["Edge in the dispel color"],
-      desc = L["Outline the line's box in the aura's dispel type color from General -> Dispel Colors. An aura with no dispel type gets none."] },
+      desc = L["Outline the line's box in the aura's dispel type color from the General page > Dispel colors. An aura with no dispel type gets none."] },
     { path = P .. "dispelEdgeSize", page = PAGE, group = G_FONT, subgroup = S_DISPEL, type = "number",
       min = 1, max = 4, step = 1, disabledIf = unlessOn("dispelEdge"),
       label = L["Edge thickness (px)"], desc = L["How thick the edge is."] },

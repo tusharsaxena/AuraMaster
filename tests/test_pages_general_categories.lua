@@ -686,7 +686,7 @@ test("general → spell categories: a profile that refuses the sweep is said out
     assertEqual(NS.ValidateSchema(), 0)
 end)
 
--- ── the Spell Categories add line: suggestions while typing, and where a name can come from (#31) ─
+-- ── the Spell categories add line: suggestions while typing, and where a name can come from (#31) ─
 
 --- The id lookups and the suggestions' sources (the bags, the spellbook, a spell's subtext), from
 --- the kit's opt-in tests/_kit/mock_ids.lua. AM's own C_Spell.GetSpellInfo keeps answering.
@@ -702,7 +702,7 @@ local function spell(m, id, name, rank)
     if rank then m.setSpellSubtext(id, rank) end
 end
 
---- The Spell Categories tab drawn again after `seed(NS, m)`, recording the suggestion dropdown:
+--- The Spell categories tab drawn again after `seed(NS, m)`, recording the suggestion dropdown:
 --- NS, m, P, the widgets, the dropdown's reader and the Add a spell box.
 local function suggesting(seed)
     local NS, m, P = spells({ before = withIds })

@@ -157,7 +157,7 @@ end)
 test("locale: every value is ASCII, the em dash excepted (T-1)", function()
     -- red under: a non-ASCII byte (an arrow, an ellipsis, a middot, a section mark, ...) reappearing
     -- in a locale VALUE. The owner's font draws most such glyphs as a box (screenshot, batch 7 T-1):
-    -- "General -> Spell Categories" rendered as "General [box] Spell Categories". The em dash (U+2014,
+    -- "General -> Spell Categories" (as it read then) rendered as "General [box] Spell Categories". The em dash (U+2014,
     -- UTF-8 bytes 0xE2 0x80 0x94) is the ONE exemption — it renders correctly in the owner's own
     -- screenshots, so it is intentionally excluded rather than silently allowed: every other
     -- multi-byte (>= 0x80) sequence in a value fails this test.

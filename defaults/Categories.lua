@@ -25,7 +25,7 @@ local _, NS = ...
 --                  nowhere else
 --                  (issue #11 gave `Cat.HARMFUL` its first, `hardCC` and the `softCC` the 2026-10-04 split made
 --                  `ccRoot` and `ccSnare`). The Filters
---                  page and General -> Spell Categories say so where it matters (docs/scope.md,
+--                  page and the General page > Spell categories say so where it matters (docs/scope.md,
 --                  "What the engine cannot do").
 --   enchant        the player's temporary weapon enchants. The odd one out: it matches no aura and
 --                  joins no aura group. Hide takes the container's enchant slots away, Show gives
@@ -36,7 +36,7 @@ local _, NS = ...
 --                  no id list of its own; it is the COMPLEMENT of every `spells`-kind category's
 --                  effective ids, so modules/FilterCompiler.lua handles it with dedicated logic rather
 --                  than the generic per-kind include/exclude every other kind shares. Drawn LAST in the
---                  grid, default Show. There is no General -> Spell Categories entry for it: it has no
+--                  grid, default Show. There is no the General page > Spell categories entry for it: it has no
 --                  list to edit.
 --
 --                  ONE ROW PER AURA TYPE, ASYMMETRIC (2026-09-16 — the owner restored the debuff
@@ -67,7 +67,7 @@ local _, NS = ...
 --                  category's Hide, and neuters them all — the owner's original complaint reborn.
 --
 -- THE SPELL LISTS ARE A STARTER SET, WRITTEN FOR THIS ADDON. They were assembled from public spell
--- data for Retail 12.x and are meant to be edited: General -> Spell Categories lets a player add or remove any
+-- data for Retail 12.x and are meant to be edited: the General page > Spell categories lets a player add or remove any
 -- id per category, and those edits live in the profile (profile.categorySpells, shared by every
 -- container since schema v2), never here.
 -- ONE ID PER LINE, and the comment on that line gives the spell's name in the 12.1 client data
@@ -691,12 +691,12 @@ Cat.HELPFUL = {
     },
     {
         key = "weaponEnchants", kind = "enchant", label = "Weapon enchants",
-        desc = "Your temporary weapon enchants, drawn after the buffs. Only on a container showing your own buffs; which weapon slots count is set on General -> Spell Categories.",
+        desc = "Your temporary weapon enchants, drawn after the buffs. Only on a container showing your own buffs; which weapon slots count is set on the General page > Spell categories.",
     },
     {
         -- U-1: last in the grid, on purpose (renderCategories draws categoryRows() in Cat.For order).
         key = "uncategorized", kind = "uncategorized", label = "Uncategorized",
-        desc = "Not in any of the Spell Categories lists above (Blizzard categories do not count). On a container watching you or your pet, Show rescues an unlisted buff from a Hidden Blizzard category; on a target or focus Blizzard may discard the spell list that rescue is built from, so Show simply changes nothing there. Hide removes the aura along with everything else this container has no other reason to draw, on every unit.",
+        desc = "Not in any of the Spell categories lists above (Blizzard categories do not count). On a container watching you or your pet, Show rescues an unlisted buff from a Hidden Blizzard category; on a target or focus Blizzard may discard the spell list that rescue is built from, so Show simply changes nothing there. Hide removes the aura along with everything else this container has no other reason to draw, on every unit.",
     },
 }
 
@@ -711,7 +711,7 @@ Cat.HELPFUL = {
 -- they answer ("is my sheep on the target", "is it rooted") is asked of an enemy target or focus,
 -- which is exactly where the ids do bite — and every
 -- surface that can mislead says so: their own descs below, the Filters section's Categories tab, the
--- General -> Spell Categories blurb, and the per-container orange warning
+-- The General page > Spell categories blurb, and the per-container orange warning
 -- (`FC.WARN.IDS_ASSISTABLE` / `IDS_OWN_DEBUFFS`, modules/FilterCompiler.lua).
 
 local ALL_DISPELS = { Magic = true, Curse = true, Disease = true, Poison = true, Bleed = true }
@@ -741,7 +741,7 @@ Cat.HARMFUL = {
         --      it is true: which of the remaining ids earn a row is a call, not a derivation, and a
         --      later curator may call it differently. It is a defensible call because nothing is
         --      lost — the exhaustive derived set (215 hard, 212 soft for build 12.1.0.69875) is
-        --      frozen in docs/spell-research/2026-09-20/, and General -> Spell Categories lets a
+        --      frozen in docs/spell-research/2026-09-20/, and the General page > Spell categories lets a
         --      player add any id out of it. These CC rows are A STARTER SET meant to be edited,
         --      exactly what this file says of every other list it ships.
         --
@@ -792,7 +792,7 @@ Cat.HARMFUL = {
         -- `ccSnare` has never shipped; Paladin's CC Snare row is Judgment of Justice). A later research
         -- run WILL derive the ability into the hard-CC bucket again: leaving it out is the intended
         -- diff, not an oversight to helpfully correct. A player who wants it adds the id on
-        -- General -> Spell Categories.
+        -- The General page > Spell categories.
         --
         -- MAIM ships on 203123, not 203126. Both are aura-applying spells named Maim in this build,
         -- and the one a Feral target carries is 203123 — mechanic 12 (stunned) on DiminishType 4,
@@ -818,7 +818,7 @@ Cat.HARMFUL = {
         --     the talent 51485 is in the pool but carries mechanic 0, and the root aura 64695
         --     (mechanic 7) is triggered only by 116943, the totem's own pulse, which the pool never
         --     reaches. A later research run's diff will propose dropping both; keep them.
-        -- A player who wants any of the three adds it by id on General -> Spell Categories.
+        -- A player who wants any of the three adds it by id on the General page > Spell categories.
         key = "hardCC", kind = "spells", label = "CC Loss of Control",
         desc = "Stuns, incapacitates, disorients and fears, plus Cyclone, Banish and Mind Control — the unit is not in control of itself. Only works on a target or focus you can't assist: Blizzard discards spell lists for debuffs on you or on a unit you can assist.",
         spells = spells({
@@ -1011,7 +1011,7 @@ Cat.HARMFUL = {
         -- covenant and legacy rows (Fae Tendrils 342373), and most of the rest of the 212, which the
         -- run's own ANALYSIS.md reads as self-buffs' incidental slows rather than anything landed on
         -- a target. Most, not all: past rules 1 and 2 this is rule 3, judgment, and what makes that
-        -- safe to say out loud is that the frozen bundle and the Spell Categories editor put every
+        -- safe to say out loud is that the frozen bundle and the Spell categories editor put every
         -- id one paste away.
         --
         -- The 40 ids the run emitted under `ALL` because it could not resolve a class were hand-keyed

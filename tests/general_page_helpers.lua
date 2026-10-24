@@ -2,7 +2,7 @@
 --
 -- Not a suite (tests/run.lua does not list it) and not part of the vendored kit. Loaded with dofile
 -- by tests/test_pages_general.lua and tests/test_pages_general_categories.lua (issue #19), so the
--- two suites open the page, read the Spell Categories list and spy on its writes the same way
+-- two suites open the page, read the Spell categories list and spy on its writes the same way
 -- instead of each keeping a copy.
 
 local fresh = dofile("tests/fresh_env.lua")
@@ -42,10 +42,10 @@ local function spyApply(NS)
     return calls
 end
 
---- The General page on its Spell Categories tab.
+--- The General page on its Spell categories tab.
 local function spells(opts)
     local NS, m, P, _, tab = general(opts)
-    return NS, m, P, tab(NS.L["Spell Categories"])
+    return NS, m, P, tab(NS.L["Spell categories"])
 end
 
 --- The muted markers the panel colors with (settings/GeneralSpells.lua's TYPE_COLORS and

@@ -14,7 +14,7 @@ local _, NS = ...
 -- snapshotted once per apply (modules/Container.lua's SnapshotClass, modules/Style.lua's
 -- Style.Color), so a player container reads the player's. The two pandemic-window swatches are PALETTE
 -- definitions — one color per state — and carry no companion, the one exemption options-ui-§17 makes. The
--- dispel type colors are the profile's, on General → Dispel Colors (settings/GeneralSpells.lua).
+-- dispel type colors are the profile's, on General → Dispel colors (settings/GeneralSpells.lua).
 
 local L = NS.L
 local H = NS.Helpers
@@ -47,7 +47,7 @@ NS.RegisterSchemaRows(H.BarGroup({
     prefix = P, page = PAGE, group = G_GENERAL, subgroup = L["Fill"], classColor = UNIT,
     extra = {
         { path = P .. "colorMode", type = "string", values = NS.Choices(C.BAR_COLOR_MODES, C.BAR_COLOR_MODE_LABELS),
-          label = L["Color by"], desc = L["One color, or each debuff's dispel type (colors on General -> Dispel Colors). Buffs and many debuffs have no dispel type, class debuffs such as Judgment or Consecration included: those keep the bar color."] },
+          label = L["Color by"], desc = L["One color, or each debuff's dispel type (colors on the General page > Dispel colors). Buffs and many debuffs have no dispel type, class debuffs such as Judgment or Consecration included: those keep the bar color."] },
         { path = P .. "drain", type = "string", values = NS.Choices(C.DRAIN_DIRECTIONS, C.DRAIN_DIRECTION_LABELS),
           label = L["Drains toward"], desc = L["Which end the bar empties toward as the aura runs out. A permanent aura draws a full bar."] },
         -- engine-only: it eases the engine's timer between its updates; a placeholder's fill is drawn
@@ -95,7 +95,7 @@ local BG_TOOLTIPS = {
     [P .. "bgAlpha"] = L["How opaque the background texture is."],
     [P .. "bgColor"] = L["The background color."] .. (H.CLASS_COLOR_NOTE and (" " .. H.CLASS_COLOR_NOTE) or ""),
     [P .. "useClassColorBg"] = L["Draw the background in the class color instead of the swatch beside it."],
-    [P .. "bgColorMode"] = L["One color, or each debuff's dispel type (colors on General -> Dispel Colors). Buffs and many debuffs have no dispel type, class debuffs such as Judgment or Consecration included: those keep the background color."],
+    [P .. "bgColorMode"] = L["One color, or each debuff's dispel type (colors on the General page > Dispel colors). Buffs and many debuffs have no dispel type, class debuffs such as Judgment or Consecration included: those keep the background color."],
 }
 for _, row in ipairs(bg) do row.tooltip = BG_TOOLTIPS[row.path] end
 NS.RegisterSchemaRows(bg)

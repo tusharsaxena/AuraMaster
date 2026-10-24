@@ -78,7 +78,7 @@ end
 
 --- The id to actually store for `typed`, plus the chat line owed to the player.
 ---
---- ONE SEAM FOR EVERY ADD BOX. Both the Spell Categories tab and the Filters section's Overrides
+--- ONE SEAM FOR EVERY ADD BOX. Both the Spell categories tab and the Filters section's Overrides
 --- lists take an id the same way and have the same problem, so they take the same answer here
 --- rather than each growing its own copy of the reasoning.
 ---
@@ -146,7 +146,7 @@ CA.HELP_WARN  = "info"
 --- leaves every row the same shape.
 ---
 --- `extra` is whatever the CALLER has to add for this list -- the overlap guardrail's "also in"
---- line on the Spell Categories tab, the override verdict on the Filters section. It goes AFTER the
+--- line on the Spell categories tab, the override verdict on the Filters section. It goes AFTER the
 --- never-matches line, because an id no aura carries has no verdict worth explaining.
 ---
 --- THE SEVERITY COMES BACK BESIDE THE LINES, as a second return, because the caller has to put it

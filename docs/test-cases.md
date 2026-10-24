@@ -416,8 +416,8 @@ Total.
 - situations: the remainder slot exists only for R-4 on units whose ids are not always applied
 - situations: an R-3 plan's every view is its blizzard view
 - situations: a player buff plan (ids always applied) is unchanged, every reading as blizzard
-- situations: the remainder subtracts Hidden Dispel Types and one Hidden Who Cast It row
-- situations: both Who Cast It rows Hidden make the remainder NEVER in every view
+- situations: the remainder subtracts Hidden Dispel types and one Hidden Who cast it row
+- situations: both Who cast it rows Hidden make the remainder NEVER in every view
 - situations: a remainder that cannot draw leaves the every view equal to the blizzard view
 - situations: 'Without a duration' makes the remainder NEVER in the every view (buffs)
 - situations: the remainder keeps the blacklist and ignores the whitelist and spell categories
@@ -1454,7 +1454,7 @@ Total.
 - icons: the time and stack texts are boxed to the icon's width less their offsets
 - icons: a hidden text is never handed to the engine; a shown one is, as its own region
 - icons: the dispel border is our four strips, tinted by the engine (PreserveAsset), on harmful auras only (DB-1)
-- icons: the dispel border keeps Blizzard's own colors; Dispel Colors drive bars only (G-3, DB-2)
+- icons: the dispel border keeps Blizzard's own colors; Dispel colors drive bars only (G-3, DB-2)
 - icons: our border draws above the swipe, the dispel border above ours, the texts above all (I-1)
 - icons: the dispel strips take our Solid border's exact shape and thickness (DB-1)
 - icons: the dispel strips follow Border thickness on every dress (DB-1)
@@ -1955,7 +1955,7 @@ Total.
 - general: the Reset-all popup carries options-ui-§12's wording and cannot be clicked through
 - general: Defaults restores the General rows of the profile and no container setting, now that Containers is its own page
 - general: the page's Defaults tooltip no longer mentions a container's identity (N-1: Containers is its own page)
-- general: the tab strip reads Master controls, Display, Spell Categories, Dispel Colors — Containers is gone from it
+- general: the tab strip reads Master controls, Display, Spell categories, Dispel colors — Containers is gone from it
 - general → spell categories: the list is ordered by name, case-insensitively, ids the client cannot name last (owner 2026-09-20)
 - general → spell categories: the list draws two columns, filled row-major, in the by-name order (owner 2026-09-20)
 - general → spell categories: a dropdown of the fifteen spell categories plus Weapon enchants, opening on the first
@@ -1969,9 +1969,9 @@ Total.
 - general → spell categories: choosing Weapon enchants draws slot toggles, not a spell list
 - general → spell categories: the Weapon enchants entry explains the all-slots fallback
 - general → spell categories: unticking a weapon slot writes the profile, one row at a time
-- general: Select moves the Spell Categories tab onto the given category, and ignores a key it cannot draw
+- general: Select moves the Spell categories tab onto the given category, and ignores a key it cannot draw
 - general: Select accepts the enchant key too, and lands the tab on it
-- general → spell categories: the tab and Dispel Colors are drawn with no container at all
+- general → spell categories: the tab and Dispel colors are drawn with no container at all
 - general → dispel colors: five profile-wide swatches, no None, no class-color companion, under a line saying they drive bars and text
 - general → dispel colors: a swatch writes its own type's color and re-applies every container
 - general → dispel colors: the page's Defaults restores them
@@ -2051,24 +2051,24 @@ Total.
 
 - filters: Cast by writes the selected container's filter and no other
 - filters: a buff container's Categories tab offers the weapon-enchant rows; a debuff container's does not
-- filters: hidePermanentEnchants draws right under the Spell Categories grid, tied to Weapon enchants by name, ahead of the Uncategorized note (T-3)
+- filters: hidePermanentEnchants draws right under the Spell categories grid, tied to Weapon enchants by name, ahead of the Uncategorized note (T-3)
 - filters: the max-auras description tells the truth about a group being per-shown-category, not the whole container
 - filters: the sort-by and direction descriptions tell the truth about a group being per-shown-category, not the whole container
 - filters: a max-duration preset writes the same path as the slider
 - filters: a stored max-duration matching no preset leaves the preset dropdown blank
 - filters: the max-duration description says there is no minimum
-- filters: a buff container's Categories tab is two grids, Blizzard Categories then Spell Categories, each once
-- filters: a debuff container's Categories tab is Blizzard Categories, Spell Categories, Dispel Types and Who Cast It, each once
-- filters: the Dispel Types grid draws no 4th cell, blank or otherwise
+- filters: a buff container's Categories tab is two grids, Blizzard categories then Spell categories, each once
+- filters: a debuff container's Categories tab is Blizzard categories, Spell categories, Dispel types and Who cast it, each once
+- filters: the Dispel types grid draws no 4th cell, blank or otherwise
 - filters: a category the player made is marked as theirs in the grid, and its schema row is not (owner 2026-09-21)
 - filters: every grid's columns are Show and Hide, then the category (schema v3)
-- filters: the Spell Categories grid opens with a line naming where its lists live (F-2)
+- filters: the Spell categories grid opens with a line naming where its lists live (F-2)
 - filters: the 'these are the lists' line draws wherever the grid holds an editable list — both aura types since the CC lists (T-2)
 - filters: a debuff container's Categories tab says its spell lists only match on a target or focus you can't assist (A3)
 - filters: the Uncategorized cost note draws only where the engine is certain to honor spell ids (A2)
-- filters: the Spell Categories NOTE names where spell categories are not applied, per unit (SV-04)
-- filters: no Spell Categories NOTE on a buff container on the player or the pet (SV-04)
-- filters: a spells-kind row's See spells link selects that category on General -> Spell Categories and lands there; a token row gets an info icon instead (F-3/N-3/N-4/N-5)
+- filters: the Spell categories NOTE names where spell categories are not applied, per unit (SV-04)
+- filters: no Spell categories NOTE on a buff container on the player or the pet (SV-04)
+- filters: a spells-kind row's See spells link selects that category on the General page > Spell categories and lands there; a token row gets an info icon instead (F-3/N-3/N-4/N-5)
 - filters: the priority order (spec §6) is stated on the General tab, highest rank first
 - filters: the priority block is stated once — not on Categories, not on Overrides (batch 8)
 - filters: the priority block is a heading, a lead-in and five separate rank lines (T-2, batch 8)
@@ -2079,7 +2079,7 @@ Total.
 - filters: a grid checkbox stores show or hide for the selected container and re-syncs its line
 - filters: /am get and /am list print a category's state as Show or Hide
 - filters: every category row is skipRender and names its grid
-- filters: no aura type is offered a Spell lists tab; the lists live on General → Spell Categories
+- filters: no aura type is offered a Spell lists tab; the lists live on General → Spell categories
 - filters: Overrides replaces Always / never, with a Whitelist and a Blacklist section
 - filters: the Overrides NOTE heads the tab on every container whose spell lists can be off (SV-04)
 - filters: Overrides adds to one list at a time by id or by name, and Remove takes an id off
@@ -2098,9 +2098,9 @@ Total.
 - filters: an uncategorized blacklisted spell warns that no category hides it
 - filters: a whitelisted spell no category claims, on a buff container, names Uncategorized instead of the generic rank-5 wording
 - filters: Show all and Hide all head every Categories section, one pair each (feedback #10, B11-T10)
-- filters: Show all / Hide all on Dispel Types and Who Cast It set exactly their own section, for this container only (B11-T10)
-- filters: Hide all on Blizzard Categories hides exactly that section, as one [Set] line and one apply (feedback #10)
-- filters: Show all on Spell Categories shows exactly that section, whatever Blizzard Categories say (feedback #10)
+- filters: Show all / Hide all on Dispel types and Who cast it set exactly their own section, for this container only (B11-T10)
+- filters: Hide all on Blizzard categories hides exactly that section, as one [Set] line and one apply (feedback #10)
+- filters: Show all on Spell categories shows exactly that section, whatever Blizzard categories say (feedback #10)
 
 ### test_pages_situations.lua (11)
 
@@ -2174,7 +2174,7 @@ Total.
 - bars: General opens on Size (Width, Height) ahead of Fill, with paths unchanged (S-1)
 - bars: Width writes the selected container, and the page re-reads after the banner moves
 - bars: a confirmed fill color is stored on the selected container, as a table of its own
-- bars: Pandemic carries no dispel swatches, and Color by points at General -> Dispel Colors (B-6)
+- bars: Pandemic carries no dispel swatches, and Color by points at the General page > Dispel colors (B-6)
 - bars: the Pandemic tab holds the time color and the highlight, in pandemic-window words, paths unchanged (B2-1)
 - bars: Background & border offers Color by beside the background, writing bgColorMode (feedback #7)
 - pages: every Border style row says Solid redraws at once and another texture after a /reload (B2-3)
@@ -2192,7 +2192,7 @@ Total.
 
 - text page: the five tabs are drawn in order, Pandemic before Animation (B2-1)
 - text page: General holds Size, the Template dropdown and box, the cheat sheet, then Placement
-- text page: the section is named Text Template (Task 20, owner: rename this section)
+- text page: the section is named Text template (Task 20, owner: rename this section)
 - text page: the Preview is a disabled EditBox labeled Preview, PrettyChat's own shape (Task 20)
 - text page: the Preview box refreshes after a template change (Task 20)
 - text page: the cheat sheet has a Tokens heading, a Rules heading and one bullet per token (Task 20)

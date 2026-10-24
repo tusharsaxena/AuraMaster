@@ -140,7 +140,7 @@ local _, NS = ...
 -- (token, flag, dispel) Show categories draw, each aura once; the every view draws through one
 -- trailing remainder group (filter situations, S1). The owner's rule: where Blizzard will not apply
 -- spell ids, spell categories and the Overrides lists are not applied. `FC.WARN.IDS_*`
--- (`identityWarning`) and the NOTE lines on Filters -> Categories and Overrides say so.
+-- (`identityWarning`) and the NOTE lines on Filters > Categories and Overrides say so.
 --
 -- A Hide's `excludeSpellIDs` still ships even where the engine ignores it (only the union itself is
 -- skipped there, since the gate is its one reader): an ignored exclude costs nothing, suppressing it would change no outcome, and
@@ -454,7 +454,7 @@ end
 local ENCHANT_SLOTS = { "mainHand", "offHand", "ranged" }
 
 --- The enchant block: which weapon slots the container draws, and whether a permanent enchant is
---- skipped. The slots are the profile's (General -> Spell Categories); a profile with none, or with
+--- skipped. The slots are the profile's (the General page > Spell categories); a profile with none, or with
 --- every slot unticked, falls back to all three, because a container showing enchants and no slots
 --- would draw nothing with nothing to explain it.
 local function enchantBlock(filter, enchantSlots)
@@ -668,7 +668,7 @@ local function addCatchAllGroup(plan, base, cats, look)
 end
 
 --- The remainder (filter situations, S1; `FV.AppendRemainder`): the base minus every Hidden Blizzard,
---- Dispel or Who Cast It category, drawn only in the every view. Both Who rows Hidden (a conflict)
+--- Dispel or Who cast it category, drawn only in the every view. Both Who rows Hidden (a conflict)
 --- and Timeless buffs (`cats.timeless`, built from spell ids) leave it NEVER there, but present.
 local function addRemainderGroup(plan, base, cats, look)
     local con = cloneCon(base)

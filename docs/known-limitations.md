@@ -35,7 +35,7 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   `Ancestral Protection Totem (207399) (also in 1)` is 47. So at the floor that row shows
   no `(also in 1)`. **Accepted**: this is the library's documented degradation and the tooltip still
   names every claiming category. A wider panel buys it back at about 8 characters per 100px.
-- **Categories are created only on General → Spell Categories.** Filters → Categories, where a player
+- **Categories are created only on General → Spell categories.** Filters → Categories, where a player
   is most likely to be thinking about categories, shows them and links to their spells but offers no
   way to make one. Accepted by the owner on 2026-09-21.
 - **A Text line of several pieces cannot be centered as one line.** A line is a chain of font strings
@@ -97,7 +97,7 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
 - **Spell-id filters apply only to buffs on units you can assist and debuffs on units you cannot**
   (Blizzard's `CanApplyIdentityCandidateFilters`). Where they do not, a container draws the view its
   Situations setting picks (filter situations, 2026-10-02): every aura once (the default), honoring
-  Cast by, Duration, Max duration and the Blizzard, Dispel and Who Cast It rows set to Hide, or only the
+  Cast by, Duration, Max duration and the Blizzard, Dispel and Who cast it rows set to Hide, or only the
   Blizzard categories set to Show. Neither applies spell categories, Uncategorized or the Overrides
   lists. With "Only Blizzard categories" a container built only on spell categories shows nothing on
   a hostile target, and a `NeverSecret` aura (Sated, Exhaustion) claimed only by a spell category is
@@ -111,7 +111,7 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   built from spell ids, which Blizzard drops where spell lists don't apply, so a target or focus buff
   container in it that hides a category gets a remainder group that matches nothing there (filter
   situations S1), and its other groups keep their blizzard view: Every aura, once draws exactly what
-  Only my Blizzard categories set to Show draws (SI-06). Both Who Cast It rows set to Hide do the same.
+  Only my Blizzard categories set to Show draws (SI-06). Both Who cast it rows set to Hide do the same.
   Its Situations tab says so.
 - **On a target or focus BUFF container, Uncategorized set to Show no longer rescues an unlisted
   aura.** That row's group carries an `excludeSpellIDs` of the categorized union as its only
@@ -132,7 +132,7 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   Totem, whose totems carry no mechanic and whose auras no matching name — those two now ship by
   hand (Earthbind 3600 on CC Snare, Earthgrab 64695 on CC Root, owner 2026-10-04). The KNOWN GAPS comment
   above `hardCC` (`defaults/Categories.lua:822`) records each one and why rather than papering over it. A player who
-  wants any of the other three adds it by id on General → Spell Categories, which is a profile-wide edit
+  wants any of the other three adds it by id on General → Spell categories, which is a profile-wide edit
   every container picks up.
 - **"Only auras without a duration" is learned, not filtered.** The engine has no such filter; the
   addon excludes every spell it has seen carry a duration, learned from player and pet buffs while

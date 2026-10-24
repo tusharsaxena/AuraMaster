@@ -1,11 +1,11 @@
 local _, NS = ...
 
--- settings/GeneralDispel.lua — General → Dispel Colors: one color per dispel type, shared by every
+-- settings/GeneralDispel.lua — General → Dispel colors: one color per dispel type, shared by every
 -- container (schema v2 made the set the profile's). Peeled whole out of settings/GeneralSpells.lua
 -- (issue #16, layout-§1), with no change to what it draws or stores.
 --
---     [ Master controls ][ Display ][ Spell Categories ][ Dispel Colors ]
---     Dispel Colors     the lead-in and its four bullets, then one swatch per dispel type,
+--     [ Master controls ][ Blizzard frames ][ Spell categories ][ Dispel colors ]
+--     Dispel colors     the lead-in and its four bullets, then one swatch per dispel type,
 --                       Magic … Bleed
 --
 -- DISPEL COLORS are five plain color rows at `dispelColors.<type>`: absolute, so profile-wide, and with
@@ -18,7 +18,7 @@ local _, NS = ...
 -- one exemption options-ui-§17 makes.
 --
 -- This file registers nothing itself. settings/General.lua registers ROWS after the Spell
--- Categories tab's enchant rows, so Dispel Colors takes the last strip position, and draws TAB
+-- Categories tab's enchant rows, so Dispel colors takes the last strip position, and draws TAB
 -- beside settings/GeneralSpells.lua's. It loads after GeneralSpells.lua, whose published BULLET
 -- and BULLET_GAP its bullets read (one definition, not a copy), and before General.lua.
 
@@ -28,7 +28,7 @@ local C = NS.Constants
 local GS = NS.GeneralSpells
 
 local PAGE = "general"
-local DISPEL = L["Dispel Colors"]
+local DISPEL = L["Dispel colors"]
 local BULLET, BULLET_GAP = GS.BULLET, GS.BULLET_GAP
 
 local DISPEL_ROWS = {}
@@ -48,7 +48,7 @@ end
 -- between them, drawn from helpers that already exist. The WORDING is the paragraph's, split.
 local DISPEL_LEAD = L["One color per dispel type, shared by every container:"]
 local DISPEL_FACTS = {
-    L["Read by bars colored by dispel type, and by a text line's dispel type word, backdrop or edge (Text -> Font)."],
+    L["Read by bars colored by dispel type, and by a text line's dispel type word, backdrop or edge (Text style > Font)."],
     -- Split in two (the paragraph's one long sentence): at panel width a ~170-character bullet wraps,
     -- and its second line lands flush under the "- " with no hanging indent, so a three-bullet block
     -- reads as 1/2/1 lines and loses the shape the bullets were asked for. Two short facts instead.
@@ -57,7 +57,7 @@ local DISPEL_FACTS = {
     L["An icon's dispel border keeps Blizzard's own colors."],
 }
 
---- The Dispel Colors tab: the lead-in and its four bullets, then the group's five rows.
+--- The Dispel colors tab: the lead-in and its four bullets, then the group's five rows.
 local function renderDispel(ctx, _, rows)
     local scroll = H.EnsureScroll(ctx)
     H.TextRow(ctx, DISPEL_LEAD, { fontObject = "GameFontNormalSmall" })

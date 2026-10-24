@@ -2,7 +2,7 @@
 -- type is offered, what each writes, the Categories grid (F-1), the Overrides tab (F-3), and the
 -- warnings above every tab. The compiler's reading of what these rows store is
 -- tests/test_filtercompiler.lua's. The spell categories' lists are profile-wide and edited on
--- General → Spell Categories (tests/test_pages_general.lua).
+-- General → Spell categories (tests/test_pages_general.lua).
 
 local T = _G.AM_TEST
 local test, assertEqual, assertTrue, assertFalse, assertNil =
@@ -158,9 +158,9 @@ test("filters: a buff container's Categories tab offers the weapon-enchant rows;
 end)
 
 -- T-3 (batch 7): hidePermanentEnchants used to sit alone below the grid, below the Uncategorized
--- note too. It now draws directly under the Spell Categories grid, ahead of that note, behind a
+-- note too. It now draws directly under the Spell categories grid, ahead of that note, behind a
 -- line naming the row it is a sub-option of — so it reads as tied to Weapon enchants, not floating.
-test("filters: hidePermanentEnchants draws right under the Spell Categories grid, tied to Weapon enchants by name, ahead of the Uncategorized note (T-3)", function()
+test("filters: hidePermanentEnchants draws right under the Spell categories grid, tied to Weapon enchants by name, ahead of the Uncategorized note (T-3)", function()
     local _, _, P, ws = categories()
     local texts = P.texts(ws)
     local tieIndex, noteIndex
@@ -247,13 +247,13 @@ end)
 
 -- ── the Categories grid (F-1) ─────────────────────────────────────────────────────────────────
 
-test("filters: a buff container's Categories tab is two grids, Blizzard Categories then Spell Categories, each once", function()
+test("filters: a buff container's Categories tab is two grids, Blizzard categories then Spell categories, each once", function()
     local NS, _, P, ws = categories()
     local L = NS.L
     -- red under: the rows drawn by the flow engine (each subgroup heading repeats as the kinds
-    -- interleave), or the grids drawn in the wrong order. F-1: the heading reads Spell Categories,
+    -- interleave), or the grids drawn in the wrong order. F-1: the heading reads Spell categories,
     -- not Custom Categories.
-    assertEqual(table.concat(headings(ws), "|"), L["Blizzard Categories"] .. "|" .. L["Spell Categories"])
+    assertEqual(table.concat(headings(ws), "|"), L["Blizzard categories"] .. "|" .. L["Spell categories"])
     assertNil(P.find(ws, "Dropdown", NS.FindSchemaRow("container.filter.categories.defensives").label),
         "a category is a grid line, not a dropdown")
     assertTrue(gridLine(NS, ws, "defensives") ~= nil, "a custom category has a grid line")
@@ -261,23 +261,23 @@ test("filters: a buff container's Categories tab is two grids, Blizzard Categori
     assertNil(gridLine(NS, ws, "crowdControl"), "no debuff category on a buff container")
 end)
 
-test("filters: a debuff container's Categories tab is Blizzard Categories, Spell Categories, Dispel Types and Who Cast It, each once", function()
+test("filters: a debuff container's Categories tab is Blizzard categories, Spell categories, Dispel types and Who cast it, each once", function()
     local NS, _, _, ws = categories(2)
     local L = NS.L
     -- U-1, fix round 3 (2026-09-16): the owner restored the debuff row — `uncategorizedDebuffs`
-    -- shares the Spell Categories grid, so it draws for a debuff container again, one row, asymmetric
+    -- shares the Spell categories grid, so it draws for a debuff container again, one row, asymmetric
     -- with the buff row (Hide reproduces the retired toggle; Show is inert — defaults/Categories.lua's
     -- KINDS doc, modules/FilterCompiler.lua's `hasUnion` gate).
     -- red under: a grid key mapping dispel or who-cast-it rows into the Blizzard grid
     assertEqual(table.concat(headings(ws), "|"),
-        L["Blizzard Categories"] .. "|" .. L["Spell Categories"] .. "|" .. L["Dispel Types"] .. "|" .. L["Who Cast It"])
+        L["Blizzard categories"] .. "|" .. L["Spell categories"] .. "|" .. L["Dispel types"] .. "|" .. L["Who cast it"])
     assertTrue(gridLine(NS, ws, "magic") ~= nil)
     assertTrue(gridLine(NS, ws, "fromPlayers") ~= nil)
     assertTrue(gridLine(NS, ws, "uncategorizedDebuffs") ~= nil, "U-1: restored for debuffs (fix round 3)")
     assertNil(gridLine(NS, ws, "defensives"), "no buff category on a debuff container")
 end)
 
-test("filters: the Dispel Types grid draws no 4th cell, blank or otherwise", function()
+test("filters: the Dispel types grid draws no 4th cell, blank or otherwise", function()
     local NS, _, _, ws = categories(2)
     -- A characterization (AM-13, before renderCategories went table-dispatched): the plain grids
     -- pass no extraColumn at all, so their lines stay three cells wide.
@@ -314,7 +314,7 @@ test("filters: every grid's columns are Show and Hide, then the category (schema
         local kids = w.children
         if kids and kids[1] and kids[1].type == "Label" and kids[1].text == L["Show"] then
             headers = headers + 1
-            -- Only the first three: the Spell Categories grid's header carries a fourth, blank cell
+            -- Only the first three: the Spell categories grid's header carries a fourth, blank cell
             -- for F-3's `See spells` link column, checked on its own below.
             local got = { kids[1].text, kids[2].text, kids[3].text }
             -- red under: CATEGORY_STATE_LABELS keeping a third, Default column
@@ -324,12 +324,12 @@ test("filters: every grid's columns are Show and Hide, then the category (schema
     assertEqual(headers, 2, "one header line per grid")
 end)
 
--- ── F-2/F-3: the Spell Categories grid's blurb and its `See spells` link ─────────────────────────
+-- ── F-2/F-3: the Spell categories grid's blurb and its `See spells` link ─────────────────────────
 
-test("filters: the Spell Categories grid opens with a line naming where its lists live (F-2)", function()
+test("filters: the Spell categories grid opens with a line naming where its lists live (F-2)", function()
     local _, _, P, ws = categories()
     -- red under: F-2's line missing, or attached under the wrong grid
-    assertTrue(P.hasText(ws, "General -> Spell Categories"), "names where the lists live")
+    assertTrue(P.hasText(ws, "the General page > Spell categories"), "names where the lists live")
 end)
 
 -- T-2 fix round 4 (batch 7), revised by issue #11 A1: the F-2 line claims the grid holds EDITABLE
@@ -339,11 +339,11 @@ end)
 -- `uncategorized`, the Show/Hide flag over the catch-all, which is what a debuff grid was before A1.
 test("filters: the 'these are the lists' line draws wherever the grid holds an editable list — both aura types since the CC lists (T-2)", function()
     local NS, _, P, buffWs = categories(1)
-    assertTrue(P.hasText(buffWs, "General -> Spell Categories"), "a buff container has editable lists")
+    assertTrue(P.hasText(buffWs, "the General page > Spell categories"), "a buff container has editable lists")
     local _, _, P2, debuffWs = categories(2)
-    assertTrue(P2.hasText(debuffWs, "General -> Spell Categories"),
+    assertTrue(P2.hasText(debuffWs, "the General page > Spell categories"),
         "a debuff container's grid now carries the CC lists, which live there")
-    assertTrue(P2.find(debuffWs, "Heading", NS.L["Spell Categories"]) ~= nil, "the Spell Categories grid still draws")
+    assertTrue(P2.find(debuffWs, "Heading", NS.L["Spell categories"]) ~= nil, "the Spell categories grid still draws")
     assertTrue(gridLine(NS, debuffWs, "uncategorizedDebuffs") ~= nil, "and still carries its Uncategorized row")
     assertTrue(gridLine(NS, debuffWs, "hardCC") ~= nil, "and the CC Loss of Control row the claim is now about")
     assertTrue(gridLine(NS, debuffWs, "ccRoot") ~= nil, "and CC Root")
@@ -390,7 +390,7 @@ test("filters: the Uncategorized cost note draws only where the engine is certai
         "false on a target too — hostility is dynamic and the plan is compiled long before anyone looks")
 end)
 
--- SV-04 (spell-list views, V4): the NOTE under the Spell Categories heading. Where Blizzard does not
+-- SV-04 (spell-list views, V4): the NOTE under the Spell categories heading. Where Blizzard does not
 -- apply spell ids the container switches to its blizzard view, in which every spell category's group
 -- is NEVER, so the grid must say so on every container whose `FC.IdsMode` is not "always", in the
 -- words of the unit it is about, and stay silent on a buff container on the player or the pet.
@@ -412,7 +412,7 @@ local function indexOfText(ws, text)
     return nil
 end
 
-test("filters: the Spell Categories NOTE names where spell categories are not applied, per unit (SV-04)", function()
+test("filters: the Spell categories NOTE names where spell categories are not applied, per unit (SV-04)", function()
     local cases = {
         { id = 2, unit = nil,      note = "NOTE: on your own debuffs, these spell categories are not applied (see Situations)." },
         { id = 2, unit = "pet",    note = "NOTE: on your pet's debuffs, these spell categories are not applied (see Situations)." },
@@ -427,10 +427,10 @@ test("filters: the Spell Categories NOTE names where spell categories are not ap
         -- red under: no NOTE line drawn, the wrong unit wording for this container, or the line
         -- without its pointer to the Situations tab (SI-05)
         assertTrue(at ~= nil, where .. " draws: " .. c.note)
-        local heading = indexOfText(ws, NS.L["Spell Categories"])
+        local heading = indexOfText(ws, NS.L["Spell categories"])
         local showAll = indexOfText(ws, NS.L["Show all"])
         -- red under: the NOTE drawn anywhere but straight under the heading
-        assertTrue(heading ~= nil and heading < at, where .. ": under the Spell Categories heading")
+        assertTrue(heading ~= nil and heading < at, where .. ": under the Spell categories heading")
         local buttons
         for i = heading, #ws do
             if ws[i].text == NS.L["Show all"] then buttons = i break end
@@ -439,7 +439,7 @@ test("filters: the Spell Categories NOTE names where spell categories are not ap
     end
 end)
 
-test("filters: no Spell Categories NOTE on a buff container on the player or the pet (SV-04)", function()
+test("filters: no Spell categories NOTE on a buff container on the player or the pet (SV-04)", function()
     for _, unit in ipairs({ "player", "pet" }) do
         local _, _, P, ws = categoriesOn(1, unit)
         -- red under: the NOTE gated on anything but FC.IdsMode ~= "always"
@@ -458,7 +458,7 @@ local function tooltipLines(m, widget)
     return table.concat(lines, "\n")
 end
 
-test("filters: a spells-kind row's See spells link selects that category on General -> Spell Categories and lands there; a token row gets an info icon instead (F-3/N-3/N-4/N-5)", function()
+test("filters: a spells-kind row's See spells link selects that category on the General page > Spell categories and lands there; a token row gets an info icon instead (F-3/N-3/N-4/N-5)", function()
     local NS, m, P = filters()
     P.show("General") -- render once, so H.SelectTab (K-4) has a rendered ctx to land the click on
     local ws = P.tab("filters", NS.L["Categories"])
@@ -473,8 +473,8 @@ test("filters: a spells-kind row's See spells link selects that category on Gene
     link:__fire("OnClick")
     -- N-3: this used to land on the addon's main panel (categories["general"] was never recorded
     -- because General registers through the plain NS.RegisterOptionsPage). Landing on General ->
-    -- Spell Categories, not the main panel, is exactly what N-3 fixed.
-    assertEqual(NS.Helpers.__pageCtx.general.activeTab, NS.L["Spell Categories"], "lands on General -> Spell Categories")
+    -- Spell categories, not the main panel, is exactly what N-3 fixed.
+    assertEqual(NS.Helpers.__pageCtx.general.activeTab, NS.L["Spell categories"], "lands on the General page > Spell categories")
     local gws = P.rerender("General")
     local dd = P.find(gws, "Dropdown", NS.L["Category"])
     assertEqual(dd.value, "healing", "and selects the row's own category there")
@@ -493,7 +493,7 @@ test("filters: a spells-kind row's See spells link selects that category on Gene
     local enchantKids = gridLine(NS, ws, "weaponEnchants")
     assertTrue(enchantKids[4].text:find(NS.L["See spells"], 1, true) ~= nil, "the enchant row's link too")
     -- A "who cast it" flag row (fromPlayers) is the addon's own computation, not a Blizzard secret
-    -- (it lives in its own "Who Cast It" grid) — it carries no extra cell either. Categories is
+    -- (it lives in its own "Who cast it" grid) — it carries no extra cell either. Categories is
     -- already the active tab, so switching container and rerendering redraws it directly — a
     -- second click on the tab that is already active draws nothing new (page_helpers.lua's P.tab).
     NS.Helpers.SelectContainer(2)
@@ -695,7 +695,7 @@ test("filters: every category row is skipRender and names its grid", function()
     end
 end)
 
-test("filters: no aura type is offered a Spell lists tab; the lists live on General → Spell Categories", function()
+test("filters: no aura type is offered a Spell lists tab; the lists live on General → Spell categories", function()
     local NS, _, P = filters()
     for _, auraType in ipairs({ "HELPFUL", "HARMFUL" }) do
         NS.SetByPath("container.auraType", auraType, 1)
@@ -775,7 +775,7 @@ test("filters: Overrides adds to one list at a time by id or by name, and Remove
     assertEqual(NS.Database.FindContainer(1).filter.blacklist[12345], true, "the blacklist is not")
 end)
 
--- The Overrides lists pack TWO entries to a Flow row, as the Spell Categories list does
+-- The Overrides lists pack TWO entries to a Flow row, as the Spell categories list does
 -- (`columns`, LibKa0s v1.47.0 / OptionsWidgets minor 24; the canvas fit that makes it a MAXIMUM is
 -- v1.50.0, minor 27). Pinned here because the reason is a CONSISTENCY one rather than a length one
 -- -- an override list is short, so nothing about its own scroll would notice a silent return to one
@@ -1087,8 +1087,8 @@ end
 test("filters: Show all and Hide all head every Categories section, one pair each (feedback #10, B11-T10)", function()
     -- the player's buffs draw two sections; the player's debuffs draw all four
     local expect = {
-        [1] = { "Blizzard Categories", "Spell Categories" },
-        [2] = { "Blizzard Categories", "Spell Categories", "Dispel Types", "Who Cast It" },
+        [1] = { "Blizzard categories", "Spell categories" },
+        [2] = { "Blizzard categories", "Spell categories", "Dispel types", "Who cast it" },
     }
     for _, id in ipairs({ 1, 2 }) do
         local NS, _, _, ws = categories(id)
@@ -1097,7 +1097,7 @@ test("filters: Show all and Hide all head every Categories section, one pair eac
         local shows, hides = at[L["Show all"]] or {}, at[L["Hide all"]] or {}
         local sections = expect[id]
         local showCount, hideCount, sectionCount = #shows, #hides, #sections
-        -- red under: no pair on Dispel Types / Who Cast It, or a pair too many
+        -- red under: no pair on Dispel types / Who cast it, or a pair too many
         assertEqual(showCount, sectionCount, "container " .. id .. ": one Show all per section")
         assertEqual(hideCount, sectionCount, "container " .. id .. ": one Hide all per section")
         for i, heading in ipairs(sections) do
@@ -1109,7 +1109,7 @@ test("filters: Show all and Hide all head every Categories section, one pair eac
     end
 end)
 
-test("filters: Show all / Hide all on Dispel Types and Who Cast It set exactly their own section, for this container only (B11-T10)", function()
+test("filters: Show all / Hide all on Dispel types and Who cast it set exactly their own section, for this container only (B11-T10)", function()
     local NS, m, P, ws = categories(2)   -- the player's debuffs
     local c, other = NS.Database.FindContainer(2), NS.Database.FindContainer(3)
     local keys = {}
@@ -1123,9 +1123,9 @@ test("filters: Show all / Hide all on Dispel Types and Who Cast It set exactly t
     for key, state in pairs(other.filter.categories) do otherBefore[key] = state end
     m.__fireTimers()
     local lines = captureLog(NS)
-    P.all(ws, "Button", NS.L["Hide all"])[3]:__fire("OnClick")    -- Dispel Types
+    P.all(ws, "Button", NS.L["Hide all"])[3]:__fire("OnClick")    -- Dispel types
     m.__fireTimers()
-    -- red under: no Hide all on Dispel Types, or one reaching past its own section
+    -- red under: no Hide all on Dispel types, or one reaching past its own section
     for _, key in ipairs(keys.dispel) do assertEqual(c.filter.categories[key], "hide", key) end
     for _, grid in ipairs({ "blizzard", "custom", "who" }) do
         for _, key in ipairs(keys[grid]) do
@@ -1134,11 +1134,11 @@ test("filters: Show all / Hide all on Dispel Types and Who Cast It set exactly t
     end
     assertEqual(table.concat(lines, " | "),
         ("[Set] hide all dispel categories of container 2: %d rows | [Apply] applied 1 container(s)"):format(dispelCount))
-    P.all(ws, "Button", NS.L["Hide all"])[4]:__fire("OnClick")    -- Who Cast It
+    P.all(ws, "Button", NS.L["Hide all"])[4]:__fire("OnClick")    -- Who cast it
     for _, key in ipairs(keys.who) do assertEqual(c.filter.categories[key], "hide", key) end
-    P.all(ws, "Button", NS.L["Show all"])[3]:__fire("OnClick")    -- Dispel Types again
+    P.all(ws, "Button", NS.L["Show all"])[3]:__fire("OnClick")    -- Dispel types again
     for _, key in ipairs(keys.dispel) do assertEqual(c.filter.categories[key], "show", key) end
-    -- red under: Show all on Dispel Types reaching Who Cast It
+    -- red under: Show all on Dispel types reaching Who cast it
     for _, key in ipairs(keys.who) do assertEqual(c.filter.categories[key], "hide", key .. " stays hidden") end
     for key, state in pairs(otherBefore) do
         -- red under: the buttons writing every debuff container, not the selected one
@@ -1146,7 +1146,7 @@ test("filters: Show all / Hide all on Dispel Types and Who Cast It set exactly t
     end
 end)
 
-test("filters: Hide all on Blizzard Categories hides exactly that section, as one [Set] line and one apply (feedback #10)", function()
+test("filters: Hide all on Blizzard categories hides exactly that section, as one [Set] line and one apply (feedback #10)", function()
     local NS, m, P, ws = categories()
     local c = NS.Database.FindContainer(1)
     local blizzard, custom = gridKeys(NS, "HELPFUL", "blizzard"), gridKeys(NS, "HELPFUL", "custom")
@@ -1169,13 +1169,13 @@ test("filters: Hide all on Blizzard Categories hides exactly that section, as on
         ("[Set] hide all blizzard categories of container 1: %d rows | [Apply] applied 1 container(s)"):format(blizzardCount))
 end)
 
-test("filters: Show all on Spell Categories shows exactly that section, whatever Blizzard Categories say (feedback #10)", function()
+test("filters: Show all on Spell categories shows exactly that section, whatever Blizzard categories say (feedback #10)", function()
     local NS, _, P, ws = categories()
     local c = NS.Database.FindContainer(1)
     local blizzard, custom = gridKeys(NS, "HELPFUL", "blizzard"), gridKeys(NS, "HELPFUL", "custom")
-    P.all(ws, "Button", NS.L["Hide all"])[1]:__fire("OnClick")    -- Blizzard Categories: all Hide
-    P.all(ws, "Button", NS.L["Hide all"])[2]:__fire("OnClick")    -- Spell Categories: all Hide
-    P.all(ws, "Button", NS.L["Show all"])[2]:__fire("OnClick")    -- Spell Categories: all Show
+    P.all(ws, "Button", NS.L["Hide all"])[1]:__fire("OnClick")    -- Blizzard categories: all Hide
+    P.all(ws, "Button", NS.L["Hide all"])[2]:__fire("OnClick")    -- Spell categories: all Hide
+    P.all(ws, "Button", NS.L["Show all"])[2]:__fire("OnClick")    -- Spell categories: all Show
     for _, key in ipairs(custom) do assertEqual(c.filter.categories[key], "show", key) end
     for _, key in ipairs(blizzard) do
         -- red under: Show all reaching past its own section

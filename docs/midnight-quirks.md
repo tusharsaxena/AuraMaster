@@ -203,9 +203,9 @@ whitelisted one is not excluded by the group that would otherwise draw it. Every
 group count, so switching never rebuilds the engine. A container with a category Hidden on a unit
 whose ids are not always applied also ends in one remainder group, NEVER in the ids and blizzard
 views, which is the whole every view: every aura passing the base and in no Hidden Blizzard, Dispel
-or Who Cast It category, once (`FV.AppendRemainder`;
+or Who cast it category, once (`FV.AppendRemainder`;
 docs/superpowers/specs/2026-10-02-filter-situations-design.md S1). Where the remainder cannot draw
-(both Who Cast It rows Hidden, or "Only auras without a duration" on buffs) the other groups keep
+(both Who cast it rows Hidden, or "Only auras without a duration" on buffs) the other groups keep
 their blizzard view, so the every view is the blizzard view (SI-06). `FC.IdsMode` pins buffs on the
 player and the pet to the ids view and their debuffs to the view their Players setting picks; for a
 target or focus, `Compat.IdsApply` (`core/Compat.lua:330`) asks steps 2 to 4 above and answers false
@@ -229,7 +229,7 @@ A Situations write switches the view the same way, at once (the rows' `view` eff
 and `/am diagnostics` prints each container's mode, view and situation. The Filters section says so four times: the
 orange warning above every tab (`identityWarning`, `modules/FilterCompiler.lua:418`, printed only when
 the container hides a category or has an Overrides list, and naming only the Overrides lists when it
-hides nothing), a NOTE under the Spell Categories
+hides nothing), a NOTE under the Spell categories
 heading and at the head of Overrides on every container whose mode is not "always", each ending
 "(see Situations)", and the Situations tab itself, which names the same units, holds the setting and
 says what the every view cannot honor there: spell categories, Uncategorized, the Overrides lists
@@ -659,7 +659,7 @@ debuffs usually have none; bleeds carry `Bleed`). The blue is most likely the ba
 close to the Magic swatch, which a typeless aura keeps.
 
 **What this addon does.** Nothing changes in code: a typeless aura keeps the surface's own color and
-draws no type word, backdrop or edge. The Bars section's Color by tooltips and General -> Dispel Colors
+draws no type word, backdrop or edge. The Bars section's Color by tooltips and the General page > Dispel colors
 say that buffs and many debuffs have no type, rather than citing one rare debuff.
 
 **The probe.** Out of combat, with a target carrying the debuffs, paste the three lines one at a time.
