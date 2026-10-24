@@ -36,7 +36,7 @@ local _, NS = ...
 --                  no id list of its own; it is the COMPLEMENT of every `spells`-kind category's
 --                  effective ids, so modules/FilterCompiler.lua handles it with dedicated logic rather
 --                  than the generic per-kind include/exclude every other kind shares. Drawn LAST in the
---                  grid, default Show. There is no the General page > Spell categories entry for it: it has no
+--                  grid, default Show. There is no entry for it on the General page > Spell categories: it has no
 --                  list to edit.
 --
 --                  ONE ROW PER AURA TYPE, ASYMMETRIC (2026-09-16 — the owner restored the debuff
@@ -711,7 +711,7 @@ Cat.HELPFUL = {
 -- they answer ("is my sheep on the target", "is it rooted") is asked of an enemy target or focus,
 -- which is exactly where the ids do bite — and every
 -- surface that can mislead says so: their own descs below, the Filters section's Categories tab, the
--- The General page > Spell categories blurb, and the per-container orange warning
+-- blurb on the General page > Spell categories, and the per-container orange warning
 -- (`FC.WARN.IDS_ASSISTABLE` / `IDS_OWN_DEBUFFS`, modules/FilterCompiler.lua).
 
 local ALL_DISPELS = { Magic = true, Curse = true, Disease = true, Poison = true, Bleed = true }
@@ -792,7 +792,7 @@ Cat.HARMFUL = {
         -- `ccSnare` has never shipped; Paladin's CC Snare row is Judgment of Justice). A later research
         -- run WILL derive the ability into the hard-CC bucket again: leaving it out is the intended
         -- diff, not an oversight to helpfully correct. A player who wants it adds the id on
-        -- The General page > Spell categories.
+        -- the General page > Spell categories.
         --
         -- MAIM ships on 203123, not 203126. Both are aura-applying spells named Maim in this build,
         -- and the one a Feral target carries is 203123 — mechanic 12 (stunned) on DiminishType 4,
