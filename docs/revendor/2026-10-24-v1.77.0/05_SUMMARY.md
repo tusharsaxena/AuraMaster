@@ -70,3 +70,40 @@ All run through `dev-copilot/bin/ka0s-bounded`.
 
 No in-game smoke is added. What reaches AuraMaster for free is library behaviour, and the library's
 own smoke list covers it (SM-LK-*).
+
+## Re-vendor after the tag moved (M3)
+
+Item `AM-RV2` (M3, settings layout). The run's LK-95 moved the local annotated tag v1.77.0 to carry
+the settings-layout surfaces, so the copy above no longer matched it. Both payloads were copied
+whole again from `git -C ../LibKa0s archive v1.77.0 LibKa0s testkit tools`, and `media/icons/` was
+pruned again with that tag's `tools/prune-icons.lua` to the same declaration
+(`LibKa0s icons: clear, close, copy, help, info.`: 6 files kept, 5,834 removed). This is a
+re-vendor of the same version, so no new bundle was written and the `CLAUDE.md` provenance line
+stays v1.77.0. It records no sha or kit revision, so nothing there rolls.
+
+| | Tag object | Commit (`v1.77.0^{}`) |
+|---|---|---|
+| Old (AM-RV) | `7380d36` | `78240f7` |
+| New (after LK-95) | `b2b8ee25c5f9fa26db146254bf786b366dec986b` | `afae2f75cb7ff61c57156d9a3d8a6b2b9f4c5e10` |
+
+**Per-file minors that moved:** one file. `OptionsCompose.lua` 8 -> **11**: minor 9
+(`MasterControls` takes `notes`, `resetPositionTooltip` and `lockIsPreview`; the alpha row reads
+*Master opacity* on the unchanged `alpha` leaf; the frameless packing), minor 10 (`tooltips` beside
+`labels` on the group composers) and minor 11 (`O.ResetAllTooltip(tail)`). No other payload file
+changed, and `tests/_kit/` is byte-identical to the earlier copy, so the kit stays at revision 42.
+No file was removed upstream.
+
+**Contract blocker (3g), fixed in the same commit.** `Kit.assertSurfaceParity` failed once the live
+instance had `ResetAllTooltip`, so the Options degradation stub in `settings/OptionsSetup.lua` gains
+it as a no-op beside `StrataTooltip`. The edit stays on the same two lines, so no citation of that
+file moves.
+
+**Adoption:** none here. The new composer arguments and `O.ResetAllTooltip` are AM-LY's to adopt.
+The standards half needed nothing: the standard's three-place reference names no version, and the
+standard moved only within v2.88.0 (WS-95).
+
+Gates (all through `ka0s-bounded`): `lua tests/run.lua` 2136 passed, 0 failed, 1 skipped (the
+declared diagnostics opt-out), 2137 total (16 shards); `luacheck .` 0 warnings / 0 errors in 179
+files; complexity suite green, max CCN 15, 5633 functions; largest authored `.lua` is
+`defaults/Categories.lua`, 1344 lines; `diff -r` against the tag empty for both payloads before the
+prune.

@@ -308,8 +308,8 @@ if not lib then
         "AddSpacer", "TextRow", "TabStrip", "SubTabStrip", "PageHeader", "PageBanner",
         "InlineButtonPair", "SessionCheckbox", "AttachTooltip", "ChoiceGrid", "ResolveId", "IdInput",
         "IdList", "Drawer", "UnnamedCandidates", "SelectTab", "NavRail", "SelectSection",
-        -- the Keybindings tab and the strata tooltip (OptionsKeybinds 2, OptionsCompose 8; LibKa0s v1.77.0)
-        "KeybindingsTab", "KeybindRows", "StrataTooltip",
+        -- Keybindings tab, strata and Reset-all tooltips (OptionsKeybinds 2, OptionsCompose 8 and 11)
+        "KeybindingsTab", "KeybindRows", "StrataTooltip", "ResetAllTooltip",
         -- this addon's decorations on the live instance (defined below the `return`)
         "SelectContainer", "ContainerBanner", "RenderWarnings", "RenderPage", "RenderContainerPage",
         "LandOnGeneral",
