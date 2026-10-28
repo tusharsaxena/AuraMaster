@@ -186,7 +186,24 @@ a timer so the rest can be shown on their own, both come from [TinyBuffBars](htt
 under the MIT license.
 
 The debug console uses [JetBrains Mono](https://www.jetbrains.com/lp/mono/), licensed under the SIL
-Open Font License 1.1. The **?** and **X** on each container's handle, the debug console's close,
-copy and clear buttons, and the help marks in the settings are drawn from
-[Open Iconic](https://github.com/iconic/open-iconic) by Waybury (MIT). Both ship with their license
-text beside them.
+Open Font License 1.1.
+
+Ka0s Default, the skin every profile starts on, draws [Oxanium](https://github.com/sevmeyer/oxanium)
+by The Oxanium Project Authors, also SIL Open Font License 1.1.
+
+The other skins draw on seven more SIL Open Font License 1.1 faces, one family per skin:
+[Inter](https://github.com/rsms/inter) by The Inter Project Authors,
+[Nunito](https://github.com/googlefonts/nunito) by The Nunito Project Authors,
+[Vollkorn](https://github.com/FAlthausen/Vollkorn-Typeface) by The Vollkorn Project Authors,
+[Bitter](https://github.com/solmatas/BitterPro) by The Bitter Project Authors,
+[Philosopher](https://github.com/alexeiva/philosopher) by The Philosopher Project Authors,
+[Fira Sans](https://github.com/mozilla/Fira) by The Mozilla Foundation and Telefonica S.A., and
+[Atkinson Hyperlegible](https://www.brailleinstitute.org/freefont/) by the Braille Institute of
+America. Inter, Nunito, Vollkorn, Bitter and Oxanium are static weights cut from upstream's
+variable fonts.
+
+The **?** and **X** on each container's handle, the debug console's close, copy and clear buttons,
+the help marks in the settings, and the skin picker's preview and settings buttons are drawn from
+[Open Iconic](https://github.com/iconic/open-iconic) by Waybury (MIT). Only the icons the addon
+draws are shipped. The fonts and the icons are bundled inside the LibKa0s payload, with their
+license text beside them.

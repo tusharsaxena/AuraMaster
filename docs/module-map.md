@@ -309,7 +309,7 @@ All vendored under `libs/`, loaded by the `# Libraries` block of `AuraMaster.toc
 | AceConfig-3.0, AceDBOptions-3.0 | The Profiles sub-page only (`settings/Profiles.lua`, options-ui-§3) |
 | LibSharedMedia-3.0 | Texture, border and font lookups through `LSM` (`modules/Style.lua:33`) |
 | LibDataBroker-1.1, LibDBIcon-1.0 | The launcher's broker object and its minimap button (`core/LauncherSetup.lua`, launcher-§1). Both are OPTIONAL: `LibKa0s-Launcher-1.0` resolves them with `LibStub(…, true)` at Register time, so a client missing either degrades rather than raises |
-| LibKa0s v1.77.0 | Fourteen modules bound by name — table below |
+| LibKa0s v1.80.0 | Fourteen modules bound by name — table below |
 
 | LibKa0s module | Setup file | Publishes |
 |---|---|---|
@@ -331,7 +331,7 @@ All vendored under `libs/`, loaded by the `# Libraries` block of `AuraMaster.toc
 `LibKa0s-Item-1.0` arrives with the whole-folder copy (library-stack-§7) and is not bound by name
 here; the addon handles no items. `LibKa0s-Glow-1.0` and `LibKa0s-Sim-1.0` also arrive with the
 copy and are not bound by name either: there is no glow driver and no simulator here. The copy's
-`media/icons/` ships only the five marks CLAUDE.md's `LibKa0s icons:` line declares. `LibKa0s-Schema-1.0` runs under the
+`media/icons/` ships only the seven marks CLAUDE.md's `LibKa0s icons:` line declares. `LibKa0s-Schema-1.0` runs under the
 rows but not the write seam (`docs/schema.md`, "Write seam: why AuraMaster keeps SetByPath").
 Every setup file degrades to a stub when
 the library is absent, exercised by `tests/degraded_env.lua`.
