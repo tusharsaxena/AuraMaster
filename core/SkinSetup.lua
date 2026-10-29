@@ -20,6 +20,9 @@ local addonName, NS = ...
 --                           `/am set` and the panel already write through (architecture-§5); `i`, the
 --                           Scope's `{ panel, fonts }`, writes the two exceptions, and `m`, the Font and
 --                           texture section's `{ font, texture }`, the two overrides ("" for false).
+--   NS.SkinFontsIgnored()   true while the applied "Ignore fonts" is on (`Skin:GetIgnore`, live;
+--                           false degraded). Style.SkinKey reads it for the HUD's face: the
+--                           library's Resolve and Token never check it, only P.font does.
 --   NS.SkinOverride()       the stored overrides: font, texture, each an LSM key or false for the
 --                           skin's own; false, false before NS:InitDB.
 --   NS.ApplySkinIgnore(p,f) moves the applied exceptions (`Skin:SetIgnore`), live; no argument
@@ -387,6 +390,7 @@ if not Skin then
     function NS.ApplySkinChoice() return false, false end
     function NS.ApplySkinIgnore() return false, false end
     function NS.ApplySkinOverride() return false end
+    function NS.SkinFontsIgnored() return false end
     -- Nothing to paint an AceGUI widget with: stock AceGUI, as the client draws it.
     function NS.SkinPaintAce() return false end
     function NS.SkinPaintAceTree() return 0 end
@@ -430,6 +434,14 @@ end
 function NS.SkinOnRelease(widget, fn)
     if type(Skin.OnRelease) ~= "function" then return releaseByCallback(widget, fn) end
     return Skin:OnRelease(widget, fn)
+end
+
+--- The applied "Ignore fonts". The library's Resolve and Token never read it (only P.font, the
+--- primitives' path, does), so the HUD's face asks here (Style.SkinKey), as AbsorbTracker's does.
+function NS.SkinFontsIgnored()
+    if type(Skin.GetIgnore) ~= "function" then return false end
+    local _, fonts = Skin:GetIgnore(addonName)
+    return fonts == true
 end
 
 function NS.ApplySkinIgnore(panel, fonts)

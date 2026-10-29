@@ -310,7 +310,10 @@ Every surface Aura Master draws paints through the `LibKa0s-Skin-1.0` facade wit
   whose geometry reads secret, so no recorded primitive ever touches them. `Style.SkinKey` resolves
   `hud.font` (every font block, through `Style.FontKey`) and `bar.texture` (the bar fill and
   background) while the element's "Use the skin's ..." companion is on, and the stored pick while it
-  is off. Borders, sizes, flags and every HUD color stay the player's (X4; DECISIONS D1, D3, D4).
+  is off. While the Skin tab's Ignore fonts is on (`NS.SkinFontsIgnored`, `Skin:GetIgnore`) every
+  font block draws its stored face, companion or override notwithstanding, because the library's
+  `Resolve` never reads that exception itself (only its primitives' font path does); AbsorbTracker
+  does the same. Borders, sizes, flags and every HUD color stay the player's (X4; DECISIONS D1, D3, D4).
   One `OnLooksChanged` listener (`modules/ContainerManager.lua`) primes the fonts and re-applies every
   container; under lockdown the apply waits for combat to end (D12). Schema v13 turned every stored
   companion on once (O2), which visibly changes Ka0s Default's HUD (X5): Oxanium and the Ka0s

@@ -155,6 +155,32 @@ test("skin hud: a font block draws the skin's hud.font while its companion is on
     assertEqual((S.FontKey(t, D)), skinPath, "a block stored before the companion reads the template's")
 end)
 
+test("skin hud: Ignore fonts keeps every font block on its stored face, over the skin and a font override", function()
+    -- The library's Resolve and Token never read ignoreFonts (only P.font, the primitives' path,
+    -- does), so the HUD asks NS.SkinFontsIgnored itself, as AbsorbTracker does. red under: a
+    -- Style.SkinKey that resolves hud.font through the skin while Ignore fonts is on.
+    local NS, mocks = mediaEnv()
+    local S, C, D = NS.Style, NS.Constants, NS.CONTAINER_TEMPLATE.bars.name
+    local Skin = mocks.LibStub("LibKa0s-Skin-1.0")
+    local t = NS.Database.DeepCopy(D)
+    t.font = "Friz Quadrata TT"
+    local ownPath = S.Fetch("font", "Friz Quadrata TT", C.FALLBACK_FONT)
+    assertEqual(NS.SkinFontsIgnored(), false, "fonts follow the skin by default")
+    local ok, err = pcall(function()
+        Skin:SetIgnore("AuraMaster", nil, true)
+        assertEqual(NS.SkinFontsIgnored(), true, "the applied exception reads back")
+        assertEqual((S.FontKey(t, D)), ownPath, "ignored fonts draw the stored face")
+        Skin:SetOverride("AuraMaster", "Override Face", nil)
+        assertEqual((S.FontKey(t, D)), ownPath, "a font override is not drawn while fonts are ignored")
+        assertEqual(S.SkinKey("bar.texture", "Stored", true), NS.Skin.Resolve("bar.texture", "Stored", true),
+            "Ignore fonts leaves the textures alone")
+    end)
+    Skin:SetOverride("AuraMaster", false, nil)
+    Skin:SetIgnore("AuraMaster", nil, false)
+    if not ok then error(err, 0) end
+    assertTrue(S.FontKey(t, D) ~= ownPath, "unticked, the skin's face is back")
+end)
+
 test("skin hud: a bar's fill and background draw the skin's bar.texture while each companion is on", function()
     local NS, mocks = mediaEnv()
     local S, FALLBACK = NS.Style, NS.Constants.FALLBACK_TEXTURE

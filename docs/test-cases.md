@@ -2016,12 +2016,13 @@ Total.
 - skin surfaces: the frame picker's outline, name and hint are the skin's
 - skin surfaces: a shown TEST marker is retold in the new skin's sem.warn
 
-### test_skin_hud.lua (10)
+### test_skin_hud.lua (11)
 
 - skin hud: every font block and both bar textures follow the skin by default; no border does
 - skin hud: each companion is a schema row defaulting on, and its picker shows the skin's value while it is on
 - skin hud: the name label's face picker dims for the label off or the skin's face on
 - skin hud: a font block draws the skin's hud.font while its companion is on, its own face when off
+- skin hud: Ignore fonts keeps every font block on its stored face, over the skin and a font override
 - skin hud: a bar's fill and background draw the skin's bar.texture while each companion is on
 - skin hud: without the library's facade answering, a pick draws the stored key
 - skin hud: a skin switch primes the fonts, then asks one system apply of every container, and rewrites nothing
@@ -2622,7 +2623,7 @@ Total.
 | test_skinsetup.lua | 16 |
 | test_skin_literals.lua | 3 |
 | test_skin_surfaces.lua | 7 |
-| test_skin_hud.lua | 10 |
+| test_skin_hud.lua | 11 |
 | test_skin_picker.lua | 19 |
 | test_pages_general_categories.lua | 32 |
 | test_pages_containers.lua | 35 |
@@ -2652,4 +2653,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **2210** |
+| **Total** | **2211** |

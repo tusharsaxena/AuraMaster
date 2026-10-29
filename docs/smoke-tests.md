@@ -2366,10 +2366,11 @@ Result:
 **SKIN-10. The Font and texture overrides (AM-01, AM-03).** On the Skin tab pick a **Font** (any
 LibSharedMedia face) → every container string whose **Use the skin's font** is ticked redraws in it,
 live; pick a **Texture** → every ticked fill and background takes it. Unticked elements keep their own
-pick. Turn **Ignore fonts** on → the skin-painted strings (the drag strips, the settings pages with
-Ignore settings panel off) keep their own face; the containers' text is governed by its **Use the
-skin's font** companions and keeps the skin's face or the override. Set both overrides back to *Skin's
-own* → the skin's own face and texture return. Result:
+pick. Turn **Ignore fonts** on → every string keeps its own face, live: the skin-painted strings (the
+drag strips, the settings pages with Ignore settings panel off) and every container's text, which
+draws its own **Font** pick even with **Use the skin's font** ticked and a Font override set; the bar
+textures still follow the skin. Turn it off → the skin's face (or the override) returns. Set both
+overrides back to *Skin's own* → the skin's own face and texture return. Result:
 
 **SKIN-11. A skin change in combat (AM-03; D12).** With containers showing auras, enter combat on a
 dummy and pick another skin with `/am set skin.skin azeroth` → no Lua error and no taint warning; the
