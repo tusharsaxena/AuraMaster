@@ -328,7 +328,7 @@ hides it, and clearing does not show it again.
 `UpdateAllAuras` exists for external refreshes such as target changes.
 
 **What this addon does.** `PLAYER_TARGET_CHANGED`, `PLAYER_FOCUS_CHANGED` and `UNIT_PET` (for the
-player) call `UpdateAllAuras` on every container on that unit (`core/AuraMaster.lua:175-194`).
+player) call `UpdateAllAuras` on every container on that unit (`core/AuraMaster.lua:188-207`).
 
 ## An addon font loads lazily, and the engine writes a name once (measured 2026-09-27)
 
@@ -788,7 +788,7 @@ does not set the flag.
 - **Blizzard's `BuffFrame` and `DebuffFrame` are reparented, never hidden**, and only out of combat
   (`modules/BlizzardFrames.lua`, events-frames-taint-§3).
 - **Protected opens are refused, not deferred.** The options panel (the library, options-ui-§2),
-  `NS.OpenOptionsPage` (`settings/OptionsSetup.lua:392`), the frame picker and a handle drag all
+  `NS.OpenOptionsPage` (`settings/OptionsSetup.lua:397`), the frame picker and a handle drag all
   refuse under `InCombatLockdown()`.
 - **A settings page shown in combat is locked, never closed** (LibKa0s v1.46.1, options-ui-§2). A
   page reached in combat (the AddOns sidebar), or open when combat starts, is covered whole — header

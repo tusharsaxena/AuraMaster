@@ -613,6 +613,7 @@ end
 --- is a cell-filling button, so it takes the library's inset width rather than a flush half.
 local function pickButton(_, line)
     local btn = NS.AceGUI:Create("Button")
+    NS.SkinPaintAce(btn)   -- this owner's skin (core/SkinSetup.lua)
     btn:SetText(L["Pick a frame..."])
     btn:SetRelativeWidth(H.BUTTON_PAIR_REL)
     btn:SetCallback("OnClick", pickFrame)
@@ -641,6 +642,7 @@ end
 --- The Container dropdown's right half (pairWith): the read-only attachment line.
 local function attachedLine(_, line)
     local label = NS.AceGUI:Create("Label")
+    NS.SkinPaintAce(label)   -- this owner's skin (core/SkinSetup.lua)
     label:SetRelativeWidth(0.5)
     label:SetText(attachedText())
     line:AddChild(label)

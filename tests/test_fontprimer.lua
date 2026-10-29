@@ -63,6 +63,9 @@ local function env(atLogin, extra)
     end })
     mocks.__fireTimers(); mocks.__fireTimers()
     ownFonts(NS2)
+    -- The skin picker seen, so the first world entry arms no picker timer of its own (core/AuraMaster.lua
+    -- OnEnterWorld): every case here counts the primer's timers alone.
+    NS2.SetByPath("skin.pickerSeen", true)
     if not atLogin then
         mocks.__fireEvent("PLAYER_ENTERING_WORLD")
         mocks.__fireEvent("LOADING_SCREEN_DISABLED")

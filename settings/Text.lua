@@ -298,6 +298,7 @@ local function previewBox(cfg)
     return { wide = true, make = function(_, parent)
         local sample = C.TEXT_SAMPLE_AURAS[cfg.auraType] or C.TEXT_SAMPLE_AURAS.HELPFUL
         local box = NS.AceGUI:Create("EditBox")
+        NS.SkinPaintAce(box)   -- this owner's skin (core/SkinSetup.lua)
         box:SetLabel(L["Preview"])
         box:SetFullWidth(true)
         box:SetDisabled(true)

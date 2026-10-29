@@ -2029,6 +2029,28 @@ Total.
 - skin hud: v13 runs once, so a player's later pick survives the next load
 - skin hud: the v13 body seeds each companion before ResetToSkin, and sets them itself without it
 
+### test_skin_picker.lua (19)
+
+- Skin picker: the spec names this owner, its seams, General's Skin tab and the eye
+- Skin picker: an unseen profile shows it; a seen one does not
+- Skin picker: the first world entry arms one two-second start; later entries arm none
+- Skin picker: a profile that has closed it arms nothing at the world entry
+- Skin picker: in combat a start waits for PLAYER_REGEN_ENABLED, once
+- Skin picker: a held start is dropped by HideSkinPicker
+- Skin picker: never while the addon is switched off
+- Skin picker: a new profile and a reset profile show it again; a seen one does not
+- Skin picker: the player's close marks it seen; this addon's own hide does not
+- Skin picker: the stand-down takes a shown picker down, unmarked
+- Skin picker: a profile that has seen it takes a shown picker down, unmarked
+- Skin picker: the eye starts test mode, and leaves a running one alone
+- Skin picker: the eye in combat starts nothing
+- Skin widgets: a hand-built dropdown is painted for this owner
+- Skin widgets: SkinPaintAce paints a widget acquired past the proxy, for this owner
+- Skin widgets: with the settings panel ignored (the new-profile default) nothing is painted
+- Skin widgets: the release chain runs the host's work and the skin's restore
+- Skin widgets: the Profiles page paints the dialog's tree after every open
+- Skin widgets: without the library nothing is painted, and release work takes the callback
+
 ### test_pages_general_categories.lua (32)
 
 - general → spell categories: the picker owns its row, and Create sits beside the name (owner 2026-09-22)
@@ -2429,7 +2451,7 @@ Total.
 
 - prose: no authored file carries a British spelling from localization-§5's published list
 - prose: the gate carries localization-§5's two lists whole, and nothing of its own
-- prose: the exclusions this repository declared suppressed 11 of 223 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (11): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, docs/spell-research/2026-09-24-logs/CORRECTIONS.md, docs/spell-research/2026-09-24-logs/CURRENT_CATEGORIES.md, docs/spell-research/2026-09-24-logs/DECISIONS.md, docs/spell-research/2026-09-24-logs/FLAGS.md, docs/spell-research/2026-09-24-logs/PROPOSED_ADDITIONS.md, docs/spell-research/2026-09-24-logs/REVIEW.md, docs/spell-research/2026-09-24-logs/SOURCES.md, docs/spell-research/2026-09-24-logs/dictionary/AURAS.md
+- prose: the exclusions this repository declared suppressed 11 of 224 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (11): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, docs/spell-research/2026-09-24-logs/CORRECTIONS.md, docs/spell-research/2026-09-24-logs/CURRENT_CATEGORIES.md, docs/spell-research/2026-09-24-logs/DECISIONS.md, docs/spell-research/2026-09-24-logs/FLAGS.md, docs/spell-research/2026-09-24-logs/PROPOSED_ADDITIONS.md, docs/spell-research/2026-09-24-logs/REVIEW.md, docs/spell-research/2026-09-24-logs/SOURCES.md, docs/spell-research/2026-09-24-logs/dictionary/AURAS.md
 - prose: no path this repository narrows the gate by is loaded by a TOC
 - prose: every path this repository narrows the gate by is one .pkgmeta keeps out of the zip
 - prose self-test: the carve-out suppresses the named generated folder, and only it
@@ -2601,6 +2623,7 @@ Total.
 | test_skin_literals.lua | 3 |
 | test_skin_surfaces.lua | 7 |
 | test_skin_hud.lua | 10 |
+| test_skin_picker.lua | 19 |
 | test_pages_general_categories.lua | 32 |
 | test_pages_containers.lua | 35 |
 | test_pages_filters.lua | 53 |
@@ -2629,4 +2652,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **2191** |
+| **Total** | **2210** |

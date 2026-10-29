@@ -106,7 +106,7 @@ Declared in report order in `buckets` (`core/PerfSetup.lua:48`), each bracketed 
 
 | Bucket | Declared parent | Bracket | Why it is bracketed |
 |---|---|---|---|
-| `unitSwap` | — | `core/AuraMaster.lua:186`, `:191` | The one path driven by play: target, focus or pet changed, so every container on that unit calls the engine's `UpdateAllAuras`. On a target or focus swap the bracket first spans `CM.ApplyViews` (`modules/ContainerManager.lua:431`): each container whose view moved calls the engine's `SetAuraGroupFilterString` and `SetAuraGroupCandidateFilters` per group, each ending in its own `UpdateAllAuras`. After the refresh it spans `CM.ApplyUnitGate` (filter situations S6): the visibility pass of each container whose Unit type answer moved, none for a container with no gate. It switches quietly: no `emptyPass` runs inside the bracket, because EmptyWatch re-predicts from its own swap handler (see that row). Whatever the engine does synchronously inside these calls lands here |
+| `unitSwap` | — | `core/AuraMaster.lua:199`, `:191` | The one path driven by play: target, focus or pet changed, so every container on that unit calls the engine's `UpdateAllAuras`. On a target or focus swap the bracket first spans `CM.ApplyViews` (`modules/ContainerManager.lua:431`): each container whose view moved calls the engine's `SetAuraGroupFilterString` and `SetAuraGroupCandidateFilters` per group, each ending in its own `UpdateAllAuras`. After the refresh it spans `CM.ApplyUnitGate` (filter situations S6): the visibility pass of each container whose Unit type answer moved, none for a container with no gate. It switches quietly: no `emptyPass` runs inside the bracket, because EmptyWatch re-predicts from its own swap handler (see that row). Whatever the engine does synchronously inside these calls lands here |
 | `applyPass` | — | `modules/ContainerManager.lua:358-366` | The coalesced pass applying pending configuration to every dirty container, plus re-placing container-attached ones |
 | `applyContainer` | `applyPass` | `modules/Container.lua:596-643` | One container: compile, place, build or update the engine, restyle, visibility. The call site passes `"applyPass"`, so the record carries observed containment |
 | `visibilityPass` | — | `modules/ContainerManager.lua:385` | The show ladder over every container, on combat transitions, world entry and the master rows |
@@ -171,7 +171,7 @@ then the combat-restricted half (Blizzard frames handed back and a visibility pa
 `PLAYER_REGEN_ENABLED` when combat refuses it. `Container:ShouldShow` checks **the latch** as step 0, so
 every engine is disabled and nothing — a combat transition, a target swap, a settings change — can
 enable one behind it, and `CM.RequestApply` arms no timer. `standUp`
-(`core/LifecycleSetup.lua:152`) re-registers the events, subscribes again, builds any container
+(`core/LifecycleSetup.lua:156`) re-registers the events, subscribes again, builds any container
 the addon never built while down, moves target, focus, player and pet containers to the view their
 unit and Situations setting pick now (before any engine is re-enabled), and re-applies every container from the settings **as they are
 then**, never a snapshot. `NS.Perf.suspended` still reads true through the whole of arm B — the

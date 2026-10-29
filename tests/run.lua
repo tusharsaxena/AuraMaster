@@ -159,6 +159,7 @@ Kit.run{
         "test_skin_literals",
         "test_skin_surfaces",
         "test_skin_hud",
+        "test_skin_picker",
         "test_pages_general_categories",
         "test_pages_containers",
         "test_pages_filters",

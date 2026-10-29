@@ -93,13 +93,18 @@ function NS.RegisterDropdownWidget(AceGUI)
 end
 
 --- A dropdown for the addon's own hand-built controls: the addon's type once registered, the stock
---- one otherwise.
+--- one otherwise, painted for this owner's skin (core/SkinSetup.lua; the alias above lets the
+--- painter treat the addon's type as the stock Dropdown).
 function NS.CreateDropdown()
     local AceGUI = NS.AceGUI
+    local dd
     if AceGUI.GetWidgetVersion and AceGUI:GetWidgetVersion(DROPDOWN_WIDGET) then
-        return AceGUI:Create(DROPDOWN_WIDGET)
+        dd = AceGUI:Create(DROPDOWN_WIDGET)
+    else
+        dd = AceGUI:Create("Dropdown")
     end
-    return AceGUI:Create("Dropdown")
+    NS.SkinPaintAce(dd)
+    return dd
 end
 
 local lib = LibStub and LibStub("LibKa0s-Options-1.0", true)

@@ -122,6 +122,10 @@ local function standDown()
     if NS.ContainerManager and NS.ContainerManager.StopListening then NS.ContainerManager.StopListening() end
     -- The frame picker's overlay runs an OnUpdate; a stood-down addon runs none.
     if NS.FramePicker and NS.FramePicker.Stop then NS.FramePicker.Stop() end
+    -- The first-run skin picker is a window this addon shows; it goes down unmarked (a pending
+    -- preview put back), so it comes back on the next login the addon stands up for
+    -- (core/SkinSetup.lua).
+    if NS.HideSkinPicker then NS.HideSkinPicker() end
     if not applySecure() then
         holdPending()
         traceEdge("stand-down: hiding held until combat ends")
