@@ -83,6 +83,13 @@ function NS.RegisterDropdownWidget(AceGUI)
         end
         return w
     end, version)
+    -- THE SKIN PAINTS IT AS A DROPDOWN (AM-G1, LibKa0s SkinAce minor 4): the library's painter
+    -- dispatches on the widget's type name, so a type of our own would stay stock under every skin.
+    -- Naming its base once lets PaintAce, the Options proxy (every schema row with `values`), the
+    -- durability hooks and the release restore treat it as the stock Dropdown; the LEFT
+    -- justification above is ours and the library never touches it.
+    local Skin = LibStub and LibStub("LibKa0s-Skin-1.0", true)
+    if Skin and type(Skin.AliasAceType) == "function" then Skin:AliasAceType(DROPDOWN_WIDGET, "Dropdown") end
 end
 
 --- A dropdown for the addon's own hand-built controls: the addon's type once registered, the stock
@@ -434,7 +441,7 @@ local C = NS.Constants
 local function containerList()
     local list, order = {}, {}
     for _, c in ipairs(NS.Database.GetContainersByName()) do
-        list[c.id] = ("%s  |cff888888(%s %s, %s)|r"):format(tostring(c.name),
+        list[c.id] = ("%s  %s(%s %s, %s)|r"):format(tostring(c.name), NS.SkinEscape("am.note") or "",
             L[C.UNIT_LABELS[c.unit] or tostring(c.unit)],
             L[C.AURA_TYPE_LABELS[c.auraType] or tostring(c.auraType)],
             L[C.STYLE_LABELS[c.style] or tostring(c.style)])
@@ -489,7 +496,7 @@ function Helpers.RenderWarnings(ctx, cfg)
     local plan = NS.FilterCompiler.Compile(cfg, NS.FilterCompiler.ProfileContext())
     local warnings = plan.warnings or {}
     for _, w in ipairs(warnings) do
-        Helpers.TextRow(ctx, "|cffffa040" .. L[w] .. "|r")
+        Helpers.TextRow(ctx, (NS.SkinEscape("am.planWarn") or "") .. L[w] .. "|r")
     end
     if #warnings > 0 then
         local scroll = Helpers.EnsureScroll and Helpers.EnsureScroll(ctx)

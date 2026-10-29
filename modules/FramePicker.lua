@@ -47,6 +47,23 @@ local function stop()
     end
 end
 
+--- A hint line in the skin's `cover.text` (Ka0s Default's gray, aaaaaa; decision D6): the picker is an
+--- overlay over the game, as the combat cover is.
+local function hint(text)
+    return (NS.SkinEscape("cover.text") or "") .. text .. "|r"
+end
+
+--- The picker's own chrome from the skin: the outline's 2px edge in the owner token `am.pick`
+--- (Ka0s Default's blue) and the frame name in `text.accent` (GameFontNormalLarge's gold). The face
+--- stays the font object's. Run at build and on every skin switch.
+local function paint()
+    if not outline then return end
+    local r, g, b, a = NS.Skin.Color("am.pick")
+    NS.Style.DrawEdge(outline, 2, r, g, b, a)
+    label:SetTextColor(NS.SkinColor("text.accent"))
+end
+NS.Skin.OnLooksChanged(paint)
+
 local function onUpdate()
     -- Combat ends a pick: the overlay toggles keyboard propagation, which is protected under
     -- lockdown, and attaching a container is a settings change that would wait for combat anyway.
@@ -65,10 +82,10 @@ local function onUpdate()
     if target then
         outline:ClearAllPoints()
         if pcall(outline.SetAllPoints, outline, target) then outline:Show() else outline:Hide() end
-        label:SetText(name .. "\n|cffaaaaaa" .. NS.L["Left-click to attach, right-click to cancel"] .. "|r")
+        label:SetText(name .. "\n" .. hint(NS.L["Left-click to attach, right-click to cancel"]))
     else
         outline:Hide()
-        label:SetText("|cffaaaaaa" .. NS.L["Point at a named frame. Right-click to cancel."] .. "|r")
+        label:SetText(hint(NS.L["Point at a named frame. Right-click to cancel."]))
     end
     local x, y = GetCursorPosition()
     local scale = UIParent:GetEffectiveScale()
@@ -112,11 +129,11 @@ local function build()
     -- arithmetic on the size (docs/midnight-quirks.md, "A backdrop on an engine button reads a secret
     -- size").
     outline = CreateFrame("Frame", nil, overlay, "DisableUntrustedLayoutScriptsTemplate")
-    NS.Style.DrawEdge(outline, 2, 0.2, 0.8, 1, 1)
     outline:Hide()
 
     label = overlay:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     label:SetJustifyH("LEFT")
+    paint()
 end
 
 --- Start picking. `pick(name)` is called with the chosen frame's global name; `cancel()` if the

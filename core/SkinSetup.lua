@@ -81,9 +81,11 @@ local function byte(n) return n / 255 end
 -- exactly; `follow` is the nearest library ROLE token, whose value every other skin and EllesmereUI
 -- draw it in. The gap each meets is the inventory's (inputs/inventory/AuraMaster.md §5).
 NS.SKIN_TOKENS = {
-    -- AM-G2: the drag strip's name of an attached container, a warm gray (C.ATTACHED_NAME_COLOR).
+    -- AM-G2: the drag strip's name of an attached container, a warm gray: the strip's gold with the
+    -- color drained out, so at a glance it reads as attached (the owner, 2026-09-26).
     ["am.attachedName"] = { default = { byte(0x8c), byte(0x8a), byte(0x84), 1 }, follow = "text.muted" },
-    -- AM-G4: the drag-to-attach marks, a go/no-go pair (C.SNAP_COLOR, C.DETACH_COLOR).
+    -- AM-G4: the drag-to-attach marks, a go/no-go pair (modules/Anchors_Snap.lua's Snap.COLOR), opaque
+    -- so they read over any bar or icon color.
     ["am.attach"]       = { default = { 0.25, 0.90, 0.35, 1 }, follow = "sem.good" },
     ["am.detach"]       = { default = { 0.95, 0.25, 0.25, 1 }, follow = "sem.bad" },
     -- AM-G5: the frame picker's outline (modules/FramePicker.lua).
@@ -94,7 +96,8 @@ NS.SKIN_TOKENS = {
     -- section's "(info)" (|cffbbbbbb).
     ["am.note"]         = { default = { byte(0x88), byte(0x88), byte(0x88), 1 }, follow = "text.muted" },
     ["am.noteAlt"]      = { default = { byte(0xbb), byte(0xbb), byte(0xbb), 1 }, follow = "text.muted" },
-    -- AM-G8: the panel's secondary gold, the growth note and the "yours" marker (C.SECONDARY_GOLD).
+    -- AM-G8: the panel's secondary gold (batch 10 F6), the growth note and the "yours" marker: the
+    -- drag handle's gold dimmed toward its help mark.
     ["am.goldMuted"]    = { default = { byte(0xd9), byte(0xb8), byte(0x61), 1 }, follow = "text.headingAlt" },
     -- AM-G9: the Filters section's in-panel "See spells" link (|cff6699ff).
     ["am.link"]         = { default = { byte(0x66), byte(0x99), byte(0xff), 1 }, follow = "text.accent" },
@@ -102,9 +105,23 @@ NS.SKIN_TOKENS = {
 
 -- The Ka0s Default tokens the DEGRADED facade answers, copied from the library and limited to the
 -- ones this addon reads. Both arms publish the table, so tests/test_skinsetup.lua can hold each
--- entry to the live library's Ka0s Default value: a copy that drifts goes red there. Empty until a
--- surface reads a library token (AM-02, AM-03); each conversion adds its tokens here in its change.
-NS.SKIN_FALLBACK = {}
+-- entry to the live library's Ka0s Default value: a copy that drifts goes red there. Each surface
+-- converted to a library token adds it here in the same change.
+NS.SKIN_FALLBACK = {
+    -- AM-02, the unlock furniture: the drag strip's own edge (the host painter draws it), the strip
+    -- and close-mark tooltips' title and body lines, the TEST tag, the unlocked outline, and the
+    -- frame picker's name and hint.
+    ["handle.edge"]     = { 1, 0.82, 0, 0.6 },
+    ["gtip.title"]      = { 1, 0.82, 0, 1 },
+    ["gtip.value"]      = { 1, 1, 1, 1 },
+    ["sem.warn"]        = { 1, 0.5, 0, 1 },
+    ["chart.crosshair"] = { 1, 1, 1, 0.35 },
+    ["text.accent"]     = { 1, 0.82, 0, 1 },
+    ["cover.text"]      = { 0.667, 0.667, 0.667, 1 },
+    -- AM-02, the settings pages' markup: the muted notes and the gold emphasis.
+    ["text.disabled"]   = { 0.5, 0.5, 0.5, 1 },
+    ["text.heading"]    = { 1, 0.82, 0, 1 },
+}
 
 --- A color token's components AS A CALL SITE WRITES THEM: r, g, b for an opaque color and r, g, b,
 --- a otherwise (the library's own text and vertex rule), so a site that passed three components

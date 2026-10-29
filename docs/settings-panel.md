@@ -715,7 +715,7 @@ attachment re-applies every container following it (`Anchors.Followers`). Under 
 Fill, Grow horizontally and Grow vertically are dimmed and show the inherited values. They do that
 through a row `panelGet` that only the panel descriptor reads; `/am get` and every module read the
 stored values. The line "Fill and growth follow '*root*' because this container is attached to it."
-sits under the Growth heading and above them, in the panel's muted secondary gold (`C.SECONDARY_GOLD`), with a row gap below it. Per row, Spacing and Line
+sits under the Growth heading and above them, in the panel's muted secondary gold (the owner token `am.goldMuted`), with a row gap below it. Per row, Spacing and Line
 spacing stay the container's own and stay live. The stored flow is never written, so a detach
 restores it at the next apply. A container attached to a missing or looping target sits on the
 screen and keeps its own flow.

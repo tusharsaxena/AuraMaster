@@ -344,7 +344,7 @@ end
 -- WHICH CONTAINER is said by its drag-handle STRIP (A5, as A6 amends it): the TARGET's strip (for a
 -- hold or a detach, the current parent's) has its OWN edge repainted 2px in the mark's color, through
 -- the painter that drew it (Style.DrawEdge, the same four textures, which live on the strip), and the
--- widget's gold (Anchors.STRIP_EDGE) painted back when the mark leaves that strip or hides (edgeStrip).
+-- widget's gold (Anchors.PaintStripEdge, the skin's `handle.edge`) painted back when the mark leaves that strip or hides (edgeStrip).
 -- No frame of ours is anchored to a strip: A5 hung an overlay on it with SetAllPoints, and in game it
 -- never showed, most likely because the strip hangs under the container's anchor, a tree the client
 -- refuses or voids anchors into from outside (the rule that makes GameTooltip refuse SetOwner on the
@@ -390,7 +390,11 @@ local hitRect = {} -- scratch: the highlighted target's rect
 -- CHILD the dragged container's; each `strip` nil while it has none, and `col` the color table it was
 -- last repainted in, nil before its first repaint.
 local TARGET, CHILD = {}, {}
-local GOLD = Anchors.STRIP_EDGE   -- the strip's own edge, put back when the mark leaves it (A6)
+-- The mark's two colors, the owner tokens `am.attach` (Ka0s Default's green) and `am.detach` (its
+-- red), as { r, g, b, a } records. ONE TABLE EACH, refreshed in place on a skin switch (refreshColors):
+-- paintHighlight and edgeStrip skip a repaint by the record's identity, so a tick on the same state
+-- lays nothing; the switch clears what they last painted, so the next tick repaints in the new skin.
+Snap.COLOR = { attach = {}, detach = {} }
 local dragRect = {} -- scratch: the dragged container's strip or footprint, for the child's dot
 local painted     -- the color table the highlight was last painted in, or nil before it is built
 local ownRect, parentRect = {}, {} -- scratch: the dragged container's and its parent's rects (A10, A11), for the leeway
@@ -437,7 +441,7 @@ end
 
 --- Build the highlight, its two join dots, the line between them and the box, once (Snap.highlight
 --- the holder, Snap.marker the target's dot, Snap.childMarker the dragged one's, Snap.line, Snap.box:
---- published for the headless suite), painted in C.SNAP_COLOR. The holder covers UIParent and takes
+--- published for the headless suite), painted in Snap.COLOR.attach. The holder covers UIParent and takes
 --- no mouse (a plain frame never enables it), so it only carries its parts' visibility and strata; the
 --- The popup strata (FULLSCREEN_DIALOG) puts the dots, the line and the box over any container,
 --- whatever strata its layout picked. Hidden at birth; shown only while a pair is.
@@ -451,14 +455,14 @@ local function buildHighlight()
     local line = hl:CreateLine(nil, "OVERLAY")
     line:SetThickness(LINE)
     Snap.line = line
-    paintHighlight(C.SNAP_COLOR)
+    paintHighlight(Snap.COLOR.attach)
     hl:Hide()
     return hl
 end
 
 --- Repaint, in slot `slot` (TARGET or CHILD), strip `strip`'s own edge `EDGE` px in color `col`
 --- ({ r, g, b, a }), or, with `strip` nil, repaint none (A6). Whatever strip the slot repainted before
---- and is leaving gets the widget's gold back first (GOLD: 1px, as the widget drew it), so at most one
+--- and is leaving gets the widget's gold back first (Anchors.PaintStripEdge: 1px, as the widget drew it), so at most one
 --- strip per slot is ever off its own gold. A strip already in `col` is not repainted, so a tick on the
 --- same target in the same color lays nothing. Both paints are Style.DrawEdge on the strip, the
 --- painter the widget drew it with: the same four textures, laid against the strip alone, no size
@@ -466,7 +470,7 @@ end
 local function edgeStrip(slot, strip, col)
     if strip ~= slot.strip then
         local old = slot.strip
-        if old then NS.Style.DrawEdge(old, GOLD.size, GOLD.r, GOLD.g, GOLD.b, GOLD.a) end
+        if old then Anchors.PaintStripEdge(old) end
         slot.strip, slot.col = strip, nil
     end
     if strip and col ~= slot.col then
@@ -474,6 +478,18 @@ local function edgeStrip(slot, strip, col)
         NS.Style.DrawEdge(strip, EDGE, col.r, col.g, col.b, col.a)
     end
 end
+
+--- Fill Snap.COLOR from the skin, in place, and forget what the highlight and the two strip slots were
+--- last painted in, so the next paint (the driver's next tick, mid-drag) lays the new skin's colors.
+local function refreshColors()
+    for key, token in pairs({ attach = "am.attach", detach = "am.detach" }) do
+        local col = Snap.COLOR[key]
+        col.r, col.g, col.b, col.a = NS.Skin.Color(token)
+    end
+    painted, TARGET.col, CHILD.col = nil, nil, nil
+end
+refreshColors()
+NS.Skin.OnLooksChanged(refreshColors)
 
 --- Hide the highlight (and every part of it with it), if it was ever built, and give both repainted
 --- strips their gold back (edgeStrip), built or not: every way a mark ends runs through here.
@@ -584,7 +600,7 @@ end
 --      current pair's two points (its own now, its parent's now) at most C.DETACH_RADIUS from where
 --      they were when the drag began, or from each other: green on the current pair, a release snaps
 --      it back and writes nothing;
---   3. "detach": beyond it: the whole mark red (C.DETACH_COLOR) on the current pair, a release
+--   3. "detach": beyond it: the whole mark red (Snap.COLOR.detach) on the current pair, a release
 --      detaches it where it was let go (D6).
 -- "Strictly nearer" is this file's reading of the addendum's "not its current pair": the hit's |gap|
 -- (A7) under the current pair's `away` (rest-invariant: its points rest a seam, a nudge or a strip
@@ -807,7 +823,7 @@ function Snap.Tick()
         return nil
     end
     local state, pair = classify(live)
-    local col = state == "detach" and C.DETACH_COLOR or C.SNAP_COLOR
+    local col = state == "detach" and Snap.COLOR.detach or Snap.COLOR.attach
     showHighlight(pair, markRect(state, pair), markStrip(pair), live, col)
     return pair, state
 end

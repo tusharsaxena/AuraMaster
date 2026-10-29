@@ -86,29 +86,28 @@ test("Skin seam: every owner token draws today's color on Ka0s Default, and foll
     assertTrue(n >= 9, "the owner tokens are missing")
 end)
 
-test("Skin seam: the owner tokens match the constants the surfaces draw today", function()
-    -- The surfaces read the tokens in AM-02; until then the constants are the pixels, and each token's
-    -- default must equal its constant so the switch moves nothing on Ka0s Default. A constant is an
-    -- { r, g, b, a } record or an "aarrggbb" string.
+test("Skin seam: the owner tokens draw on Ka0s Default the pixels the surfaces drew before AM-02", function()
+    -- The constants the surfaces read before they read the tokens (C.ATTACHED_NAME_COLOR,
+    -- C.SNAP_COLOR, C.DETACH_COLOR, C.SECONDARY_GOLD) are gone; their values are pinned here, so the
+    -- switch moved nothing on Ka0s Default. An "aarrggbb" string or an { r, g, b } triple.
     local NS = skinEnv()
-    local C = NS.Constants
     local function channels(c)
         if type(c) == "string" then
             return tonumber(c:sub(3, 4), 16) / 255, tonumber(c:sub(5, 6), 16) / 255, tonumber(c:sub(7, 8), 16) / 255
         end
-        return c.r, c.g, c.b
+        return c[1], c[2], c[3]
     end
     for name, c in pairs({
-        ["am.attachedName"] = C.ATTACHED_NAME_COLOR,
-        ["am.attach"]       = C.SNAP_COLOR,
-        ["am.detach"]       = C.DETACH_COLOR,
-        ["am.goldMuted"]    = C.SECONDARY_GOLD,
+        ["am.attachedName"] = "ff8c8a84",
+        ["am.attach"]       = { 0.25, 0.90, 0.35 },
+        ["am.detach"]       = { 0.95, 0.25, 0.25 },
+        ["am.goldMuted"]    = "ffd9b861",
+        ["am.pick"]         = { 0.2, 0.8, 1 },
     }) do
-        assertTrue(c ~= nil, name .. ": its constant is gone")
         local r, g, b = NS.SkinColor(name)
         local cr, cg, cb = channels(c)
         for i, pair in ipairs({ { r, cr }, { g, cg }, { b, cb } }) do
-            assertTrue(math.abs(pair[1] - pair[2]) < 1e-6, ("%s[%d]: token %s, constant %s"):format(name, i, pair[1], pair[2]))
+            assertTrue(math.abs(pair[1] - pair[2]) < 1e-6, ("%s[%d]: token %s, before %s"):format(name, i, pair[1], pair[2]))
         end
     end
 end)

@@ -399,7 +399,6 @@ local TYPE_MARK       = L["[{type}]"]
 -- never opened.
 local COLOR_END   = "|r"
 local TYPE_COLORS = { HELPFUL = "|c" .. C.AURA_TYPE_COLORS.HELPFUL, HARMFUL = "|c" .. C.AURA_TYPE_COLORS.HARMFUL }
-local YOURS_COLOR = "|c" .. C.SECONDARY_GOLD
 
 --- `text` in `color`, or `text` unchanged when there is no color for it.
 local function colored(color, text)
@@ -451,7 +450,7 @@ local YOURS_MARK  = L["(yours)"]
 local function markedName(def)
     local name = Cat.LabelOf(def)
     if not Cat.IsUserCategory(def) then return name end
-    local mark = colored(YOURS_COLOR, YOURS_MARK)
+    local mark = colored(NS.SkinEscape("am.goldMuted"), YOURS_MARK)   -- the panel's muted gold (AM-G8)
     return (USER_MARKER
         :gsub("{mark}", function() return mark end)
         :gsub("{name}", function() return name end))

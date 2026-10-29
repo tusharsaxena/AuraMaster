@@ -115,6 +115,25 @@ test("parity: the degraded Skin facade answers every name the live facade carrie
     T.assertSurfaceParity(NS.Skin, NS2.Skin, "Skin facade vs host stub", {})
 end)
 
+test("parity: each host-copy skin token is the live library's Ka0s Default value", function()
+    -- The degraded facade answers Ka0s Default from NS.SKIN_FALLBACK, a copy of the library's own
+    -- values limited to the tokens this addon reads. A copy is the thing that drifts, so every entry
+    -- is held to LibKa0s-Skin-1.0's resolved Ka0s Default here (LootHistory's case).
+    -- red under: a token added to the copy with a value of its own, or the library moving a value.
+    local live = T.mocks.LibStub("LibKa0s-Skin-1.0"):ResolveSkin("ka0s")
+    local n = 0
+    for name, c in pairs(loadDegraded().SKIN_FALLBACK) do
+        n = n + 1
+        local want = live[name]
+        assertTrue(type(want) == "table", name .. " is not a Ka0s Default color token in the library")
+        for i = 1, 4 do
+            local a, b = c[i] or 1, want[i] or 1
+            assertTrue(math.abs(a - b) < 1e-6, ("%s[%d]: host copy %s, library %s"):format(name, i, a, b))
+        end
+    end
+    assertTrue(n > 0, "the host copy is empty, so this case asserts nothing")
+end)
+
 test("parity: the Skin seam publishes the same NS members on both paths", function()
     -- Members from: grep -nE '^\s*function NS\.[A-Za-z_]+|^\s*NS\.[A-Za-z_]+\s*=' core/SkinSetup.lua
     local f = io.open("core/SkinSetup.lua", "r")

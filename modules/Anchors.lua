@@ -480,12 +480,27 @@ local STRIP_H   = DRAG and DRAG.HEIGHT or 18
 local STRIP_GAP = DRAG and DRAG.GAP or 2
 
 -- The strip's own edge as the widget paints it once, at build (LibKa0s-Widgets' dhBuildChrome calls
--- the painter we hand it, `edge = NS.Style.DrawEdge` in BuildHandle, as edge(handle, 1, 1, 0.82, 0,
--- 0.6)): 1px of gold at 0.6 alpha. The widget publishes no figure for it, so it is named here, once,
--- for the one other painter of that edge: the drag's mark (modules/Anchors_Snap.lua), which repaints
--- the target's strip in its own color and must give back exactly this when it leaves (the
--- owner-feedback addendum's A6). Read-only; a change in the widget's chrome means a change here.
-Anchors.STRIP_EDGE = { size = 1, r = 1, g = 0.82, b = 0, a = 0.6 }
+-- the painter we hand it, `edge = NS.Style.DrawEdge` in BuildHandle, with the owner's `handle.edge`,
+-- Ka0s Default's 1px of gold at 0.6 alpha). The widget repaints its own fill, label and marks on a
+-- skin switch but never a host painter's edge (DragHandle minor 6), so this addon redraws it there
+-- (Anchors.Reskin), and so does the one other painter of that edge: the drag's mark
+-- (modules/Anchors_Snap.lua), which repaints the target's strip in its own color and must give back
+-- exactly this when it leaves (the owner-feedback addendum's A6). Read from the skin at each paint.
+local STRIP_EDGE_SIZE = 1
+
+--- Paint `strip`'s own edge as the widget drew it: STRIP_EDGE_SIZE px in the skin's `handle.edge`.
+function Anchors.PaintStripEdge(strip)
+    local r, g, b, a = NS.Skin.Color("handle.edge")
+    NS.Style.DrawEdge(strip, STRIP_EDGE_SIZE, r, g, b, a)
+end
+
+--- A tooltip line `{ text, r, g, b }` (the widget's entry shape) whose color is the skin's token
+--- `token`, read on every hover, so a skin switch shows through without rebuilding the spec.
+local function tokenLine(text, token)
+    return setmetatable({ text }, { __index = function(_, i)
+        if i == 2 or i == 3 or i == 4 then return (select(i - 1, NS.Skin.Color(token))) end
+    end })
+end
 
 --- Right-click (the strip or its "?"): the Containers page, with THIS container selected in its band
 --- (feedback #9). Under combat lockdown the open is refused with options-ui-§2's gray line, and the
@@ -522,9 +537,10 @@ end
 ---
 --- THE LINES ARE FUNCTIONS because the widget calls them on EVERY hover rather than capturing them
 --- when the handle is built: a renamed container and a container that has just been attached or
---- detached both show through without rebuilding anything. The attached line carries its own gold
---- through the `{ entry, r, g, b }` shape, so it stays the color it is today instead of taking the
---- body band's white.
+--- detached both show through without rebuilding anything. Every line carries its own color through
+--- the `{ entry, r, g, b }` shape, read from the skin on each hover (tokenLine): the title in
+--- `gtip.title`, the body in `gtip.value` and the attached line in `gtip.title`, Ka0s Default's gold,
+--- white and gold, the widget's own defaults (skinning-§7: the lines an addon writes take the skin).
 ---
 --- PLACED BESIDE THE STRIP (`tooltipPlace`, modules/Anchors_Tooltip.lua), owned by UIParent and
 --- anchored to UIParent alone, never by or to the hovered frame. The anchor inherits
@@ -563,13 +579,13 @@ local function tooltipSpec(container)
         return Anchors.JoinText(container, cfg) or NS.L["Attached — set its offsets in the Layout section."]
     end
     return {
-        title = function()
+        title = tokenLine(function()
             local cfg = container:Cfg()
             return cfg and cfg.name or NS.L["Container"]
-        end,
+        end, "gtip.title"),
         body = {
-            howTo,
-            { attached, 1, 0.82, 0 },
+            tokenLine(howTo, "gtip.value"),
+            tokenLine(attached, "gtip.title"),
         },
     }
 end
@@ -595,12 +611,12 @@ end
 --- same `tooltipPlace` and `tooltipOwner` (see tooltipSpec).
 local function closeTooltipSpec(container)
     return {
-        title = function()
+        title = tokenLine(function()
             local cfg = container:Cfg()
             return cfg and cfg.name or NS.L["Container"]
-        end,
+        end, "gtip.title"),
         body = {
-            NS.L["Click to disable this container. Its settings are kept; turn Enable this container back on for it on the Containers page to bring it back."],
+            tokenLine(NS.L["Click to disable this container. Its settings are kept; turn Enable this container back on for it on the Containers page to bring it back."], "gtip.value"),
         },
     }
 end
@@ -621,10 +637,10 @@ local function beginDrag(container)
 end
 
 --- The handle's label, in its three parts: the container's name, a warm gray
---- (C.ATTACHED_NAME_COLOR) while it is attached to another container or a named frame, the sign that
+--- (the owner token `am.attachedName`) while it is attached to another container or a named frame, the sign that
 --- it is attached and follows that (the owner, 2026-09-26; since issue #22 a container-attached one
 --- drags too, so the gray says "attached", not "cannot be dragged"); and while test
---- mode is on an orange TEST tag after it (feedback #8), so the placeholders on screen read as
+--- mode is on an orange TEST tag after it (feedback #8; `sem.warn`, decision D5), so the placeholders on screen read as
 --- placeholders. Apart, so a strip too narrow for the whole shortens the name alone (stripLabel).
 --- @return string open, string name, string close, string tag  open and close wrap the name's color
 local function handleParts(cfg)
@@ -632,10 +648,10 @@ local function handleParts(cfg)
     local open, close, tag = "", "", ""
     local mode = cfg.attach and cfg.attach.mode
     if mode == "container" or mode == "frame" then
-        open, close = "|c" .. NS.Constants.ATTACHED_NAME_COLOR, "|r"
+        open, close = NS.SkinEscape("am.attachedName"), "|r"
     end
     if NS.State and NS.State.testMode then
-        tag = ("  |c%s%s|r"):format(NS.Constants.TEST_TAG_COLOR, NS.L["TEST"])
+        tag = "  " .. NS.Preview.TestTag()
     end
     return open, name, close, tag
 end
@@ -996,3 +1012,21 @@ function Anchors.UpdateHandle(container, show)
     end
     handle:SetShown(show)
 end
+
+--- Redraw what the widget leaves to this addon after a skin switch: each strip's own edge (the host
+--- painter's, which the widget never repaints) and its label, whose attached-name gray and TEST tag
+--- are markup read from the skin (handleParts). The label is the strip's cached text re-derived, a
+--- config-and-measure pass that is combat-safe, as UpdateHandle's is; nothing is placed here.
+function Anchors.Reskin()
+    local CM = NS.ContainerManager
+    for _, container in pairs(CM and CM.instances or {}) do
+        local handle = container.handle
+        local cfg = handle and container:Cfg()
+        if cfg then
+            Anchors.PaintStripEdge(handle)
+            handle:SetLabel(container.stripShown and stripLabel(container, handle, cfg) or handleText(cfg))
+        end
+    end
+end
+
+NS.Skin.OnLooksChanged(function() Anchors.Reskin() end)

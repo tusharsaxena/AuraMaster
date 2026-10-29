@@ -156,6 +156,8 @@ Kit.run{
         "test_options_descriptor",
         "test_pages_general",
         "test_skinsetup",
+        "test_skin_literals",
+        "test_skin_surfaces",
         "test_pages_general_categories",
         "test_pages_containers",
         "test_pages_filters",

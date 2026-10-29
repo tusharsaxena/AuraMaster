@@ -650,7 +650,7 @@ local function growthNote(ctx, cfg)
     local root = NS.Anchors.FlowRoot(cfg)
     if root then
         local note = L["Fill and growth follow '%s' because this container is attached to it."]
-        H.TextRow(ctx, "|c" .. C.SECONDARY_GOLD .. note:format(tostring(root.name)) .. "|r")
+        H.TextRow(ctx, (NS.SkinEscape("am.goldMuted") or "") .. note:format(tostring(root.name)) .. "|r")
         local scroll = H.EnsureScroll(ctx)
         if scroll then H.AddSpacer(scroll, H.ROW_VSPACER) end
         return
@@ -675,7 +675,8 @@ end
 -- from its parent's flow so that they never face it.
 
 local SMALL = { fontObject = "GameFontHighlightSmall" }
-local GRAY = "|cff808080%s|r"
+-- A muted note in the skin's `text.disabled` (Ka0s Default's 808080, decision D7), read at render.
+local function gray(text) return (NS.SkinEscape("text.disabled") or "") .. text .. "|r" end
 local OPPOSITE = { up = "down", down = "up", left = "right", right = "left" }
 
 --- Whether a point's vertical side faces growth `growV` (its BOTTOM growing down, its TOP up).
@@ -718,7 +719,7 @@ local function growsBackNote(ctx)
     local cfg = NS.ActiveContainer()
     if not cfg then return end
     for _, line in ipairs(growsBackLines(cfg)) do
-        H.TextRow(ctx, GRAY:format(line), SMALL)
+        H.TextRow(ctx, gray(line), SMALL)
     end
 end
 

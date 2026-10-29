@@ -159,19 +159,18 @@ C.ATTACH_EDGES = {
 -- outside pairs within this many UIParent units of the matching point on another one snaps on there.
 -- Distances are read in UIParent units (modules/Anchors_Snap.lua), so the radius feels the same
 -- under any container or UI scale. The highlight that marks the candidate while it is in range is
--- drawn in this green, opaque, so it reads over any bar or icon color.
+-- drawn in the skin's `am.attach` (core/SkinSetup.lua; Ka0s Default's opaque green), so it reads over
+-- any bar or icon color.
 C.SNAP_RADIUS = 24
-C.SNAP_COLOR = { r = 0.25, g = 0.90, b = 0.35, a = 1 }
 
 -- The detach leeway (issue #22, the owner-feedback addendum's A4): while a container attached to another
 -- is dragged, it holds (green on its current pair, and a release snaps it back, writing nothing) while
 -- its own point of that pair is at most this many UIParent units from where it rested, or from its
 -- parent's, both measured on the two containers' strips (A10); past it, the whole mark (the
--- parent's strip edge, both dots and the line) turns this red and a release detaches it. Wider than
+-- parent's strip edge, both dots and the line) turns the skin's `am.detach` red and a release detaches it. Wider than
 -- C.SNAP_RADIUS, so a grab that barely moves never detaches by accident; 128 since the second smoke
 -- round (A9: the first 64 was "way too little").
 C.DETACH_RADIUS = 128
-C.DETACH_COLOR = { r = 0.95, g = 0.25, b = 0.25, a = 1 }
 
 -- Growth.
 C.AXES = { "horizontal", "vertical" }
@@ -289,20 +288,8 @@ C.TOOLTIP_ANCHOR_LABELS = {
     ANCHOR_LEFT = "Left", ANCHOR_RIGHT = "Right", ANCHOR_CURSOR = "At the cursor",
 }
 
--- The TEST tag on a container's drag handle while test mode is on (feedback #8, modules/Anchors.lua's
--- handleText): orange, so the placeholders cannot be mistaken for live auras. The AARRGGBB body of a
--- "|c" escape.
-C.TEST_TAG_COLOR = "ffff8000"
-
--- The panel's muted gold for secondary text (batch 10 F6): the drag handle's gold dimmed toward its
--- help mark, the same (0.85, 0.72, 0.38) settings/GeneralSpells.lua marks a player's own category
--- with. The Growth subsection's inherited-flow note reads in it. The AARRGGBB body of a "|c" escape.
-C.SECONDARY_GOLD = "ffd9b861"
--- The strip name of a container attached to another container or a named frame: a warm gray, the
--- strip's gold with the color drained out, so at a glance it reads as attached (the owner,
--- 2026-09-26; the dim SECONDARY_GOLD of the first cut was not muted enough). It once meant "cannot
--- be dragged"; since issue #22 a container-attached one drags too, so it means attached alone.
-C.ATTACHED_NAME_COLOR = "ff8c8a84"
+-- The TEST tag, the panel's muted gold and the strip name of an attached container are skin tokens
+-- now (core/SkinSetup.lua: `sem.warn`, `am.goldMuted`, `am.attachedName`), read where they are drawn.
 
 -- Time text. Each is a SecondsFormatter setup; "blizzard" copies the engine's own, rounding up.
 C.TIME_FORMATS = { "blizzard", "short", "long" }

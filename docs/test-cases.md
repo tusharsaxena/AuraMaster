@@ -1986,7 +1986,7 @@ Total.
 - Skin seam: the owner is the folder name, and NS.Skin is its facade
 - Skin seam: the read answers Ka0s Default before the profile store exists
 - Skin seam: every owner token draws today's color on Ka0s Default, and follows a library role
-- Skin seam: the owner tokens match the constants the surfaces draw today
+- Skin seam: the owner tokens draw on Ka0s Default the pixels the surfaces drew before AM-02
 - Skin seam: SkinEscape rounds a token back to the byte the markup wrote
 - Skin seam: the skin keys default to Ka0s Default, as skip-render rows of General's Appearance group
 - Skin seam: the skin row's values are every registered skin, in the library's order
@@ -1999,6 +1999,22 @@ Total.
 - Skin seam: a profile switch, copy and reset each apply that profile's skin
 - Skin seam: NS.ApplySkin hands the library this addon's owner
 - Skin seam: the drag strip is built for this addon's owner
+
+### test_skin_literals.lua (3)
+
+- no color literal outside core/SkinSetup.lua and the named allow-list
+- every allow-list entry carries its reason
+- the gate is falsifiable: a planted literal of each shape is reported
+
+### test_skin_surfaces.lua (7)
+
+- skin surfaces: a skin switch repaints each strip's own edge in the new skin's handle.edge
+- skin surfaces: the strip label's attached gray and TEST tag are the new skin's
+- skin surfaces: the strip and close-mark tooltip lines take the skin's gtip colors on each hover
+- skin surfaces: the unlocked outline is repainted in the new skin's guide color
+- skin surfaces: the drag-to-attach mark's colors are the skin's, refreshed in place on a switch
+- skin surfaces: the frame picker's outline, name and hint are the skin's
+- skin surfaces: a shown TEST marker is retold in the new skin's sem.warn
 
 ### test_pages_general_categories.lua (32)
 
@@ -2035,7 +2051,7 @@ Total.
 - general → spell categories: Restore sits above the Add line and clears that category's edits and no other's (B2)
 - general → spell categories: Restore sits on the Category dropdown's line, to its right (feedback #3)
 
-### test_pages_containers.lua (34)
+### test_pages_containers.lua (35)
 
 - containers: registers its own top-level Blizzard category, with one tab, General (N-1, options-ui-§14)
 - containers: Unit, Aura type and Style sit under their own subsection; Name and Enabled do not
@@ -2056,6 +2072,7 @@ Total.
 - containers: changing the aura type redraws an open Filters page for the new type, on the next frame
 - containers: Unit, Aura type and Style draw every value in a color of its own
 - containers: the addon's dropdown is the stock one in a pool of its own, justified LEFT on acquire
+- containers: the addon's dropdown type is painted by the skin as a stock Dropdown (AM-G1)
 - containers: Aura type offers Buffs and Debuffs only; the retired Weapon enchants type is refused (feedback #6)
 - containers: the Style dropdown offers bars, icons and text and writes the selected container
 - containers: a new Style resets Fill to the one it suits and leaves the grow directions (B5)
@@ -2416,7 +2433,7 @@ Total.
 - prose self-test: the disclosure names what each entry suppressed, and says when it is bounded
 - prose self-test: a malformed waived is a failure, not a silence
 
-### test_surface_parity.lua (10)
+### test_surface_parity.lua (11)
 
 - parity: the Core stub publishes everything core/CoreSetup.lua publishes live
 - parity: the DebugLog stub carries every member the addon calls
@@ -2426,6 +2443,7 @@ Total.
 - parity: the Slash stub carries every dispatcher member the addon calls
 - parity: the Slash stub's refusal line is the library's own format, byte for byte
 - parity: the degraded Skin facade answers every name the live facade carries
+- parity: each host-copy skin token is the live library's Ka0s Default value
 - parity: the Skin seam publishes the same NS members on both paths
 - parity: the degraded facade answers the owner tokens' Ka0s Default values
 
@@ -2567,8 +2585,10 @@ Total.
 | test_options_descriptor.lua | 19 |
 | test_pages_general.lua | 36 |
 | test_skinsetup.lua | 16 |
+| test_skin_literals.lua | 3 |
+| test_skin_surfaces.lua | 7 |
 | test_pages_general_categories.lua | 32 |
-| test_pages_containers.lua | 34 |
+| test_pages_containers.lua | 35 |
 | test_pages_filters.lua | 53 |
 | test_pages_situations.lua | 11 |
 | test_pages_layout.lua | 52 |
@@ -2587,7 +2607,7 @@ Total.
 | test_locale.lua | 10 |
 | test_docs.lua | 7 |
 | test_prose.lua | 18 |
-| test_surface_parity.lua | 10 |
+| test_surface_parity.lua | 11 |
 | test_vendor_sync.lua | 3 |
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 2 |
@@ -2595,4 +2615,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **2169** |
+| **Total** | **2181** |

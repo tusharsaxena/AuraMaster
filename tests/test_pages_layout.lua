@@ -449,10 +449,9 @@ test("layout: the follow line is dim gold, says why, and has a gap below it (F6)
     local NS, _, P = attachedChild()
     local H = NS.Helpers
     positionTab(NS, P)
-    local want = "|c" .. NS.Constants.SECONDARY_GOLD
+    -- red under: the gold as the addon's muted secondary gold (am.goldMuted), not the bright heading gold
+    local want = "|cffd9b861"
         .. NS.L["Fill and growth follow '%s' because this container is attached to it."]:format("Player buffs") .. "|r"
-    -- red under: the gold as the addon's muted secondary gold, not the bright heading gold
-    assertEqual(NS.Constants.SECONDARY_GOLD, "ffd9b861")
     local kids = H.EnsureScroll(H.__pageCtx.layout).children
     local at
     for i, w in ipairs(kids) do
@@ -479,7 +478,7 @@ test("layout: the follow line is drawn under the Growth heading only, above the 
     local heading, at, fill
     for i, w in ipairs(ws) do
         if w.type == "Heading" and w.text == NS.L["Growth"] then heading = i end
-        if w.text == "|c" .. NS.Constants.SECONDARY_GOLD .. line .. "|r" then at = i end
+        if w.text == "|cffd9b861" .. line .. "|r" then at = i end
         if w == P.row(ws, "container.layout.axis") then fill = i end
     end
     -- red under: the note drawn above the attach rows (the old section intro), or below Fill

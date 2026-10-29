@@ -113,7 +113,7 @@ end
 --- and the entry's own help mark are for.
 function CA.SuggestTag(id)
     local kind = CA.Resolve(id)
-    if kind then return "|cffff8000" .. NS.L["not an aura"] .. "|r" end
+    if kind then return (NS.SkinEscape("sem.warn") or "") .. NS.L["not an aura"] .. "|r" end
     return nil
 end
 

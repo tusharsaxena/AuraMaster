@@ -217,7 +217,7 @@ test("drag: the mark repaints the target strip's own edge 2px in green, never bo
     local hl, marker = Snap.highlight, Snap.marker
     assertTrue(hl ~= nil and hl:IsShown(), "shown with a candidate")
     -- red under: A5's overlay (a frame of ours SetAllPoints on the strip, the strip's own edge left gold)
-    assertEdgeOn(NS, mocks, strip, NS.Constants.SNAP_COLOR, "the target's strip")
+    assertEdgeOn(NS, mocks, strip, NS.Anchors.Snap.COLOR.attach, "the target's strip")
     assertFalse(Snap.box:IsShown(), "no box over the placeholder")
     local m = marker:__last("SetPoint")
     assertEqual(m[1], "CENTER")
@@ -246,7 +246,7 @@ test("drag: the repaint moves to the new target's strip, and the old one gets it
     recordAnchor(inst.anchor)
     inst.handle:__fire("OnDragStart")
     local Snap = NS.Anchors.Snap
-    local green = NS.Constants.SNAP_COLOR
+    local green = NS.Anchors.Snap.COLOR.attach
     local one, three = CM.instances[1].handle, CM.instances[3].handle
     plant(inst.anchor, 0, 75, 20, 95)
     assertEqual(Snap.Tick().id, 1)
@@ -272,7 +272,7 @@ test("drag: a target with no strip, or with its strip hidden, is boxed over its 
     recordAnchor(inst.anchor)
     inst.handle:__fire("OnDragStart")
     local Snap = NS.Anchors.Snap
-    local col = NS.Constants.SNAP_COLOR
+    local col = NS.Anchors.Snap.COLOR.attach
     local strip = CM.instances[1].handle
     for _, case in ipairs({ "hidden", "none" }) do
         if case == "hidden" then strip:Hide() else CM.instances[1].handle = nil end
@@ -321,7 +321,7 @@ test("drag: the highlight puts a dot of the parent's size on the child's join po
     assertEqual(lineEnd(mocks, line, "SetEndPoint"), "BOTTOMLEFT 3,95", "and ends on the child's")
     assertEqual(line:__joined("SetThickness"), "2")
     -- red under: a part painted apart from the box (one color for all of them, A3)
-    local col = NS.Constants.SNAP_COLOR
+    local col = NS.Anchors.Snap.COLOR.attach
     local want = table.concat({ col.r, col.g, col.b, col.a }, ",")
     assertEqual(marker.dot:__joined("SetColorTexture"), want, "the parent's dot")
     assertEqual(child.dot:__joined("SetColorTexture"), want, "the child's dot")
@@ -626,7 +626,7 @@ test("drag: the target strip's own gold comes back on every path the mark ends b
         inst.handle:__fire("OnDragStart")
         plant(inst.anchor, 0, 75, 20, 95)
         NS.Anchors.Snap.Tick()
-        assertEdgeOn(NS, mocks, strip, NS.Constants.SNAP_COLOR, what .. ": marked first")
+        assertEdgeOn(NS, mocks, strip, NS.Anchors.Snap.COLOR.attach, what .. ": marked first")
         run(NS, mocks, inst)
         -- red under: a path that hides the mark (or drops the target) without restoring the strip's
         -- own edge, and for "the target destroyed" a Destroy with no Snap.ReleaseStrip call
