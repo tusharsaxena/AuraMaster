@@ -7,7 +7,9 @@
 --
 --   1. A NUMERIC LITERAL IN A COLOR POSITION of a paint call: the r, g or b argument of
 --      SetTextColor, SetColorTexture, SetVertexColor, SetBackdropColor and SetBackdropBorderColor,
---      the r, g, b after AddLine's text, and the two r, g, b triples after AddDoubleLine's texts.
+--      the r, g, b after AddLine's text, the two r, g, b triples after AddDoubleLine's texts, and
+--      the r, g, b after the frame and size of Style.DrawEdge, the painter of this addon's own edges
+--      (the unlocked outline, the frame picker's outline, the drag strip's edge, the snap box).
 --      `SetTextColor(0.85, 0.85, 0.85)` fails; `SetTextColor(NS.SkinColor("text.accent"))` passes.
 --      An ALPHA literal over token components (`SetColorTexture(r, g, b, 0.95)`) is not a color:
 --      it is the surface's opacity, the same under every skin, and is left alone on purpose.
@@ -37,6 +39,7 @@ local COLOR_ARGS = {
     SetTextColor = { 1, 2, 3 }, SetColorTexture = { 1, 2, 3 }, SetVertexColor = { 1, 2, 3 },
     SetBackdropColor = { 1, 2, 3 }, SetBackdropBorderColor = { 1, 2, 3 },
     AddLine = { 2, 3, 4 }, AddDoubleLine = { 3, 4, 5, 6, 7, 8 },
+    DrawEdge = { 3, 4, 5 },
 }
 
 local CHAT = "chat output: DEFAULT_CHAT_FRAME is Blizzard's, not a skinned surface (decision D9, X7)"
@@ -178,11 +181,15 @@ test("the gate is falsifiable: a planted literal of each shape is reported", fun
         "fs:SetTextColor(NS.SkinColor(\"text.body\"))   -- 0.9, 0.9, 0.9 in a comment",
         "tex:SetColorTexture(r, g, b, 0.95)",
         "-- |cffffffff in a comment",
+        "NS.Style.DrawEdge(o, 1, 1, 1, 1, 0.35)",
+        "NS.Style.DrawEdge(outline, 2, r, g, b, 0.5)",
+        "cd:SetDrawEdge(true)",
     }, "\n")
     local hits = scan(planted)
     local lines = {}
     for _, h in ipairs(hits) do lines[#lines + 1] = h.line end
     table.sort(lines)
-    assertEqual(table.concat(lines, ","), "2,3,5,6,7",
-        "the literal lines and only those (a token call, an alpha literal and a comment pass)")
+    assertEqual(table.concat(lines, ","), "2,3,5,6,7,11",
+        "the literal lines and only those (a token call, an alpha literal, a comment, DrawEdge over "
+        .. "token components and the cooldown's SetDrawEdge pass)")
 end)

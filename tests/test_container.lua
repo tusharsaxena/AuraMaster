@@ -203,7 +203,7 @@ test("container: the unlocked outline under a secret anchor size draws strips an
     assertTrue(o.__secretRect, "its own size reads secret")
     assertNil(o.__template, "a plain frame, never a BackdropTemplate")
     assertNil(o.backdropInfo, "no backdrop")
-    -- The old look: a 1px white edge at OUTLINE_ALPHA (0.35), no fill.
+    -- The old look, kept on Ka0s Default: a 1px edge in the skin's chart.crosshair (white at 0.35), no fill.
     BS.assertSolid(o, 1, "1,1,1,0.35", "the outline")
     -- The client runs its OnSizeChanged when a change resizes it.
     -- red under: BackdropTemplate's size script (it re-runs the arithmetic on every resize)

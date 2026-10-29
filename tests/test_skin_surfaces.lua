@@ -189,6 +189,26 @@ test("skin surfaces: the frame picker's outline, name and hint are the skin's", 
     overlay:__fire("OnKeyDown", "ESCAPE")
 end)
 
+test("skin surfaces: the frame picker's OnUpdate reads no token: the hints are built by its paint", function()
+    local NS, mocks, switch = env({ "cover.text" })
+    NS.FramePicker.Start(function() end, function() end)
+    local overlay = mocks.__globals.AuraMasterFramePicker
+    local texts = {}
+    rawset(overlay, "SetText", function(_, s) texts[#texts + 1] = s end)
+    switch()
+    local escape, color, reads = NS.SkinEscape, NS.Skin.Color, 0
+    NS.SkinEscape = function(...) reads = reads + 1; return escape(...) end
+    NS.Skin.Color = function(...) reads = reads + 1; return color(...) end
+    overlay:__fire("OnUpdate")
+    overlay:__fire("OnUpdate")
+    overlay:__fire("OnUpdate")
+    NS.SkinEscape, NS.Skin.Color = escape, color
+    -- red under: hint() calling NS.SkinEscape("cover.text") on every frame of a pick
+    assertEqual(reads, 0, "token reads per frame")
+    assertTrue(texts[#texts]:find(NS.SkinEscape("cover.text"), 1, true) == 1, "the hint is still the skin's")
+    overlay:__fire("OnKeyDown", "ESCAPE")
+end)
+
 test("skin surfaces: a shown TEST marker is retold in the new skin's sem.warn", function()
     local NS, mocks, switch = env({ "sem.warn" })
     NS.Preview.SetTestMode(true)

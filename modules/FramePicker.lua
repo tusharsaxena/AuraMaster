@@ -53,11 +53,17 @@ local function hint(text)
     return (NS.SkinEscape("cover.text") or "") .. text .. "|r"
 end
 
+-- The two hint lines, built by paint() (at build and on every skin switch), so the per-frame
+-- OnUpdate concatenates cached strings and reads no token.
+local hintAttach, hintPoint = "", ""
+
 --- The picker's own chrome from the skin: the outline's 2px edge in the owner token `am.pick`
---- (Ka0s Default's blue) and the frame name in `text.accent` (GameFontNormalLarge's gold). The face
---- stays the font object's. Run at build and on every skin switch.
+--- (Ka0s Default's blue), the frame name in `text.accent` (GameFontNormalLarge's gold) and the two
+--- hint lines. The face stays the font object's. Run at build and on every skin switch.
 local function paint()
     if not outline then return end
+    hintAttach = "\n" .. hint(NS.L["Left-click to attach, right-click to cancel"])
+    hintPoint = hint(NS.L["Point at a named frame. Right-click to cancel."])
     local r, g, b, a = NS.Skin.Color("am.pick")
     NS.Style.DrawEdge(outline, 2, r, g, b, a)
     label:SetTextColor(NS.SkinColor("text.accent"))
@@ -82,10 +88,10 @@ local function onUpdate()
     if target then
         outline:ClearAllPoints()
         if pcall(outline.SetAllPoints, outline, target) then outline:Show() else outline:Hide() end
-        label:SetText(name .. "\n" .. hint(NS.L["Left-click to attach, right-click to cancel"]))
+        label:SetText(name .. hintAttach)
     else
         outline:Hide()
-        label:SetText(hint(NS.L["Point at a named frame. Right-click to cancel."]))
+        label:SetText(hintPoint)
     end
     local x, y = GetCursorPosition()
     local scale = UIParent:GetEffectiveScale()

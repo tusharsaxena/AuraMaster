@@ -2006,7 +2006,7 @@ Total.
 - every allow-list entry carries its reason
 - the gate is falsifiable: a planted literal of each shape is reported
 
-### test_skin_surfaces.lua (7)
+### test_skin_surfaces.lua (8)
 
 - skin surfaces: a skin switch repaints each strip's own edge in the new skin's handle.edge
 - skin surfaces: the strip label's attached gray and TEST tag are the new skin's
@@ -2014,6 +2014,7 @@ Total.
 - skin surfaces: the unlocked outline is repainted in the new skin's guide color
 - skin surfaces: the drag-to-attach mark's colors are the skin's, refreshed in place on a switch
 - skin surfaces: the frame picker's outline, name and hint are the skin's
+- skin surfaces: the frame picker's OnUpdate reads no token: the hints are built by its paint
 - skin surfaces: a shown TEST marker is retold in the new skin's sem.warn
 
 ### test_skin_hud.lua (11)
@@ -2622,7 +2623,7 @@ Total.
 | test_pages_general.lua | 36 |
 | test_skinsetup.lua | 16 |
 | test_skin_literals.lua | 3 |
-| test_skin_surfaces.lua | 7 |
+| test_skin_surfaces.lua | 8 |
 | test_skin_hud.lua | 11 |
 | test_skin_picker.lua | 19 |
 | test_pages_general_categories.lua | 32 |
@@ -2653,4 +2654,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **2211** |
+| **Total** | **2212** |
