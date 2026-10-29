@@ -1,0 +1,15 @@
+Independent review of AuraMaster's skinning adoption (M2, feat/2026-10-29-skinning-rollout). Verdict: approve once the two majors are dealt with; no blockers.
+
+FIXED
+- major, AM-04 committed red (prose gate: 'honours' in tests/test_skin_picker.lua, fixed only in AM-05). The branch was unpushed, so history was rewritten with a non-interactive rebase: the one-word fix moved into AM-04 (a522e4a -> e78306c, gated green at that commit: 2210 passed, 0 failed, 1 skipped; luacheck 0/0), AM-05 rebased (99f06dc -> 52f2a52, tree byte-identical) and its stale bullet about the fix dropped. Every commit on the branch is now green.
+- major, Ignore fonts did not reach the HUD (Style.SkinKey resolved hud.font through S.Resolve, which never reads ignoreFonts). 9985d57 AM-03: NS.SkinFontsIgnored() (Skin:GetIgnore live, false degraded) copied from AbsorbTracker; Style.SkinKey returns the stored key for hud.font while it is true; the OnLooksChanged re-apply covers SetIgnore. Red-first case in tests/test_skin_hud.lua; ARCHITECTURE, module-map and SKIN-10 updated; four Style.lua doc citations moved.
+- minor, per-frame token read in the frame picker's OnUpdate. f922041 AM-02: hint strings built and cached in paint() (build + OnLooksChanged); red-first case counts zero token reads across OnUpdate.
+- minor, literal gate blind to DrawEdge. f922041 AM-02: COLOR_ARGS gains DrawEdge = {3,4,5}; falsifiable case plants a DrawEdge literal (reported) beside a token DrawEdge and cd:SetDrawEdge (pass). Font and texture paths stay out of the gate: the reviewer notes every remaining one is a recorded fallback or exception.
+- minor, README overstated the default repaint. fd376e7 AM-05: settings pages repaint only once Ignore settings panel is off (on by default); names Ignore fonts.
+- minor, stale OUTLINE_ALPHA comment in tests/test_container.lua. f922041 AM-02: names chart.crosshair.
+
+DECLINED: none.
+
+NOTE (library, not fixed here): the library-composed font picker's skinValue (OptionsCompose) still previews the skin's hud.font while a companion is on even with Ignore fonts on; the HUD itself now draws the stored face. Same in AbsorbTracker.
+
+Gate at HEAD: lua tests/run.lua 2212 passed, 0 failed, 1 skipped (2213); luacheck 0 warnings / 0 errors in 188 files; badge 2212/2212, docs/test-cases.md regenerated.
