@@ -940,3 +940,17 @@ function CM.Init()
     CM.FlushPending("startup")
     if NS.TimedSpells and NS.TimedSpells.Sync then NS.TimedSpells.Sync() end
 end
+
+-- A SKIN CHANGE RE-DRESSES THE HUD (skinning-§6). The HUD's fonts and bar textures resolve through
+-- the skin at dress time (Style.SkinKey), and no primitive records an engine button, so the one way a
+-- switch, an override or an exception change reaches them is a re-apply of every container: fonts
+-- primed FIRST (a skin's face is an addon font, lazily loaded: issue #24, as CONFIG_CHANGED does),
+-- then a system apply, which waits quietly under lockdown or secrecy and lands when it lifts
+-- (DECISIONS D12). Only while subscribed: before CM.Init (the profile's skin is applied at
+-- OnInitialize) and while stood down there is nothing built to re-dress, and the build reads the
+-- skin as it is then.
+NS.Skin.OnLooksChanged(function()
+    if not ev then return end
+    if NS.FontPrimer then NS.FontPrimer.PrimeAll() end
+    CM.RequestApply(nil, true)
+end)

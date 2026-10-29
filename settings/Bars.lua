@@ -43,8 +43,10 @@ NS.RegisterSchemaRows({
       label = L["Height (px)"], desc = L["The height of one bar."] },
 })
 
+-- `fromSkin`: the composer's "Use the skin's texture" companion (bars.barTextureFromSkin, default on
+-- from the template, X3), which draws the fill in the skin's `bar.texture` and dims the picker.
 NS.RegisterSchemaRows(H.BarGroup({
-    prefix = P, page = PAGE, group = G_GENERAL, subgroup = L["Fill"], classColor = UNIT,
+    prefix = P, page = PAGE, group = G_GENERAL, subgroup = L["Fill"], classColor = UNIT, fromSkin = true,
     extra = {
         { path = P .. "colorMode", type = "string", values = NS.Choices(C.BAR_COLOR_MODES, C.BAR_COLOR_MODE_LABELS),
           label = L["Color by"], desc = L["One color, or each debuff's dispel type (colors on the General page > Dispel colors). Buffs and many debuffs have no dispel type, class debuffs such as Judgment or Consecration included: those keep the bar color."] },
@@ -80,8 +82,10 @@ NS.RegisterSchemaRows({
 -- The background is a bar group, not options-ui-§16's "group over a background": that clause is for
 -- a surface with no texture, and this one has a live texture (modules/Style_Bars.lua paints it). The
 -- composer's own tooltips describe a fill, so each row's is replaced, found by path.
+-- Its own "Use the skin's texture" companion (bars.bgTextureFromSkin): the background follows the
+-- skin's `bar.texture` apart from the fill. The borders take none (DECISIONS D1).
 local bg = H.BarGroup({
-    prefix = P, page = PAGE, group = G_BG, subgroup = L["Background"], classColor = UNIT,
+    prefix = P, page = PAGE, group = G_BG, subgroup = L["Background"], classColor = UNIT, fromSkin = true,
     keys = { barTexture = "bgTexture", barAlpha = "bgAlpha", barColor = "bgColor", useClassColorBar = "useClassColorBg" },
     labels = { barTexture = L["Background texture"], barAlpha = L["Background opacity"], barColor = L["Background color"] },
     -- feedback #7: the background colors by dispel type as the fill does, from the same palette.
@@ -97,7 +101,7 @@ local BG_TOOLTIPS = {
     [P .. "useClassColorBg"] = L["Draw the background in the class color instead of the swatch beside it."],
     [P .. "bgColorMode"] = L["One color, or each debuff's dispel type (colors on the General page > Dispel colors). Buffs and many debuffs have no dispel type, class debuffs such as Judgment or Consecration included: those keep the background color."],
 }
-for _, row in ipairs(bg) do row.tooltip = BG_TOOLTIPS[row.path] end
+for _, row in ipairs(bg) do row.tooltip = BG_TOOLTIPS[row.path] or row.tooltip end
 NS.RegisterSchemaRows(bg)
 local border = H.BorderGroup({
     prefix = P, page = PAGE, group = G_BG, subgroup = L["Border"], show = true, classColor = UNIT,
@@ -120,7 +124,7 @@ local function textRows(leaf, group, extras)
           label = L["Show"], desc = L["Draw this text."] },
     })
     NS.RegisterSchemaRows(H.FontGroup({
-        prefix = prefix, page = PAGE, group = group, subgroup = L["Font"], classColor = UNIT,
+        prefix = prefix, page = PAGE, group = group, subgroup = L["Font"], classColor = UNIT, fromSkin = true,
     }))
     local rows = {
         { path = prefix .. "justify", page = PAGE, group = group, subgroup = L["Placement"], type = "string",

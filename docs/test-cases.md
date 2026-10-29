@@ -128,7 +128,7 @@ Total.
 - v3: MigrateV3 returns the number of containers it walked
 - v3: a container skipped for an unrecognized auraType is not counted in the walked total, and logs its own line
 - v3: the whitelist lift never sweeps a category the aura type does not have
-- v12: the current schema version is 12
+- v12: the v12 step is on the ladder, below v13's skin reset
 - v3: RunMigrations migrates every stored profile, the inactive one included
 - v4: a HELPFUL container with the toggle on ends up with Uncategorized hidden, and the dead key cleared
 - v4: a HARMFUL container with the toggle on ends up with Uncategorized (debuffs) hidden, and the dead key cleared
@@ -2016,6 +2016,19 @@ Total.
 - skin surfaces: the frame picker's outline, name and hint are the skin's
 - skin surfaces: a shown TEST marker is retold in the new skin's sem.warn
 
+### test_skin_hud.lua (10)
+
+- skin hud: every font block and both bar textures follow the skin by default; no border does
+- skin hud: each companion is a schema row defaulting on, and its picker shows the skin's value while it is on
+- skin hud: the name label's face picker dims for the label off or the skin's face on
+- skin hud: a font block draws the skin's hud.font while its companion is on, its own face when off
+- skin hud: a bar's fill and background draw the skin's bar.texture while each companion is on
+- skin hud: without the library's facade answering, a pick draws the stored key
+- skin hud: a skin switch primes the fonts, then asks one system apply of every container, and rewrites nothing
+- skin hud: v13 puts every stored pick back on the skin in every profile, keeping each pick
+- skin hud: v13 runs once, so a player's later pick survives the next load
+- skin hud: the v13 body seeds each companion before ResetToSkin, and sets them itself without it
+
 ### test_pages_general_categories.lua (32)
 
 - general → spell categories: the picker owns its row, and Create sits beside the name (owner 2026-09-22)
@@ -2416,7 +2429,7 @@ Total.
 
 - prose: no authored file carries a British spelling from localization-§5's published list
 - prose: the gate carries localization-§5's two lists whole, and nothing of its own
-- prose: the exclusions this repository declared suppressed 11 of 221 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (11): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, docs/spell-research/2026-09-24-logs/CORRECTIONS.md, docs/spell-research/2026-09-24-logs/CURRENT_CATEGORIES.md, docs/spell-research/2026-09-24-logs/DECISIONS.md, docs/spell-research/2026-09-24-logs/FLAGS.md, docs/spell-research/2026-09-24-logs/PROPOSED_ADDITIONS.md, docs/spell-research/2026-09-24-logs/REVIEW.md, docs/spell-research/2026-09-24-logs/SOURCES.md, docs/spell-research/2026-09-24-logs/dictionary/AURAS.md
+- prose: the exclusions this repository declared suppressed 11 of 223 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (11): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, docs/spell-research/2026-09-24-logs/CORRECTIONS.md, docs/spell-research/2026-09-24-logs/CURRENT_CATEGORIES.md, docs/spell-research/2026-09-24-logs/DECISIONS.md, docs/spell-research/2026-09-24-logs/FLAGS.md, docs/spell-research/2026-09-24-logs/PROPOSED_ADDITIONS.md, docs/spell-research/2026-09-24-logs/REVIEW.md, docs/spell-research/2026-09-24-logs/SOURCES.md, docs/spell-research/2026-09-24-logs/dictionary/AURAS.md
 - prose: no path this repository narrows the gate by is loaded by a TOC
 - prose: every path this repository narrows the gate by is one .pkgmeta keeps out of the zip
 - prose self-test: the carve-out suppresses the named generated folder, and only it
@@ -2587,6 +2600,7 @@ Total.
 | test_skinsetup.lua | 16 |
 | test_skin_literals.lua | 3 |
 | test_skin_surfaces.lua | 7 |
+| test_skin_hud.lua | 10 |
 | test_pages_general_categories.lua | 32 |
 | test_pages_containers.lua | 35 |
 | test_pages_filters.lua | 53 |
@@ -2615,4 +2629,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **2181** |
+| **Total** | **2191** |

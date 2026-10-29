@@ -43,7 +43,7 @@ otherwise (`docs/profiles.md`).
 ## The container template
 
 A container is created at runtime, so it cannot be an AceDB default. `NS.CONTAINER_TEMPLATE`
-(`defaults/Profile.lua:150`) is deep-copied for every new container (`Database.NewContainerData`), and
+(`defaults/Profile.lua:155`) is deep-copied for every new container (`Database.NewContainerData`), and
 every stored container is backfilled from it on load (`Database.PrepareProfile`, below). Each stored
 container also carries its own `id`. The render path reads its fallbacks from the template too: a leaf
 that is missing or garbage when a container is drawn falls back to the template's value for that same
@@ -206,7 +206,7 @@ Every Bars and Icons text element (`bars.name`, `bars.time`, `bars.stacks`, `ico
 
 ## The starter containers
 
-`NS.STARTER_CONTAINERS` (`defaults/Profile.lua:314`) seeds a brand-new profile once, each spec merged
+`NS.STARTER_CONTAINERS` (`defaults/Profile.lua:322`) seeds a brand-new profile once, each spec merged
 over the template:
 
 | Name | Unit | Type | Style | Differs from the template |
@@ -809,6 +809,18 @@ The stamp follows savedvariables-§1 as ruled at WowAddonStandards v2.65.0:
   The split is frozen inside the step as the 14 root and 45 snare ids it was (the old row's 57 plus the two Shaman totem auras added with it), and a test pins it to
   the shipped lists. Idempotent: a second run finds no `softCC`
   (`tests/test_database_categories.lua`).
+- **Schema v13** (`Database.MigrateV13`, `core/Database_Migrations.lua`, the skinning rollout's AM-03,
+  the owner's ruling O2) runs over **every** stored profile and logs one `[Migrate] v13 profile '<name>'`
+  line each; `Database.CurrentSchemaVersion()` answers `13`. It puts the HUD back on the skin, once, for
+  every player: on every stored container, each "Use the skin's ..." companion of
+  `Database.SKIN_PICKS` (the two bar textures, `bars.barTextureFromSkin` and `bars.bgTextureFromSkin`, and
+  the `fontFromSkin` of every font block: `bars.name`, `bars.time`, `bars.stacks`, `icons.time`,
+  `icons.stacks`, `text.font`, `label.font`) is set on through LibKa0s-Skin-1.0's `ResetToSkin`, or
+  directly without the library. A companion that is not yet a bool is seeded `false` first, so
+  `ResetToSkin` never writes its `"@skin"` sentinel into a pick. The picks themselves, the borders
+  (DECISIONS D1), sizes, flags and colors are untouched, and an absent block is not created. The
+  template defaults every companion to `true` (X3), so a new container follows the skin too. The stamp
+  makes it once: a companion the player turns off afterwards stays off (`tests/test_skin_hud.lua`).
 - **Migration lesson (batch 10 F7): a step already pushed is never extended again.** A step's
   version stamp is written once per account, so a half added to a step after any build carrying it
   has been pushed never reaches an install that already ran that build: the owner's v9 install

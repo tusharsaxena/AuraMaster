@@ -120,10 +120,15 @@ NS.defaults.global = {
     minimap = { hide = false },
 }
 
---- The six canonical font leaves (options-ui-§16): white, outlined, no shadow, at `size`.
+--- The six canonical font leaves (options-ui-§16): white, outlined, no shadow, at `size`; and the
+--- face's "Use the skin's font" companion (LibKa0s OptionsCompose's `fromSkin`), default ON (the
+--- rollout's X3), so a new container follows the skin's `hud.font` the way a stored one does after
+--- the v13 reset (core/Database_Migrations.lua). The stored face is kept for when the player turns
+--- the companion off. Size, flags and color stay the player's (DECISIONS D4, X4).
 local function font(size)
     return {
         font              = "Friz Quadrata TT",
+        fontFromSkin      = true,
         fontSize          = size,
         fontColor         = color(1, 1, 1, 1),
         useClassColorFont = false,
@@ -222,12 +227,15 @@ NS.CONTAINER_TEMPLATE = {
     bars = {
         width = 220, height = 18,
 
-        barTexture = "Blizzard", barAlpha = 1.0,
+        -- The fill and the background each follow the skin's `bar.texture` while their "Use the
+        -- skin's texture" companion is on: default ON (X3), as the font's. The stored picks are kept.
+        -- The borders have no companion (DECISIONS D1): every skin's `bar.borderStyle` is None.
+        barTexture = "Blizzard", barTextureFromSkin = true, barAlpha = 1.0,
         barColor = color(0.20, 0.55, 0.95, 1), useClassColorBar = false,
         colorMode = "static",   -- "dispel" tints by the profile's dispelColors (schema v2)
         drain = "left", smooth = false,
 
-        bgTexture = "Blizzard", bgAlpha = 1.0, bgColor = color(0, 0, 0, 0.5), useClassColorBg = false,
+        bgTexture = "Blizzard", bgTextureFromSkin = true, bgAlpha = 1.0, bgColor = color(0, 0, 0, 0.5), useClassColorBg = false,
         bgColorMode = "static",   -- "dispel" tints the background as colorMode does the fill (feedback #7)
 
         borderShow = false, borderStyle = "Solid", borderSize = 1,

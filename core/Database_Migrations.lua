@@ -1,6 +1,6 @@
 local _, NS = ...
 
--- core/Database_Migrations.lua — the frozen schema step bodies, Database.MigrateV2 .. MigrateV12,
+-- core/Database_Migrations.lua — the frozen schema step bodies, Database.MigrateV2 .. MigrateV13,
 -- with their private helpers and id tables. Peeled out of core/Database.lua, which keeps the ladder
 -- that calls them (SCHEMA_STEPS, climbLadder, NS.RunMigrations), AceDB init and the registry helpers.
 --
@@ -932,4 +932,68 @@ function Database.MigrateV12(p)
         end
     end
     return split
+end
+
+-- ---------------------------------------------------------------------------
+-- Schema v13: the HUD back on the skin, once (skinning-§6, the owner's ruling O2)
+-- ---------------------------------------------------------------------------
+--
+-- Every stored container's fonts and bar textures follow the skin again, once, for every player:
+-- each "Use the skin's ..." companion (LibKa0s OptionsCompose's `fromSkin`) is set on, through
+-- LibKa0s-Skin-1.0's ResetToSkin. The stored picks are kept (a companion turned off brings them
+-- back), and the borders, sizes, flags and colors are never touched (DECISIONS D1, D4, X4). The
+-- account-wide stamp is what makes it once: a player who unticks a companion afterwards keeps that
+-- pick, because this step never runs again.
+--
+-- THE COMPANION IS SEEDED BEFORE THE CALL. A container stored before v13 holds no companion, and
+-- ResetToSkin, handed a string pick with no `<leaf>FromSkin` beside it, writes its "@skin" sentinel
+-- INTO THE PICK, which the LSM picker and the CLI cannot render. So each companion that is not a
+-- bool is laid down as false first, and ResetToSkin then sets it through the companion branch.
+-- Without the library (or a Skin major before ResetToSkin) the companions are set directly: they
+-- mean nothing until it loads, and then they must already say "follow". Only a block that exists is
+-- touched; a partial container gets the rest from the load backfill, whose template says true.
+
+-- Each followed pick, container-relative: the font of every text block and the two bar textures.
+Database.SKIN_PICKS = {
+    "bars.barTexture", "bars.bgTexture",
+    "bars.name.font", "bars.time.font", "bars.stacks.font",
+    "icons.time.font", "icons.stacks.font",
+    "text.font.font", "label.font.font",
+}
+
+--- The table holding `path`'s last segment inside `c`, and that segment; nil when a block is absent.
+local function pickParent(c, path)
+    local parent, leaf = c, nil
+    for seg in path:gmatch("[^%.]+") do
+        if leaf then
+            parent = parent[leaf]
+            if type(parent) ~= "table" then return nil end
+        end
+        leaf = seg
+    end
+    return parent, leaf
+end
+
+--- Put one profile's HUD back on the skin. `resetToSkin` is LibKa0s-Skin-1.0's ResetToSkin, or nil
+--- to set the companions directly. Answers how many containers had a companion moved to on.
+function Database.MigrateV13(p, resetToSkin)
+    if type(p) ~= "table" or type(p.containers) ~= "table" then return 0 end
+    local moved = 0
+    for _, c in pairs(p.containers) do
+        if type(c) == "table" then
+            local keys, changed = {}, false
+            for _, path in ipairs(Database.SKIN_PICKS) do
+                local parent, leaf = pickParent(c, path)
+                if parent then
+                    local companion = leaf .. "FromSkin"
+                    if parent[companion] ~= true then changed = true end
+                    if type(parent[companion]) ~= "boolean" then parent[companion] = false end
+                    if resetToSkin then keys[#keys + 1] = path else parent[companion] = true end
+                end
+            end
+            if resetToSkin and #keys > 0 then resetToSkin(c, keys) end
+            if changed then moved = moved + 1 end
+        end
+    end
+    return moved
 end

@@ -381,10 +381,11 @@ test("text page: the blink row is engine-only, and the Font tab carries the comp
     end
     -- red under: the font block on a prefix other than text.font., the time format back on Font (it is
     -- General's since AUR-L17), the Dispel type subsection not after them (smoke batch 2, item 5), or
-    -- the Glow subgroup anywhere but between the font block and Dispel type (TG-03)
+    -- the Glow subgroup anywhere but between the font block and Dispel type (TG-03), or the block's
+    -- "Use the skin's font" companion anywhere but last in it (the composer's fromSkin, AM-03)
     assertEqual(table.concat(paths, ","), table.concat({ P_ .. "font.font", P_ .. "font.fontSize",
         P_ .. "font.fontColor", P_ .. "font.useClassColorFont", P_ .. "font.fontFlags",
-        P_ .. "font.fontShadow", P_ .. "glow", P_ .. "glowColor", P_ .. "useClassColorGlow",
+        P_ .. "font.fontShadow", P_ .. "font.fontFromSkin", P_ .. "glow", P_ .. "glowColor", P_ .. "useClassColorGlow",
         P_ .. "glowIntensity", P_ .. "glowThickness", P_ .. "glowX", P_ .. "glowY",
         P_ .. "dispelTypeColor", P_ .. "dispelBackdrop", P_ .. "dispelBackdropAlpha", P_ .. "dispelEdge",
         P_ .. "dispelEdgeSize" }, ","))

@@ -27,6 +27,19 @@ local FRIZ = "Fonts\\FRIZQT__.TTF"
 local HOLD, REFRESH = 1.0, 0.5
 local WORLD_HOLD, WORLD_REFRESH = 2.0, 1.5
 
+--- Every text block of every stored container drawn in its own face, not the skin's: each
+--- "Use the skin's font" companion off (AM-03). These cases pin the primer over the stored picks
+--- they write; that the primer reads the skin's face through the same Style.FontKey is
+--- tests/test_skin_hud.lua's.
+local function ownFonts(NS2)
+    for _, c in ipairs(NS2.Database.GetContainers()) do
+        for _, t in ipairs({ c.label.font, c.bars.name, c.bars.time, c.bars.stacks, c.icons.time,
+            c.icons.stacks, c.text.font }) do
+            t.fontFromSkin = false
+        end
+    end
+end
+
 --- A fresh environment, settled, with the media stand-in. The starter containers are 1 (player
 --- bars), 2 (player icons), 3 (target icons) and 4 (player text), every font Friz Quadrata. The
 --- harness's fresh environment stops at PLAYER_LOGIN, so this one then enters the world through the
@@ -49,6 +62,7 @@ local function env(atLogin, extra)
         if extra then extra(m) end
     end })
     mocks.__fireTimers(); mocks.__fireTimers()
+    ownFonts(NS2)
     if not atLogin then
         mocks.__fireEvent("PLAYER_ENTERING_WORLD")
         mocks.__fireEvent("LOADING_SCREEN_DISABLED")

@@ -861,7 +861,7 @@ end
 --- Everything the fitted size depends on, as one string.
 local function fitKey(s, auraType)
     local f = s.font or D.font
-    return table.concat({ Style.Fetch("font", f.font, C.FALLBACK_FONT), tostring(f.fontSize), tostring(f.fontFlags),
+    return table.concat({ (Style.FontKey(f, D.font)), tostring(f.fontSize), tostring(f.fontFlags),
         tostring(s.template), tostring(s.justifyH), tostring(s.justifyV), tostring(s.timeFormat),
         tostring(s.icon), tostring(s.iconSize), tostring(s.iconGap), tostring(s.x), tostring(s.anim),
         tostring(s.animBounce), tostring(auraType) }, "|")

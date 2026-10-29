@@ -580,13 +580,20 @@ NS.RegisterSchemaRows({
     },
 })
 -- The composer carries no disabledIf, so the font rows take it here (settings/Bars.lua's tooltips
--- are set the same way). Not the color swatch: a swatch is never grayed (anti-pattern #74).
+-- are set the same way). Not the color swatch: a swatch is never grayed (anti-pattern #74). The face
+-- picker already dims under its "Use the skin's font" companion (`fromSkin`, the composer's
+-- disabledIf naming the companion's path), so it dims for either: the label off or the skin's face.
 local labelFont = H.FontGroup({
     prefix = "container.label.font.", page = PAGE, group = G_LABEL, subgroup = L["Font"],
-    classColor = { source = "unit" },
+    classColor = { source = "unit" }, fromSkin = true,
 })
 for _, row in ipairs(labelFont) do
-    if row.type ~= "color" then row.disabledIf = labelOff end
+    local governedBy = row.disabledIf
+    if type(governedBy) == "string" then
+        row.disabledIf = function() return labelOff() or NS.GetSetting(governedBy) == true end
+    elseif row.type ~= "color" then
+        row.disabledIf = labelOff
+    end
 end
 NS.RegisterSchemaRows(labelFont)
 
