@@ -64,10 +64,11 @@ the rest.
 - **Make it look right**. The last entry in the list is the container's style, Bar style, Icon style or Text style, with its textures, fonts, colors and borders. A Text container draws each aura as one line from a template such as `$spellname$[ x$stacks$][ - $remainingduration$]`, and the page lists every token it understands. Its text can also glow: a ring of color around each letter, in the color, strength, thickness and offset you pick, in addition to the font's outline and shadow. General → Dispel colors picks the color for each dispel type.
 
 General → Skin dresses Aura Master in one of nine skins, or in EllesmereUI's look when that addon is
-loaded. The skin repaints the settings pages, the handles and outlines you see while unlocked, and
-the debug console. On your containers it sets the fonts and the bar textures, unless you turn off
-**Use the skin's font** or **Use the skin's texture** on a style tab to keep your own. Your colors,
-borders and sizes are never changed. The first time you log in, a small window offers the skins with
+loaded. The skin repaints the handles and outlines you see while unlocked and the debug console, and
+the settings pages too once you turn off **Ignore settings panel** on the Skin tab (it starts on). On
+your containers it sets the fonts and the bar textures, unless you turn off **Use the skin's font** or
+**Use the skin's texture** on a style tab to keep your own; **Ignore fonts** keeps every font as you
+picked it. Your colors, borders and sizes are never changed. The first time you log in, a small window offers the skins with
 a preview, which turns on test mode so you can see them on your containers.
 
 Spell categories and the Overrides lists don't work everywhere, because the game only filters by
