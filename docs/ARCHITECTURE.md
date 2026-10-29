@@ -39,7 +39,7 @@ out of test mode. The full pipeline is in `docs/data-flow.md`.
 ### Libraries
 
 Everything is vendored under `libs/`: LibStub and CallbackHandler, the Ace3 stack, LibSharedMedia,
-the optional LibDataBroker and LibDBIcon, and LibKa0s with fourteen modules bound by name, every
+the optional LibDataBroker and LibDBIcon, and LibKa0s with fifteen modules bound by name, every
 one of which degrades to a stub or a fallback when the library is absent. What each library is used for, and
 what each LibKa0s setup file publishes: `docs/module-map.md` → *Libraries*.
 
@@ -82,8 +82,8 @@ Every non-vendored file, its responsibility and the full load order: `docs/modul
 
 ## Settings Schema
 
-`NS.Schema` holds **276** rows across seven pages (General 18, Containers 5, Filters 57, Layout 38,
-Bars 72, Icons 42, Text 44), plus one runtime row per user category. It drives the panel,
+`NS.Schema` holds **292** rows across seven pages (General 25, Containers 5, Filters 57, Layout 39,
+Bars 77, Icons 44, Text 45), plus one runtime row per user category. It drives the panel,
 `/am list|get|set|reset` and the resets through one write seam, `NS.SetByPath`.
 
 - **Containers registry** (architecture-§5): keys `containers`, `containerOrder`, `nextContainerId`,
@@ -290,6 +290,50 @@ events and every module's subscriptions and timers, turns every container off an
 frames back, finishing the combat-restricted half on `PLAYER_REGEN_ENABLED`; standing up rebuilds
 from current state. What stands down, what survives and the library-absent path:
 `docs/data-flow.md` → *The disabled state*.
+
+## Skins
+
+Every surface Aura Master draws paints through the `LibKa0s-Skin-1.0` facade with this addon as its
+**owner** (skinning-§1 to §3; Ka0sAddonsCommonTasks `docs/2026-10-29-SKINNING_ROLLOUT/`, the AM items).
+
+- **The seam.** `core/SkinSetup.lua` registers the owner `"AuraMaster"` at file load with its read and
+  write seams (`NS.SkinChoice`, `NS.WriteSkinChoice`, every half through `NS.SetByPath`) and its own
+  `am.*` tokens (`NS.SKIN_TOKENS`: the colors no library token holds exactly, each drawn at today's
+  value on Ka0s Default and following a library role token in every other skin). It publishes
+  `NS.Skin`, `NS.SkinColor`, `NS.SkinEscape` and `NS.SkinPaintAce` / `NS.SkinPaintAceTree` /
+  `NS.SkinOnRelease`; its degraded arm answers from `NS.SKIN_FALLBACK`, which
+  `tests/test_skinsetup.lua` holds to the library's values. The choice is the profile's `skin` table,
+  seven rows drawn by the library's Skin tab on General ([schema.md](schema.md),
+  [settings-panel.md](settings-panel.md)). `NS.ApplySkinChoice` applies it right after `NS:InitDB`
+  and on every profile event.
+- **The HUD reads the skin at dress time.** The aura buttons are Blizzard's pooled engine buttons,
+  whose geometry reads secret, so no recorded primitive ever touches them. `Style.SkinKey` resolves
+  `hud.font` (every font block, through `Style.FontKey`) and `bar.texture` (the bar fill and
+  background) while the element's "Use the skin's ..." companion is on, and the stored pick while it
+  is off. Borders, sizes, flags and every HUD color stay the player's (X4; DECISIONS D1, D3, D4).
+  One `OnLooksChanged` listener (`modules/ContainerManager.lua`) primes the fonts and re-applies every
+  container; under lockdown the apply waits for combat to end (D12). Schema v13 turned every stored
+  companion on once (O2), which visibly changes Ka0s Default's HUD (X5): Oxanium and the Ka0s
+  Default bar in place of Friz Quadrata and Blizzard.
+- **The unlock furniture** (the drag strip and its tooltips, the outline, the drag-to-attach marks,
+  the frame picker and the TEST marker) repaints from tokens on `OnLooksChanged`
+  (`modules/Anchors.lua`, `Anchors_Snap.lua`, `Container.lua`, `FramePicker.lua`, `Preview.lua`); the
+  strip's library parts follow the `owner` handed to `KW.DragHandle`.
+- **Settings and tools.** The library paints the pages, the composed rows, the debug console, its
+  copy window, the perf panel and the close marks for the owner already named. What this addon
+  acquires itself, the `AuraMasterDropdown` widgets, the hand-built buttons, edit boxes and label,
+  and the Profiles page, goes through `NS.SkinPaintAce` and `NS.SkinPaintAceTree`, and stays stock
+  while **Ignore settings panel** is on.
+- **The first-run skin picker.** `NS.MaybeShowSkinPicker` shows `O.SkinPicker` two seconds after the
+  first world entry and after every profile event while the profile's `skin.pickerSeen` is false and
+  the addon stands up (O3); in combat it waits for `PLAYER_REGEN_ENABLED`. Its eye turns test mode
+  on; the player's close writes `pickerSeen`, and a close the addon makes (`NS.HideSkinPicker`) does
+  not.
+- **EllesmereUI.** The library's provider: with source `eui` and its gate holding, EllesmereUI's
+  facade paints; otherwise the addon wears its Ka0s skin and the Skin tab says why.
+- **The color gate.** `tests/test_skin_literals.lua` fails on a numeric color literal in a paint call
+  or a `|cff` escape in code outside `core/SkinSetup.lua` and its named allow-list: chat output (X7),
+  the dispel-type and identity palettes (rung 4, D8) and the engine-tinted strips.
 
 ## Frame layering
 
