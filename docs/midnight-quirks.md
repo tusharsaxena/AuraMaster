@@ -67,7 +67,7 @@ after its `initializeFrame` has run. Its child regions cannot be reparented afte
 applies these access restrictions from `PLAYER_ENTERING_WORLD`.
 
 **What this addon does.**
-- **Builds at `PLAYER_LOGIN`** (`core/AuraMaster.lua:42`), before the restrictions apply, so every
+- **Builds at `PLAYER_LOGIN`** (`core/AuraMaster.lua:45`), before the restrictions apply, so every
   button's first dressing has an unrestricted window. That build ignores aura secrecy (never combat
   lockdown): a `/reload` or relog mid-key logs in with auras already secret, and holding the build
   there left every container blank until the key ended (`FlushPending("startup")`,
@@ -328,7 +328,7 @@ hides it, and clearing does not show it again.
 `UpdateAllAuras` exists for external refreshes such as target changes.
 
 **What this addon does.** `PLAYER_TARGET_CHANGED`, `PLAYER_FOCUS_CHANGED` and `UNIT_PET` (for the
-player) call `UpdateAllAuras` on every container on that unit (`core/AuraMaster.lua:172-191`).
+player) call `UpdateAllAuras` on every container on that unit (`core/AuraMaster.lua:175-194`).
 
 ## An addon font loads lazily, and the engine writes a name once (measured 2026-09-27)
 

@@ -25,6 +25,9 @@ if NS.Util and NS.Util.printf then NS.Printf = NS.Util.printf end
 
 function addon:OnInitialize()
     NS:InitDB()
+    -- The profile's skin, applied as soon as the store exists (skinning-§2): the owner registered at
+    -- file load wearing Ka0s Default, before AceDB, and nothing has been drawn for it yet.
+    NS.ApplySkinChoice()
     -- THE HOLD IS TAKEN FROM THE STORED PATH, here, before anything registers or draws. Not a
     -- special case: it is the same NS.SyncEnabled call the checkbox, the two verbs and the profile
     -- callbacks make (core/LifecycleSetup.lua). Surviving a /reload is the whole point of the
@@ -228,6 +231,10 @@ local function prepareProfile()
         NS.Categories.SyncUserCategories(NS.db.profile)
     end
     if NS.Database and NS.db then NS.Database.PrepareProfile(NS.db.profile) end
+    -- THE NEW PROFILE'S SKIN, before anything rebuilds against it (skinning-§2): a switch, a copy and
+    -- a reset each carry their own pair, exceptions and overrides, and SetChoice repaints this owner's
+    -- frames once (idempotent, so a profile with the same skin repaints nothing).
+    if NS.ApplySkinChoice then NS.ApplySkinChoice() end
     if NS.State then NS.State.SetActiveContainer(nil) end
     -- A PROFILE SWITCH CAN FLIP THE ENABLE PATH with no checkbox and no verb touched, so the latch
     -- is re-read from the new profile before anything rebuilds against it. `enabled` is a stored

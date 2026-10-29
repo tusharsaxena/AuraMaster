@@ -12,7 +12,7 @@ is a defect in this doc (documentation-§3).
 | Page | Tabs | Covers |
 |---|---|---|
 | Ka0s Aura Master (landing) | — untabbed (options-ui-§13) | Logo, the TOC's one-line Notes, and the slash command list generated from `NS.COMMANDS`. `/am` and `/am config` open the panel here |
-| General | Master controls · Blizzard frames · Spell categories · Dispel colors | Turn the addon off, when containers show at all, master scale and opacity, lock (unlocked shows the drag handles), debug console, test mode (placeholder auras), the two resets; hiding Blizzard's buff and debuff frames; which spells each spell category matches, and one color per dispel type, both shared by every container |
+| General | Master controls · Blizzard frames · Spell categories · Dispel colors · Skin | Turn the addon off, when containers show at all, master scale and opacity, lock (unlocked shows the drag handles), debug console, test mode (placeholder auras), the two resets; hiding Blizzard's buff and debuff frames; which spells each spell category matches, and one color per dispel type, both shared by every container |
 | Containers | a nav rail (options-ui-§13): General · Filters · Layout · the container's own style | One page per container (#6): the band's picker chooses the container, the rail chooses which part of it the tabs below show, and only the scroll moves |
 | Containers → General (rail) | General | A top-level page (`N-1`, batch 7): create, select, rename, enable, unit, aura type and style of a container, and duplicate, delete, copy settings between containers |
 | Containers → Filters (rail) | General · Categories · Overrides · Situations | Who cast it, timed or permanent, maximum duration, sort order and cap (per group), then the engine-group note and the five-rank priority block at the foot of the tab; what draws where spell lists don't apply, per NPC and per player, then the Show/Hide category grids (weapon enchants among them); the whitelist and blacklist spell lists, each entry's verdict in its "?" mark; the kinds of zone the container shows in, and the kinds of unit (NPC or player, friendly, neutral or hostile) a target or focus container shows for. Tabs vary with the aura type |
@@ -40,7 +40,7 @@ layout after it; the earlier names are noted where a row moved.
   descriptor (`get`/`set`/`applyDefault` over the write seam, `rowsForPage` over
   `NS.SchemaForPage`, `skipRestoreAll`, `resetProfile`, `scheduleTimer`, the color codec) and the
   library draws the canvas, header, tab strip, two-column flow and widgets. The parent category
-  registers eagerly at `PLAYER_LOGIN` through `NS.CreateOptionsPanel` (`core/AuraMaster.lua:53`) and every body is built on its first
+  registers eagerly at `PLAYER_LOGIN` through `NS.CreateOptionsPanel` (`core/AuraMaster.lua:56`) and every body is built on its first
   `OnShow` (options-ui-§5).
 - **Every page renders through the tab strip**, one tab per schema `group` in declaration order
   (options-ui-§13). The landing page and Profiles are the two untabbed pages.
@@ -381,6 +381,13 @@ a line saying that whether a container shows enchants at all is that container's
 Categories row, with a link back. Unticking every slot here does not turn enchants off anywhere — a
 container reads all three anyway — because the container-level Hide on Filters → Categories is the
 one switch for that; the tab says so.
+
+**Skin** — LibKa0s-Options-1.0's own `O.AppearanceTab` (skinning-§3), keyed by the Appearance group and
+last on the page (General has no Keybindings tab): the skin source (Ka0s skins or EllesmereUI), the
+nine Ka0s skins, the font and texture overrides, the Scope (Ignore settings panel, Ignore fonts),
+"Copy to every Ka0s addon..." and the note, all drawn by the library for the owner
+`core/SkinSetup.lua` registered. Its seven `skin.*` rows are skip-render schema rows, so the defaults,
+every reset and `/am set` reach them; a pick repaints at once.
 
 **Dispel colors** — a lead-in ("One color per dispel type, shared by every container:") and three
 bullets (2026-09-20, owner: a list rather than a wall of prose — the shape the Filters priority block

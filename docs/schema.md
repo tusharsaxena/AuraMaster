@@ -29,6 +29,7 @@ otherwise (`docs/profiles.md`).
 | `containers` | map | `{}` | `[id] = container` (the template below); written at runtime only by `modules/ContainerManager.lua`, and on load by `Database.PrepareProfile` (repair and first-run seeding) |
 | `containerOrder` | array | `{}` | Container ids in display order |
 | `nextContainerId` | number | `1` | The next id to hand out |
+| `skin` | table | `{ source = "ka0s", skin = "ka0s", ignorePanel = true, ignoreFonts = false, font = "", texture = "", pickerSeen = false }` | The skin this addon wears (skinning-§2: per addon, per profile), drawn by General → Skin and written only through `NS.WriteSkinChoice` (`core/SkinSetup.lua`), which writes each half through `NS.SetByPath`. `source` is `ka0s` or `eui` (EllesmereUI); `skin` is a registered Ka0s skin key; `ignorePanel` and `ignoreFonts` are the Scope's two exceptions; `font` and `texture` are LibSharedMedia keys over the skin's own (`""` keeps the skin's); `pickerSeen` is the first-run skin picker's memory. Seven skip-render rows of the General page's Appearance group, so `/am get\|set skin.*` reaches each |
 | `seeded` | bool | `false` | The starter containers have been created once; deleting them all does not bring them back |
 
 ### `global` — account-wide
@@ -42,7 +43,7 @@ otherwise (`docs/profiles.md`).
 ## The container template
 
 A container is created at runtime, so it cannot be an AceDB default. `NS.CONTAINER_TEMPLATE`
-(`defaults/Profile.lua:139`) is deep-copied for every new container (`Database.NewContainerData`), and
+(`defaults/Profile.lua:150`) is deep-copied for every new container (`Database.NewContainerData`), and
 every stored container is backfilled from it on load (`Database.PrepareProfile`, below). Each stored
 container also carries its own `id`. The render path reads its fallbacks from the template too: a leaf
 that is missing or garbage when a container is drawn falls back to the template's value for that same
@@ -205,7 +206,7 @@ Every Bars and Icons text element (`bars.name`, `bars.time`, `bars.stacks`, `ico
 
 ## The starter containers
 
-`NS.STARTER_CONTAINERS` (`defaults/Profile.lua:303`) seeds a brand-new profile once, each spec merged
+`NS.STARTER_CONTAINERS` (`defaults/Profile.lua:314`) seeds a brand-new profile once, each spec merged
 over the template:
 
 | Name | Unit | Type | Style | Differs from the template |

@@ -44,6 +44,17 @@ NS.defaults.profile = {
     hideBlizzardBuffs   = false,
     hideBlizzardDebuffs = false,
 
+    -- The skin this addon wears (skinning-§2: per addon, per profile), written only through the write
+    -- seam (core/SkinSetup.lua's NS.WriteSkinChoice) and drawn by the library's Skin tab on General.
+    -- `source` and `skin` start on Ka0s Default; the Scope's two exceptions leave the settings panel
+    -- the client's and skin the fonts (the owner's call for a new profile, LootHistory SF-45); `font`
+    -- and `texture` are the overrides, "" for the skin's own; `pickerSeen` is the first-run picker's
+    -- memory, false on every profile, old and new (owner ruling O3).
+    skin = {
+        source = "ka0s", skin = "ka0s", ignorePanel = true, ignoreFonts = false,
+        font = "", texture = "", pickerSeen = false,
+    },
+
     -- Profile-wide since schema v2 (core/Database_Migrations.lua's MigrateV2 lifted them off the
     -- containers): every container shares one set of spell-category edits and one dispel palette.
     -- `categorySpells` is [categoryKey] = { [spellId] = true (added) | false (removed) }, layered

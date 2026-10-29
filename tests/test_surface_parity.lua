@@ -104,3 +104,46 @@ test("parity: the Slash stub's refusal line is the library's own format, byte fo
     -- red under: the library rewording
     T.assertLibraryConstant(NS2.Slash.__stubDisabledLineFormat, "LibKa0s-Slash-1.0", "DISABLED_LINE_FORMAT")
 end)
+
+test("parity: the degraded Skin facade answers every name the live facade carries", function()
+    -- core/SkinSetup.lua: live, NS.Skin is LibKa0s-Skin-1.0's `Skin:For("AuraMaster")`; without the
+    -- library it is the host's table, whose painting names are no-ops and whose Token / Color / Text
+    -- answer the host copy NS.SKIN_FALLBACK and the owner tokens' defaults. A facade is per owner and
+    -- built by `For`, so this is the two-table form, key for key, with nothing ignored: a vocabulary
+    -- name the library adds fails here until the stub answers it.
+    local NS2 = loadDegraded()
+    T.assertSurfaceParity(NS.Skin, NS2.Skin, "Skin facade vs host stub", {})
+end)
+
+test("parity: the Skin seam publishes the same NS members on both paths", function()
+    -- Members from: grep -nE '^\s*function NS\.[A-Za-z_]+|^\s*NS\.[A-Za-z_]+\s*=' core/SkinSetup.lua
+    local f = io.open("core/SkinSetup.lua", "r")
+    local src = f:read("*a")
+    f:close()
+    local names = {}
+    for name in src:gmatch("\n%s*function NS%.([A-Za-z_]+)") do names[name] = true end
+    for name in src:gmatch("\n%s*NS%.([A-Za-z_]+)%s*=") do names[name] = true end
+    local NS2, n = loadDegraded(), 0
+    for name in pairs(names) do
+        n = n + 1
+        assertTrue(NS[name] ~= nil, "core/SkinSetup.lua's live arm does not publish NS." .. name)
+        assertTrue(NS2[name] ~= nil, "core/SkinSetup.lua's degraded arm does not publish NS." .. name)
+        assertTrue(type(NS[name]) == type(NS2[name]), "NS." .. name .. " is a " .. type(NS[name])
+            .. " live and a " .. type(NS2[name]) .. " degraded")
+    end
+    assertTrue(n >= 12, "the derivation found only " .. n .. " publications")
+end)
+
+test("parity: the degraded facade answers the owner tokens' Ka0s Default values", function()
+    -- Without the library the owner tokens are still read (AM-02's surfaces): the host stub answers
+    -- each one's `default`, the value the live library answers on Ka0s Default.
+    local NS2 = loadDegraded()
+    for name in pairs(NS.SKIN_TOKENS) do
+        local a = { NS.Skin.Color(name) }
+        local b = { NS2.Skin.Color(name) }
+        assertTrue(#a == 4 and #b == 4, name .. ": both facades answer four components")
+        for i = 1, 4 do
+            assertTrue(math.abs(a[i] - b[i]) < 1e-6, ("%s[%d]: live %s, degraded %s"):format(name, i, a[i], b[i]))
+        end
+    end
+end)

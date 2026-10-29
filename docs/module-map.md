@@ -67,6 +67,7 @@ naming what resolves at load (toc-file-§5); the rest are conventional and free 
 | `core/State.lua` | Session-only state: `debug`, `activeContainerId`, `testMode`; `State.SetActiveContainer` | Conventional |
 | `core/EnvSetup.lua` | `LibKa0s-Env-1.0` seam: `NS.Meta(field)`, `NS.Version()` | Conventional: nothing resolved at load |
 | `core/CoreSetup.lua` | `LibKa0s-Core-1.0` seam: `NS.Print`, `NS.Printf`, `NS.SafeToString`, `NS.ResolveColor`, `NS.ClassColor`, `NS.SKIN`/`ApplySkin` (the skin seam, published for a future standalone window; nothing consumes it today), the `NS.MakeCloseButton` wrapper; `NS.LIBKA0S_MISSING` | **Load-bearing**: after `Namespace.lua`, before everything that prints |
+| `core/SkinSetup.lua` | `LibKa0s-Skin-1.0` seam: `NS.Skin` (the owner's facade, `Skin:For("AuraMaster")`), `NS.SKIN_TOKENS` (this addon's own `am.*` tokens: today's colors on Ka0s Default, each following a library role token), `NS.SKIN_FALLBACK`, the read and write seams `NS.SkinChoice` / `NS.SkinOverride` / `NS.WriteSkinChoice` (through `NS.SetByPath`), the apply seams `NS.ApplySkinChoice` / `NS.ApplySkinIgnore` / `NS.ApplySkinOverride`, the row values `NS.SKIN_SOURCE_OPTIONS` / `NS.SKIN_OPTIONS`, and `NS.SkinColor` / `NS.SkinEscape`. Registers the owner at file load; without the library a host facade answers Ka0s Default and paints nothing | **Load-bearing**: after `CoreSetup.lua` (`NS.Print`), before `core/Bus.lua`, every frame builder and `settings/General.lua` (which read `NS.Skin` and `NS.SKIN_OPTIONS` at load) |
 | `core/Bus.lua` | The closed message bus: `NS.bus`, `NS.NewBusTarget()`, the four `NS.MSG` names (strict, through `LibKa0s-Bus-1.0`'s `Catalog`), `NS.BusLib` | **Load-bearing**: `settings/OptionsSetup.lua` subscribes at load |
 | `core/PoolSetup.lua` | `LibKa0s-Pool-1.0` seam, or a four-member local pool (`New`, `Acquire`, `ReleaseAll`, `Counts`) | Conventional |
 | `core/LifecycleSetup.lua` | `LibKa0s-Lifecycle-1.0` seam: the ONE latch behind both reasons to be inert — `NS.lifecycle`, `NS.IsStoodDown`, `NS.IsDisabled`, `NS.SyncEnabled`, `NS.HoldsText` (the holds the `[Init]` line names), and the `standDown` / `standUp` pair the whole addon goes down and comes back up through. Each edge's `[Lifecycle]` line is the library's, through the descriptor's `debug`; this file writes only the combat-held secure half's `[State]` lines | **Load-bearing**: before `core/PerfSetup.lua`, which takes the instance as its `lifecycle` field |
@@ -309,13 +310,14 @@ All vendored under `libs/`, loaded by the `# Libraries` block of `AuraMaster.toc
 | AceConfig-3.0, AceDBOptions-3.0 | The Profiles sub-page only (`settings/Profiles.lua`, options-ui-§3) |
 | LibSharedMedia-3.0 | Texture, border and font lookups through `LSM` (`modules/Style.lua:33`) |
 | LibDataBroker-1.1, LibDBIcon-1.0 | The launcher's broker object and its minimap button (`core/LauncherSetup.lua`, launcher-§1). Both are OPTIONAL: `LibKa0s-Launcher-1.0` resolves them with `LibStub(…, true)` at Register time, so a client missing either degrades rather than raises |
-| LibKa0s v1.80.0 | Fourteen modules bound by name — table below |
+| LibKa0s v1.80.0 | Fifteen modules bound by name — table below |
 
 | LibKa0s module | Setup file | Publishes |
 |---|---|---|
 | `LibKa0s-Media-1.0` | `core/MediaSetup.lua` | `NS.Icon`, `NS.MediaFont`, the LSM registration |
 | `LibKa0s-Env-1.0` | `core/EnvSetup.lua` | `NS.Meta`, `NS.Version` |
 | `LibKa0s-Core-1.0` | `core/CoreSetup.lua` | `NS.Print`, `NS.Printf`, `NS.SafeToString`, `NS.ResolveColor`, `NS.ClassColor`, `NS.MakeCloseButton` |
+| `LibKa0s-Skin-1.0` | `core/SkinSetup.lua` | `NS.Skin`, the owner `AuraMaster` registered at file load with its `am.*` tokens; the read, write and apply seams the General page's Skin tab and `/am set skin.*` reach |
 | `LibKa0s-Pool-1.0` | `core/PoolSetup.lua` | `NS.Pool` (preview element pools) |
 | `LibKa0s-Lifecycle-1.0` | `core/LifecycleSetup.lua` | `NS.lifecycle` — the one latch; `NS.IsStoodDown`, `NS.IsDisabled`, `NS.SyncEnabled`, `NS.HoldsText` |
 | `LibKa0s-Perf-1.0` | `core/PerfSetup.lua` | `NS.Perf` (buckets, `/am perf`, and the `perf` hold on that latch) |

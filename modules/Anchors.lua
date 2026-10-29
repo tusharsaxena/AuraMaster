@@ -672,6 +672,9 @@ function Anchors.BuildHandle(container)
     if not (KW and KW.DragHandle) then return nil end
     local anchor = container.anchor
     local handle = KW.DragHandle(anchor, {
+        -- The skin owner, the folder name (skinning-§1, DragHandle minor 6): the strip's fill, label
+        -- and marks read this addon's skin. The edge stays the host painter's (`edge` below).
+        owner        = NS.name,
         label        = handleText(container:Cfg()),
         moveFrame    = anchor,
         helpIcon     = NS.Icon and NS.Icon("help") or nil,

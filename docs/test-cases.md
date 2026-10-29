@@ -1960,7 +1960,7 @@ Total.
 - general: the Reset-all popup carries options-ui-§12's wording and cannot be clicked through
 - general: Defaults restores the General rows of the profile and no container setting, now that Containers is its own page
 - general: the page's Defaults tooltip no longer mentions a container's identity (N-1: Containers is its own page)
-- general: the tab strip reads Master controls, Blizzard frames, Spell categories, Dispel colors — Containers is gone from it
+- general: the tab strip reads Master controls, Blizzard frames, Spell categories, Dispel colors, Skin — Containers is gone from it
 - general → spell categories: the list is ordered by name, case-insensitively, ids the client cannot name last (owner 2026-09-20)
 - general → spell categories: the list draws two columns, filled row-major, in the by-name order (owner 2026-09-20)
 - general → spell categories: a dropdown of the fifteen spell categories plus Weapon enchants, opening on the first
@@ -1980,6 +1980,25 @@ Total.
 - general → dispel colors: five profile-wide swatches, no None, no class-color companion, under a line saying they drive bars and text
 - general → dispel colors: a swatch writes its own type's color and re-applies every container
 - general → dispel colors: the page's Defaults restores them
+
+### test_skinsetup.lua (16)
+
+- Skin seam: the owner is the folder name, and NS.Skin is its facade
+- Skin seam: the read answers Ka0s Default before the profile store exists
+- Skin seam: every owner token draws today's color on Ka0s Default, and follows a library role
+- Skin seam: the owner tokens match the constants the surfaces draw today
+- Skin seam: SkinEscape rounds a token back to the byte the markup wrote
+- Skin seam: the skin keys default to Ka0s Default, as skip-render rows of General's Appearance group
+- Skin seam: the skin row's values are every registered skin, in the library's order
+- Skin seam: /am set refuses a skin that is not registered and applies one that is
+- Skin seam: /am set reaches an exception and an override, each only its own half
+- Skin seam: another addon's copy to every Ka0s addon repaints AuraMaster once
+- Skin seam: General's Skin tab is last (the page has no Keybindings tab)
+- Skin seam: one tab pick is one effective SetChoice, one repaint and no reload
+- Skin seam: the profile's stored skin, exceptions and overrides are applied at login
+- Skin seam: a profile switch, copy and reset each apply that profile's skin
+- Skin seam: NS.ApplySkin hands the library this addon's owner
+- Skin seam: the drag strip is built for this addon's owner
 
 ### test_pages_general_categories.lua (32)
 
@@ -2380,7 +2399,7 @@ Total.
 
 - prose: no authored file carries a British spelling from localization-§5's published list
 - prose: the gate carries localization-§5's two lists whole, and nothing of its own
-- prose: the exclusions this repository declared suppressed 11 of 219 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (11): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, docs/spell-research/2026-09-24-logs/CORRECTIONS.md, docs/spell-research/2026-09-24-logs/CURRENT_CATEGORIES.md, docs/spell-research/2026-09-24-logs/DECISIONS.md, docs/spell-research/2026-09-24-logs/FLAGS.md, docs/spell-research/2026-09-24-logs/PROPOSED_ADDITIONS.md, docs/spell-research/2026-09-24-logs/REVIEW.md, docs/spell-research/2026-09-24-logs/SOURCES.md, docs/spell-research/2026-09-24-logs/dictionary/AURAS.md
+- prose: the exclusions this repository declared suppressed 11 of 221 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (11): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, docs/spell-research/2026-09-24-logs/CORRECTIONS.md, docs/spell-research/2026-09-24-logs/CURRENT_CATEGORIES.md, docs/spell-research/2026-09-24-logs/DECISIONS.md, docs/spell-research/2026-09-24-logs/FLAGS.md, docs/spell-research/2026-09-24-logs/PROPOSED_ADDITIONS.md, docs/spell-research/2026-09-24-logs/REVIEW.md, docs/spell-research/2026-09-24-logs/SOURCES.md, docs/spell-research/2026-09-24-logs/dictionary/AURAS.md
 - prose: no path this repository narrows the gate by is loaded by a TOC
 - prose: every path this repository narrows the gate by is one .pkgmeta keeps out of the zip
 - prose self-test: the carve-out suppresses the named generated folder, and only it
@@ -2397,7 +2416,7 @@ Total.
 - prose self-test: the disclosure names what each entry suppressed, and says when it is bounded
 - prose self-test: a malformed waived is a failure, not a silence
 
-### test_surface_parity.lua (7)
+### test_surface_parity.lua (10)
 
 - parity: the Core stub publishes everything core/CoreSetup.lua publishes live
 - parity: the DebugLog stub carries every member the addon calls
@@ -2406,6 +2425,9 @@ Total.
 - parity: the Compat arms carry every LibKa0s-Compat-1.0 member the addon wires
 - parity: the Slash stub carries every dispatcher member the addon calls
 - parity: the Slash stub's refusal line is the library's own format, byte for byte
+- parity: the degraded Skin facade answers every name the live facade carries
+- parity: the Skin seam publishes the same NS members on both paths
+- parity: the degraded facade answers the owner tokens' Ka0s Default values
 
 ### test_vendor_sync.lua (3)
 
@@ -2544,6 +2566,7 @@ Total.
 | test_optionssetup.lua | 21 |
 | test_options_descriptor.lua | 19 |
 | test_pages_general.lua | 36 |
+| test_skinsetup.lua | 16 |
 | test_pages_general_categories.lua | 32 |
 | test_pages_containers.lua | 34 |
 | test_pages_filters.lua | 53 |
@@ -2564,7 +2587,7 @@ Total.
 | test_locale.lua | 10 |
 | test_docs.lua | 7 |
 | test_prose.lua | 18 |
-| test_surface_parity.lua | 7 |
+| test_surface_parity.lua | 10 |
 | test_vendor_sync.lua | 3 |
 | test_lintconfig.lua | 5 |
 | test_eol.lua | 2 |
@@ -2572,4 +2595,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **2150** |
+| **Total** | **2169** |
