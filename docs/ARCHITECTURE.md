@@ -9,7 +9,7 @@ Ka0s Aura Master draws player-built aura **containers**. A container is one unit
 `target`, `focus`, `pet` — `core/Constants.lua:39`), one aura type (`HELPFUL` or `HARMFUL` — `:45`;
 the player's temporary weapon enchants are the buff category `weaponEnchants`, schema v5) and one style (`bars`, `icons` or
 `text` — `:49`), plus its filters, placement and look. A profile holds any number of them; a fresh
-profile is seeded with four (`NS.STARTER_CONTAINERS`, `defaults/Profile.lua:303`).
+profile is seeded with four (`NS.STARTER_CONTAINERS`, `defaults/Profile.lua:322`).
 
 **The design is dictated by one client fact.** On Retail 12.1 an addon cannot read aura data while
 auras are secret — combat, encounters, Mythic+ and PvP (`core/Secrets.lua`, `docs/midnight-quirks.md`).
@@ -39,17 +39,17 @@ out of test mode. The full pipeline is in `docs/data-flow.md`.
 ### Libraries
 
 Everything is vendored under `libs/`: LibStub and CallbackHandler, the Ace3 stack, LibSharedMedia,
-the optional LibDataBroker and LibDBIcon, and LibKa0s with fourteen modules bound by name, every
+the optional LibDataBroker and LibDBIcon, and LibKa0s with fifteen modules bound by name, every
 one of which degrades to a stub or a fallback when the library is absent. What each library is used for, and
 what each LibKa0s setup file publishes: `docs/module-map.md` → *Libraries*.
 
 ## Module Map
 
 Five source folders in the TOC's load order — `locales/` → `core/` → `defaults/` → `modules/` →
-`settings/` (layout-§1) — 61 authored Lua files under them: one locale, 17 core, 4 defaults, 24
+`settings/` (layout-§1) — 62 authored Lua files under them: one locale, 18 core, 4 defaults, 24
 modules and 15 settings. The load-bearing positions are annotated at their TOC lines:
 `core/MediaSetup.lua` before `core/Constants.lua` (the monospace face), `core/CoreSetup.lua` before
-anything that prints, `core/PerfSetup.lua` before every module that takes `NS.Perf` as an upvalue,
+anything that prints, `core/SkinSetup.lua` after it and before every frame builder (the skin owner registers at file load, skinning-§1), `core/PerfSetup.lua` before every module that takes `NS.Perf` as an upvalue,
 `defaults/Categories.lua` before `defaults/Profile.lua` (the template's category states) and
 `defaults/UserCategories.lua` directly after it (the `NS.Categories` upvalue),
 `modules/Style_Text.lua` before `modules/Style_TextGlow.lua` (which decorates `NS.Style.Text` at file
@@ -82,8 +82,8 @@ Every non-vendored file, its responsibility and the full load order: `docs/modul
 
 ## Settings Schema
 
-`NS.Schema` holds **276** rows across seven pages (General 18, Containers 5, Filters 57, Layout 38,
-Bars 72, Icons 42, Text 44), plus one runtime row per user category. It drives the panel,
+`NS.Schema` holds **292** rows across seven pages (General 25, Containers 5, Filters 57, Layout 39,
+Bars 77, Icons 44, Text 45), plus one runtime row per user category. It drives the panel,
 `/am list|get|set|reset` and the resets through one write seam, `NS.SetByPath`.
 
 - **Containers registry** (architecture-§5): keys `containers`, `containerOrder`, `nextContainerId`,
@@ -145,7 +145,7 @@ pass on.
 
 | Message | Sender | Payload | Consumers |
 |---|---|---|---|
-| `Ka0s_AuraMaster_ContainersChanged` (`NS.MSG.CONTAINERS_CHANGED`) | `modules/ContainerManager.lua` — create, delete, rename, duplicate, profile change (copy-from and reset positions are settings writes, announced by `CONFIG_CHANGED`) | none | `settings/OptionsSetup.lua:410` — `NS.RequestPanelRefresh`, a coalesced panel re-render (every banner lists containers); `modules/TimedSpells.lua:204` — `TS.Sync`, which starts or stops the timed-spell scan (a container added or removed can change whether any needs it) |
+| `Ka0s_AuraMaster_ContainersChanged` (`NS.MSG.CONTAINERS_CHANGED`) | `modules/ContainerManager.lua` — create, delete, rename, duplicate, profile change (copy-from and reset positions are settings writes, announced by `CONFIG_CHANGED`) | none | `settings/OptionsSetup.lua:435` — `NS.RequestPanelRefresh`, a coalesced panel re-render (every banner lists containers); `modules/TimedSpells.lua:204` — `TS.Sync`, which starts or stops the timed-spell scan (a container added or removed can change whether any needs it) |
 | `Ka0s_AuraMaster_ConfigChanged` (`NS.MSG.CONFIG_CHANGED`) | `settings/Schema.lua:603` — the write seam, once per write; never for a session row | `{ section, containerId, path }`; `containerId` nil for an addon-wide row, `path` the row written | `modules/ContainerManager.lua:866` — first `FontPrimer.PrimeAll` (a new font is drawn before anything is applied in it), then by the row's `effect`: `"visibility"` (the master enable, visibility, lock and alpha, a container's enable, its six `filter.zones` rows and its two `filter.unitFilter` rows) runs `ApplyVisibility()` at once, `"none"` queues nothing, `"view"` (the two `filter.situations` rows) runs `CM.ApplyViews` for that container at once, in combat too and never held, otherwise `RequestApply(containerId)` (nil re-applies all), a write to a flow or attachment path also re-applies every container following that one (`Anchors.Followers`), and a write to a container's attach points, mode or target also re-applies the container it attaches to (`requestParents`); `modules/TimedSpells.lua:203` — `TS.Sync`, the same re-sync (a filter write can change whether any container needs the scan) |
 | `Ka0s_AuraMaster_VisibilityChanged` (`NS.MSG.VISIBILITY_CHANGED`) | `core/AuraMaster.lua` — entering the world, combat start and end; `modules/Preview.lua` — `Preview.SetTestMode`, when test mode switches on or off | none | `modules/ContainerManager.lua:879` — `ApplyVisibility()` over every container |
 | `Ka0s_AuraMaster_TimedSpellsChanged` (`NS.MSG.TIMED_SPELLS_CHANGED`) | `modules/TimedSpells.lua` — a scan learned timed spells, or `/am forgettimed` emptied the set | none from a scan; `{ byPlayer = true }` from `/am forgettimed` | `modules/ContainerManager.lua` `CM.Init` — `RequestApply(nil, system)` over every container (their excluded ids moved); a scan's request is the addon's own, so a deferral of it prints no notice |
@@ -226,16 +226,16 @@ optional. The full table and the reasons:
 
 | Event | Registered by | Handler → effect |
 |---|---|---|
-| `PLAYER_ENTERING_WORLD` | `core/AuraMaster.lua:59` (AceEvent, through `NS.SafeRegisterEvent`) | `OnEnterWorld` → `VISIBILITY_CHANGED`, `ContainerManager.FlushPending`, `FontPrimer.OnEnterWorld` (notes the time: the loading screen is still up; the primer's anchor only on a client that refused `LOADING_SCREEN_DISABLED`) |
-| `LOADING_SCREEN_DISABLED` | `core/AuraMaster.lua:61` | `OnLoadingScreenEnd` → `FontPrimer.OnLoadingScreenEnd` (the loading screen's real end: arms the primer's world hide and refresh), then `CM.RequestEnchantReset("world")`: the weapon-enchant reset, 1.75 s later, whatever the primer did (SP-AMX-01) |
-| `PLAYER_REGEN_DISABLED` | `core/AuraMaster.lua:62` | `OnCombatChanged` → `VISIBILITY_CHANGED` |
-| `PLAYER_REGEN_ENABLED` | `core/AuraMaster.lua:63` | `OnCombatChanged` → `VISIBILITY_CHANGED`, `FlushPending`, `ReapplyStaleClass`, `BlizzardFrames.Apply`, `Anchors.ResolvePending` (a frame that appeared during combat) |
-| `PLAYER_TARGET_CHANGED`, `PLAYER_FOCUS_CHANGED` | `core/AuraMaster.lua:64-65` | `OnUnitSwap` → `CM.ApplyViews` (each container on that unit switched to the view of its plan the new unit's reaction picks, spell-list views V2) → `RefreshUnit` → the engine's `UpdateAllAuras` → `CM.ApplyUnitGate` (the visibility pass of each container on that unit whose Unit type answer moved, filter situations S6) (bucket `unitSwap`); re-applies the class-colored containers of that unit when the new unit's class differs, or marks them stale, silently, while an apply must wait |
-| `UNIT_PET` | `core/AuraMaster.lua:66` | `OnUnitPet` (player only) → `RefreshUnit("pet")` (bucket `unitSwap`); re-applies the class-colored pet containers when the pet's class differs, or marks them stale while an apply must wait |
-| `ADDON_LOADED` | `core/AuraMaster.lua:67` | `OnAddonLoaded` → `Anchors.ResolvePending` (frame-attached containers) |
-| `ADDON_RESTRICTION_STATE_CHANGED` | `core/AuraMaster.lua:69` | `OnRestrictionChanged` → `FlushPending`, `ReapplyStaleClass` (a deferred apply runs when secrecy lifts) |
-| `ITEM_DATA_LOAD_RESULT`, `GET_ITEM_INFO_RECEIVED` | `core/AuraMaster.lua:72-73` | `OnItemDataLoaded` → `CM.OnWeaponItemData`: the item equipped in slot 16 or 17, loaded successfully, arms the weapon-enchant reset 0.5 s later. One debounced `C_Timer` serves both triggers and keeps the later deadline; when it fires, `CM.ResetEnchants` turns each live engine with enchant frames off and on again (`ContainerClass:ResetEnchants`), so the weapon names are drawn afresh (`docs/midnight-quirks.md` → *Weapon enchants*). `CM.StopListening` cancels it |
-| `ZONE_CHANGED_NEW_AREA` | `core/AuraMaster.lua:76` | `OnZoneChanged` → `VISIBILITY_CHANGED`: a border crossing into another kind of place with no loading screen re-runs the visibility pass, whose zone gate (`ContainerClass:ShouldShow`, filter situations S3) reads `NS.Compat.InstanceType()` on every pass. Untraced |
+| `PLAYER_ENTERING_WORLD` | `core/AuraMaster.lua:62` (AceEvent, through `NS.SafeRegisterEvent`) | `OnEnterWorld` → `VISIBILITY_CHANGED`, `ContainerManager.FlushPending`, `FontPrimer.OnEnterWorld` (notes the time: the loading screen is still up; the primer's anchor only on a client that refused `LOADING_SCREEN_DISABLED`) |
+| `LOADING_SCREEN_DISABLED` | `core/AuraMaster.lua:64` | `OnLoadingScreenEnd` → `FontPrimer.OnLoadingScreenEnd` (the loading screen's real end: arms the primer's world hide and refresh), then `CM.RequestEnchantReset("world")`: the weapon-enchant reset, 1.75 s later, whatever the primer did (SP-AMX-01) |
+| `PLAYER_REGEN_DISABLED` | `core/AuraMaster.lua:65` | `OnCombatChanged` → `VISIBILITY_CHANGED` |
+| `PLAYER_REGEN_ENABLED` | `core/AuraMaster.lua:66` | `OnCombatChanged` → `VISIBILITY_CHANGED`, `FlushPending`, `ReapplyStaleClass`, `BlizzardFrames.Apply`, `Anchors.ResolvePending` (a frame that appeared during combat) |
+| `PLAYER_TARGET_CHANGED`, `PLAYER_FOCUS_CHANGED` | `core/AuraMaster.lua:67-68` | `OnUnitSwap` → `CM.ApplyViews` (each container on that unit switched to the view of its plan the new unit's reaction picks, spell-list views V2) → `RefreshUnit` → the engine's `UpdateAllAuras` → `CM.ApplyUnitGate` (the visibility pass of each container on that unit whose Unit type answer moved, filter situations S6) (bucket `unitSwap`); re-applies the class-colored containers of that unit when the new unit's class differs, or marks them stale, silently, while an apply must wait |
+| `UNIT_PET` | `core/AuraMaster.lua:69` | `OnUnitPet` (player only) → `RefreshUnit("pet")` (bucket `unitSwap`); re-applies the class-colored pet containers when the pet's class differs, or marks them stale while an apply must wait |
+| `ADDON_LOADED` | `core/AuraMaster.lua:70` | `OnAddonLoaded` → `Anchors.ResolvePending` (frame-attached containers) |
+| `ADDON_RESTRICTION_STATE_CHANGED` | `core/AuraMaster.lua:72` | `OnRestrictionChanged` → `FlushPending`, `ReapplyStaleClass` (a deferred apply runs when secrecy lifts) |
+| `ITEM_DATA_LOAD_RESULT`, `GET_ITEM_INFO_RECEIVED` | `core/AuraMaster.lua:75-76` | `OnItemDataLoaded` → `CM.OnWeaponItemData`: the item equipped in slot 16 or 17, loaded successfully, arms the weapon-enchant reset 0.5 s later. One debounced `C_Timer` serves both triggers and keeps the later deadline; when it fires, `CM.ResetEnchants` turns each live engine with enchant frames off and on again (`ContainerClass:ResetEnchants`), so the weapon names are drawn afresh (`docs/midnight-quirks.md` → *Weapon enchants*). `CM.StopListening` cancels it |
+| `ZONE_CHANGED_NEW_AREA` | `core/AuraMaster.lua:79` | `OnZoneChanged` → `VISIBILITY_CHANGED`: a border crossing into another kind of place with no loading screen re-runs the visibility pass, whose zone gate (`ContainerClass:ShouldShow`, filter situations S3) reads `NS.Compat.InstanceType()` on every pass. Untraced |
 | `UNIT_AURA` for `player` and `pet` | `modules/TimedSpells.lua` — the module's one private frame, `TS.unitFrame` (events-frames-taint-§1's carve-out: the vendored AceEvent has no `RegisterUnitEvent`), through `NS.SafeRegisterUnitEvent`; built once and reused, registered only while a container uses "without a duration", the addon is not suspended, and auras are readable (no combat lockdown, not secret), and unregistered by hand in `TS.Stop` | the frame's one `OnEvent` → `onUnitAura`: the client delivers only `player` and `pet`; the handler still proves the unit a safe key and compares it (defense in depth), then schedules a scan 0.5 s later (bucket `timedScan`). A scan that comes due after the gate closed is dropped too |
 | `UNIT_AURA` for `player` and `pet`, and for `target` and `focus` | `modules/EmptyWatch.lua` — its two private frames, `EW.unitFrames[1]` (player, pet) and `[2]` (target, focus), the same carve-out, each filtering `UNIT_AURA` and nothing else, through `NS.SafeRegisterUnitEvent`; built once and reused, each registered only while a shown container on its units is unlocked and out of test mode, the addon is not suspended, combat has not started and auras are readable, and unregistered by hand in `EW.Stop` | the frames' one `OnEvent` only marks a pass due: one pass 0.2 s later (bucket `emptyPass`) re-predicts every watched container and re-runs the visibility pass of any whose answer changed |
 | `PLAYER_TARGET_CHANGED`, `PLAYER_FOCUS_CHANGED` | `modules/EmptyWatch.lua` (AceEvent, on its own target) — while its target and focus frame is registered | `CM.ApplyViews(unit)` first (AceEvent runs this and `OnUnitSwap` in no set order, so the prediction never reads the old unit's view; a no-op when the view is already right), then the pass run at once, not 0.2 s later, folding in one already due: the engine redraws for the new unit in the same frame, so a follower hung from a parent that just emptied would otherwise sit on the engine's 1x1 rect for the delay |
@@ -251,7 +251,7 @@ The twelve `core/AuraMaster.lua` registrations are one module-level list, `LIFEC
 `RegisterLifecycleEvents` and `UnregisterLifecycleEvents` both walk, so the stand-down and the
 stand-up remove and restore the same list. With logging on, the world-entry, loading-screen, combat
 and restriction handlers each write one `[Event]` line before acting (`traceEvent`,
-`core/AuraMaster.lua:100`; `docs/debug.md` -> *The event trace*); the unit swaps, `ADDON_LOADED`,
+`core/AuraMaster.lua:103`; `docs/debug.md` -> *The event trace*); the unit swaps, `ADDON_LOADED`,
 the two item events and `ZONE_CHANGED_NEW_AREA` (a border crossing, which fires on every zone
 border) do not. The weapon-enchant reset writes one `[Apply]` line when it fires.
 
@@ -290,6 +290,53 @@ events and every module's subscriptions and timers, turns every container off an
 frames back, finishing the combat-restricted half on `PLAYER_REGEN_ENABLED`; standing up rebuilds
 from current state. What stands down, what survives and the library-absent path:
 `docs/data-flow.md` → *The disabled state*.
+
+## Skins
+
+Every surface Aura Master draws paints through the `LibKa0s-Skin-1.0` facade with this addon as its
+**owner** (skinning-§1 to §3; Ka0sAddonsCommonTasks `docs/2026-10-29-SKINNING_ROLLOUT/`, the AM items).
+
+- **The seam.** `core/SkinSetup.lua` registers the owner `"AuraMaster"` at file load with its read and
+  write seams (`NS.SkinChoice`, `NS.WriteSkinChoice`, every half through `NS.SetByPath`) and its own
+  `am.*` tokens (`NS.SKIN_TOKENS`: the colors no library token holds exactly, each drawn at today's
+  value on Ka0s Default and following a library role token in every other skin). It publishes
+  `NS.Skin`, `NS.SkinColor`, `NS.SkinEscape` and `NS.SkinPaintAce` / `NS.SkinPaintAceTree` /
+  `NS.SkinOnRelease`; its degraded arm answers from `NS.SKIN_FALLBACK`, which
+  `tests/test_skinsetup.lua` holds to the library's values. The choice is the profile's `skin` table,
+  seven rows drawn by the library's Skin tab on General ([schema.md](schema.md),
+  [settings-panel.md](settings-panel.md)). `NS.ApplySkinChoice` applies it right after `NS:InitDB`
+  and on every profile event.
+- **The HUD reads the skin at dress time.** The aura buttons are Blizzard's pooled engine buttons,
+  whose geometry reads secret, so no recorded primitive ever touches them. `Style.SkinKey` resolves
+  `hud.font` (every font block, through `Style.FontKey`) and `bar.texture` (the bar fill and
+  background) while the element's "Use the skin's ..." companion is on, and the stored pick while it
+  is off. While the Skin tab's Ignore fonts is on (`NS.SkinFontsIgnored`, `Skin:GetIgnore`) every
+  font block draws its stored face, companion or override notwithstanding, because the library's
+  `Resolve` never reads that exception itself (only its primitives' font path does); AbsorbTracker
+  does the same. Borders, sizes, flags and every HUD color stay the player's (X4; DECISIONS D1, D3, D4).
+  One `OnLooksChanged` listener (`modules/ContainerManager.lua`) primes the fonts and re-applies every
+  container; under lockdown the apply waits for combat to end (D12). Schema v13 turned every stored
+  companion on once (O2), which visibly changes Ka0s Default's HUD (X5): Oxanium and the Ka0s
+  Default bar in place of Friz Quadrata and Blizzard.
+- **The unlock furniture** (the drag strip and its tooltips, the outline, the drag-to-attach marks,
+  the frame picker and the TEST marker) repaints from tokens on `OnLooksChanged`
+  (`modules/Anchors.lua`, `Anchors_Snap.lua`, `Container.lua`, `FramePicker.lua`, `Preview.lua`); the
+  strip's library parts follow the `owner` handed to `KW.DragHandle`.
+- **Settings and tools.** The library paints the pages, the composed rows, the debug console, its
+  copy window, the perf panel and the close marks for the owner already named. What this addon
+  acquires itself, the `AuraMasterDropdown` widgets, the hand-built buttons, edit boxes and label,
+  and the Profiles page, goes through `NS.SkinPaintAce` and `NS.SkinPaintAceTree`, and stays stock
+  while **Ignore settings panel** is on.
+- **The first-run skin picker.** `NS.MaybeShowSkinPicker` shows `O.SkinPicker` two seconds after the
+  first world entry and after every profile event while the profile's `skin.pickerSeen` is false and
+  the addon stands up (O3); in combat it waits for `PLAYER_REGEN_ENABLED`. Its eye turns test mode
+  on; the player's close writes `pickerSeen`, and a close the addon makes (`NS.HideSkinPicker`) does
+  not.
+- **EllesmereUI.** The library's provider: with source `eui` and its gate holding, EllesmereUI's
+  facade paints; otherwise the addon wears its Ka0s skin and the Skin tab says why.
+- **The color gate.** `tests/test_skin_literals.lua` fails on a numeric color literal in a paint call
+  or a `|cff` escape in code outside `core/SkinSetup.lua` and its named allow-list: chat output (X7),
+  the dispel-type and identity palettes (rung 4, D8) and the engine-tinted strips.
 
 ## Frame layering
 

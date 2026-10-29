@@ -5,7 +5,7 @@
 ## Version: 1.1.0
 ## IconTexture: Interface\AddOns\AuraMaster\media\logos\auramaster.logo.128.tga
 ## SavedVariables: AuraMasterDB, AuraMasterPerfDB
-## OptionalDeps: Ace3, LibStub, CallbackHandler-1.0, LibSharedMedia-3.0, LibDataBroker-1.1, LibDBIcon-1.0
+## OptionalDeps: Ace3, LibStub, CallbackHandler-1.0, LibSharedMedia-3.0, LibDataBroker-1.1, LibDBIcon-1.0, EllesmereUI
 ## DefaultState: enabled
 ## Category-enUS: Combat
 ## X-License: MIT
@@ -51,6 +51,11 @@ core\EnvSetup.lua
 # LOAD-BEARING: after Namespace (NS.PREFIX) and before everything that prints; publishes
 # NS.LIBKA0S_MISSING, which every later degradation stub reads.
 core\CoreSetup.lua
+# LOAD-BEARING: the LibKa0s-Skin-1.0 seam. Registers the skin owner at FILE LOAD (skinning-§1), so
+# the EllesmereUI provider offers it before EllesmereUI dispatches; after CoreSetup (NS.Print) and
+# before every module that builds a frame and settings/General.lua, which read NS.Skin and
+# NS.SKIN_OPTIONS at load.
+core\SkinSetup.lua
 # LOAD-BEARING: publishes NS.bus and NS.MSG, read at load by settings/OptionsSetup.lua.
 core\Bus.lua
 # Conventional: NS.Pool, reached at render time.

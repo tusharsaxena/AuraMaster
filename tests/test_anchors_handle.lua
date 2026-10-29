@@ -598,8 +598,8 @@ test("handle: while test mode is on the label carries an orange TEST tag after t
     NS.Preview.SetTestMode(true)
     mocks.__fireTimers()
     -- red under: UpdateHandle writing the bare name whatever the mode (no marker on the placeholders)
-    assertEqual(texts[#texts], name .. "  |c" .. NS.Constants.TEST_TAG_COLOR .. NS.L["TEST"] .. "|r")
-    assertEqual(NS.Constants.TEST_TAG_COLOR, "ffff8000", "orange")
+    -- Ka0s Default's sem.warn, the orange it always drew (decision D5)
+    assertEqual(texts[#texts], name .. "  |cffff8000" .. NS.L["TEST"] .. "|r", "orange")
     NS.Preview.SetTestMode(false)
     mocks.__fireTimers()
     -- red under: a tag left behind once test mode ends
@@ -662,9 +662,9 @@ test("handle: an attached container's name is a desaturated gray, to the screen 
         texts[n + 1] = s
     end)
     local name = NS.Database.FindContainer(2).name
-    local dim = "|c" .. NS.Constants.ATTACHED_NAME_COLOR .. name .. "|r"
-    -- red under: the dim gold of the first cut, which the owner found not muted enough
-    assertEqual(NS.Constants.ATTACHED_NAME_COLOR, "ff8c8a84", "a warm gray, not a gold")
+    -- red under: the dim gold of the first cut, which the owner found not muted enough (Ka0s
+    -- Default's am.attachedName, a warm gray, not a gold)
+    local dim = "|cff8c8a84" .. name .. "|r"
     NS.Anchors.UpdateHandle(inst, true)
     assertEqual(texts[#texts], name, "on the screen: the name as it was")
     NS.SetByPath("container.attach.container", 1, 2)
@@ -680,7 +680,7 @@ test("handle: an attached container's name is a desaturated gray, to the screen 
     NS.Preview.SetTestMode(true)
     mocks.__fireTimers()
     NS.Anchors.UpdateHandle(inst, true)
-    assertEqual(texts[#texts], dim .. "  |c" .. NS.Constants.TEST_TAG_COLOR .. NS.L["TEST"] .. "|r",
+    assertEqual(texts[#texts], dim .. "  |cffff8000" .. NS.L["TEST"] .. "|r",
         "the TEST tag still follows in orange")
     NS.Preview.SetTestMode(false)
     NS.SetByPath("container.attach.mode", "screen", 2)

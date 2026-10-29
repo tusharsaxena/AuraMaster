@@ -82,7 +82,7 @@ local function textRows(leaf, group, extras)
           label = L["Show"], desc = L["Draw this text."] },
     })
     NS.RegisterSchemaRows(H.FontGroup({
-        prefix = prefix, page = PAGE, group = group, subgroup = L["Font"], classColor = UNIT,
+        prefix = prefix, page = PAGE, group = group, subgroup = L["Font"], classColor = UNIT, fromSkin = true,
     }))
     local rows = {
         { path = prefix .. "justify", page = PAGE, group = group, subgroup = L["Placement"], type = "string",

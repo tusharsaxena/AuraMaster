@@ -555,9 +555,9 @@ test("database v2: RunMigrations logs one [Migrate] line per profile, and a seco
     for _, l in ipairs(lines) do
         if l:find("profile '", 1, true) then perProfile = perProfile + 1 end
     end
-    -- red under: logging once for the whole step, or not at all per profile. 2 profiles x the 11
-    -- steps a v1 profile now climbs (v2 to v12).
-    assertEqual(perProfile, 22, table.concat(lines, " | "))
+    -- red under: logging once for the whole step, or not at all per profile. 2 profiles x the 12
+    -- steps a v1 profile now climbs (v2 to v13).
+    assertEqual(perProfile, 24, table.concat(lines, " | "))
     assertEqual(NS.db.sv.profiles.Other.containers[1].layout.strata, "HIGH")
     local before = #lines
     NS.db.sv.profiles.Other.containers[1].layout.strata = "MEDIUM"
@@ -851,11 +851,12 @@ test("v3: the whitelist lift never sweeps a category the aura type does not have
     assertNil(c.defensives, "a HELPFUL-only category never appears on a HARMFUL container")
 end)
 
-test("v12: the current schema version is 12", function()
+test("v12: the v12 step is on the ladder, below v13's skin reset", function()
     local NS = fresh()
-    -- red under: the v12 step missing from SCHEMA_STEPS (the 2026-10-04 Soft CC split)
-    assertEqual(NS.Database.CurrentSchemaVersion(), 12)
-    assertEqual(NS.db.global.schemaVersion, 12)
+    -- red under: the v12 step missing from SCHEMA_STEPS (the 2026-10-04 Soft CC split); v13 is the
+    -- one-time HUD reset onto the skin (AM-03, tests/test_skin_hud.lua)
+    assertEqual(NS.Database.CurrentSchemaVersion(), 13)
+    assertEqual(NS.db.global.schemaVersion, 13)
 end)
 
 test("v3: RunMigrations migrates every stored profile, the inactive one included", function()

@@ -153,9 +153,13 @@ NS.ClassColor = lib.ClassColor
 -- The shared window edge: the standalone-windows skin seam, published flat for a future standalone
 -- window so it reaches the edge by name rather than through a private lookalike (standalone-windows).
 -- Nothing consumes it today: the addon has no standalone window, and the frame picker draws its own
--- outline rather than reading NS.SKIN.
+-- outline rather than reading NS.SKIN. ApplySkin is WRAPPED to hand the skin owner, the folder name
+-- (skinning-§1: every library factory that takes an owner is given one), so a future caller paints
+-- through this addon's skin rather than Ka0s Default.
 NS.SKIN      = lib.SKIN
-NS.ApplySkin = lib.ApplySkin
+NS.ApplySkin = function(frame, keys)
+    return lib.ApplySkin(frame, keys, addonName)
+end
 
 -- WRAPPED, TO SAY WHO IS ASKING — and this wrapper is a MUST (standalone-windows, anti-patterns
 -- #64/#65). Core draws the catalog's `close` mark only when told which addon FOLDER to build the path

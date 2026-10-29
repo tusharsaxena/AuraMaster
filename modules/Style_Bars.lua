@@ -203,7 +203,8 @@ end
 --- Paint the fill and show it. The fill is shown every dress: the engine's no-aura pass hides a
 --- dispel texture, and clearing the binding does not show it again.
 local function paintFill(am, b, preview)
-    am.fill:SetTexture(Style.Fetch("statusbar", b.barTexture, C.FALLBACK_TEXTURE))
+    local key = Style.SkinKey("bar.texture", b.barTexture, Style.OrTemplate(b.barTextureFromSkin, D.bars.barTextureFromSkin))
+    am.fill:SetTexture(Style.Fetch("statusbar", key, C.FALLBACK_TEXTURE))
     paintSurface(am.fill, b.colorMode, b.barColor, b.useClassColorBar, preview,
         tonumber(b.barAlpha) or D.bars.barAlpha)
     am.fill:Show()
@@ -215,7 +216,10 @@ end
 local function applySurfaces(am, b, preview)
     paintFill(am, b, preview)
 
-    am.bg:SetTexture(Style.Fetch("statusbar", b.bgTexture, C.FALLBACK_TEXTURE))
+    -- The background follows the skin's `bar.texture` too, under its own companion: the skin has no
+    -- background-texture token, and the player's background color still tints it.
+    local bgKey = Style.SkinKey("bar.texture", b.bgTexture, Style.OrTemplate(b.bgTextureFromSkin, D.bars.bgTextureFromSkin))
+    am.bg:SetTexture(Style.Fetch("statusbar", bgKey, C.FALLBACK_TEXTURE))
     paintSurface(am.bg, b.bgColorMode, b.bgColor, b.useClassColorBg, preview,
         tonumber(b.bgAlpha) or D.bars.bgAlpha)
     am.bg:Show()

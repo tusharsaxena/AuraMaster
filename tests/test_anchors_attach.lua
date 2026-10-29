@@ -87,9 +87,9 @@ test("drag: held within C.DETACH_RADIUS of its current pair, green on that pair;
     assertTrue(Snap.highlight:IsShown(), "the mark is shown on it")
     assertEqual(dotAt(mocks, Snap.marker, "the parent's dot"), "BOTTOMLEFT 0,100")
     -- red under: the hold drawn as a box over the parent's placeholder, its strip left plain (A5)
-    assertEdgeOn(NS, mocks, NS.ContainerManager.instances[1].handle, C.SNAP_COLOR, "hold: the parent's strip")
+    assertEdgeOn(NS, mocks, NS.ContainerManager.instances[1].handle, NS.Anchors.Snap.COLOR.attach, "hold: the parent's strip")
     assertFalse(Snap.box:IsShown(), "hold: no box")
-    assertPainted(NS, C.SNAP_COLOR, "hold")
+    assertPainted(NS, NS.Anchors.Snap.COLOR.attach, "hold")
     -- Exactly 128 from where it rested holds ("at most"); 129 does not.
     plant(inst.anchor, 0, -53, 20, -33)
     assertEqual(select(2, Snap.Tick()), "hold", "128: still held")
@@ -99,15 +99,15 @@ test("drag: held within C.DETACH_RADIUS of its current pair, green on that pair;
     assertEqual(state, "detach", "129: past the radius")
     assertEqual(pair.id .. " " .. pair.point .. ">" .. pair.relPoint, "1 TOPLEFT>BOTTOMLEFT", "shown on the current pair")
     assertTrue(Snap.highlight:IsShown(), "still shown")
-    -- red under: no DETACH_COLOR, or only the box repainted (the dots and the line left green)
-    assertPainted(NS, C.DETACH_COLOR, "detach")
-    assertEdgeOn(NS, mocks, NS.ContainerManager.instances[1].handle, C.DETACH_COLOR, "detach: the parent's strip, red")
+    -- red under: no detach color, or only the box repainted (the dots and the line left green)
+    assertPainted(NS, NS.Anchors.Snap.COLOR.detach, "detach")
+    assertEdgeOn(NS, mocks, NS.ContainerManager.instances[1].handle, NS.Anchors.Snap.COLOR.detach, "detach: the parent's strip, red")
     assertEqual(dotAt(mocks, Snap.childMarker, "the child's dot"), "BOTTOMLEFT 0,-34",
         "the child's dot on its own point of the current pair")
     plant(inst.anchor, 0, 50, 20, 70)
     Snap.Tick()
     -- red under: a paint that never goes back to green once red
-    assertPainted(NS, C.SNAP_COLOR, "back within the leeway")
+    assertPainted(NS, NS.Anchors.Snap.COLOR.attach, "back within the leeway")
     restore()
 end)
 
@@ -137,7 +137,7 @@ test("drag: another pair in snap range beats the hold, and Shift suppresses only
     -- red under: hold checked before another pair (the drop could never move it along its parent)
     assertEqual(state, "attach", "another pair")
     assertEqual(pair.id .. " " .. pair.point .. ">" .. pair.relPoint, "1 TOP>BOTTOM")
-    assertPainted(NS, NS.Constants.SNAP_COLOR, "attach")
+    assertPainted(NS, NS.Anchors.Snap.COLOR.attach, "attach")
     mocks.__shift = true
     pair, state = Snap.Tick()
     -- red under: Shift suppressing the hold too (no mark at all, a release detaches)
@@ -145,7 +145,7 @@ test("drag: another pair in snap range beats the hold, and Shift suppresses only
     assertEqual(pair.point .. ">" .. pair.relPoint, "TOPLEFT>BOTTOMLEFT", "on the current pair")
     plant(inst.anchor, 300, 75, 320, 95)
     assertEqual(select(2, Snap.Tick()), "detach", "Shift, past the radius: red")
-    assertPainted(NS, NS.Constants.DETACH_COLOR, "Shift, detach")
+    assertPainted(NS, NS.Anchors.Snap.COLOR.detach, "Shift, detach")
     mocks.__shift = false
     restore()
 end)
@@ -293,7 +293,7 @@ test("drag: a child flush under a long parent, in snap range of its own pair far
     -- red under: a hit on the current pair left to the leeway (150 past it: red, a release detaches)
     assertEqual(state, "hold", "its own pair in snap range")
     assertEqual(pair.id .. " " .. pair.point .. ">" .. pair.relPoint, "1 TOPLEFT>BOTTOMLEFT")
-    assertPainted(NS, NS.Constants.SNAP_COLOR, "hold")
+    assertPainted(NS, NS.Anchors.Snap.COLOR.attach, "hold")
     Snap.Drop(inst)
     assertEqual(at.mode .. " " .. tostring(at.container), "container 1", "a release snaps it back")
     restore()
@@ -384,10 +384,10 @@ test("drag: an unreadable parent holds while the cursor has moved less than C.DE
     -- (its TOPLEFT, 300,430 at scale 1 under UIParent's 2: 150,215 in UIParent units)
     -- red under: the parent's strip left plain where its rect does not read (it has one: A5 still edges it)
     local strip = CM.instances[3].handle
-    assertLoneDot(NS, mocks, 150, 215, NS.Constants.SNAP_COLOR, "hold", strip)
+    assertLoneDot(NS, mocks, 150, 215, NS.Anchors.Snap.COLOR.attach, "hold", strip)
     mocks.GetCursorPosition = function() return 658, 300 end   -- 129 units
     assertEqual(select(2, Snap.Tick()), "detach", "129 units")
-    assertLoneDot(NS, mocks, 150, 215, NS.Constants.DETACH_COLOR, "detach", strip)
+    assertLoneDot(NS, mocks, 150, 215, NS.Anchors.Snap.COLOR.detach, "detach", strip)
     mocks.GetCursorPosition = function() return 100, 100 end
     restore()
 end)
@@ -414,11 +414,11 @@ test("drag: a hidden parent is measured by the cursor and drawn as the child's d
     local _, state = Snap.Tick()
     assertEqual(state, "hold", "the cursor has not moved")
     -- red under: a hidden parent's stale rect boxed (the parent's IsShown not read for the mark)
-    assertLoneDot(NS, mocks, 0, 95, NS.Constants.SNAP_COLOR, "hold")
+    assertLoneDot(NS, mocks, 0, 95, NS.Anchors.Snap.COLOR.attach, "hold")
     mocks.GetCursorPosition = function() return 229, 100 end   -- 129 units
     -- red under: the hidden parent measured at its last rect (its rest vector read too: held at 0)
     assertEqual(select(2, Snap.Tick()), "detach", "129 units of cursor travel")
-    assertLoneDot(NS, mocks, 0, 95, NS.Constants.DETACH_COLOR, "detach")
+    assertLoneDot(NS, mocks, 0, 95, NS.Anchors.Snap.COLOR.detach, "detach")
     mocks.GetCursorPosition = function() return 100, 100 end
     restore()
 end)
@@ -444,7 +444,7 @@ test("drag: a parent whose block reads secret is measured by the cursor, never b
     assertEqual(state, "hold", "the cursor has not moved")
     -- red under: the mark drawn on that fallback too (the dots on the first element alone, not on
     -- the block it snaps back onto), or the parent's strip left plain (A5)
-    assertLoneDot(NS, mocks, 0, 95, NS.Constants.SNAP_COLOR, "hold", CM.instances[1].handle)
+    assertLoneDot(NS, mocks, 0, 95, NS.Anchors.Snap.COLOR.attach, "hold", CM.instances[1].handle)
     restore()
 end)
 
@@ -476,9 +476,9 @@ test("drag: a parent whose block reads secret but whose strip reads holds on its
     assertEqual(dotAt(mocks, Snap.childMarker, "the child's dot"), "BOTTOMLEFT 0,95")
     assertEqual(lineEnd(mocks, Snap.line, "SetStartPoint"), "BOTTOMLEFT 0,242", "the line from 1's strip")
     assertEqual(lineEnd(mocks, Snap.line, "SetEndPoint"), "BOTTOMLEFT 0,95", "the line to 2's strip")
-    assertEdgeOn(NS, mocks, CM.instances[1].handle, NS.Constants.SNAP_COLOR, "hold: the parent's strip")
+    assertEdgeOn(NS, mocks, CM.instances[1].handle, NS.Anchors.Snap.COLOR.attach, "hold: the parent's strip")
     assertFalse(Snap.box:IsShown(), "hold: no box")
-    assertPainted(NS, NS.Constants.SNAP_COLOR, "hold")
+    assertPainted(NS, NS.Anchors.Snap.COLOR.attach, "hold")
     Snap.EndDrag(inst)
     restore()
 end)

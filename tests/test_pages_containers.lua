@@ -401,6 +401,20 @@ test("containers: the addon's dropdown is the stock one in a pool of its own, ju
     assertEqual(NS.CreateDropdown().type, want, "the hand-built dropdowns use it once registered")
 end)
 
+test("containers: the addon's dropdown type is painted by the skin as a stock Dropdown (AM-G1)", function()
+    local NS, m = containers()
+    local AceGUI, want = NS.AceGUI, NS.Constants.DROPDOWN_WIDGET
+    local Skin = m.LibStub("LibKa0s-Skin-1.0")
+    plantStockDropdown(AceGUI)
+    NS.RegisterDropdownWidget(AceGUI)
+    -- red under: no Skin:AliasAceType call, so PaintAce finds no painter for the type and every
+    -- dropdown on every page stays stock under all nine skins (LibKa0s SkinAce minor 4)
+    assertEqual(Skin.__aceAlias[want], "Dropdown")
+    -- a second registration (a reload of the panel) says it again, and the library answers true
+    NS.RegisterDropdownWidget(AceGUI)
+    assertEqual(Skin.__aceAlias[want], "Dropdown")
+end)
+
 test("containers: Aura type offers Buffs and Debuffs only; the retired Weapon enchants type is refused (feedback #6)", function()
     local NS, _, P, ws = containers()
     local dd = P.row(ws, "container.auraType")

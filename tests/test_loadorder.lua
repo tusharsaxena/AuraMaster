@@ -43,6 +43,12 @@ test("loadorder: the load-bearing pairs are in order, and the TOC says why", fun
         { "core/MediaSetup.lua", "core/Constants.lua" },
         { "core/Namespace.lua", "core/CoreSetup.lua" },
         { "core/CoreSetup.lua", "core/PerfSetup.lua" },
+        -- The skin seam reads NS.Print and NS.L at load, and every frame builder and settings/General.lua
+        -- read NS.Skin and NS.SKIN_OPTIONS at load (skinning-§1: the owner registers at file load).
+        { "core/CoreSetup.lua", "core/SkinSetup.lua" },
+        { "core/SkinSetup.lua", "core/Bus.lua" },
+        { "core/SkinSetup.lua", "settings/General.lua" },
+        { "core/SkinSetup.lua", "modules/Anchors.lua" },
         { "core/PerfSetup.lua", "core/AuraMaster.lua" },
         { "core/Constants.lua", "core/DebugLogSetup.lua" },
         { "defaults/Categories.lua", "defaults/Profile.lua" },

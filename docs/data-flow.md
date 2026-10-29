@@ -44,7 +44,7 @@ engine does the reading, filtering, sorting, layout and timer animation in its o
         │  and candidate filters; sorts; lays out with the flow settings; creates buttons
         │  and calls initializeFrame for each new one
         ▼
- 6  Style.Element(button, cfg, true)                           modules/Style.lua:853
+ 6  Style.Element(button, cfg, true)                           modules/Style.lua:874
         │  build the regions once (icon, icon border, bar, fill, spark clip, text, border, pandemic wash)
         │  apply the look; bind regions to the engine: SetIcon, SetDurationBar, SetSpellName,
         │  SetDurationText, SetApplicationCount, AddDispelTypeTexture, AddPandemicRegion,
@@ -229,7 +229,7 @@ keeps the natural width, `ApplyWidth(element)`, and runs past it. Nothing on scr
 marks the point where a container attached to another joins it (batch 11 G6 removed batch 9's join
 pin); the strip's tooltip names the parent's point and the parent (`Anchors.JoinText`). While the
 container is attached to another container or a named frame, its strip name is a warm gray
-(`C.ATTACHED_NAME_COLOR`, the owner, 2026-09-26): attached, not undraggable. The tooltip's first line
+(the owner token `am.attachedName`, the owner, 2026-09-26): attached, not undraggable. The tooltip's first line
 says how to use the strip (`tooltipSpec`, issue #22): on the screen, "Drag to move. Drop it on another
 container to attach it there; hold Shift to place it without attaching."; attached to another
 container, "Attached to '*parent*'. Drag it away and let go once the marks turn red to detach it; let
@@ -498,7 +498,7 @@ leeway, the parent's) strip with each edge on a side it grows toward taken out t
 edge (A11, `Snap.ParentRect`, read in `modules/Anchors_SnapRect.lua`), with a 2 px edge in the mark's color on that container's drag-handle strip
 and on the dragged container's own (A13)
 (the owner-feedback addendum's A5 and A6: the strip's own 1 px gold edge repainted through
-`Style.DrawEdge`, no frame of ours anchored to it, and its gold, `Anchors.STRIP_EDGE`, painted back
+`Style.DrawEdge`, no frame of ours anchored to it, and its gold, the skin's `handle.edge` (`Anchors.PaintStripEdge`), painted back
 when the mark leaves it, hides or its container is destroyed; a box over its rect only when it has no
 visible strip), a dot on each of the two join
 points and a line between them, all in one color, and `Anchors.Place` leaves a dragging anchor alone. `Snap.Drop` decides
@@ -508,7 +508,7 @@ would change. An attached container has a leeway (the owner-feedback addendum's 
 128 since A9): while its current pair's two points stay that close to where they rested when the drag began, or
 to each other (the cursor's travel when its parent does not read), or while the snap's own pick is that
 very pair (over its third of a long parent's side, however far from its points), the mark stays green on that pair, the parent's strip repainted, and a release snaps it back, writing nothing; past it, the
-whole mark turns red (`C.DETACH_COLOR`) and a release detaches to the drop position, X/Y 0. Another
+whole mark turns red (`Snap.COLOR.detach`, the owner token `am.detach`) and a release detaches to the drop position, X/Y 0. Another
 pair in snap range, not its current one nor the one the pick gave where it rested, and nearer than it
 by the leeway's measure (the nearer of its two points' distance and how far that has moved since the
 drag began: 0 where it rests, though those points rest a seam, a nudge or a strip apart; DD-15R)
@@ -636,7 +636,7 @@ joined there lands past the block; its before-side edges stay the strip's. The r
 the target's drag-handle strip has its OWN 1 px gold edge repainted 2 px in the mark's color, through
 the painter that drew it (`Style.DrawEdge` on the strip, the same four textures; no frame of ours is
 anchored to a strip, since A5's overlay hung on it never showed in game), and the widget's gold
-(`Anchors.STRIP_EDGE`) painted back the moment the mark moves to another strip or hides, on every way a
+(`Anchors.PaintStripEdge`, the skin's `handle.edge`) painted back the moment the mark moves to another strip or hides, on every way a
 drag ends, and from `ContainerClass:Destroy` (`Snap.ReleaseStrip`) when the strip's container is
 destroyed mid-drag, so a dormant instance never comes back green; with a 10 px dot on the target's join point, one on the dragged
 container's and a 2 px line between them, all in one color, the dots on the two rects (the target's
@@ -668,7 +668,7 @@ pair's two points, and it must not turn red there. Otherwise,
 while that pair's two points are at most `C.DETACH_RADIUS` (128 UIParent units, A9) from where they were
 when the drag began (read before the lift, where its settings put it: the seam gap, its strip and
 label room and its X/Y nudge already between them), or from each other, the mark stays green on the current pair (a *hold*); beyond it,
-the repainted strip (or the box), both dots and the line all turn red (`C.DETACH_COLOR`, a *detach*). Shift suppresses only
+the repainted strip (or the box), both dots and the line all turn red (`Snap.COLOR.detach`, a *detach*). Shift suppresses only
 the other pair. When the parent does not read (hidden, or its hang frame secret, as an engine holding
 auras is), the hold lasts while the cursor has moved less than `C.DETACH_RADIUS` from where the drag
 began, and the dots and the line, having no parent rect to sit on, collapse onto the dot on the dragged

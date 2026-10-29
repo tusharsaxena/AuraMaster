@@ -26,6 +26,8 @@ read_globals = {
     "UnitExists", "GetWeaponEnchantInfo",
     -- which weapon an item-data event names (modules/ContainerManager.lua's enchant reset)
     "GetInventoryItemID",
+    -- the degraded skin facade's GetFont, without LibKa0s (core/SkinSetup.lua)
+    "STANDARD_TEXT_FONT",
 }
 
 globals = {

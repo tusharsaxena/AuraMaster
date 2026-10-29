@@ -83,16 +83,28 @@ function NS.RegisterDropdownWidget(AceGUI)
         end
         return w
     end, version)
+    -- THE SKIN PAINTS IT AS A DROPDOWN (AM-G1, LibKa0s SkinAce minor 4): the library's painter
+    -- dispatches on the widget's type name, so a type of our own would stay stock under every skin.
+    -- Naming its base once lets PaintAce, the Options proxy (every schema row with `values`), the
+    -- durability hooks and the release restore treat it as the stock Dropdown; the LEFT
+    -- justification above is ours and the library never touches it.
+    local Skin = LibStub and LibStub("LibKa0s-Skin-1.0", true)
+    if Skin and type(Skin.AliasAceType) == "function" then Skin:AliasAceType(DROPDOWN_WIDGET, "Dropdown") end
 end
 
 --- A dropdown for the addon's own hand-built controls: the addon's type once registered, the stock
---- one otherwise.
+--- one otherwise, painted for this owner's skin (core/SkinSetup.lua; the alias above lets the
+--- painter treat the addon's type as the stock Dropdown).
 function NS.CreateDropdown()
     local AceGUI = NS.AceGUI
+    local dd
     if AceGUI.GetWidgetVersion and AceGUI:GetWidgetVersion(DROPDOWN_WIDGET) then
-        return AceGUI:Create(DROPDOWN_WIDGET)
+        dd = AceGUI:Create(DROPDOWN_WIDGET)
+    else
+        dd = AceGUI:Create("Dropdown")
     end
-    return AceGUI:Create("Dropdown")
+    NS.SkinPaintAce(dd)
+    return dd
 end
 
 local lib = LibStub and LibStub("LibKa0s-Options-1.0", true)
@@ -322,6 +334,19 @@ if not lib then
     -- The Defaults-tooltip line the Keybindings tab adds (OptionsKeybinds 2): empty, since a build
     -- without the library draws no tooltip to end with it.
     Helpers.KEYBINDS_UNCHANGED = ""
+    -- The Skin tab (LibKa0s v1.78.0, OptionsAppearance minor 1; skinning-§3), owed by every Options
+    -- stub, adopted or not. On this path RenderTabbedSchema draws no tabs and EnsureScroll answers
+    -- nil, so the entry is inert and AppearanceRows answers nil, as the live one does when it cannot
+    -- draw. Labeled "Skin" since OptionsAppearance minor 3 (v1.79.0); the key stays "Appearance".
+    Helpers.AppearanceTab = function()
+        return { key = "Appearance", label = "Skin", render = function() end }
+    end
+    Helpers.AppearanceRows = function() return nil end
+    -- The first-run skin picker (LibKa0s v1.79.0, OptionsSkinPicker minor 1). Without the library
+    -- there is no skin to pick: SkinPicker draws nothing and answers nil (never the live one's
+    -- second value, "queued": there is no queue), and HideSkinPicker is a no-op.
+    Helpers.SkinPicker = function() return nil end
+    Helpers.HideSkinPicker = function() end
     -- The gap RenderWarnings leaves under its orange lines: a zero placeholder, never a plausible
     -- figure, since nothing is drawn without the library (RenderWarnings is a no-op above).
     Helpers.WARNINGS_GAP = 0
@@ -421,7 +446,7 @@ local C = NS.Constants
 local function containerList()
     local list, order = {}, {}
     for _, c in ipairs(NS.Database.GetContainersByName()) do
-        list[c.id] = ("%s  |cff888888(%s %s, %s)|r"):format(tostring(c.name),
+        list[c.id] = ("%s  %s(%s %s, %s)|r"):format(tostring(c.name), NS.SkinEscape("am.note") or "",
             L[C.UNIT_LABELS[c.unit] or tostring(c.unit)],
             L[C.AURA_TYPE_LABELS[c.auraType] or tostring(c.auraType)],
             L[C.STYLE_LABELS[c.style] or tostring(c.style)])
@@ -476,7 +501,7 @@ function Helpers.RenderWarnings(ctx, cfg)
     local plan = NS.FilterCompiler.Compile(cfg, NS.FilterCompiler.ProfileContext())
     local warnings = plan.warnings or {}
     for _, w in ipairs(warnings) do
-        Helpers.TextRow(ctx, "|cffffa040" .. L[w] .. "|r")
+        Helpers.TextRow(ctx, (NS.SkinEscape("am.planWarn") or "") .. L[w] .. "|r")
     end
     if #warnings > 0 then
         local scroll = Helpers.EnsureScroll and Helpers.EnsureScroll(ctx)

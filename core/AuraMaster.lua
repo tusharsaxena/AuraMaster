@@ -25,6 +25,9 @@ if NS.Util and NS.Util.printf then NS.Printf = NS.Util.printf end
 
 function addon:OnInitialize()
     NS:InitDB()
+    -- The profile's skin, applied as soon as the store exists (skinning-§2): the owner registered at
+    -- file load wearing Ka0s Default, before AceDB, and nothing has been drawn for it yet.
+    NS.ApplySkinChoice()
     -- THE HOLD IS TAKEN FROM THE STORED PATH, here, before anything registers or draws. Not a
     -- special case: it is the same NS.SyncEnabled call the checkbox, the two verbs and the profile
     -- callbacks make (core/LifecycleSetup.lua). Surviving a /reload is the whole point of the
@@ -112,12 +115,25 @@ local function traceEvent(event, fmt, ...)
         NS.Compat.AurasAreSecret(), InCombatLockdown() and true or false, queued, ...)
 end
 
+-- Whether this session has lit the skin picker's login timer (addon:OnEnterWorld): PLAYER_ENTERING_WORLD
+-- fires on every loading screen, and the picker is offered once.
+local skinPickerOffered = false
+
 function addon:OnEnterWorld(event, isLogin, isReload)
     traceEvent(event, " login=%s reload=%s", isLogin and true or false, isReload and true or false)
     NS.bus:SendMessage(NS.MSG.VISIBILITY_CHANGED)
     if NS.ContainerManager then NS.ContainerManager.FlushPending() end
     -- The loading screen is still up here; the primer notes the time (issue #24, FP-06).
     if NS.FontPrimer then NS.FontPrimer.OnEnterWorld() end
+    -- The first-run skin picker (core/SkinSetup.lua), once per session, on a profile that has not
+    -- closed it: two seconds in, off the login spike. A profile that has closed it arms nothing.
+    -- This event is registered only while the addon stands up, and the picker re-reads the latch
+    -- and the key when the timer fires, so a stand-down in between shows nothing. The stored skin
+    -- was applied in OnInitialize; in combat it holds for PLAYER_REGEN_ENABLED.
+    if not skinPickerOffered and NS.SkinPickerDue and NS.SkinPickerDue() then
+        skinPickerOffered = true
+        C_Timer.After(2, function() if NS.MaybeShowSkinPicker then NS.MaybeShowSkinPicker() end end)
+    end
 end
 
 -- The player may now be in another kind of place: re-run the visibility pass, which reads it
@@ -219,6 +235,10 @@ end
 
 --- Before the trace, so the trace follows the registry the new profile will run with.
 local function prepareProfile()
+    -- THE SKIN PICKER DOWN FIRST, unmarked (core/SkinSetup.lua): its dismissal puts back the skin
+    -- the OLD profile stored, so it must go before the new profile's skin is applied below, never
+    -- after. rebuildProfile offers it again to a profile that has not closed it.
+    if NS.HideSkinPicker then NS.HideSkinPicker() end
     -- THE USER CATEGORIES FIRST, for the same reason NS.RunMigrations syncs before it prepares
     -- (issue #10 checkpoint 3): until the sync swaps them, the container template still carries the
     -- PREVIOUS profile's user keys, so PrepareProfile's backfill would write those dead keys into
@@ -228,6 +248,10 @@ local function prepareProfile()
         NS.Categories.SyncUserCategories(NS.db.profile)
     end
     if NS.Database and NS.db then NS.Database.PrepareProfile(NS.db.profile) end
+    -- THE NEW PROFILE'S SKIN, before anything rebuilds against it (skinning-§2): a switch, a copy and
+    -- a reset each carry their own pair, exceptions and overrides, and SetChoice repaints this owner's
+    -- frames once (idempotent, so a profile with the same skin repaints nothing).
+    if NS.ApplySkinChoice then NS.ApplySkinChoice() end
     if NS.State then NS.State.SetActiveContainer(nil) end
     -- A PROFILE SWITCH CAN FLIP THE ENABLE PATH with no checkbox and no verb touched, so the latch
     -- is re-read from the new profile before anything rebuilds against it. `enabled` is a stored
@@ -244,6 +268,11 @@ local function rebuildProfile()
     if NS.ContainerManager and NS.ContainerManager.Announce then NS.ContainerManager.Announce(true) end
     if NS.BlizzardFrames and NS.BlizzardFrames.Apply then NS.BlizzardFrames.Apply() end
     if NS.RefreshOptionsPanel then NS.RefreshOptionsPanel() end
+    -- The first-run skin picker (core/SkinSetup.lua): a new or reset profile starts from the
+    -- defaults, `skin.pickerSeen` false, so it shows, a fresh showing over the new profile's skin;
+    -- one that has seen it stays down. After the latch (prepareProfile's NS.SyncEnabled), so a
+    -- profile with the addon switched off shows nothing.
+    if NS.MaybeShowSkinPicker then NS.MaybeShowSkinPicker() end
 end
 
 --- OnProfileChanged: a switch.

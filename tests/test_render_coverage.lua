@@ -364,17 +364,23 @@ local function differing(row, cur)
     return nil
 end
 
--- The toggles other rows only show under. On in the baseline; each is tested by turning it off.
+-- The toggles other rows only show under. On in the baseline; each is tested by turning it off. The
+-- "Use the skin's ..." companions (AM-03) are the other way about: OFF in the baseline, so the font
+-- and texture pickers they govern draw the stored pick and show a change; each companion is tested
+-- by turning it on, which draws the skin's face or texture in place of that pick.
+local OWN_FONT = { fontFromSkin = false }
 local GATES = {
-    bars = { borderShow = true, iconBorderShow = true, expiringColorOn = true },
-    icons = { borderShow = true, expiringColorOn = true },
+    bars = { borderShow = true, iconBorderShow = true, expiringColorOn = true,
+        barTextureFromSkin = false, bgTextureFromSkin = false,
+        name = OWN_FONT, time = OWN_FONT, stacks = OWN_FONT },
+    icons = { borderShow = true, expiringColorOn = true, time = OWN_FONT, stacks = OWN_FONT },
     -- Right, so Center (a multi-piece template stacks in rows, feedback #1) still moves the chain;
     -- an icon, so its rows reach one; a $dispeltype$ piece, so coloring its word has a word to color
     -- (feedback #7). Size to fit off, so Width and Height reach the element; turning it on then shows
     -- through the measurer rig() installs (batch 8, AS-1). The glow on, so its rows reach its sets
     -- (TG-03).
     text = { autoSize = false, icon = "LEFT", iconBorderShow = true, expiringColorOn = true, justifyH = "RIGHT",
-        glow = true,
+        glow = true, font = OWN_FONT,
         template = "$spellname$[ x$stacks$][ ($dispeltype$)][ - $remainingduration$]" },
 }
 

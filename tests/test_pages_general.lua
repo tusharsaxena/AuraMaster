@@ -232,12 +232,13 @@ test("general: the page's Defaults tooltip no longer mentions a container's iden
         NS.L["Restore every General setting on this profile to its addon default. The Minimap button is left alone — whether the button is shown is a per-installation preference, like where you dragged it. The spell categories' lists are not rows; each category has its own restore."])
 end)
 
-test("general: the tab strip reads Master controls, Blizzard frames, Spell categories, Dispel colors — Containers is gone from it", function()
+test("general: the tab strip reads Master controls, Blizzard frames, Spell categories, Dispel colors, Skin — Containers is gone from it", function()
     local NS, m, P = general()
     local keys = P.tabKeys("general")
     -- red under: the Containers tab left behind on General after N-1's move, or dropped without the
     -- Spell categories / Dispel colors tabs shifting up to take its old place
-    assertEqual(table.concat(keys, ","), "Master controls,Blizzard frames,Spell categories,Dispel colors")
+    -- The Skin tab (skinning-§3) is last: the library's O.AppearanceTab, keyed by the Appearance group.
+    assertEqual(table.concat(keys, ","), "Master controls,Blizzard frames,Spell categories,Dispel colors,Appearance")
     local seen = {}
     for _, k in ipairs(keys) do
         assertNil(seen[k], "tab " .. k .. " drawn twice")

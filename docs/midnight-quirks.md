@@ -67,7 +67,7 @@ after its `initializeFrame` has run. Its child regions cannot be reparented afte
 applies these access restrictions from `PLAYER_ENTERING_WORLD`.
 
 **What this addon does.**
-- **Builds at `PLAYER_LOGIN`** (`core/AuraMaster.lua:42`), before the restrictions apply, so every
+- **Builds at `PLAYER_LOGIN`** (`core/AuraMaster.lua:45`), before the restrictions apply, so every
   button's first dressing has an unrestricted window. That build ignores aura secrecy (never combat
   lockdown): a `/reload` or relog mid-key logs in with auras already secret, and holding the build
   there left every container blank until the key ended (`FlushPending("startup")`,
@@ -314,7 +314,7 @@ field's brackets (`$spellname$[-$stacks$]`) goes with the field, and the Text se
 **The restriction.** `AddDispelTypeTexture` and `AddPandemicRegion` append to the button.
 
 **What this addon does.** Every live restyle empties both lists FIRST, before any other binding,
-through `Style.ClearAdditiveBindings` (`modules/Style.lua:557`), and then adds again
+through `Style.ClearAdditiveBindings` (`modules/Style.lua:578`), and then adds again
 (`modules/Style_Bars.lua:326-333`, `modules/Style_Icons.lua:178`). The order matters: every `Set*` /
 `Add*` binding re-runs the engine's whole apply pass, which re-tints, shows or hides each dispel
 texture still listed, while `ClearDispelTypeTextures` itself touches no region. A clear made after
@@ -328,7 +328,7 @@ hides it, and clearing does not show it again.
 `UpdateAllAuras` exists for external refreshes such as target changes.
 
 **What this addon does.** `PLAYER_TARGET_CHANGED`, `PLAYER_FOCUS_CHANGED` and `UNIT_PET` (for the
-player) call `UpdateAllAuras` on every container on that unit (`core/AuraMaster.lua:172-191`).
+player) call `UpdateAllAuras` on every container on that unit (`core/AuraMaster.lua:188-207`).
 
 ## An addon font loads lazily, and the engine writes a name once (measured 2026-09-27)
 
@@ -590,7 +590,7 @@ The restyle stopped at the border, after `Style.ClearAdditiveBindings` had empti
 and before `Icons.Bind` could add it back: that is the lost highlight.
 
 **What this addon does.** No aura-button border reads a size (`Style.ApplyBorder`,
-`modules/Style.lua:495`):
+`modules/Style.lua:516`):
 - **Solid**, the default, is four strip textures of our own on the border frame, each anchored between
   two corners, its thickness a plain setting (the pattern of a Text line's dispel edge). Nothing is
   read, so a Solid border redraws on every restyle.
@@ -722,7 +722,7 @@ smoke, 2026-10-15).
   string's shadow in the glow color at −2d, look the same as eight.
 
 **What this addon does.** A Text container with Glow on builds `C.TEXT_GLOW_TWINS` twin engines
-(`core/Constants.lua:362`: 4 under shadow pairing, `C.TEXT_GLOW_PAIRED`, else 8) beside its main
+(`core/Constants.lua:349`: 4 under shadow pairing, `C.TEXT_GLOW_PAIRED`, else 8) beside its main
 (`modules/Container_Twins.lua`). Each takes the main's unit, groups, view, enchant slots and flow
 through the same calls in the same order, hangs from a holder of ours at Thickness × its ring
 direction plus Offset X and Y, and sits three frame levels below the main, written before its first
@@ -788,7 +788,7 @@ does not set the flag.
 - **Blizzard's `BuffFrame` and `DebuffFrame` are reparented, never hidden**, and only out of combat
   (`modules/BlizzardFrames.lua`, events-frames-taint-§3).
 - **Protected opens are refused, not deferred.** The options panel (the library, options-ui-§2),
-  `NS.OpenOptionsPage` (`settings/OptionsSetup.lua:372`), the frame picker and a handle drag all
+  `NS.OpenOptionsPage` (`settings/OptionsSetup.lua:397`), the frame picker and a handle drag all
   refuse under `InCombatLockdown()`.
 - **A settings page shown in combat is locked, never closed** (LibKa0s v1.46.1, options-ui-§2). A
   page reached in combat (the AddOns sidebar), or open when combat starts, is covered whole — header
@@ -857,7 +857,7 @@ does not set the flag.
   only while `Compat.AurasAreSecret()` is false, and through the `core/Secrets.lua` gates; chat and
   debug lines go through `NS.SafeToString`.
 - **Right-click cancel uses one click phase** (`RightButtonUp`) so a button reassigned between press
-  and release cannot cancel the wrong aura (`modules/Style.lua:908`).
+  and release cannot cancel the wrong aura (`modules/Style.lua:929`).
 - **Animations on engine buttons are set up at dress time only.** `modules/Style_Text.lua` builds its
   three AnimationGroups with the regions and calls `Stop`/`Play` only in a dress (initializeFrame or a
   restyle while auras are readable), each through `Style.Bind`, so a refusal costs one call and is

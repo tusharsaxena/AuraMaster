@@ -43,6 +43,27 @@ function Style.Fetch(mediaType, key, fallback)
     return fallback
 end
 
+--- The media key a HUD pick draws (skinning-§6, the owner's ruling O2): the owner's skin token
+--- `token` while the pick's "Use the skin's ..." companion `fromSkin` is on, else the stored `key`.
+--- Through the owner's facade, S.Resolve, so the Skin tab's own font or texture override wins over the
+--- skin's. The stored pick is never rewritten: turning the companion off brings it back. A facade
+--- that answers nothing (degraded, no LibKa0s) draws the stored pick, the look before skins. While
+--- the Skin tab's "Ignore fonts" is on (NS.SkinFontsIgnored) a `hud.font` pick draws the stored
+--- face whatever its companion says: the library's Resolve never reads that exception itself.
+---
+--- NOT a recorded primitive (S.BarTexture and friends): the regions this dresses sit on Blizzard's
+--- pooled aura buttons, whose geometry reads secret and which a skin registry must never hold. A
+--- skin switch reaches them through the one OnLooksChanged listener (modules/ContainerManager.lua),
+--- which re-applies every container. Read per dress, never per aura event.
+function Style.SkinKey(token, key, fromSkin)
+    if fromSkin ~= true then return key end
+    if token == "hud.font" and NS.SkinFontsIgnored and NS.SkinFontsIgnored() then return key end
+    local S = NS.Skin
+    local v = S and S.Resolve and S.Resolve(token, key, true)
+    if v == nil then return key end
+    return v
+end
+
 -- The class color of the dress in progress: the container's snapshot of its tracked unit's class
 -- ({ r, g, b }, with r nil when that class did not resolve), or nil for a player container. Set and
 -- cleared by Style.Element, so nothing between it and Style.Color has to thread it through.
@@ -1025,10 +1046,12 @@ end
 --- The font file, size and client flag string font block `t` draws in (`tdef` the template's block,
 --- which the size falls back to): the one resolution Style.ApplyFont sets, the measures (TimeTextWidth,
 --- WidestLine, PiecePadding) measure in and modules/FontPrimer.lua primes, so the primed font is the
---- one the text uses. The file is LibSharedMedia's, or the built-in fallback when the name no longer
---- resolves.
+--- one the text uses. The face is the skin's `hud.font` while `fontFromSkin` is on (Style.SkinKey;
+--- a missing companion reads the template's); the file is LibSharedMedia's, or the built-in fallback
+--- when the name no longer resolves.
 function Style.FontKey(t, tdef)
     local size = tonumber(t.fontSize) or tdef.fontSize
     local flags = FLAG_MAP[t.fontFlags or "NONE"] or (t.fontFlags or "")
-    return Style.Fetch("font", t.font, C.FALLBACK_FONT), size, flags
+    local key = Style.SkinKey("hud.font", t.font, Style.OrTemplate(t.fontFromSkin, tdef.fontFromSkin))
+    return Style.Fetch("font", key, C.FALLBACK_FONT), size, flags
 end

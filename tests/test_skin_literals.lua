@@ -1,0 +1,195 @@
+-- tests/test_skin_literals.lua — the hard-coded color gate (AM-02; skinning's anti-pattern #107,
+-- binding for this addon since it adopted skins). The gate is LootHistory's
+-- (../LootHistory/tests/test_skin_literals.lua), with this addon's allow-list.
+--
+-- WHAT IT PROVES. That no color this addon draws is a literal the skin cannot reach. Two shapes are
+-- caught, in every tracked .lua file under core/, modules/ and settings/:
+--
+--   1. A NUMERIC LITERAL IN A COLOR POSITION of a paint call: the r, g or b argument of
+--      SetTextColor, SetColorTexture, SetVertexColor, SetBackdropColor and SetBackdropBorderColor,
+--      the r, g, b after AddLine's text, the two r, g, b triples after AddDoubleLine's texts, and
+--      the r, g, b after the frame and size of Style.DrawEdge, the painter of this addon's own edges
+--      (the unlocked outline, the frame picker's outline, the drag strip's edge, the snap box).
+--      `SetTextColor(0.85, 0.85, 0.85)` fails; `SetTextColor(NS.SkinColor("text.accent"))` passes.
+--      An ALPHA literal over token components (`SetColorTexture(r, g, b, 0.95)`) is not a color:
+--      it is the surface's opacity, the same under every skin, and is left alone on purpose.
+--   2. A `|cff` (any case) escape in code, i.e. markup that names a color byte for byte. Comments
+--      are stripped first; NS.SkinEscape builds the escapes a token feeds.
+--
+-- core/SkinSetup.lua is out of scope: it IS the seam, and its host copy of the Ka0s Default tokens
+-- (NS.SKIN_FALLBACK) and NS.SkinEscape's format are the literals every other file reads through.
+-- Colors held as "aarrggbb" data and joined to "|c" at the call site (core/Constants.lua's identity
+-- palette) are not escapes in code and are not caught: they are a rung-4 exception (decision D8).
+--
+-- THE ALLOW-LIST. Each entry names one file, a plain substring the offending line carries, and the
+-- reason it is not chrome. An entry that matches nothing fails the gate, so the list cannot outlive
+-- what it excuses.
+--
+-- IT FAILS RATHER THAN PASSES WHEN IT CANNOT LOOK: no io.popen, no git, or an empty file list is a
+-- failure. The last case proves the gate is falsifiable: a planted literal of each shape is reported.
+
+local T = _G.AM_TEST
+local test, assertEqual, assertTrue, fail = T.test, T.assertEqual, T.assertTrue, T.fail
+local ROOT = "."
+
+local SEAM = "core/SkinSetup.lua"
+
+-- call name -> the argument positions that hold color components.
+local COLOR_ARGS = {
+    SetTextColor = { 1, 2, 3 }, SetColorTexture = { 1, 2, 3 }, SetVertexColor = { 1, 2, 3 },
+    SetBackdropColor = { 1, 2, 3 }, SetBackdropBorderColor = { 1, 2, 3 },
+    AddLine = { 2, 3, 4 }, AddDoubleLine = { 3, 4, 5, 6, 7, 8 },
+    DrawEdge = { 3, 4, 5 },
+}
+
+local CHAT = "chat output: DEFAULT_CHAT_FRAME is Blizzard's, not a skinned surface (decision D9, X7)"
+local ALLOW = {
+    { file = "core/Namespace.lua", find = "NS.PREFIX", why = "the chat prefix: chat output's cyan brand (X7)" },
+    { file = "core/DebugLogSetup.lua", find = "|cff40ff40", why = CHAT .. "; the degraded debug ON/OFF line" },
+    { file = "modules/FramePicker.lua", find = "|cff808080", why = CHAT .. "; the combat refusal" },
+    { file = "modules/Preview.lua", find = "|cff808080", why = CHAT .. "; the combat refusal" },
+    { file = "settings/Containers.lua", find = "printf(\"|cff808080%s|r\", err)", why = CHAT .. "; a refused write" },
+    { file = "settings/Containers.lua", find = "return printf(\"|cff808080%s|r\", L[", why = CHAT .. "; the combat refusal" },
+    { file = "settings/Layout.lua", find = "NS.Printf(\"|cff808080%s|r\"", why = CHAT .. "; the attach refusals" },
+    { file = "settings/OptionsSetup.lua", find = "NS.Printf(\"|cff808080%s|r\"", why = CHAT .. "; the combat refusal" },
+    { file = "settings/Slash.lua", find = "|cFFFFFF00", why = CHAT .. "; the library's disabled-line fallback, pinned byte for byte" },
+    { file = "settings/Slash.lua", find = "|cff888888", why = CHAT .. "; /am list's container line" },
+    { file = "settings/Slash.lua", find = "|cff808080", why = CHAT .. "; refusals and the get/set echo's notes" },
+    { file = "settings/Slash.lua", find = "|cff33ff99", why = CHAT .. "; /am list's active-container mark" },
+    { file = "modules/Style.lua", find = "strip:SetVertexColor(1, 1, 1, 1)",
+      why = "Style.TintEdge's dispel strips: left white for the aura engine to tint (game meaning, rung 4)" },
+    { file = "modules/Style_Text.lua", find = "word = \"|cff\" .. hex(c.r)",
+      why = "the dispel word in its dispel type's color (game meaning, rung 4)" },
+    { file = "modules/Style_Text.lua", find = "text:gsub(\"|cff%x%x%x%x%x%x.-|r\"",
+      why = "a pattern that finds a colored run in a template, not a color" },
+    { file = "settings/Text.lua", find = "(\"|cff%02x%02x%02x%s|r\"):format(hex(r), hex(g), hex(b), raw)",
+      why = "the Text page's preview in the player's own font color (a user setting, never chrome)" },
+}
+
+--- Strip a line's trailing comment. `--` never occurs inside a string in these files' color code, so
+--- a plain cut is enough; a string that did hold one would only shorten what is scanned.
+local function code(line) return (line:gsub("%-%-.*$", "")) end
+
+--- Split a call's argument list at its top-level commas (parens, braces and quotes nest).
+local function splitArgs(s)
+    local args, depth, buf, quote = {}, 0, {}, nil
+    local i = 1
+    while i <= #s do
+        local c = s:sub(i, i)
+        if quote then
+            buf[#buf + 1] = c
+            if c == "\\" then buf[#buf + 1] = s:sub(i + 1, i + 1); i = i + 1
+            elseif c == quote then quote = nil end
+        elseif c == '"' or c == "'" then quote = c; buf[#buf + 1] = c
+        elseif c == "(" or c == "{" or c == "[" then depth = depth + 1; buf[#buf + 1] = c
+        elseif c == ")" or c == "}" or c == "]" then depth = depth - 1; buf[#buf + 1] = c
+        elseif c == "," and depth == 0 then args[#args + 1] = table.concat(buf); buf = {}
+        else buf[#buf + 1] = c end
+        i = i + 1
+    end
+    args[#args + 1] = table.concat(buf)
+    return args
+end
+
+local function isNumber(arg) return arg:match("^%s*%-?%d*%.?%d+%s*$") ~= nil end
+
+--- Every offending line of one source text: { line = n, text = what was found }.
+local function scan(src)
+    local lines, hits = {}, {}
+    for ln in (src .. "\n"):gmatch("(.-)\n") do lines[#lines + 1] = code(ln) end
+    local stripped = table.concat(lines, "\n")
+    for name, positions in pairs(COLOR_ARGS) do
+        local init = 1
+        while true do
+            local s, e, args = stripped:find("[:%.]" .. name .. "%s*(%b())", init)
+            if not s then break end
+            init = e + 1
+            local list = splitArgs(args:sub(2, -2))
+            for _, p in ipairs(positions) do
+                if list[p] and isNumber(list[p]) then
+                    local n = select(2, stripped:sub(1, s):gsub("\n", "")) + 1
+                    hits[#hits + 1] = { line = n, text = lines[n] }
+                    break
+                end
+            end
+        end
+    end
+    for n, ln in ipairs(lines) do
+        if ln:find("|c[fF][fF]") then hits[#hits + 1] = { line = n, text = ln } end
+    end
+    return hits
+end
+
+local function allowed(file, text, used)
+    for i, a in ipairs(ALLOW) do
+        if a.file == file and text:find(a.find, 1, true) then used[i] = true; return true end
+    end
+    return false
+end
+
+local function trackedSources()
+    if not io.popen then fail("skin literal gate: io.popen is unavailable, so this gate cannot run") end
+    local p = io.popen("git -C " .. ROOT .. " ls-files 'core/*.lua' 'modules/*.lua' 'settings/*.lua' 2>/dev/null")
+    if not p then fail("skin literal gate: io.popen returned no handle") end
+    local files = {}
+    for path in p:lines() do if path ~= SEAM then files[#files + 1] = path end end
+    p:close()
+    if #files == 0 then fail("skin literal gate: git listed no source files, so nothing was scanned") end
+    return files
+end
+
+local function readAll(path)
+    local f = io.open(ROOT .. "/" .. path, "rb")
+    if not f then fail("skin literal gate: cannot read " .. path) end
+    local s = f:read("*a")
+    f:close()
+    return s
+end
+
+test("no color literal outside core/SkinSetup.lua and the named allow-list", function()
+    local bad, used = {}, {}
+    for _, path in ipairs(trackedSources()) do
+        for _, h in ipairs(scan(readAll(path))) do
+            if not allowed(path, h.text, used) then
+                bad[#bad + 1] = ("%s:%d: %s"):format(path, h.line, (h.text:gsub("^%s+", "")))
+            end
+        end
+    end
+    assertEqual(#bad, 0, "hard-coded colors the skin cannot reach (read a token through NS.Skin / "
+        .. "NS.SkinColor / NS.SkinEscape, or add an allow-list entry with its reason):\n  "
+        .. table.concat(bad, "\n  "))
+    for i, a in ipairs(ALLOW) do
+        assertTrue(used[i], ("stale allow-list entry: %s %q matches nothing"):format(a.file, a.find))
+    end
+end)
+
+test("every allow-list entry carries its reason", function()
+    for _, a in ipairs(ALLOW) do
+        assertTrue(type(a.why) == "string" and #a.why > 10, a.file .. " " .. a.find .. ": no reason")
+    end
+end)
+
+test("the gate is falsifiable: a planted literal of each shape is reported", function()
+    local planted = table.concat({
+        "local x = 1",
+        "fs:SetTextColor(0.85, 0.85, 0.85)",
+        "tex:SetColorTexture(r, g,",
+        "  0.5, 1)",
+        'tt:AddLine("n records", 0.7, 0.7, 0.7)',
+        'tt:AddDoubleLine("a", "b", r, g, b, 1, 1, 1)',
+        'local s = "|cff808080(none)|r"',
+        "fs:SetTextColor(NS.SkinColor(\"text.body\"))   -- 0.9, 0.9, 0.9 in a comment",
+        "tex:SetColorTexture(r, g, b, 0.95)",
+        "-- |cffffffff in a comment",
+        "NS.Style.DrawEdge(o, 1, 1, 1, 1, 0.35)",
+        "NS.Style.DrawEdge(outline, 2, r, g, b, 0.5)",
+        "cd:SetDrawEdge(true)",
+    }, "\n")
+    local hits = scan(planted)
+    local lines = {}
+    for _, h in ipairs(hits) do lines[#lines + 1] = h.line end
+    table.sort(lines)
+    assertEqual(table.concat(lines, ","), "2,3,5,6,7,11",
+        "the literal lines and only those (a token call, an alpha literal, a comment, DrawEdge over "
+        .. "token components and the cooldown's SetDrawEdge pass)")
+end)

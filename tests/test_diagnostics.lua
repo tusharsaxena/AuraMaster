@@ -806,12 +806,12 @@ local function primerEnv(atLogin)
 end
 
 --- Two containers on addon fonts: #1's bar name on Prototype 10 with no outline, #4's Text line on
---- Kait 17 with a thick outline.
+--- Kait 17 with a thick outline; each the player's own face, its "Use the skin's font" off (AM-03).
 local function primerFonts(NS)
     local n = NS.Database.FindContainer(1).bars.name
-    n.font, n.fontSize, n.fontFlags = "Ka0s Prototype", 10, "NONE"
+    n.font, n.fontSize, n.fontFlags, n.fontFromSkin = "Ka0s Prototype", 10, "NONE", false
     local t = NS.Database.FindContainer(4).text.font
-    t.font, t.fontSize, t.fontFlags = "Ka0s Kait", 17, "THICKOUTLINE"
+    t.font, t.fontSize, t.fontFlags, t.fontFromSkin = "Ka0s Kait", 17, "THICKOUTLINE", false
 end
 
 --- The `fonts primed:` header line, or nil.

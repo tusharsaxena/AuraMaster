@@ -85,7 +85,7 @@ test("width: in test mode the name is shortened, never the TEST tag, which stays
     assertEqual(text:sub(-#tag), tag, "the TEST tag kept whole, last")
     assertEqual(text:sub(-#tag - 3, -#tag - 1), "...", "the name before it shortened")
     assertTrue(#text * PX <= w - RESERVE2, "and the whole of it fits: " .. text)
-    assertTrue(rec.text:find(NS.Constants.TEST_TAG_COLOR, 1, true) ~= nil, "the tag still orange")
+    assertTrue(rec.text:find("|cffff8000", 1, true) ~= nil, "the tag still orange")
     assertEqual(inst.stripOverhang, 0)
 end)
 
@@ -108,7 +108,8 @@ test("width: the full name stays the strip's tooltip title", function()
     end
     NS.Anchors.BuildHandle(inst)
     lib.DragHandle = build
-    assertEqual(spec.tooltip.title(), LONG)
+    -- the title is a { text, r, g, b } entry whose color the skin answers on each hover
+    assertEqual(spec.tooltip.title[1](), LONG)
 end)
 
 test("width: a one-icon container too narrow for the marks and a readable label keeps its natural width", function()

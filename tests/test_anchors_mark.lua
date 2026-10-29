@@ -79,7 +79,7 @@ end
 
 test("mark: the dragged container's own strip is repainted with the target's, 2px in green (A13)", function()
     local NS, _, inst, Snap = screenDrag()
-    local green = NS.Constants.SNAP_COLOR
+    local green = NS.Anchors.Snap.COLOR.attach
     -- red under: only the target's strip repainted (the dragged one kept its gold)
     assertEqual(stripEdge(inst.handle), rgba(green), "the dragged strip")
     assertTrue(Snap.MarkedChildStrip() == inst.handle, "the strip the mark says it painted")
@@ -100,15 +100,15 @@ test("mark: past the leeway the dragged strip turns red with its parent's, and a
     holdAnchor(inst.anchor)
     plant(inst.anchor, 0, 75, 20, 95)
     inst.handle:__fire("OnDragStart")
-    local Snap, C = NS.Anchors.Snap, NS.Constants
+    local Snap = NS.Anchors.Snap
     plant(inst.anchor, 0, 50, 20, 70)
     assertEqual(select(2, Snap.Tick()), "hold", "within the leeway")
-    assertEqual(stripEdge(inst.handle), rgba(C.SNAP_COLOR), "hold: the dragged strip green")
+    assertEqual(stripEdge(inst.handle), rgba(NS.Anchors.Snap.COLOR.attach), "hold: the dragged strip green")
     plant(inst.anchor, 0, -54, 20, -34)
     assertEqual(select(2, Snap.Tick()), "detach", "past the leeway")
     -- red under: the dragged strip left green (or gold) while the rest of the mark turned red
-    assertEqual(stripEdge(inst.handle), rgba(C.DETACH_COLOR), "detach: the dragged strip red")
-    assertEqual(stripEdge(CM.instances[1].handle), rgba(C.DETACH_COLOR), "detach: the parent's strip red")
+    assertEqual(stripEdge(inst.handle), rgba(NS.Anchors.Snap.COLOR.detach), "detach: the dragged strip red")
+    assertEqual(stripEdge(CM.instances[1].handle), rgba(NS.Anchors.Snap.COLOR.detach), "detach: the parent's strip red")
     inst.handle:__fire("OnDragStop")
     assertEqual(stripEdge(inst.handle), GOLD, "dropped: its gold back")
     assertNil(Snap.MarkedChildStrip(), "and the mark holds no dragged strip")
@@ -120,7 +120,7 @@ test("mark: a Destroy of the dragged container gives its strip's gold back by it
     -- red under: ReleaseStrip checking the target's strip only (the dragged one waited for EndDrag)
     assertEqual(stripEdge(inst.handle), GOLD, "the dragged strip's gold is back")
     assertNil(Snap.MarkedChildStrip(), "and the mark holds no dragged strip")
-    assertEqual(stripEdge(NS.ContainerManager.instances[1].handle), rgba(NS.Constants.SNAP_COLOR),
+    assertEqual(stripEdge(NS.ContainerManager.instances[1].handle), rgba(NS.Anchors.Snap.COLOR.attach),
         "the target's strip is not the dragged one's: still marked")
 end)
 
@@ -307,7 +307,7 @@ test("mark: the dragged strip's own gold comes back on every path the mark ends 
         local what, run = path[1], path[2]
         local NS, mocks, inst, Snap = screenDrag()
         local strip = inst.handle
-        assertEqual(stripEdge(strip), rgba(NS.Constants.SNAP_COLOR), what .. ": marked first")
+        assertEqual(stripEdge(strip), rgba(NS.Anchors.Snap.COLOR.attach), what .. ": marked first")
         run(NS, mocks, inst)
         -- red under: a path that hides the mark without restoring the dragged strip's own edge
         assertEqual(stripEdge(strip), GOLD, what .. ": the dragged strip's own gold is back")

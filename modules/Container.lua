@@ -24,8 +24,8 @@ ContainerClass.__index = ContainerClass
 local Perf = NS.Perf
 local D = NS.CONTAINER_TEMPLATE
 local HUGE = math.huge
--- The unlocked outline's opacity: faint enough to read as a guide, never as a border (B1).
-local OUTLINE_ALPHA = 0.35
+-- The unlocked outline's color token, Ka0s Default's white at 0.35: a guide, never a border (B1).
+local OUTLINE_TOKEN = "chart.crosshair"
 local EMPTY = {}
 
 local function callEngine(engine, method, ...)
@@ -772,6 +772,13 @@ function ContainerClass:ApplyAlpha(cfg, p)
     self.anchor:SetAlpha((tonumber(L.alpha) or 1) * (tonumber(p and p.alpha) or 1))
 end
 
+--- Paint the unlocked outline `o`'s 1px edge in the skin's guide color, `chart.crosshair`: a guide
+--- line over content is the crosshair's role (the M0 consolidation refuted AM-G3: no owner token).
+local function paintOutline(o)
+    local r, g, b, a = NS.Skin.Color(OUTLINE_TOKEN)
+    NS.Style.DrawEdge(o, 1, r, g, b, a)
+end
+
 --- The container's OUTLINE: a faint one-pixel box, a frame of ours under the anchor, never the
 --- engine's. Two shapes:
 ---   the empty-only PLACEHOLDER (B1, batch 9 HG-1): one element's size, at the corner its flow starts
@@ -794,7 +801,7 @@ function ContainerClass:ApplyOutline(cfg, on, block)
     end
     if not o then
         o = CreateFrame("Frame", nil, self.anchor)
-        NS.Style.DrawEdge(o, 1, 1, 1, 1, OUTLINE_ALPHA)
+        paintOutline(o)
         o:EnableMouse(false)
         self.outline = o
     end
@@ -1006,3 +1013,10 @@ function ContainerClass:Destroy()
     self.anchor:Hide()
     self.anchor:ClearAllPoints()
 end
+
+-- A skin switch repaints every built outline (its edge is ours, drawn by Style.DrawEdge).
+NS.Skin.OnLooksChanged(function()
+    for _, inst in pairs(NS.ContainerManager and NS.ContainerManager.instances or {}) do
+        if inst.outline then paintOutline(inst.outline) end
+    end
+end)

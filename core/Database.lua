@@ -2,7 +2,7 @@ local _, NS = ...
 
 -- core/Database.lua — AceDB, the schema migration runner, and the pure data helpers over the
 -- container registry. Called from core/AuraMaster.lua's OnInitialize and headlessly by the harness.
--- The step bodies the ladder runs (Database.MigrateV2 .. MigrateV12) are core/Database_Migrations.lua.
+-- The step bodies the ladder runs (Database.MigrateV2 .. MigrateV13) are core/Database_Migrations.lua.
 --
 -- NOTHING HERE TOUCHES A FRAME. The registry's CRUD with its messages and live instances is
 -- modules/ContainerManager.lua; this file only knows what a container looks like on disk.
@@ -434,6 +434,18 @@ local SCHEMA_STEPS = {
             local n = Database.MigrateV12(p)
             if NS.DebugLog then
                 NS.DebugLog.DebugAtEnable("Migrate", "v12 profile '%s': Soft CC split into CC Root and CC Snare on %s container(s)", name, n)
+            end
+        end)
+    end },
+    { to = 13, apply = function(db)
+        -- The one-time HUD reset onto the skin (O2): Database.MigrateV13 says what it moves and why
+        -- the companions are seeded before ResetToSkin.
+        local Skin = LibStub and LibStub("LibKa0s-Skin-1.0", true)
+        local resetToSkin = Skin and type(Skin.ResetToSkin) == "function" and Skin.ResetToSkin or nil
+        eachProfile(db, function(p, name)
+            local n = Database.MigrateV13(p, resetToSkin)
+            if NS.DebugLog then
+                NS.DebugLog.DebugAtEnable("Migrate", "v13 profile '%s': fonts and bar textures put back on the skin on %s container(s)", name, n)
             end
         end)
     end },

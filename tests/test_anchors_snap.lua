@@ -761,9 +761,9 @@ end)
 test("snap: the radius is 24 UIParent units and the highlight is an opaque green", function()
     local NS = fresh()
     local C = NS.Constants
-    -- red under: no C.SNAP_RADIUS / C.SNAP_COLOR
+    -- red under: no C.SNAP_RADIUS / no Snap.COLOR.attach (Ka0s Default's am.attach)
     assertEqual(C.SNAP_RADIUS, 24)
-    local col = C.SNAP_COLOR
+    local col = NS.Anchors.Snap.COLOR.attach
     assertTrue(type(col) == "table" and col.g > col.r and col.g > col.b, "green")
     assertEqual(col.a, 1)
     assertFalse(col.r > 0.5, "not yellow")

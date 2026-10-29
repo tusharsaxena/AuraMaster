@@ -580,13 +580,20 @@ NS.RegisterSchemaRows({
     },
 })
 -- The composer carries no disabledIf, so the font rows take it here (settings/Bars.lua's tooltips
--- are set the same way). Not the color swatch: a swatch is never grayed (anti-pattern #74).
+-- are set the same way). Not the color swatch: a swatch is never grayed (anti-pattern #74). The face
+-- picker already dims under its "Use the skin's font" companion (`fromSkin`, the composer's
+-- disabledIf naming the companion's path), so it dims for either: the label off or the skin's face.
 local labelFont = H.FontGroup({
     prefix = "container.label.font.", page = PAGE, group = G_LABEL, subgroup = L["Font"],
-    classColor = { source = "unit" },
+    classColor = { source = "unit" }, fromSkin = true,
 })
 for _, row in ipairs(labelFont) do
-    if row.type ~= "color" then row.disabledIf = labelOff end
+    local governedBy = row.disabledIf
+    if type(governedBy) == "string" then
+        row.disabledIf = function() return labelOff() or NS.GetSetting(governedBy) == true end
+    elseif row.type ~= "color" then
+        row.disabledIf = labelOff
+    end
 end
 NS.RegisterSchemaRows(labelFont)
 
@@ -606,6 +613,7 @@ end
 --- is a cell-filling button, so it takes the library's inset width rather than a flush half.
 local function pickButton(_, line)
     local btn = NS.AceGUI:Create("Button")
+    NS.SkinPaintAce(btn)   -- this owner's skin (core/SkinSetup.lua)
     btn:SetText(L["Pick a frame..."])
     btn:SetRelativeWidth(H.BUTTON_PAIR_REL)
     btn:SetCallback("OnClick", pickFrame)
@@ -634,6 +642,7 @@ end
 --- The Container dropdown's right half (pairWith): the read-only attachment line.
 local function attachedLine(_, line)
     local label = NS.AceGUI:Create("Label")
+    NS.SkinPaintAce(label)   -- this owner's skin (core/SkinSetup.lua)
     label:SetRelativeWidth(0.5)
     label:SetText(attachedText())
     line:AddChild(label)
@@ -650,7 +659,7 @@ local function growthNote(ctx, cfg)
     local root = NS.Anchors.FlowRoot(cfg)
     if root then
         local note = L["Fill and growth follow '%s' because this container is attached to it."]
-        H.TextRow(ctx, "|c" .. C.SECONDARY_GOLD .. note:format(tostring(root.name)) .. "|r")
+        H.TextRow(ctx, (NS.SkinEscape("am.goldMuted") or "") .. note:format(tostring(root.name)) .. "|r")
         local scroll = H.EnsureScroll(ctx)
         if scroll then H.AddSpacer(scroll, H.ROW_VSPACER) end
         return
@@ -675,7 +684,8 @@ end
 -- from its parent's flow so that they never face it.
 
 local SMALL = { fontObject = "GameFontHighlightSmall" }
-local GRAY = "|cff808080%s|r"
+-- A muted note in the skin's `text.disabled` (Ka0s Default's 808080, decision D7), read at render.
+local function gray(text) return (NS.SkinEscape("text.disabled") or "") .. text .. "|r" end
 local OPPOSITE = { up = "down", down = "up", left = "right", right = "left" }
 
 --- Whether a point's vertical side faces growth `growV` (its BOTTOM growing down, its TOP up).
@@ -718,7 +728,7 @@ local function growsBackNote(ctx)
     local cfg = NS.ActiveContainer()
     if not cfg then return end
     for _, line in ipairs(growsBackLines(cfg)) do
-        H.TextRow(ctx, GRAY:format(line), SMALL)
+        H.TextRow(ctx, gray(line), SMALL)
     end
 end
 

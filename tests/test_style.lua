@@ -480,7 +480,8 @@ test("style: a font the client refuses falls back to the built-in font at the sa
     registered["font:Gone"] = "Interface\\AddOns\\SomePack\\Gone.ttf"
     local fs = R()
     fs.__answer.SetFont = function(_, path) return path == C.FALLBACK_FONT end
-    NS2.Style.ApplyText(fs, { font = "Gone", fontSize = 13, fontFlags = "OUTLINE" }, R(), D.bars.name)
+    -- The player's own face (its "Use the skin's font" off), which is the one the client refuses.
+    NS2.Style.ApplyText(fs, { font = "Gone", fontFromSkin = false, fontSize = 13, fontFlags = "OUTLINE" }, R(), D.bars.name)
     local calls = fs:__calls("SetFont")
     assertEqual(calls[1][1], registered["font:Gone"], "the listed font is tried first")
     -- red under: ApplyText ignoring SetFont's answer (the text draws in no font at all)

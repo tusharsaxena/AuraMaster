@@ -637,8 +637,8 @@ test("preview: a LOCKED test mode marks every previewing container with a TEST t
     assertFalse(inst.testMarker:IsShown(), "the marker goes when test mode does")
     NS2.Preview.SetTestMode(true)
     mocks.__fireTimers()
-    -- the localized word, in the strip tag's orange
-    assertEqual(texts[#texts], "|c" .. NS2.Constants.TEST_TAG_COLOR .. NS2.L["TEST"] .. "|r")
+    -- the localized word, in the strip tag's orange (Ka0s Default's sem.warn)
+    assertEqual(texts[#texts], "|cffff8000" .. NS2.L["TEST"] .. "|r")
 end)
 
 test("preview: an UNLOCKED test mode leaves the TEST tag to the strip, and the marker returns when it locks again", function()

@@ -157,7 +157,7 @@ end
 
 --- The client's name for spell `id`, lowercased for sorting, or nil while it has none. The lookup is
 --- `NS.Compat.GetSpellInfo`, deliberately the same C_Spell call the library's own entry label reads
---- (`libs/LibKa0s/OptionsIds.lua:52-60`), so a list can never sort on one name and draw
+--- (`libs/LibKa0s/OptionsIds.lua:54-62`), so a list can never sort on one name and draw
 --- another.
 local function sortName(id)
     local name = NS.Compat.GetSpellInfo(id)
@@ -335,7 +335,7 @@ local ID_TOOLTIP = (L["Type a spell id or a name and pick from the list, or shif
 -- THE WORDS ARE NOT OURS TO CHOOSE. `C.AURA_TYPE_LABELS` is what the panel already calls these two
 -- things everywhere a player meets them: the container's own Aura type dropdown
 -- (settings/Containers.lua:82), the gray summary behind every container in the picker
--- (settings/OptionsSetup.lua:421) and the `/am list` line (settings/Slash.lua:216) -- those three
+-- (settings/OptionsSetup.lua:439) and the `/am list` line (settings/Slash.lua:216) -- those three
 -- are its readers, and the Filters section is not among them; its category rows are labeled from the
 -- category, not from the aura type. So the marker reads the table rather than defining a second
 -- vocabulary here. Read, not copied: a translation that moves those two labels moves the markers
@@ -372,7 +372,7 @@ local ID_TOOLTIP = (L["Type a spell id or a name and pick from the list, or shif
 -- are not the subject of the row, so each is a dimmed version of its hue rather than the saturated
 -- one a status light would use. The panel already has a register for chrome of this kind -- the
 -- drag handle's gold label at (1, 0.82, 0) and its help mark at (0.7, 0.7, 0.72),
--- libs/LibKa0s/WidgetsDragHandle.lua:495 and :171 -- and these three sit inside it:
+-- libs/LibKa0s/WidgetsDragHandle.lua:521 and :171 -- and these three sit inside it:
 --
 --     Buffs    (0.45, 0.75, 0.50) = 73bf80   muted green
 --     Debuffs  (0.80, 0.45, 0.45) = cc7373   muted red
@@ -399,7 +399,6 @@ local TYPE_MARK       = L["[{type}]"]
 -- never opened.
 local COLOR_END   = "|r"
 local TYPE_COLORS = { HELPFUL = "|c" .. C.AURA_TYPE_COLORS.HELPFUL, HARMFUL = "|c" .. C.AURA_TYPE_COLORS.HARMFUL }
-local YOURS_COLOR = "|c" .. C.SECONDARY_GOLD
 
 --- `text` in `color`, or `text` unchanged when there is no color for it.
 local function colored(color, text)
@@ -451,7 +450,7 @@ local YOURS_MARK  = L["(yours)"]
 local function markedName(def)
     local name = Cat.LabelOf(def)
     if not Cat.IsUserCategory(def) then return name end
-    local mark = colored(YOURS_COLOR, YOURS_MARK)
+    local mark = colored(NS.SkinEscape("am.goldMuted"), YOURS_MARK)   -- the panel's muted gold (AM-G8)
     return (USER_MARKER
         :gsub("{mark}", function() return mark end)
         :gsub("{name}", function() return name end))
@@ -598,6 +597,7 @@ end
 local function restoreCell(key)
     return { make = function(_, parent)
         local btn = NS.AceGUI:Create("Button")
+        NS.SkinPaintAce(btn)   -- this owner's skin (core/SkinSetup.lua)
         btn:SetText(L["Restore this category's starter list"])
         btn:SetRelativeWidth(H.BUTTON_PAIR_REL)
         btn:SetCallback("OnClick", function()
@@ -667,7 +667,7 @@ end
 --- The list entry's suffix for `id`, or nil: HOW MANY other categories claim it, in a few gray
 --- words the library draws INSIDE the entry's own label, after the id -- `(X) [icon] Renewing Mist
 --- (119611) (also in 1)` (owner, 2026-09-21; LibKa0s v1.49.0's `entry.suffix`, OptionsWidgets minor
---- 25, `libs/LibKa0s/OptionsIdList.lua:265-312`). It replaces the `note` this used to be: a note
+--- 25, `libs/LibKa0s/OptionsIdList.lua:268-315`). It replaces the `note` this used to be: a note
 --- is a second full-width Label that took the entry out of the two-column grid for the row it landed
 --- on, and the library's own guidance is a sentence in a `note`, a few words in a `suffix`, and the
 --- full story in the TOOLTIP -- which is where the NAMES now are (`overlapLine`).
@@ -699,18 +699,18 @@ end
 ---
 --- A host kind with `base = "spell"` is the only hook there is: `O.IdList` builds an entry's tooltip
 --- from the kind's `tooltip` and from nothing else (`entryTooltip`,
---- `libs/LibKa0s/OptionsIdList.lua:383-395`), and a based kind takes the base's `info`, `link`,
+--- `libs/LibKa0s/OptionsIdList.lua:386-398`), and a based kind takes the base's `info`, `link`,
 --- `noun`, `plural` and name color, so the list draws exactly as it did.
 ---
 --- `resolve` DELEGATES back to the library. A based kind does not inherit the client's name lookup
---- (`BASE_FIELDS`, `libs/LibKa0s/OptionsIds.lua:126`), so without this line typing "Renewing Mist" into the add box would stop
+--- (`BASE_FIELDS`, `libs/LibKa0s/OptionsIds.lua:128`), so without this line typing "Renewing Mist" into the add box would stop
 --- resolving; handing the text to `O.ResolveId("spell", ...)` is the library's own documented way
 --- back to the spellbook lookup and the shared-name check, rather than a second copy of either.
 ---
 --- AND THE SUGGESTIONS COME WITH THE BASE. The library keys its client sources off its own kind
 --- tables, but reads that table through `decorKind`, so a kind declaring `base = "spell"` wears the
 --- spell row -- the spellbook, and the rank a shared name is checked against (`suggestRow`,
---- `libs/LibKa0s/OptionsIds.lua:524-526`). A spell that is in the spellbook and on no list of
+--- `libs/LibKa0s/OptionsIds.lua:526-528`). A spell that is in the spellbook and on no list of
 --- this addon is therefore still offered as you type, as well as still resolving by name, by id or
 --- by link. Under LibKa0s v1.49.0 that lookup was keyed by the kind TABLE ITSELF, a host table
 --- joined no row, and this tab bought its tooltip at the price of its autocomplete; v1.49.1 is the
@@ -847,7 +847,7 @@ local function renderSpells(ctx)
     -- is the inconsistency the owner asked to close rather than a new one to open.
     --
     -- The 10 is a LITERAL on purpose: the library republishes `ROW_VSPACER` to hosts and deliberately
-    -- keeps `SECTION_TOP_SPACER` internal (`libs/LibKa0s/Options.lua:46-84`, and the scalar list at
+    -- keeps `SECTION_TOP_SPACER` internal (`libs/LibKa0s/Options.lua:55-93`, and the scalar list at
     -- `:514-520`), so `H.SECTION_TOP_SPACER` does not exist and reading it would silently be nil.
     -- Matching the number is the honest way to match the look; if the library ever republishes it,
     -- this is the line that takes it.
@@ -860,7 +860,7 @@ local function renderSpells(ctx)
         -- TWO COLUMNS, FILLED ROW-MAJOR (1 2 / 3 4). Owner, 2026-09-20: one entry per row ran very
         -- long for a 60-id category -- CC Loss of Control alone is most of a screen of scrolling before the
         -- next control. `columns` is LibKa0s v1.47.0's O.IdList option (OptionsWidgets minor 24,
-        -- `libs/LibKa0s/OptionsIdList.lua:856-863`): the count is floored and clamped into
+        -- `libs/LibKa0s/OptionsIdList.lua:873-880`): the count is floored and clamped into
         -- 1..ID_COLUMNS_MAX, which the library pins at 2 (`:139`), so two is the whole of what it
         -- offers rather than a taste. Each entry's relative width is divided by the count, so a
         -- pair still sums to the width one entry held alone. Row-major is the library's packing
@@ -877,7 +877,7 @@ local function renderSpells(ctx)
         --
         -- AND IT DOES NOT ALWAYS FIT, at the narrowest width this list is drawn at. The label is
         -- `0.43` of the content width in the icon style at two columns and an entry spends 16px of
-        -- it on its icon (`entryNameRel` and `ID_ICON_SIZE`, `libs/LibKa0s/OptionsIdList.lua:666`, `:44`), and
+        -- it on its icon (`entryNameRel` and `ID_ICON_SIZE`, `libs/LibKa0s/OptionsIdList.lua:683`, `:44`), and
         -- the floor for THIS list is the icon style's 520px content, not the default style's 584px
         -- (the table in `docs/api/Options/version-23.24.3.7.3-docs.md` of the LibKa0s repo). So the
         -- real budget is `0.43 * 520 - 16 = 207.6px` -- an earlier note here computed 235px against

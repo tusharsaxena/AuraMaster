@@ -369,11 +369,13 @@ test("options descriptor: a bespoke tab with `before` is drawn ahead of the tab 
         for i, t in ipairs(P.drawnTabs(ctx)) do keys[i] = t.key end
         return table.concat(keys, ",")
     end
+    -- The General page's Skin rows (the Appearance group, every row skipRender) stay a group of the
+    -- page, so a spec with no tab keyed by it still draws its tab, last of the groups.
     -- red under: RenderPage dropping `before` (every bespoke tab appended after the schema groups)
-    assertEqual(strip("Blizzard frames"), "Master controls,Extra,Blizzard frames,Spell categories,Dispel colors")
+    assertEqual(strip("Blizzard frames"), "Master controls,Extra,Blizzard frames,Spell categories,Dispel colors,Appearance")
     -- red under: a tab whose `before` names nothing this render draws being dropped
-    assertEqual(strip("No such tab"), "Master controls,Blizzard frames,Spell categories,Dispel colors,Extra")
-    assertEqual(strip(nil), "Master controls,Blizzard frames,Spell categories,Dispel colors,Extra")
+    assertEqual(strip("No such tab"), "Master controls,Blizzard frames,Spell categories,Dispel colors,Appearance,Extra")
+    assertEqual(strip(nil), "Master controls,Blizzard frames,Spell categories,Dispel colors,Appearance,Extra")
 end)
 
 test("options descriptor: RenderWarnings draws one orange line per thing the engine will not do", function()

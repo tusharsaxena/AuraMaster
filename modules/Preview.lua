@@ -253,11 +253,16 @@ local MARKER_INSET = 2
 -- the unlocked outline, below the strip's HANDLE band.
 local MARKER_LEVEL = C.LAYERS.LEVEL.MARKER
 
-local markerText
---- The marker's text: the localized TEST in the strip tag's orange (C.TEST_TAG_COLOR), built once.
+--- The TEST tag the strip label (modules/Anchors.lua's handleParts) and the marker share: the
+--- localized TEST in the skin's `sem.warn` (Ka0s Default's orange, ff8000; decision D5), read at
+--- each call so a skin switch reaches the next label and Preview.Reskin's marker repaint.
+function Preview.TestTag()
+    return (NS.SkinEscape("sem.warn") or "") .. NS.L["TEST"] .. "|r"
+end
+
+--- The marker's text: the TEST tag alone.
 function Preview.MarkerText()
-    markerText = markerText or ("|c%s%s|r"):format(C.TEST_TAG_COLOR, NS.L["TEST"])
-    return markerText
+    return Preview.TestTag()
 end
 
 --- Show the marker over `container`'s placeholder block, or hide it (`on` false). Built on the first
@@ -292,6 +297,17 @@ function Preview.ApplyMarker(container, on)
     if not wasShown then fs:SetText(Preview.MarkerText()) end
     m:Show()
 end
+
+--- Redraw every shown marker's text after a skin switch (its TEST tag is markup read from the skin).
+function Preview.Reskin()
+    local CM = NS.ContainerManager
+    for _, container in pairs(CM and CM.instances or {}) do
+        local m = container.testMarker
+        if m and m:IsShown() then container.testMarkerText:SetText(Preview.MarkerText()) end
+    end
+end
+
+NS.Skin.OnLooksChanged(function() Preview.Reskin() end)
 
 --- Remove one container's placeholders, of every style, and their marker.
 function Preview.Hide(container)

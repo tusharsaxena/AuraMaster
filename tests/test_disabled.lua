@@ -181,6 +181,18 @@ local function baseline(broker)
     end }
     local NS, mocks = fresh(opts)
     mocks.__fireTimers()
+    -- THE SKIN LIBRARY'S LOGIN RETRY, SETTLED, AND NOT OURS. Since LibKa0s v1.78.0 the first
+    -- RegisterOwner (core/SkinSetup.lua) makes LibKa0s-Skin-1.0's EllesmereUI retry frame, registered
+    -- for ADDON_LOADED and PLAYER_LOGIN; in the client PLAYER_LOGIN fires once, long before a player
+    -- can switch the addon off, and the frame unregisters both. The headless run never fires it, so
+    -- the one login event the client delivers is delivered here (LootHistory's test_disabled does the
+    -- same). The frame is the library's, parentless and never drawn, so it joins the client's own.
+    local skinLib = mocks.LibStub("LibKa0s-Skin-1.0", true)
+    local retry = skinLib and skinLib.__euiEventFrame
+    if retry then
+        retry:__fire("OnEvent", "PLAYER_LOGIN")
+        client[retry] = true
+    end
     return NS, mocks, regs(mocks), mocks.__timers(), onScreen(mocks, client), rec, client
 end
 

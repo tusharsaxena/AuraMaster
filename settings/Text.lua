@@ -54,8 +54,11 @@ local G_PANDEMIC, S_TIME = L["Pandemic"], L["Time color"]
 local S_PLACEMENT, S_DISPEL, S_GLOW = L["Placement"], L["Dispel type"], L["Glow"]
 local SMALL = { fontObject = "GameFontHighlightSmall" }
 local HEADING = { fontObject = "GameFontNormalSmall" }
-local GRAY = "|cff808080%s|r"
-local GOLD = "|cffffd100%s|r"
+-- The page's two markup colors, read from the skin at each render (NS.SkinEscape): a muted note in
+-- `text.disabled` (Ka0s Default's 808080, decision D7) and template syntax in `text.heading` (its
+-- ffd100 gold).
+local function gray(text) return (NS.SkinEscape("text.disabled") or "") .. text .. "|r" end
+local function gold(text) return (NS.SkinEscape("text.heading") or "") .. text .. "|r" end
 local BULLET = "- "
 local CUSTOM = "custom"
 
@@ -142,7 +145,7 @@ NS.RegisterSchemaRows({
 
 --- A run of template syntax, in the token gold.
 local function token(text)
-    return GOLD:format(text)
+    return gold(text)
 end
 
 --- A small gap, then a heading line, in the same voice a subgroup heading reads in (owner,
@@ -200,14 +203,14 @@ local function centerNote(ctx, cfg)
     local n = NS.Style.Text.FieldCount(compiled)
     local msg = n == 1 and L["Center stacks this template in 1 row; text outside [ ] is not drawn."]
         or L["Center stacks this template in %d rows, one per field; text outside [ ] is not drawn."]:format(n)
-    H.TextRow(ctx, GRAY:format(msg), SMALL)
+    H.TextRow(ctx, gray(msg), SMALL)
 end
 
 --- Under Justify, always (smoke batch 2, item 3): what Center does to a template of several fields,
 --- and why it cannot center them on one line. The facts are modules/Style_Text.lua's: Text.Stacked,
 --- layoutStack's rows, Text.StackHeight's fixed rows, and an icon at size 0 taking one row's height.
 local function justifyNote(ctx)
-    H.TextRow(ctx, GRAY:format(L["Center centers the line only when the template is a single piece. With several fields, each field (name, stacks, dispel type, and the duration tokens together) gets its own centered row, text outside [ ] is not drawn, and the box grows to fit the rows. Rows keep their place even when a field is empty (one stack, no dispel type, no duration), and an icon at size 0 is one row tall. Aura text is secret, so its width cannot be measured to center several fields on one line."]), SMALL)
+    H.TextRow(ctx, gray(L["Center centers the line only when the template is a single piece. With several fields, each field (name, stacks, dispel type, and the duration tokens together) gets its own centered row, text outside [ ] is not drawn, and the box grows to fit the rows. Rows keep their place even when a field is empty (one stack, no dispel type, no duration), and an icon at size 0 is one row tall. Aura text is secret, so its width cannot be measured to center several fields on one line."]), SMALL)
 end
 
 -- ── The built-in templates (feedback #5) ──────────────────────────────────────────────────────
@@ -295,6 +298,7 @@ local function previewBox(cfg)
     return { wide = true, make = function(_, parent)
         local sample = C.TEXT_SAMPLE_AURAS[cfg.auraType] or C.TEXT_SAMPLE_AURAS.HELPFUL
         local box = NS.AceGUI:Create("EditBox")
+        NS.SkinPaintAce(box)   -- this owner's skin (core/SkinSetup.lua)
         box:SetLabel(L["Preview"])
         box:SetFullWidth(true)
         box:SetDisabled(true)
@@ -342,7 +346,7 @@ end
 --- Under Size, while Size to fit is on: why Width and Height are dimmed, and when they still count.
 local function fitNote(ctx)
     if not sizedToFit() then return end
-    H.TextRow(ctx, GRAY:format(L["Width and height follow the font, the icon and the template while Size to fit is on. They still apply if the size cannot be measured."]), SMALL)
+    H.TextRow(ctx, gray(L["Width and height follow the font, the icon and the template while Size to fit is on. They still apply if the size cannot be measured."]), SMALL)
 end
 
 -- The Placement rows drawn above the Justify note (the justify pair); the offsets follow it.
@@ -380,7 +384,7 @@ end
 -- ── Font ──────────────────────────────────────────────────────────────────────────────────────
 
 NS.RegisterSchemaRows(H.FontGroup({
-    prefix = P .. "font.", page = PAGE, group = G_FONT, subgroup = L["Font"], classColor = UNIT,
+    prefix = P .. "font.", page = PAGE, group = G_FONT, subgroup = L["Font"], classColor = UNIT, fromSkin = true,
 }))
 -- The glow behind the text (text glow, spec G4; rows per the glyph glow addendum, TG-09): drawn by
 -- modules/Style_TextGlow.lua in addition to the font's outline and shadow, behind the text, never in
@@ -517,13 +521,13 @@ NS.RegisterSchemaRows({
 --- After the Icon tab's rows: why they are dimmed, when Icon position is None (smoke batch 2, item 6).
 local function iconNote(ctx)
     if not noIcon() then return end
-    H.TextRow(ctx, GRAY:format(L["Set Icon position to show the icon."]), SMALL)
+    H.TextRow(ctx, gray(L["Set Icon position to show the icon."]), SMALL)
 end
 
 --- After the Pandemic tab's rows: why they are dimmed, when the template has no duration.
 local function pandemicNote(ctx)
     if not noDuration() then return end
-    H.TextRow(ctx, GRAY:format(L["The pandemic window needs a duration token, such as $remainingduration$, in the template."]), SMALL)
+    H.TextRow(ctx, gray(L["The pandemic window needs a duration token, such as $remainingduration$, in the template."]), SMALL)
 end
 
 NS.RegisterContainerSection(PAGE, L["Text style"], {
