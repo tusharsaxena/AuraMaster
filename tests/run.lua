@@ -164,6 +164,7 @@ Kit.run{
         "test_skin_outline",
         "test_skin_verb",
         "test_skin_picker",
+        "test_glyphs",
         "test_pages_general_categories",
         "test_pages_containers",
         "test_pages_filters",

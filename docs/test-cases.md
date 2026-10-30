@@ -2036,7 +2036,7 @@ Total.
 - skin hud: v13 runs once, so a player's later pick survives the next load
 - skin hud: the v13 body seeds each companion before ResetToSkin, and sets them itself without it
 
-### test_skin_flags.lua (6)
+### test_skin_flags.lua (7)
 
 - skin flags: every font block's setting is the minimum set, its flags led by From skin
 - skin flags: /am set takes From skin and a picked flag, and the HUD draws each
@@ -2044,16 +2044,18 @@ Total.
 - skin flags: v14 runs once, so an OUTLINE the player picks afterwards stays OUTLINE
 - skin flags: the v14 body leaves an absent block and an absent flag alone
 - skin flags: a block on the skin's face stored at 12 draws at 13 under Obsidian; its own face, and Ignore fonts, at 12
+- skin flags: a stacked Text block on the skin's face lays its rows out at the scaled size under Obsidian
 
-### test_skin_glow_restore.lua (5)
+### test_skin_glow_restore.lua (6)
 
 - glow restore: v15 takes the owner's Ka0s Kait picks off the skin's face in every profile
 - glow restore: the Text container then draws Kait at its stored size, and the glow follows it
 - glow restore: the skin's own HUD face is the profile's skin's, not Ka0s Default's
 - glow restore: v15 runs once, so the companion ticked again afterwards stays on
 - glow restore: the v15 body leaves absent blocks alone and answers how many blocks moved
+- glow restore: a face the payload deleted (D-03) stays on the skin, so it never draws the client fallback
 
-### test_skin_outline.lua (9)
+### test_skin_outline.lua (10)
 
 - outline: a fresh profile stores All text, the library's default, and applies it
 - outline: the schema row offers the library's three modes, in its order, drawn by the Skin tab
@@ -2064,6 +2066,7 @@ Total.
 - outline: the stored mode is applied at load
 - outline: a profile switch applies the incoming profile's mode, and back
 - outline: without LibKa0s the apply is a quiet no-op and From skin draws OUTLINE
+- outline: a Font outline change re-measures Size to fit on a From skin block
 
 ### test_skin_verb.lua (6)
 
@@ -2095,6 +2098,10 @@ Total.
 - Skin widgets: the release chain runs the host's work and the skin's restore
 - Skin widgets: the Profiles page paints the dialog's tree after every open
 - Skin widgets: without the library nothing is painted, and release work takes the callback
+
+### test_glyphs.lua (1)
+
+- glyphs: display strings use only characters every shipped skin face draws
 
 ### test_pages_general_categories.lua (32)
 
@@ -2496,7 +2503,7 @@ Total.
 
 - prose: no authored file carries a British spelling from localization-§5's published list
 - prose: the gate carries localization-§5's two lists whole, and nothing of its own
-- prose: the exclusions this repository declared suppressed 11 of 228 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (11): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, docs/spell-research/2026-09-24-logs/CORRECTIONS.md, docs/spell-research/2026-09-24-logs/CURRENT_CATEGORIES.md, docs/spell-research/2026-09-24-logs/DECISIONS.md, docs/spell-research/2026-09-24-logs/FLAGS.md, docs/spell-research/2026-09-24-logs/PROPOSED_ADDITIONS.md, docs/spell-research/2026-09-24-logs/REVIEW.md, docs/spell-research/2026-09-24-logs/SOURCES.md, docs/spell-research/2026-09-24-logs/dictionary/AURAS.md
+- prose: the exclusions this repository declared suppressed 11 of 229 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (11): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, docs/spell-research/2026-09-24-logs/CORRECTIONS.md, docs/spell-research/2026-09-24-logs/CURRENT_CATEGORIES.md, docs/spell-research/2026-09-24-logs/DECISIONS.md, docs/spell-research/2026-09-24-logs/FLAGS.md, docs/spell-research/2026-09-24-logs/PROPOSED_ADDITIONS.md, docs/spell-research/2026-09-24-logs/REVIEW.md, docs/spell-research/2026-09-24-logs/SOURCES.md, docs/spell-research/2026-09-24-logs/dictionary/AURAS.md
 - prose: no path this repository narrows the gate by is loaded by a TOC
 - prose: every path this repository narrows the gate by is one .pkgmeta keeps out of the zip
 - prose self-test: the carve-out suppresses the named generated folder, and only it
@@ -2668,11 +2675,12 @@ Total.
 | test_skin_literals.lua | 3 |
 | test_skin_surfaces.lua | 7 |
 | test_skin_hud.lua | 12 |
-| test_skin_flags.lua | 6 |
-| test_skin_glow_restore.lua | 5 |
-| test_skin_outline.lua | 9 |
+| test_skin_flags.lua | 7 |
+| test_skin_glow_restore.lua | 6 |
+| test_skin_outline.lua | 10 |
 | test_skin_verb.lua | 6 |
 | test_skin_picker.lua | 19 |
+| test_glyphs.lua | 1 |
 | test_pages_general_categories.lua | 32 |
 | test_pages_containers.lua | 35 |
 | test_pages_filters.lua | 53 |
@@ -2701,4 +2709,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **2243** |
+| **Total** | **2247** |
