@@ -98,29 +98,51 @@ test("skin surfaces: the strip label's attached gray and TEST tag are the new sk
     NS.Preview.SetTestMode(false)
 end)
 
-test("skin surfaces: the strip and close-mark tooltip lines take the skin's gtip colors on each hover", function()
-    local NS, mocks, switch = env({ "gtip.title", "gtip.value" })
+test("skin surfaces: the strip and close-mark tooltips draw the skin's gtip colors on each hover", function()
+    local NS, mocks = env({})
     local lib = mocks.LibStub("LibKa0s-Widgets-1.0")
-    local build, spec = lib.DragHandle, nil
+    local build, specs = lib.DragHandle, {}
     lib.DragHandle = function(parent, s)
-        spec = s
+        specs[#specs + 1] = s
         return build(parent, s)
     end
-    NS.Anchors.BuildHandle(NS.ContainerManager.instances[1])
+    local inst = NS.ContainerManager.instances[1]
+    NS.Anchors.BuildHandle(inst)
     lib.DragHandle = build
-    local function color(entry) return joined(entry[2], entry[3], entry[4]) end
+    local spec = specs[#specs]
+    -- The title and the how-to line are the widget's title and body bands, which take gtip.title
+    -- and gtip.value themselves since LibKa0s v1.81.0 (WidgetsDragHandle minor 7, LK-08). red under:
+    -- the host still coloring them itself (tokenLine), a copy of what the band already draws.
+    assertTrue(type(spec.tooltip.title) ~= "table", "the strip title takes its band's color")
+    assertTrue(type(spec.tooltip.body[1]) ~= "table", "the how-to line takes its band's color")
+    assertTrue(type(spec.closeTooltip.title) ~= "table", "the close-mark title takes its band's color")
+    assertTrue(type(spec.closeTooltip.body[1]) ~= "table", "the close-mark line takes its band's color")
+    -- The attached line is gold inside the white body band: the one color of its own that stays.
+    assertTrue(type(spec.tooltip.body[2]) == "table", "the attached line keeps a color of its own")
+    NS.SetByPath("container.attach.mode", "container", inst.id)
+    local drawn = {}
+    local function add(_, s, r, g, b) drawn[#drawn + 1] = { s, joined(r, g, b) } end
+    rawset(mocks.GameTooltip, "SetText", add)
+    rawset(mocks.GameTooltip, "AddLine", add)
+    rawset(mocks.GameTooltip, "SetOwner", function() drawn = {} end)
     local function want(name)
         local r, g, b = NS.Skin.Color(name)
         return joined(r, g, b)
     end
-    for _, skin in ipairs({ "Ka0s Default", "switched" }) do
-        if skin == "switched" then switch() end
-        -- red under: a title or body line with no color of its own (the widget's literal gold and white)
-        assertEqual(color(spec.tooltip.title), want("gtip.title"), skin .. ": the strip title")
-        assertEqual(color(spec.tooltip.body[1]), want("gtip.value"), skin .. ": the how-to line")
-        assertEqual(color(spec.tooltip.body[2]), want("gtip.title"), skin .. ": the attached line")
-        assertEqual(color(spec.closeTooltip.title), want("gtip.title"), skin .. ": the close-mark title")
-        assertEqual(color(spec.closeTooltip.body[1]), want("gtip.value"), skin .. ": the close-mark line")
+    -- Every skin, so one whose gtip colors are not the widget's literal gold and white tells a band
+    -- that follows the skin from one that never did.
+    for _, def in ipairs(mocks.LibStub("LibKa0s-Skin-1.0"):Skins()) do
+        local skin = def.key
+        NS.ApplySkinChoice("ka0s", skin)
+        inst.handle:__fire("OnEnter")
+        -- red under: a band drawing the widget's literal gold and white, or a line in another token
+        assertEqual(#drawn, 3, skin .. ": the strip's title, how-to and attached lines")
+        assertEqual(drawn[1][2], want("gtip.title"), skin .. ": the strip title")
+        assertEqual(drawn[2][2], want("gtip.value"), skin .. ": the how-to line")
+        assertEqual(drawn[3][2], want("gtip.title"), skin .. ": the attached line")
+        inst.handle.close:__fire("OnEnter")
+        assertEqual(drawn[1][2], want("gtip.title"), skin .. ": the close-mark title")
+        assertEqual(drawn[2][2], want("gtip.value"), skin .. ": the close-mark line")
     end
 end)
 

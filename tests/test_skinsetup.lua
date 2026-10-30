@@ -121,6 +121,55 @@ test("Skin seam: SkinEscape rounds a token back to the byte the markup wrote", f
     assertNil(NS.SkinEscape("no.such"), "a token the skin leaves alone answers nil")
 end)
 
+-- The settings pages' own markup (Ka0sAddonsCommonTasks docs/2026-10-30-SKIN_LIBRARY_FOLLOWUPS,
+-- decision D-03): a host paint on a settings page follows the same Scope as the library's chrome,
+-- so while the owner ignores its settings panel the page draws the bytes it drew before skins
+-- (Ka0s Default's) under any skin, and one page never mixes stock and skinned.
+test("Skin seam: PanelEscape is the skin's escape, and Ka0s Default's while the settings panel is ignored", function()
+    local NS, m, Skin = skinEnv()
+    local other
+    for _, def in ipairs(Skin:Skins()) do
+        if def.key ~= "ka0s" and not other then
+            quietly(m, function() NS.ApplySkinChoice("ka0s", def.key) end)
+            if NS.SkinEscape("am.note") ~= "|cff888888" then other = def.key end
+        end
+    end
+    assertTrue(other ~= nil, "a skin that draws am.note in another color")
+    local names = { "am.note", "am.noteAlt", "am.planWarn", "am.goldMuted", "am.link",
+                    "text.disabled", "text.heading" }
+    Skin:SetIgnore(OWNER, false, nil)
+    for _, name in ipairs(names) do
+        assertEqual(NS.PanelEscape(name), NS.SkinEscape(name), name .. ": the panel follows the skin")
+    end
+    Skin:SetIgnore(OWNER, true, nil)
+    -- red under: settings markup reading the skin while the page around it is stock
+    assertEqual(NS.PanelEscape("am.note"), "|cff888888", "the gray the markup wrote")
+    assertEqual(NS.PanelEscape("am.planWarn"), "|cffffa040")
+    assertEqual(NS.PanelEscape("am.link"), "|cff6699ff")
+    quietly(m, function() NS.ApplySkinChoice("ka0s", "ka0s") end)
+    local ka0s = {}
+    for _, name in ipairs(names) do ka0s[name] = NS.SkinEscape(name) end
+    quietly(m, function() NS.ApplySkinChoice("ka0s", other) end)
+    for _, name in ipairs(names) do
+        assertEqual(NS.PanelEscape(name), ka0s[name], name .. ": Ka0s Default's bytes while ignored")
+    end
+    assertNil(NS.PanelEscape("no.such"), "a token the skin leaves alone answers nil")
+    Skin:SetIgnore(OWNER, false, nil)
+end)
+
+test("Skin seam: every settings page colors its markup through PanelEscape, never the skin's escape", function()
+    -- red under: a settings page that reads NS.SkinEscape / NS.SkinColor, which ignore the panel Scope
+    for _, path in ipairs({ "settings/Filters.lua", "settings/GeneralSpells.lua", "settings/Layout.lua",
+                            "settings/OptionsSetup.lua", "settings/Text.lua" }) do
+        local f = assert(io.open(path, "rb"))
+        local src = f:read("*a")
+        f:close()
+        assertNil(src:find("NS%.SkinEscape%("), path .. " reads NS.SkinEscape")
+        assertNil(src:find("NS%.SkinColor%("), path .. " reads NS.SkinColor")
+        assertTrue(src:find("NS%.PanelEscape%(") ~= nil, path .. " colors its markup through NS.PanelEscape")
+    end
+end)
+
 -- ── the keys and the rows ────────────────────────────────────────────────────────────────────
 
 test("Skin seam: the skin keys default to Ka0s Default, as skip-render rows of General's Appearance group", function()

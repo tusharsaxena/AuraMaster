@@ -108,8 +108,8 @@ test("width: the full name stays the strip's tooltip title", function()
     end
     NS.Anchors.BuildHandle(inst)
     lib.DragHandle = build
-    -- the title is a { text, r, g, b } entry whose color the skin answers on each hover
-    assertEqual(spec.tooltip.title[1](), LONG)
+    -- the title is a function, read on each hover, in its band's color (gtip.title, the widget's)
+    assertEqual(spec.tooltip.title(), LONG)
 end)
 
 test("width: a one-icon container too narrow for the marks and a readable label keeps its natural width", function()

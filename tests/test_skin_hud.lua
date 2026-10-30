@@ -121,6 +121,31 @@ test("skin hud: each companion is a schema row defaulting on, and its picker sho
     end
 end)
 
+test("skin hud: while fonts are ignored a ticked face picker previews the stored face, a texture picker the skin's", function()
+    -- LibKa0s v1.81.0 (LK-01): the composer's preview reads S.Resolve, which answers the stored face
+    -- for hud.font while the owner ignores fonts. red under: a vendored copy whose Resolve never reads
+    -- Ignore fonts (the picker would show the skin's face the HUD no longer draws).
+    local NS, mocks = fresh()
+    local Skin = mocks.LibStub("LibKa0s-Skin-1.0")
+    local c = NS.ActiveContainer()
+    local ok, err = pcall(function()
+        Skin:SetIgnore("AuraMaster", nil, true)
+        for _, path in ipairs(NS.Database.SKIN_PICKS) do
+            local picker = NS.FindSchemaRow("container." .. path)
+            local parent, leaf = walk(c, path)
+            parent[leaf .. "FromSkin"] = true
+            if path:find("Texture$") then
+                assertEqual(picker.skinValue(picker), NS.Skin.Token("bar.texture"), path .. ": the skin's texture")
+            else
+                -- nil: no skin value to preview, so the picker shows its stored face
+                assertNil(picker.skinValue(picker), path .. ": the stored face, shown")
+            end
+        end
+    end)
+    Skin:SetIgnore("AuraMaster", nil, false)
+    if not ok then error(err, 0) end
+end)
+
 test("skin hud: the name label's face picker dims for the label off or the skin's face on", function()
     local NS = fresh()
     local c = NS.ActiveContainer()
@@ -156,19 +181,19 @@ test("skin hud: a font block draws the skin's hud.font while its companion is on
 end)
 
 test("skin hud: Ignore fonts keeps every font block on its stored face, over the skin and a font override", function()
-    -- The library's Resolve and Token never read ignoreFonts (only P.font, the primitives' path,
-    -- does), so the HUD asks NS.SkinFontsIgnored itself, as AbsorbTracker does. red under: a
-    -- Style.SkinKey that resolves hud.font through the skin while Ignore fonts is on.
+    -- The library's S.Resolve answers the stored face for hud.font while the owner ignores fonts
+    -- (LibKa0s v1.81.0, Skin minor 8, LK-01), so Style.SkinKey needs no check of its own. red under:
+    -- a library Resolve that ignores ignoreFonts, or a Style.SkinKey that bypasses Resolve.
     local NS, mocks = mediaEnv()
     local S, C, D = NS.Style, NS.Constants, NS.CONTAINER_TEMPLATE.bars.name
     local Skin = mocks.LibStub("LibKa0s-Skin-1.0")
     local t = NS.Database.DeepCopy(D)
     t.font = "Friz Quadrata TT"
     local ownPath = S.Fetch("font", "Friz Quadrata TT", C.FALLBACK_FONT)
-    assertEqual(NS.SkinFontsIgnored(), false, "fonts follow the skin by default")
     local ok, err = pcall(function()
         Skin:SetIgnore("AuraMaster", nil, true)
-        assertEqual(NS.SkinFontsIgnored(), true, "the applied exception reads back")
+        -- red under: a host that still asks its own NS.SkinFontsIgnored (gone with LK-01)
+        assertNil(NS.SkinFontsIgnored, "the host keeps no Ignore-fonts check of its own")
         assertEqual((S.FontKey(t, D)), ownPath, "ignored fonts draw the stored face")
         Skin:SetOverride("AuraMaster", "Override Face", nil)
         assertEqual((S.FontKey(t, D)), ownPath, "a font override is not drawn while fonts are ignored")

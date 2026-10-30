@@ -20,9 +20,6 @@ local addonName, NS = ...
 --                           `/am set` and the panel already write through (architecture-§5); `i`, the
 --                           Scope's `{ panel, fonts }`, writes the two exceptions, and `m`, the Font and
 --                           texture section's `{ font, texture }`, the two overrides ("" for false).
---   NS.SkinFontsIgnored()   true while the applied "Ignore fonts" is on (`Skin:GetIgnore`, live;
---                           false degraded). Style.SkinKey reads it for the HUD's face: the
---                           library's Resolve and Token never check it, only P.font does.
 --   NS.SkinOverride()       the stored overrides: font, texture, each an LSM key or false for the
 --                           skin's own; false, false before NS:InitDB.
 --   NS.ApplySkinIgnore(p,f) moves the applied exceptions (`Skin:SetIgnore`), live; no argument
@@ -40,6 +37,8 @@ local addonName, NS = ...
 --                           a literal that became a token keeps its arity on Ka0s Default.
 --   NS.SkinEscape(name)     a color token as a "|cffrrggbb" escape, rounded to the byte, so markup
 --                           written as a literal keeps its bytes on Ka0s Default (|cff888888).
+--   NS.PanelEscape(name)    the same for a settings page's markup, Ka0s Default's bytes while the
+--                           owner ignores its settings panel (D-03), so a page never mixes the two.
 --   NS.SkinPaintAce(w)      an AceGUI widget this addon acquired itself, painted for this owner:
 --   NS.SkinPaintAceTree(c)  `Skin:PaintAce` / `Skin:PaintAceTree` with the owner bound (the facade
 --                           carries neither). Nothing while the owner ignores its settings panel;
@@ -156,11 +155,30 @@ end
 --- A color token as a "|cffrrggbb" escape, each channel rounded to the nearest byte (1/3 is 55,
 --- .5 is 80), so markup a call site wrote as a literal keeps its bytes on Ka0s Default. nil for a
 --- token the skin leaves alone.
+local function escape(r, g, b)
+    local function toByte(v) return math.floor(v * 255 + 0.5) end
+    return ("|cff%02x%02x%02x"):format(toByte(r), toByte(g), toByte(b))
+end
+
 function NS.SkinEscape(name)
     local r, g, b = NS.Skin.Color(name)
     if r == nil then return nil end
-    local function toByte(v) return math.floor(v * 255 + 0.5) end
-    return ("|cff%02x%02x%02x"):format(toByte(r), toByte(g), toByte(b))
+    return escape(r, g, b)
+end
+
+--- NS.SkinEscape for markup on a SETTINGS PAGE (Ka0sAddonsCommonTasks
+--- docs/2026-10-30-SKIN_LIBRARY_FOLLOWUPS, decision D-03): while the owner ignores its settings
+--- panel (`Skin:GetIgnore`, the public half) the page around it is stock, so the markup draws Ka0s
+--- Default's bytes, the ones it wrote before skins, under any skin; otherwise the skin's escape. The
+--- Ka0s Default value is the owner token's `default` or the host copy's (NS.SKIN_FALLBACK, held to
+--- the library by tests/test_surface_parity.lua). Windows and the HUD keep NS.SkinEscape (D-01).
+function NS.PanelEscape(name)
+    if Skin and type(Skin.GetIgnore) == "function" and Skin:GetIgnore(addonName) == true then
+        local own = NS.SKIN_TOKENS[name]
+        local c = own and own.default or NS.SKIN_FALLBACK[name]
+        if c then return escape(c[1], c[2], c[3]) end
+    end
+    return NS.SkinEscape(name)
 end
 
 NS.SKIN_SOURCE_OPTIONS = {
@@ -390,7 +408,6 @@ if not Skin then
     function NS.ApplySkinChoice() return false, false end
     function NS.ApplySkinIgnore() return false, false end
     function NS.ApplySkinOverride() return false end
-    function NS.SkinFontsIgnored() return false end
     -- Nothing to paint an AceGUI widget with: stock AceGUI, as the client draws it.
     function NS.SkinPaintAce() return false end
     function NS.SkinPaintAceTree() return 0 end
@@ -434,14 +451,6 @@ end
 function NS.SkinOnRelease(widget, fn)
     if type(Skin.OnRelease) ~= "function" then return releaseByCallback(widget, fn) end
     return Skin:OnRelease(widget, fn)
-end
-
---- The applied "Ignore fonts". The library's Resolve and Token never read it (only P.font, the
---- primitives' path, does), so the HUD's face asks here (Style.SkinKey), as AbsorbTracker's does.
-function NS.SkinFontsIgnored()
-    if type(Skin.GetIgnore) ~= "function" then return false end
-    local _, fonts = Skin:GetIgnore(addonName)
-    return fonts == true
 end
 
 function NS.ApplySkinIgnore(panel, fonts)
