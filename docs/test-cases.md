@@ -128,7 +128,7 @@ Total.
 - v3: MigrateV3 returns the number of containers it walked
 - v3: a container skipped for an unrecognized auraType is not counted in the walked total, and logs its own line
 - v3: the whitelist lift never sweeps a category the aura type does not have
-- v12: the v12 step is on the ladder, below v13's skin reset and v14's Font flags
+- v12: the v12 step is on the ladder, below v13's skin reset, v14's Font flags and v15's own faces
 - v3: RunMigrations migrates every stored profile, the inactive one included
 - v4: a HELPFUL container with the toggle on ends up with Uncategorized hidden, and the dead key cleared
 - v4: a HARMFUL container with the toggle on ends up with Uncategorized (debuffs) hidden, and the dead key cleared
@@ -1119,7 +1119,7 @@ Total.
 - collapse: Build pins the engine one unit behind its anchor's start corner and pads the start sides
 - collapse: a live update re-sends the same start padding (no rebuild)
 
-### test_anchors_width.lua (6)
+### test_anchors_width.lua (9)
 
 - width: a long name on a wide Bars container gives a strip exactly as wide as its bar, the name shortened with ...
 - width: in test mode the name is shortened, never the TEST tag, which stays after it
@@ -1127,6 +1127,9 @@ Total.
 - width: the full name stays the strip's tooltip title
 - width: a one-icon container too narrow for the marks and a readable label keeps its natural width
 - width: the label is worked out once per name and width, not on every pass
+- width: the strip hands the widget an onRefit, and a skin repaint re-shortens a capped label in the new face
+- width: the cached label is keyed by the strip's face as well as the name and the room
+- width: a hidden strip's repaint re-places nothing, and an onRefit under lockdown only relabels
 
 ### test_anchors_snap.lua (31)
 
@@ -2042,6 +2045,14 @@ Total.
 - skin flags: the v14 body leaves an absent block and an absent flag alone
 - skin flags: a block on the skin's face stored at 12 draws at 13 under Obsidian; its own face, and Ignore fonts, at 12
 
+### test_skin_glow_restore.lua (5)
+
+- glow restore: v15 takes the owner's Ka0s Kait picks off the skin's face in every profile
+- glow restore: the Text container then draws Kait at its stored size, and the glow follows it
+- glow restore: the skin's own HUD face is the profile's skin's, not Ka0s Default's
+- glow restore: v15 runs once, so the companion ticked again afterwards stays on
+- glow restore: the v15 body leaves absent blocks alone and answers how many blocks moved
+
 ### test_skin_outline.lua (9)
 
 - outline: a fresh profile stores All text, the library's default, and applies it
@@ -2622,7 +2633,7 @@ Total.
 | test_anchors_points.lua | 18 |
 | test_anchors_steady.lua | 8 |
 | test_anchors_collapse.lua | 9 |
-| test_anchors_width.lua | 6 |
+| test_anchors_width.lua | 9 |
 | test_anchors_snap.lua | 31 |
 | test_anchors_drag.lua | 21 |
 | test_anchors_attach.lua | 22 |
@@ -2658,6 +2669,7 @@ Total.
 | test_skin_surfaces.lua | 7 |
 | test_skin_hud.lua | 12 |
 | test_skin_flags.lua | 6 |
+| test_skin_glow_restore.lua | 5 |
 | test_skin_outline.lua | 9 |
 | test_skin_verb.lua | 6 |
 | test_skin_picker.lua | 19 |
@@ -2689,4 +2701,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **2235** |
+| **Total** | **2243** |

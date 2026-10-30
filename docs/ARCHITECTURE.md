@@ -325,7 +325,12 @@ Every surface Aura Master draws paints through the `LibKa0s-Skin-1.0` facade wit
   One `OnLooksChanged` listener (`modules/ContainerManager.lua`) primes the fonts and re-applies every
   container; under lockdown the apply waits for combat to end (D12). Schema v13 turned every stored
   companion on once (O2), which visibly changes Ka0s Default's HUD (X5): Oxanium and the Ka0s
-  Default bar in place of Friz Quadrata and Blizzard.
+  Default bar in place of Friz Quadrata and Blizzard. Schema v15 turned it back off, once, on every
+  block whose stored face is the player's own (neither the skin's HUD face nor the template's Friz
+  Quadrata), so the owner's Ka0s Kait Text containers and their glow came back (D-15).
+- **The drag strips re-fit after a repaint.** The widget calls `Anchors.Refit` (its `onRefit`,
+  DragHandle minor 8, D-12) after every repaint of the skin: a shown strip takes its label again in
+  the new face (the shortened label is cached per face) and, out of combat, is re-placed.
 - **The unlock furniture** (the drag strip and its tooltips, the outline, the drag-to-attach marks,
   the frame picker) repaints from tokens on `OnLooksChanged`
   (`modules/Anchors.lua`, `Anchors_Snap.lua`, `Container.lua`, `FramePicker.lua`, `Preview.lua`); the

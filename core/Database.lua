@@ -458,6 +458,25 @@ local SCHEMA_STEPS = {
             end
         end)
     end },
+    { to = 15, apply = function(db)
+        -- The player's own faces back off the skin (ruling D-15): Database.MigrateV15, against each
+        -- profile's own skin's HUD face, resolved through the library (Ka0s Default's without it).
+        local Skin = LibStub and LibStub("LibKa0s-Skin-1.0", true)
+        local function hudFace(p)
+            local key = type(p.skin) == "table" and p.skin.skin or nil
+            if Skin and type(Skin.ResolveSkin) == "function" then
+                local tokens = Skin:ResolveSkin(key or "ka0s")
+                if type(tokens) == "table" and type(tokens["hud.font"]) == "string" then return tokens["hud.font"] end
+            end
+            return Database.DEFAULT_HUD_FACE
+        end
+        eachProfile(db, function(p, name)
+            local n = Database.MigrateV15(p, hudFace(p))
+            if NS.DebugLog then
+                NS.DebugLog.DebugAtEnable("Migrate", "v15 profile '%s': Use the skin's font turned off on %s text block(s) with a face of their own", name, n)
+            end
+        end)
+    end },
 }
 
 --- Current schema version: the last step's `to`, or 0 (the defaults' "never migrated" stamp).

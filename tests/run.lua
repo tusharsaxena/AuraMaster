@@ -160,6 +160,7 @@ Kit.run{
         "test_skin_surfaces",
         "test_skin_hud",
         "test_skin_flags",
+        "test_skin_glow_restore",
         "test_skin_outline",
         "test_skin_verb",
         "test_skin_picker",

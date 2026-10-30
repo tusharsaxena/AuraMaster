@@ -708,6 +708,9 @@ function Anchors.BuildHandle(container)
         number       = NS.Secrets.NumberOr,
         level        = LEVEL.HANDLE,
         ignoreParentAlpha = true,
+        -- The capped strip is sized here, not by the widget's own re-fit (DragHandle minor 8, D-12):
+        -- after every repaint of its skin the widget calls this instead (Anchors.Refit, below).
+        onRefit      = function() Anchors.Refit(container) end,
     })
     if not handle then return nil end
     return handle
@@ -913,19 +916,34 @@ local function shortened(handle, cfg, avail)
     return compose(lo)
 end
 
+--- The face the strip's label draws in, as one string (file, size, flags): what a measure measures
+--- in, so the shortened label is cached per face too. A skin switch, Ignore fonts or the Font
+--- outline moves it under an unchanged name and room (LibKa0s v1.82.0, D-12). Our own font string,
+--- never secret; "" when it cannot say.
+local function stripFace(handle)
+    local label = handle.label
+    if not (label and label.GetFont) then return "" end
+    local path, size, flags = label:GetFont()
+    return tostring(path) .. "|" .. tostring(size) .. "|" .. tostring(flags)
+end
+
 --- The text the strip draws: the whole label on a natural-width strip or when it fits, else the
---- name shortened (shortened). Cached on the container by the whole label and the room it has, so
---- an unchanged pass measures nothing. Config math and the widget's own measure only: safe in combat.
+--- name shortened (shortened). Cached on the container by the whole label, the room it has and the
+--- face it draws in, so an unchanged pass measures nothing. Config math and the widget's own measure
+--- only: safe in combat.
 local function stripLabel(container, handle, cfg)
     local full = handleText(cfg)
     if not (handle.Reserve and cfg) then return full end
     local w = NS.Style.ElementSize(cfg)
     if not stripCapped(handle, w) then return full end
     local avail = w - handle:Reserve() * 2
-    if container.stripFull == full and container.stripAvail == avail then return container.stripText end
+    local face = stripFace(handle)
+    if container.stripFull == full and container.stripAvail == avail and container.stripFace == face then
+        return container.stripText
+    end
     local text = full
     if labelWidth(handle, full) > avail then text = shortened(handle, cfg, avail) end
-    container.stripFull, container.stripAvail, container.stripText = full, avail, text
+    container.stripFull, container.stripAvail, container.stripFace, container.stripText = full, avail, face, text
     return text
 end
 
@@ -1012,6 +1030,23 @@ function Anchors.UpdateHandle(container, show)
         placeHandle(container, cfg)
     end
     handle:SetShown(show)
+end
+
+--- The widget's re-fit for a strip this addon sizes (DragHandle minor 8's `spec.onRefit`, D-12),
+--- called after every repaint of its skin, which can change the label's face under a width measured
+--- in the old one. A shown strip drops its cached label, takes it again in the new face and, out of
+--- combat, is re-placed (capped at its element, or its natural width) with the anchor's clamp. Under
+--- lockdown only the label moves: placing is layout work beside an aura engine's parent, and the next
+--- visibility pass after combat catches it up (UpdateHandle). A hidden strip, or one not yet built,
+--- is left alone: UpdateHandle sizes it when it shows.
+function Anchors.Refit(container)
+    local handle = container and container.handle
+    local cfg = handle and container.stripShown and container:Cfg()
+    if not cfg then return end
+    container.stripFull = nil
+    handle:SetLabel(stripLabel(container, handle, cfg))
+    if InCombatLockdown() then return end
+    clampToHandle(container, cfg, placeHandle(container, cfg))
 end
 
 --- Redraw what the widget leaves to this addon after a skin switch: each strip's own edge (the host

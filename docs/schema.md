@@ -835,13 +835,24 @@ The stamp follows savedvariables-§1 as ruled at WowAddonStandards v2.65.0:
   makes it once: a companion the player turns off afterwards stays off (`tests/test_skin_hud.lua`).
 - **Schema v14** (`Database.MigrateV14`, `core/Database_Migrations.lua`, AM-01 of the 2026-10-30 skin
   fonts run, LibKa0s v1.82.0, ruling D-07 and its Addendum 01) runs over **every** stored profile and
-  logs one `[Migrate] v14 profile '<name>'` line each; `Database.CurrentSchemaVersion()` answers `14`.
+  logs one `[Migrate] v14 profile '<name>'` line each.
   On every stored container, a `fontFlags` of `Database.FLAG_BLOCKS` (`bars.name`, `bars.time`,
   `bars.stacks`, `icons.time`, `icons.stacks`, `text.font`, `label.font`) equal to the old default
   `"OUTLINE"` becomes `"@skin"`, From skin, which draws OUTLINE under the Font outline's default, so
   nothing changes on screen. Any other flag counts as the player's pick and stays; an absent block or
   flag is left alone. The stamp makes it once: an OUTLINE picked afterwards stays
   (`tests/test_skin_flags.lua`).
+- **Schema v15** (`Database.MigrateV15`, `core/Database_Migrations.lua`, AM-03 of the same run, the
+  owner's ruling D-15) runs over **every** stored profile and logs one `[Migrate] v15 profile '<name>'`
+  line each; `Database.CurrentSchemaVersion()` answers `15`. v13 put every text block on the skin's
+  face, so the owner's Text containers stopped drawing their stored Ka0s Kait and the glow behind the
+  text, tuned against it, smeared (image-36, image-37; the glow code never changed). On every stored
+  container, a block of `Database.FLAG_BLOCKS` whose `fontFromSkin` is on and whose stored `font` is
+  a face of the player's own, neither the profile's skin's own `hud.font` (resolved through
+  `Skin:ResolveSkin`, `Database.DEFAULT_HUD_FACE`, Ka0s Prototype, without the library) nor the
+  template's `"Friz Quadrata TT"`, which no player picked, has `fontFromSkin` turned off, so the stored
+  face draws again at its stored size. The face, the glow, sizes, flags and colors are untouched. The
+  stamp makes it once: a companion ticked again afterwards stays on (`tests/test_skin_glow_restore.lua`).
 - **Migration lesson (batch 10 F7): a step already pushed is never extended again.** A step's
   version stamp is written once per account, so a half added to a step after any build carrying it
   has been pushed never reaches an install that already ran that build: the owner's v9 install

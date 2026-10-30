@@ -29,7 +29,7 @@ check's number is not reused. Checks with no recorded pass, and checks new or co
 | TEXT-1 to TEXT-36 | Text style | Templates and tokens, justify, the icon, dispel type word, backdrop and edge, animation, Size to fit, the glow behind the text |
 | LAYER-1 to LAYER-6 | Frame layering | Bar borders over the fill, the outline and the name label over the auras, the snap highlight over a Dialog container, the strip at low opacity, the Strata tooltip |
 | SETLAYOUT-1 to SETLAYOUT-9 | Settings layout (item 020) | Every settings page item 020 moved, regrouped or relabeled, read as `docs/settings-panel.md` describes, with no setting lost, moved or reset; the confirm buttons' ellipsis |
-| SKIN-1 to SKIN-30 | Skins | The skinning rollout: the one-time HUD reset under Ka0s Default, Ka0s Default otherwise unchanged, the Skin tab, each skin on the HUD, the unlock furniture, the settings pages and the tool windows, other addons stock, the font and texture companions and overrides, combat, EllesmereUI on, off and back, the copy, profiles, tooltips and popups, the first-run skin picker; the library follow-ups (each skin's HUD face, Ignore fonts on the HUD, the picker's title, the strings newly in the skin's face); the skin fonts run (the Font outline, From skin flags, `/am skin`, width parity, the HUD size scale) |
+| SKIN-1 to SKIN-32 | Skins | The skinning rollout: the one-time HUD reset under Ka0s Default, Ka0s Default otherwise unchanged, the Skin tab, each skin on the HUD, the unlock furniture, the settings pages and the tool windows, other addons stock, the font and texture companions and overrides, combat, EllesmereUI on, off and back, the copy, profiles, tooltips and popups, the first-run skin picker; the library follow-ups (each skin's HUD face, Ignore fonts on the HUD, the picker's title, the strings newly in the skin's face); the skin fonts run (the Font outline, From skin flags, `/am skin`, width parity, the HUD size scale, the own faces and glow back, the strips' re-fit) |
 | DEGRADED-1 | Library-absent install | The launcher libraries missing |
 | LOC-1 to LOC-2 | Non-English client | Spell names from the client, adding a spell by its localized name |
 
@@ -2521,6 +2521,23 @@ Turn **Ignore fonts** on → every container draws at its stored size. Back to *
 before. Fail: a stored size that moved, a skin's-face text that does not scale, or a Lua error.
 Result:
 
+**SKIN-31. The own faces come back, and the glow with them (AM-03; D-15, schema v15).** On the
+owner's account (the three `PLYR TXT` Text containers on **Ka0s Kait** with the glow on), log in on
+this build → each draws Ka0s Kait again, and the black glow behind the text is the dense drop it was
+before the skinning run (image-36's smudged double letters gone, red included). Text style → Font →
+**Use the skin's font** reads unticked on those three; on a container whose stored face is Ka0s
+Prototype, or the starting Friz Quadrata, it stays ticked. The glow's settings are as stored. Tick it
+again on one, `/reload` → it stays ticked (v15 ran once). Fail: Kait not back, the glow still smeared,
+a Prototype or Friz block taken off the skin, or a Lua error. Result:
+
+**SKIN-32. The drag strips re-fit after a skin switch (AM-03; D-12).** `/am unlock` and `/am test`
+with a long-named Bars container capped at its bar (its name shortened with "...") and a one-icon
+container, then pick **Obsidian**, **Ka0s Default**, **High Contrast** in turn, and toggle **Ignore
+fonts** and the **Font outline** → after each, with no `/reload`, the capped strip stays at its bar's
+width with its name re-shortened to fit the new face, and the one-icon strip grows or shrinks to its
+title; nothing is cut off mid-letter or runs past the strip. In combat a switch is refused, so nothing
+moves. Fail: a strip still sized for the previous face until a `/reload`, or a Lua error. Result:
+
 ## Library-absent install
 
 **DEGRADED-1. Without the launcher libraries.** Rename `libs/LibDBIcon-1.0` aside, `/reload` → one
@@ -2569,5 +2586,6 @@ Open from the 2026-10-30 skin fonts run (Ka0sAddonsCommonTasks `docs/2026-10-30-
 AM-01, LibKa0s v1.82.0): SKIN-26 to SKIN-30 are new, and SKIN-4 and SKIN-25 are re-opened (their faces
 moved to Prototype and Expressway, and the HUD sizes scale). From AM-02: CONT-27 is rewritten (a locked
 test mode draws no TEST marker, D-14); LAYER-2, SKIN-1, SKIN-2 and SKIN-5 only lost their mention of
-that marker and keep their recorded passes. Their `Result:` lines are empty until
+that marker and keep their recorded passes. From AM-03: SKIN-31 (the own faces and the glow back, schema
+v15) and SKIN-32 (the strips' re-fit after a skin switch) are new. Their `Result:` lines are empty until
 the owner runs them.

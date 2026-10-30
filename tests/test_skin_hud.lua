@@ -282,19 +282,23 @@ end)
 
 --- A profile as a v12 account stored it: no companion anywhere, a pick of the player's own on each
 --- followed key, one block absent (container 2 has no icons block) and one companion an early build
---- stored off (container 1's bar time text).
+--- stored off (container 1's bar time text). The font picks are Ka0s Default's own HUD face, Ka0s
+--- Prototype: a load climbs past v13 to v15, which turns the companion back off on a face that is not
+--- the skin's (D-15, tests/test_skin_glow_restore.lua), so only a skin-face pick shows v13's reset
+--- surviving the whole ladder. The MigrateV13 body case below calls the step alone.
 local function v12profile()
+    local PROTO = "Ka0s Prototype"
     return {
         seeded = true, nextContainerId = 3, containerOrder = { 1, 2 },
         containers = {
             [1] = { name = "Bars", unit = "player", auraType = "HELPFUL", style = "bars",
-                label = { font = { font = "Morpheus" } },
+                label = { font = { font = PROTO } },
                 bars = { barTexture = "Smooth", bgTexture = "Minimalist", borderStyle = "Solid",
-                    name = { font = "Arial Narrow" }, time = { font = "Arial Narrow", fontFromSkin = false } },
-                icons = { time = { font = "Skurri" }, stacks = { font = "Skurri" } },
-                text = { font = { font = "Morpheus" } } },
+                    name = { font = PROTO }, time = { font = PROTO, fontFromSkin = false } },
+                icons = { time = { font = PROTO }, stacks = { font = PROTO } },
+                text = { font = { font = PROTO } } },
             [2] = { name = "Lines", unit = "player", auraType = "HELPFUL", style = "text",
-                text = { font = { font = "Skurri" } } },
+                text = { font = { font = PROTO } } },
         },
     }
 end
@@ -319,8 +323,8 @@ test("skin hud: v13 puts every stored pick back on the skin in every profile, ke
         assertEqual(#sentinels(cs), 0, name .. ": " .. table.concat(sentinels(cs), ", "))
         assertEqual(c1.bars.barTexture, "Smooth", name .. ": the pick is kept")
         assertEqual(c1.bars.bgTexture, "Minimalist", name)
-        assertEqual(c1.bars.name.font, "Arial Narrow", name)
-        assertEqual(c1.label.font.font, "Morpheus", name)
+        assertEqual(c1.bars.name.font, "Ka0s Prototype", name)
+        assertEqual(c1.label.font.font, "Ka0s Prototype", name)
         assertEqual(c1.bars.borderStyle, "Solid", name .. ": the border is not reset (D1)")
         assertNil(c1.bars.borderStyleFromSkin, name .. ": and gets no companion")
     end

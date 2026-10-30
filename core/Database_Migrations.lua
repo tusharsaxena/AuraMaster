@@ -1,6 +1,6 @@
 local _, NS = ...
 
--- core/Database_Migrations.lua — the frozen schema step bodies, Database.MigrateV2 .. MigrateV14,
+-- core/Database_Migrations.lua — the frozen schema step bodies, Database.MigrateV2 .. MigrateV15,
 -- with their private helpers and id tables. Peeled out of core/Database.lua, which keeps the ladder
 -- that calls them (SCHEMA_STEPS, climbLadder, NS.RunMigrations), AceDB init and the registry helpers.
 --
@@ -1023,6 +1023,42 @@ function Database.MigrateV14(p)
                 local t = parent and parent[leaf]
                 if type(t) == "table" and t.fontFlags == OLD_FLAGS then
                     t.fontFlags = FROM_SKIN_FLAGS
+                    moved = moved + 1
+                end
+            end
+        end
+    end
+    return moved
+end
+
+-- ---------------------------------------------------------------------------
+-- Schema v15: the player's own faces back off the skin (ruling D-15, image-36 and image-37)
+-- ---------------------------------------------------------------------------
+
+-- The face every text block starts on (defaults/Profile.lua's font()): no player picked it, so it
+-- keeps following the skin, as v13 meant every untouched block to.
+local TEMPLATE_FACE = "Friz Quadrata TT"
+-- Ka0s Default's HUD face at LibKa0s v1.82.0, for a load without the library to resolve it.
+Database.DEFAULT_HUD_FACE = "Ka0s Prototype"
+
+--- Take one profile's own picks back off the skin's face: on every stored text block of
+--- Database.FLAG_BLOCKS whose "Use the skin's font" is on and whose stored face is neither `hudFace`
+--- (the profile's skin's own HUD face) nor the template's starting face, the companion goes off, so
+--- the stored face draws again (the owner's Ka0s Kait Text containers, whose glow was tuned against
+--- it; the glow code is unchanged). Everything else, the face itself included, is left as stored.
+--- Answers how many blocks moved.
+function Database.MigrateV15(p, hudFace)
+    if type(p) ~= "table" or type(p.containers) ~= "table" then return 0 end
+    local moved = 0
+    for _, c in pairs(p.containers) do
+        if type(c) == "table" then
+            for _, path in ipairs(Database.FLAG_BLOCKS) do
+                local parent, leaf = pickParent(c, path)
+                local t = parent and parent[leaf]
+                local face = type(t) == "table" and t.font
+                if t and t.fontFromSkin == true and type(face) == "string" and face ~= ""
+                    and face ~= TEMPLATE_FACE and face ~= hudFace then
+                    t.fontFromSkin = false
                     moved = moved + 1
                 end
             end
