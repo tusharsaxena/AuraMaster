@@ -1981,13 +1981,15 @@ Total.
 - general → dispel colors: a swatch writes its own type's color and re-applies every container
 - general → dispel colors: the page's Defaults restores them
 
-### test_skinsetup.lua (16)
+### test_skinsetup.lua (18)
 
 - Skin seam: the owner is the folder name, and NS.Skin is its facade
 - Skin seam: the read answers Ka0s Default before the profile store exists
 - Skin seam: every owner token draws today's color on Ka0s Default, and follows a library role
 - Skin seam: the owner tokens draw on Ka0s Default the pixels the surfaces drew before AM-02
 - Skin seam: SkinEscape rounds a token back to the byte the markup wrote
+- Skin seam: PanelEscape is the skin's escape, and Ka0s Default's while the settings panel is ignored
+- Skin seam: every settings page colors its markup through PanelEscape, never the skin's escape
 - Skin seam: the skin keys default to Ka0s Default, as skip-render rows of General's Appearance group
 - Skin seam: the skin row's values are every registered skin, in the library's order
 - Skin seam: /am set refuses a skin that is not registered and applies one that is
@@ -2010,17 +2012,18 @@ Total.
 
 - skin surfaces: a skin switch repaints each strip's own edge in the new skin's handle.edge
 - skin surfaces: the strip label's attached gray and TEST tag are the new skin's
-- skin surfaces: the strip and close-mark tooltip lines take the skin's gtip colors on each hover
+- skin surfaces: the strip and close-mark tooltips draw the skin's gtip colors on each hover
 - skin surfaces: the unlocked outline is repainted in the new skin's guide color
 - skin surfaces: the drag-to-attach mark's colors are the skin's, refreshed in place on a switch
 - skin surfaces: the frame picker's outline, name and hint are the skin's
 - skin surfaces: the frame picker's OnUpdate reads no token: the hints are built by its paint
 - skin surfaces: a shown TEST marker is retold in the new skin's sem.warn
 
-### test_skin_hud.lua (11)
+### test_skin_hud.lua (12)
 
 - skin hud: every font block and both bar textures follow the skin by default; no border does
 - skin hud: each companion is a schema row defaulting on, and its picker shows the skin's value while it is on
+- skin hud: while fonts are ignored a ticked face picker previews the stored face, a texture picker the skin's
 - skin hud: the name label's face picker dims for the label off or the skin's face on
 - skin hud: a font block draws the skin's hud.font while its companion is on, its own face when off
 - skin hud: Ignore fonts keeps every font block on its stored face, over the skin and a font override
@@ -2621,10 +2624,10 @@ Total.
 | test_optionssetup.lua | 21 |
 | test_options_descriptor.lua | 19 |
 | test_pages_general.lua | 36 |
-| test_skinsetup.lua | 16 |
+| test_skinsetup.lua | 18 |
 | test_skin_literals.lua | 3 |
 | test_skin_surfaces.lua | 8 |
-| test_skin_hud.lua | 11 |
+| test_skin_hud.lua | 12 |
 | test_skin_picker.lua | 19 |
 | test_pages_general_categories.lua | 32 |
 | test_pages_containers.lua | 35 |
@@ -2654,4 +2657,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **2212** |
+| **Total** | **2215** |
