@@ -585,7 +585,7 @@ NS.RegisterSchemaRows({
 -- disabledIf naming the companion's path), so it dims for either: the label off or the skin's face.
 local labelFont = H.FontGroup({
     prefix = "container.label.font.", page = PAGE, group = G_LABEL, subgroup = L["Font"],
-    classColor = { source = "unit" }, fromSkin = true,
+    classColor = { source = "unit" }, fromSkin = true, flagsFromSkin = true,
 })
 for _, row in ipairs(labelFont) do
     local governedBy = row.disabledIf

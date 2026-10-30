@@ -34,6 +34,10 @@ end
 --- the reserve by that mark's frame (HELP_HIT, 18) on BOTH sides so the label stays centered:
 --- 2 * (29 + 18). The widget answers it as handle:Reserve().
 local RESERVE2 = 94
+--- The px the widget adds to a measured label (LibKa0s v1.82.0, WidgetsDragHandle minor 8's
+--- DRAG_HANDLE.FIT_SLACK, ruling D-12), so an exact fit never truncates: every natural width is
+--- label + SLACK + RESERVE2.
+local SLACK = 2
 
 test("handle: a dark strip with a 1px gold edge, a gold label and the catalog help mark", function()
     local NS, mocks = fresh()
@@ -153,7 +157,7 @@ test("handle: at least as wide as its container's element, and as its label with
     assertEqual(last(h, "SetWidth")[1], w, "a label wider than the element: capped at it")
     cfg.bars.width = 100
     NS.Anchors.UpdateHandle(inst, true)
-    assertEqual(last(h, "SetWidth")[1], w + 100 + RESERVE2, "too narrow to cap: the label with its marks")
+    assertEqual(last(h, "SetWidth")[1], w + 100 + SLACK + RESERVE2, "too narrow to cap: the label with its marks")
 end)
 
 test("handle: while shown the anchor's clamp rect takes it in; hidden, or in combat, the rect is left alone", function()
@@ -166,7 +170,7 @@ test("handle: while shown the anchor's clamp rect takes it in; hidden, or in com
     cfg.bars.width = 100   -- too narrow to cap (B11-T11), so the strip runs past it
     local w = NS.Style.ElementSize(cfg)
     measureAs(mocks, w + 100)
-    local over = 100 + RESERVE2
+    local over = 100 + SLACK + RESERVE2
     cfg.layout.growV, cfg.layout.growH = "down", "right"
     NS.Anchors.UpdateHandle(inst, true)
     assertEqual(insets, "0," .. over .. ",20,0", "down/right: above, reaching right")
@@ -522,7 +526,7 @@ test("handle: the width comes from a detached measuring string, never the label,
     local ok, err = pcall(NS.Anchors.UpdateHandle, inst, true)
     -- red under: placeHandle reading handle.label:GetStringWidth() (the reported error)
     assertTrue(ok, tostring(err))
-    assertEqual(last(h, "SetWidth")[1], w + 100 + RESERVE2, "the measured width sizes the strip")
+    assertEqual(last(h, "SetWidth")[1], w + 100 + SLACK + RESERVE2, "the measured width sizes the strip")
     assertEqual(measured[#measured], NS.Database.FindContainer(1).name, "the label's own text is measured")
 end)
 
@@ -536,7 +540,8 @@ test("handle: a measured width that reads secret falls back to the element's wid
     NS.Anchors.UpdateHandle(inst, true)
     -- red under: labelWidth without its NumberOr guard (41.5 + 52 = 93.5 in the harness; a raise in
     -- the client)
-    assertEqual(last(h, "SetWidth")[1], math.max(RESERVE2, NS.Style.ElementSize(NS.Database.FindContainer(2))))
+    assertEqual(last(h, "SetWidth")[1],
+        math.max(SLACK + RESERVE2, NS.Style.ElementSize(NS.Database.FindContainer(2))))
 end)
 
 test("handle: an anchor whose frame level reads secret places the strip from the stored level (E)", function()

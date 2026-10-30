@@ -861,7 +861,10 @@ end
 --- Everything the fitted size depends on, as one string.
 local function fitKey(s, auraType)
     local f = s.font or D.font
-    return table.concat({ (Style.FontKey(f, D.font)), tostring(f.fontSize), tostring(f.fontFlags),
+    -- The resolved file, size and flags (From skin and the HUD size scale read the skin), so a skin
+    -- or Font outline change re-fits.
+    local path, size, flags = Style.FontKey(f, D.font)
+    return table.concat({ path, tostring(size), flags,
         tostring(s.template), tostring(s.justifyH), tostring(s.justifyV), tostring(s.timeFormat),
         tostring(s.icon), tostring(s.iconSize), tostring(s.iconGap), tostring(s.x), tostring(s.anim),
         tostring(s.animBounce), tostring(auraType) }, "|")

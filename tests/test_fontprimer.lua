@@ -7,7 +7,10 @@
 --
 -- The harness loads no LibSharedMedia, so every font would resolve to the built-in fallback and be
 -- skipped. Each environment here gets a stand-in that knows three fonts: two addon fonts and the
--- client's Friz Quadrata, which the starter containers use and the primer must skip.
+-- client's Friz Quadrata, which the starter containers use and the primer must skip. The stored
+-- pick's key is "Ka0s Pick", a name no skin draws: from LibKa0s v1.82.0 Ka0s Default's HUD face is
+-- "Ka0s Prototype", which the starter containers' companion reaches, so a stand-in that resolved that
+-- key would prime the skin's face at login before ownFonts runs.
 
 local T = _G.AM_TEST
 local spyConsole = dofile("tests/console_spy.lua")
@@ -48,7 +51,7 @@ end
 --- `before` hook, after the media stand-in.
 local function env(atLogin, extra)
     local NS2, mocks = fresh({ before = function(m)
-        local media = { ["Ka0s Prototype"] = PROTO, ["Ka0s Kait"] = KAIT, ["Friz Quadrata TT"] = FRIZ,
+        local media = { ["Ka0s Pick"] = PROTO, ["Ka0s Kait"] = KAIT, ["Friz Quadrata TT"] = FRIZ,
             ["Arial Narrow"] = "Fonts\\ARIALN.TTF" }
         local lsm = setmetatable({ MediaType = { FONT = "font", STATUSBAR = "statusbar", BORDER = "border",
             BACKGROUND = "background", SOUND = "sound" } },
@@ -151,9 +154,9 @@ end)
 test("fontprimer: the triples come from every text block of every container, deduplicated", function()
     local NS2, _, FP = env()
     local c1, c2, c3, c4 = cfgOf(NS2, 1), cfgOf(NS2, 2), cfgOf(NS2, 3), cfgOf(NS2, 4)
-    c1.bars.name.font, c1.bars.name.fontSize = "Ka0s Prototype", 10
-    c1.bars.time.font, c1.bars.time.fontSize = "Ka0s Prototype", 11
-    c1.bars.stacks.font, c1.bars.stacks.fontSize = "Ka0s Prototype", 10      -- the name's triple
+    c1.bars.name.font, c1.bars.name.fontSize = "Ka0s Pick", 10
+    c1.bars.time.font, c1.bars.time.fontSize = "Ka0s Pick", 11
+    c1.bars.stacks.font, c1.bars.stacks.fontSize = "Ka0s Pick", 10      -- the name's triple
     c2.icons.time.font, c2.icons.time.fontSize = "Ka0s Kait", 14
     c2.icons.stacks.font, c2.icons.stacks.fontSize = "Ka0s Kait", 15
     c3.enabled = false                                                         -- primed all the same
@@ -180,7 +183,7 @@ end)
 test("fontprimer: the primed triple is the one Style.ApplyFont sets, flags and fallback included", function()
     local NS2, _, FP = env()
     local t = cfgOf(NS2, 1).bars.name
-    t.font, t.fontSize, t.fontFlags = "Ka0s Prototype", 12, "MONOCHROMEOUTLINE"
+    t.font, t.fontSize, t.fontFlags = "Ka0s Pick", 12, "MONOCHROMEOUTLINE"
     local fs = R()
     NS2.Style.ApplyFont(fs, t, NS2.CONTAINER_TEMPLATE.bars.name)
     local set = fs:__last("SetFont")
@@ -207,7 +210,7 @@ test("fontprimer: a font the client refuses is not counted, listed as primed, or
     local NS2, mocks, FP = env()
     local strings = recordFrame(mocks, true)
     local t = cfgOf(NS2, 1).bars.name
-    t.font, t.fontSize = "Ka0s Prototype", 10
+    t.font, t.fontSize = "Ka0s Pick", 10
     local n = FP.PrimeAll()
     assertEqual(#strings, 1, "the font was tried")
     -- red under: SetFont's answer ignored (a refused font reported as primed and refreshed for)
@@ -222,7 +225,7 @@ test("fontprimer: one shown 1x1 frame on UIParent draws each new triple, and hid
     local NS2, mocks, FP = env()
     local strings, got = recordFrame(mocks)
     local t = cfgOf(NS2, 1).bars.name
-    t.font, t.fontSize = "Ka0s Prototype", 10
+    t.font, t.fontSize = "Ka0s Pick", 10
     FP.PrimeAll()
     local f = got.frame
     assertTrue(f ~= nil, "no frame was built")
@@ -253,7 +256,7 @@ test("fontprimer: a second PrimeAll primes nothing new, shows nothing and arms n
     local NS2, mocks, FP = env()
     local strings, got = recordFrame(mocks)
     local t = cfgOf(NS2, 1).bars.name
-    t.font, t.fontSize = "Ka0s Prototype", 10
+    t.font, t.fontSize = "Ka0s Pick", 10
     FP.PrimeAll()
     fire(mocks, HOLD); fire(mocks, REFRESH)
     assertEqual(armed(mocks, HOLD) + armed(mocks, REFRESH), 0, "settled")
@@ -269,7 +272,7 @@ test("fontprimer: a font change primes only the new triple and arms one refresh"
     local NS2, mocks, FP = env()
     local strings, got = recordFrame(mocks)
     local t = cfgOf(NS2, 1).bars.name
-    t.font, t.fontSize = "Ka0s Prototype", 10
+    t.font, t.fontSize = "Ka0s Pick", 10
     FP.PrimeAll()
     fire(mocks, HOLD); fire(mocks, REFRESH)
     assertFalse(got.frame:IsShown(), "hidden after the first hold")
@@ -319,7 +322,7 @@ test("fontprimer: the refresh reaches only live, shown, non-previewing instances
         inst.name = name
     end
     local t = cfgOf(NS2, 1).bars.name
-    t.font, t.fontSize = "Ka0s Prototype", 10
+    t.font, t.fontSize = "Ka0s Pick", 10
     FP.PrimeAll()
     assertEqual((live.engine.__counts.UpdateAllAuras or 0), before, "nothing before REFRESH")
     fire(mocks, REFRESH)
@@ -336,7 +339,7 @@ test("fontprimer: the refresh re-applies, so a name label drawn in the font is w
     local NS2, mocks, FP, CM = env()
     local c = cfgOf(NS2, 1)
     c.label.show = true
-    c.label.font.font, c.label.font.fontSize = "Ka0s Prototype", 12
+    c.label.font.font, c.label.font.fontSize = "Ka0s Pick", 12
     FP.PrimeAll()
     CM.RequestApply(1)
     fire(mocks, 0)                          -- the apply, in the just-primed font
@@ -367,7 +370,7 @@ test("fontprimer: in test mode the refresh re-applies the previewing container, 
         applies = applies + 1
         return apply(self)
     end
-    NS2.SetByPath("container.bars.name.font", "Ka0s Prototype", 1)
+    NS2.SetByPath("container.bars.name.font", "Ka0s Pick", 1)
     fire(mocks, 0)                          -- the write's own apply
     assertEqual(applies, 1)
     fire(mocks, REFRESH)
@@ -384,7 +387,7 @@ test("fontprimer: a refresh timer that fires on a stood-down addon does nothing"
     local eligible = fakeInst({ ApplyVisibility = function() return false, false, false end })
     CM.instances[901] = eligible
     local t = cfgOf(NS2, 1).bars.name
-    t.font, t.fontSize = "Ka0s Prototype", 10
+    t.font, t.fontSize = "Ka0s Pick", 10
     FP.PrimeAll()
     local handle
     for _, h in ipairs(mocks.__timers()) do
@@ -405,7 +408,7 @@ test("fontprimer: Stop cancels both timers and hides the frame, and the primed s
     local NS2, mocks, FP = env()
     local _, got = recordFrame(mocks)
     local t = cfgOf(NS2, 1).bars.name
-    t.font, t.fontSize = "Ka0s Prototype", 10
+    t.font, t.fontSize = "Ka0s Pick", 10
     FP.PrimeAll()
     assertEqual(armed(mocks, HOLD) + armed(mocks, REFRESH), 2)
     FP.Stop()
@@ -419,7 +422,7 @@ end)
 test("fontprimer: disabling the addon stops the primer, and nothing primes while stood down", function()
     local NS2, mocks, FP, CM = env()
     local t = cfgOf(NS2, 1).bars.name
-    t.font, t.fontSize = "Ka0s Prototype", 10
+    t.font, t.fontSize = "Ka0s Pick", 10
     FP.PrimeAll()
     local frame = FP.__frame()
     assertTrue(frame:IsShown())
@@ -465,7 +468,7 @@ test("fontprimer: a login priming waits for the world, then refreshes at WORLD_R
     local live = CM.instances[1]
     local before = live.engine.__counts.UpdateAllAuras or 0
     local t = cfgOf(NS2, 1).bars.name
-    t.font, t.fontSize = "Ka0s Prototype", 10
+    t.font, t.fontSize = "Ka0s Pick", 10
     FP.PrimeAll()                           -- as CM.Init's, under the loading screen
     assertTrue(got.frame:IsShown(), "shown through the loading screen")
     -- red under: the login priming arming its short hide and refresh (both run under the loading screen)
@@ -499,7 +502,7 @@ test("fontprimer: a loading screen that outlasts WORLD_HOLD after PLAYER_ENTERIN
     local eligible = fakeInst({ ApplyVisibility = function() return false, false, false end })
     CM.instances[901] = eligible
     local t = cfgOf(NS2, 1).bars.name
-    t.font, t.fontSize = "Ka0s Prototype", 10
+    t.font, t.fontSize = "Ka0s Pick", 10
     FP.PrimeAll()
     NS2.DebugLog:SetEnabled(true)
     mocks.__now = 100
@@ -527,7 +530,7 @@ test("fontprimer: a client that refuses LOADING_SCREEN_DISABLED times the world 
     local NS2, mocks, FP = env(true, function(m) m.__badEvents = { LOADING_SCREEN_DISABLED = true } end)
     local _, got = recordFrame(mocks)
     local t = cfgOf(NS2, 1).bars.name
-    t.font, t.fontSize = "Ka0s Prototype", 10
+    t.font, t.fontSize = "Ka0s Pick", 10
     FP.PrimeAll()
     mocks.__fireEvent("PLAYER_ENTERING_WORLD")
     -- red under: no fallback (the frame shown and no refresh, for good, on a client without the event)
@@ -540,7 +543,7 @@ test("fontprimer: a later loading screen with nothing newly primed arms nothing"
     local NS2, mocks, FP = env(true)
     local _, got = recordFrame(mocks)
     local t = cfgOf(NS2, 1).bars.name
-    t.font, t.fontSize = "Ka0s Prototype", 10
+    t.font, t.fontSize = "Ka0s Pick", 10
     FP.PrimeAll()
     mocks.__fireEvent("PLAYER_ENTERING_WORLD"); mocks.__fireEvent("LOADING_SCREEN_DISABLED")
     fire(mocks, WORLD_REFRESH); fire(mocks, WORLD_HOLD)
@@ -553,7 +556,7 @@ end)
 
 test("fontprimer: a font change during play keeps the short path, never the world timers", function()
     local NS2, mocks = env()
-    NS2.SetByPath("container.bars.name.font", "Ka0s Prototype", 1)
+    NS2.SetByPath("container.bars.name.font", "Ka0s Pick", 1)
     -- red under: every priming waiting for a PLAYER_ENTERING_WORLD that is not coming
     assertEqual(armed(mocks, HOLD), 1)
     assertEqual(armed(mocks, REFRESH), 1)
@@ -564,7 +567,7 @@ test("fontprimer: Stop cancels the world timers, and ends the wait for the world
     local NS2, mocks, FP = env(true)
     local _, got = recordFrame(mocks)
     local t = cfgOf(NS2, 1).bars.name
-    t.font, t.fontSize = "Ka0s Prototype", 10
+    t.font, t.fontSize = "Ka0s Pick", 10
     FP.PrimeAll()
     mocks.__fireEvent("PLAYER_ENTERING_WORLD"); mocks.__fireEvent("LOADING_SCREEN_DISABLED")
     assertEqual(armed(mocks, WORLD_HOLD) + armed(mocks, WORLD_REFRESH), 2)
@@ -578,7 +581,7 @@ test("fontprimer: a login stood down takes the short path on a stand-up in play"
     -- A stood-down addon hears no PLAYER_ENTERING_WORLD, so the primer cannot wait for one.
     local NS2, mocks = env(true)
     NS2.SetByPath("enabled", false)
-    cfgOf(NS2, 1).bars.name.font = "Ka0s Prototype"
+    cfgOf(NS2, 1).bars.name.font = "Ka0s Pick"
     NS2.SetByPath("enabled", true)
     -- red under: the stand-up's priming waiting for the world (the frame shown and no refresh, for good)
     assertEqual(armed(mocks, HOLD), 1)
@@ -589,7 +592,7 @@ test("fontprimer: DiagState names which refresh is armed, or that it waits for t
     local NS2, mocks, FP = env(true)
     assertEqual(FP.DiagState().state, "idle")
     local t = cfgOf(NS2, 1).bars.name
-    t.font, t.fontSize = "Ka0s Prototype", 10
+    t.font, t.fontSize = "Ka0s Pick", 10
     FP.PrimeAll()
     -- red under: DiagState without a state (the report cannot tell a waiting priming from an idle one)
     assertEqual(FP.DiagState().state, "awaiting-world")
@@ -614,7 +617,7 @@ test("fontprimer: a settings write primes before its apply is requested", functi
         seen = seen or #FP.DiagState().primed
         return request(...)
     end
-    NS2.SetByPath("container.bars.name.font", "Ka0s Prototype", 1)
+    NS2.SetByPath("container.bars.name.font", "Ka0s Pick", 1)
     CM.RequestApply = request
     -- red under: no PrimeAll in the CONFIG_CHANGED handler, or one after RequestApply
     assertEqual(seen, 1)
@@ -648,7 +651,7 @@ test("fontprimer: one Fonts debug line per PrimeAll that primed something, and n
     FP.PrimeAll()
     assertEqual(#lines, 0, "nothing primed, nothing said")
     local c1 = cfgOf(NS2, 1)
-    c1.bars.name.font, c1.bars.time.font = "Ka0s Prototype", "Ka0s Kait"
+    c1.bars.name.font, c1.bars.time.font = "Ka0s Pick", "Ka0s Kait"
     FP.PrimeAll()
     FP.PrimeAll()
     NS2.Debug = debug
@@ -687,7 +690,7 @@ test("fontprimer: a refused font is not marked primed, and the next PrimeAll pri
     local gate = refuseProto()
     local strings, got = recordFrame(mocks, gate.fn)
     local c1 = cfgOf(NS2, 1)
-    c1.bars.name.font, c1.bars.name.fontSize = "Ka0s Prototype", 10
+    c1.bars.name.font, c1.bars.name.fontSize = "Ka0s Pick", 10
     c1.bars.time.font, c1.bars.time.fontSize = "Ka0s Kait", 11
     assertEqual(FP.PrimeAll(), 1, "Kait primed, Prototype refused")
     assertEqual(primed(FP), KAIT .. "|11|OUTLINE")
@@ -715,8 +718,8 @@ test("fontprimer: a font refused again stays on the refused set once, and every 
     local NS2, mocks, FP = env()
     local strings = recordFrame(mocks, true)
     local c1 = cfgOf(NS2, 1)
-    c1.bars.name.font, c1.bars.name.fontSize = "Ka0s Prototype", 10
-    c1.bars.stacks.font, c1.bars.stacks.fontSize = "Ka0s Prototype", 10     -- the same triple
+    c1.bars.name.font, c1.bars.name.fontSize = "Ka0s Pick", 10
+    c1.bars.stacks.font, c1.bars.stacks.fontSize = "Ka0s Pick", 10     -- the same triple
     FP.PrimeAll(); FP.PrimeAll(); FP.PrimeAll()
     -- red under: no dedup on the refused set (the triple listed once per block or per PrimeAll)
     assertEqual(refused(FP), PROTO .. "|10|OUTLINE")
@@ -734,7 +737,7 @@ test("fontprimer: a font refused under the loading screen is primed at its end, 
     local eligible = fakeInst({ ApplyVisibility = function() return false, false, false end })
     CM.instances[901] = eligible
     local t = cfgOf(NS2, 1).bars.name
-    t.font, t.fontSize = "Ka0s Prototype", 10
+    t.font, t.fontSize = "Ka0s Pick", 10
     FP.PrimeAll()                           -- as CM.Init's, under the loading screen: refused
     assertEqual(primed(FP), "")
     assertEqual(#mocks.__timers(), 0)
@@ -762,7 +765,7 @@ test("fontprimer: on a client without the loading screen's end, PLAYER_ENTERING_
     local gate = refuseProto()
     recordFrame(mocks, gate.fn)
     local t = cfgOf(NS2, 1).bars.name
-    t.font, t.fontSize = "Ka0s Prototype", 10
+    t.font, t.fontSize = "Ka0s Pick", 10
     FP.PrimeAll()
     gate.accept()
     mocks.__fireEvent("PLAYER_ENTERING_WORLD")
@@ -776,7 +779,7 @@ test("fontprimer: a loading screen's end with a font still refused arms nothing"
     local NS2, mocks, FP = env(true)
     local _, got = recordFrame(mocks, true)
     local t = cfgOf(NS2, 1).bars.name
-    t.font, t.fontSize = "Ka0s Prototype", 10
+    t.font, t.fontSize = "Ka0s Pick", 10
     FP.PrimeAll()
     mocks.__fireEvent("PLAYER_ENTERING_WORLD"); mocks.__fireEvent("LOADING_SCREEN_DISABLED")
     -- red under: a refusal treated as a priming (the frame shown and a refresh for nothing drawn).
@@ -797,7 +800,7 @@ test("fontprimer: one Fonts debug line when the refused count moves, counts only
         lines[n + 1] = string.format(fmt, ...)
     end)
     local c1 = cfgOf(NS2, 1)
-    c1.bars.name.font, c1.bars.name.fontSize = "Ka0s Prototype", 10
+    c1.bars.name.font, c1.bars.name.fontSize = "Ka0s Pick", 10
     c1.bars.time.font, c1.bars.time.fontSize = "Ka0s Kait", 11
     FP.PrimeAll()
     -- red under: a refusal said nothing (the trace cannot show why a font is missing), or a line per triple
@@ -821,7 +824,7 @@ test("fontprimer: DiagState lists the refused triples, copies only, and a primed
     local gate = refuseProto()
     recordFrame(mocks, gate.fn)
     local t = cfgOf(NS2, 1).bars.name
-    t.font, t.fontSize = "Ka0s Prototype", 10
+    t.font, t.fontSize = "Ka0s Pick", 10
     assertEqual(#FP.DiagState().refused, 0)
     FP.PrimeAll()
     local s = FP.DiagState()

@@ -41,6 +41,10 @@ NS.COMMANDS = {
         function() cli:PrintHelp() end},
     {"config",        L["Open the settings panel"],
         function() NS.OpenOptionsPanel() end},
+    -- The reserved skin verb (LibKa0s v1.82.0's O.SkinVerb, ruling D-16): the picker a new profile
+    -- shows, whatever skin.pickerSeen says. A feature verb, refused while disabled (not in liveVerbs).
+    {"skin",          L["Choose a skin: open the skin picker"],
+        function() NS.RunSkinVerb() end},
     {"enable",        L["Turn Aura Master on (every enabled container shows again)"],
         function() runEnabled(true) end},
     {"disable",       L["Turn Aura Master off (hides every container)"],

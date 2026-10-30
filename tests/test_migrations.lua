@@ -392,7 +392,8 @@ test("migrations: a v8 account climbs through v9 in every profile", function()
     local NS = fresh({ savedVariables = { profiles = { Default = v8profile(), Raid = v8profile() },
         global = { schemaVersion = 8 } } })
     -- red under: the v9 row missing from SCHEMA_STEPS
-    assertEqual(NS.SCHEMA_VERSION, 13)
+    assertEqual(NS.SCHEMA_VERSION, NS.Database.CurrentSchemaVersion())
+    assertTrue(NS.SCHEMA_VERSION >= 9, "past v9")
     assertEqual(NS.db.global.schemaVersion, NS.SCHEMA_VERSION)
     for _, name in ipairs({ "Default", "Raid" }) do
         local cs = NS.db.sv.profiles[name].containers
@@ -662,8 +663,8 @@ test("migrations: a v10 account reaches v11 in every profile, each converted und
     local NS = fresh({ savedVariables = { profiles = { Default = v10profile("left", "up"),
         Raid = v10profile("right", "down") }, global = { schemaVersion = 10 } } })
     -- red under: no v11 row in SCHEMA_STEPS
-    assertEqual(NS.SCHEMA_VERSION, 13)
-    assertEqual(NS.db.global.schemaVersion, 13)
+    assertTrue(NS.SCHEMA_VERSION >= 11, "past v11")
+    assertEqual(NS.db.global.schemaVersion, NS.SCHEMA_VERSION)
     local d, r = NS.db.sv.profiles.Default.containers, NS.db.sv.profiles.Raid.containers
     assertEqual(pairOf(d[3].attach), "TOPRIGHT>TOPLEFT", "Default grows left and up")
     -- red under: the conversion reading the active profile's chain for an inactive one

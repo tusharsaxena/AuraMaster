@@ -498,9 +498,14 @@ test("style: each outline setting reaches the font as the client's flag string",
         -- red under: FLAG_MAP missing an entry (the combined flag is not the setting's own name)
         assertEqual(fs:__last("SetFont")[3], flags, setting)
     end
+    -- From skin (LibKa0s v1.82.0, ruling D-07): the Skin tab's Font outline, All text by default, so
+    -- OUTLINE; nothing stored reads the template's From skin.
     local fs = R()
+    NS.Style.ApplyText(fs, { fontFlags = "@skin" }, R(), D.bars.name)
+    assertEqual(fs:__last("SetFont")[3], "OUTLINE", "From skin under All text")
+    fs = R()
     NS.Style.ApplyText(fs, {}, R(), D.bars.name)
-    assertEqual(fs:__last("SetFont")[3], "", "no setting: no outline")
+    assertEqual(fs:__last("SetFont")[3], "OUTLINE", "no setting: the template's From skin")
 end)
 
 test("style: a font shadow is a one-pixel black drop when on, and no offset when off", function()

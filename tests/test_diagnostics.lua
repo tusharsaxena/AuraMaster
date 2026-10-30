@@ -780,11 +780,13 @@ local PRIMER_KAIT = "Interface\\AddOns\\SharedMedia_MyMedia\\font\\Ka0s Kait.ttf
 
 --- A fresh environment with a LibSharedMedia stand-in that knows two addon fonts and the client's
 --- Friz Quadrata (the harness loads no media library, so every font would resolve to the fallback).
+--- The pick's key, "Ka0s Pick", is a name no skin draws (Ka0s Default's HUD face is "Ka0s Prototype"
+--- from LibKa0s v1.82.0, and the starter containers follow it).
 --- It enters the world (the fresh environment stops at PLAYER_LOGIN): PLAYER_ENTERING_WORLD, then the
 --- loading screen's end, so a priming takes the short path; with `atLogin` it stays before either.
 local function primerEnv(atLogin)
     local NS, mocks = fresh({ before = function(m)
-        local media = { ["Ka0s Prototype"] = PRIMER_PROTO, ["Ka0s Kait"] = PRIMER_KAIT,
+        local media = { ["Ka0s Pick"] = PRIMER_PROTO, ["Ka0s Kait"] = PRIMER_KAIT,
             ["Friz Quadrata TT"] = "Fonts\\FRIZQT__.TTF" }
         local lsm = setmetatable({ MediaType = { FONT = "font", STATUSBAR = "statusbar", BORDER = "border",
             BACKGROUND = "background", SOUND = "sound" } },
@@ -809,7 +811,7 @@ end
 --- Kait 17 with a thick outline; each the player's own face, its "Use the skin's font" off (AM-03).
 local function primerFonts(NS)
     local n = NS.Database.FindContainer(1).bars.name
-    n.font, n.fontSize, n.fontFlags, n.fontFromSkin = "Ka0s Prototype", 10, "NONE", false
+    n.font, n.fontSize, n.fontFlags, n.fontFromSkin = "Ka0s Pick", 10, "NONE", false
     local t = NS.Database.FindContainer(4).text.font
     t.font, t.fontSize, t.fontFlags, t.fontFromSkin = "Ka0s Kait", 17, "THICKOUTLINE", false
 end

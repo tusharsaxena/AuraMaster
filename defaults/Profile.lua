@@ -49,10 +49,11 @@ NS.defaults.profile = {
     -- `source` and `skin` start on Ka0s Default; the Scope's two exceptions leave the settings panel
     -- the client's and skin the fonts (the owner's call for a new profile, LootHistory SF-45); `font`
     -- and `texture` are the overrides, "" for the skin's own; `pickerSeen` is the first-run picker's
-    -- memory, false on every profile, old and new (owner ruling O3).
+    -- memory, false on every profile, old and new (owner ruling O3); `outline` is the Font outline,
+    -- "all" text, "hud" text only or "off" (LibKa0s v1.82.0, ruling D-06).
     skin = {
         source = "ka0s", skin = "ka0s", ignorePanel = true, ignoreFonts = false,
-        font = "", texture = "", pickerSeen = false,
+        font = "", texture = "", outline = "all", pickerSeen = false,
     },
 
     -- Profile-wide since schema v2 (core/Database_Migrations.lua's MigrateV2 lifted them off the
@@ -120,7 +121,8 @@ NS.defaults.global = {
     minimap = { hide = false },
 }
 
---- The six canonical font leaves (options-ui-§16): white, outlined, no shadow, at `size`; and the
+--- The six canonical font leaves (options-ui-§16): white, flags From skin ("@skin": the Skin tab's
+--- Font outline decides, LibKa0s v1.82.0, ruling D-07), no shadow, at `size`; and the
 --- face's "Use the skin's font" companion (LibKa0s OptionsCompose's `fromSkin`), default ON (the
 --- rollout's X3), so a new container follows the skin's `hud.font` the way a stored one does after
 --- the v13 reset (core/Database_Migrations.lua). The stored face is kept for when the player turns
@@ -132,7 +134,7 @@ local function font(size)
         fontSize          = size,
         fontColor         = color(1, 1, 1, 1),
         useClassColorFont = false,
-        fontFlags         = "OUTLINE",
+        fontFlags         = "@skin",
         fontShadow        = false,
     }
 end

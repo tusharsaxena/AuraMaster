@@ -128,7 +128,7 @@ Total.
 - v3: MigrateV3 returns the number of containers it walked
 - v3: a container skipped for an unrecognized auraType is not counted in the walked total, and logs its own line
 - v3: the whitelist lift never sweeps a category the aura type does not have
-- v12: the v12 step is on the ladder, below v13's skin reset
+- v12: the v12 step is on the ladder, below v13's skin reset and v14's Font flags
 - v3: RunMigrations migrates every stored profile, the inactive one included
 - v4: a HELPFUL container with the toggle on ends up with Uncategorized hidden, and the dead key cleared
 - v4: a HARMFUL container with the toggle on ends up with Uncategorized (debuffs) hidden, and the dead key cleared
@@ -1694,7 +1694,7 @@ Total.
 
 - slash: every command is a positional {name, desc, fn} triple
 - slash: the reserved verbs are all present
-- slash: NS.COMMANDS carries 25 verbs, profile right after resetall, redraw right after forgettimed, diagnostics right after debug, and no diag verb
+- slash: NS.COMMANDS carries 26 verbs, skin right after config, profile right after resetall, redraw right after forgettimed, diagnostics right after debug, and no diag verb
 - slash: /am new creates the described container and selects it
 - slash: /am new text creates a text-style container
 - slash: /am new gives the new container the Fill its style suits (B5)
@@ -1981,7 +1981,7 @@ Total.
 - general → dispel colors: a swatch writes its own type's color and re-applies every container
 - general → dispel colors: the page's Defaults restores them
 
-### test_skinsetup.lua (18)
+### test_skinsetup.lua (19)
 
 - Skin seam: the owner is the folder name, and NS.Skin is its facade
 - Skin seam: the read answers Ka0s Default before the profile store exists
@@ -1990,6 +1990,7 @@ Total.
 - Skin seam: SkinEscape rounds a token back to the byte the markup wrote
 - Skin seam: PanelEscape is the skin's escape, and Ka0s Default's while the settings panel is ignored
 - Skin seam: every settings page colors its markup through PanelEscape, never the skin's escape
+- Skin seam: the cast-id suggestion tag follows the settings panel's Ignore, not the skin alone
 - Skin seam: the skin keys default to Ka0s Default, as skip-render rows of General's Appearance group
 - Skin seam: the skin row's values are every registered skin, in the library's order
 - Skin seam: /am set refuses a skin that is not registered and applies one that is
@@ -2033,6 +2034,36 @@ Total.
 - skin hud: v13 puts every stored pick back on the skin in every profile, keeping each pick
 - skin hud: v13 runs once, so a player's later pick survives the next load
 - skin hud: the v13 body seeds each companion before ResetToSkin, and sets them itself without it
+
+### test_skin_flags.lua (6)
+
+- skin flags: every font block's setting is the minimum set, its flags led by From skin
+- skin flags: /am set takes From skin and a picked flag, and the HUD draws each
+- skin flags: v14 moves the old default OUTLINE onto From skin in every profile, keeping each pick
+- skin flags: v14 runs once, so an OUTLINE the player picks afterwards stays OUTLINE
+- skin flags: the v14 body leaves an absent block and an absent flag alone
+- skin flags: a block on the skin's face stored at 12 draws at 13 under Obsidian; its own face, and Ignore fonts, at 12
+
+### test_skin_outline.lua (9)
+
+- outline: a fresh profile stores All text, the library's default, and applies it
+- outline: the schema row offers the library's three modes, in its order, drawn by the Skin tab
+- outline: the write seam stores media.outline, and leaves it alone when it is nil
+- outline: another addon's copy reaches the store through WriteChoice
+- outline: the row's write applies the mode live, and the HUD's From skin flags follow it
+- outline: /am set refuses a mode the library does not know
+- outline: the stored mode is applied at load
+- outline: a profile switch applies the incoming profile's mode, and back
+- outline: without LibKa0s the apply is a quiet no-op and From skin draws OUTLINE
+
+### test_skin_verb.lua (6)
+
+- skin verb: the row sits right after config, with the library's help words
+- skin verb: /am skin shows the picker on a profile that has closed it
+- skin verb: NS.RunSkinVerb hands O.SkinVerb this addon's first-run spec
+- skin verb: in combat every call prints the library's gray line and shows nothing
+- skin verb: refused while the addon is disabled, and no picker shows
+- skin verb: without LibKa0s the verb prints the library-absent line
 
 ### test_skin_picker.lua (19)
 
@@ -2624,10 +2655,13 @@ Total.
 | test_optionssetup.lua | 21 |
 | test_options_descriptor.lua | 19 |
 | test_pages_general.lua | 36 |
-| test_skinsetup.lua | 18 |
+| test_skinsetup.lua | 19 |
 | test_skin_literals.lua | 3 |
 | test_skin_surfaces.lua | 8 |
 | test_skin_hud.lua | 12 |
+| test_skin_flags.lua | 6 |
+| test_skin_outline.lua | 9 |
+| test_skin_verb.lua | 6 |
 | test_skin_picker.lua | 19 |
 | test_pages_general_categories.lua | 32 |
 | test_pages_containers.lua | 35 |
@@ -2657,4 +2691,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **2215** |
+| **Total** | **2237** |

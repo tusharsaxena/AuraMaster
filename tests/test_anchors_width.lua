@@ -14,6 +14,7 @@ local fresh = dofile("tests/fresh_env.lua")
 
 local PX = 6   -- what one character measures in the stand-in measurer
 local RESERVE2 = 94   -- the widget's reserve on both sides of the label, the close mark included
+local SLACK = 2       -- the px the widget adds to a measured label (LibKa0s v1.82.0, DRAG_HANDLE.FIT_SLACK)
 
 --- The text a label draws, its color escapes removed (the client does not measure them either).
 local function plain(s)
@@ -62,7 +63,7 @@ test("width: a long name on a wide Bars container gives a strip exactly as wide 
     local rec, inst, cfg = stripOf(NS, mocks, 1, LONG)
     local w = NS.Style.ElementSize(cfg)
     assertEqual(cfg.style, "bars")
-    -- red under: handle:ApplyWidth(w), which takes the natural width (#LONG * 6 + 94 = 322 > 220)
+    -- red under: handle:ApplyWidth(w), which takes the natural width (#LONG * 6 + 2 + 94 = 324 > 220)
     assertEqual(rec.width, w, "the strip is the bar's width")
     local text = plain(rec.text)
     assertTrue(#text * PX <= w - RESERVE2, "the label fits between the marks: " .. text)
@@ -118,9 +119,9 @@ test("width: a one-icon container too narrow for the marks and a readable label 
     local w = NS.Style.ElementSize(cfg)
     assertEqual(cfg.style, "icons")
     assertTrue(w < RESERVE2 + 40, "one icon is narrower than the marks and a label")
-    assertEqual(rec.width, #LONG * PX + RESERVE2, "the name and the marks, as before")
+    assertEqual(rec.width, #LONG * PX + SLACK + RESERVE2, "the name and the marks, as before")
     assertEqual(plain(rec.text), LONG, "nothing shortened")
-    assertEqual(inst.stripOverhang, #LONG * PX + RESERVE2 - w, "the overhang an ahead follower clears")
+    assertEqual(inst.stripOverhang, #LONG * PX + SLACK + RESERVE2 - w, "the overhang an ahead follower clears")
 end)
 
 test("width: the label is worked out once per name and width, not on every pass", function()

@@ -48,7 +48,7 @@ marked as such rather than listed as a requirement.
 | `lua5.1` (+ `luac`) | **5.1 exactly** | the headless suite, `lua tests/run.lua`; the offline perf runner `lua tests/perf.lua`; the complexity suite's sighted shadow (`tests/_kit/lizard_sighted.lua`, run by the automated-test runner); one-file syntax checks `luac -p file.lua` | `tests/_kit/loader.lua:72` and `:91` call `setfenv`, `:89` calls `loadstring` |
 | `luacheck` | any recent | `luacheck .`, the other half of the green gate | `.luacheckrc` at the repo root |
 | `lizard` | any recent | the `complexity` suite of `tests/_kit/run-automated-tests.sh` (automated-tests) | `tests/_kit/run-automated-tests.sh:168` probes `command -v lizard` |
-| `git` | any recent | the vendored-payload gate, the lint-config gate, the line-ending gate, the layout cap gate, the runner-mode (100755) case, and the runner's manifest | `tests/_kit/vendor_sync.lua:409` (`git -C … show`), `tests/test_lintconfig.lua:155` (`git ls-files`), `tests/_kit/test_eol.lua` (`git check-attr`), `tests/_kit/test_layout_cap.lua:171` (`git ls-files`), `tests/_kit/vendor_sync.lua:644` (`git ls-files -s`, the kit's runner-mode case), `tests/_kit/run-automated-tests.sh:172` (`git rev-parse`) |
+| `git` | any recent | the vendored-payload gate, the lint-config gate, the line-ending gate, the layout cap gate, the runner-mode (100755) case, and the runner's manifest | `tests/_kit/vendor_sync.lua:422` (`git -C … show`), `tests/test_lintconfig.lua:155` (`git ls-files`), `tests/_kit/test_eol.lua` (`git check-attr`), `tests/_kit/test_layout_cap.lua:171` (`git ls-files`), `tests/_kit/vendor_sync.lua:657` (`git ls-files -s`, the kit's runner-mode case), `tests/_kit/run-automated-tests.sh:172` (`git rev-parse`) |
 | `bash` | any recent | running the vendored automated-test runner, and the standard utilities it pipes through: `sed`, `grep`, `awk`, `date`, `find`, `wc`, `sort`, `head`, `tail`, `tr` | `tests/_kit/run-automated-tests.sh:1` is `#!/usr/bin/env bash` and uses bash arrays; `:69`, `:81` and `:94` (`sed`), `:81` and `:166` (`grep`), `:101` (`date`), `:78` (`head`), `:81` (`tr`); `awk` builds `PERF_SCENARIOS`, `PERF_TABLE` and `CCN_BAND_ROWS`, `find`, `wc` and `sort` build `CCN_BAND_ROWS`, and `tail` picks the lint `Total:` line and the tests `footer` |
 | POSIX shell with `ls` and `grep` (`-r`, `--include`) | any | tests that list or scan source files by shelling out: the docs gate, the locale gate, the close-button, icon-declaration and metadata-reader source scans, and the kit's directory listing | `tests/test_docs.lua:45` and `tests/test_locale.lua:24` (`io.popen("ls -1 …")`), `tests/test_setups.lua:42`, `:74` and `:108` (`io.popen("grep -r… --include='*.lua' …")`), `tests/_kit/framework.lua` (`listDir`, `ls -A`) |
 | POSIX `sh` + `nproc` (coreutils) | any | the parallel harness, which `lua tests/run.lua` uses by default (`jobs = "auto"`; `-j N` overrides); `nproc` is optional: without it (or `sysctl -n hw.ncpu`), `auto` falls back to one job | `tests/_kit/framework.lua` (`nproc` for `--jobs auto`; `os.execute(":")`, the POSIX-shell probe; shards backgrounded with `&` and joined with `wait`) |
@@ -88,14 +88,14 @@ Versions are pinned only where a version matters: `lua5.1` is hard, `luacheck` a
 ### Optional: a sibling `../LibKa0s` checkout
 
 `tests/test_vendor_sync.lua` hands the comparison to the vendored `tests/_kit/vendor_sync.lua`, which
-reads the tag named in root `CLAUDE.md` (`v1.81.0`) out of a checkout at `../LibKa0s` and compares
+reads the tag named in root `CLAUDE.md` (`v1.82.0`) out of a checkout at `../LibKa0s` and compares
 `libs/LibKa0s/` and `tests/_kit/` against it. Without that checkout the case records a **skip with
 its reason**, not a pass and not a failure (testing-§11). Clone it if you touch `libs/`, re-vendor,
 or want that case to actually compare:
 
 ```sh
 git clone https://github.com/tusharsaxena/LibKa0s.git ../LibKa0s
-git -C ../LibKa0s rev-parse --short v1.81.0   # verify: prints a commit
+git -C ../LibKa0s rev-parse --short v1.82.0   # verify: prints a commit
 ```
 
 ### Not dependencies of this repo

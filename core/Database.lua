@@ -449,6 +449,15 @@ local SCHEMA_STEPS = {
             end
         end)
     end },
+    { to = 14, apply = function(db)
+        -- Font flags onto From skin (LibKa0s v1.82.0, ruling D-07): Database.MigrateV14.
+        eachProfile(db, function(p, name)
+            local n = Database.MigrateV14(p)
+            if NS.DebugLog then
+                NS.DebugLog.DebugAtEnable("Migrate", "v14 profile '%s': Font flags moved to From skin on %s text block(s)", name, n)
+            end
+        end)
+    end },
 }
 
 --- Current schema version: the last step's `to`, or 0 (the defaults' "never migrated" stamp).

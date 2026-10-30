@@ -9,7 +9,7 @@ Ka0s Aura Master draws player-built aura **containers**. A container is one unit
 `target`, `focus`, `pet` — `core/Constants.lua:39`), one aura type (`HELPFUL` or `HARMFUL` — `:45`;
 the player's temporary weapon enchants are the buff category `weaponEnchants`, schema v5) and one style (`bars`, `icons` or
 `text` — `:49`), plus its filters, placement and look. A profile holds any number of them; a fresh
-profile is seeded with four (`NS.STARTER_CONTAINERS`, `defaults/Profile.lua:322`).
+profile is seeded with four (`NS.STARTER_CONTAINERS`, `defaults/Profile.lua:324`).
 
 **The design is dictated by one client fact.** On Retail 12.1 an addon cannot read aura data while
 auras are secret — combat, encounters, Mythic+ and PvP (`core/Secrets.lua`, `docs/midnight-quirks.md`).
@@ -82,7 +82,7 @@ Every non-vendored file, its responsibility and the full load order: `docs/modul
 
 ## Settings Schema
 
-`NS.Schema` holds **292** rows across seven pages (General 25, Containers 5, Filters 57, Layout 39,
+`NS.Schema` holds **293** rows across seven pages (General 26, Containers 5, Filters 57, Layout 39,
 Bars 77, Icons 44, Text 45), plus one runtime row per user category. It drives the panel,
 `/am list|get|set|reset` and the resets through one write seam, `NS.SetByPath`.
 
@@ -145,7 +145,7 @@ pass on.
 
 | Message | Sender | Payload | Consumers |
 |---|---|---|---|
-| `Ka0s_AuraMaster_ContainersChanged` (`NS.MSG.CONTAINERS_CHANGED`) | `modules/ContainerManager.lua` — create, delete, rename, duplicate, profile change (copy-from and reset positions are settings writes, announced by `CONFIG_CHANGED`) | none | `settings/OptionsSetup.lua:435` — `NS.RequestPanelRefresh`, a coalesced panel re-render (every banner lists containers); `modules/TimedSpells.lua:204` — `TS.Sync`, which starts or stops the timed-spell scan (a container added or removed can change whether any needs it) |
+| `Ka0s_AuraMaster_ContainersChanged` (`NS.MSG.CONTAINERS_CHANGED`) | `modules/ContainerManager.lua` — create, delete, rename, duplicate, profile change (copy-from and reset positions are settings writes, announced by `CONFIG_CHANGED`) | none | `settings/OptionsSetup.lua:438` — `NS.RequestPanelRefresh`, a coalesced panel re-render (every banner lists containers); `modules/TimedSpells.lua:204` — `TS.Sync`, which starts or stops the timed-spell scan (a container added or removed can change whether any needs it) |
 | `Ka0s_AuraMaster_ConfigChanged` (`NS.MSG.CONFIG_CHANGED`) | `settings/Schema.lua:603` — the write seam, once per write; never for a session row | `{ section, containerId, path }`; `containerId` nil for an addon-wide row, `path` the row written | `modules/ContainerManager.lua:866` — first `FontPrimer.PrimeAll` (a new font is drawn before anything is applied in it), then by the row's `effect`: `"visibility"` (the master enable, visibility, lock and alpha, a container's enable, its six `filter.zones` rows and its two `filter.unitFilter` rows) runs `ApplyVisibility()` at once, `"none"` queues nothing, `"view"` (the two `filter.situations` rows) runs `CM.ApplyViews` for that container at once, in combat too and never held, otherwise `RequestApply(containerId)` (nil re-applies all), a write to a flow or attachment path also re-applies every container following that one (`Anchors.Followers`), and a write to a container's attach points, mode or target also re-applies the container it attaches to (`requestParents`); `modules/TimedSpells.lua:203` — `TS.Sync`, the same re-sync (a filter write can change whether any container needs the scan) |
 | `Ka0s_AuraMaster_VisibilityChanged` (`NS.MSG.VISIBILITY_CHANGED`) | `core/AuraMaster.lua` — entering the world, combat start and end; `modules/Preview.lua` — `Preview.SetTestMode`, when test mode switches on or off | none | `modules/ContainerManager.lua:879` — `ApplyVisibility()` over every container |
 | `Ka0s_AuraMaster_TimedSpellsChanged` (`NS.MSG.TIMED_SPELLS_CHANGED`) | `modules/TimedSpells.lua` — a scan learned timed spells, or `/am forgettimed` emptied the set | none from a scan; `{ byPlayer = true }` from `/am forgettimed` | `modules/ContainerManager.lua` `CM.Init` — `RequestApply(nil, system)` over every container (their excluded ids moved); a scan's request is the addon's own, so a deferral of it prints no notice |
@@ -155,7 +155,7 @@ Four messages, well under the more-than-ten trigger for a separate `message-bus.
 ## Slash Commands
 
 `/am` with `/auramaster` as the long alias, dispatched by `LibKa0s-Slash-1.0` over the addon's own
-ordered `NS.COMMANDS` (`settings/Slash.lua:39`). Twenty-five verbs; `options` is an alias of `config`.
+ordered `NS.COMMANDS` (`settings/Slash.lua:39`). Twenty-six verbs; `options` is an alias of `config`.
 A bare `/am` runs `config`, opening the settings panel on its landing page (slash-commands-§4); `/am
 help` prints the list.
 `/am test` is the test mode's verb (preview-mode): unlocking no longer previews, so the placeholders
@@ -315,7 +315,12 @@ Every surface Aura Master draws paints through the `LibKa0s-Skin-1.0` facade wit
   (LibKa0s v1.81.0, LK-01), so `Style.SkinKey` needs no check of its own, and a nil answer draws the
   stored pick. The composer's font pickers preview the same stored face. Since v1.81.0 each skin
   carries a HUD face of its own (WoW Default keeps Friz Quadrata; SKIN-4 lists them). Borders,
-  sizes, flags and every HUD color stay the player's (X4; DECISIONS D1, D3, D4).
+  sizes, flags and every HUD color stay the player's (X4; DECISIONS D1, D3, D4). Since LibKa0s
+  v1.82.0 two follow the skin without being rewritten: a block on the skin's face draws at
+  `S.HudFontSize(stored)`, scaled to Ka0s Default's width (D-09), and a Font flags of *From skin*
+  (`"@skin"`, every block's default; schema v14 moved the old default OUTLINE onto it, D-07) draws
+  `S.FontFlags`, the Skin tab's Font outline (`skin.outline`, applied by `NS.ApplySkinOutline`, D-06).
+  A flag the player picked draws as picked.
   One `OnLooksChanged` listener (`modules/ContainerManager.lua`) primes the fonts and re-applies every
   container; under lockdown the apply waits for combat to end (D12). Schema v13 turned every stored
   companion on once (O2), which visibly changes Ka0s Default's HUD (X5): Oxanium and the Ka0s
@@ -338,7 +343,8 @@ Every surface Aura Master draws paints through the `LibKa0s-Skin-1.0` facade wit
   first world entry and after every profile event while the profile's `skin.pickerSeen` is false and
   the addon stands up (O3); in combat it waits for `PLAYER_REGEN_ENABLED`. Its eye turns test mode
   on; the player's close writes `pickerSeen`, and a close the addon makes (`NS.HideSkinPicker`) does
-  not.
+  not. `/am skin` (`NS.RunSkinVerb`, LibKa0s v1.82.0's `O.SkinVerb`, D-16) shows the same picker on
+  demand, whatever `pickerSeen` says.
 - **EllesmereUI.** The library's provider: with source `eui` and its gate holding, EllesmereUI's
   facade paints; otherwise the addon wears its Ka0s skin and the Skin tab says why.
 - **The color gate.** `tests/test_skin_literals.lua` fails on a numeric color literal in a paint call

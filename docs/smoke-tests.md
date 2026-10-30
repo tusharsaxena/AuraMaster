@@ -29,7 +29,7 @@ check's number is not reused. Checks with no recorded pass, and checks new or co
 | TEXT-1 to TEXT-36 | Text style | Templates and tokens, justify, the icon, dispel type word, backdrop and edge, animation, Size to fit, the glow behind the text |
 | LAYER-1 to LAYER-6 | Frame layering | Bar borders over the fill, the outline and the name label over the auras, the snap highlight over a Dialog container, the strip at low opacity, the Strata tooltip |
 | SETLAYOUT-1 to SETLAYOUT-9 | Settings layout (item 020) | Every settings page item 020 moved, regrouped or relabeled, read as `docs/settings-panel.md` describes, with no setting lost, moved or reset; the confirm buttons' ellipsis |
-| SKIN-1 to SKIN-25 | Skins | The skinning rollout: the one-time HUD reset under Ka0s Default, Ka0s Default otherwise unchanged, the Skin tab, each skin on the HUD, the unlock furniture, the settings pages and the tool windows, other addons stock, the font and texture companions and overrides, combat, EllesmereUI on, off and back, the copy, profiles, tooltips and popups, the first-run skin picker; the library follow-ups (each skin's HUD face, Ignore fonts on the HUD, the picker's title, the strings newly in the skin's face) |
+| SKIN-1 to SKIN-30 | Skins | The skinning rollout: the one-time HUD reset under Ka0s Default, Ka0s Default otherwise unchanged, the Skin tab, each skin on the HUD, the unlock furniture, the settings pages and the tool windows, other addons stock, the font and texture companions and overrides, combat, EllesmereUI on, off and back, the copy, profiles, tooltips and popups, the first-run skin picker; the library follow-ups (each skin's HUD face, Ignore fonts on the HUD, the picker's title, the strings newly in the skin's face); the skin fonts run (the Font outline, From skin flags, `/am skin`, width parity, the HUD size scale) |
 | DEGRADED-1 | Library-absent install | The launcher libraries missing |
 | LOC-1 to LOC-2 | Non-English client | Spell names from the client, adding a spell by its localized name |
 
@@ -2315,15 +2315,16 @@ WoW Default, WoW Midnight, WoW Forever, then Ka0s Default → with **no reload**
 background take the skin's own texture (Obsidian Ka0s Matte, Azeroth Ka0s Parchment, Glass Ka0s Glass
 Bar, High Contrast Ka0s Solid, Ember Ka0s Forge, WoW Midnight Ka0s Satin, WoW Forever Ka0s Classic, WoW
 Default Blizzard, Ka0s Default Ka0s Default), and every string the skin's own HUD face (*follow-ups*,
-LK-04: Obsidian Inter SemiBold, Azeroth Vollkorn Bold, Glass Nunito SemiBold, High Contrast Atkinson
-Hyperlegible Bold, Ember Bitter Bold, WoW Midnight Philosopher Bold, WoW Forever Fira Sans SemiBold,
-WoW Default Friz Quadrata, Ka0s Default Oxanium SemiBold; before the follow-ups every skin but Ka0s
-Default drew Friz Quadrata here), at the sizes and outlines you set. Judge each face on the HUD: the
+LK-04, and LibKa0s v1.82.0 for the two that moved: Obsidian Expressway, Azeroth Vollkorn Bold, Glass
+Nunito SemiBold, High Contrast Atkinson Hyperlegible Bold, Ember Bitter Bold, WoW Midnight Philosopher
+Bold, WoW Forever Fira Sans SemiBold, WoW Default Friz Quadrata, Ka0s Default Prototype; before the
+follow-ups every skin but Ka0s Default drew Friz Quadrata here), at the outlines you set and at sizes
+scaled to Ka0s Default's width (SKIN-30). Judge each face on the HUD: the
 owner rules on them here. Bar colors, dispel colors, borders, the spark, the pandemic wash and the glow keep
 their own colors in every skin. No name, time or stack count goes blank, or each fills in within about
 1 s (the font primer). Fail: a container on the previous skin's face or texture until `/reload`, a
 fallback square, a white or missing fill, a recolored bar or border, or text that stays blank.
-Result: pass (owner-marked 2026-10-30)
+Result: (re-opened 2026-10-30, AM-01 of the skin fonts run: Obsidian and Ka0s Default's faces moved, and the sizes scale)
 
 **SKIN-5. The unlock furniture follows the skin (AM-02).** `/am unlock` and `/am test` with a chain
 (see *Before you start*), then pick **Azeroth** and **High Contrast** in turn → the drag strips' fill,
@@ -2463,15 +2464,63 @@ Ka0s addons' windows and settings pages → each looks exactly as before. Disabl
 
 **SKIN-25. The strings newly in the skin's face (*follow-ups*, LK-06a to LK-06c; D-13).** Fully
 restart on this build, on **Ka0s Default** with Ignore settings panel off → these strings, which drew
-the client's Friz Quadrata before, now read in **Oxanium**: the drag strips' labels (`/am unlock`),
+the client's Friz Quadrata before, now read in **Prototype** (Oxanium before LibKa0s v1.82.0): the drag strips' labels (`/am unlock`),
 the debug console's title-bar words (`/am debug`), the perf panel's step and command columns
 (`/am perf`), and the suggestion rows under the add-a-spell box on Filters (type a few letters of a
 spell). The suggestion rows are a light gray (0.9) rather than white. Each strip's label still fits
 its strip. Turn **Ignore fonts** on → each of them goes back to Friz Quadrata, live. Turn **Ignore
 settings panel** on → the suggestion rows go back to the client's look, and a cast id's orange
 **not an aura** tag on its row keeps Ka0s Default's orange in every skin (D-03); the strips and the tool
-windows keep Oxanium. Fail: a label cut off or overflowing its strip, a string that stays in Oxanium
-under Ignore fonts, or a Lua error. Result: pass (owner-marked 2026-10-30)
+windows keep Prototype. Fail: a label cut off or overflowing its strip, a string that stays in
+Prototype under Ignore fonts, or a Lua error. Result:
+
+**SKIN-26. The Font outline (AM-01; LibKa0s v1.82.0, D-06).** On a fresh profile, General → Skin →
+**Font and texture** → **Font outline** reads **All text**; `/am get skin.outline` → `all`. With
+`/am test`, `/am unlock` and the debug console open (`/am debug`): pick **HUD text only** → the
+console's words and the drag strips' labels lose their outline, live, and every container's text
+keeps it; pick **Off** → the containers' text loses it too, except an element whose Font flags you
+picked (SKIN-27); pick **All text** → both come back. `/am set skin.outline hud` → the dropdown reads
+HUD text only; `/am set skin.outline thick` is refused. `/reload` keeps the choice, and a second
+profile keeps its own (switch with `/am profile`). Turn **Ignore fonts** on → the dropdown grays out
+and nothing the mode did shows. **Copy to every Ka0s addon…** → another Ka0s addon's Skin tab shows
+the same Font outline. Fail: a mode that needs a `/reload`, an outline that stays under Off, or a Lua
+error. Result:
+
+**SKIN-27. Font flags start on From skin (AM-01; D-07, schema v14).** On the previous build, give one
+container's Bars → Name text Font flags **Thick outline** and leave the rest on **Outline**; upgrade
+and log in on this build → the Name text reads **Thick outline**, and every other font's Font flags
+reads **From skin**, in every profile (switch to a second one with `/am profile`); nothing changed on
+screen. A new container's fonts read From skin. Set the Font outline (SKIN-26) to **Off** → the From
+skin texts lose their outline and the Thick outline name keeps it. Pick **Outline** on one font
+afterwards, `/reload` → it stays Outline, not From skin. Each font setting on Bars, Icons, Text and
+Layout → Label carries Font, Use the skin's font, Font size, Font color, Use class color, Font flags
+and Font shadow. Fail: a picked flag moved to From skin, a font without one of those rows, or a Lua
+error. Result:
+
+**SKIN-28. `/am skin` (AM-01; D-16).** On a profile that has closed its first-run picker, `/am skin`
+→ the **Choose a skin** window opens; pick and **Apply** → saved as SKIN-20. `/am help` lists **skin**
+right after **config**, "Choose a skin: open the skin picker". In combat, `/am skin` twice → a gray
+"cannot open the skin picker during combat" line each time and no window. `/am disable`, then
+`/am skin` → the one disabled line and no window; `/am enable`. With another Ka0s addon's picker open
+→ a line that this one opens when that one closes, and it does. Fail: no window on a seen profile, a
+window in combat or while disabled, or a Lua error. Result:
+
+**SKIN-29. Width parity of the windows and the strips (AM-01; D-08, D-12).** With the Font outline on
+**All text**, open the debug console (`/am debug`), the perf panel (`/am perf`), and `/am unlock` with
+`/am test` and the chain (*Before you start*), then pick each skin in turn → the console's title words,
+the perf panel's columns and every drag strip's label read about as wide as under Ka0s Default
+(Prototype), none cut off or overflowing, and each strip re-fits its title after the switch with no
+`/reload` (a long name capped at its bar stays capped and shortened with "..." in the new face). The
+strings SKIN-2, SKIN-8 and LAYOUT-31 name as Oxanium read in Prototype on Ka0s Default. Fail: a label
+cut off, a strip too wide or narrow for its title after a switch, or a Lua error. Result:
+
+**SKIN-30. HUD text scales with the skin's face (AM-01; D-09).** With a Bars container at the default
+Name text size and a Text container at 36, both on **Use the skin's font**, pick **Obsidian** → both
+draw a little larger (13/12 of the size), as wide as under Ka0s Default; the Font size sliders still
+read 12 and 36. Untick **Use the skin's font** on the Text container → it draws at 36 in its own face.
+Turn **Ignore fonts** on → every container draws at its stored size. Back to **Ka0s Default** → as
+before. Fail: a stored size that moved, a skin's-face text that does not scale, or a Lua error.
+Result:
 
 ## Library-absent install
 
@@ -2516,3 +2565,8 @@ On 2026-10-30 the owner reported that every check of the skinning rollout (Ka0sA
 `docs/2026-10-30-SKIN_LIBRARY_FOLLOWUPS/`, AM-RV to AM-02, LibKa0s v1.81.0) passed: SKIN-1 to SKIN-25,
 PANEL-2, SETLAYOUT-1 and LAYOUT-31, each recorded on its `Result:` line as
 `pass (owner-marked 2026-10-30)`.
+
+Open from the 2026-10-30 skin fonts run (Ka0sAddonsCommonTasks `docs/2026-10-30-SKIN_FONTS_AND_FEEDBACK/`,
+AM-01, LibKa0s v1.82.0): SKIN-26 to SKIN-30 are new, and SKIN-4 and SKIN-25 are re-opened (their faces
+moved to Prototype and Expressway, and the HUD sizes scale). Their `Result:` lines are empty until
+the owner runs them.

@@ -28,12 +28,14 @@ local function walk(t, path)
     return parent, leaf
 end
 
---- Every path under `t` whose value is the FROM_SKIN sentinel, joined.
+--- Every path under `t` whose value is the FROM_SKIN sentinel, joined. A Font flags leaf is not a
+--- pick: "@skin" is its From skin value (LibKa0s v1.82.0, ruling D-07), a CLI value the setting
+--- offers, so it is skipped.
 local function sentinels(t, prefix, out)
     out = out or {}
     for k, v in pairs(t) do
         local p = (prefix or "") .. tostring(k)
-        if v == FROM_SKIN then out[#out + 1] = p end
+        if v == FROM_SKIN and k ~= "fontFlags" then out[#out + 1] = p end
         if type(v) == "table" then sentinels(v, p .. ".", out) end
     end
     return out
@@ -300,7 +302,7 @@ end
 test("skin hud: v13 puts every stored pick back on the skin in every profile, keeping each pick", function()
     local NS = fresh({ savedVariables = { profiles = { Default = v12profile(), Raid = v12profile() },
         global = { schemaVersion = 12 } } })
-    assertEqual(NS.db.global.schemaVersion, 13)
+    assertEqual(NS.db.global.schemaVersion, NS.SCHEMA_VERSION)
     -- Raid is never activated in this load, so the load backfill never reaches it: what it holds is
     -- the step's alone.
     for _, name in ipairs({ "Raid", "Default" }) do
@@ -331,7 +333,7 @@ test("skin hud: v13 runs once, so a player's later pick survives the next load",
     assertTrue(NS.SetByPath("container.bars.name.fontFromSkin", false, 1), "the panel's write")
     local sv = _G.AuraMasterDB
     local NS2 = fresh({ savedVariables = sv })
-    assertEqual(NS2.db.global.schemaVersion, 13)
+    assertEqual(NS2.db.global.schemaVersion, NS2.SCHEMA_VERSION)
     local c = NS2.Database.FindContainer(1)
     -- red under: a step that re-runs each load (an unstamped reset), or a backfill that forces true
     assertEqual(c.bars.barTextureFromSkin, false, "the texture pick kept")

@@ -1,6 +1,6 @@
 local _, NS = ...
 
--- core/Database_Migrations.lua — the frozen schema step bodies, Database.MigrateV2 .. MigrateV13,
+-- core/Database_Migrations.lua — the frozen schema step bodies, Database.MigrateV2 .. MigrateV14,
 -- with their private helpers and id tables. Peeled out of core/Database.lua, which keeps the ladder
 -- that calls them (SCHEMA_STEPS, climbLadder, NS.RunMigrations), AceDB init and the registry helpers.
 --
@@ -993,6 +993,39 @@ function Database.MigrateV13(p, resetToSkin)
             end
             if resetToSkin and #keys > 0 then resetToSkin(c, keys) end
             if changed then moved = moved + 1 end
+        end
+    end
+    return moved
+end
+
+-- ---------------------------------------------------------------------------
+-- Schema v14: Font flags onto From skin (LibKa0s v1.82.0, ruling D-07, Addendum 01)
+-- ---------------------------------------------------------------------------
+
+-- Every font block's flags, container-relative: the fontFlags leaf of each text block v13 reset.
+Database.FLAG_BLOCKS = {
+    "bars.name", "bars.time", "bars.stacks", "icons.time", "icons.stacks", "text.font", "label.font",
+}
+-- The Font flags every block defaulted to before v14, and the From skin value it moves to.
+local OLD_FLAGS, FROM_SKIN_FLAGS = "OUTLINE", "@skin"
+
+--- Move one profile's Font flags onto From skin: a stored flag equal to the old default ("OUTLINE")
+--- becomes "@skin", which draws the Skin tab's Font outline (OUTLINE under its default, All text, so
+--- nothing changes on screen). Only a flag the player changed (anything else) counts as picked and
+--- stays. An absent block, or an absent flag, is left alone. Answers how many blocks moved.
+function Database.MigrateV14(p)
+    if type(p) ~= "table" or type(p.containers) ~= "table" then return 0 end
+    local moved = 0
+    for _, c in pairs(p.containers) do
+        if type(c) == "table" then
+            for _, path in ipairs(Database.FLAG_BLOCKS) do
+                local parent, leaf = pickParent(c, path)
+                local t = parent and parent[leaf]
+                if type(t) == "table" and t.fontFlags == OLD_FLAGS then
+                    t.fontFlags = FROM_SKIN_FLAGS
+                    moved = moved + 1
+                end
+            end
         end
     end
     return moved
