@@ -586,7 +586,7 @@ test("anchors: a drag whose offsets read secret saves nothing (E)", function()
     assertEqual(NS.Database.FindContainer(1).position.x, NS.STARTER_CONTAINERS[1].position.x)
 end)
 
--- ── the TEST marker (feedback #8) ─────────────────────────────────────────────────────────────
+-- ── the strip's TEST tag (feedback #8) ─────────────────────────────────────────────────────────────
 
 test("handle: while test mode is on the label carries an orange TEST tag after the name; off, the name alone (feedback #8)", function()
     local NS, mocks = fresh()

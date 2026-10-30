@@ -200,8 +200,8 @@ C.STRATA_LABELS = { BACKGROUND = "Background", LOW = "Low", MEDIUM = "Medium", H
 --                                               engine; the engine, live buttons and preview
 --                                               placeholders at L+1 (buttons L+2); the glow twins
 --                                               under the main (GLOW_* below); the name label L+20
---   T2 edit chrome       the container's        unlocked outline L+30, TEST marker L+40, drag handle
---                                               L+50 (+HOP over an attach parent's strip)
+--   T2 edit chrome       the container's        unlocked outline L+30, drag handle L+50 (+HOP over
+--                                               an attach parent's strip)
 --   T6 modal             DIALOG (library)       LibKa0s debug console and perf panel; Blizzard's
 --                                               StaticPopups (reset all, delete, attach flow, ...)
 --   T7 child             FULLSCREEN (library)   the debug console's copy window
@@ -243,7 +243,6 @@ C.LAYERS = {
         CONTENT = 1,     -- the engine, the preview placeholders and extent (implicit, anchor + 1)
         LABEL   = 20,
         OUTLINE = 30,
-        MARKER  = 40,
         HANDLE  = 50,
         HOP     = 1,     -- a child's strip over its attach parent's strip
         -- inside one element, over the element root

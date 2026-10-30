@@ -1618,9 +1618,9 @@ Total.
 - preview: the debuff set covers every dispel type plus one with none, and runs out, stacks and lasts forever (TD-2)
 - preview: a container showing only Weapon enchants previews the enchant set, one per slot (SEP-4)
 - preview: a Text container's Size to fit measures the enchant names too, so an enchant placeholder fits its box
-- preview: a LOCKED test mode marks every previewing container with a TEST text over its placeholders (preview-mode marker)
-- preview: an UNLOCKED test mode leaves the TEST tag to the strip, and the marker returns when it locks again
-- preview: a parked container hides its TEST marker with its placeholders
+- preview: a LOCKED test mode draws its placeholders with no TEST marker over them
+- preview: an UNLOCKED test mode keeps the TEST tag on the strip, and locking again adds no marker
+- preview: a parked container hides its placeholders
 
 ### test_render_coverage.lua (3)
 
@@ -1657,12 +1657,11 @@ Total.
 - picker: a new pick waits for the buttons to be released again before it can pick
 - framepicker: PickFor refuses in combat, refuses with no container, and makes exactly the two attach writes
 
-### test_layers.lua (9)
+### test_layers.lua (8)
 
 - layers: one table, NS.Constants.LAYERS, with the standard's tier keys and this addon's bands
 - layers: no literal strata and no absolute level in core, modules or settings (frame-layering-§3, §5)
 - layers: an unlocked container's chrome sits at its named bands over the anchor; the strip ignores the container's alpha
-- layers: the TEST marker sits at the marker band, under the strip's band
 - layers: a bar's fill, spark, borders and texts each sit at their own band over the element (AUR-Z02)
 - layers: an icon's swipe, border, dispel edge and texts each sit at their own band over the element (AUR-Z02)
 - layers: the frame picker's overlay is in the cursor tier
@@ -2009,7 +2008,7 @@ Total.
 - every allow-list entry carries its reason
 - the gate is falsifiable: a planted literal of each shape is reported
 
-### test_skin_surfaces.lua (8)
+### test_skin_surfaces.lua (7)
 
 - skin surfaces: a skin switch repaints each strip's own edge in the new skin's handle.edge
 - skin surfaces: the strip label's attached gray and TEST tag are the new skin's
@@ -2018,7 +2017,6 @@ Total.
 - skin surfaces: the drag-to-attach mark's colors are the skin's, refreshed in place on a switch
 - skin surfaces: the frame picker's outline, name and hint are the skin's
 - skin surfaces: the frame picker's OnUpdate reads no token: the hints are built by its paint
-- skin surfaces: a shown TEST marker is retold in the new skin's sem.warn
 
 ### test_skin_hud.lua (12)
 
@@ -2487,7 +2485,7 @@ Total.
 
 - prose: no authored file carries a British spelling from localization-§5's published list
 - prose: the gate carries localization-§5's two lists whole, and nothing of its own
-- prose: the exclusions this repository declared suppressed 11 of 225 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (11): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, docs/spell-research/2026-09-24-logs/CORRECTIONS.md, docs/spell-research/2026-09-24-logs/CURRENT_CATEGORIES.md, docs/spell-research/2026-09-24-logs/DECISIONS.md, docs/spell-research/2026-09-24-logs/FLAGS.md, docs/spell-research/2026-09-24-logs/PROPOSED_ADDITIONS.md, docs/spell-research/2026-09-24-logs/REVIEW.md, docs/spell-research/2026-09-24-logs/SOURCES.md, docs/spell-research/2026-09-24-logs/dictionary/AURAS.md
+- prose: the exclusions this repository declared suppressed 11 of 228 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (11): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, docs/spell-research/2026-09-24-logs/CORRECTIONS.md, docs/spell-research/2026-09-24-logs/CURRENT_CATEGORIES.md, docs/spell-research/2026-09-24-logs/DECISIONS.md, docs/spell-research/2026-09-24-logs/FLAGS.md, docs/spell-research/2026-09-24-logs/PROPOSED_ADDITIONS.md, docs/spell-research/2026-09-24-logs/REVIEW.md, docs/spell-research/2026-09-24-logs/SOURCES.md, docs/spell-research/2026-09-24-logs/dictionary/AURAS.md
 - prose: no path this repository narrows the gate by is loaded by a TOC
 - prose: every path this repository narrows the gate by is one .pkgmeta keeps out of the zip
 - prose self-test: the carve-out suppresses the named generated folder, and only it
@@ -2643,7 +2641,7 @@ Total.
 | test_render_coverage.lua | 3 |
 | test_blizzardframes.lua | 8 |
 | test_framepicker.lua | 15 |
-| test_layers.lua | 9 |
+| test_layers.lua | 8 |
 | test_disabled.lua | 18 |
 | test_slash.lua | 35 |
 | test_slash_verbs.lua | 55 |
@@ -2657,7 +2655,7 @@ Total.
 | test_pages_general.lua | 36 |
 | test_skinsetup.lua | 19 |
 | test_skin_literals.lua | 3 |
-| test_skin_surfaces.lua | 8 |
+| test_skin_surfaces.lua | 7 |
 | test_skin_hud.lua | 12 |
 | test_skin_flags.lua | 6 |
 | test_skin_outline.lua | 9 |
@@ -2691,4 +2689,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **2237** |
+| **Total** | **2235** |

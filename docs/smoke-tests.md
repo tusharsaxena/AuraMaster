@@ -21,7 +21,7 @@ check's number is not reused. Checks with no recorded pass, and checks new or co
 | STATE-1 to STATE-5 | Master switch | Enable and disable, visibility, the inert disabled addon |
 | COMBAT-1 to COMBAT-7 | Combat and restrictions | Deferred changes, the settings lock, resets in combat, Mythic+ keys |
 | DIAG-1 to DIAG-22 | Debug, diagnostics, perf | The debug console, bulk `[Set]` lines, `/am diagnostics`, `/am perf`, the event trace, resizing the console, its copy window and the perf panel, the console's Diagnostics link, diagnostics turning logging on, the library's own lines (a slash refusal, a stand-down edge, the launcher's at-enable line) |
-| CONT-1 to CONT-27 | Containers | Create, duplicate, delete, rename, copy; handles, strips and the close mark; test mode and its TEST marker; unit swaps; empty placeholders |
+| CONT-1 to CONT-27 | Containers | Create, duplicate, delete, rename, copy; handles, strips and the close mark; test mode (no TEST marker on a locked container, the strip's TEST tag); unit swaps; empty placeholders |
 | FILT-1 to FILT-64 | Filters and spell categories | Cast by, the category grids, Overrides, the add-a-spell box, aura ids, your own categories, weapon enchants and their names, the help marks' art, where spell lists apply, the Situations tab, its zones and its Unit type gate |
 | LAYOUT-1 to LAYOUT-38 | Layout | Anchor modes, attaching, chains, growth, anchor points, seams, the name label, mouse and tooltips |
 | DRAG-1 to DRAG-18 | Layout | Drag to attach (issue #22): dropping a container on another, the highlight on the target's strip, the side a drop picks, Shift, loops, detaching and its leeway (green hold, snap back, red past it), the growth-conflict popup, combat, a parent holding auras, frame-attached containers, the strip's tooltip, a drop between pulls in a key, a dropped side surviving a growth change, a drag cut short, a before-side drop with the line between the two join dots, the strip edge following the mark |
@@ -769,14 +769,13 @@ run out → the outline comes back within a second of it lapsing. Result: pass (
 **?** help mark and its **X** close mark, neither blank. Hover the X → its tooltip is unchanged.
 Result: pass (owner-marked 2026-10-23)
 
-**CONT-27. A locked test mode says TEST on the display.** Locked, `/am test` → every container that
-fills with placeholders carries an orange **TEST** over its placeholder block, at the corner the first
-placeholder starts from, readable without hovering, with no outline drawn: check a bar container, an
-icon container growing left and a Text container. Hover a placeholder → the world under it behaves as
-before (the word takes no mouse). `/am unlock` → the word goes and each strip reads its name, then
-**TEST** (CONT-17), never both; `/am lock` → the word is back. `/am test off` → it goes with the
-placeholders. On a non-English client the word is the client's. (Run bundle id SM-AM-1.)
-Result: pass (owner-marked 2026-10-23)
+**CONT-27. A locked test mode draws no TEST over the placeholders (rewritten 2026-10-30, AM-02;
+D-14).** Locked, `/am test` → every container fills with placeholders and none carries a **TEST**
+word over them: check a bar container (its first bar's name reads whole, image-35's "TESTower Word"
+gone), an icon container growing left and a Text container. `/am unlock` → each strip reads its name,
+then the orange **TEST** tag (CONT-17); `/am lock` → the tag goes with the strip and no TEST appears on
+the placeholders. `/am test off` → the placeholders go. Fail: a TEST word on a locked container, a
+strip without its tag, or a Lua error. Result:
 
 ## Filters and spell categories
 
@@ -2149,7 +2148,7 @@ dispel edge sits over the border, and the countdown and stacks sit over both, as
 
 **LAYER-2. The unlocked outline draws over the auras.** Unlock (`/am unlock`) with a container
 showing live auras, then `/am test` → the thin white outline is visible over the live buttons and over
-the placeholders where they meet it. The TEST marker and the strip still draw over the outline. Result: pass (owner-marked 2026-10-24)
+the placeholders where they meet it. The strip still draws over the outline. Result: pass (owner-marked 2026-10-24)
 
 **LAYER-3. A nudged name label draws over the block.** Layout → Label on, then set its Y offset so the
 label sits over the first aura → the name reads on top of the aura, and under the strip while
@@ -2279,7 +2278,7 @@ bars container set the Name text font to **Ka0s Prototype** and the fill texture
 texture. Fully restart and log in on this build with the skin on **Ka0s Default** → in both profiles
 every bar's fill and background wear the **Ka0s Default** bar (dim at the top, a highlight low on the
 bar and a short lip) in place of Blizzard's plain bar, and every container string (bar name, time and
-stacks, icon time and stacks, Text lines, the name label, the TEST marker) reads in **Oxanium**, a
+stacks, icon time and stacks, Text lines, the name label) reads in **Oxanium**, a
 squared technical face, in place of Friz Quadrata. The customized container changed too: O2 puts
 every player's HUD back on the skin once. The borders, their style and thickness, every size,
 outline and shadow, the glow and every color are exactly as before. On the customized container,
@@ -2292,8 +2291,8 @@ border, size or color, a stored pick lost, or the reset running again after the 
 **SKIN-2. Ka0s Default otherwise looks as before (AM-02, AM-04; X1).** On **Ka0s Default** with
 Ignore settings panel off, `/am unlock` and `/am test`, then walk the settings pages → apart from the
 HUD's face and bar (SKIN-1) everything keeps its colors, edges and spacing: the gold drag strip with
-its gold edge, an attached container's name in the warm gray, the orange `TEST` tag on the strip and
-the TEST marker, the white outline at low opacity, the green attach and red detach marks of a drag,
+its gold edge, an attached container's name in the warm gray, the orange `TEST` tag on the strip,
+the white outline at low opacity, the green attach and red detach marks of a drag,
 the frame picker's light-blue outline and gray hint (`/am pick`), the orange plan warnings at the top
 of a container's tabs, the gray notes on Layout and Text, the gold emphasis on Text, the blue **See
 spells** link on Filters, and the unit, aura-type and style colors in the Container picker. The one
@@ -2331,7 +2330,7 @@ Result: (re-opened 2026-10-30, AM-01 of the skin fonts run: Obsidian and Ka0s De
 edge, label (in the skin's face, *follow-ups*), **?** and **X** marks, an attached container's gray
 name and the `TEST` tag, the strip's and the close mark's tooltip lines (the title and the how-to
 line in the skin's tooltip title and body colors, an attached container's line in its title color),
-the white outline and the TEST marker all repaint with no reload. The strip is a window, not the
+and the white outline all repaint with no reload. The strip is a window, not the
 settings panel: it does all this with **Ignore settings panel** on too.
 Drag a container onto another → the attach highlight and the detach warning draw in the skin's good
 and bad colors. `/am pick` → the frame picker's outline and label draw in the skin's colors. Fail: a
@@ -2568,5 +2567,7 @@ PANEL-2, SETLAYOUT-1 and LAYOUT-31, each recorded on its `Result:` line as
 
 Open from the 2026-10-30 skin fonts run (Ka0sAddonsCommonTasks `docs/2026-10-30-SKIN_FONTS_AND_FEEDBACK/`,
 AM-01, LibKa0s v1.82.0): SKIN-26 to SKIN-30 are new, and SKIN-4 and SKIN-25 are re-opened (their faces
-moved to Prototype and Expressway, and the HUD sizes scale). Their `Result:` lines are empty until
+moved to Prototype and Expressway, and the HUD sizes scale). From AM-02: CONT-27 is rewritten (a locked
+test mode draws no TEST marker, D-14); LAYER-2, SKIN-1, SKIN-2 and SKIN-5 only lost their mention of
+that marker and keep their recorded passes. Their `Result:` lines are empty until
 the owner runs them.

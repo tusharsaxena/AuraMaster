@@ -3,7 +3,7 @@
 -- AuraMaster has no window of its own; what it draws outside the HUD is the unlock furniture: the
 -- drag strip's own edge (the host painter's, which the widget never repaints), its label's markup
 -- (an attached container's gray name, the TEST tag), the strip and close-mark tooltip lines, the
--- unlocked outline, the drag-to-attach mark, the frame picker and the TEST marker. Each reads its
+-- unlocked outline, the drag-to-attach mark and the frame picker. Each reads its
 -- color from the skin when it paints, and each is repainted by an OnLooksChanged listener when the
 -- skin changes. Ka0s Default's pixels are pinned by the suites that own each surface
 -- (tests/test_anchors_*.lua, tests/test_container.lua, tests/test_framepicker.lua,
@@ -229,21 +229,4 @@ test("skin surfaces: the frame picker's OnUpdate reads no token: the hints are b
     assertEqual(reads, 0, "token reads per frame")
     assertTrue(texts[#texts]:find(NS.SkinEscape("cover.text"), 1, true) == 1, "the hint is still the skin's")
     overlay:__fire("OnKeyDown", "ESCAPE")
-end)
-
-test("skin surfaces: a shown TEST marker is retold in the new skin's sem.warn", function()
-    local NS, mocks, switch = env({ "sem.warn" })
-    NS.Preview.SetTestMode(true)
-    mocks.__fireTimers()
-    local inst
-    for _, i in pairs(NS.ContainerManager.instances) do
-        if i.testMarker and i.testMarker:IsShown() then inst = i end
-    end
-    assertTrue(inst ~= nil, "a locked test mode shows a marker")
-    local texts = {}
-    rawset(inst.testMarkerText, "SetText", function(_, s) texts[#texts + 1] = s end)
-    switch()
-    -- red under: the marker's text built once, in the literal orange
-    assertEqual(texts[#texts], NS.SkinEscape("sem.warn") .. NS.L["TEST"] .. "|r")
-    NS.Preview.SetTestMode(false)
 end)

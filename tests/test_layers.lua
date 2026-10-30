@@ -27,10 +27,12 @@ test("layers: one table, NS.Constants.LAYERS, with the standard's tier keys and 
     assertEqual(LY.STRATA.POPUP, "FULLSCREEN_DIALOG", "the drag-time snap highlight")
     assertEqual(LY.STRATA.CURSOR, "TOOLTIP", "the frame picker, which labels the frame under the cursor")
     local V = LY.LEVEL
-    -- The display's band (frame-layering-§3): label < outline < marker < handle, over the content.
-    assertTrue(V.CONTENT < V.LABEL and V.LABEL < V.OUTLINE and V.OUTLINE < V.MARKER and V.MARKER < V.HANDLE,
-        "content < label < outline < marker < handle")
-    assertEqual(V.LABEL, 20); assertEqual(V.OUTLINE, 30); assertEqual(V.MARKER, 40); assertEqual(V.HANDLE, 50)
+    -- The display's band (frame-layering-§3): label < outline < handle, over the content. The TEST
+    -- marker's band (40) went with the marker (D-14 of the 2026-10-30 skin fonts run).
+    assertTrue(V.CONTENT < V.LABEL and V.LABEL < V.OUTLINE and V.OUTLINE < V.HANDLE,
+        "content < label < outline < handle")
+    assertEqual(V.LABEL, 20); assertEqual(V.OUTLINE, 30); assertEqual(V.HANDLE, 50)
+    assertTrue(V.MARKER == nil, "no marker band")
     -- Inside one element, from the element root: fill < spark < border < dispel edge < overlay.
     assertTrue(V.FILL < V.SPARK and V.SPARK < V.BORDER and V.BORDER < V.DISPEL and V.DISPEL < V.OVERLAY,
         "fill < spark < border < dispel < overlay")
@@ -84,22 +86,6 @@ test("layers: an unlocked container's chrome sits at its named bands over the an
     mocks.__fireTimers()
     assertEqual(mocks.__layers(inst.anchor).strata, "LOW", "the player's pick reaches the anchor")
     assertEqual(mocks.__layers(inst.handle).strata, "LOW", "and its chrome inherits it")
-    restore()
-end)
-
-test("layers: the TEST marker sits at the marker band, under the strip's band", function()
-    local NS, mocks, restore = layered()
-    NS.Preview.SetTestMode(true)
-    mocks.__fireTimers()
-    local V = NS.Constants.LAYERS.LEVEL
-    local checked = 0
-    for _, inst in pairs(NS.ContainerManager.instances) do
-        if inst.testMarker and inst.testMarker:IsShown() then
-            checked = checked + 1
-            assertEqual(mocks.__layers(inst.testMarker).level, mocks.__layers(inst.anchor).level + V.MARKER)
-        end
-    end
-    assertTrue(checked > 0, "some container is marked")
     restore()
 end)
 

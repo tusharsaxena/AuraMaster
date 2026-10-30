@@ -160,9 +160,10 @@ A bare `/am` runs `config`, opening the settings panel on its landing page (slas
 help` prints the list.
 `/am test` is the test mode's verb (preview-mode): unlocking no longer previews, so the placeholders
 have a switch of their own, shared with the Master controls *Test mode* checkbox and the launcher
-menu's *Test mode* entry. While it is on, every previewing container says so on the display
-(preview-mode's marker): unlocked, its strip reads its name and then an orange TEST; locked, where no
-strip shows, `Preview.ApplyMarker` draws the same localized TEST over its placeholder block.
+menu's *Test mode* entry. While it is on and unlocked, each strip reads its name and then an orange
+TEST. Locked, the placeholders carry no TEST of their own: the owner removed that marker (D-14 of
+Ka0sAddonsCommonTasks `docs/2026-10-30-SKIN_FONTS_AND_FEEDBACK/`, image-35), and preview-mode's
+on-display marker is a MAY for a HUD display such as an aura container (WS-01).
 
 | Command | What it does |
 |---|---|
@@ -326,7 +327,7 @@ Every surface Aura Master draws paints through the `LibKa0s-Skin-1.0` facade wit
   companion on once (O2), which visibly changes Ka0s Default's HUD (X5): Oxanium and the Ka0s
   Default bar in place of Friz Quadrata and Blizzard.
 - **The unlock furniture** (the drag strip and its tooltips, the outline, the drag-to-attach marks,
-  the frame picker and the TEST marker) repaints from tokens on `OnLooksChanged`
+  the frame picker) repaints from tokens on `OnLooksChanged`
   (`modules/Anchors.lua`, `Anchors_Snap.lua`, `Container.lua`, `FramePicker.lua`, `Preview.lua`); the
   strip's library parts follow the `owner` handed to `KW.DragHandle`.
 - **Settings and tools.** The library paints the pages, the composed rows, the debug console, its
@@ -363,7 +364,7 @@ Blizzard own. The tiers:
   `L+1` and up, and the name label at `L+20`. Inside one element, every frame is counted from the
   button: fill, spark, border, dispel edge, then the texts.
 - **Edit chrome (T2).** The chrome stays in the container's strata. The unlocked outline sits at
-  `L+30`, the TEST marker at `L+40` and the drag strip at `L+50`. The strip ignores the
+  `L+30` and the drag strip at `L+50`. The strip ignores the
   container's opacity.
 - **Modals (T6) and their child window (T7).** These belong to the library and Blizzard: the debug
   console, the perf panel and the StaticPopups at Dialog, and the console's copy window at
