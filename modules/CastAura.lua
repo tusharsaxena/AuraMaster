@@ -111,9 +111,13 @@ end
 --- ORANGE, AND TWO WORDS. The library adds no color of its own and does not wrap, truncate or
 --- measure this, so a sentence here would run off the row; the full story is what the chat line
 --- and the entry's own help mark are for.
+---
+--- NS.PanelEscape, NOT NS.SkinEscape: the row sits in the library's id suggestion popup on the Spell
+--- categories page, which the settings panel's Ignore puts back to the client look (LK-06c), so the
+--- tag draws Ka0s Default's orange there too and never mixes a skin color into a stock popup (D-03).
 function CA.SuggestTag(id)
     local kind = CA.Resolve(id)
-    if kind then return (NS.SkinEscape("sem.warn") or "") .. NS.L["not an aura"] .. "|r" end
+    if kind then return (NS.PanelEscape("sem.warn") or "") .. NS.L["not an aura"] .. "|r" end
     return nil
 end
 

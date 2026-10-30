@@ -2468,7 +2468,8 @@ the debug console's title-bar words (`/am debug`), the perf panel's step and com
 (`/am perf`), and the suggestion rows under the add-a-spell box on Filters (type a few letters of a
 spell). The suggestion rows are a light gray (0.9) rather than white. Each strip's label still fits
 its strip. Turn **Ignore fonts** on → each of them goes back to Friz Quadrata, live. Turn **Ignore
-settings panel** on → the suggestion rows go back to the client's look; the strips and the tool
+settings panel** on → the suggestion rows go back to the client's look, and a cast id's orange
+**not an aura** tag on its row keeps Ka0s Default's orange in every skin (D-03); the strips and the tool
 windows keep Oxanium. Fail: a label cut off or overflowing its strip, a string that stays in Oxanium
 under Ignore fonts, or a Lua error. Result:
 

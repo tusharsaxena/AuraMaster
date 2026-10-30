@@ -170,6 +170,36 @@ test("Skin seam: every settings page colors its markup through PanelEscape, neve
     end
 end)
 
+test("Skin seam: the cast-id suggestion tag follows the settings panel's Ignore, not the skin alone", function()
+    -- red under: CA.SuggestTag reading NS.SkinEscape. The tag is markup a settings page pulls from
+    -- modules/ (settings/GeneralSpells.lua hands it to the id box as `suggestTag`), so the page scan
+    -- above never sees it; the popup it sits in goes stock with Ignore settings panel (LK-06c, D-03).
+    local NS, m, Skin = skinEnv()
+    NS.CastToAura = { REWRITE = { [115151] = 119611 }, CHOICES = {} }
+    local CA = NS.CastAura
+    quietly(m, function() NS.ApplySkinChoice("ka0s", "ka0s") end)
+    local ka0s = NS.SkinEscape("sem.warn")
+    assertEqual(ka0s, "|cffff8000", "Ka0s Default's orange")
+    -- No shipped skin overrides sem.warn today (every one inherits Ka0s Default's), so the case
+    -- stands in a skin that does: the facade's Color answers a blue for that one token.
+    local color = NS.Skin.Color
+    NS.Skin.Color = function(name, ...)
+        if name == "sem.warn" then return 0, 0, 1, 1 end
+        return color(name, ...)
+    end
+    local ok, err = pcall(function()
+        local tag = function() return CA.SuggestTag(115151) end
+        Skin:SetIgnore(OWNER, false, nil)
+        assertEqual(tag(), "|cff0000ff" .. NS.L["not an aura"] .. "|r", "the panel follows the skin")
+        Skin:SetIgnore(OWNER, true, nil)
+        assertEqual(tag(), ka0s .. NS.L["not an aura"] .. "|r", "Ka0s Default's bytes while ignored")
+        assertNil(CA.SuggestTag(12345), "an ordinary id carries no tag")
+    end)
+    NS.Skin.Color = color
+    Skin:SetIgnore(OWNER, false, nil)
+    if not ok then error(err, 0) end
+end)
+
 -- ── the keys and the rows ────────────────────────────────────────────────────────────────────
 
 test("Skin seam: the skin keys default to Ka0s Default, as skip-render rows of General's Appearance group", function()
