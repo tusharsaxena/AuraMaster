@@ -1038,12 +1038,20 @@ end
 -- The face every text block starts on (defaults/Profile.lua's font()): no player picked it, so it
 -- keeps following the skin, as v13 meant every untouched block to.
 local TEMPLATE_FACE = "Friz Quadrata TT"
+-- The faces LibKa0s v1.82.0 deleted from its payload (ruling D-03): a block that stored one is no pick
+-- that still resolves, so it keeps following the skin; turning the companion off would draw the
+-- client fallback font instead. Named, not looked up: a third-party pack may register after us.
+local DELETED_FACES = {
+    ["Ka0s Inter"] = true, ["Ka0s Inter SemiBold"] = true, ["Ka0s Oxanium SemiBold"] = true,
+    ["Ka0s Oxanium Bold"] = true, ["Ka0s Fira Sans"] = true,
+}
 -- Ka0s Default's HUD face at LibKa0s v1.82.0, for a load without the library to resolve it.
 Database.DEFAULT_HUD_FACE = "Ka0s Prototype"
 
 --- Take one profile's own picks back off the skin's face: on every stored text block of
 --- Database.FLAG_BLOCKS whose "Use the skin's font" is on and whose stored face is neither `hudFace`
---- (the profile's skin's own HUD face) nor the template's starting face, the companion goes off, so
+--- (the profile's skin's own HUD face) nor the template's starting face nor a face the payload deleted
+--- (D-03, which still falls back to the skin's), the companion goes off, so
 --- the stored face draws again (the owner's Ka0s Kait Text containers, whose glow was tuned against
 --- it; the glow code is unchanged). Everything else, the face itself included, is left as stored.
 --- Answers how many blocks moved.
@@ -1057,7 +1065,7 @@ function Database.MigrateV15(p, hudFace)
                 local t = parent and parent[leaf]
                 local face = type(t) == "table" and t.font
                 if t and t.fontFromSkin == true and type(face) == "string" and face ~= ""
-                    and face ~= TEMPLATE_FACE and face ~= hudFace then
+                    and face ~= TEMPLATE_FACE and face ~= hudFace and not DELETED_FACES[face] then
                     t.fontFromSkin = false
                     moved = moved + 1
                 end

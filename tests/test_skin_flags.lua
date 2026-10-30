@@ -125,3 +125,20 @@ test("skin flags: a block on the skin's face stored at 12 draws at 13 under Obsi
     Skin:SetIgnore("AuraMaster", nil, false)
     assertEqual(NS.Database.FindContainer(1).bars.name.fontSize, D.bars.name.fontSize, "no stored size moved")
 end)
+
+test("skin flags: a stacked Text block on the skin's face lays its rows out at the scaled size under Obsidian", function()
+    local NS = fresh()
+    local Text = NS.Style.Text
+    -- Three field rows: name, stacks, the bracketed duration (the literal is not drawn).
+    local s = { template = "$spellname$ :: $stacks$[ - $remainingduration$]", justifyH = "CENTER",
+        font = { font = "Friz Quadrata TT", fontFromSkin = true, fontSize = 36, fontFlags = FROM_SKIN } }
+    assertEqual(Text.StackHeight(s), 3 * 36 + 2 * 2, "Ka0s Default is the baseline")
+    NS.SetByPath("skin.skin", "obsidian")
+    -- red under: Style_Text.lua's fontSize answering the stored size (39-px glyphs on a 38-px pitch)
+    assertEqual(Text.StackHeight(s), 3 * 39 + 2 * 2, "rows at the drawn size")
+    s.autoSize = true
+    local _, h = Text.AutoSize(s, "HELPFUL")
+    if h then assertTrue(h >= 3 * 39 + 2 * 2, "Size to fit holds the scaled stack") end
+    s.font.fontFromSkin = false
+    assertEqual(Text.StackHeight(s), 3 * 36 + 2 * 2, "its own face: as stored")
+end)

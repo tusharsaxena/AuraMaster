@@ -111,3 +111,15 @@ test("glow restore: the v15 body leaves absent blocks alone and answers how many
     assertEqual(NS.Database.MigrateV15({ containers = { [1] = "junk", [2] = { bars = {} } } }, PROTO), 0)
     assertEqual(NS.Database.MigrateV15(nil, PROTO), 0)
 end)
+
+test("glow restore: a face the payload deleted (D-03) stays on the skin, so it never draws the client fallback", function()
+    local NS = fresh()
+    local p = { containers = { [1] = { name = "Old", style = "bars", bars = {
+        name = font("Ka0s Oxanium SemiBold"), time = font("Ka0s Inter"), stacks = font("Ka0s Fira Sans") } } } }
+    -- red under: v15 treating a deleted face as the player's own pick (the companion off, the face
+    -- unresolvable, so Style.Fetch draws C.FALLBACK_FONT)
+    assertEqual(NS.Database.MigrateV15(p, PROTO), 0)
+    assertTrue(p.containers[1].bars.name.fontFromSkin, "Oxanium SemiBold follows the skin")
+    assertTrue(p.containers[1].bars.time.fontFromSkin, "Inter follows the skin")
+    assertTrue(p.containers[1].bars.stacks.fontFromSkin, "Fira Sans follows the skin")
+end)

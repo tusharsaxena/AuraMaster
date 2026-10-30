@@ -2,7 +2,7 @@ local _, NS = ...
 
 -- core/Database.lua — AceDB, the schema migration runner, and the pure data helpers over the
 -- container registry. Called from core/AuraMaster.lua's OnInitialize and headlessly by the harness.
--- The step bodies the ladder runs (Database.MigrateV2 .. MigrateV13) are core/Database_Migrations.lua.
+-- The step bodies the ladder runs (Database.MigrateV2 .. MigrateV15) are core/Database_Migrations.lua.
 --
 -- NOTHING HERE TOUCHES A FRAME. The registry's CRUD with its messages and live instances is
 -- modules/ContainerManager.lua; this file only knows what a container looks like on disk.

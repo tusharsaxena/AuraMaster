@@ -82,9 +82,11 @@ local EDGES = {
     { "edgeRight", "TOPRIGHT", "BOTTOMRIGHT", "SetWidth" },
 }
 
---- The line's font size, which is a stacked row's height (and, per-row, the icon's "line height").
+--- The line's font size, which is a stacked row's height (and, per-row, the icon's "line height"): the
+--- size it draws at (Style.FontKey, so the skin's HUD size scale reaches the row pitch, StackHeight and
+--- Size to fit as it reaches the glyphs), never the stored one.
 local function fontSize(s)
-    return number((s.font or D.font).fontSize, D.font.fontSize)
+    return select(2, Style.FontKey(s.font or D.font, D.font))
 end
 
 -- ---------------------------------------------------------------------------

@@ -103,3 +103,20 @@ test("outline: without LibKa0s the apply is a quiet no-op and From skin draws OU
     assertEqual(NS2.Skin.HudFontSize(36, true), 36, "never scaled without the library")
     assertEqual(NS2.Skin.HudFontSize(nil), 12)
 end)
+
+test("outline: a Font outline change re-measures Size to fit on a From skin block", function()
+    -- red under: Text.AutoSize's cache key built from the stored "@skin" (an outline change keeps a
+    -- width the old outline measured).
+    local NS = fresh()
+    local Text, Style = NS.Style.Text, NS.Style
+    local calls, real = 0, Style.WidestLine
+    Style.WidestLine = function() calls = calls + 1; return 100 end
+    local s = { template = "$spellname$", autoSize = true, font = { fontFlags = "@skin" } }
+    Text.AutoSize(s, "HELPFUL")
+    Text.AutoSize(s, "HELPFUL")
+    assertEqual(calls, 1, "a second read is cached")
+    NS.SetByPath("skin.outline", "off")
+    Text.AutoSize(s, "HELPFUL")
+    Style.WidestLine = real
+    assertEqual(calls, 2, "the outline change re-measured")
+end)

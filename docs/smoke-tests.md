@@ -2279,7 +2279,9 @@ texture. Fully restart and log in on this build with the skin on **Ka0s Default*
 every bar's fill and background wear the **Ka0s Default** bar (dim at the top, a highlight low on the
 bar and a short lip) in place of Blizzard's plain bar, and every container string (bar name, time and
 stacks, icon time and stacks, Text lines, the name label) reads in **Oxanium**, a
-squared technical face, in place of Friz Quadrata. The customized container changed too: O2 puts
+squared technical face, in place of Friz Quadrata (the pass below was recorded on LibKa0s v1.81.0; since
+v1.82.0 Ka0s Default's HUD face is **Prototype**, and schema v15 then takes a block's own-face pick other
+than the skin's face and Friz Quadrata back off the skin, SKIN-4 and SKIN-31). The customized container changed too: O2 puts
 every player's HUD back on the skin once. The borders, their style and thickness, every size,
 outline and shadow, the glow and every color are exactly as before. On the customized container,
 Bars → Name text → untick **Use the skin's font** → the names go back to Ka0s Prototype; Bars →
@@ -2518,7 +2520,12 @@ Name text size and a Text container at 36, both on **Use the skin's font**, pick
 draw a little larger (13/12 of the size), as wide as under Ka0s Default; the Font size sliders still
 read 12 and 36. Untick **Use the skin's font** on the Text container → it draws at 36 in its own face.
 Turn **Ignore fonts** on → every container draws at its stored size. Back to **Ka0s Default** → as
-before. Fail: a stored size that moved, a skin's-face text that does not scale, or a Lua error.
+before. Tick it again, set that Text container's Horizontal justify to **Center** with a template of
+three fields (for example `$spellname$ :: $stacks$ $remainingduration$`) and **Size to fit** on, then
+pick **Obsidian** → the three stacked rows keep their 2-pixel gap, never overlapping, and the box grows
+to hold them; under an 11-point skin they keep that gap, never spreading apart. Fail: a stored size
+that moved, a skin's-face text that does not scale, stacked rows that overlap or spread, a box cut
+short, or a Lua error.
 Result:
 
 **SKIN-31. The own faces come back, and the glow with them (AM-03; D-15, schema v15).** On the
@@ -2586,6 +2593,8 @@ Open from the 2026-10-30 skin fonts run (Ka0sAddonsCommonTasks `docs/2026-10-30-
 AM-01, LibKa0s v1.82.0): SKIN-26 to SKIN-30 are new, and SKIN-4 and SKIN-25 are re-opened (their faces
 moved to Prototype and Expressway, and the HUD sizes scale). From AM-02: CONT-27 is rewritten (a locked
 test mode draws no TEST marker, D-14); LAYER-2, SKIN-1, SKIN-2 and SKIN-5 only lost their mention of
-that marker and keep their recorded passes. From AM-03: SKIN-31 (the own faces and the glow back, schema
+that marker and keep their recorded passes; SKIN-1 keeps its pass, noted as recorded on the Oxanium
+face. The review of AM-01 to AM-03 extended the still-open SKIN-30 to a stacked, sized-to-fit Text
+container. From AM-03: SKIN-31 (the own faces and the glow back, schema
 v15) and SKIN-32 (the strips' re-fit after a skin switch) are new. Their `Result:` lines are empty until
 the owner runs them.
