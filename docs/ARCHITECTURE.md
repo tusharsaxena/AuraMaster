@@ -300,8 +300,8 @@ Every surface Aura Master draws paints through the `LibKa0s-Skin-1.0` facade wit
   write seams (`NS.SkinChoice`, `NS.WriteSkinChoice`, every half through `NS.SetByPath`) and its own
   `am.*` tokens (`NS.SKIN_TOKENS`: the colors no library token holds exactly, each drawn at today's
   value on Ka0s Default and following a library role token in every other skin). It publishes
-  `NS.Skin`, `NS.SkinColor`, `NS.SkinEscape` and `NS.SkinPaintAce` / `NS.SkinPaintAceTree` /
-  `NS.SkinOnRelease`; its degraded arm answers from `NS.SKIN_FALLBACK`, which
+  `NS.Skin`, `NS.SkinColor`, `NS.SkinEscape`, `NS.PanelEscape` and `NS.SkinPaintAce` /
+  `NS.SkinPaintAceTree` / `NS.SkinOnRelease`; its degraded arm answers from `NS.SKIN_FALLBACK`, which
   `tests/test_skinsetup.lua` holds to the library's values. The choice is the profile's `skin` table,
   seven rows drawn by the library's Skin tab on General ([schema.md](schema.md),
   [settings-panel.md](settings-panel.md)). `NS.ApplySkinChoice` applies it right after `NS:InitDB`
@@ -310,10 +310,12 @@ Every surface Aura Master draws paints through the `LibKa0s-Skin-1.0` facade wit
   whose geometry reads secret, so no recorded primitive ever touches them. `Style.SkinKey` resolves
   `hud.font` (every font block, through `Style.FontKey`) and `bar.texture` (the bar fill and
   background) while the element's "Use the skin's ..." companion is on, and the stored pick while it
-  is off. While the Skin tab's Ignore fonts is on (`NS.SkinFontsIgnored`, `Skin:GetIgnore`) every
-  font block draws its stored face, companion or override notwithstanding, because the library's
-  `Resolve` never reads that exception itself (only its primitives' font path does); AbsorbTracker
-  does the same. Borders, sizes, flags and every HUD color stay the player's (X4; DECISIONS D1, D3, D4).
+  is off. While the Skin tab's Ignore fonts is on every font block draws its stored face, companion
+  or override notwithstanding: the library's `S.Resolve` answers the stored value for `hud.font` then
+  (LibKa0s v1.81.0, LK-01), so `Style.SkinKey` needs no check of its own, and a nil answer draws the
+  stored pick. The composer's font pickers preview the same stored face. Since v1.81.0 each skin
+  carries a HUD face of its own (WoW Default keeps Friz Quadrata; SKIN-4 lists them). Borders,
+  sizes, flags and every HUD color stay the player's (X4; DECISIONS D1, D3, D4).
   One `OnLooksChanged` listener (`modules/ContainerManager.lua`) primes the fonts and re-applies every
   container; under lockdown the apply waits for combat to end (D12). Schema v13 turned every stored
   companion on once (O2), which visibly changes Ka0s Default's HUD (X5): Oxanium and the Ka0s
@@ -326,7 +328,12 @@ Every surface Aura Master draws paints through the `LibKa0s-Skin-1.0` facade wit
   copy window, the perf panel and the close marks for the owner already named. What this addon
   acquires itself, the `AuraMasterDropdown` widgets, the hand-built buttons, edit boxes and label,
   and the Profiles page, goes through `NS.SkinPaintAce` and `NS.SkinPaintAceTree`, and stays stock
-  while **Ignore settings panel** is on.
+  while **Ignore settings panel** is on. The pages' own markup (plan warnings, notes, the gold
+  emphasis, the **See spells** link) colors through `NS.PanelEscape`, which answers Ka0s Default's
+  bytes while that switch is on, so a stock page never carries skinned notes (D-03 of
+  Ka0sAddonsCommonTasks `docs/2026-10-30-SKIN_LIBRARY_FOLLOWUPS/`). The debug console, its copy window,
+  the perf panel and the drag strip are windows: they wear the skin whatever that switch says, and
+  their strings obey Ignore fonts (D-01).
 - **The first-run skin picker.** `NS.MaybeShowSkinPicker` shows `O.SkinPicker` two seconds after the
   first world entry and after every profile event while the profile's `skin.pickerSeen` is false and
   the addon stands up (O3); in combat it waits for `PLAYER_REGEN_ENABLED`. Its eye turns test mode

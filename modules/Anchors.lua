@@ -537,10 +537,11 @@ end
 ---
 --- THE LINES ARE FUNCTIONS because the widget calls them on EVERY hover rather than capturing them
 --- when the handle is built: a renamed container and a container that has just been attached or
---- detached both show through without rebuilding anything. Every line carries its own color through
---- the `{ entry, r, g, b }` shape, read from the skin on each hover (tokenLine): the title in
---- `gtip.title`, the body in `gtip.value` and the attached line in `gtip.title`, Ka0s Default's gold,
---- white and gold, the widget's own defaults (skinning-§7: the lines an addon writes take the skin).
+--- detached both show through without rebuilding anything. The title and the how-to line take their
+--- bands' colors, which the widget reads from this owner's skin on each hover (`gtip.title` and
+--- `gtip.value`, LibKa0s WidgetsDragHandle minor 7). The attached line is the one with a color of its
+--- own, through the `{ entry, r, g, b }` shape (tokenLine): `gtip.title`, gold inside the white body
+--- band under Ka0s Default (skinning-§7: the lines an addon writes take the skin).
 ---
 --- PLACED BESIDE THE STRIP (`tooltipPlace`, modules/Anchors_Tooltip.lua), owned by UIParent and
 --- anchored to UIParent alone, never by or to the hovered frame. The anchor inherits
@@ -579,12 +580,12 @@ local function tooltipSpec(container)
         return Anchors.JoinText(container, cfg) or NS.L["Attached — set its offsets in the Layout section."]
     end
     return {
-        title = tokenLine(function()
+        title = function()
             local cfg = container:Cfg()
             return cfg and cfg.name or NS.L["Container"]
-        end, "gtip.title"),
+        end,
         body = {
-            tokenLine(howTo, "gtip.value"),
+            howTo,
             tokenLine(attached, "gtip.title"),
         },
     }
@@ -611,12 +612,12 @@ end
 --- same `tooltipPlace` and `tooltipOwner` (see tooltipSpec).
 local function closeTooltipSpec(container)
     return {
-        title = tokenLine(function()
+        title = function()
             local cfg = container:Cfg()
             return cfg and cfg.name or NS.L["Container"]
-        end, "gtip.title"),
+        end,
         body = {
-            tokenLine(NS.L["Click to disable this container. Its settings are kept; turn Enable this container back on for it on the Containers page to bring it back."], "gtip.value"),
+            NS.L["Click to disable this container. Its settings are kept; turn Enable this container back on for it on the Containers page to bring it back."],
         },
     }
 end

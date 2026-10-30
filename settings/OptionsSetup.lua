@@ -446,7 +446,7 @@ local C = NS.Constants
 local function containerList()
     local list, order = {}, {}
     for _, c in ipairs(NS.Database.GetContainersByName()) do
-        list[c.id] = ("%s  %s(%s %s, %s)|r"):format(tostring(c.name), NS.SkinEscape("am.note") or "",
+        list[c.id] = ("%s  %s(%s %s, %s)|r"):format(tostring(c.name), NS.PanelEscape("am.note") or "",
             L[C.UNIT_LABELS[c.unit] or tostring(c.unit)],
             L[C.AURA_TYPE_LABELS[c.auraType] or tostring(c.auraType)],
             L[C.STYLE_LABELS[c.style] or tostring(c.style)])
@@ -501,7 +501,7 @@ function Helpers.RenderWarnings(ctx, cfg)
     local plan = NS.FilterCompiler.Compile(cfg, NS.FilterCompiler.ProfileContext())
     local warnings = plan.warnings or {}
     for _, w in ipairs(warnings) do
-        Helpers.TextRow(ctx, (NS.SkinEscape("am.planWarn") or "") .. L[w] .. "|r")
+        Helpers.TextRow(ctx, (NS.PanelEscape("am.planWarn") or "") .. L[w] .. "|r")
     end
     if #warnings > 0 then
         local scroll = Helpers.EnsureScroll and Helpers.EnsureScroll(ctx)

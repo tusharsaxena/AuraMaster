@@ -327,8 +327,8 @@ end
 -- baked into the locale value (localization-§2 keeps a locale VALUE equal to its key; an escape
 -- sequence in the string a translator copies would be a second thing to get wrong). The colors are
 -- the owner tokens `am.link` and `am.noteAlt` (Ka0s Default's 6699ff and bbbbbb), read at render.
-local function linkColor() return NS.SkinEscape("am.link") or "" end
-local function iconColor() return NS.SkinEscape("am.noteAlt") or "" end
+local function linkColor() return NS.PanelEscape("am.link") or "" end
+local function iconColor() return NS.PanelEscape("am.noteAlt") or "" end
 local COLOR_END  = "|r"
 
 -- N-5: a Blizzard category (kind "token" or "flag") is decided by the engine's own secure code —

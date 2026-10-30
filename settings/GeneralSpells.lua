@@ -450,7 +450,7 @@ local YOURS_MARK  = L["(yours)"]
 local function markedName(def)
     local name = Cat.LabelOf(def)
     if not Cat.IsUserCategory(def) then return name end
-    local mark = colored(NS.SkinEscape("am.goldMuted"), YOURS_MARK)   -- the panel's muted gold (AM-G8)
+    local mark = colored(NS.PanelEscape("am.goldMuted"), YOURS_MARK)   -- the panel's muted gold (AM-G8)
     return (USER_MARKER
         :gsub("{mark}", function() return mark end)
         :gsub("{name}", function() return name end))

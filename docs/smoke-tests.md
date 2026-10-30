@@ -29,7 +29,7 @@ check's number is not reused. Checks with no recorded pass, and checks new or co
 | TEXT-1 to TEXT-36 | Text style | Templates and tokens, justify, the icon, dispel type word, backdrop and edge, animation, Size to fit, the glow behind the text |
 | LAYER-1 to LAYER-6 | Frame layering | Bar borders over the fill, the outline and the name label over the auras, the snap highlight over a Dialog container, the strip at low opacity, the Strata tooltip |
 | SETLAYOUT-1 to SETLAYOUT-9 | Settings layout (item 020) | Every settings page item 020 moved, regrouped or relabeled, read as `docs/settings-panel.md` describes, with no setting lost, moved or reset; the confirm buttons' ellipsis |
-| SKIN-1 to SKIN-24 | Skins | The skinning rollout: the one-time HUD reset under Ka0s Default, Ka0s Default otherwise unchanged, the Skin tab, each skin on the HUD, the unlock furniture, the settings pages and the tool windows, other addons stock, the font and texture companions and overrides, combat, EllesmereUI on, off and back, the copy, profiles, tooltips and popups, the first-run skin picker |
+| SKIN-1 to SKIN-25 | Skins | The skinning rollout: the one-time HUD reset under Ka0s Default, Ka0s Default otherwise unchanged, the Skin tab, each skin on the HUD, the unlock furniture, the settings pages and the tool windows, other addons stock, the font and texture companions and overrides, combat, EllesmereUI on, off and back, the copy, profiles, tooltips and popups, the first-run skin picker; the library follow-ups (each skin's HUD face, Ignore fonts on the HUD, the picker's title, the strings newly in the skin's face) |
 | DEGRADED-1 | Library-absent install | The launcher libraries missing |
 | LOC-1 to LOC-2 | Non-English client | Spell names from the client, adding a spell by its localized name |
 
@@ -202,7 +202,7 @@ categories ][ Dispel colors ][ Skin ]**, and no Container picker above it. Maste
 Aura Master | General visibility / Master scale | Master alpha / Lock frame | Debug console, with the
 **Test mode** row beside **Minimap button**, then **Reset position** and **Reset all settings**.
 (Amended by AM-05, 2026-10-29: item 020's **Blizzard frames** label and AM-01's **Skin** tab last.)
-Result:
+Result: pass (owner-marked 2026-10-30)
 
 **PANEL-3. Master scale and alpha.** Change **Master scale** and **Master alpha** → every container
 scales and fades together, multiplying each container's own Layout → Frame scale and opacity.
@@ -1448,7 +1448,7 @@ container.label.justifyH` → `AUTO`, the dropdown Center again. A Bars containe
 centered. X/Y offsets and every font leaf (face, size, flags, shadow, color) apply live; with Show off
 the offsets and font rows are grayed, but not the color swatch; the face picker is grayed too while
 **Use the skin's font** is ticked. (Amended by AM-05, 2026-10-29: the label follows the skin's face,
-AM-03.) Result:
+AM-03.) Result: pass (owner-marked 2026-10-30)
 
 **LAYOUT-32. The name label, unlocked.** `/am unlock` → the label stays, and the strip sits past it on
 the same side, by the label's height plus the strip gap, never covering it; `/am lock` → the strip
@@ -2195,7 +2195,7 @@ Start each from a fresh profile's starter set, note a few values you change on e
 Spell categories ][ Dispel colors ][ Skin ]**, sentence case. Blizzard frames holds Hide Blizzard buffs | Hide
 Blizzard debuffs with no heading over them; each still hides its Blizzard frame out of combat. Master
 controls reads Master opacity beside Master scale. `/reload` → both Hide rows and every Master row keep
-what you set. (Amended by AM-05, 2026-10-29: the strip ends with AM-01's **Skin** tab.) Result:
+what you set. (Amended by AM-05, 2026-10-29: the strip ends with AM-01's **Skin** tab.) Result: pass (owner-marked 2026-10-30)
 
 **SETLAYOUT-2. Containers → General (rail).** The rail reads General · Filters · Layout · **Bar
 style** (Icon style on #2, Text style on #4). The General tab reads Name | **Enable this container**,
@@ -2265,7 +2265,8 @@ each button still asks first. (Owner call of 2026-10-24 widening T-1; run bundle
 ## Skins
 
 The skinning rollout's checks (Ka0sAddonsCommonTasks `docs/2026-10-29-SKINNING_ROLLOUT/`, items AM-01
-to AM-04; each row names the items it verifies). **Fully exit and restart the client after checking
+to AM-04; each row names the items it verifies), amended for its library follow-ups
+(`docs/2026-10-30-SKIN_LIBRARY_FOLLOWUPS/`, LibKa0s v1.81.0; rows marked *follow-ups*). **Fully exit and restart the client after checking
 out the branch**: the skins' font and texture files are new, and `/reload` does not see new files, so
 a reload alone leaves fallback squares and blank bars. Pick skins on `/am config` → General →
 **Skin**. A new profile starts with **Ignore settings panel** on, so turn it off on the Skin tab
@@ -2286,7 +2287,7 @@ Bars → Name text → untick **Use the skin's font** → the names go back to K
 General → untick **Use the skin's texture** → the fill's stored texture comes back (the picks were
 kept, never rewritten). `/reload` → both stay unticked (the reset ran once).
 Fail: a container still on Friz Quadrata or Blizzard's bar with its companion ticked, a changed
-border, size or color, a stored pick lost, or the reset running again after the reload. Result:
+border, size or color, a stored pick lost, or the reset running again after the reload. Result: pass (owner-marked 2026-10-30)
 
 **SKIN-2. Ka0s Default otherwise looks as before (AM-02, AM-04; X1).** On **Ka0s Default** with
 Ignore settings panel off, `/am unlock` and `/am test`, then walk the settings pages → apart from the
@@ -2295,8 +2296,9 @@ its gold edge, an attached container's name in the warm gray, the orange `TEST` 
 the TEST marker, the white outline at low opacity, the green attach and red detach marks of a drag,
 the frame picker's light-blue outline and gray hint (`/am pick`), the orange plan warnings at the top
 of a container's tabs, the gray notes on Layout and Text, the gold emphasis on Text, the blue **See
-spells** link on Filters, and the unit, aura-type and style colors in the Container picker. Fail: any
-of those in a different color. Result:
+spells** link on Filters, and the unit, aura-type and style colors in the Container picker. The one
+change is the face of a few library-drawn strings, now Oxanium (SKIN-25). Fail: any of those in a
+different color. Result: pass (owner-marked 2026-10-30)
 
 **SKIN-3. The Skin tab (AM-01).** General → the strip ends **[ Dispel colors ][ Skin ]**. Skin →
 **Skin source** (*Ka0s skins* on; *EllesmereUI* disabled with a line saying why, unless EllesmereUI is
@@ -2305,30 +2307,35 @@ color swatches, **Font and texture** (**Font** and **Texture**, both *Skin's own
 the Scope (**Ignore settings panel**, on in a new profile, and **Ignore fonts**, off), **Copy to every
 Ka0s addon…** and the note that skins change every visual element. Pick **Obsidian** → no reload, the
 choice moves; `/am get skin.skin` → `obsidian`; `/am set skin.skin ka0s` → Ka0s Default again, live.
-Result:
+Result: pass (owner-marked 2026-10-30)
 
 **SKIN-4. Each skin on the HUD, live (AM-03).** With a bars, an icons and a Text container showing
 live auras, plus `/am test`, pick each skin in turn: Obsidian, Azeroth, Glass, High Contrast, Ember,
 WoW Default, WoW Midnight, WoW Forever, then Ka0s Default → with **no reload** every bar's fill and
 background take the skin's own texture (Obsidian Ka0s Matte, Azeroth Ka0s Parchment, Glass Ka0s Glass
 Bar, High Contrast Ka0s Solid, Ember Ka0s Forge, WoW Midnight Ka0s Satin, WoW Forever Ka0s Classic, WoW
-Default Blizzard, Ka0s Default Ka0s Default), and every string the skin's own family (Obsidian Inter,
-Azeroth Vollkorn, Glass Nunito, High Contrast Atkinson Hyperlegible, Ember Bitter, WoW Midnight
-Philosopher, WoW Forever Fira Sans, WoW Default Friz Quadrata, Ka0s Default Oxanium), at the sizes and
-outlines you set. Bar colors, dispel colors, borders, the spark, the pandemic wash and the glow keep
+Default Blizzard, Ka0s Default Ka0s Default), and every string the skin's own HUD face (*follow-ups*,
+LK-04: Obsidian Inter SemiBold, Azeroth Vollkorn Bold, Glass Nunito SemiBold, High Contrast Atkinson
+Hyperlegible Bold, Ember Bitter Bold, WoW Midnight Philosopher Bold, WoW Forever Fira Sans SemiBold,
+WoW Default Friz Quadrata, Ka0s Default Oxanium SemiBold; before the follow-ups every skin but Ka0s
+Default drew Friz Quadrata here), at the sizes and outlines you set. Judge each face on the HUD: the
+owner rules on them here. Bar colors, dispel colors, borders, the spark, the pandemic wash and the glow keep
 their own colors in every skin. No name, time or stack count goes blank, or each fills in within about
 1 s (the font primer). Fail: a container on the previous skin's face or texture until `/reload`, a
 fallback square, a white or missing fill, a recolored bar or border, or text that stays blank.
-Result:
+Result: pass (owner-marked 2026-10-30)
 
 **SKIN-5. The unlock furniture follows the skin (AM-02).** `/am unlock` and `/am test` with a chain
 (see *Before you start*), then pick **Azeroth** and **High Contrast** in turn → the drag strips' fill,
-edge, label, **?** and **X** marks, an attached container's gray name and the `TEST` tag, the strip's
-and the close mark's tooltip lines, the white outline and the TEST marker all repaint with no reload.
+edge, label (in the skin's face, *follow-ups*), **?** and **X** marks, an attached container's gray
+name and the `TEST` tag, the strip's and the close mark's tooltip lines (the title and the how-to
+line in the skin's tooltip title and body colors, an attached container's line in its title color),
+the white outline and the TEST marker all repaint with no reload. The strip is a window, not the
+settings panel: it does all this with **Ignore settings panel** on too.
 Drag a container onto another → the attach highlight and the detach warning draw in the skin's good
 and bad colors. `/am pick` → the frame picker's outline and label draw in the skin's colors. Fail: a
 strip, mark, tooltip line or highlight on the old colors, or the tooltip frame itself reskinned (it
-stays Blizzard's). Result:
+stays Blizzard's). Result: pass (owner-marked 2026-10-30)
 
 **SKIN-6. The settings pages follow the skin (AM-01, AM-02, AM-04).** On **Obsidian** with Ignore
 settings panel off, walk General (every tab), Containers (the band and its Container picker, the
@@ -2339,19 +2346,26 @@ text stays left-aligned. The hand-built buttons (Spell categories **Add a spell*
 buttons, Layout **Pick a frame…**), the category name boxes, the Text **Preview** box (still in the
 container's own font color) and the Profiles page all wear the skin too. The plan warnings, notes,
 gold emphasis and **See spells** link take the skin's colors; the unit, aura-type and style colors
-stay the same in every skin. Turn **Ignore settings panel** on → every page is stock again, live.
-Fail: a control that keeps the old skin until `/reload`, a skinned control with Ignore settings panel
-on, or a dropdown whose text moves to the center. Result:
+stay the same in every skin. Turn **Ignore settings panel** on → every page is stock again, live, and
+the plan warnings, notes, gold emphasis and **See spells** link go back to the colors they draw on Ka0s
+Default (*follow-ups*, D-03), so no page mixes stock controls with skinned notes. Fail: a control that
+keeps the old skin until `/reload`, a skinned control or a skin-colored note with Ignore settings
+panel on, or a dropdown whose text moves to the center. Result: pass (owner-marked 2026-10-30)
 
 **SKIN-7. Other addons stay stock (AM-04).** With a non-default skin and Ignore settings panel off,
 open Aura Master's pages, then another Ka0s addon's and another AceGUI addon's, and flip between them
 a few times → Aura Master's controls are skinned; the other addons' pages are stock every time (the
-AceGUI pool leak check). Result:
+AceGUI pool leak check). Result: pass (owner-marked 2026-10-30)
 
 **SKIN-8. The tool windows follow the skin (AM-01).** With **Azeroth**, open the debug console
 (`/am debug`), its **Copy** window and the perf panel (`/am perf`) → each wears Aura Master's skin: the
-window edge and title, the console's lines and scroll bar, the buttons. Switch to **Ka0s Default**
-with the console open → it recolors with no reload and looks as before the run. Result:
+window edge and title, the console's lines and scroll bar, the buttons, the title bar's words (the
+toggle and the **Diagnostics** link) and the perf panel's columns in the skin's face, and the
+resize grip in the skin's icon tint (*follow-ups*). They are windows, not the settings panel: with
+**Ignore settings panel** on (a new profile's default) they stay skinned. Turn **Ignore fonts** on
+with the console open → its words and the perf panel's columns go back to the client's face, live,
+and come back when it is turned off. Switch to **Ka0s Default** with the console open → it recolors
+with no reload and looks as before the run, apart from those words in Oxanium (SKIN-25). Result: pass (owner-marked 2026-10-30)
 
 **SKIN-9. Use the skin's font and texture (AM-03; D1, D2, X3).** On a bars container, General →
 **Use the skin's texture** is ticked and the **Bar texture** picker is dimmed, showing the skin's
@@ -2361,87 +2375,103 @@ again → it follows the skin. Do the same with **Use the skin's font** on Bars 
 Time text, Text → Font and Layout → Label → each governs only its own element. There is no "Use the
 skin's border" anywhere. Click **New container** → its companions are ticked. Fail: a companion that
 moves another element, a dimmed picker that still writes, or a new container on the stored picks.
-Result:
+Result: pass (owner-marked 2026-10-30)
 
 **SKIN-10. The Font and texture overrides (AM-01, AM-03).** On the Skin tab pick a **Font** (any
 LibSharedMedia face) → every container string whose **Use the skin's font** is ticked redraws in it,
 live; pick a **Texture** → every ticked fill and background takes it. Unticked elements keep their own
 pick. Turn **Ignore fonts** on → every string keeps its own face, live: the skin-painted strings (the
 drag strips, the settings pages with Ignore settings panel off) and every container's text, which
-draws its own **Font** pick even with **Use the skin's font** ticked and a Font override set; the bar
-textures still follow the skin. Turn it off → the skin's face (or the override) returns. Set both
-overrides back to *Skin's own* → the skin's own face and texture return. Result:
+draws its own **Font** pick even with **Use the skin's font** ticked and a Font override set (the
+library's own rule since the follow-ups, LK-01); the bar textures still follow the skin. With it on,
+a ticked **Use the skin's font** picker (dimmed) shows the container's own **Font** pick, not the
+skin's face (*follow-ups*). Turn it off → the skin's face (or the override) returns, on the HUD and in
+the pickers. Set both overrides back to *Skin's own* → the skin's own face and texture return.
+Result: pass (owner-marked 2026-10-30)
 
 **SKIN-11. A skin change in combat (AM-03; D12).** With containers showing auras, enter combat on a
 dummy and pick another skin with `/am set skin.skin azeroth` → no Lua error and no taint warning; the
 settings and furniture repaint as they can, and the containers keep their old face and texture until
-combat ends, then take the new skin without a `/reload`. Result:
+combat ends, then take the new skin without a `/reload`. Result: pass (owner-marked 2026-10-30)
 
 **SKIN-12. EllesmereUI on (AM-01; the library's eui source).** With EllesmereUI loaded, its
 third-party skinning on and Aura Master on in its Third-Party list → Skin → **Skin source** offers
 **EllesmereUI**; choosing it repaints the settings pages, the drag strips and the tool windows in the
 EllesmereUI look, live, and the containers keep drawing with no blank text (record the face and
-texture they wear). Result:
+texture they wear). Result: pass (owner-marked 2026-10-30)
 
 **SKIN-13. EllesmereUI off (AM-01).** Turn Aura Master off in EllesmereUI's Third-Party list (or
 disable EllesmereUI) and `/reload` → the EllesmereUI choice is disabled, the failing condition and its
-fix are listed, and Aura Master wears its Ka0s skin, HUD included. Result:
+fix are listed, and Aura Master wears its Ka0s skin, HUD included. Result: pass (owner-marked 2026-10-30)
 
 **SKIN-14. Back from EllesmereUI needs a reload (AM-01).** With EllesmereUI as the source, pick **Ka0s
-skins** → a reload is offered; after the reload the Ka0s skin shows everywhere. Result:
+skins** → a reload is offered; after the reload the Ka0s skin shows everywhere. Result: pass (owner-marked 2026-10-30)
 
 **SKIN-15. Copy to every Ka0s addon (AM-01).** With another Ka0s addon that uses skins loaded, press
 **Copy to every Ka0s addon…** on **Azeroth** → the other addon wears Azeroth live and its Skin tab
 shows it; Aura Master is unchanged. With no other adopter loaded the button is disabled with its hint.
-Result:
+Result: pass (owner-marked 2026-10-30)
 
 **SKIN-16. Profiles (AM-01).** Give two profiles different skins, switch between them on the Profiles
 page and with `/am profile`, then reset one → the skin, the overrides and the Scope follow the profile
-each time with no reload, the HUD included. Result:
+each time with no reload, the HUD included. Result: pass (owner-marked 2026-10-30)
 
 **SKIN-17. Tooltips, popups and the minimap button (AM-02; X8).** Under **Azeroth** and **High
 Contrast**, hover an aura, a drag strip and its close mark, and the minimap button → the lines Aura
 Master writes are readable in the skin's colors, and the tooltip frame is Blizzard's; the Delete and
-reset confirmations, the color picker and the media pull-outs are stock. Result:
+reset confirmations, the color picker and the media pull-outs are stock. Result: pass (owner-marked 2026-10-30)
 
 **SKIN-18. The skin picker on a fresh profile (AM-04; O3, X6).** Create a new profile on the Profiles
-page → a small window titled for Ka0s Aura Master opens about three quarters up the screen: a
+page → a small window titled **Choose a skin** opens about three quarters up the screen, with **Ka0s
+Aura Master** on a line of its own above the dropdown, in full, never cut off (*follow-ups*, LK-11): a
 dropdown showing the skin worn now, an eye and a gear beside it, **Apply** under it and a close mark.
 For a character that never ran this build: log in → it opens about two seconds after the world
 loads, already in the profile's skin. Close it, `/reload` → it does not come back on that profile;
 reset the profile → it opens again. Fail: no window on a new or reset profile, or one on a profile
-that already closed it. Result:
+that already closed it. Result: pass (owner-marked 2026-10-30)
 
 **SKIN-19. The picker previews, and its eye turns test mode on (AM-04; X6).** In the picker's
 dropdown pick **Obsidian** → Aura Master repaints in Obsidian with no reload, the picker stays open,
 and `/am get skin.skin` still prints the skin it opened with. Press the eye → test mode turns on and
 every container shows its placeholders in the previewed skin, under the picker. Press the close mark
 → the stored skin comes back and the picker is marked seen. Fail: a pick that saves, an eye that does
-nothing, or a close that keeps the preview. Result:
+nothing, or a close that keeps the preview. Result: pass (owner-marked 2026-10-30)
 
 **SKIN-20. Apply and the gear save the pick (AM-04).** On a fresh profile preview **Azeroth** and
 press **Apply** → the picker closes, Azeroth stays, `/am get skin.skin` → `azeroth`, and `/reload`
 keeps it. On another fresh profile preview **Glass** and press the gear → it saves Glass and opens
-General on its **Skin** tab. Result:
+General on its **Skin** tab. Result: pass (owner-marked 2026-10-30)
 
 **SKIN-21. Apply to all, and one picker at a time (AM-04).** With a second Ka0s addon that uses skins
 loaded, both on fresh profiles, `/reload` → only one picker opens; close it → the other's opens.
 Reset both, `/reload`, and press **Apply to all Ka0s addons** on the one that opens → both addons wear
-the skin and no second picker opens; `/reload` brings neither back. Result:
+the skin and no second picker opens; `/reload` brings neither back. Result: pass (owner-marked 2026-10-30)
 
 **SKIN-22. The picker in combat and while switched off (AM-04).** On a fresh profile, `/reload` and
 enter combat before the two seconds pass → no picker until combat ends, then it opens. With the
 picker open, `/am disable` → it closes without being marked seen and does not open while the addon is
-off, `/reload` included; `/am enable`, then `/reload` → it opens again on that profile. Result:
+off, `/reload` included; `/am enable`, then `/reload` → it opens again on that profile. Result: pass (owner-marked 2026-10-30)
 
 **SKIN-23. A profile switch with a preview pending (AM-04).** Give a second profile **Azeroth** and
 close its picker. On a fresh profile preview **Obsidian**, then switch to the Azeroth profile → the
 picker closes and Aura Master wears Azeroth (never Ka0s Default or Obsidian). Switch back → Ka0s
-Default, and the picker opens there again. Result:
+Default, and the picker opens there again. Result: pass (owner-marked 2026-10-30)
 
 **SKIN-24. Other Ka0s addons unchanged (AM-01).** With Aura Master on a non-default skin, open other
 Ka0s addons' windows and settings pages → each looks exactly as before. Disable Aura Master,
-`/reload` and compare → still unchanged. Result:
+`/reload` and compare → still unchanged. Result: pass (owner-marked 2026-10-30)
+
+**SKIN-25. The strings newly in the skin's face (*follow-ups*, LK-06a to LK-06c; D-13).** Fully
+restart on this build, on **Ka0s Default** with Ignore settings panel off → these strings, which drew
+the client's Friz Quadrata before, now read in **Oxanium**: the drag strips' labels (`/am unlock`),
+the debug console's title-bar words (`/am debug`), the perf panel's step and command columns
+(`/am perf`), and the suggestion rows under the add-a-spell box on Filters (type a few letters of a
+spell). The suggestion rows are a light gray (0.9) rather than white. Each strip's label still fits
+its strip. Turn **Ignore fonts** on → each of them goes back to Friz Quadrata, live. Turn **Ignore
+settings panel** on → the suggestion rows go back to the client's look, and a cast id's orange
+**not an aura** tag on its row keeps Ka0s Default's orange in every skin (D-03); the strips and the tool
+windows keep Oxanium. Fail: a label cut off or overflowing its strip, a string that stays in Oxanium
+under Ignore fonts, or a Lua error. Result: pass (owner-marked 2026-10-30)
 
 ## Library-absent install
 
@@ -2481,12 +2511,8 @@ On 2026-10-24 the owner reported that every check of the keybindings, settings l
 layering run passed: LAYER-1 to LAYER-6, SETLAYOUT-1 to SETLAYOUT-8 and SETLAYOUT-9, each recorded
 on its `Result:` line as `pass (owner-marked 2026-10-24)`.
 
-Owed from the skinning rollout (Ka0sAddonsCommonTasks `docs/2026-10-29-SKINNING_ROLLOUT/`, AM-01 to
-AM-05, 2026-10-29): SKIN-1 to SKIN-24 (new: the one-time HUD reset that visibly changes Ka0s
-Default's bars and fonts, X5; Ka0s Default otherwise unchanged; the Skin tab; each skin on the HUD,
-the unlock furniture, the settings pages and the tool windows; other addons stock; the font and
-texture companions and overrides; combat; EllesmereUI on, off and back; the copy; profiles; tooltips
-and popups; the first-run skin picker), PANEL-2 and SETLAYOUT-1 (amended: the **Skin** tab last on
-General) and LAYOUT-31 (amended: the name label in the skin's face). STYLE-20 to STYLE-30 keep their
-results: only their set-up changed (untick **Use the skin's font** before picking Ka0s Prototype), and
-the primer's work on the skins' own faces is SKIN-4's.
+On 2026-10-30 the owner reported that every check of the skinning rollout (Ka0sAddonsCommonTasks
+`docs/2026-10-29-SKINNING_ROLLOUT/`, AM-01 to AM-05) and its library follow-ups (Ka0sAddonsCommonTasks
+`docs/2026-10-30-SKIN_LIBRARY_FOLLOWUPS/`, AM-RV to AM-02, LibKa0s v1.81.0) passed: SKIN-1 to SKIN-25,
+PANEL-2, SETLAYOUT-1 and LAYOUT-31, each recorded on its `Result:` line as
+`pass (owner-marked 2026-10-30)`.

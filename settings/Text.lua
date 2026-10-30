@@ -54,11 +54,11 @@ local G_PANDEMIC, S_TIME = L["Pandemic"], L["Time color"]
 local S_PLACEMENT, S_DISPEL, S_GLOW = L["Placement"], L["Dispel type"], L["Glow"]
 local SMALL = { fontObject = "GameFontHighlightSmall" }
 local HEADING = { fontObject = "GameFontNormalSmall" }
--- The page's two markup colors, read from the skin at each render (NS.SkinEscape): a muted note in
--- `text.disabled` (Ka0s Default's 808080, decision D7) and template syntax in `text.heading` (its
--- ffd100 gold).
-local function gray(text) return (NS.SkinEscape("text.disabled") or "") .. text .. "|r" end
-local function gold(text) return (NS.SkinEscape("text.heading") or "") .. text .. "|r" end
+-- The page's two markup colors, read from the skin at each render (NS.PanelEscape, so Ka0s
+-- Default's while the settings panel is ignored): a muted note in `text.disabled` (Ka0s Default's
+-- 808080, decision D7) and template syntax in `text.heading` (its ffd100 gold).
+local function gray(text) return (NS.PanelEscape("text.disabled") or "") .. text .. "|r" end
+local function gold(text) return (NS.PanelEscape("text.heading") or "") .. text .. "|r" end
 local BULLET = "- "
 local CUSTOM = "custom"
 

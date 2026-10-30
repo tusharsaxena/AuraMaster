@@ -48,8 +48,9 @@ end
 --- Through the owner's facade, S.Resolve, so the Skin tab's own font or texture override wins over the
 --- skin's. The stored pick is never rewritten: turning the companion off brings it back. A facade
 --- that answers nothing (degraded, no LibKa0s) draws the stored pick, the look before skins. While
---- the Skin tab's "Ignore fonts" is on (NS.SkinFontsIgnored) a `hud.font` pick draws the stored
---- face whatever its companion says: the library's Resolve never reads that exception itself.
+--- the Skin tab's "Ignore fonts" is on a `hud.font` pick draws the stored face whatever its
+--- companion says: S.Resolve answers the stored face for `hud.font` then (LibKa0s v1.81.0, LK-01),
+--- and Ignore fonts leaves `bar.texture` alone.
 ---
 --- NOT a recorded primitive (S.BarTexture and friends): the regions this dresses sit on Blizzard's
 --- pooled aura buttons, whose geometry reads secret and which a skin registry must never hold. A
@@ -57,7 +58,6 @@ end
 --- which re-applies every container. Read per dress, never per aura event.
 function Style.SkinKey(token, key, fromSkin)
     if fromSkin ~= true then return key end
-    if token == "hud.font" and NS.SkinFontsIgnored and NS.SkinFontsIgnored() then return key end
     local S = NS.Skin
     local v = S and S.Resolve and S.Resolve(token, key, true)
     if v == nil then return key end
