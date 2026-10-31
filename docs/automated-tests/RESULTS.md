@@ -32,6 +32,7 @@ archaeology, for the same reason a skip is never a pass (`automated-tests-§4`).
 
 | Run | Commit | Tree | Version | Lint w/e | Files | Tests | Perf | NLOC | Funcs | Avg NLOC | Avg CCN | Max CCN | CCN warn | Verdict |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| [`20261031-212339`](20261031-212339/) | `16cf393` | clean | 1.1.0 | 0/0 | 201 | 2249/1/2250 | pass | 55169 | 5992 | 8.3 | 2.3 | 15 | 0 | **green** |
 | [`20261031-202022`](20261031-202022/) | `472da8f` | clean | 1.1.0 | 0/0 | 193 | 2249/1/2250 | pass | 55057 | 5977 | 8.3 | 2.3 | 15 | 0 | **green** |
 | [`20261009-191725`](20261009-191725/) | `ad636a2` | clean | 1.0.1 → 1.1.0 | 0/0 | 174 | 2058/1/2059 | pass | 49857 | 5459 | 8.3 | 2.3 | 15 | 0 | **green** |
 | [`20260927-214918`](20260927-214918/) | `b5208f3` | clean | 1.0.0 → 1.0.1 | 0/0 | 146 | 1702/0/1702 | pass | 41031 | 4472 | 8.2 | 2.3 | 15 | 0 | **green** |
@@ -50,17 +51,17 @@ archaeology, for the same reason a skip is never a pass (`automated-tests-§4`).
 ## Test suite
 
 **2250 cases** — 2249 passed, 0 failed, 1 skipped. The generated inventory
-[`20261031-202022/test-cases.md`](20261031-202022/test-cases.md) is the authority on which cases existed at this run;
+[`20261031-212339/test-cases.md`](20261031-212339/test-cases.md) is the authority on which cases existed at this run;
 `docs/test-cases.md` is that same list at HEAD.
 
-Moved **2059 → 2250** since the previous run.
+Unchanged from the previous run at 2250 cases.
 
 **1 case(s) reported a `skip`.** A skip is counted in the total and never in `passed`, and at
 the release gate it is NOT EVALUATED rather than passed (`automated-tests-§3`).
 
 ## Lint
 
-**0 warnings / 0 errors over 193 files** (`luacheck .`).
+**0 warnings / 0 errors over 201 files** (`luacheck .`).
 
 Read that figure with its scope attached: `.luacheckrc` excludes 6 path(s) from it — `libs/`, `tests/_kit/`, `docs/audits/`, `docs/reviews/`, `docs/automated-tests/`, `_dev/` —
 so nothing under them is in the count above. A `0/0` that never moves is partly a statement about
@@ -70,21 +71,21 @@ to whoever thinks to open `.luacheckrc`.
 ## Perf
 
 **12 scenarios** from `tests/perf.lua`; the measurements are in
-[`20261031-202022/perf.json`](20261031-202022/perf.json).
+[`20261031-212339/perf.json`](20261031-212339/perf.json).
 
 | `scenario` | `iters` | `ms/iter` | `api/iter` | `bytes/iter` |
 |---|---|---|---|---|
-| `compile` | 2000 | 0.01168 | 0.0 | 4136.0 |
-| `applyPass` | 200 | 1.85437 | 30.0 | 104452.5 |
-| `restyle` | 200 | 0.94080 | 0.0 | 39125.5 |
-| `restyleText` | 200 | 0.74209 | 0.0 | 27747.6 |
-| `restyleTextGlow` | 200 | 3.84614 | 0.0 | 140643.6 |
-| `visibilityPass` | 1000 | 0.02633 | 8.0 | 384.0 |
-| `unitSwap` | 1000 | 0.00332 | 1.0 | 0.0 |
-| `probeOverheadOff` | 1000 | 0.02476 | 9.0 | 384.0 |
-| `probeOverheadOn` | 1000 | 0.02686 | 9.0 | 384.5 |
-| `probeAbsent` | 1000 | 0.02111 | 9.0 | 384.0 |
-| `unitAuraFiltered` | 1000 | 0.00039 | 0.0 | 0.0 |
+| `compile` | 2000 | 0.01046 | 0.0 | 4136.0 |
+| `applyPass` | 200 | 1.49434 | 30.0 | 104452.5 |
+| `restyle` | 200 | 0.83202 | 0.0 | 39125.5 |
+| `restyleText` | 200 | 0.59474 | 0.0 | 27747.6 |
+| `restyleTextGlow` | 200 | 3.45817 | 0.0 | 140643.6 |
+| `visibilityPass` | 1000 | 0.02461 | 8.0 | 384.0 |
+| `unitSwap` | 1000 | 0.00344 | 1.0 | 0.0 |
+| `probeOverheadOff` | 1000 | 0.02207 | 9.0 | 384.0 |
+| `probeOverheadOn` | 1000 | 0.02321 | 9.0 | 384.5 |
+| `probeAbsent` | 1000 | 0.01847 | 9.0 | 384.0 |
+| `unitAuraFiltered` | 1000 | 0.00022 | 0.0 | 0.0 |
 | `emptyWatchAura` | 1000 | 0.00005 | 0.0 | 0.0 |
 
 `perf` never fails a run and never blocks a commit — it is recorded, read and compared, not
@@ -92,8 +93,8 @@ thresholded (`performance-§9`). It does gate the **tag** (`automated-tests-§3`
 
 ## Complexity watch list
 
-Current as of [`20261031-202022`](20261031-202022/) — **this run's measurement, not its diff.** Max CCN **15** across 5977
-functions, **0** of them warned on; 14 file(s) in the 1000–1500 band and 0 over the 1500 cap
+Current as of [`20261031-212339`](20261031-212339/) — **this run's measurement, not its diff.** Max CCN **15** across 5992
+functions, **0** of them warned on; 6 file(s) in the 1000–1500 band and 0 over the 1500 cap
 (`layout-§1`).
 
 Every row below is generated from this run's own `lizard` output. **The `Disposition` column is
@@ -117,15 +118,7 @@ None.
 | 1000–1500 (on notice) | `modules/Anchors.lua` | 1068 | Accepted — newly in the band at this run (982 → 1068, the skin seam on the unlock furniture); 71 functions, max CCN 13 (`Anchors.FlowRoot`). One concern, where a container sits and its drag handle; the join and snap code are already peeled into `modules/Anchors_Attach.lua` and `modules/Anchors_Snap.lua` |
 | 1000–1500 (on notice) | `modules/Anchors_Snap.lua` | 1156 | Accepted — newly in the band at the 1.1.0 release run (a new file: the snap core for drag to attach, #22); 60 functions, max CCN 15 (`classify`, at the threshold, not over it). One concern, the pair pick and its geometry; `modules/Anchors_SnapRect.lua` already holds the rect reads, and the pick is the next seam if it grows |
 | 1000–1500 (on notice) | `modules/Container.lua` | 1020 | Accepted — newly in the band at this run (928 → 1020), just inside it; 64 functions, max CCN 15 (`ContainerClass.ApplyHang`, at the threshold, not over it). One cohesive class, a live container's anchor, handle and engine lifecycle, with the twin engines already in `modules/Container_Twins.lua` |
-| 1000–1500 (on notice) | `modules/Style.lua` | 1076 | Split on FX-AM-SIZE: the element border moved to `modules/Style_Border.lua`, leaving 895 lines. Leaves the band at the next run |
 | 1000–1500 (on notice) | `settings/Filters.lua` | 1018 | Accepted — newly in the band at this run (971 → 1018), just inside it; 49 functions, max CCN 11 (`viewWhich`). One settings page: its four tabs, their grids and the per-category help text, so size rather than tangle |
-| 1000–1500 (on notice) | `settings/Schema.lua` | 1057 | Split on FX-AM-SIZE: `NS.ValidateSchema` moved to `settings/Schema_Validate.lua`, and `NS.IsSection` was removed as dead on FX-AM-DEAD, leaving 975 lines. Leaves the band at the next run |
-| 1000–1500 (on notice) | `tests/test_containermanager.lua` | 1074 | Split on FX-AM-SIZE: the queue and registry cases moved to `tests/test_containermanager_queue.lua`, leaving 838 lines. Leaves the band at the next run |
-| 1000–1500 (on notice) | `tests/test_database.lua` | 1200 | Split on FX-AM-SIZE: the v4 and v5 cases moved to `tests/test_database_steps.lua`, leaving 898 lines. Leaves the band at the next run |
-| 1000–1500 (on notice) | `tests/test_filtercompiler.lua` | 1311 | Split on FX-AM-SIZE: the Uncategorized cases moved to `tests/test_filtercompiler_uncategorized.lua`. Leaves the band at the next run |
-| 1000–1500 (on notice) | `tests/test_pages_filters.lua` | 1198 | Split on FX-AM-SIZE: the Overrides cases moved to `tests/test_pages_filters_overrides.lua`. Leaves the band at the next run |
-| 1000–1500 (on notice) | `tests/test_style.lua` | 1211 | Split on FX-AM-SIZE: the border cases moved to `tests/test_style_borders.lua`. Leaves the band at the next run |
-| 1000–1500 (on notice) | `tests/test_style_text.lua` | 1023 | Split on FX-AM-SIZE: the icon cases moved to `tests/test_style_text_icon.lua`. Leaves the band at the next run |
 
 `lizard` counts every `and`/`or` short-circuit as a decision, so in Lua a run of
 `t.k = rec.k or D.k` defaulting lines scores high with no visible branching at all: a large CCN
