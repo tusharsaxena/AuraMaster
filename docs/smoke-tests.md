@@ -29,7 +29,7 @@ check's number is not reused. Checks with no recorded pass, and checks new or co
 | TEXT-1 to TEXT-36 | Text style | Templates and tokens, justify, the icon, dispel type word, backdrop and edge, animation, Size to fit, the glow behind the text |
 | LAYER-1 to LAYER-6 | Frame layering | Bar borders over the fill, the outline and the name label over the auras, the snap highlight over a Dialog container, the strip at low opacity, the Strata tooltip |
 | SETLAYOUT-1 to SETLAYOUT-9 | Settings layout (item 020) | Every settings page item 020 moved, regrouped or relabeled, read as `docs/settings-panel.md` describes, with no setting lost, moved or reset; the confirm buttons' ellipsis |
-| SKIN-1 to SKIN-32 | Skins | The skinning rollout: the one-time HUD reset under Ka0s Default, Ka0s Default otherwise unchanged, the Skin tab, each skin on the HUD, the unlock furniture, the settings pages and the tool windows, other addons stock, the font and texture companions and overrides, combat, EllesmereUI on, off and back, the copy, profiles, tooltips and popups, the first-run skin picker; the library follow-ups (each skin's HUD face, Ignore fonts on the HUD, the picker's title, the strings newly in the skin's face); the skin fonts run (the Font outline, From skin flags, `/am skin`, width parity, the HUD size scale, the own faces and glow back, the strips' re-fit) |
+| SKIN-1 to SKIN-34 | Skins | The skinning rollout: the one-time HUD reset under Ka0s Default, Ka0s Default otherwise unchanged, the Skin tab, each skin on the HUD, the unlock furniture, the settings pages and the tool windows, other addons stock, the font and texture companions and overrides, combat, EllesmereUI on, off and back, the copy, profiles, tooltips and popups, the first-run skin picker; the library follow-ups (each skin's HUD face, Ignore fonts on the HUD, the picker's title, the strings newly in the skin's face); the skin fonts run (the Font outline, From skin flags, `/am skin`, width parity, the HUD size scale, the own faces and glow back, the strips' re-fit) |
 | DEGRADED-1 | Library-absent install | The launcher libraries missing |
 | LOC-1 to LOC-2 | Non-English client | Spell names from the client, adding a spell by its localized name |
 
@@ -2578,6 +2578,15 @@ strata → **Container scale**: drag it down and up, then the same with General 
 mid-letter or run past the marks. Fail: a name that only corrects itself when renamed, or a Lua error.
 Result:
 
+**SKIN-34. A font row and a border row on the only media picker (M3-MEDIA).** On the Skin tab turn
+**Ignore settings panel** off. On a bars container, rail → Bars → a text tab such as **Name text** →
+open the **Font** dropdown: the closed row and every row of the list wear the skin, each face previewed
+in itself, and a pick reaches the bar. Bars → **Background & border** → open **Border style**: the same
+skinned list with a swatch per border, the row lines up with its neighbors, and a pick reaches the bar.
+Switch to another skin and open both again: they follow it. Fail: a stock-looking dropdown, a blank list
+or a Lua error.
+Result:
+
 ## Library-absent install
 
 **DEGRADED-1. Without the launcher libraries.** Rename `libs/LibDBIcon-1.0` aside, `/reload` → one
@@ -2650,3 +2659,5 @@ code with no change meant. **Fully exit and restart the client**: the two new fi
 
 Open from the same run's LibKa0s v1.84.0 adoption (M2_LIBRARY_RELEASE.md): SKIN-33 is new (XX-ADOPT);
 TEXT-37 and TEXT-38 are new and TEXT-6 is re-opened (XX-67).
+
+Open from the same run's re-cut v1.84.0 (M3, `Ka0sMedia_*` the only media picker): SKIN-34 is new.

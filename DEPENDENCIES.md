@@ -26,9 +26,9 @@ marked as such rather than listed as a requirement.
   falls back to the deprecated global `GetAddOnMetadata`; the TOC is Retail-only, where `C_AddOns`
   always exists.
 - **Nothing else.** The TOC declares no `## Dependencies`. Every library it loads — LibStub,
-  CallbackHandler-1.0, the Ace3 modules, LibDataBroker-1.1, LibDBIcon-1.0, LibKa0s,
-  LibSharedMedia-3.0 and AceGUI-3.0-SharedMediaWidgets — is vendored under `libs/` and listed in
-  the `# Libraries` block (`AuraMaster.toc:15-32`). `## OptionalDeps:` (`AuraMaster.toc:8`) names the vendored libs for load
+  CallbackHandler-1.0, the Ace3 modules, LibDataBroker-1.1, LibDBIcon-1.0, LibKa0s and
+  LibSharedMedia-3.0 — is vendored under `libs/` and listed in
+  the `# Libraries` block (`AuraMaster.toc:15-31`). `## OptionalDeps:` (`AuraMaster.toc:8`) names the vendored libs for load
   ordering, not as things to download (library-stack), and EllesmereUI (below).
 - **EllesmereUI, optional.** A separate addon, never vendored and never required. It is named in
   `## OptionalDeps:` only so it loads first when the player has it: `core/SkinSetup.lua` registers
@@ -112,7 +112,7 @@ git -C ../LibKa0s rev-parse --short v1.84.0   # verify: prints a commit
   different tool with a different justification; nothing about it licenses `pip install` here.
 - **A CI runner.** There is none; every gate is local and hand-run (testing-§5).
 - **The vendored libraries.** LibStub, CallbackHandler-1.0, the Ace3 modules, LibDataBroker-1.1,
-  LibDBIcon-1.0, LibKa0s, LibSharedMedia-3.0 and AceGUI-3.0-SharedMediaWidgets are committed
+  LibDBIcon-1.0, LibKa0s and LibSharedMedia-3.0 are committed
   under `libs/`. Listing them here does not license fetching them at build time.
 
 ## Release / assets

@@ -365,10 +365,6 @@ end
 -- The live wiring
 -- ---------------------------------------------------------------------------
 
--- LSM30_Border lines up on a canvas page only once wrapped; the library does it once per process
--- whoever calls it (LibKa0s-Options-1.0 minor 15), so the call is unconditional.
-lib.__PatchLSM30Border()
-
 -- NS.Helpers IS the library instance, decorated in place — never a copy — so a host helper added
 -- below can call the library's members and a suite spying on one sees the one callers see.
 NS.Helpers = lib:New(descriptor)

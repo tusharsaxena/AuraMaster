@@ -324,7 +324,7 @@ function NS.RegisterSchemaRows(rows, beforePath)
         end
         -- Every list row draws through the addon's own left-justified dropdown. The library falls
         -- back to the stock Dropdown while the type is unregistered (the headless kit, or before
-        -- NS.RegisterDropdownWidget ran). A row that names its own control (EditBox, LSM30_*) keeps it.
+        -- NS.RegisterDropdownWidget ran). A row that names its own control (EditBox, Ka0sMedia_*) keeps it.
         if row.values ~= nil and row.dialogControl == nil then row.dialogControl = C.DROPDOWN_WIDGET end
     end
     if S then

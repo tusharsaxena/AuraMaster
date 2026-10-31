@@ -409,6 +409,9 @@ test("schema paths: every list row draws through the addon's dropdown; a named c
     assertTrue(lists > 0, "the schema has list rows")
     -- red under: the default overwriting a row that named its own control
     assertEqual(NS2.FindSchemaRow("container.name").dialogControl, "EditBox")
+    -- red under: a composed media row back on a picker the skin cannot paint
+    assertEqual(NS2.FindSchemaRow("container.label.font.font").dialogControl, "Ka0sMedia_Font")
+    assertEqual(NS2.FindSchemaRow("container.bars.borderStyle").dialogControl, "Ka0sMedia_Border")
 end)
 
 -- ── the carve-outs ────────────────────────────────────────────────────────────────────────────

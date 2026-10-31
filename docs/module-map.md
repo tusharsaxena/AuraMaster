@@ -1,7 +1,7 @@
 # Module map
 
 Every file this repo authors, what it is for, and where it sits in load order. Vendored code —
-`libs/` (Ace3, LibStub, CallbackHandler, LibSharedMedia, AceGUI-3.0-SharedMediaWidgets,
+`libs/` (Ace3, LibStub, CallbackHandler, LibSharedMedia,
 LibDataBroker-1.1, LibDBIcon-1.0, LibKa0s) and
 `tests/_kit/` (the LibKa0s testkit) — is out of scope: it is documented upstream and never edited
 here.
@@ -14,7 +14,7 @@ order is dependency-correct. Positions marked **load-bearing** below carry a com
 naming what resolves at load (toc-file-§5); the rest are conventional and free to move.
 
 1. **Libraries.** Ace3 first, then `libs\LibKa0s\LibKa0s.xml` as one line (every LibKa0s module
-   depends on LibStub and some on Ace-free Core only), then LibSharedMedia and its AceGUI widgets.
+   depends on LibStub and some on Ace-free Core only), then LibSharedMedia.
 2. **`locales/enUS.lua`** — first after the libraries because it creates `NS.L`, which everything
    below may read at file load.
 3. **`core/`** — namespace, then the seams in the order their consumers need them (below).
@@ -315,7 +315,7 @@ The suites, in the order `tests/run.lua` runs them (it is the authority on the l
 
 ## Libraries
 
-All vendored under `libs/`, loaded by the `# Libraries` block of `AuraMaster.toc:15-32`.
+All vendored under `libs/`, loaded by the `# Libraries` block of `AuraMaster.toc:15-31`.
 
 | Library | Used for |
 |---|---|
@@ -325,9 +325,9 @@ All vendored under `libs/`, loaded by the `# Libraries` block of `AuraMaster.toc
 | AceTimer-3.0 | The color picker's drag throttle, via the options descriptor's `scheduleTimer` |
 | AceConsole-3.0 | `/am` and `/auramaster` registration (`settings/Slash.lua:655-656`) |
 | AceDB-3.0 | `AuraMasterDB` and its profiles (`core/Database.lua:270`) |
-| AceGUI-3.0, AceGUI-3.0-SharedMediaWidgets | The settings panel body and its `LSM30_*` media dropdowns |
+| AceGUI-3.0 | The settings panel body |
 | AceConfig-3.0, AceDBOptions-3.0 | The Profiles sub-page only (`settings/Profiles.lua`, options-ui-§3) |
-| LibSharedMedia-3.0 | Texture, border and font lookups through `LSM` (`modules/Style.lua:33`) |
+| LibSharedMedia-3.0 | Texture, border and font lookups through `LSM` (`modules/Style.lua:33`), and the lists behind the library's `Ka0sMedia_*` media pickers |
 | LibDataBroker-1.1, LibDBIcon-1.0 | The launcher's broker object and its minimap button (`core/LauncherSetup.lua`, launcher-§1). Both are OPTIONAL: `LibKa0s-Launcher-1.0` resolves them with `LibStub(…, true)` at Register time, so a client missing either degrades rather than raises |
 | LibKa0s v1.84.0 | Fifteen modules bound by name — table below |
 

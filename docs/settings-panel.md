@@ -131,7 +131,7 @@ Types: `bool` checkbox, `number` slider, `string` dropdown (or edit box where no
 Every dropdown the addon draws, schema row or hand-built, is the addon's own AceGUI type
 (`C.DROPDOWN_WIDGET`, `NS.RegisterDropdownWidget` in `settings/OptionsSetup.lua`): the stock Dropdown
 with its closed box justified LEFT, in a widget pool of its own, so its justification never reaches,
-or arrives from, another panel's stock Dropdown. A row that names a control (`EditBox`, `LSM30_*`) keeps it.
+or arrives from, another panel's stock Dropdown. A row that names a control (`EditBox`, `Ka0sMedia_*`) keeps it.
 Every `container.` path is relative to the selected container (`docs/schema.md`).
 
 ### General (26 rows, `settings/General.lua`, `settings/GeneralSpells.lua`, `settings/GeneralUserCategories.lua`, `settings/GeneralDispel.lua`)
