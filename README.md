@@ -74,7 +74,9 @@ font's **Font flags** start on *From skin*, which follows the Skin tab's **Font 
 only (the default), all text, or off. Pick a flag to keep your own. Your colors and borders are never
 changed. Choosing another skin puts the Skin tab's Font and Texture back to that skin's default. The
 first time you log in, a small window offers the skins with a preview, which turns on test mode so
-you can see them on your containers; `/am skin` opens it again whenever you want it.
+you can see them on your containers; `/am skin` opens it again whenever you want it. That window has
+the Skin tab's Font, Texture, Font outline and Ignore rows as well. Changes there are only a preview
+until you press Apply. The font and texture lists show each entry in its own face or as a swatch.
 
 Spell categories and the Overrides lists don't work everywhere, because the game only filters by
 spell in some places. On your target or focus they work for buffs while you can help that unit

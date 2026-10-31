@@ -1,6 +1,6 @@
 # Slash dispatch
 
-`/am` and its long form `/auramaster`. Required because `NS.COMMANDS` carries 25 commands, over the
+`/am` and its long form `/auramaster`. Required because `NS.COMMANDS` carries 26 commands, over the
 eight-or-more trigger (documentation-§3).
 
 ## Registration and dispatch

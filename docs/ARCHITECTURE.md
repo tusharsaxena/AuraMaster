@@ -350,7 +350,9 @@ Every surface Aura Master draws paints through the `LibKa0s-Skin-1.0` facade wit
   the addon stands up (O3); in combat it waits for `PLAYER_REGEN_ENABLED`. Its eye turns test mode
   on; the player's close writes `pickerSeen`, and a close the addon makes (`NS.HideSkinPicker`) does
   not. `/am skin` (`NS.RunSkinVerb`, LibKa0s v1.82.0's `O.SkinVerb`, D-16) shows the same picker on
-  demand, whatever `pickerSeen` says.
+  demand, whatever `pickerSeen` says. Since LibKa0s v1.83.0 the picker also carries the Skin tab's
+  Font, Texture, Font outline and Scope rows: a change previews and writes nothing, Apply or the gear
+  saves it through `NS.WriteSkinChoice`, and a dismissal puts back what the window opened with.
 - **EllesmereUI.** The library's provider: with source `eui` and its gate holding, EllesmereUI's
   facade paints; otherwise the addon wears its Ka0s skin and the Skin tab says why.
 - **The color gate.** `tests/test_skin_literals.lua` fails on a numeric color literal in a paint call
@@ -432,7 +434,7 @@ span bundle is `<date>-v<A>-v<B>/`, and the one untagged bundle is `docs/revendo
 | Doc | Status | Trigger |
 |---|---|---|
 | `perf-analysis/README.md` | Present | The performance harness is wired (`core/PerfSetup.lua`) |
-| `slash-dispatch.md` | Present | 25 commands in `NS.COMMANDS`, over the eight-or-more threshold |
+| `slash-dispatch.md` | Present | 26 commands in `NS.COMMANDS`, over the eight-or-more threshold |
 | `midnight-quirks.md` | Present | Client-version workarounds of the addon's own: 12.1 aura secrecy and the aura container engine, and the taint notes that follow from them |
 | `compat-layer.md` | Present | 26 shims in `core/Compat.lua`, over the three-or-more threshold |
 | `message-bus.md` | Not applicable | 4 messages in `NS.MSG`; the trigger is more than ten. The table lives in `## Message Bus` above |
