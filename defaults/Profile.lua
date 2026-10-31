@@ -53,7 +53,7 @@ NS.defaults.profile = {
     -- "all" text, "hud" text only or "off" (LibKa0s v1.82.0, ruling D-06).
     skin = {
         source = "ka0s", skin = "ka0s", ignorePanel = true, ignoreFonts = false,
-        font = "", texture = "", outline = "all", pickerSeen = false,
+        font = "", texture = "", outline = "hud", pickerSeen = false,
     },
 
     -- Profile-wide since schema v2 (core/Database_Migrations.lua's MigrateV2 lifted them off the

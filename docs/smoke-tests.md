@@ -2304,11 +2304,11 @@ different color. Result: pass (owner-marked 2026-10-30)
 **SKIN-3. The Skin tab (AM-01).** General → the strip ends **[ Dispel colors ][ Skin ]**. Skin →
 **Skin source** (*Ka0s skins* on; *EllesmereUI* disabled with a line saying why, unless EllesmereUI is
 loaded and can skin this addon), a **Look** heading over nine skins three to a line, each with its
-color swatches, **Font and texture** (**Font** and **Texture**, both *Skin's own* in a new profile),
+color swatches, **Font and texture** (**Font** and **Texture**, both *Skin's default (the skin's key)* in a new profile, each entry drawn in its own face or beside its own bar),
 the Scope (**Ignore settings panel**, on in a new profile, and **Ignore fonts**, off), **Copy to every
 Ka0s addon…** and the note that skins change every visual element. Pick **Obsidian** → no reload, the
 choice moves; `/am get skin.skin` → `obsidian`; `/am set skin.skin ka0s` → Ka0s Default again, live.
-Result: pass (owner-marked 2026-10-30)
+(Reopened by AM-F01: the two pickers are LibKa0s v1.83.0's previewing rows.) Result:
 
 **SKIN-4. Each skin on the HUD, live (AM-03).** With a bars, an icons and a Text container showing
 live auras, plus `/am test`, pick each skin in turn: Obsidian, Azeroth, Glass, High Contrast, Ember,
@@ -2316,16 +2316,16 @@ WoW Default, WoW Midnight, WoW Forever, then Ka0s Default → with **no reload**
 background take the skin's own texture (Obsidian Ka0s Matte, Azeroth Ka0s Parchment, Glass Ka0s Glass
 Bar, High Contrast Ka0s Solid, Ember Ka0s Forge, WoW Midnight Ka0s Satin, WoW Forever Ka0s Classic, WoW
 Default Blizzard, Ka0s Default Ka0s Default), and every string the skin's own HUD face (*follow-ups*,
-LK-04, and LibKa0s v1.82.0 for the two that moved: Obsidian Expressway, Azeroth Vollkorn Bold, Glass
-Nunito SemiBold, High Contrast Atkinson Hyperlegible Bold, Ember Bitter Bold, WoW Midnight Philosopher
-Bold, WoW Forever Fira Sans SemiBold, WoW Default Friz Quadrata, Ka0s Default Prototype; before the
+LK-04, LibKa0s v1.82.0, and v1.83.0's faces, D-06: Obsidian Expressway, Azeroth Open Sans Semibold,
+Glass Avant Garde, High Contrast Doris PP, Ember Emblem, WoW Midnight Segoe UI Semibold, WoW Forever
+Fira Sans SemiBold, WoW Default Ka0s Friz Quadrata TT, Ka0s Default Prototype; before the
 follow-ups every skin but Ka0s Default drew Friz Quadrata here), at the outlines you set and at sizes
 scaled to Ka0s Default's width (SKIN-30). Judge each face on the HUD: the
 owner rules on them here. Bar colors, dispel colors, borders, the spark, the pandemic wash and the glow keep
 their own colors in every skin. No name, time or stack count goes blank, or each fills in within about
 1 s (the font primer). Fail: a container on the previous skin's face or texture until `/reload`, a
 fallback square, a white or missing fill, a recolored bar or border, or text that stays blank.
-Result: (re-opened 2026-10-30, AM-01 of the skin fonts run: Obsidian and Ka0s Default's faces moved, and the sizes scale)
+Result: (re-opened 2026-10-31, AM-F01: Azeroth, Glass, High Contrast, Ember, WoW Midnight and WoW Default moved to LibKa0s v1.83.0's faces, D-06)
 
 **SKIN-5. The unlock furniture follows the skin (AM-02).** `/am unlock` and `/am test` with a chain
 (see *Before you start*), then pick **Azeroth** and **High Contrast** in turn → the drag strips' fill,
@@ -2388,8 +2388,8 @@ draws its own **Font** pick even with **Use the skin's font** ticked and a Font 
 library's own rule since the follow-ups, LK-01); the bar textures still follow the skin. With it on,
 a ticked **Use the skin's font** picker (dimmed) shows the container's own **Font** pick, not the
 skin's face (*follow-ups*). Turn it off → the skin's face (or the override) returns, on the HUD and in
-the pickers. Set both overrides back to *Skin's own* → the skin's own face and texture return.
-Result: pass (owner-marked 2026-10-30)
+the pickers. Set both overrides back to *Skin's default* → the skin's default face and texture return.
+(Reopened by AM-F01: the row's label and the pickers changed in LibKa0s v1.83.0.) Result:
 
 **SKIN-11. A skin change in combat (AM-03; D12).** With containers showing auras, enter combat on a
 dummy and pick another skin with `/am set skin.skin azeroth` → no Lua error and no taint warning; the
@@ -2476,12 +2476,13 @@ windows keep Prototype. Fail: a label cut off or overflowing its strip, a string
 Prototype under Ignore fonts, or a Lua error. Result:
 
 **SKIN-26. The Font outline (AM-01; LibKa0s v1.82.0, D-06).** On a fresh profile, General → Skin →
-**Font and texture** → **Font outline** reads **All text**; `/am get skin.outline` → `all`. With
-`/am test`, `/am unlock` and the debug console open (`/am debug`): pick **HUD text only** → the
-console's words and the drag strips' labels lose their outline, live, and every container's text
-keeps it; pick **Off** → the containers' text loses it too, except an element whose Font flags you
-picked (SKIN-27); pick **All text** → both come back. `/am set skin.outline hud` → the dropdown reads
-HUD text only; `/am set skin.outline thick` is refused. `/reload` keeps the choice, and a second
+**Font and texture** → **Font outline** reads **HUD text only** (the default since LibKa0s v1.83.0,
+D-10; a profile that stored All text keeps it); `/am get skin.outline` → `hud`. With `/am test`,
+`/am unlock` and the debug console open (`/am debug`): the console's words and the drag strips' labels
+carry no outline and every container's text does; pick **All text** → the console and the strips gain
+it, live; pick **Off** → the containers' text loses it too, except an element whose Font flags you
+picked (SKIN-27); pick **HUD text only** → the containers' text comes back. `/am set skin.outline all` →
+the dropdown reads All text; `/am set skin.outline thick` is refused. `/reload` keeps the choice, and a second
 profile keeps its own (switch with `/am profile`). Turn **Ignore fonts** on → the dropdown grays out
 and nothing the mode did shows. **Copy to every Ka0s addon…** → another Ka0s addon's Skin tab shows
 the same Font outline. Fail: a mode that needs a `/reload`, an outline that stays under Off, or a Lua
@@ -2598,3 +2599,10 @@ face. The review of AM-01 to AM-03 extended the still-open SKIN-30 to a stacked,
 container. From AM-03: SKIN-31 (the own faces and the glow back, schema
 v15) and SKIN-32 (the strips' re-fit after a skin switch) are new. Their `Result:` lines are empty until
 the owner runs them.
+
+Open from the 2026-10-31 font pickers and skin faces run (Ka0sAddonsCommonTasks
+`docs/2026-10-31-FONT_PICKERS_AND_SKIN_FACES/`, AM-F01, LibKa0s v1.83.0): SKIN-3, SKIN-4 and SKIN-10 are
+re-opened (the Skin tab's pickers preview, the leading row reads *Skin's default*, and six skins moved
+faces), SKIN-26 is rewritten for the new default (HUD text only, D-10), and SKIN-29 and SKIN-30 stay open
+and now measure the new faces. **Fully exit and restart the client**: the new fonts are new files, and
+`/reload` does not see them.

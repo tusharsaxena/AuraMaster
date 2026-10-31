@@ -1,6 +1,6 @@
 -- tests/test_skin_outline.lua — the Font outline (LibKa0s v1.82.0, Skin minor 9; AM-01 of
 -- Ka0sAddonsCommonTasks docs/2026-10-30-SKIN_FONTS_AND_FEEDBACK, ruling D-06): stored as skin.outline
--- ("all", the default, "hud", "off"), written only through the skin write seam (NS.WriteSkinChoice's
+-- ("all", "hud", the default since LibKa0s v1.83.0 (D-10), "off"), written only through the skin write seam (NS.WriteSkinChoice's
 -- `media.outline`, the Skin tab's and another addon's copy), and applied with Skin:SetOutline at
 -- load, on every profile event and on the row's own write. LibKa0sSkinTester 7d736c2 is the
 -- reference.
@@ -14,12 +14,30 @@ local OWNER = "AuraMaster"
 
 local function lib(mocks) return mocks.LibStub("LibKa0s-Skin-1.0") end
 
-test("outline: a fresh profile stores All text, the library's default, and applies it", function()
+test("outline: a fresh profile stores HUD text only, the library's default, and applies it", function()
     local NS, mocks = fresh()
-    assertEqual(NS.db.profile.skin.outline, "all")
+    assertEqual(NS.db.profile.skin.outline, "hud")
     assertEqual(NS.db.profile.skin.outline, lib(mocks).OUTLINE_DEFAULT)
-    assertEqual(lib(mocks):GetOutline(OWNER), "all")
+    assertEqual(lib(mocks):GetOutline(OWNER), "hud")
+    assertEqual(NS.SkinOutline(), "hud")
+end)
+
+test("outline: before the profile store exists the mode is the library's default, nil-safely", function()
+    local NS, mocks = fresh()
+    local db = NS.db
+    NS.db = nil
+    local mode = NS.SkinOutline()
+    NS.db = db
+    assertEqual(mode, "hud")
+    assertEqual(mode, lib(mocks).OUTLINE_DEFAULT)
+end)
+
+test("outline: a stored All text stays what it is; the new default never migrates a choice", function()
+    local NS, mocks = fresh()
+    NS.db.profile.skin.outline = "all"
+    NS.ApplySkinOutline()
     assertEqual(NS.SkinOutline(), "all")
+    assertEqual(lib(mocks):GetOutline(OWNER), "all")
 end)
 
 test("outline: the schema row offers the library's three modes, in its order, drawn by the Skin tab", function()
@@ -73,7 +91,7 @@ end)
 test("outline: /am set refuses a mode the library does not know", function()
     local NS = fresh()
     NS.Slash:OnSlash("set skin.outline thick")
-    assertEqual(NS.db.profile.skin.outline, "all")
+    assertEqual(NS.db.profile.skin.outline, "hud")
 end)
 
 test("outline: the stored mode is applied at load", function()
@@ -87,11 +105,11 @@ end)
 
 test("outline: a profile switch applies the incoming profile's mode, and back", function()
     local NS, mocks = fresh()
-    NS.SetByPath("skin.outline", "hud")
+    NS.SetByPath("skin.outline", "off")
     NS.db:SetProfile("Alt")
-    assertEqual(lib(mocks):GetOutline(OWNER), "all", "Alt keeps the default")
+    assertEqual(lib(mocks):GetOutline(OWNER), "hud", "Alt keeps the default")
     NS.db:SetProfile("Default")
-    assertEqual(lib(mocks):GetOutline(OWNER), "hud", "Default's is back")
+    assertEqual(lib(mocks):GetOutline(OWNER), "off", "Default's is back")
 end)
 
 test("outline: without LibKa0s the apply is a quiet no-op and From skin draws OUTLINE", function()

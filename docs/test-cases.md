@@ -2055,9 +2055,11 @@ Total.
 - glow restore: the v15 body leaves absent blocks alone and answers how many blocks moved
 - glow restore: a face the payload deleted (D-03) stays on the skin, so it never draws the client fallback
 
-### test_skin_outline.lua (10)
+### test_skin_outline.lua (12)
 
-- outline: a fresh profile stores All text, the library's default, and applies it
+- outline: a fresh profile stores HUD text only, the library's default, and applies it
+- outline: before the profile store exists the mode is the library's default, nil-safely
+- outline: a stored All text stays what it is; the new default never migrates a choice
 - outline: the schema row offers the library's three modes, in its order, drawn by the Skin tab
 - outline: the write seam stores media.outline, and leaves it alone when it is nil
 - outline: another addon's copy reaches the store through WriteChoice
@@ -2677,7 +2679,7 @@ Total.
 | test_skin_hud.lua | 12 |
 | test_skin_flags.lua | 7 |
 | test_skin_glow_restore.lua | 6 |
-| test_skin_outline.lua | 10 |
+| test_skin_outline.lua | 12 |
 | test_skin_verb.lua | 6 |
 | test_skin_picker.lua | 19 |
 | test_glyphs.lua | 1 |
@@ -2709,4 +2711,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **2247** |
+| **Total** | **2249** |

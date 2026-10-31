@@ -384,12 +384,12 @@ one switch for that; the tab says so.
 
 **Skin** — LibKa0s-Options-1.0's own `O.AppearanceTab` (skinning-§3), keyed by the Appearance group and
 last on the page (General has no Keybindings tab): the skin source (Ka0s skins or EllesmereUI), the
-nine Ka0s skins, the font and texture overrides with their Reset buttons, the Font outline (all text,
-HUD text only, or off; LibKa0s v1.82.0, ruling D-06), the Scope (Ignore settings panel, Ignore fonts),
+nine Ka0s skins, the font and texture overrides with their Reset buttons, the Font outline (HUD text
+only, the default, all text, or off; LibKa0s v1.82.0, ruling D-06; default moved in v1.83.0, D-10), the Scope (Ignore settings panel, Ignore fonts),
 "Copy to every Ka0s addon..." under its "Other Ka0s addons" heading, and the note, all drawn by the
 library for the owner `core/SkinSetup.lua` registered. Its eight `skin.*` rows are skip-render schema
 rows, so the defaults, every reset and `/am set` reach them; a pick repaints at once, and a skin that
-changes the look puts the font and texture overrides back to the skin's own. Every font setting on
+changes the look puts the font and texture overrides back to the skin's default. Every font setting on
 the style and Layout pages is the library's minimum set (`FontGroup{ fromSkin, flagsFromSkin }`):
 face with "Use the skin's font", size, color with its class color, flags led by *From skin* (the
 default, which follows the Font outline) and shadow.
