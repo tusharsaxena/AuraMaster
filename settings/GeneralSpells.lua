@@ -157,7 +157,7 @@ end
 
 --- The client's name for spell `id`, lowercased for sorting, or nil while it has none. The lookup is
 --- `NS.Compat.GetSpellInfo`, deliberately the same C_Spell call the library's own entry label reads
---- (`libs/LibKa0s/OptionsIds.lua:54-62`), so a list can never sort on one name and draw
+--- (`libs/LibKa0s/OptionsIds.lua:63-71`), so a list can never sort on one name and draw
 --- another.
 local function sortName(id)
     local name = NS.Compat.GetSpellInfo(id)
@@ -173,7 +173,7 @@ end
 --- AN ID THE CLIENT CANNOT NAME HAS NO NAME TO SORT ON, and the answer is chosen rather than
 --- accidental: it sorts AFTER every named id, and ties there break on the id ascending. Two reasons.
 --- The library draws such an entry as "Unknown spell 12345" (`entryLabel`,
---- `OptionsIdList.lua:301-312`), so it carries no name for a reader to look for and belongs at
+--- `OptionsIdList.lua:325-337`), so it carries no name for a reader to look for and belongs at
 --- the end rather than wedged between two real names; and the id tiebreak makes the whole
 --- comparison a total order over the set, so the sort is deterministic whatever order `pairs`
 --- hands the ids in. A nil name never reaches the comparison — it is resolved once, up front,
@@ -181,7 +181,7 @@ end
 ---
 --- The list does NOT reorder itself a moment later. O.IdList's re-ask-and-redraw (five asks, 0.4 s
 --- a window) is the ITEM path: `loadEntry` returns at once unless the kind declares `loads = true`,
---- which only "item" does (`OptionsIdList.lua:349-354`, and the candidate rule at `OptionsIds.lua:384`). A
+--- which only "item" does (`OptionsIdList.lua:373-378`, and the candidate rule at `OptionsIds.lua:395`). A
 --- spell's name is client data with no load step, so an id that is unnamed at this draw is an id
 --- the client does not know at all, and it stays unnamed and last until a re-render — no visible
 --- settling, and nothing here to mistake for a bug.
@@ -334,8 +334,8 @@ local ID_TOOLTIP = (L["Type a spell id or a name and pick from the list, or shif
 --
 -- THE WORDS ARE NOT OURS TO CHOOSE. `C.AURA_TYPE_LABELS` is what the panel already calls these two
 -- things everywhere a player meets them: the container's own Aura type dropdown
--- (settings/Containers.lua:82), the gray summary behind every container in the picker
--- (settings/OptionsSetup.lua:439) and the `/am list` line (settings/Slash.lua:216) -- those three
+-- (settings/Containers.lua:83), the gray summary behind every container in the picker
+-- (settings/OptionsSetup.lua:454) and the `/am list` line (settings/Slash.lua:216) -- those three
 -- are its readers, and the Filters section is not among them; its category rows are labeled from the
 -- category, not from the aura type. So the marker reads the table rather than defining a second
 -- vocabulary here. Read, not copied: a translation that moves those two labels moves the markers
@@ -372,7 +372,7 @@ local ID_TOOLTIP = (L["Type a spell id or a name and pick from the list, or shif
 -- are not the subject of the row, so each is a dimmed version of its hue rather than the saturated
 -- one a status light would use. The panel already has a register for chrome of this kind -- the
 -- drag handle's gold label at (1, 0.82, 0) and its help mark at (0.7, 0.7, 0.72),
--- libs/LibKa0s/WidgetsDragHandle.lua:521 and :171 -- and these three sit inside it:
+-- libs/LibKa0s/WidgetsDragHandle.lua:221 and :215 -- and these three sit inside it:
 --
 --     Buffs    (0.45, 0.75, 0.50) = 73bf80   muted green
 --     Debuffs  (0.80, 0.45, 0.45) = cc7373   muted red
@@ -510,7 +510,7 @@ end
 -- pullout rows do, tail first, marker last. It was once justified here, on a STOCK Dropdown, and that
 -- justification rode the shared AceGUI pool into other panels' boxes (owner, 2026-09-30).
 --
--- The call is capability-guarded (the same shape as modules/Style.lua:901): the headless widget
+-- The call is capability-guarded (the same shape as modules/Style.lua:925): the headless widget
 -- kit is a data recorder with neither method, and it is not ours to extend.
 local CATEGORY_PULLOUT_WIDTH = 320
 
@@ -667,7 +667,7 @@ end
 --- The list entry's suffix for `id`, or nil: HOW MANY other categories claim it, in a few gray
 --- words the library draws INSIDE the entry's own label, after the id -- `(X) [icon] Renewing Mist
 --- (119611) (also in 1)` (owner, 2026-09-21; LibKa0s v1.49.0's `entry.suffix`, OptionsWidgets minor
---- 25, `libs/LibKa0s/OptionsIdList.lua:268-315`). It replaces the `note` this used to be: a note
+--- 25, `libs/LibKa0s/OptionsIdList.lua:289-337`). It replaces the `note` this used to be: a note
 --- is a second full-width Label that took the entry out of the two-column grid for the row it landed
 --- on, and the library's own guidance is a sentence in a `note`, a few words in a `suffix`, and the
 --- full story in the TOOLTIP -- which is where the NAMES now are (`overlapLine`).
@@ -699,18 +699,18 @@ end
 ---
 --- A host kind with `base = "spell"` is the only hook there is: `O.IdList` builds an entry's tooltip
 --- from the kind's `tooltip` and from nothing else (`entryTooltip`,
---- `libs/LibKa0s/OptionsIdList.lua:386-398`), and a based kind takes the base's `info`, `link`,
+--- `libs/LibKa0s/OptionsIdList.lua:407-419`), and a based kind takes the base's `info`, `link`,
 --- `noun`, `plural` and name color, so the list draws exactly as it did.
 ---
 --- `resolve` DELEGATES back to the library. A based kind does not inherit the client's name lookup
---- (`BASE_FIELDS`, `libs/LibKa0s/OptionsIds.lua:128`), so without this line typing "Renewing Mist" into the add box would stop
+--- (`BASE_FIELDS`, `libs/LibKa0s/OptionsIds.lua:137`), so without this line typing "Renewing Mist" into the add box would stop
 --- resolving; handing the text to `O.ResolveId("spell", ...)` is the library's own documented way
 --- back to the spellbook lookup and the shared-name check, rather than a second copy of either.
 ---
 --- AND THE SUGGESTIONS COME WITH THE BASE. The library keys its client sources off its own kind
 --- tables, but reads that table through `decorKind`, so a kind declaring `base = "spell"` wears the
 --- spell row -- the spellbook, and the rank a shared name is checked against (`suggestRow`,
---- `libs/LibKa0s/OptionsIds.lua:526-528`). A spell that is in the spellbook and on no list of
+--- `libs/LibKa0s/OptionsIds.lua:535-537`). A spell that is in the spellbook and on no list of
 --- this addon is therefore still offered as you type, as well as still resolving by name, by id or
 --- by link. Under LibKa0s v1.49.0 that lookup was keyed by the kind TABLE ITSELF, a host table
 --- joined no row, and this tab bought its tooltip at the price of its autocomplete; v1.49.1 is the
@@ -847,8 +847,8 @@ local function renderSpells(ctx)
     -- is the inconsistency the owner asked to close rather than a new one to open.
     --
     -- The 10 is a LITERAL on purpose: the library republishes `ROW_VSPACER` to hosts and deliberately
-    -- keeps `SECTION_TOP_SPACER` internal (`libs/LibKa0s/Options.lua:55-93`, and the scalar list at
-    -- `:514-520`), so `H.SECTION_TOP_SPACER` does not exist and reading it would silently be nil.
+    -- keeps `SECTION_TOP_SPACER` internal (`libs/LibKa0s/Options.lua:65-103`, and the scalar list at
+    -- `:533-542`), so `H.SECTION_TOP_SPACER` does not exist and reading it would silently be nil.
     -- Matching the number is the honest way to match the look; if the library ever republishes it,
     -- this is the line that takes it.
     local gridScroll = H.EnsureScroll(ctx)
@@ -860,8 +860,8 @@ local function renderSpells(ctx)
         -- TWO COLUMNS, FILLED ROW-MAJOR (1 2 / 3 4). Owner, 2026-09-20: one entry per row ran very
         -- long for a 60-id category -- CC Loss of Control alone is most of a screen of scrolling before the
         -- next control. `columns` is LibKa0s v1.47.0's O.IdList option (OptionsWidgets minor 24,
-        -- `libs/LibKa0s/OptionsIdList.lua:873-880`): the count is floored and clamped into
-        -- 1..ID_COLUMNS_MAX, which the library pins at 2 (`:139`), so two is the whole of what it
+        -- `libs/LibKa0s/OptionsIdList.lua:949-956`): the count is floored and clamped into
+        -- 1..ID_COLUMNS_MAX, which the library pins at 2 (`:157`), so two is the whole of what it
         -- offers rather than a taste. Each entry's relative width is divided by the count, so a
         -- pair still sums to the width one entry held alone. Row-major is the library's packing
         -- order, which is why the by-name sort above reads left-to-right then down, not down one
@@ -869,7 +869,7 @@ local function renderSpells(ctx)
         --
         -- THE TRADE WE TOOK. At more than one column the library turns word wrap OFF on an entry's
         -- label, because a name that wrapped to two lines would push the column beside it down and
-        -- break the grid (`entryNoWrap`, `:726-732`). The client then truncates the TAIL, and the
+        -- break the grid (`entryNoWrap`, `:812-818`). The client then truncates the TAIL, and the
         -- gray `(id)` and the `(also in N)` suffix sit at the tail -- so a long spell name in a
         -- narrow panel loses its suffix first, then its id, then the end of its own name. Hovering
         -- the row still names the spell AND names the categories. docs/settings-panel.md says this
@@ -877,7 +877,7 @@ local function renderSpells(ctx)
         --
         -- AND IT DOES NOT ALWAYS FIT, at the narrowest width this list is drawn at. The label is
         -- `0.43` of the content width in the icon style at two columns and an entry spends 16px of
-        -- it on its icon (`entryNameRel` and `ID_ICON_SIZE`, `libs/LibKa0s/OptionsIdList.lua:683`, `:44`), and
+        -- it on its icon (`entryNameRel` and `ID_ICON_SIZE`, `libs/LibKa0s/OptionsIdList.lua:752`, `:62`), and
         -- the floor for THIS list is the icon style's 520px content, not the default style's 584px
         -- (the table in `docs/api/Options/version-23.24.3.7.3-docs.md` of the LibKa0s repo). So the
         -- real budget is `0.43 * 520 - 16 = 207.6px` -- an earlier note here computed 235px against

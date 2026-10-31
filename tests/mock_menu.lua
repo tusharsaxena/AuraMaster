@@ -2,7 +2,7 @@
 -- launcher's right click (LibKa0s-Launcher-1.0 minor 4, launcher-§2).
 --
 -- MODELED ON THE LIBRARY'S OWN, not vendored from it. LibKa0s keeps its `tests/mock_menu.lua`
--- repo-local rather than in the kit (docs/api/Launcher/version-4-docs.md, "Testing a host"), so a
+-- repo-local rather than in the kit (LibKa0s docs/api/Launcher/version-4-docs.md, "Testing a host"), so a
 -- consumer that pins its menu entries installs its own. This one keeps the two fidelity points that
 -- file names, because both matter here:
 --   * a grayed entry is never clicked. `Click` refuses a disabled checkbox the way the client does,
