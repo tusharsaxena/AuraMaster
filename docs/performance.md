@@ -217,13 +217,15 @@ charged to the addon. Figures from bundles recorded before this change are not c
 | `restyle` | Re-dressing every button of a live engine (`Container:Restyle`) |
 | `restyleText` | A same-shape re-dress of the Text starter with ten live buttons: it must build no frame, and its Size to fit (batch 8, AS-2) must answer from the memo, measuring no string. The runner's hidden measuring string answers a readable width, as the client's does, so the loops measure the steady path rather than a failed measure that is never remembered |
 | `restyleTextGlow` | The same Text starter with the glow on, ten live buttons on its main and on each of its `C.TEXT_GLOW_TWINS` twin engines (`modules/Container_Twins.lua`): every button re-dressed per restyle, the twins' in the glow, and no frame built |
-| `visibilityPass` | The show ladder over every container (`ContainerManager.ApplyVisibility`): one `SetEnabled` per engine, the glowing starter's twins included from `restyleTextGlow` on |
+| `visibilityPass` | The show ladder over every container (`ContainerManager.ApplyVisibility`): one `SetEnabled` per engine, the glowing starter's twins included from `restyleTextGlow` on. Pinned at 8: the 4 starters and the 4 twins |
 | `unitSwap` | A target change refreshing the containers on that unit |
 | `probeOverheadOff` | The hottest bracketed path with capture off |
 | `probeOverheadOn` | The same path with capture on, for orientation; must make the same engine calls |
 | `probeAbsent` | The same bodies with no brackets at all. `probeOverheadOff` must match its engine calls and allocate no more, which is the evidence that a dormant bracket costs nothing (performance-§9) |
 | `unitAuraFiltered` | TimedSpells' unit frame, dispatched as the client does from its `RegisterUnitEvent` unit list: a `nameplate1` `UNIT_AURA` must never reach the handler, which must be registered for exactly `player,pet`; the measured loop is a player `UNIT_AURA` with its scan already queued, which must allocate 0 B/iter and arm no further timer |
 | `emptyWatchAura` | EmptyWatch's player frame: nothing registered while locked; unlocked, a player `UNIT_AURA` with the pass already queued must allocate 0 B/iter and arm no further timer |
+
+**`visibilityPass` and the probe scenarios moved from 4 and 5 calls to 8 and 9 at TG-11 (`12ac405`).** That commit left the text glow on for the later scenarios, so the fixture gained 4 twin engines. A pass still costs one `SetEnabled` per engine: with the glow off the same scenarios read 4 and 5. The cost is real for a container with the glow on, and absent for one without it.
 
 **The `compile` figure tracks the size of the spell lists wherever the categorized union is built.**
 `categorizedUnion` copies every `spells`-kind category's ids, so each list the curation adds costs
