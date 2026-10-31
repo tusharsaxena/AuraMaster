@@ -32,6 +32,7 @@ archaeology, for the same reason a skip is never a pass (`automated-tests-§4`).
 
 | Run | Commit | Tree | Version | Lint w/e | Files | Tests | Perf | NLOC | Funcs | Avg NLOC | Avg CCN | Max CCN | CCN warn | Verdict |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| [`20261101-001140`](20261101-001140/) | `b37c794` | clean | 1.1.0 | 0/0 | 201 | 2253/1/2254 | pass | 55273 | 6003 | 8.3 | 2.3 | 15 | 0 | **green** |
 | [`20261031-212339`](20261031-212339/) | `16cf393` | clean | 1.1.0 | 0/0 | 201 | 2249/1/2250 | pass | 55169 | 5992 | 8.3 | 2.3 | 15 | 0 | **green** |
 | [`20261031-202022`](20261031-202022/) | `472da8f` | clean | 1.1.0 | 0/0 | 193 | 2249/1/2250 | pass | 55057 | 5977 | 8.3 | 2.3 | 15 | 0 | **green** |
 | [`20261009-191725`](20261009-191725/) | `ad636a2` | clean | 1.0.1 → 1.1.0 | 0/0 | 174 | 2058/1/2059 | pass | 49857 | 5459 | 8.3 | 2.3 | 15 | 0 | **green** |
@@ -50,11 +51,11 @@ archaeology, for the same reason a skip is never a pass (`automated-tests-§4`).
 
 ## Test suite
 
-**2250 cases** — 2249 passed, 0 failed, 1 skipped. The generated inventory
-[`20261031-212339/test-cases.md`](20261031-212339/test-cases.md) is the authority on which cases existed at this run;
+**2254 cases** — 2253 passed, 0 failed, 1 skipped. The generated inventory
+[`20261101-001140/test-cases.md`](20261101-001140/test-cases.md) is the authority on which cases existed at this run;
 `docs/test-cases.md` is that same list at HEAD.
 
-Unchanged from the previous run at 2250 cases.
+Moved **2250 → 2254** since the previous run.
 
 **1 case(s) reported a `skip`.** A skip is counted in the total and never in `passed`, and at
 the release gate it is NOT EVALUATED rather than passed (`automated-tests-§3`).
@@ -71,29 +72,29 @@ to whoever thinks to open `.luacheckrc`.
 ## Perf
 
 **12 scenarios** from `tests/perf.lua`; the measurements are in
-[`20261031-212339/perf.json`](20261031-212339/perf.json).
+[`20261101-001140/perf.json`](20261101-001140/perf.json).
 
 | `scenario` | `iters` | `ms/iter` | `api/iter` | `bytes/iter` |
 |---|---|---|---|---|
-| `compile` | 2000 | 0.01046 | 0.0 | 4136.0 |
-| `applyPass` | 200 | 1.49434 | 30.0 | 104452.5 |
-| `restyle` | 200 | 0.83202 | 0.0 | 39125.5 |
-| `restyleText` | 200 | 0.59474 | 0.0 | 27747.6 |
-| `restyleTextGlow` | 200 | 3.45817 | 0.0 | 140643.6 |
-| `visibilityPass` | 1000 | 0.02461 | 8.0 | 384.0 |
-| `unitSwap` | 1000 | 0.00344 | 1.0 | 0.0 |
-| `probeOverheadOff` | 1000 | 0.02207 | 9.0 | 384.0 |
-| `probeOverheadOn` | 1000 | 0.02321 | 9.0 | 384.5 |
-| `probeAbsent` | 1000 | 0.01847 | 9.0 | 384.0 |
-| `unitAuraFiltered` | 1000 | 0.00022 | 0.0 | 0.0 |
-| `emptyWatchAura` | 1000 | 0.00005 | 0.0 | 0.0 |
+| `compile` | 2000 | 0.01135 | 0.0 | 4136.0 |
+| `applyPass` | 200 | 1.68022 | 30.0 | 104452.5 |
+| `restyle` | 200 | 0.82971 | 0.0 | 39125.5 |
+| `restyleText` | 200 | 0.67908 | 0.0 | 27747.6 |
+| `restyleTextGlow` | 200 | 3.50442 | 0.0 | 140643.6 |
+| `visibilityPass` | 1000 | 0.02793 | 8.0 | 384.0 |
+| `unitSwap` | 1000 | 0.00339 | 1.0 | 0.0 |
+| `probeOverheadOff` | 1000 | 0.02244 | 9.0 | 384.0 |
+| `probeOverheadOn` | 1000 | 0.03130 | 9.0 | 384.5 |
+| `probeAbsent` | 1000 | 0.01764 | 9.0 | 384.0 |
+| `unitAuraFiltered` | 1000 | 0.00020 | 0.0 | 0.0 |
+| `emptyWatchAura` | 1000 | 0.00006 | 0.0 | 0.0 |
 
 `perf` never fails a run and never blocks a commit — it is recorded, read and compared, not
 thresholded (`performance-§9`). It does gate the **tag** (`automated-tests-§3`).
 
 ## Complexity watch list
 
-Current as of [`20261031-212339`](20261031-212339/) — **this run's measurement, not its diff.** Max CCN **15** across 5992
+Current as of [`20261101-001140`](20261101-001140/) — **this run's measurement, not its diff.** Max CCN **15** across 6003
 functions, **0** of them warned on; 6 file(s) in the 1000–1500 band and 0 over the 1500 cap
 (`layout-§1`).
 
@@ -115,7 +116,7 @@ None.
 |---|---|---|---|
 | 1000–1500 (on notice) | `core/Database_Migrations.lua` | 1076 | Accepted — newly in the band at this run (935 → 1076, the skin steps through v15); 14 frozen `Database.MigrateV` step bodies with their private helpers, 50 functions, max CCN 15 (`Database.MigrateV15`, at the threshold, not over it). Steps are independent and frozen once shipped, so the size is ladder length, not tangle |
 | 1000–1500 (on notice) | `defaults/Categories.lua` | 1344 | Accepted as a tracked deviation: `docs/ARCHITECTURE.md` → `## Documented deviations`, the `layout-§1` row for this file (FX-AM-SIZE). Data, 8 functions, max CCN 4, and `tools/spell-research/` reads and rewrites this one path, so a split is not a pure move |
-| 1000–1500 (on notice) | `modules/Anchors.lua` | 1068 | Accepted — newly in the band at this run (982 → 1068, the skin seam on the unlock furniture); 71 functions, max CCN 13 (`Anchors.FlowRoot`). One concern, where a container sits and its drag handle; the join and snap code are already peeled into `modules/Anchors_Attach.lua` and `modules/Anchors_Snap.lua` |
+| 1000–1500 (on notice) | `modules/Anchors.lua` | 1078 | Accepted — newly in the band at this run (982 → 1068, the skin seam on the unlock furniture); 72 functions, max CCN 13 (`Anchors.FlowRoot`). One concern, where a container sits and its drag handle; the join and snap code are already peeled into `modules/Anchors_Attach.lua` and `modules/Anchors_Snap.lua` |
 | 1000–1500 (on notice) | `modules/Anchors_Snap.lua` | 1156 | Accepted — newly in the band at the 1.1.0 release run (a new file: the snap core for drag to attach, #22); 60 functions, max CCN 15 (`classify`, at the threshold, not over it). One concern, the pair pick and its geometry; `modules/Anchors_SnapRect.lua` already holds the rect reads, and the pick is the next seam if it grows |
 | 1000–1500 (on notice) | `modules/Container.lua` | 1020 | Accepted — newly in the band at this run (928 → 1020), just inside it; 64 functions, max CCN 15 (`ContainerClass.ApplyHang`, at the threshold, not over it). One cohesive class, a live container's anchor, handle and engine lifecycle, with the twin engines already in `modules/Container_Twins.lua` |
 | 1000–1500 (on notice) | `settings/Filters.lua` | 1018 | Accepted — newly in the band at this run (971 → 1018), just inside it; 49 functions, max CCN 11 (`viewWhich`). One settings page: its four tabs, their grids and the per-category help text, so size rather than tangle |
