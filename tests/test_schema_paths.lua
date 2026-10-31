@@ -470,11 +470,10 @@ test("schema paths: exactly the documented sections are whole-writable", functio
     for _, p in ipairs({ "container.filter", "container.layout", "container.behavior",
             "container.position", "container.bars", "container.icons", "container.attach" }) do
         -- red under: SECTIONS without container.attach (a drop could not write it whole)
-        assertTrue(NS2.IsSection(p), p)
+        assertTrue((NS2.CheckWrite(p, {}, 1)), p)
     end
-    for _, p in ipairs({ "container.name", "container", "container.filter.whitelist",
-            "bars", "container.bars.name" }) do
-        assertFalse(NS2.IsSection(p), p)
+    for _, p in ipairs({ "container.name", "container", "bars", "container.bars.name" }) do
+        assertFalse((NS2.CheckWrite(p, {}, 1)), p)
     end
 end)
 

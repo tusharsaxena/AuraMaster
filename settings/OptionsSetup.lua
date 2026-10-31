@@ -267,9 +267,6 @@ function NS.RegisterContainerSection(key, label, spec)
     NS.ContainerPageDisabledFor[key] = style and function(c) return c.style ~= style end or nil
 end
 
---- The registered section `key`, or nil. Read-only: a test seam (the suite is its only reader).
-function NS.ContainerSection(key) return sections[key] end
-
 if not lib then
     local function sayMissing() NS.Printf(L["%s, so the settings panel is unavailable."], NS.LIBKA0S_MISSING) end
     local Helpers = {}

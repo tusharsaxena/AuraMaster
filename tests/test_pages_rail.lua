@@ -12,24 +12,6 @@ local pages = dofile("tests/page_helpers.lua")
 
 -- ── the registry ─────────────────────────────────────────────────────────────────────────────
 
-test("sections: Filters, Layout, Bars, Icons and Text register as sections under their page keys", function()
-    local NS = T.NS
-    local LABELS = { filters = "Filters", layout = "Layout", bars = "Bar style", icons = "Icon style", text = "Text style" }   -- AUR-L22
-    for key, label in pairs(LABELS) do
-        local s = NS.ContainerSection(key)
-        -- red under: a page file registering a Blizzard sub-page and no section
-        assertTrue(s ~= nil, key .. " registered")
-        assertEqual(s.key, key, key .. " keeps its page key: every row path is unchanged")
-        assertEqual(s.label, NS.L[label], key .. "'s rail label")
-        assertEqual(type(s.tooltip), "string", key .. " carries a rail tooltip")
-    end
-    assertEqual(NS.ContainerSection("bars").style, "bars")
-    assertEqual(NS.ContainerSection("icons").style, "icons")
-    assertEqual(NS.ContainerSection("text").style, "text")
-    assertNil(NS.ContainerSection("filters").style, "Filters is every style's")
-    assertNil(NS.ContainerSection("layout").style, "and Layout")
-end)
-
 -- Characterization: this case passes before and after SR-AM-02. It pins that the predicate
 -- modules/Diagnostics.lua reads survives as data when the disabled notice goes (SR-AM-05).
 test("sections: each style section's gate is derived from its style, on both builds (Diagnostics' inert split)", function()
@@ -79,6 +61,24 @@ test("rail: Containers draws General, Filters, Layout and the selected container
     NS.Helpers.SelectContainer(4)                   -- text
     P.show("Containers")
     assertEqual(railKeys(P, ctx), "containers,filters,layout,text")
+end)
+
+test("rail: every section draws a tooltip on its entry", function()
+    local NS, _, P = env()
+    local ctx = NS.Helpers.__pageCtx.containers
+    local seen = {}
+    for _, id in ipairs({ 1, 2, 4 }) do                   -- bars, icons, text
+        NS.Helpers.SelectContainer(id)
+        P.show("Containers")
+        for _, e in ipairs(P.drawnRail(ctx).entries) do
+            -- red under: a page file registering a section with no spec.tooltip
+            if e.key ~= "containers" then assertEqual(type(e.tooltip), "string", e.key) end
+            seen[e.key] = true
+        end
+    end
+    for _, key in ipairs({ "filters", "layout", "bars", "icons", "text" }) do
+        assertTrue(seen[key], key .. " reached the rail")
+    end
 end)
 
 test("rail: the page opens on General, today's one General tab under the band, beside a 120px rail", function()

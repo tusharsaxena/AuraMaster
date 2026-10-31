@@ -258,7 +258,7 @@ player's own; **the schema is a live table, not a frozen one**, and each user ca
 it in schema order, `NS.UnregisterSchemaRows(pred)` takes it down again on a profile switch, and
 `NS.Schema` is rebuilt in place so the live reference the options descriptor and the CLI hold stays
 the same table — the rest of this file). It drives the panel,
-`/am list|get|set|reset` and the resets; one write seam, `NS.SetByPath` (`settings/Schema.lua:894`),
+`/am list|get|set|reset` and the resets; one write seam, `NS.SetByPath` (`settings/Schema.lua:887`),
 is where the panel, the CLI, the Defaults buttons and a drag handle all land. It resolves the
 container, validates against it, runs the row's optional `normalize` hook, writes, reacts and
 announces, in that order.
@@ -488,7 +488,7 @@ next to `Buffs` becomes `buffs (2)`). The rule covers every writer, whether that
 `/am set`, `ContainerManager.Rename` or a reset.
 
 The write seam also takes nine **whole sections**: `container.filter`, `.layout`, `.behavior`,
-`.label`, `.position`, `.bars`, `.icons`, `.text` and `.attach` (`NS.IsSection`). `NS.SetByPath("container.position", tbl, id)`
+`.label`, `.position`, `.bars`, `.icons`, `.text` and `.attach` (`SECTIONS` in `settings/Schema.lua`). `NS.SetByPath("container.position", tbl, id)`
 stores a deep copy of `tbl` in place of the section. First it backfills the copy from the template, so
 no key can be dropped. Then it runs the spell-set carve-outs under that section, and then every row
 `validate` under it. A single rejection refuses the whole write, and nothing gets stored. Once the

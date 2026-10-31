@@ -662,13 +662,6 @@ local SECTIONS = {
     ["container.text"]     = "text",
 }
 
---- Whether `path` is one of the whole-section paths (a test seam: tests/test_schema.lua).
---- Test-only today: the only readers are tests/test_schema.lua:334-335,
---- tests/test_schema_paths.lua:473,477 and tests/test_anchors_label.lua:375. Kept deliberately; not a deletion candidate.
-function NS.IsSection(path)
-    return SECTIONS[path] ~= nil
-end
-
 local function isUnder(p, section)
     return p:sub(1, #section + 1) == section .. "."
 end
