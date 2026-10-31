@@ -1,0 +1,19 @@
+{
+  "schema": 1,
+  "addon": "AuraMaster",
+  "addonVersion": "1.1.0",
+  "run": "20261031-202022",
+  "startedAt": "2026-10-31T20:20:22+05:30",
+  "durationMs": 37069,
+  "label": "pre-merge",
+  "release": null,
+  "git": { "sha": "472da8fac5ecbeffc5a5db5ae71eba4af00407d3", "branch": "feat/2026-10-31-font-pickers-skin-faces", "dirty": false },
+  "host": { "lua": "Lua 5.1.5  Copyright (C) 1994-2012 Lua.org, PUC-Rio", "luacheck": "Luacheck: 1.2.0", "lizard": "1.24.0", "timingSource": "date +%s%3N" },
+  "suites": {
+    "lint": { "status": "pass", "durationMs": 9073, "warnings": 0, "errors": 0, "files": 193, "gating": true, "gates": { "commit": true, "release": true } },
+    "tests": { "status": "pass", "durationMs": 17380, "passed": 2249, "failed": 0, "skipped": 1, "total": 2250, "gating": true, "gates": { "commit": true, "release": true } },
+    "perf": { "status": "pass", "durationMs": 2342, "scenarios": 12, "gating": false, "gates": { "commit": false, "release": true } },
+    "complexity": { "status": "pass", "durationMs": 6001, "warnings": 0, "maxCcn": 15, "nloc": 55057, "functions": 5977, "avgCcn": 2.3, "avgNloc": 8.3, "avgToken": 75.7, "warnFunRatio": 0.00, "warnNlocRatio": 0.00, "bandFiles": 14, "overCapFiles": 0, "blindFiles": 0, "crashedFiles": 0, "gating": false, "gates": { "commit": false, "release": true } }
+  },
+  "verdict": "green"
+}

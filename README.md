@@ -4,7 +4,7 @@
 ![CurseForge Version](https://img.shields.io/curseforge/v/1698345)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-2212%2F2212_passing-green)
+![Tests](https://img.shields.io/badge/Tests-2249%2F2249_passing-green)
 
 Ka0s Aura Master lets you build your own buff and debuff displays. Each one is a container. You pick
 whose auras it shows (yours, your target's, your focus's or your pet's), whether it shows buffs,
@@ -68,8 +68,15 @@ loaded. The skin repaints the handles and outlines you see while unlocked and th
 the settings pages too once you turn off **Ignore settings panel** on the Skin tab (it starts on). On
 your containers it sets the fonts and the bar textures, unless you turn off **Use the skin's font** or
 **Use the skin's texture** on a style tab to keep your own; **Ignore fonts** keeps every font as you
-picked it. Your colors, borders and sizes are never changed. The first time you log in, a small window offers the skins with
-a preview, which turns on test mode so you can see them on your containers.
+picked it. Text on the skin's font is drawn a little larger or smaller in some skins, so it is as
+wide as in Ka0s Default; the size you set is kept, and text in your own font draws at it. Each
+font's **Font flags** start on *From skin*, which follows the Skin tab's **Font outline**: HUD text
+only (the default), all text, or off. Pick a flag to keep your own. Your colors and borders are never
+changed. Choosing another skin puts the Skin tab's Font and Texture back to that skin's default. The
+first time you log in, a small window offers the skins with a preview, which turns on test mode so
+you can see them on your containers; `/am skin` opens it again whenever you want it. That window has
+the Skin tab's Font, Texture, Font outline and Ignore rows as well. Changes there are only a preview
+until you press Apply. The font and texture lists show each entry in its own face or as a swatch.
 
 Spell categories and the Overrides lists don't work everywhere, because the game only filters by
 spell in some places. On your target or focus they work for buffs while you can help that unit
@@ -193,25 +200,8 @@ The trick that lets a permanent buff draw as a full bar, and the idea of learnin
 a timer so the rest can be shown on their own, both come from [TinyBuffBars](https://github.com/mixMugz/WoW-TinyBuffBars) by mixMugz, released
 under the MIT license.
 
-The debug console uses [JetBrains Mono](https://www.jetbrains.com/lp/mono/), licensed under the SIL
-Open Font License 1.1.
-
-Ka0s Default, the skin every profile starts on, draws [Oxanium](https://github.com/sevmeyer/oxanium)
-by The Oxanium Project Authors, also SIL Open Font License 1.1.
-
-The other skins draw on seven more SIL Open Font License 1.1 faces, one family per skin:
-[Inter](https://github.com/rsms/inter) by The Inter Project Authors,
-[Nunito](https://github.com/googlefonts/nunito) by The Nunito Project Authors,
-[Vollkorn](https://github.com/FAlthausen/Vollkorn-Typeface) by The Vollkorn Project Authors,
-[Bitter](https://github.com/solmatas/BitterPro) by The Bitter Project Authors,
-[Philosopher](https://github.com/alexeiva/philosopher) by The Philosopher Project Authors,
-[Fira Sans](https://github.com/mozilla/Fira) by The Mozilla Foundation and Telefonica S.A., and
-[Atkinson Hyperlegible](https://www.brailleinstitute.org/freefont/) by the Braille Institute of
-America. Inter, Nunito, Vollkorn, Bitter and Oxanium are static weights cut from upstream's
-variable fonts.
-
 The **?** and **X** on each container's handle, the debug console's close, copy and clear buttons,
 the help marks in the settings, and the skin picker's preview and settings buttons are drawn from
 [Open Iconic](https://github.com/iconic/open-iconic) by Waybury (MIT). Only the icons the addon
-draws are shipped. The fonts and the icons are bundled inside the LibKa0s payload, with their
-license text beside them.
+draws are shipped. The icons are bundled inside the LibKa0s payload, with their license text
+beside them.

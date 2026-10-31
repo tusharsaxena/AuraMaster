@@ -19,16 +19,25 @@ local addonName, NS = ...
 --   NS.WriteSkinChoice(s,k,i,m) the write seam: every half through NS.SetByPath, the one seam
 --                           `/am set` and the panel already write through (architecture-§5); `i`, the
 --                           Scope's `{ panel, fonts }`, writes the two exceptions, and `m`, the Font and
---                           texture section's `{ font, texture }`, the two overrides ("" for false).
+--                           texture section's `{ font, texture, outline }`, the two overrides ("" for
+--                           false) and, when its `outline` is not nil, skin.outline.
 --   NS.SkinOverride()       the stored overrides: font, texture, each an LSM key or false for the
 --                           skin's own; false, false before NS:InitDB.
 --   NS.ApplySkinIgnore(p,f) moves the applied exceptions (`Skin:SetIgnore`), live; no argument
 --                           applies the stored pair, a nil half keeps that half.
 --   NS.ApplySkinOverride(f,t) moves the applied overrides (`Skin:SetOverride`), live; no argument
 --                           applies the stored pair, a nil half keeps that half, false or "" clears.
+--   NS.SkinOutline()        the stored font outline mode, "all", "hud" or "off" (LibKa0s v1.82.0, Skin
+--                           minor 9, ruling D-06); "hud" before NS:InitDB (LibKa0s v1.83.0, D-10).
+--   NS.ApplySkinOutline(m)  moves the applied font outline (`Skin:SetOutline`), live; no argument
+--                           applies the stored skin.outline.
+--   NS.SKIN_OUTLINE_OPTIONS the outline row's values: "all", "hud", "off", the library's order.
+--   NS.RunSkinVerb()        `/am skin` (ruling D-16): O.SkinVerb with NS.SkinPickerSpec(), the picker a
+--                           new profile shows whatever skin.pickerSeen says; the library-absent line
+--                           on nil, "absent".
 --   NS.ApplySkinChoice(s,k) moves the applied skin (`Skin:SetChoice`: resolve, repaint every frame
 --                           recorded for this owner, THEN fire OnLooksChanged). No argument applies the
---                           stored pair and with it the stored exceptions and overrides
+--                           stored pair and with it the stored exceptions, overrides and outline
 --                           (addon:OnInitialize, the three profile callbacks); a nil half keeps that
 --                           half (each skin row's onChange).
 --   NS.SKIN_SOURCE_OPTIONS  the source row's values, and NS.SKIN_OPTIONS the skin row's (every
@@ -85,6 +94,7 @@ local Skin = LibStub and LibStub("LibKa0s-Skin-1.0", true)
 local SOURCE_PATH, SKIN_PATH = "skin.source", "skin.skin"
 local PANEL_PATH, FONTS_PATH = "skin.ignorePanel", "skin.ignoreFonts"
 local FONT_PATH, TEXTURE_PATH = "skin.font", "skin.texture"
+local OUTLINE_PATH, OUTLINE_DEFAULT = "skin.outline", "hud"
 local DEFAULT = "ka0s"
 local BRAND = "Ka0s Aura Master"
 
@@ -181,6 +191,14 @@ function NS.PanelEscape(name)
     return NS.SkinEscape(name)
 end
 
+-- The font outline modes (LibKa0s-Skin-1.0 minor 9's OUTLINE_MODES, in its order), with the Skin
+-- tab's words. settings/Schema.lua's skin.outline row validates `/am set` against them.
+NS.SKIN_OUTLINE_OPTIONS = {
+    { value = "all", text = "All text" },
+    { value = "hud", text = "HUD text only" },
+    { value = "off", text = "Off" },
+}
+
 NS.SKIN_SOURCE_OPTIONS = {
     { value = "ka0s", text = "Ka0s skins" },
     { value = "eui",  text = "EllesmereUI" },
@@ -209,9 +227,10 @@ local function storedKey(v)
 end
 
 --- The write seam: every half through NS.SetByPath (validate, store, the [Set] line, onChange).
---- `media` is `{ font = key|false, texture = key|false }`: the Skin tab's Font and texture pick and
---- another addon's copy both hand it here, after Skin:SetOverride moved the applied pair, so each
---- row's onChange re-applies its own half as a no-op.
+--- `media` is `{ font = key|false, texture = key|false, outline = mode|nil }`: the Skin tab's Font
+--- and texture pick, its Font outline (LibKa0s v1.82.0) and another addon's copy all hand it here,
+--- after Skin:SetOverride / Skin:SetOutline moved the applied state, so each row's onChange
+--- re-applies its own half as a no-op. A nil `outline` leaves skin.outline alone.
 function NS.WriteSkinChoice(source, skin, ignore, media)
     if not (NS.db and NS.SetByPath) then return end
     if source ~= nil then NS.SetByPath(SOURCE_PATH, source) end
@@ -223,7 +242,14 @@ function NS.WriteSkinChoice(source, skin, ignore, media)
     if type(media) == "table" then
         NS.SetByPath(FONT_PATH, storedKey(media.font))
         NS.SetByPath(TEXTURE_PATH, storedKey(media.texture))
+        if media.outline ~= nil then NS.SetByPath(OUTLINE_PATH, media.outline) end
     end
+end
+
+--- The stored font outline mode, nil-safely: "hud" until the profile store exists.
+function NS.SkinOutline()
+    if not (NS.db and NS.GetSetting) then return OUTLINE_DEFAULT end
+    return NS.GetSetting(OUTLINE_PATH) or OUTLINE_DEFAULT
 end
 
 --- The stored overrides, nil-safely: each an LSM key, or false for the skin's own; false, false
@@ -294,6 +320,22 @@ function NS.SkinPickerSpec()
         page = "general", tab = "Appearance",
         onPreview = previewSkin, onClose = pickerClosed,
     }
+end
+
+--- `/am skin` (LibKa0s v1.82.0, OptionsSkinPicker minor 3's O.SkinVerb, ruling D-16): the picker a
+--- new profile shows, whatever skin.pickerSeen says. The library prints its own lines (combat on
+--- every call, queued, unavailable); without LibKa0s the stub answers nil, "absent" and this prints
+--- the library-absent line. The dispatcher refuses the verb while the addon is disabled. Answers
+--- the picker's frame, or nil and the reason.
+function NS.RunSkinVerb()
+    local O = NS.Helpers
+    local verb = O and type(O.SkinVerb) == "function" and O.SkinVerb or nil
+    local win, why
+    if verb then win, why = verb(NS.SkinPickerSpec()) else why = "absent" end
+    if win == nil and why == "absent" and NS.Printf then
+        NS.Printf(NS.L["%s is unavailable: the LibKa0s library did not load."], "/am skin")
+    end
+    return win, why
 end
 
 local function dropPickerDeferral()
@@ -377,7 +419,7 @@ if not Skin then
         "GetAccentColor", "GetPanelColor", "GetFont",
         "TitleBar", "Divider", "Footer", "Card", "Slider", "NavItem", "Drawer", "ListRow", "MenuFrame",
         "Tooltip", "Strip", "Cover", "Text", "ChartStyle", "BarStyle", "IconBorder", "GlowColor",
-        "BarTexture",
+        "BarTexture", "FontFlags", "HudFontSize",
     }) do S[name] = noop end
 
     S.Token = function(name)
@@ -403,11 +445,23 @@ if not Skin then
     S.GetFont = function() return STANDARD_TEXT_FONT end
     S.ChartStyle = function() return {} end
     S.BarStyle = function() return {} end
+    -- The two LibKa0s v1.82.0 answers SetFont reads, so neither may be a no-op's nil: a picked flag
+    -- as stored, "OUTLINE" for From skin or nothing stored (Ka0s Default's HUD outline, D-07); a
+    -- positive size as stored, else 12, never scaled (Ka0s Default is the baseline, D-09).
+    S.FontFlags = function(v)
+        if type(v) == "string" and v ~= S.FROM_SKIN then return v end
+        return "OUTLINE"
+    end
+    S.HudFontSize = function(size)
+        local n = tonumber(size)
+        return (n and n > 0) and n or 12
+    end
 
     NS.Skin = S
     function NS.ApplySkinChoice() return false, false end
     function NS.ApplySkinIgnore() return false, false end
     function NS.ApplySkinOverride() return false end
+    function NS.ApplySkinOutline() return false end
     -- Nothing to paint an AceGUI widget with: stock AceGUI, as the client draws it.
     function NS.SkinPaintAce() return false end
     function NS.SkinPaintAceTree() return 0 end
@@ -469,8 +523,18 @@ function NS.ApplySkinOverride(font, texture)
     return Skin:SetOverride(addonName, font, texture)
 end
 
---- No argument applies the stored pair AND the stored exceptions and overrides (addon:OnInitialize,
---- the profile callbacks); a nil half keeps that half and leaves the rest alone (each skin row).
+--- The applied font outline (LibKa0s-Skin-1.0 minor 9, ruling D-06): Skin:SetOutline, live, which
+--- repaints and fires OnLooksChanged on a change. No argument applies the stored mode; the library
+--- reads an unknown one as its default, "hud". A copy without SetOutline moves nothing.
+function NS.ApplySkinOutline(mode)
+    if type(Skin.SetOutline) ~= "function" then return false end
+    if mode == nil then mode = NS.SkinOutline() end
+    return Skin:SetOutline(addonName, mode)
+end
+
+--- No argument applies the stored pair AND the stored exceptions, overrides and outline
+--- (addon:OnInitialize, the profile callbacks); a nil half keeps that half and leaves the rest alone
+--- (each skin row).
 function NS.ApplySkinChoice(source, skin)
     local whole = source == nil and skin == nil
     if whole then source, skin = NS.SkinChoice() end
@@ -479,6 +543,7 @@ function NS.ApplySkinChoice(source, skin)
     if whole then
         NS.ApplySkinIgnore()
         NS.ApplySkinOverride()
+        NS.ApplySkinOutline()
     end
     return changed, reload
 end

@@ -14,6 +14,7 @@ local fresh = dofile("tests/fresh_env.lua")
 
 local PX = 6   -- what one character measures in the stand-in measurer
 local RESERVE2 = 94   -- the widget's reserve on both sides of the label, the close mark included
+local SLACK = 2       -- the px the widget adds to a measured label (LibKa0s v1.82.0, DRAG_HANDLE.FIT_SLACK)
 
 --- The text a label draws, its color escapes removed (the client does not measure them either).
 local function plain(s)
@@ -62,7 +63,7 @@ test("width: a long name on a wide Bars container gives a strip exactly as wide 
     local rec, inst, cfg = stripOf(NS, mocks, 1, LONG)
     local w = NS.Style.ElementSize(cfg)
     assertEqual(cfg.style, "bars")
-    -- red under: handle:ApplyWidth(w), which takes the natural width (#LONG * 6 + 94 = 322 > 220)
+    -- red under: handle:ApplyWidth(w), which takes the natural width (#LONG * 6 + 2 + 94 = 324 > 220)
     assertEqual(rec.width, w, "the strip is the bar's width")
     local text = plain(rec.text)
     assertTrue(#text * PX <= w - RESERVE2, "the label fits between the marks: " .. text)
@@ -118,9 +119,9 @@ test("width: a one-icon container too narrow for the marks and a readable label 
     local w = NS.Style.ElementSize(cfg)
     assertEqual(cfg.style, "icons")
     assertTrue(w < RESERVE2 + 40, "one icon is narrower than the marks and a label")
-    assertEqual(rec.width, #LONG * PX + RESERVE2, "the name and the marks, as before")
+    assertEqual(rec.width, #LONG * PX + SLACK + RESERVE2, "the name and the marks, as before")
     assertEqual(plain(rec.text), LONG, "nothing shortened")
-    assertEqual(inst.stripOverhang, #LONG * PX + RESERVE2 - w, "the overhang an ahead follower clears")
+    assertEqual(inst.stripOverhang, #LONG * PX + SLACK + RESERVE2 - w, "the overhang an ahead follower clears")
 end)
 
 test("width: the label is worked out once per name and width, not on every pass", function()
@@ -136,4 +137,66 @@ test("width: the label is worked out once per name and width, not on every pass"
     NS.Anchors.UpdateHandle(inst, true)
     NS.Anchors.UpdateHandle(inst, true)
     assertEqual(calls, 0, "an unchanged name and width measure nothing")
+end)
+
+-- ── the re-fit after a skin repaint (LibKa0s v1.82.0 WidgetsDragHandle minor 8's onRefit, D-12) ──
+--
+-- The widget re-fits a strip it fitted after every repaint of its skin; a capped AuraMaster strip is
+-- sized here (SetWidth, the name shortened), so the widget calls the onRefit this addon hands it
+-- instead, and that re-derives the label in the new face and re-places the strip.
+
+test("width: the strip hands the widget an onRefit, and a skin repaint re-shortens a capped label in the new face", function()
+    local NS, mocks = fresh()
+    local rec, inst, cfg = stripOf(NS, mocks, 1, LONG)
+    local w = NS.Style.ElementSize(cfg)
+    -- red under: BuildHandle passing no onRefit (the capped strip is never re-fitted, D-12)
+    assertTrue(type(inst.handle.__onRefit) == "function", "onRefit handed to the widget")
+    local before = plain(rec.text)
+    -- A wider face: every character now measures PX + 3. The widget reads it on the next measure.
+    PX = 9
+    rec.width, rec.text = nil, nil
+    NS.SetByPath("skin.skin", "obsidian")
+    PX = 6
+    -- red under: an onRefit that does not drop the cached label (the old face's text, now too wide)
+    assertTrue(rec.text ~= nil, "the label was re-derived after the repaint")
+    local after = plain(rec.text)
+    assertTrue(#after < #before, "shorter in the wider face: " .. before .. " -> " .. after)
+    assertTrue(#after * 9 <= w - RESERVE2, "and it fits between the marks: " .. after)
+    assertEqual(rec.width, w, "still capped at the bar's width")
+end)
+
+test("width: the cached label is keyed by the strip's face as well as the name and the room", function()
+    local NS, mocks = fresh()
+    local _, inst = stripOf(NS, mocks, 1, LONG)
+    local calls = 0
+    local lib = mocks.LibStub("LibKa0s-Widgets-1.0")
+    local measurer = lib.__DragHandleMeasurer
+    lib.__DragHandleMeasurer = function(...)
+        calls = calls + 1
+        return measurer(...)
+    end
+    NS.Anchors.UpdateHandle(inst, true)
+    assertEqual(calls, 0, "same face: nothing measured")
+    -- red under: a cache keyed by the name and the room alone (a face change keeps the old text)
+    rawset(inst.handle.label, "GetFont", function() return "Interface\\Other.ttf", 12, "OUTLINE" end)
+    NS.Anchors.UpdateHandle(inst, true)
+    assertTrue(calls > 0, "a new face measures again")
+end)
+
+test("width: a hidden strip's repaint re-places nothing, and an onRefit under lockdown only relabels", function()
+    local NS, mocks = fresh()
+    local rec, inst, cfg = stripOf(NS, mocks, 1, LONG)
+    rec.width = nil
+    inst.handle.__onRefit(inst.handle)
+    assertEqual(rec.width, NS.Style.ElementSize(cfg), "a shown strip is re-placed at its cap")
+    mocks.__lockdown = true
+    rec.width = nil
+    inst.handle.__onRefit(inst.handle)
+    mocks.__lockdown = false
+    -- red under: an onRefit placing the strip in combat (layout work beside an aura engine's parent)
+    assertEqual(rec.width, nil, "no SetWidth under lockdown")
+    NS.Anchors.UpdateHandle(inst, false)
+    rec.width, rec.text = nil, nil
+    inst.handle.__onRefit(inst.handle)
+    assertEqual(rec.width, nil, "a hidden strip is not placed")
 end)

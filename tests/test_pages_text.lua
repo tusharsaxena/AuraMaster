@@ -73,6 +73,24 @@ test("text page: the five tabs are drawn in order, Pandemic before Animation (B2
         table.concat({ L["General"], L["Font"], L["Icon"], L["Pandemic"], L["Animation"] }, ","))
 end)
 
+-- Where each landmark of the General tab sits in `ws`: the template box, the cheat sheet's first
+-- line, the Placement rows, Time format, Preview and the Template reference heading (AM-05: lifted
+-- out of the case below so it stays under CCN 15).
+local function generalPositions(NS, ws, box)
+    local L = NS.L
+    local at = {}
+    for i, w in ipairs(ws) do
+        if w == box then at.box = i end
+        if w.type == "Label" and w.text and w.text:find("$spellname$", 1, true) and not at.sheet then at.sheet = i end
+        if w.labelText == NS.FindSchemaRow(P_ .. "justifyH").label then at.justify = i end
+        if w.labelText == L["Time format"] then at.format = i end
+        if w.labelText == L["Preview"] then at.preview = i end
+        if w.labelText == NS.FindSchemaRow(P_ .. "y").label then at.y = i end
+        if w.type == "Heading" and w.text == L["Template reference"] then at.reference = i end
+    end
+    return at
+end
+
 test("text page: General holds Size, the Template dropdown, box, Time format and Preview, then Placement, then the cheat sheet (AUR-L17, AUR-L19)", function()
     local NS, m, P, ws = textPage()
     local L = NS.L
@@ -98,16 +116,7 @@ test("text page: General holds Size, the Template dropdown, box, Time format and
     -- red under: the cheat sheet without the bracketed-duration example (feedback #5)
     assertTrue(P.hasText(ws, "[ ($remainingpercent$%)] hides with the time"))
     -- The cheat sheet is the tab's last subsection, Template reference, under every control.
-    local at = {}
-    for i, w in ipairs(ws) do
-        if w == box then at.box = i end
-        if w.type == "Label" and w.text and w.text:find("$spellname$", 1, true) and not at.sheet then at.sheet = i end
-        if w.labelText == NS.FindSchemaRow(P_ .. "justifyH").label then at.justify = i end
-        if w.labelText == L["Time format"] then at.format = i end
-        if w.labelText == L["Preview"] then at.preview = i end
-        if w.labelText == NS.FindSchemaRow(P_ .. "y").label then at.y = i end
-        if w.type == "Heading" and w.text == L["Template reference"] then at.reference = i end
-    end
+    local at = generalPositions(NS, ws, box)
     -- red under: Time format left on Font, or drawn outside the template block
     assertTrue(at.box < at.format and at.format < at.preview, "box, then Time format, then Preview")
     -- red under: the cheat sheet back between the template and Placement

@@ -238,80 +238,18 @@ function Preview.Extent(container, count)
     return extent
 end
 
---- THE TEST MARKER (preview-mode, anti-pattern #97): while test mode is on, a display drawing
---- placeholder data says so on the display, in visible localized text, in every layout it draws
---- them in. Unlocked, the drag strip carries it (Anchors' handleParts: the name, then an orange
---- TEST); but the strip shows only while unlocked, and a LOCKED test mode drew its placeholders
---- with nothing on them saying they were test data (it draws no outline either: Container's
---- ApplyOutline). So whenever a container previews and its strip is not up, this marker is: the
---- same orange TEST, in a plain frame of ours over the placeholder block (the preview extent),
---- inset at the corner the first placeholder starts from. It takes no mouse, so the hover and
---- every click still reach what they reached, and it moves nothing: a follower hangs from the
---- extent, never from this. Test mode never runs in combat, and the frame is our own besides.
-local MARKER_INSET = 2
--- The MARKER band (core/Constants.lua's layers table): above every region a placeholder dresses and
--- the unlocked outline, below the strip's HANDLE band.
-local MARKER_LEVEL = C.LAYERS.LEVEL.MARKER
-
---- The TEST tag the strip label (modules/Anchors.lua's handleParts) and the marker share: the
---- localized TEST in the skin's `sem.warn` (Ka0s Default's orange, ff8000; decision D5), read at
---- each call so a skin switch reaches the next label and Preview.Reskin's marker repaint.
+--- The TEST tag the unlocked drag strip's label carries after the name (modules/Anchors.lua's
+--- handleParts): the localized TEST in the skin's `sem.warn` (Ka0s Default's orange, ff8000;
+--- decision D5), read at each call so a skin switch reaches the next label. A locked test mode draws
+--- no TEST over the placeholders: the owner removed that marker (D-14 of Ka0sAddonsCommonTasks
+--- docs/2026-10-30-SKIN_FONTS_AND_FEEDBACK, image-35, where it covered a bar's name), and the
+--- standard's test-mode marker is a MAY for a HUD display (preview-mode, WS-01).
 function Preview.TestTag()
     return (NS.SkinEscape("sem.warn") or "") .. NS.L["TEST"] .. "|r"
 end
 
---- The marker's text: the TEST tag alone.
-function Preview.MarkerText()
-    return Preview.TestTag()
-end
-
---- Show the marker over `container`'s placeholder block, or hide it (`on` false). Built on the first
---- show; placed on every show, since the block's start corner follows the layout's growth.
-function Preview.ApplyMarker(container, on)
-    local m = container.testMarker
-    local cfg = on and container:Cfg()
-    local block = container.previewExtent
-    if not (cfg and block) then
-        if m then m:Hide() end
-        return
-    end
-    local wasShown = m and m:IsShown()
-    if not m then
-        m = CreateFrame("Frame", nil, container.anchor)
-        m:EnableMouse(false)
-        local fs = m:CreateFontString(nil, "OVERLAY")
-        local font = NS.CONTAINER_TEMPLATE.label.font
-        NS.Style.ApplyFont(fs, font, font)
-        fs:SetWordWrap(false)
-        container.testMarker, container.testMarkerText = m, fs
-    end
-    local fs = container.testMarkerText
-    m:SetFrameLevel(NS.Secrets.NumberOr(container.anchor:GetFrameLevel(), 0) + MARKER_LEVEL)
-    m:ClearAllPoints()
-    m:SetAllPoints(block)
-    local corner = Preview.Offset(cfg, 1)
-    local x = corner:find("LEFT", 1, true) and MARKER_INSET or -MARKER_INSET
-    local y = corner:find("TOP", 1, true) and -MARKER_INSET or MARKER_INSET
-    fs:ClearAllPoints()
-    fs:SetPoint(corner, m, corner, x, y)
-    if not wasShown then fs:SetText(Preview.MarkerText()) end
-    m:Show()
-end
-
---- Redraw every shown marker's text after a skin switch (its TEST tag is markup read from the skin).
-function Preview.Reskin()
-    local CM = NS.ContainerManager
-    for _, container in pairs(CM and CM.instances or {}) do
-        local m = container.testMarker
-        if m and m:IsShown() then container.testMarkerText:SetText(Preview.MarkerText()) end
-    end
-end
-
-NS.Skin.OnLooksChanged(function() Preview.Reskin() end)
-
---- Remove one container's placeholders, of every style, and their marker.
+--- Remove one container's placeholders, of every style.
 function Preview.Hide(container)
     if container.previewPools then releaseAll(container.previewPools) end
     container.previewShown = false
-    if container.testMarker then container.testMarker:Hide() end
 end

@@ -1043,15 +1043,34 @@ function Style.PreviewTime(fs, aura, s, sdef)
     end
 end
 
+--- The client flag string a stored Font flags value draws: a legacy key through FLAG_MAP, a picked
+--- flag as stored, and From skin ("@skin", the default since LibKa0s v1.82.0, ruling D-07) through
+--- the skin's S.FontFlags, which reads the Skin tab's Font outline (the HUD's `hud.outline`). Nothing
+--- stored reads the template's value.
+local function drawnFlags(stored, default)
+    local v = stored
+    if v == nil then v = default end
+    local S = NS.Skin
+    if v == nil or v == (S and S.FROM_SKIN or "@skin") then
+        return S and S.FontFlags and S.FontFlags(v) or "OUTLINE"
+    end
+    return FLAG_MAP[v] or v
+end
+
 --- The font file, size and client flag string font block `t` draws in (`tdef` the template's block,
 --- which the size falls back to): the one resolution Style.ApplyFont sets, the measures (TimeTextWidth,
 --- WidestLine, PiecePadding) measure in and modules/FontPrimer.lua primes, so the primed font is the
 --- one the text uses. The face is the skin's `hud.font` while `fontFromSkin` is on (Style.SkinKey;
 --- a missing companion reads the template's); the file is LibSharedMedia's, or the built-in fallback
---- when the name no longer resolves.
+--- when the name no longer resolves. While the face is the skin's the size is S.HudFontSize's, the
+--- stored size scaled by the skin's HUD size over Ka0s Default's (LibKa0s v1.82.0, ruling D-09), so
+--- the text is as wide in every skin; the stored value is never rewritten, and its own face draws the
+--- stored size. The flags are drawnFlags'.
 function Style.FontKey(t, tdef)
-    local size = tonumber(t.fontSize) or tdef.fontSize
-    local flags = FLAG_MAP[t.fontFlags or "NONE"] or (t.fontFlags or "")
-    local key = Style.SkinKey("hud.font", t.font, Style.OrTemplate(t.fontFromSkin, tdef.fontFromSkin))
-    return Style.Fetch("font", key, C.FALLBACK_FONT), size, flags
+    local stored = tonumber(t.fontSize) or tdef.fontSize
+    local fromSkin = Style.OrTemplate(t.fontFromSkin, tdef.fontFromSkin) == true
+    local S = NS.Skin
+    local size = (S and S.HudFontSize) and S.HudFontSize(stored, fromSkin) or stored
+    local key = Style.SkinKey("hud.font", t.font, fromSkin)
+    return Style.Fetch("font", key, C.FALLBACK_FONT), size, drawnFlags(t.fontFlags, tdef.fontFlags)
 end

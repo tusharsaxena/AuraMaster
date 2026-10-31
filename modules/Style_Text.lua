@@ -82,9 +82,11 @@ local EDGES = {
     { "edgeRight", "TOPRIGHT", "BOTTOMRIGHT", "SetWidth" },
 }
 
---- The line's font size, which is a stacked row's height (and, per-row, the icon's "line height").
+--- The line's font size, which is a stacked row's height (and, per-row, the icon's "line height"): the
+--- size it draws at (Style.FontKey, so the skin's HUD size scale reaches the row pitch, StackHeight and
+--- Size to fit as it reaches the glyphs), never the stored one.
 local function fontSize(s)
-    return number((s.font or D.font).fontSize, D.font.fontSize)
+    return select(2, Style.FontKey(s.font or D.font, D.font))
 end
 
 -- ---------------------------------------------------------------------------
@@ -861,7 +863,10 @@ end
 --- Everything the fitted size depends on, as one string.
 local function fitKey(s, auraType)
     local f = s.font or D.font
-    return table.concat({ (Style.FontKey(f, D.font)), tostring(f.fontSize), tostring(f.fontFlags),
+    -- The resolved file, size and flags (From skin and the HUD size scale read the skin), so a skin
+    -- or Font outline change re-fits.
+    local path, size, flags = Style.FontKey(f, D.font)
+    return table.concat({ path, tostring(size), flags,
         tostring(s.template), tostring(s.justifyH), tostring(s.justifyV), tostring(s.timeFormat),
         tostring(s.icon), tostring(s.iconSize), tostring(s.iconGap), tostring(s.x), tostring(s.anim),
         tostring(s.animBounce), tostring(auraType) }, "|")

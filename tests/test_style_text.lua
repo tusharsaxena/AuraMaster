@@ -184,7 +184,7 @@ test("text style: the padding is measured once per font, size and flags (item 8)
     NS.Style.PiecePadding({ fontSize = 12 }, tdef)
     -- red under: PiecePadding measuring on every dress
     assertEqual(fs:__count("SetText"), measured, "cached")
-    NS.Style.PiecePadding({ fontSize = 12, fontFlags = "OUTLINE" }, tdef)
+    NS.Style.PiecePadding({ fontSize = 12, fontFlags = "THICKOUTLINE" }, tdef)
     assertTrue(fs:__count("SetText") > measured, "new flags measure again")
 end)
 

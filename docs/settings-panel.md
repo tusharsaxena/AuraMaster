@@ -1,7 +1,7 @@
 # Settings panel
 
 How the options are organized, what each control does, and which schema key it writes. The rows
-below are derived from the live schema (`NS.Schema`, 292 rows on a profile with no categories of the
+below are derived from the live schema (`NS.Schema`, 293 rows on a profile with no categories of the
 player's own — each of those adds one more `container.filter.categories.<key>` row at runtime) by
 loading the addon headlessly and
 walking it page → group → subgroup; a page, tab or row listed here that the schema does not produce
@@ -134,7 +134,7 @@ with its closed box justified LEFT, in a widget pool of its own, so its justific
 or arrives from, another panel's stock Dropdown. A row that names a control (`EditBox`, `LSM30_*`) keeps it.
 Every `container.` path is relative to the selected container (`docs/schema.md`).
 
-### General (25 rows, `settings/General.lua`, `settings/GeneralSpells.lua`, `settings/GeneralUserCategories.lua`, `settings/GeneralDispel.lua`)
+### General (26 rows, `settings/General.lua`, `settings/GeneralSpells.lua`, `settings/GeneralUserCategories.lua`, `settings/GeneralDispel.lua`)
 
 **Master controls** — composed by the library's `MasterControls` from one declaration
 (options-ui-§15), in canonical order, two per line:
@@ -384,10 +384,17 @@ one switch for that; the tab says so.
 
 **Skin** — LibKa0s-Options-1.0's own `O.AppearanceTab` (skinning-§3), keyed by the Appearance group and
 last on the page (General has no Keybindings tab): the skin source (Ka0s skins or EllesmereUI), the
-nine Ka0s skins, the font and texture overrides, the Scope (Ignore settings panel, Ignore fonts),
-"Copy to every Ka0s addon..." and the note, all drawn by the library for the owner
-`core/SkinSetup.lua` registered. Its seven `skin.*` rows are skip-render schema rows, so the defaults,
-every reset and `/am set` reach them; a pick repaints at once.
+nine Ka0s skins, the font and texture overrides with their Reset buttons (each a `Ka0sMedia_*` picker,
+LibKa0s v1.83.0, that draws every entry in its own face or beside its swatch, led by "Skin's default
+(<key>)"), the Font outline (HUD text
+only, the default, all text, or off; LibKa0s v1.82.0, ruling D-06; default moved in v1.83.0, D-10), the Scope (Ignore settings panel, Ignore fonts),
+"Copy to every Ka0s addon..." under its "Other Ka0s addons" heading, and the note, all drawn by the
+library for the owner `core/SkinSetup.lua` registered. Its eight `skin.*` rows are skip-render schema
+rows, so the defaults, every reset and `/am set` reach them; a pick repaints at once, and a skin that
+changes the look puts the font and texture overrides back to the skin's default. Every font setting on
+the style and Layout pages is the library's minimum set (`FontGroup{ fromSkin, flagsFromSkin }`):
+face with "Use the skin's font", size, color with its class color, flags led by *From skin* (the
+default, which follows the Font outline) and shadow.
 
 **Dispel colors** — a lead-in ("One color per dispel type, shared by every container:") and three
 bullets (2026-09-20, owner: a list rather than a wall of prose — the shape the Filters priority block

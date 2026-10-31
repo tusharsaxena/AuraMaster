@@ -347,6 +347,9 @@ if not lib then
     -- second value, "queued": there is no queue), and HideSkinPicker is a no-op.
     Helpers.SkinPicker = function() return nil end
     Helpers.HideSkinPicker = function() end
+    -- `/am skin`'s act (LibKa0s v1.82.0, OptionsSkinPicker minor 3's O.SkinVerb, ruling D-16):
+    -- without the library nothing opens, and the reason is "absent", which NS.RunSkinVerb words.
+    Helpers.SkinVerb = function() return nil, "absent" end
     -- The gap RenderWarnings leaves under its orange lines: a zero placeholder, never a plausible
     -- figure, since nothing is drawn without the library (RenderWarnings is a no-op above).
     Helpers.WARNINGS_GAP = 0

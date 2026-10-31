@@ -260,7 +260,7 @@ local function timeBoxWidth(b, area)
     local t = b.time or {}
     local width = Style.TimeTextWidth(t, D.bars.time, b.timeFormat)
     if not width then
-        local size = tonumber(t.fontSize) or D.bars.time.fontSize
+        local size = select(2, Style.FontKey(t, D.bars.time))
         width = size * (C.TIME_TEXT_EMS[b.timeFormat] or C.TIME_TEXT_EMS.long)
     end
     return math.min(area, math.ceil(width) + math.abs(tonumber(t.x) or 0))

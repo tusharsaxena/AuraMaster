@@ -128,7 +128,7 @@ Total.
 - v3: MigrateV3 returns the number of containers it walked
 - v3: a container skipped for an unrecognized auraType is not counted in the walked total, and logs its own line
 - v3: the whitelist lift never sweeps a category the aura type does not have
-- v12: the v12 step is on the ladder, below v13's skin reset
+- v12: the v12 step is on the ladder, below v13's skin reset, v14's Font flags and v15's own faces
 - v3: RunMigrations migrates every stored profile, the inactive one included
 - v4: a HELPFUL container with the toggle on ends up with Uncategorized hidden, and the dead key cleared
 - v4: a HARMFUL container with the toggle on ends up with Uncategorized (debuffs) hidden, and the dead key cleared
@@ -1119,7 +1119,7 @@ Total.
 - collapse: Build pins the engine one unit behind its anchor's start corner and pads the start sides
 - collapse: a live update re-sends the same start padding (no rebuild)
 
-### test_anchors_width.lua (6)
+### test_anchors_width.lua (9)
 
 - width: a long name on a wide Bars container gives a strip exactly as wide as its bar, the name shortened with ...
 - width: in test mode the name is shortened, never the TEST tag, which stays after it
@@ -1127,6 +1127,9 @@ Total.
 - width: the full name stays the strip's tooltip title
 - width: a one-icon container too narrow for the marks and a readable label keeps its natural width
 - width: the label is worked out once per name and width, not on every pass
+- width: the strip hands the widget an onRefit, and a skin repaint re-shortens a capped label in the new face
+- width: the cached label is keyed by the strip's face as well as the name and the room
+- width: a hidden strip's repaint re-places nothing, and an onRefit under lockdown only relabels
 
 ### test_anchors_snap.lua (31)
 
@@ -1618,9 +1621,9 @@ Total.
 - preview: the debuff set covers every dispel type plus one with none, and runs out, stacks and lasts forever (TD-2)
 - preview: a container showing only Weapon enchants previews the enchant set, one per slot (SEP-4)
 - preview: a Text container's Size to fit measures the enchant names too, so an enchant placeholder fits its box
-- preview: a LOCKED test mode marks every previewing container with a TEST text over its placeholders (preview-mode marker)
-- preview: an UNLOCKED test mode leaves the TEST tag to the strip, and the marker returns when it locks again
-- preview: a parked container hides its TEST marker with its placeholders
+- preview: a LOCKED test mode draws its placeholders with no TEST marker over them
+- preview: an UNLOCKED test mode keeps the TEST tag on the strip, and locking again adds no marker
+- preview: a parked container hides its placeholders
 
 ### test_render_coverage.lua (3)
 
@@ -1657,12 +1660,11 @@ Total.
 - picker: a new pick waits for the buttons to be released again before it can pick
 - framepicker: PickFor refuses in combat, refuses with no container, and makes exactly the two attach writes
 
-### test_layers.lua (9)
+### test_layers.lua (8)
 
 - layers: one table, NS.Constants.LAYERS, with the standard's tier keys and this addon's bands
 - layers: no literal strata and no absolute level in core, modules or settings (frame-layering-§3, §5)
 - layers: an unlocked container's chrome sits at its named bands over the anchor; the strip ignores the container's alpha
-- layers: the TEST marker sits at the marker band, under the strip's band
 - layers: a bar's fill, spark, borders and texts each sit at their own band over the element (AUR-Z02)
 - layers: an icon's swipe, border, dispel edge and texts each sit at their own band over the element (AUR-Z02)
 - layers: the frame picker's overlay is in the cursor tier
@@ -1694,7 +1696,7 @@ Total.
 
 - slash: every command is a positional {name, desc, fn} triple
 - slash: the reserved verbs are all present
-- slash: NS.COMMANDS carries 25 verbs, profile right after resetall, redraw right after forgettimed, diagnostics right after debug, and no diag verb
+- slash: NS.COMMANDS carries 26 verbs, skin right after config, profile right after resetall, redraw right after forgettimed, diagnostics right after debug, and no diag verb
 - slash: /am new creates the described container and selects it
 - slash: /am new text creates a text-style container
 - slash: /am new gives the new container the Fill its style suits (B5)
@@ -1981,7 +1983,7 @@ Total.
 - general → dispel colors: a swatch writes its own type's color and re-applies every container
 - general → dispel colors: the page's Defaults restores them
 
-### test_skinsetup.lua (18)
+### test_skinsetup.lua (19)
 
 - Skin seam: the owner is the folder name, and NS.Skin is its facade
 - Skin seam: the read answers Ka0s Default before the profile store exists
@@ -1990,6 +1992,7 @@ Total.
 - Skin seam: SkinEscape rounds a token back to the byte the markup wrote
 - Skin seam: PanelEscape is the skin's escape, and Ka0s Default's while the settings panel is ignored
 - Skin seam: every settings page colors its markup through PanelEscape, never the skin's escape
+- Skin seam: the cast-id suggestion tag follows the settings panel's Ignore, not the skin alone
 - Skin seam: the skin keys default to Ka0s Default, as skip-render rows of General's Appearance group
 - Skin seam: the skin row's values are every registered skin, in the library's order
 - Skin seam: /am set refuses a skin that is not registered and applies one that is
@@ -2008,7 +2011,7 @@ Total.
 - every allow-list entry carries its reason
 - the gate is falsifiable: a planted literal of each shape is reported
 
-### test_skin_surfaces.lua (8)
+### test_skin_surfaces.lua (7)
 
 - skin surfaces: a skin switch repaints each strip's own edge in the new skin's handle.edge
 - skin surfaces: the strip label's attached gray and TEST tag are the new skin's
@@ -2017,7 +2020,6 @@ Total.
 - skin surfaces: the drag-to-attach mark's colors are the skin's, refreshed in place on a switch
 - skin surfaces: the frame picker's outline, name and hint are the skin's
 - skin surfaces: the frame picker's OnUpdate reads no token: the hints are built by its paint
-- skin surfaces: a shown TEST marker is retold in the new skin's sem.warn
 
 ### test_skin_hud.lua (12)
 
@@ -2033,6 +2035,49 @@ Total.
 - skin hud: v13 puts every stored pick back on the skin in every profile, keeping each pick
 - skin hud: v13 runs once, so a player's later pick survives the next load
 - skin hud: the v13 body seeds each companion before ResetToSkin, and sets them itself without it
+
+### test_skin_flags.lua (7)
+
+- skin flags: every font block's setting is the minimum set, its flags led by From skin
+- skin flags: /am set takes From skin and a picked flag, and the HUD draws each
+- skin flags: v14 moves the old default OUTLINE onto From skin in every profile, keeping each pick
+- skin flags: v14 runs once, so an OUTLINE the player picks afterwards stays OUTLINE
+- skin flags: the v14 body leaves an absent block and an absent flag alone
+- skin flags: a block on the skin's face stored at 12 draws at 13 under Obsidian; its own face, and Ignore fonts, at 12
+- skin flags: a stacked Text block on the skin's face lays its rows out at the scaled size under Obsidian
+
+### test_skin_glow_restore.lua (6)
+
+- glow restore: v15 takes the owner's Ka0s Kait picks off the skin's face in every profile
+- glow restore: the Text container then draws Kait at its stored size, and the glow follows it
+- glow restore: the skin's own HUD face is the profile's skin's, not Ka0s Default's
+- glow restore: v15 runs once, so the companion ticked again afterwards stays on
+- glow restore: the v15 body leaves absent blocks alone and answers how many blocks moved
+- glow restore: a face the payload deleted (D-03) stays on the skin, so it never draws the client fallback
+
+### test_skin_outline.lua (12)
+
+- outline: a fresh profile stores HUD text only, the library's default, and applies it
+- outline: before the profile store exists the mode is the library's default, nil-safely
+- outline: a stored All text stays what it is; the new default never migrates a choice
+- outline: the schema row offers the library's three modes, in its order, drawn by the Skin tab
+- outline: the write seam stores media.outline, and leaves it alone when it is nil
+- outline: another addon's copy reaches the store through WriteChoice
+- outline: the row's write applies the mode live, and the HUD's From skin flags follow it
+- outline: /am set refuses a mode the library does not know
+- outline: the stored mode is applied at load
+- outline: a profile switch applies the incoming profile's mode, and back
+- outline: without LibKa0s the apply is a quiet no-op and From skin draws OUTLINE
+- outline: a Font outline change re-measures Size to fit on a From skin block
+
+### test_skin_verb.lua (6)
+
+- skin verb: the row sits right after config, with the library's help words
+- skin verb: /am skin shows the picker on a profile that has closed it
+- skin verb: NS.RunSkinVerb hands O.SkinVerb this addon's first-run spec
+- skin verb: in combat every call prints the library's gray line and shows nothing
+- skin verb: refused while the addon is disabled, and no picker shows
+- skin verb: without LibKa0s the verb prints the library-absent line
 
 ### test_skin_picker.lua (19)
 
@@ -2055,6 +2100,10 @@ Total.
 - Skin widgets: the release chain runs the host's work and the skin's restore
 - Skin widgets: the Profiles page paints the dialog's tree after every open
 - Skin widgets: without the library nothing is painted, and release work takes the callback
+
+### test_glyphs.lua (1)
+
+- glyphs: display strings use only characters every shipped skin face draws
 
 ### test_pages_general_categories.lua (32)
 
@@ -2456,7 +2505,7 @@ Total.
 
 - prose: no authored file carries a British spelling from localization-§5's published list
 - prose: the gate carries localization-§5's two lists whole, and nothing of its own
-- prose: the exclusions this repository declared suppressed 11 of 225 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (11): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, docs/spell-research/2026-09-24-logs/CORRECTIONS.md, docs/spell-research/2026-09-24-logs/CURRENT_CATEGORIES.md, docs/spell-research/2026-09-24-logs/DECISIONS.md, docs/spell-research/2026-09-24-logs/FLAGS.md, docs/spell-research/2026-09-24-logs/PROPOSED_ADDITIONS.md, docs/spell-research/2026-09-24-logs/REVIEW.md, docs/spell-research/2026-09-24-logs/SOURCES.md, docs/spell-research/2026-09-24-logs/dictionary/AURAS.md
+- prose: the exclusions this repository declared suppressed 11 of 229 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (11): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, docs/spell-research/2026-09-24-logs/CORRECTIONS.md, docs/spell-research/2026-09-24-logs/CURRENT_CATEGORIES.md, docs/spell-research/2026-09-24-logs/DECISIONS.md, docs/spell-research/2026-09-24-logs/FLAGS.md, docs/spell-research/2026-09-24-logs/PROPOSED_ADDITIONS.md, docs/spell-research/2026-09-24-logs/REVIEW.md, docs/spell-research/2026-09-24-logs/SOURCES.md, docs/spell-research/2026-09-24-logs/dictionary/AURAS.md
 - prose: no path this repository narrows the gate by is loaded by a TOC
 - prose: every path this repository narrows the gate by is one .pkgmeta keeps out of the zip
 - prose self-test: the carve-out suppresses the named generated folder, and only it
@@ -2593,7 +2642,7 @@ Total.
 | test_anchors_points.lua | 18 |
 | test_anchors_steady.lua | 8 |
 | test_anchors_collapse.lua | 9 |
-| test_anchors_width.lua | 6 |
+| test_anchors_width.lua | 9 |
 | test_anchors_snap.lua | 31 |
 | test_anchors_drag.lua | 21 |
 | test_anchors_attach.lua | 22 |
@@ -2612,7 +2661,7 @@ Total.
 | test_render_coverage.lua | 3 |
 | test_blizzardframes.lua | 8 |
 | test_framepicker.lua | 15 |
-| test_layers.lua | 9 |
+| test_layers.lua | 8 |
 | test_disabled.lua | 18 |
 | test_slash.lua | 35 |
 | test_slash_verbs.lua | 55 |
@@ -2624,11 +2673,16 @@ Total.
 | test_optionssetup.lua | 21 |
 | test_options_descriptor.lua | 19 |
 | test_pages_general.lua | 36 |
-| test_skinsetup.lua | 18 |
+| test_skinsetup.lua | 19 |
 | test_skin_literals.lua | 3 |
-| test_skin_surfaces.lua | 8 |
+| test_skin_surfaces.lua | 7 |
 | test_skin_hud.lua | 12 |
+| test_skin_flags.lua | 7 |
+| test_skin_glow_restore.lua | 6 |
+| test_skin_outline.lua | 12 |
+| test_skin_verb.lua | 6 |
 | test_skin_picker.lua | 19 |
+| test_glyphs.lua | 1 |
 | test_pages_general_categories.lua | 32 |
 | test_pages_containers.lua | 35 |
 | test_pages_filters.lua | 53 |
@@ -2657,4 +2711,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **2215** |
+| **Total** | **2249** |

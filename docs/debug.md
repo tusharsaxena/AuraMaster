@@ -16,7 +16,7 @@ It turns logging on when it is off, writes a one-shot report of what the addon s
 into the debug console, opens the console, and prints one chat line with the line count. Press **Copy** in the console and paste
 the text into a bug report.
 
-- `diagnostics` is its own verb in `NS.COMMANDS` (25 verbs) and a sub-verb of `debug`. Both answer
+- `diagnostics` is its own verb in `NS.COMMANDS` (26 verbs) and a sub-verb of `debug`. Both answer
   while the addon is disabled: `diagnostics` is named in `liveVerbs()` next to `debug`.
 - It turns logging on for the session first, through the one seam (`NS.DebugLog:SetEnabled(true)`),
   when logging is off, so the `[Debug] logging enabled` line, its chat line and the `[Init]` summary

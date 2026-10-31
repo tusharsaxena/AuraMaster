@@ -29,7 +29,7 @@ otherwise (`docs/profiles.md`).
 | `containers` | map | `{}` | `[id] = container` (the template below); written at runtime only by `modules/ContainerManager.lua`, and on load by `Database.PrepareProfile` (repair and first-run seeding) |
 | `containerOrder` | array | `{}` | Container ids in display order |
 | `nextContainerId` | number | `1` | The next id to hand out |
-| `skin` | table | `{ source = "ka0s", skin = "ka0s", ignorePanel = true, ignoreFonts = false, font = "", texture = "", pickerSeen = false }` | The skin this addon wears (skinning-§2: per addon, per profile), drawn by General → Skin and written only through `NS.WriteSkinChoice` (`core/SkinSetup.lua`), which writes each half through `NS.SetByPath`. `source` is `ka0s` or `eui` (EllesmereUI); `skin` is a registered Ka0s skin key; `ignorePanel` and `ignoreFonts` are the Scope's two exceptions; `font` and `texture` are LibSharedMedia keys over the skin's own (`""` keeps the skin's); `pickerSeen` is the first-run skin picker's memory. Seven skip-render rows of the General page's Appearance group, so `/am get\|set skin.*` reaches each |
+| `skin` | table | `{ source = "ka0s", skin = "ka0s", ignorePanel = true, ignoreFonts = false, font = "", texture = "", outline = "hud", pickerSeen = false }` | The skin this addon wears (skinning-§2: per addon, per profile), drawn by General → Skin and written only through `NS.WriteSkinChoice` (`core/SkinSetup.lua`), which writes each half through `NS.SetByPath`. `source` is `ka0s` or `eui` (EllesmereUI); `skin` is a registered Ka0s skin key; `ignorePanel` and `ignoreFonts` are the Scope's two exceptions; `font` and `texture` are LibSharedMedia keys over the skin's default (`""` keeps the skin's); `outline` is the Skin tab's Font outline, `all`, `hud` (the default since LibKa0s v1.83.0, D-10; a stored choice stays) or `off` (LibKa0s v1.82.0, ruling D-06), applied with `Skin:SetOutline` at load, on every profile event and on its row's write; `pickerSeen` is the first-run skin picker's memory. Eight skip-render rows of the General page's Appearance group, so `/am get\|set skin.*` reaches each |
 | `seeded` | bool | `false` | The starter containers have been created once; deleting them all does not bring them back |
 
 ### `global` — account-wide
@@ -43,7 +43,7 @@ otherwise (`docs/profiles.md`).
 ## The container template
 
 A container is created at runtime, so it cannot be an AceDB default. `NS.CONTAINER_TEMPLATE`
-(`defaults/Profile.lua:155`) is deep-copied for every new container (`Database.NewContainerData`), and
+(`defaults/Profile.lua:157`) is deep-copied for every new container (`Database.NewContainerData`), and
 every stored container is backfilled from it on load (`Database.PrepareProfile`, below). Each stored
 container also carries its own `id`. The render path reads its fallbacks from the template too: a leaf
 that is missing or garbage when a container is drawn falls back to the template's value for that same
@@ -116,7 +116,7 @@ backfills it onto every stored container, so it needs no schema step.
 | `label.show` | `false` | draw the container's `name` where its drag strip sits, locked or unlocked; while unlocked the strip moves out past it (D6) |
 | `label.justifyH` | `"AUTO"` | `"LEFT"`, `"CENTER"` or `"RIGHT"` once picked (batch 9 LJ-1). `"AUTO"` (`C.LABEL_JUSTIFY_AUTO`) is no pick: the style's default, Bars and Text `CENTER`, Icons `LEFT` (`RIGHT` when growing left, mirrored for a follower on its parent's behind side, whose label lines up with the edge that faces the parent), resolved by `Anchors.LabelJustify` and never written. A value, not nil, so the row's path resolves against the template (architecture-§5); an unknown stored value reads as `"AUTO"` |
 | `label.x` / `.y` | `0` / `0` | pixels, a nudge from that spot (-200 to 200) |
-| `label.font` | the six font leaves, `"Friz Quadrata TT"` 12, gold `{ r=1, g=0.82, b=0, a=1 }`, `"OUTLINE"`, no shadow, no class color, and `fontFromSkin` `true` | the strip's own look; a class color follows the container's unit; while `fontFromSkin` is on the label draws in the skin's `hud.font` and the stored face is kept, not read (X3) |
+| `label.font` | the six font leaves, `"Friz Quadrata TT"` 12, gold `{ r=1, g=0.82, b=0, a=1 }`, `"@skin"` (From skin), no shadow, no class color, and `fontFromSkin` `true` | the strip's own look; a class color follows the container's unit; while `fontFromSkin` is on the label draws in the skin's `hud.font` and the stored face is kept, not read (X3) |
 
 ### `bars`
 
@@ -147,7 +147,7 @@ backfills it onto every stored container, so it needs no schema step.
 | `expiringThreshold` | `5` | `expiringColor` | `{ 1, 0.25, 0.25, 1 }` |
 | `pandemic` | `false` | `pandemicColor` | `{ 1, 0.85, 0.10, 1 }` |
 
-The profile's `dispelColors` defaults (`C.DEFAULT_DISPEL_COLORS`, `core/Constants.lua:306`): Magic `{0.20, 0.60, 1.00}`, Curse `{0.60, 0.00, 1.00}`, Disease
+The profile's `dispelColors` defaults (`C.DEFAULT_DISPEL_COLORS`, `core/Constants.lua:305`): Magic `{0.20, 0.60, 1.00}`, Curse `{0.60, 0.00, 1.00}`, Disease
 `{0.60, 0.40, 0.00}`, Poison `{0.00, 0.60, 0.00}`,
 Bleed `{0.80, 0.10, 0.10}`, all alpha 1. An aura
 with no dispel type takes the surface's own color instead (feedback #7); schema v5 clears a stored
@@ -203,15 +203,20 @@ schema-version bump.
 Every Bars and Icons text element (`bars.name`, `bars.time`, `bars.stacks`, `icons.time`,
 `icons.stacks`) has the six canonical font leaves (options-ui-§16) and then its placement: `show`
 (`true`), `font` (`"Friz Quadrata TT"`), `fontSize`, `fontColor` (`{ 1, 1, 1, 1 }`),
-`useClassColorFont` (`false`), `fontFlags` (`"OUTLINE"`), `fontShadow` (`false`), then the face's
+`useClassColorFont` (`false`), `fontFlags` (`"@skin"`, From skin: the Skin tab's Font outline decides,
+LibKa0s v1.82.0, ruling D-07; any other value is the client flag drawn as picked), `fontShadow`
+(`false`), then the face's
 "Use the skin's font" companion `fontFromSkin` (`true`: the face is the skin's `hud.font` and `font` is
 kept, not read; X3, DECISIONS D2 of the skinning rollout), `point`, `x`, `y`, `justify` (the Text
 style's `text.font` carries the six font leaves and `fontFromSkin` only). The borders, sizes, flags
-and every color take no companion (D1, D3, D4): they stay the player's under every skin.
+and every color take no companion (D1, D3, D4): they stay the player's under every skin. While
+`fontFromSkin` is on the text draws at `S.HudFontSize(fontSize)`, the stored size scaled by the skin's
+HUD size over Ka0s Default's (D-09), so it is as wide in every skin; the stored `fontSize` is never
+rewritten, and with the companion off, or under Ignore fonts, it draws as stored.
 
 ## The starter containers
 
-`NS.STARTER_CONTAINERS` (`defaults/Profile.lua:322`) seeds a brand-new profile once, each spec merged
+`NS.STARTER_CONTAINERS` (`defaults/Profile.lua:324`) seeds a brand-new profile once, each spec merged
 over the template:
 
 | Name | Unit | Type | Style | Differs from the template |
@@ -241,8 +246,8 @@ and its one writer (the library's `P.Save`, behind `/am perf finish`) are named 
 
 ## Settings schema, registries and named non-setting state
 
-`NS.Schema` holds **292** rows across seven pages: General 25 (its Dispel colors tab's five, its
-Spell categories tab's three `enchantSlots` rows and its Skin tab's seven `skin.*` rows among them), Containers 5 (`N-1`, batch 7 — split
+`NS.Schema` holds **293** rows across seven pages: General 26 (its Dispel colors tab's five, its
+Spell categories tab's three `enchantSlots` rows and its Skin tab's eight `skin.*` rows among them), Containers 5 (`N-1`, batch 7 — split
 out of General's own tab), Filters 57, Layout 39 (the Label tab's eleven among them, batch 8 and B9 LJ-1; batch 9's Side row replaced by batch 11's two anchor-point rows),
 Bars 77, Icons 44 and Text 45 (its `autoSize` among them; the nine "Use the skin's ..." companions,
 `barTextureFromSkin`, `bgTextureFromSkin` and every font block's `fontFromSkin`, are spread across
@@ -818,7 +823,7 @@ The stamp follows savedvariables-§1 as ruled at WowAddonStandards v2.65.0:
   (`tests/test_database_categories.lua`).
 - **Schema v13** (`Database.MigrateV13`, `core/Database_Migrations.lua`, the skinning rollout's AM-03,
   the owner's ruling O2) runs over **every** stored profile and logs one `[Migrate] v13 profile '<name>'`
-  line each; `Database.CurrentSchemaVersion()` answers `13`. It puts the HUD back on the skin, once, for
+  line each. It puts the HUD back on the skin, once, for
   every player: on every stored container, each "Use the skin's ..." companion of
   `Database.SKIN_PICKS` (the two bar textures, `bars.barTextureFromSkin` and `bars.bgTextureFromSkin`, and
   the `fontFromSkin` of every font block: `bars.name`, `bars.time`, `bars.stacks`, `icons.time`,
@@ -828,6 +833,26 @@ The stamp follows savedvariables-§1 as ruled at WowAddonStandards v2.65.0:
   (DECISIONS D1), sizes, flags and colors are untouched, and an absent block is not created. The
   template defaults every companion to `true` (X3), so a new container follows the skin too. The stamp
   makes it once: a companion the player turns off afterwards stays off (`tests/test_skin_hud.lua`).
+- **Schema v14** (`Database.MigrateV14`, `core/Database_Migrations.lua`, AM-01 of the 2026-10-30 skin
+  fonts run, LibKa0s v1.82.0, ruling D-07 and its Addendum 01) runs over **every** stored profile and
+  logs one `[Migrate] v14 profile '<name>'` line each.
+  On every stored container, a `fontFlags` of `Database.FLAG_BLOCKS` (`bars.name`, `bars.time`,
+  `bars.stacks`, `icons.time`, `icons.stacks`, `text.font`, `label.font`) equal to the old default
+  `"OUTLINE"` becomes `"@skin"`, From skin, which draws OUTLINE under the Font outline's default, so
+  nothing changes on screen. Any other flag counts as the player's pick and stays; an absent block or
+  flag is left alone. The stamp makes it once: an OUTLINE picked afterwards stays
+  (`tests/test_skin_flags.lua`).
+- **Schema v15** (`Database.MigrateV15`, `core/Database_Migrations.lua`, AM-03 of the same run, the
+  owner's ruling D-15) runs over **every** stored profile and logs one `[Migrate] v15 profile '<name>'`
+  line each; `Database.CurrentSchemaVersion()` answers `15`. v13 put every text block on the skin's
+  face, so the owner's Text containers stopped drawing their stored Ka0s Kait and the glow behind the
+  text, tuned against it, smeared (image-36, image-37; the glow code never changed). On every stored
+  container, a block of `Database.FLAG_BLOCKS` whose `fontFromSkin` is on and whose stored `font` is
+  a face of the player's own, neither the profile's skin's own `hud.font` (resolved through
+  `Skin:ResolveSkin`, `Database.DEFAULT_HUD_FACE`, Ka0s Prototype, without the library) nor the
+  template's `"Friz Quadrata TT"`, which no player picked, has `fontFromSkin` turned off, so the stored
+  face draws again at its stored size. The face, the glow, sizes, flags and colors are untouched. The
+  stamp makes it once: a companion ticked again afterwards stays on (`tests/test_skin_glow_restore.lua`).
 - **Migration lesson (batch 10 F7): a step already pushed is never extended again.** A step's
   version stamp is written once per account, so a half added to a step after any build carrying it
   has been pushed never reaches an install that already ran that build: the owner's v9 install

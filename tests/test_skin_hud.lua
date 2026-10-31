@@ -28,12 +28,14 @@ local function walk(t, path)
     return parent, leaf
 end
 
---- Every path under `t` whose value is the FROM_SKIN sentinel, joined.
+--- Every path under `t` whose value is the FROM_SKIN sentinel, joined. A Font flags leaf is not a
+--- pick: "@skin" is its From skin value (LibKa0s v1.82.0, ruling D-07), a CLI value the setting
+--- offers, so it is skipped.
 local function sentinels(t, prefix, out)
     out = out or {}
     for k, v in pairs(t) do
         local p = (prefix or "") .. tostring(k)
-        if v == FROM_SKIN then out[#out + 1] = p end
+        if v == FROM_SKIN and k ~= "fontFlags" then out[#out + 1] = p end
         if type(v) == "table" then sentinels(v, p .. ".", out) end
     end
     return out
@@ -280,19 +282,23 @@ end)
 
 --- A profile as a v12 account stored it: no companion anywhere, a pick of the player's own on each
 --- followed key, one block absent (container 2 has no icons block) and one companion an early build
---- stored off (container 1's bar time text).
+--- stored off (container 1's bar time text). The font picks are Ka0s Default's own HUD face, Ka0s
+--- Prototype: a load climbs past v13 to v15, which turns the companion back off on a face that is not
+--- the skin's (D-15, tests/test_skin_glow_restore.lua), so only a skin-face pick shows v13's reset
+--- surviving the whole ladder. The MigrateV13 body case below calls the step alone.
 local function v12profile()
+    local PROTO = "Ka0s Prototype"
     return {
         seeded = true, nextContainerId = 3, containerOrder = { 1, 2 },
         containers = {
             [1] = { name = "Bars", unit = "player", auraType = "HELPFUL", style = "bars",
-                label = { font = { font = "Morpheus" } },
+                label = { font = { font = PROTO } },
                 bars = { barTexture = "Smooth", bgTexture = "Minimalist", borderStyle = "Solid",
-                    name = { font = "Arial Narrow" }, time = { font = "Arial Narrow", fontFromSkin = false } },
-                icons = { time = { font = "Skurri" }, stacks = { font = "Skurri" } },
-                text = { font = { font = "Morpheus" } } },
+                    name = { font = PROTO }, time = { font = PROTO, fontFromSkin = false } },
+                icons = { time = { font = PROTO }, stacks = { font = PROTO } },
+                text = { font = { font = PROTO } } },
             [2] = { name = "Lines", unit = "player", auraType = "HELPFUL", style = "text",
-                text = { font = { font = "Skurri" } } },
+                text = { font = { font = PROTO } } },
         },
     }
 end
@@ -300,7 +306,7 @@ end
 test("skin hud: v13 puts every stored pick back on the skin in every profile, keeping each pick", function()
     local NS = fresh({ savedVariables = { profiles = { Default = v12profile(), Raid = v12profile() },
         global = { schemaVersion = 12 } } })
-    assertEqual(NS.db.global.schemaVersion, 13)
+    assertEqual(NS.db.global.schemaVersion, NS.SCHEMA_VERSION)
     -- Raid is never activated in this load, so the load backfill never reaches it: what it holds is
     -- the step's alone.
     for _, name in ipairs({ "Raid", "Default" }) do
@@ -317,8 +323,8 @@ test("skin hud: v13 puts every stored pick back on the skin in every profile, ke
         assertEqual(#sentinels(cs), 0, name .. ": " .. table.concat(sentinels(cs), ", "))
         assertEqual(c1.bars.barTexture, "Smooth", name .. ": the pick is kept")
         assertEqual(c1.bars.bgTexture, "Minimalist", name)
-        assertEqual(c1.bars.name.font, "Arial Narrow", name)
-        assertEqual(c1.label.font.font, "Morpheus", name)
+        assertEqual(c1.bars.name.font, "Ka0s Prototype", name)
+        assertEqual(c1.label.font.font, "Ka0s Prototype", name)
         assertEqual(c1.bars.borderStyle, "Solid", name .. ": the border is not reset (D1)")
         assertNil(c1.bars.borderStyleFromSkin, name .. ": and gets no companion")
     end
@@ -331,7 +337,7 @@ test("skin hud: v13 runs once, so a player's later pick survives the next load",
     assertTrue(NS.SetByPath("container.bars.name.fontFromSkin", false, 1), "the panel's write")
     local sv = _G.AuraMasterDB
     local NS2 = fresh({ savedVariables = sv })
-    assertEqual(NS2.db.global.schemaVersion, 13)
+    assertEqual(NS2.db.global.schemaVersion, NS2.SCHEMA_VERSION)
     local c = NS2.Database.FindContainer(1)
     -- red under: a step that re-runs each load (an unstamped reset), or a backfill that forces true
     assertEqual(c.bars.barTextureFromSkin, false, "the texture pick kept")

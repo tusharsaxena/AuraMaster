@@ -2,7 +2,7 @@ local _, NS = ...
 
 -- core/Database.lua — AceDB, the schema migration runner, and the pure data helpers over the
 -- container registry. Called from core/AuraMaster.lua's OnInitialize and headlessly by the harness.
--- The step bodies the ladder runs (Database.MigrateV2 .. MigrateV13) are core/Database_Migrations.lua.
+-- The step bodies the ladder runs (Database.MigrateV2 .. MigrateV15) are core/Database_Migrations.lua.
 --
 -- NOTHING HERE TOUCHES A FRAME. The registry's CRUD with its messages and live instances is
 -- modules/ContainerManager.lua; this file only knows what a container looks like on disk.
@@ -446,6 +446,34 @@ local SCHEMA_STEPS = {
             local n = Database.MigrateV13(p, resetToSkin)
             if NS.DebugLog then
                 NS.DebugLog.DebugAtEnable("Migrate", "v13 profile '%s': fonts and bar textures put back on the skin on %s container(s)", name, n)
+            end
+        end)
+    end },
+    { to = 14, apply = function(db)
+        -- Font flags onto From skin (LibKa0s v1.82.0, ruling D-07): Database.MigrateV14.
+        eachProfile(db, function(p, name)
+            local n = Database.MigrateV14(p)
+            if NS.DebugLog then
+                NS.DebugLog.DebugAtEnable("Migrate", "v14 profile '%s': Font flags moved to From skin on %s text block(s)", name, n)
+            end
+        end)
+    end },
+    { to = 15, apply = function(db)
+        -- The player's own faces back off the skin (ruling D-15): Database.MigrateV15, against each
+        -- profile's own skin's HUD face, resolved through the library (Ka0s Default's without it).
+        local Skin = LibStub and LibStub("LibKa0s-Skin-1.0", true)
+        local function hudFace(p)
+            local key = type(p.skin) == "table" and p.skin.skin or nil
+            if Skin and type(Skin.ResolveSkin) == "function" then
+                local tokens = Skin:ResolveSkin(key or "ka0s")
+                if type(tokens) == "table" and type(tokens["hud.font"]) == "string" then return tokens["hud.font"] end
+            end
+            return Database.DEFAULT_HUD_FACE
+        end
+        eachProfile(db, function(p, name)
+            local n = Database.MigrateV15(p, hudFace(p))
+            if NS.DebugLog then
+                NS.DebugLog.DebugAtEnable("Migrate", "v15 profile '%s': Use the skin's font turned off on %s text block(s) with a face of their own", name, n)
             end
         end)
     end },

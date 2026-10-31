@@ -81,7 +81,7 @@ test("label: the template carries label = { show = false, justifyH = AUTO, x = 0
     -- red under: a template with no justify leaf (the row's path would not resolve, architecture-5)
     assertEqual(lb.justifyH, NS.Constants.LABEL_JUSTIFY_AUTO, "no pick: the style default (B9 E7)")
     local f = lb.font
-    assertEqual(f.font, "Friz Quadrata TT"); assertEqual(f.fontSize, 12); assertEqual(f.fontFlags, "OUTLINE")
+    assertEqual(f.font, "Friz Quadrata TT"); assertEqual(f.fontSize, 12); assertEqual(f.fontFlags, "@skin", "From skin (LibKa0s v1.82.0, D-07)")
     assertFalse(f.fontShadow); assertFalse(f.useClassColorFont)
     assertEqual(f.fontColor.r, 1); assertEqual(f.fontColor.g, 0.82); assertEqual(f.fontColor.b, 0); assertEqual(f.fontColor.a, 1)
     for _, c in ipairs(NS.Database.GetContainers and NS.Database.GetContainers() or {}) do

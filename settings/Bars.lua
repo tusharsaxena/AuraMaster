@@ -125,6 +125,7 @@ local function textRows(leaf, group, extras)
     })
     NS.RegisterSchemaRows(H.FontGroup({
         prefix = prefix, page = PAGE, group = group, subgroup = L["Font"], classColor = UNIT, fromSkin = true,
+        flagsFromSkin = true,
     }))
     local rows = {
         { path = prefix .. "justify", page = PAGE, group = group, subgroup = L["Placement"], type = "string",
