@@ -401,7 +401,7 @@ test("schema paths: every list row draws through the addon's dropdown; a named c
         if row.values ~= nil then
             lists = lists + 1
             local ok = row.dialogControl == want or (type(row.dialogControl) == "string"
-                and row.dialogControl:find("^LSM30_") ~= nil)
+                and row.dialogControl:find("^Ka0sMedia_") ~= nil)
             -- red under: RegisterSchemaRows leaving a list row on the stock, shared-pool Dropdown
             assertTrue(ok, tostring(row.path) .. " draws through " .. tostring(row.dialogControl))
         end
