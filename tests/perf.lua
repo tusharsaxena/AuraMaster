@@ -194,12 +194,20 @@ end
 
 -- 5. The visibility pass every combat transition runs.
 --    One SetEnabled per engine: each container's, and each twin of the glowing text starter (4c).
+--    Pinned, not read back from CM.instances, so a stray twin or a second SetEnabled cannot raise the
+--    figure and its expectation together. 8 = the 4 starters + C.TEXT_GLOW_TWINS (4) of the text
+--    starter, whose glow 4c leaves on. It was 4 before TG-11 (12ac405) turned that glow on here: with
+--    the glow off this pass still measures 4 and the probe scenarios 5, so the rise is the fixture
+--    gaining engines, and each pass per engine is unchanged.
+local VISIBILITY_ENGINES = 8
 local engines = containers
 for _, inst in pairs(CM.instances) do engines = engines + NS.ContainerTwins.Count(inst) end
+assert_(engines == VISIBILITY_ENGINES,
+    ("visibilityPass: the fixture holds %d engines, pinned at %d"):format(engines, VISIBILITY_ENGINES))
 local visibility = measure("visibilityPass", 1000, function() CM.ApplyVisibility() end)
-assert_(visibility.apiPerIter == engines,
+assert_(visibility.apiPerIter == VISIBILITY_ENGINES,
     ("visibilityPass makes %.1f engine calls, expected %d (one SetEnabled per engine)")
-        :format(visibility.apiPerIter, engines))
+        :format(visibility.apiPerIter, VISIBILITY_ENGINES))
 
 -- 6. A target swap: the one path ordinary combat activity drives.
 local targets = 0
@@ -220,6 +228,9 @@ local absent = measure("probeAbsent", 1000, function()
     for _, inst in pairs(CM.instances) do inst:ApplyVisibility() end
     CM.RefreshUnit("target")
 end)
+-- The visibility pass plus the target swap, pinned the same way.
+assert_(off.apiPerIter == VISIBILITY_ENGINES + targets,
+    ("probeOverheadOff makes %.1f engine calls, expected %d"):format(off.apiPerIter, VISIBILITY_ENGINES + targets))
 assert_(off.apiPerIter == on.apiPerIter, "the probe changed how many engine calls a pass makes")
 assert_(off.apiPerIter == absent.apiPerIter,
     ("a dormant bracket changed the engine calls: %.1f vs %.1f with no bracket")

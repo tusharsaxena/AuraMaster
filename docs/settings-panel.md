@@ -131,7 +131,7 @@ Types: `bool` checkbox, `number` slider, `string` dropdown (or edit box where no
 Every dropdown the addon draws, schema row or hand-built, is the addon's own AceGUI type
 (`C.DROPDOWN_WIDGET`, `NS.RegisterDropdownWidget` in `settings/OptionsSetup.lua`): the stock Dropdown
 with its closed box justified LEFT, in a widget pool of its own, so its justification never reaches,
-or arrives from, another panel's stock Dropdown. A row that names a control (`EditBox`, `LSM30_*`) keeps it.
+or arrives from, another panel's stock Dropdown. A row that names a control (`EditBox`, `Ka0sMedia_*`) keeps it.
 Every `container.` path is relative to the selected container (`docs/schema.md`).
 
 ### General (26 rows, `settings/General.lua`, `settings/GeneralSpells.lua`, `settings/GeneralUserCategories.lua`, `settings/GeneralDispel.lua`)
@@ -869,15 +869,15 @@ by `/am set` alike.
 The **Pandemic** tab (smoke batch 2, B2-1: once *Running out* on the Animation tab; labels only, paths
 unchanged) is dimmed (the Pandemic-window time color swatch excepted, since a swatch is read for its alpha even
 unused) when the template carries no duration token, with a note saying so ("The pandemic window needs a
-duration token, such as $remainingduration$, in the template."); on the Animation tab the Loop rows are dimmed
-per the chosen effect (`animSpeed`/`animIntensity` unless Pulse or Blink, `animBounce` unless
-Bounce).
+duration token, such as $remainingduration$, in the template."); on the Animation tab the Loop rows are
+drawn per the chosen effect through `shownWhen` (options-ui-§22): `animSpeed` for Pulse, Blink or Bounce,
+`animIntensity` for Pulse or Blink, `animBounce` for Bounce.
 
-The **Icon** tab's rows draw nothing while **Icon position** is None (the default): the Text style
-draws the icon and its border only on Left or Right. So every row but Icon position is dimmed then
-(`noIcon`), the icon border's swatch excepted for the same alpha reason, under a gray note, "Set Icon
-position to show the icon." (smoke batch 2, item 6). Icon position redraws the page on a change, so
-the note and the dimming follow it at once.
+The **Icon** tab's rows draw nothing while **Icon position** is Hidden (the default): the Text style
+draws the icon and its border only on Left or Right. So every row but Icon position is dropped then
+(`shownWhen`, options-ui-§22, LibKa0s#67), under a gray note, "Set Icon position to show the icon."
+(smoke batch 2, item 6). The library watches Icon position and re-renders the page on a change, so the
+rows and the note follow it. The Bar style's Icon tab drops the same rows the same way, with no note.
 
 **Glow** (Font, text glow, owner 2026-10-15; glyph glow addendum 2026-10-16) sits under the Font
 subgroup, before Dispel type. `glow` (Glow behind the text, off by default) draws a

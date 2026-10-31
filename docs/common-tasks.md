@@ -1,7 +1,7 @@
 # Common tasks
 
 Recipes for the changes this addon actually gets. Each ends with the green gate: `lua tests/run.lua`
-and `luacheck .` at 0/0 (testing-§4), and test-first — the failing case before the code.
+and `~/.claude/dev-copilot/bin/ka0s-bounded luacheck .` at 0/0 (testing-§4), and test-first — the failing case before the code.
 
 ## Add a setting to a container page
 
@@ -176,7 +176,7 @@ from, and mixing them silently is how a diff stops meaning anything.
 * **`--emit` and `--emit-cast-aura` both demand `--date`** and will not invent one from the clock.
   The date is pasted into the generated file as provenance and has to name a run that exists.
 * Python 3.8+ and the standard library only. These are not the Lua suites, so the bounded runner is
-  not involved; `lua tests/run.lua` and `luacheck .` still gate any file the run changes.
+  not involved; `lua tests/run.lua` and `~/.claude/dev-copilot/bin/ka0s-bounded luacheck .` still gate any file the run changes.
 
 ## Add a slash verb
 
@@ -274,8 +274,8 @@ add a case proving a real bracket reaches it; add the row to `docs/performance.m
 
 ## Add a section to the Containers page
 
-1. Add the section key to `VALID_PAGES` in `settings/Schema.lua`: a section key is a page key, and
-   every row's `page` names it.
+1. Add the section key to `VALID_PAGES` in `settings/Schema_Validate.lua`: a section key is a
+   page key, and every row's `page` names it.
 2. Create `settings/<Section>.lua` registering its rows and calling
    `NS.RegisterContainerSection(key, L["Title"], spec)`, with `spec.tooltip` (the rail entry's
    tooltip) and, for a section that applies to one style only, `spec.style`. An addon-wide page is

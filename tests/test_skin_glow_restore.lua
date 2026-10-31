@@ -3,7 +3,7 @@
 --
 -- The skinning rollout's v13 turned "Use the skin's font" on for every stored text block (O2), so the
 -- owner's three Text containers stopped drawing their stored Ka0s Kait and drew the skin's HUD face,
--- and the glow behind the text, tuned against Kait, smeared (inputs/inventory/H_AURAMASTER.md 9b: the
+-- and the glow behind the text, tuned against Kait, smeared (that bundle's inputs/inventory/H_AURAMASTER.md 9b: the
 -- glow code never changed). v15 turns the companion back OFF, once, in every profile, on every text
 -- block whose stored face is a pick of the player's own: a face that is neither the profile's skin's
 -- own HUD face nor the template's starting face (Friz Quadrata TT, which no player picked). The stored

@@ -144,7 +144,7 @@ local function isRecorder(v)
 end
 
 --- The recorders a region owns beside itself, each with the suffix it is named by: a bar's moving
---- edge, and a border's four Solid strips (modules/Style.lua's ApplyBorder, B2-3).
+--- edge, and a border's four Solid strips (modules/Style_Border.lua's ApplyBorder, B2-3).
 local function ownedBy(r)
     local out = {}
     local edge = rawget(r, "__edge")

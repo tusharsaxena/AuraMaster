@@ -183,6 +183,58 @@ test("width: the cached label is keyed by the strip's face as well as the name a
     assertTrue(calls > 0, "a new face measures again")
 end)
 
+test("width: the cached label is keyed by the strip's scale as well, and a scale that moves nothing else measures again", function()
+    local NS, mocks = fresh()
+    local rec, inst = stripOf(NS, mocks, 1, LONG)
+    local before = rec.text
+    local scale = 1
+    rawset(inst.handle, "GetEffectiveScale", function() return scale end)
+    NS.Anchors.UpdateHandle(inst, true)
+    assertEqual(plain(rec.text), plain(before), "the scale read for the first time keeps the text")
+    local calls = 0
+    local lib = mocks.LibStub("LibKa0s-Widgets-1.0")
+    local measurer = lib.__DragHandleMeasurer
+    lib.__DragHandleMeasurer = function(...)
+        calls = calls + 1
+        return measurer(...)
+    end
+    NS.Anchors.UpdateHandle(inst, true)
+    assertEqual(calls, 0, "same scale: nothing measured")
+    scale = 0.7
+    NS.Anchors.UpdateHandle(inst, true)
+    -- red under: a cache keyed without the scale (a layout.scale change keeps the old shortened text)
+    assertTrue(calls > 0, "a new scale measures again")
+    assertEqual(plain(rec.text), plain(before), "this measurer scales nothing, so the text holds")
+    calls = 0
+    NS.Anchors.UpdateHandle(inst, true)
+    assertEqual(calls, 0, "the new scale is cached")
+end)
+
+test("width: a strip whose scale reads secret keeps its cache on the fallback and never raises", function()
+    local NS, mocks = fresh()
+    local _, inst = stripOf(NS, mocks, 1, LONG)
+    local moving = 1
+    rawset(inst.handle, "GetEffectiveScale", function()
+        moving = moving + 1
+        return moving
+    end)
+    -- A plain Lua value cannot be secret: every read through the seam answers its fallback, as a secret one does.
+    local numberOr = NS.Secrets.NumberOr
+    NS.Secrets.NumberOr = function(_, fallback) return fallback end
+    NS.Anchors.UpdateHandle(inst, true)
+    local calls = 0
+    local lib = mocks.LibStub("LibKa0s-Widgets-1.0")
+    local measurer = lib.__DragHandleMeasurer
+    lib.__DragHandleMeasurer = function(...)
+        calls = calls + 1
+        return measurer(...)
+    end
+    NS.Anchors.UpdateHandle(inst, true)
+    NS.Secrets.NumberOr = numberOr
+    -- red under: the scale compared raw, outside NS.Secrets.NumberOr
+    assertEqual(calls, 0, "an unreadable scale is one stable key")
+end)
+
 test("width: a hidden strip's repaint re-places nothing, and an onRefit under lockdown only relabels", function()
     local NS, mocks = fresh()
     local rec, inst, cfg = stripOf(NS, mocks, 1, LONG)

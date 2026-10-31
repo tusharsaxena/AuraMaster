@@ -267,9 +267,6 @@ function NS.RegisterContainerSection(key, label, spec)
     NS.ContainerPageDisabledFor[key] = style and function(c) return c.style ~= style end or nil
 end
 
---- The registered section `key`, or nil. Read-only: a test seam (the suite is its only reader).
-function NS.ContainerSection(key) return sections[key] end
-
 if not lib then
     local function sayMissing() NS.Printf(L["%s, so the settings panel is unavailable."], NS.LIBKA0S_MISSING) end
     local Helpers = {}
@@ -317,7 +314,7 @@ if not lib then
         "PatchAlwaysShowScrollbar", "SetChromeHeight", "SetRenderer", "BuildLandingPage",
         -- renderers and widget makers
         "RenderRows", "RenderGrid", "RenderField", "RenderSchema", "RenderTabbedSchema", "Section",
-        "AddSpacer", "TextRow", "TabStrip", "SubTabStrip", "PageHeader", "PageBanner",
+        "AddSpacer", "TextRow", "TabStrip", "SubTabStrip", "PageHeader", "PageBanner", "PositionBlock",
         "InlineButtonPair", "SessionCheckbox", "AttachTooltip", "ChoiceGrid", "ResolveId", "IdInput",
         "IdList", "Drawer", "UnnamedCandidates", "SelectTab", "NavRail", "SelectSection",
         -- Keybindings tab, strata and Reset-all tooltips (OptionsKeybinds 2, OptionsCompose 8 and 11)
@@ -367,10 +364,6 @@ end
 -- ---------------------------------------------------------------------------
 -- The live wiring
 -- ---------------------------------------------------------------------------
-
--- LSM30_Border lines up on a canvas page only once wrapped; the library does it once per process
--- whoever calls it (LibKa0s-Options-1.0 minor 15), so the call is unconditional.
-lib.__PatchLSM30Border()
 
 -- NS.Helpers IS the library instance, decorated in place — never a copy — so a host helper added
 -- below can call the library's members and a suite spying on one sees the one callers see.

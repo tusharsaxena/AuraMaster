@@ -38,6 +38,32 @@ test("bars: the Icon tab holds the icon's four rows, then the composed icon-bord
     assertEqual(b.borderSize, NS.CONTAINER_TEMPLATE.bars.borderSize)
 end)
 
+test("bars: with Icon position Hidden every Icon row but the position is dropped, and comes back (options-ui-§22)", function()
+    local NS, _, P = bars()
+    local L = NS.L
+    local pre = "container.bars."
+    local rows = { "iconSize", "iconGap", "iconZoom", "iconBorderShow", "iconBorderStyle", "iconBorderSize",
+        "iconBorderColor", "useClassColorIconBorder" }
+    local function tab(position)
+        NS.SetByPath(pre .. "icon", position, 1)
+        local ws = P.rerender("Bars")
+        if NS.Helpers.__pageCtx.bars.activeTab == L["Icon"] then return ws end
+        return P.tab("bars", L["Icon"])
+    end
+    local ws = tab("NONE")
+    assertTrue(P.row(ws, pre .. "icon") ~= nil, "the position stays")
+    for _, key in ipairs(rows) do
+        -- red under: an Icon row with no shownWhen (it draws live and does nothing)
+        assertEqual(P.row(ws, pre .. key), nil, key)
+    end
+    assertEqual(P.find(ws, "Heading", L["Icon border"]), nil, "no heading over nothing")
+    for _, position in ipairs({ "LEFT", "RIGHT" }) do
+        ws = tab(position)
+        for _, key in ipairs(rows) do assertTrue(P.row(ws, pre .. key) ~= nil, key .. " on " .. position) end
+    end
+    assertEqual(P.row(tab("NONE"), pre .. "iconSize"), nil, "dropped again")
+end)
+
 test("bars: the General tab's Spark subsection turns the spark off on auras without a duration (B-3)", function()
     local NS, _, P, ws = bars()
     local row = NS.FindSchemaRow("container.bars.sparkTimeless")
@@ -202,7 +228,7 @@ test("pages: every Border style row says Solid redraws at once and another textu
         "container.icons.borderStyle", "container.text.iconBorderStyle" }) do
         local row = NS.FindSchemaRow(path)
         -- red under: the library's own "The border texture." (a live button keeps its old backdrop
-        -- until a rebuild, modules/Style.lua's ApplyBorder, and nothing said so)
+        -- until a rebuild, modules/Style_Border.lua's ApplyBorder, and nothing said so)
         assertEqual(row and (row.tooltip or row.desc), tip, path)
     end
 end)

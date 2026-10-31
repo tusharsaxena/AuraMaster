@@ -56,7 +56,7 @@ local ALLOW = {
     { file = "settings/Slash.lua", find = "|cff888888", why = CHAT .. "; /am list's container line" },
     { file = "settings/Slash.lua", find = "|cff808080", why = CHAT .. "; refusals and the get/set echo's notes" },
     { file = "settings/Slash.lua", find = "|cff33ff99", why = CHAT .. "; /am list's active-container mark" },
-    { file = "modules/Style.lua", find = "strip:SetVertexColor(1, 1, 1, 1)",
+    { file = "modules/Style_Border.lua", find = "strip:SetVertexColor(1, 1, 1, 1)",
       why = "Style.TintEdge's dispel strips: left white for the aura engine to tint (game meaning, rung 4)" },
     { file = "modules/Style_Text.lua", find = "word = \"|cff\" .. hex(c.r)",
       why = "the dispel word in its dispel type's color (game meaning, rung 4)" },

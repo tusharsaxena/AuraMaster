@@ -401,7 +401,7 @@ test("schema paths: every list row draws through the addon's dropdown; a named c
         if row.values ~= nil then
             lists = lists + 1
             local ok = row.dialogControl == want or (type(row.dialogControl) == "string"
-                and row.dialogControl:find("^LSM30_") ~= nil)
+                and row.dialogControl:find("^Ka0sMedia_") ~= nil)
             -- red under: RegisterSchemaRows leaving a list row on the stock, shared-pool Dropdown
             assertTrue(ok, tostring(row.path) .. " draws through " .. tostring(row.dialogControl))
         end
@@ -409,6 +409,9 @@ test("schema paths: every list row draws through the addon's dropdown; a named c
     assertTrue(lists > 0, "the schema has list rows")
     -- red under: the default overwriting a row that named its own control
     assertEqual(NS2.FindSchemaRow("container.name").dialogControl, "EditBox")
+    -- red under: a composed media row back on a picker the skin cannot paint
+    assertEqual(NS2.FindSchemaRow("container.label.font.font").dialogControl, "Ka0sMedia_Font")
+    assertEqual(NS2.FindSchemaRow("container.bars.borderStyle").dialogControl, "Ka0sMedia_Border")
 end)
 
 -- ── the carve-outs ────────────────────────────────────────────────────────────────────────────
@@ -470,11 +473,10 @@ test("schema paths: exactly the documented sections are whole-writable", functio
     for _, p in ipairs({ "container.filter", "container.layout", "container.behavior",
             "container.position", "container.bars", "container.icons", "container.attach" }) do
         -- red under: SECTIONS without container.attach (a drop could not write it whole)
-        assertTrue(NS2.IsSection(p), p)
+        assertTrue((NS2.CheckWrite(p, {}, 1)), p)
     end
-    for _, p in ipairs({ "container.name", "container", "container.filter.whitelist",
-            "bars", "container.bars.name" }) do
-        assertFalse(NS2.IsSection(p), p)
+    for _, p in ipairs({ "container.name", "container", "bars", "container.bars.name" }) do
+        assertFalse((NS2.CheckWrite(p, {}, 1)), p)
     end
 end)
 

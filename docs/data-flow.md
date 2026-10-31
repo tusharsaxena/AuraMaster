@@ -15,7 +15,7 @@ engine does the reading, filtering, sorting, layout and timer animation in its o
 
 ```
  1  a control, /am set, a Defaults button or a drag handle
-        │  NS.SetByPath(path, value[, containerId])            settings/Schema.lua:894
+        │  NS.SetByPath(path, value[, containerId])            settings/Schema.lua:887
         │    write → row.onChange → [Set] debug line → CONFIG_CHANGED { section, containerId, path }
         │    (a session row stops after the debug line: it sends nothing)
         │    (inside a bulk copy or reset the [Set] line is muted and tallied: one line per act)
@@ -44,7 +44,7 @@ engine does the reading, filtering, sorting, layout and timer animation in its o
         │  and candidate filters; sorts; lays out with the flow settings; creates buttons
         │  and calls initializeFrame for each new one
         ▼
- 6  Style.Element(button, cfg, true)                           modules/Style.lua:874
+ 6  Style.Element(button, cfg, true)                           modules/Style.lua:693
         │  build the regions once (icon, icon border, bar, fill, spark clip, text, border, pandemic wash)
         │  apply the look; bind regions to the engine: SetIcon, SetDurationBar, SetSpellName,
         │  SetDurationText, SetApplicationCount, AddDispelTypeTexture, AddPandemicRegion,
@@ -223,7 +223,7 @@ visibility pass re-places it when either appears or goes (`Anchors.RefreshSeam`,
 while it shows, locked or not, and its strip while that runs past its element (F4). The strip is as
 wide as the element (batch 11 T11): `Anchors.UpdateHandle` hands the widget a label whose name is
 shortened with "..." to fit between the marks (the TEST tag kept whole), measured through the
-widget's `SetLabel` and `Measure` and cached per name and width, and `placeHandle` sets the element's
+widget's `SetLabel` and `Measure` and cached per name, width, face and scale, and `placeHandle` sets the element's
 width, so `stripOverhang` is 0. Only an element too narrow for both reserves and 40 px of label
 keeps the natural width, `ApplyWidth(element)`, and runs past it. Nothing on screen
 marks the point where a container attached to another joins it (batch 11 G6 removed batch 9's join

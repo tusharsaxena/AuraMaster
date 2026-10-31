@@ -331,8 +331,7 @@ end)
 
 test("schema: a section write refuses a non-section path, a non-table, and a value a row rejects", function()
     local NS2 = fresh()
-    assertTrue(NS2.IsSection("container.position"))
-    assertFalse(NS2.IsSection("container.attach.mode"), "a row under a section is not one")
+    assertTrue((NS2.CheckWrite("container.position", {}, 1)))
     assertFalse((NS2.SetByPath("container.bars.name", { fontSize = 20 }, 1)), "not a section")
     assertFalse((NS2.SetByPath("container.position", 5, 1)), "not a table")
     local before = NS2.Database.FindContainer(1).filter

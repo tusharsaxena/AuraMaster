@@ -28,7 +28,6 @@ libs\LibDataBroker-1.1\LibDataBroker-1.1.lua
 libs\LibDBIcon-1.0\LibDBIcon-1.0.lua
 libs\LibKa0s\LibKa0s.xml
 libs\LibSharedMedia-3.0\lib.xml
-libs\AceGUI-3.0-SharedMediaWidgets\widget.xml
 #@end-no-lib-strip@
 
 # Locales (first after the libraries: this file bootstraps NS.L for everything below)
@@ -101,10 +100,11 @@ modules\FilterViews.lua
 modules\FilterCompiler.lua
 # LOAD-BEARING: TextTemplate before Style_Text, which takes NS.TextTemplate as a file-scope upvalue.
 modules\TextTemplate.lua
-# LOAD-BEARING: Style before Style_Bars, Style_Icons and Style_Text, which decorate NS.Style at file
-# scope. All four bind NS.CONTAINER_TEMPLATE (defaults\Profile.lua) at file load, and Style_Text
-# indexes its .text there.
+# LOAD-BEARING: Style before Style_Border, Style_Bars, Style_Icons and Style_Text, which decorate
+# NS.Style at file scope. Style and the last three bind NS.CONTAINER_TEMPLATE (defaults\Profile.lua)
+# at file load, and Style_Text indexes its .text there.
 modules\Style.lua
+modules\Style_Border.lua
 modules\Style_Bars.lua
 modules\Style_Icons.lua
 modules\Style_Text.lua
@@ -147,8 +147,10 @@ modules\FontPrimer.lua
 modules\Diagnostics.lua
 
 # Settings (last — depend on everything else being initialized)
-# LOAD-BEARING: the schema machinery every page registers rows into.
+# LOAD-BEARING: the schema machinery every page registers rows into, then Schema_Validate, which
+# binds the runtime Schema publishes at file load.
 settings\Schema.lua
+settings\Schema_Validate.lua
 # Conventional: its handlers reach the schema and pages at call time.
 settings\Slash.lua
 # LOAD-BEARING: before every page file, which calls the composers at file load.

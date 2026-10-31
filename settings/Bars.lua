@@ -160,16 +160,20 @@ textRows("stacks", G_STACK)
 -- first time it meets a group — so this block sits here, between the text rows and Pandemic, rather than
 -- carrying an index of its own.
 
+-- The rows a Hidden icon does not use are dropped (options-ui-§22, LibKa0s#67); the library watches
+-- the position and re-renders the page.
+local ICON_SHOWN = { path = P .. "icon", equals = { "LEFT", "RIGHT" } }
+
 NS.RegisterSchemaRows({
     { path = P .. "icon", page = PAGE, group = G_ICON, subgroup = L["Icon"], type = "string",
       values = NS.Choices(C.ICON_POSITIONS, C.ICON_POSITION_LABELS), label = L["Icon position"],
       desc = L["Where the aura's icon sits, or hide it."] },
     { path = P .. "iconSize", page = PAGE, group = G_ICON, subgroup = L["Icon"], type = "number", min = 0, max = 80, step = 1,
-      label = L["Icon size (0 = bar height)"], desc = L["A square icon this many pixels wide."] },
+      shownWhen = ICON_SHOWN, label = L["Icon size (0 = bar height)"], desc = L["A square icon this many pixels wide."] },
     { path = P .. "iconGap", page = PAGE, group = G_ICON, subgroup = L["Icon"], type = "number", min = 0, max = 20, step = 1,
-      label = L["Icon gap (px)"], desc = L["Space between the icon and the bar."] },
+      shownWhen = ICON_SHOWN, label = L["Icon gap (px)"], desc = L["Space between the icon and the bar."] },
     { path = P .. "iconZoom", page = PAGE, group = G_ICON, subgroup = L["Icon"], type = "number", min = 0, max = 0.3, step = 0.01,
-      label = L["Icon zoom"], desc = L["Crop the icon's border art."] },
+      shownWhen = ICON_SHOWN, label = L["Icon zoom"], desc = L["Crop the icon's border art."] },
 })
 -- The composed border block (options-ui-§16) on the icon's own leaves; modules/Style_Bars.lua draws
 -- it around the icon's box and insets the art inside it.
@@ -179,8 +183,9 @@ local iconBorder = H.BorderGroup({
              borderColor = "iconBorderColor", useClassColorBorder = "useClassColorIconBorder" },
 })
 -- A style other than Solid is a backdrop, which a live button's secret size keeps from redrawing
--- (modules/Style.lua's ApplyBorder, B2-3): the Border style tooltips say when it shows.
+-- (modules/Style_Border.lua's ApplyBorder, B2-3): the Border style tooltips say when it shows.
 for _, row in ipairs(iconBorder) do
+    row.shownWhen = ICON_SHOWN
     if row.path == P .. "iconBorderShow" then row.tooltip = L["Draw a border around the icon; its art sits inside it."] end
     if row.path == P .. "iconBorderStyle" then row.tooltip = L["The border texture. Solid redraws at once; any other texture, and a new thickness for one, reaches the aura buttons already on screen after a /reload."] end
 end

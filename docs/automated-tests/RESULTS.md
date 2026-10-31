@@ -32,6 +32,9 @@ archaeology, for the same reason a skip is never a pass (`automated-tests-§4`).
 
 | Run | Commit | Tree | Version | Lint w/e | Files | Tests | Perf | NLOC | Funcs | Avg NLOC | Avg CCN | Max CCN | CCN warn | Verdict |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| [`20261101-025540`](20261101-025540/) | `31133dc` | clean | 1.1.0 | 0/0 | 201 | 2253/1/2254 | pass | 55274 | 6003 | 8.3 | 2.3 | 15 | 0 | **green** |
+| [`20261101-001140`](20261101-001140/) | `b37c794` | clean | 1.1.0 | 0/0 | 201 | 2253/1/2254 | pass | 55273 | 6003 | 8.3 | 2.3 | 15 | 0 | **green** |
+| [`20261031-212339`](20261031-212339/) | `16cf393` | clean | 1.1.0 | 0/0 | 201 | 2249/1/2250 | pass | 55169 | 5992 | 8.3 | 2.3 | 15 | 0 | **green** |
 | [`20261031-202022`](20261031-202022/) | `472da8f` | clean | 1.1.0 | 0/0 | 193 | 2249/1/2250 | pass | 55057 | 5977 | 8.3 | 2.3 | 15 | 0 | **green** |
 | [`20261009-191725`](20261009-191725/) | `ad636a2` | clean | 1.0.1 → 1.1.0 | 0/0 | 174 | 2058/1/2059 | pass | 49857 | 5459 | 8.3 | 2.3 | 15 | 0 | **green** |
 | [`20260927-214918`](20260927-214918/) | `b5208f3` | clean | 1.0.0 → 1.0.1 | 0/0 | 146 | 1702/0/1702 | pass | 41031 | 4472 | 8.2 | 2.3 | 15 | 0 | **green** |
@@ -49,18 +52,18 @@ archaeology, for the same reason a skip is never a pass (`automated-tests-§4`).
 
 ## Test suite
 
-**2250 cases** — 2249 passed, 0 failed, 1 skipped. The generated inventory
-[`20261031-202022/test-cases.md`](20261031-202022/test-cases.md) is the authority on which cases existed at this run;
+**2254 cases** — 2253 passed, 0 failed, 1 skipped. The generated inventory
+[`20261101-025540/test-cases.md`](20261101-025540/test-cases.md) is the authority on which cases existed at this run;
 `docs/test-cases.md` is that same list at HEAD.
 
-Moved **2059 → 2250** since the previous run.
+Unchanged from the previous run at 2254 cases.
 
 **1 case(s) reported a `skip`.** A skip is counted in the total and never in `passed`, and at
 the release gate it is NOT EVALUATED rather than passed (`automated-tests-§3`).
 
 ## Lint
 
-**0 warnings / 0 errors over 193 files** (`luacheck .`).
+**0 warnings / 0 errors over 201 files** (`luacheck .`).
 
 Read that figure with its scope attached: `.luacheckrc` excludes 6 path(s) from it — `libs/`, `tests/_kit/`, `docs/audits/`, `docs/reviews/`, `docs/automated-tests/`, `_dev/` —
 so nothing under them is in the count above. A `0/0` that never moves is partly a statement about
@@ -70,21 +73,21 @@ to whoever thinks to open `.luacheckrc`.
 ## Perf
 
 **12 scenarios** from `tests/perf.lua`; the measurements are in
-[`20261031-202022/perf.json`](20261031-202022/perf.json).
+[`20261101-025540/perf.json`](20261101-025540/perf.json).
 
 | `scenario` | `iters` | `ms/iter` | `api/iter` | `bytes/iter` |
 |---|---|---|---|---|
-| `compile` | 2000 | 0.01168 | 0.0 | 4136.0 |
-| `applyPass` | 200 | 1.85437 | 30.0 | 104452.5 |
-| `restyle` | 200 | 0.94080 | 0.0 | 39125.5 |
-| `restyleText` | 200 | 0.74209 | 0.0 | 27747.6 |
-| `restyleTextGlow` | 200 | 3.84614 | 0.0 | 140643.6 |
-| `visibilityPass` | 1000 | 0.02633 | 8.0 | 384.0 |
-| `unitSwap` | 1000 | 0.00332 | 1.0 | 0.0 |
-| `probeOverheadOff` | 1000 | 0.02476 | 9.0 | 384.0 |
-| `probeOverheadOn` | 1000 | 0.02686 | 9.0 | 384.5 |
-| `probeAbsent` | 1000 | 0.02111 | 9.0 | 384.0 |
-| `unitAuraFiltered` | 1000 | 0.00039 | 0.0 | 0.0 |
+| `compile` | 2000 | 0.01321 | 0.0 | 4136.0 |
+| `applyPass` | 200 | 2.00861 | 30.0 | 104452.5 |
+| `restyle` | 200 | 1.11502 | 0.0 | 39125.5 |
+| `restyleText` | 200 | 0.78964 | 0.0 | 27747.6 |
+| `restyleTextGlow` | 200 | 3.85683 | 0.0 | 140643.6 |
+| `visibilityPass` | 1000 | 0.03747 | 8.0 | 384.0 |
+| `unitSwap` | 1000 | 0.00464 | 1.0 | 0.0 |
+| `probeOverheadOff` | 1000 | 0.02754 | 9.0 | 384.0 |
+| `probeOverheadOn` | 1000 | 0.03520 | 9.0 | 384.5 |
+| `probeAbsent` | 1000 | 0.02369 | 9.0 | 384.0 |
+| `unitAuraFiltered` | 1000 | 0.00021 | 0.0 | 0.0 |
 | `emptyWatchAura` | 1000 | 0.00005 | 0.0 | 0.0 |
 
 `perf` never fails a run and never blocks a commit — it is recorded, read and compared, not
@@ -92,8 +95,8 @@ thresholded (`performance-§9`). It does gate the **tag** (`automated-tests-§3`
 
 ## Complexity watch list
 
-Current as of [`20261031-202022`](20261031-202022/) — **this run's measurement, not its diff.** Max CCN **15** across 5977
-functions, **0** of them warned on; 14 file(s) in the 1000–1500 band and 0 over the 1500 cap
+Current as of [`20261101-025540`](20261101-025540/) — **this run's measurement, not its diff.** Max CCN **15** across 6003
+functions, **0** of them warned on; 6 file(s) in the 1000–1500 band and 0 over the 1500 cap
 (`layout-§1`).
 
 Every row below is generated from this run's own `lizard` output. **The `Disposition` column is
@@ -113,19 +116,11 @@ None.
 | Band | File | LOC | Disposition |
 |---|---|---|---|
 | 1000–1500 (on notice) | `core/Database_Migrations.lua` | 1076 | Accepted — newly in the band at this run (935 → 1076, the skin steps through v15); 14 frozen `Database.MigrateV` step bodies with their private helpers, 50 functions, max CCN 15 (`Database.MigrateV15`, at the threshold, not over it). Steps are independent and frozen once shipped, so the size is ladder length, not tangle |
-| 1000–1500 (on notice) | `defaults/Categories.lua` | 1344 | Accepted — in the band since `20260926-160451` (676 → 1282 then; 1282 at the 1.0.1 release run; 1344 at the 1.1.0 release run, from the CC Root / CC Snare split and the Castable/Dispellable rows); data, not logic: 8 functions, max CCN 4 (`Cat.AuraTypeOf`). The bulk is hand-curated spell-ID tables (authored, so the cap binds; not the generated carve-out). Third consecutive release run carried as Accepted: owed a fix or a tracked deviation ID (anti-pattern #53) |
-| 1000–1500 (on notice) | `modules/Anchors.lua` | 1068 | Accepted — newly in the band at this run (982 → 1068, the skin seam on the unlock furniture); 71 functions, max CCN 13 (`Anchors.FlowRoot`). One concern, where a container sits and its drag handle; the join and snap code are already peeled into `modules/Anchors_Attach.lua` and `modules/Anchors_Snap.lua` |
+| 1000–1500 (on notice) | `defaults/Categories.lua` | 1344 | Accepted as a tracked deviation: `docs/ARCHITECTURE.md` → `## Documented deviations`, the `layout-§1` row for this file (FX-AM-SIZE). Data, 8 functions, max CCN 4, and `tools/spell-research/` reads and rewrites this one path, so a split is not a pure move |
+| 1000–1500 (on notice) | `modules/Anchors.lua` | 1078 | Accepted — newly in the band at this run (982 → 1068, the skin seam on the unlock furniture); 72 functions, max CCN 13 (`Anchors.FlowRoot`). One concern, where a container sits and its drag handle; the join and snap code are already peeled into `modules/Anchors_Attach.lua` and `modules/Anchors_Snap.lua` |
 | 1000–1500 (on notice) | `modules/Anchors_Snap.lua` | 1156 | Accepted — newly in the band at the 1.1.0 release run (a new file: the snap core for drag to attach, #22); 60 functions, max CCN 15 (`classify`, at the threshold, not over it). One concern, the pair pick and its geometry; `modules/Anchors_SnapRect.lua` already holds the rect reads, and the pick is the next seam if it grows |
 | 1000–1500 (on notice) | `modules/Container.lua` | 1020 | Accepted — newly in the band at this run (928 → 1020), just inside it; 64 functions, max CCN 15 (`ContainerClass.ApplyHang`, at the threshold, not over it). One cohesive class, a live container's anchor, handle and engine lifecycle, with the twin engines already in `modules/Container_Twins.lua` |
-| 1000–1500 (on notice) | `modules/Style.lua` | 1076 | Accepted — in the band since `20260926-160451` (943 → 1018 then; 1031 at the 1.0.0 release run; 1021 at the 1.0.1 release run; 1024 at the 1.1.0 release run, debug coverage lines), just inside the band; 66 functions, max CCN 13 (`Style.CurveColor`), size rather than tangle. Third consecutive release run carried as Accepted: owed a fix or a tracked deviation ID (anti-pattern #53) |
 | 1000–1500 (on notice) | `settings/Filters.lua` | 1018 | Accepted — newly in the band at this run (971 → 1018), just inside it; 49 functions, max CCN 11 (`viewWhich`). One settings page: its four tabs, their grids and the per-category help text, so size rather than tangle |
-| 1000–1500 (on notice) | `settings/Schema.lua` | 1057 | Accepted — in the band since `20260926-160451` (976 → 1035 then; 1035 at the 1.0.1 release run; 1057 at the 1.1.0 release run, from the drag-attach and panel rows); 63 functions, max CCN 13 (`normalizeCategoryEdits`), size rather than tangle. Third consecutive release run carried as Accepted: owed a fix or a tracked deviation ID (anti-pattern #53) |
-| 1000–1500 (on notice) | `tests/test_containermanager.lua` | 1074 | Accepted — case count, not tangle: 54 independent `test(` cases (1053 → 1074 at the 1.1.0 release run), no function in it above CCN 4. Third consecutive release run carried as Accepted: owed a fix or a tracked deviation ID (anti-pattern #53) |
-| 1000–1500 (on notice) | `tests/test_database.lua` | 1200 | Accepted — case count, not tangle: 73 independent `test(` cases (1194 → 1197 at the 1.1.0 release run), no function in it above CCN 4. Third consecutive release run carried as Accepted: owed a fix or a tracked deviation ID (anti-pattern #53) |
-| 1000–1500 (on notice) | `tests/test_filtercompiler.lua` | 1311 | Accepted — case count, not tangle: 85 independent `test(` cases (1271 → 1311 at the 1.1.0 release run, Situations and CC split cases), no function in it above CCN 5. Third consecutive release run carried as Accepted: owed a fix or a tracked deviation ID (anti-pattern #53) |
-| 1000–1500 (on notice) | `tests/test_pages_filters.lua` | 1198 | Accepted — case count, not tangle: 52 independent `test(` cases (1085 → 1184 at the 1.1.0 release run, the Situations tab); its one CCN 15 function is the `entryHelp` reader, at the threshold, not over it. Third consecutive release run carried as Accepted: owed a fix or a tracked deviation ID (anti-pattern #53) |
-| 1000–1500 (on notice) | `tests/test_style.lua` | 1211 | Accepted — case count, not tangle: 60 independent `test(` cases (1203 → 1205 at the 1.1.0 release run), no function in it above CCN 7. Third consecutive release run carried as Accepted: owed a fix or a tracked deviation ID (anti-pattern #53) |
-| 1000–1500 (on notice) | `tests/test_style_text.lua` | 1023 | Accepted — in the band since the 1.0.1 release run (998 → 1016 then; 1023 at the 1.1.0 release run); case count, not tangle: 56 `test(` cases, no function in it above CCN 6. Second release run as Accepted |
 
 `lizard` counts every `and`/`or` short-circuit as a decision, so in Lua a run of
 `t.k = rec.k or D.k` defaulting lines scores high with no visible branching at all: a large CCN

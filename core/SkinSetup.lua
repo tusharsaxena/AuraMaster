@@ -107,7 +107,7 @@ local function byte(n) return n / 255 end
 -- token holds, so snapping it to the nearest one would move a Ka0s Default pixel. The name is in
 -- this addon's own namespace (`am.`), never a library family; `default` is the value drawn today,
 -- exactly; `follow` is the nearest library ROLE token, whose value every other skin and EllesmereUI
--- draw it in. The gap each meets is the inventory's (inputs/inventory/AuraMaster.md §5).
+-- draw it in. The gap each meets is the inventory's (that bundle's inputs/inventory/AuraMaster.md §5).
 NS.SKIN_TOKENS = {
     -- AM-G2: the drag strip's name of an attached container, a warm gray: the strip's gold with the
     -- color drained out, so at a glance it reads as attached (the owner, 2026-09-26).

@@ -10,7 +10,7 @@ marked as such rather than listed as a requirement.
 | Group | Who needs it | Short answer |
 |---|---|---|
 | Runtime (in-game) | Players | World of Warcraft (Retail), patch 12.1 or later. Nothing else. |
-| Development | Contributors | Lua **5.1** (+ `luac`), `luacheck`, `lizard`, `git`, `bash`, and a POSIX shell with `ls` and `grep` (`nproc` optional, for `-j auto`). |
+| Development | Contributors | Lua **5.1** (+ `luac`), `luacheck`, `lizard`, `git`, `bash`, `~/.claude/dev-copilot/bin/ka0s-bounded` (the dev-copilot plugin), and a POSIX shell with `ls` and `grep` (`nproc` optional, for `-j auto`). |
 | Release / assets | Whoever regenerates a committed asset | Python **3.8+** (the spell-research generator, `tools/spell-research/research.py`, which regenerates `defaults/CastToAura.lua`, and the combat-log tool `tools/spell-research/logs.py`) and a working internet connection for its non-`--replay` runs; Pillow (the 128 icon TGA). Not needed to build, run or test. |
 
 ## Runtime (in-game) — what a player needs
@@ -26,9 +26,9 @@ marked as such rather than listed as a requirement.
   falls back to the deprecated global `GetAddOnMetadata`; the TOC is Retail-only, where `C_AddOns`
   always exists.
 - **Nothing else.** The TOC declares no `## Dependencies`. Every library it loads — LibStub,
-  CallbackHandler-1.0, the Ace3 modules, LibDataBroker-1.1, LibDBIcon-1.0, LibKa0s,
-  LibSharedMedia-3.0 and AceGUI-3.0-SharedMediaWidgets — is vendored under `libs/` and listed in
-  the `# Libraries` block (`AuraMaster.toc:15-32`). `## OptionalDeps:` (`AuraMaster.toc:8`) names the vendored libs for load
+  CallbackHandler-1.0, the Ace3 modules, LibDataBroker-1.1, LibDBIcon-1.0, LibKa0s and
+  LibSharedMedia-3.0 — is vendored under `libs/` and listed in
+  the `# Libraries` block (`AuraMaster.toc:15-31`). `## OptionalDeps:` (`AuraMaster.toc:8`) names the vendored libs for load
   ordering, not as things to download (library-stack), and EllesmereUI (below).
 - **EllesmereUI, optional.** A separate addon, never vendored and never required. It is named in
   `## OptionalDeps:` only so it loads first when the player has it: `core/SkinSetup.lua` registers
@@ -46,7 +46,8 @@ marked as such rather than listed as a requirement.
 | Tool | Version | Needed for | Evidence |
 |---|---|---|---|
 | `lua5.1` (+ `luac`) | **5.1 exactly** | the headless suite, `lua tests/run.lua`; the offline perf runner `lua tests/perf.lua`; the complexity suite's sighted shadow (`tests/_kit/lizard_sighted.lua`, run by the automated-test runner); one-file syntax checks `luac -p file.lua` | `tests/_kit/loader.lua:72` and `:91` call `setfenv`, `:89` calls `loadstring` |
-| `luacheck` | any recent | `luacheck .`, the other half of the green gate | `.luacheckrc` at the repo root |
+| `luacheck` | any recent | `~/.claude/dev-copilot/bin/ka0s-bounded luacheck .`, the other half of the green gate | `.luacheckrc` at the repo root |
+| `ka0s-bounded` | the dev-copilot plugin | `~/.claude/dev-copilot/bin/ka0s-bounded`, the bounded runner lint goes through, because `luacheck` loads no kit and cannot bound itself (testing-§15) | installed with the dev-copilot Claude Code plugin |
 | `lizard` | any recent | the `complexity` suite of `tests/_kit/run-automated-tests.sh` (automated-tests) | `tests/_kit/run-automated-tests.sh:168` probes `command -v lizard` |
 | `git` | any recent | the vendored-payload gate, the lint-config gate, the line-ending gate, the layout cap gate, the runner-mode (100755) case, and the runner's manifest | `tests/_kit/vendor_sync.lua:422` (`git -C … show`), `tests/test_lintconfig.lua:155` (`git ls-files`), `tests/_kit/test_eol.lua` (`git check-attr`), `tests/_kit/test_layout_cap.lua:171` (`git ls-files`), `tests/_kit/vendor_sync.lua:657` (`git ls-files -s`, the kit's runner-mode case), `tests/_kit/run-automated-tests.sh:172` (`git rev-parse`) |
 | `bash` | any recent | running the vendored automated-test runner, and the standard utilities it pipes through: `sed`, `grep`, `awk`, `date`, `find`, `wc`, `sort`, `head`, `tail`, `tr` | `tests/_kit/run-automated-tests.sh:1` is `#!/usr/bin/env bash` and uses bash arrays; `:69`, `:81` and `:94` (`sed`), `:81` and `:166` (`grep`), `:101` (`date`), `:78` (`head`), `:81` (`tr`); `awk` builds `PERF_SCENARIOS`, `PERF_TABLE` and `CCN_BAND_ROWS`, `find`, `wc` and `sort` build `CCN_BAND_ROWS`, and `tail` picks the lint `Total:` line and the tests `footer` |
@@ -88,14 +89,14 @@ Versions are pinned only where a version matters: `lua5.1` is hard, `luacheck` a
 ### Optional: a sibling `../LibKa0s` checkout
 
 `tests/test_vendor_sync.lua` hands the comparison to the vendored `tests/_kit/vendor_sync.lua`, which
-reads the tag named in root `CLAUDE.md` (`v1.83.0`) out of a checkout at `../LibKa0s` and compares
+reads the tag named in root `CLAUDE.md` (`v1.84.0`) out of a checkout at `../LibKa0s` and compares
 `libs/LibKa0s/` and `tests/_kit/` against it. Without that checkout the case records a **skip with
 its reason**, not a pass and not a failure (testing-§11). Clone it if you touch `libs/`, re-vendor,
 or want that case to actually compare:
 
 ```sh
 git clone https://github.com/tusharsaxena/LibKa0s.git ../LibKa0s
-git -C ../LibKa0s rev-parse --short v1.83.0   # verify: prints a commit
+git -C ../LibKa0s rev-parse --short v1.84.0   # verify: prints a commit
 ```
 
 ### Not dependencies of this repo
@@ -111,7 +112,7 @@ git -C ../LibKa0s rev-parse --short v1.83.0   # verify: prints a commit
   different tool with a different justification; nothing about it licenses `pip install` here.
 - **A CI runner.** There is none; every gate is local and hand-run (testing-§5).
 - **The vendored libraries.** LibStub, CallbackHandler-1.0, the Ace3 modules, LibDataBroker-1.1,
-  LibDBIcon-1.0, LibKa0s, LibSharedMedia-3.0 and AceGUI-3.0-SharedMediaWidgets are committed
+  LibDBIcon-1.0, LibKa0s and LibSharedMedia-3.0 are committed
   under `libs/`. Listing them here does not license fetching them at build time.
 
 ## Release / assets
@@ -163,7 +164,7 @@ python3 -c 'import PIL; print(PIL.__version__)'    # prints a version
 ```sh
 lua tests/run.lua                                     # the suite, sharded across CPUs — must be green
 lua tests/run.lua -j 1                                # same, serially; must match it (testing-§14)
-luacheck .                                            # must be 0 warnings / 0 errors
+~/.claude/dev-copilot/bin/ka0s-bounded luacheck .    # must be 0 warnings / 0 errors
 bash tests/_kit/run-automated-tests.sh --suite complexity   # the sighted complexity report (release-time)
 ```
 

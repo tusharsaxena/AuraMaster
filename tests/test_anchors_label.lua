@@ -372,7 +372,7 @@ test("label: Copy settings copies the label section and not the name; Everything
     local found = false
     for _, k in ipairs(CM.COPY_SECTIONS) do found = found or k == "label" end
     assertTrue(found, "a copy section, so Everything takes it too")
-    assertTrue(NS.IsSection("container.label"), "a whole section of the write seam")
+    assertTrue((NS.CheckWrite("container.label", {}, 1)), "a whole section of the write seam")
 end)
 
 test("label: its class color makes a tracked container re-apply on a unit swap, only while the label shows", function()

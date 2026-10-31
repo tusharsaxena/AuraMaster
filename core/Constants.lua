@@ -210,7 +210,7 @@ C.STRATA_LABELS = { BACKGROUND = "Background", LOW = "Low", MEDIUM = "Medium", H
 --                                               AceGUI pullouts and the color picker
 --   T9 cursor            TOOLTIP                the frame picker (STRATA.CURSOR): it labels the frame
 --                                               under the cursor, whose own GameTooltip would cover
---                                               it from any lower tier; GameTooltip; LSM pullouts
+--                                               it from any lower tier; GameTooltip; media picker pullouts
 --
 -- Library bands this addon relies on: the DragHandle's help and close marks at handle + 1 (Widgets
 -- DragHandle minor 5, born there through `spec.level`) and the Options combat cover over its page.
@@ -246,7 +246,7 @@ C.LAYERS = {
         HANDLE  = 50,
         HOP     = 1,     -- a child's strip over its attach parent's strip
         -- inside one element, over the element root
-        SUNK    = 0,     -- a backdrop host sunk to its border frame's level (modules/Style.lua)
+        SUNK    = 0,     -- a backdrop host sunk to its border frame's level (modules/Style_Border.lua)
         FILL    = 1,
         SPARK   = 2,
         BORDER  = 3,
