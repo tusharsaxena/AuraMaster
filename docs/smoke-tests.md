@@ -2445,7 +2445,8 @@ each time with no reload, the HUD included. Result: pass (owner-marked 2026-10-3
 **SKIN-17. Tooltips, popups and the minimap button (AM-02; X8).** Under **Azeroth** and **High
 Contrast**, hover an aura, a drag strip and its close mark, and the minimap button → the lines Aura
 Master writes are readable in the skin's colors, and the tooltip frame is Blizzard's; the Delete and
-reset confirmations, the color picker and the media pull-outs are stock. Result: pass (owner-marked 2026-10-30)
+reset confirmations and the color picker are stock. Result: pass (owner-marked 2026-10-30). The media
+pull-outs were also stock in that pass; they now wear the skin, so check them under SKIN-34 instead.
 
 **SKIN-18. The skin picker on a fresh profile (AM-04; O3, X6).** Create a new profile on the Profiles
 page → a small window titled **Choose a skin** opens about three quarters up the screen, with **Ka0s
