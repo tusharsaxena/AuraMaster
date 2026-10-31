@@ -202,7 +202,7 @@ test("pages: every Border style row says Solid redraws at once and another textu
         "container.icons.borderStyle", "container.text.iconBorderStyle" }) do
         local row = NS.FindSchemaRow(path)
         -- red under: the library's own "The border texture." (a live button keeps its old backdrop
-        -- until a rebuild, modules/Style.lua's ApplyBorder, and nothing said so)
+        -- until a rebuild, modules/Style_Border.lua's ApplyBorder, and nothing said so)
         assertEqual(row and (row.tooltip or row.desc), tip, path)
     end
 end)

@@ -53,6 +53,7 @@ test("loadorder: the load-bearing pairs are in order, and the TOC says why", fun
         { "core/Constants.lua", "core/DebugLogSetup.lua" },
         { "defaults/Categories.lua", "defaults/Profile.lua" },
         { "defaults/Categories.lua", "defaults/UserCategories.lua" },
+        { "modules/Style.lua", "modules/Style_Border.lua" },
         { "modules/Style.lua", "modules/Style_Bars.lua" },
         { "modules/Style.lua", "modules/Style_Text.lua" },
         { "modules/TextTemplate.lua", "modules/Style_Text.lua" },
@@ -69,6 +70,7 @@ test("loadorder: the load-bearing pairs are in order, and the TOC says why", fun
         -- Anchors_SnapRect binds NS.AnchorsAttach, and Anchors_Snap binds it, at file load (DD-16).
         { "modules/Anchors_Attach.lua", "modules/Anchors_SnapRect.lua" },
         { "modules/Anchors_SnapRect.lua", "modules/Anchors_Snap.lua" },
+        { "settings/Schema.lua", "settings/Schema_Validate.lua" },
         { "settings/Schema.lua", "settings/OptionsSetup.lua" },
         { "settings/OptionsSetup.lua", "settings/General.lua" },
         { "settings/GeneralSpells.lua", "settings/General.lua" },

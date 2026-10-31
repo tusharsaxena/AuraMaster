@@ -246,7 +246,7 @@ C.LAYERS = {
         HANDLE  = 50,
         HOP     = 1,     -- a child's strip over its attach parent's strip
         -- inside one element, over the element root
-        SUNK    = 0,     -- a backdrop host sunk to its border frame's level (modules/Style.lua)
+        SUNK    = 0,     -- a backdrop host sunk to its border frame's level (modules/Style_Border.lua)
         FILL    = 1,
         SPARK   = 2,
         BORDER  = 3,

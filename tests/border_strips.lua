@@ -1,4 +1,4 @@
--- tests/border_strips.lua — reading an element border as modules/Style.lua's ApplyBorder draws it
+-- tests/border_strips.lua — reading an element border as modules/Style_Border.lua's ApplyBorder draws it
 -- (B2-3): a Solid border is four strip textures on the border frame (`__amStrips`, top, bottom,
 -- left, right), and any other style a backdrop on a frame of its own (`__amBackdrop`).
 --

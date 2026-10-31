@@ -510,7 +510,7 @@ end
 -- pullout rows do, tail first, marker last. It was once justified here, on a STOCK Dropdown, and that
 -- justification rode the shared AceGUI pool into other panels' boxes (owner, 2026-09-30).
 --
--- The call is capability-guarded (the same shape as modules/Style.lua:925): the headless widget
+-- The call is capability-guarded (the same shape as modules/Style.lua:744): the headless widget
 -- kit is a data recorder with neither method, and it is not ours to extend.
 local CATEGORY_PULLOUT_WIDTH = 320
 

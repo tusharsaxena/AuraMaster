@@ -72,7 +72,7 @@ Total.
 - launcher: with LibKa0s absent the stub answers every member, and the row still stores
 - parity: the Launcher stub carries every member of the live instance
 
-### test_database.lua (73)
+### test_database.lua (56)
 
 - database: a fresh profile is seeded with the three starter containers, once
 - database: PrepareProfile is idempotent
@@ -130,6 +130,9 @@ Total.
 - v3: the whitelist lift never sweeps a category the aura type does not have
 - v12: the v12 step is on the ladder, below v13's skin reset, v14's Font flags and v15's own faces
 - v3: RunMigrations migrates every stored profile, the inactive one included
+
+### test_database_steps.lua (17)
+
 - v4: a HELPFUL container with the toggle on ends up with Uncategorized hidden, and the dead key cleared
 - v4: a HARMFUL container with the toggle on ends up with Uncategorized (debuffs) hidden, and the dead key cleared
 - v4: a container with the toggle off or absent is untouched
@@ -297,7 +300,7 @@ Total.
 
 - settings pin: every stored path, default, range and choice set is the snapshot's
 
-### test_filtercompiler.lua (85)
+### test_filtercompiler.lua (62)
 
 - filter: an unfiltered buff container is one HELPFUL group with no candidate filters
 - filter: a debuff container starts from HARMFUL
@@ -326,29 +329,6 @@ Total.
 - filter: the whitelist beats the blacklist — an id on both lists is shown (R-2)
 - filter: the blacklist still reaches the catch-all, but never the whitelist group (R-7)
 - filter: a stray filter.onlyShown key, however it got there, is inert — the compiler never reads it (D8 retired)
-- filter: Uncategorized Show draws an unlisted aura even when a Blizzard token category is Hidden — the owner's exact case
-- filter: no two groups can match the same aura when Uncategorized is Show — the catch-all would have (fix round 1)
-- filter: Uncategorized Hide drops the catch-all entirely rather than shipping a group that can never match (fix round 1)
-- filter: a listed aura's own category group is unaffected by Uncategorized either way
-- filter: Uncategorized Show on a debuff container contributes no group and does not neuter another category's Hide
-- filter: Uncategorized Hide on a debuff container reproduces the retired 'Only these categories' toggle exactly
-- filter: Uncategorized Show on a debuff container with nothing else hidden changes nothing (R-3 still applies)
-- filter: FC.IdsHonored is the CAN-EVER predicate — true wherever a spell list could ever bite
-- filter: FC.IdsMode "always" is the CERTAIN gate — only for buffs on the player and pet
-- filter: a PLAYER debuff container with a non-empty union still gives Uncategorized Show no group — fix round 3's failure through issue #11's new door
-- filter: a TARGET debuff container gives Uncategorized Show no group either — a target may be FRIENDLY
-- filter: a FRIENDLY-target buff container loses the Uncategorized Show rescue — the accepted cost, pinned
-- filter: a target debuff container still warns about units you can assist although the gate dropped its Show group
-- filter: a TARGET debuff container's spells-kind Show emits its ids-view group, whose blizzard view is NEVER, and warns (the issue #11 residual, superseded)
-- explain: an unlisted id is rank 3 (shown) when Uncategorized is Show — not the old rank 5
-- explain: an unlisted id is rank 4 (hidden) when Uncategorized is Hide
-- explain: with no Uncategorized category for the aura type at all, an unclaimed id is still rank 5
-- explain: HARMFUL, Uncategorized Show (default): an unclaimed id is rank 5, not rank 3 — hasUnion is false, nothing to rescue
-- explain: HARMFUL, Uncategorized Hide: an unclaimed id is rank 4, naming Uncategorized
-- explain: HARMFUL with a non-empty union on the PLAYER: an unclaimed id is still rank 5, never a rescue the compiler does not compile
-- explain: HARMFUL with a non-empty union on a TARGET: still rank 5, in lockstep with the gate
-- explain: HELPFUL on a TARGET: the rescue the accepted cost gives up is not claimed here either
-- filter: every unit/aura-type combination prints exactly the identity warning it printed before the predicate split
 - filter: spell lists on your own debuffs are flagged as ignored
 - filter: spell lists on a target's buffs only apply while it is friendly
 - filter: the player's own buffs carry no identity warning
@@ -384,6 +364,32 @@ Total.
 - explain: a token category is never named — only spells-kind categories are reasoned about
 - filter: the Player cooldowns starter draws one group per list it shows and no catch-all
 - filter: a buff container showing only Weapon enchants draws the slots, no aura group and no never-matches warning (feedback #6)
+
+### test_filtercompiler_uncategorized.lua (23)
+
+- filter: Uncategorized Show draws an unlisted aura even when a Blizzard token category is Hidden — the owner's exact case
+- filter: no two groups can match the same aura when Uncategorized is Show — the catch-all would have (fix round 1)
+- filter: Uncategorized Hide drops the catch-all entirely rather than shipping a group that can never match (fix round 1)
+- filter: a listed aura's own category group is unaffected by Uncategorized either way
+- filter: Uncategorized Show on a debuff container contributes no group and does not neuter another category's Hide
+- filter: Uncategorized Hide on a debuff container reproduces the retired 'Only these categories' toggle exactly
+- filter: Uncategorized Show on a debuff container with nothing else hidden changes nothing (R-3 still applies)
+- filter: FC.IdsHonored is the CAN-EVER predicate — true wherever a spell list could ever bite
+- filter: FC.IdsMode "always" is the CERTAIN gate — only for buffs on the player and pet
+- filter: a PLAYER debuff container with a non-empty union still gives Uncategorized Show no group — fix round 3's failure through issue #11's new door
+- filter: a TARGET debuff container gives Uncategorized Show no group either — a target may be FRIENDLY
+- filter: a FRIENDLY-target buff container loses the Uncategorized Show rescue — the accepted cost, pinned
+- filter: a target debuff container still warns about units you can assist although the gate dropped its Show group
+- filter: a TARGET debuff container's spells-kind Show emits its ids-view group, whose blizzard view is NEVER, and warns (the issue #11 residual, superseded)
+- explain: an unlisted id is rank 3 (shown) when Uncategorized is Show — not the old rank 5
+- explain: an unlisted id is rank 4 (hidden) when Uncategorized is Hide
+- explain: with no Uncategorized category for the aura type at all, an unclaimed id is still rank 5
+- explain: HARMFUL, Uncategorized Show (default): an unclaimed id is rank 5, not rank 3 — hasUnion is false, nothing to rescue
+- explain: HARMFUL, Uncategorized Hide: an unclaimed id is rank 4, naming Uncategorized
+- explain: HARMFUL with a non-empty union on the PLAYER: an unclaimed id is still rank 5, never a rescue the compiler does not compile
+- explain: HARMFUL with a non-empty union on a TARGET: still rank 5, in lockstep with the gate
+- explain: HELPFUL on a TARGET: the rescue the accepted cost gives up is not claimed here either
+- filter: every unit/aura-type combination prints exactly the identity warning it printed before the predicate split
 
 ### test_filtercompiler_categories.lua (9)
 
@@ -614,7 +620,7 @@ Total.
 - twins: Diagnostics' frame, shown and button counts read the main, never a twin
 - twins: the empty watch reads the main's pool only
 
-### test_containermanager.lua (54)
+### test_containermanager.lua (41)
 
 - manager: Create appends a container, names it uniquely and announces it
 - manager: two containers with one name become 'X' and 'X (2)'
@@ -657,6 +663,9 @@ Total.
 - manager: a player's change held beside the addon's own request is announced once
 - manager: a reload in combat builds silently and applies once combat ends
 - manager: a reload while auras are secret (mid-key, out of combat) still builds at login
+
+### test_containermanager_queue.lua (13)
+
 - manager: a request for one container applies only that one
 - manager: a flushed queue is empty, and a later request schedules a pass of its own
 - manager: a held request keeps exactly its container through the hold
@@ -1282,7 +1291,7 @@ Total.
 - template: every built-in compiles, and each aura type's list is the pinned one
 - template: a stored template matches a built-in by its text and its justify rule, else none
 
-### test_style.lua (60)
+### test_style.lua (38)
 
 - style: an element's size comes from its style's settings
 - style: a stored-nil leaf falls back to the template's own value
@@ -1313,6 +1322,18 @@ Total.
 - style: a text's color is its own swatch, or the dress's class when its companion is on
 - style: a missing color paints opaque white rather than raising
 - style: a border is hidden when off, styled None, or without a positive size
+- style: a frame dressed as a bar, then as an icon, builds icon regions and hides the bar's
+- style: hiding the other style's regions never hides the element itself
+- style: a text element takes its size from its own block, and a missing leaf from the template
+- style: a text container's class color is looked for in its text block, the font included
+- style: a duration run's text format has its format string and one component per token, built once
+- style: a duration run binds its format and binding, recolored only when asked, blinking only when asked
+- style: a placeholder's seconds are written by the format's formatter, else as whole seconds
+- style: a client that refuses the percent rule's step gets the plain "%d" rule, never none (feedback #5)
+- style: no format Aura Master itself authors carries a leading or trailing space (feedback #5)
+
+### test_style_borders.lua (22)
+
 - style: a Solid border is four strips between the frame's corners, never a backdrop (B2-3)
 - style: a tint edge lays the Solid border's four strips, white, untinted and hidden, for the engine to show (DB-1)
 - style: a Solid border takes the class color through its companion (B2-3)
@@ -1335,15 +1356,6 @@ Total.
 - style: a placeholder running out takes the running-out color, as the engine's curve paints a live one (B-5)
 - style: at the default threshold one placeholder is running out, so turning the color on shows (B-5)
 - style: a style leaf left nil draws the template's value, never a literal of its own
-- style: a frame dressed as a bar, then as an icon, builds icon regions and hides the bar's
-- style: hiding the other style's regions never hides the element itself
-- style: a text element takes its size from its own block, and a missing leaf from the template
-- style: a text container's class color is looked for in its text block, the font included
-- style: a duration run's text format has its format string and one component per token, built once
-- style: a duration run binds its format and binding, recolored only when asked, blinking only when asked
-- style: a placeholder's seconds are written by the format's formatter, else as whole seconds
-- style: a client that refuses the percent rule's step gets the plain "%d" rule, never none (feedback #5)
-- style: no format Aura Master itself authors carries a leading or trailing space (feedback #5)
 
 ### test_castaura.lua (7)
 
@@ -1480,7 +1492,7 @@ Total.
 - icons: filling a preview icon that was never dressed does nothing and raises nothing
 - icons: a debuff placeholder tints its dispel strips in Blizzard's color for its type; a buff, an untyped one or the option off shows none (TD-4, DB-1)
 
-### test_style_text.lua (56)
+### test_style_text.lua (48)
 
 - text style: the element takes its size; clip, animation and text-area frames nest inside it
 - text style: Left lays the first piece at the area's left and each next piece against the previous one
@@ -1511,14 +1523,6 @@ Total.
 - text style: a preview dress binds nothing
 - text style: the three loops are built once, looping as each effect needs, and None plays none
 - text style: each effect plays its own loop with the speed, fade and height set
-- text style: an icon on the left sits on the animated frame and the text area starts after it and its gap
-- text style: on a stacked Center, icon size 0 is ONE ROW's height, not the whole stack (fix round 1, feedback #1)
-- text style: an icon on the right insets the area's right edge; none hides it and binds nothing
-- text style: a left icon with its border on draws the border at its edge size and color, the art inset inside it (item 6)
-- text style: an icon border the client refuses on a live re-dress costs the icon, never the text, and is reported
-- text style: an icon whose SetSize is refused on a live re-dress costs the icon, never the text, and is reported
-- text style: the same refusal on every re-dress reaches the error handler once, and the debug log once
-- text style: a live re-dress with the icon border on under secret geometry draws the border and reports nothing (B2-3)
 - text style: a refused stored template draws the default one and logs it once
 - text style: a template edit that keeps the shape re-dresses the same strings; a new shape swaps chains
 - text style: the structure key carries the template's shape, so a live shape change gets new buttons
@@ -1538,6 +1542,17 @@ Total.
 - text style: an Enrage aura shows no visible backdrop or edge, live or in the preview (fix round 1, feedback #7)
 - text style: a placeholder's and the Preview box's dispel word take its palette color when the option is on (feedback #7)
 - text style: a debuff placeholder's dispel word and tints follow its own type, and the untyped one shows neither (TD-4)
+
+### test_style_text_icon.lua (8)
+
+- text style: an icon on the left sits on the animated frame and the text area starts after it and its gap
+- text style: on a stacked Center, icon size 0 is ONE ROW's height, not the whole stack (fix round 1, feedback #1)
+- text style: an icon on the right insets the area's right edge; none hides it and binds nothing
+- text style: a left icon with its border on draws the border at its edge size and color, the art inset inside it (item 6)
+- text style: an icon border the client refuses on a live re-dress costs the icon, never the text, and is reported
+- text style: an icon whose SetSize is refused on a live re-dress costs the icon, never the text, and is reported
+- text style: the same refusal on every re-dress reaches the error handler once, and the debug log once
+- text style: a live re-dress with the icon border on under secret geometry draws the border and reports nothing (B2-3)
 
 ### test_style_text_autosize.lua (18)
 
@@ -2178,7 +2193,7 @@ Total.
 - containers: Defaults restores Enabled, Unit, Aura type and Style, and never the name
 - containers: the page's Defaults tooltip names the section on screen and the kept name
 
-### test_pages_filters.lua (53)
+### test_pages_filters.lua (36)
 
 - filters: Cast by writes the selected container's filter and no other
 - filters: a buff container's Categories tab offers the weapon-enchant rows; a debuff container's does not
@@ -2212,6 +2227,13 @@ Total.
 - filters: /am get and /am list print a category's state as Show or Hide
 - filters: every category row is skipRender and names its grid
 - filters: no aura type is offered a Spell lists tab; the lists live on General → Spell categories
+- filters: Show all and Hide all head every Categories section, one pair each (feedback #10, B11-T10)
+- filters: Show all / Hide all on Dispel types and Who cast it set exactly their own section, for this container only (B11-T10)
+- filters: Hide all on Blizzard categories hides exactly that section, as one [Set] line and one apply (feedback #10)
+- filters: Show all on Spell categories shows exactly that section, whatever Blizzard categories say (feedback #10)
+
+### test_pages_filters_overrides.lua (17)
+
 - filters: Overrides replaces Always / never, with a Whitelist and a Blacklist section
 - filters: the Overrides NOTE heads the tab on every container whose spell lists can be off (SV-04)
 - filters: Overrides adds to one list at a time by id or by name, and Remove takes an id off
@@ -2229,10 +2251,6 @@ Total.
 - filters: an entry with a verdict keeps its place in the two-column grid
 - filters: an uncategorized blacklisted spell warns that no category hides it
 - filters: a whitelisted spell no category claims, on a buff container, names Uncategorized instead of the generic rank-5 wording
-- filters: Show all and Hide all head every Categories section, one pair each (feedback #10, B11-T10)
-- filters: Show all / Hide all on Dispel types and Who cast it set exactly their own section, for this container only (B11-T10)
-- filters: Hide all on Blizzard categories hides exactly that section, as one [Set] line and one apply (feedback #10)
-- filters: Show all on Spell categories shows exactly that section, whatever Blizzard categories say (feedback #10)
 
 ### test_pages_situations.lua (11)
 
@@ -2505,7 +2523,7 @@ Total.
 
 - prose: no authored file carries a British spelling from localization-§5's published list
 - prose: the gate carries localization-§5's two lists whole, and nothing of its own
-- prose: the exclusions this repository declared suppressed 11 of 230 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (11): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, docs/spell-research/2026-09-24-logs/CORRECTIONS.md, docs/spell-research/2026-09-24-logs/CURRENT_CATEGORIES.md, docs/spell-research/2026-09-24-logs/DECISIONS.md, docs/spell-research/2026-09-24-logs/FLAGS.md, docs/spell-research/2026-09-24-logs/PROPOSED_ADDITIONS.md, docs/spell-research/2026-09-24-logs/REVIEW.md, docs/spell-research/2026-09-24-logs/SOURCES.md, docs/spell-research/2026-09-24-logs/dictionary/AURAS.md
+- prose: the exclusions this repository declared suppressed 11 of 238 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (11): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, docs/spell-research/2026-09-24-logs/CORRECTIONS.md, docs/spell-research/2026-09-24-logs/CURRENT_CATEGORIES.md, docs/spell-research/2026-09-24-logs/DECISIONS.md, docs/spell-research/2026-09-24-logs/FLAGS.md, docs/spell-research/2026-09-24-logs/PROPOSED_ADDITIONS.md, docs/spell-research/2026-09-24-logs/REVIEW.md, docs/spell-research/2026-09-24-logs/SOURCES.md, docs/spell-research/2026-09-24-logs/dictionary/AURAS.md
 - prose: no path this repository narrows the gate by is loaded by a TOC
 - prose: every path this repository narrows the gate by is one .pkgmeta keeps out of the zip
 - prose self-test: the carve-out suppresses the named generated folder, and only it
@@ -2601,13 +2619,15 @@ Total.
 | test_loadorder.lua | 10 |
 | test_setups.lua | 15 |
 | test_launcher.lua | 30 |
-| test_database.lua | 73 |
+| test_database.lua | 56 |
+| test_database_steps.lua | 17 |
 | test_database_categories.lua | 28 |
 | test_migrations.lua | 29 |
 | test_schema.lua | 38 |
 | test_schema_paths.lua | 38 |
 | test_settings_pin.lua | 1 |
-| test_filtercompiler.lua | 85 |
+| test_filtercompiler.lua | 62 |
+| test_filtercompiler_uncategorized.lua | 23 |
 | test_filtercompiler_categories.lua | 9 |
 | test_filterviews.lua | 14 |
 | test_filterviews_situations.lua | 13 |
@@ -2619,7 +2639,8 @@ Total.
 | test_container_zones.lua | 8 |
 | test_container_unitfilter.lua | 14 |
 | test_container_twins.lua | 32 |
-| test_containermanager.lua | 54 |
+| test_containermanager.lua | 41 |
+| test_containermanager_queue.lua | 13 |
 | test_compat.lua | 37 |
 | test_secrets.lua | 6 |
 | test_bus.lua | 8 |
@@ -2649,12 +2670,14 @@ Total.
 | test_anchors_mark.lua | 8 |
 | test_anchors_drop.lua | 25 |
 | test_texttemplate.lua | 26 |
-| test_style.lua | 60 |
+| test_style.lua | 38 |
+| test_style_borders.lua | 22 |
 | test_castaura.lua | 7 |
 | test_timedspells.lua | 22 |
 | test_style_bars.lua | 63 |
 | test_style_icons.lua | 31 |
-| test_style_text.lua | 56 |
+| test_style_text.lua | 48 |
+| test_style_text_icon.lua | 8 |
 | test_style_text_autosize.lua | 18 |
 | test_style_text_glow.lua | 27 |
 | test_preview.lua | 32 |
@@ -2685,7 +2708,8 @@ Total.
 | test_glyphs.lua | 1 |
 | test_pages_general_categories.lua | 32 |
 | test_pages_containers.lua | 35 |
-| test_pages_filters.lua | 53 |
+| test_pages_filters.lua | 36 |
+| test_pages_filters_overrides.lua | 17 |
 | test_pages_situations.lua | 11 |
 | test_pages_layout.lua | 52 |
 | test_pages_bars.lua | 13 |

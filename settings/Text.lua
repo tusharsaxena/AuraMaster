@@ -468,7 +468,7 @@ local iconBorder = H.BorderGroup({
 for _, row in ipairs(iconBorder) do
     if row.path == P .. "iconBorderShow" then row.tooltip = L["Draw a border around the icon; its art sits inside it."] end
     -- A style other than Solid is a backdrop, which a live button's secret size keeps from redrawing
-    -- (modules/Style.lua's ApplyBorder, B2-3): the tooltip says when it shows.
+    -- (modules/Style_Border.lua's ApplyBorder, B2-3): the tooltip says when it shows.
     if row.path == P .. "iconBorderStyle" then row.tooltip = L["The border texture. Solid redraws at once; any other texture, and a new thickness for one, reaches the aura buttons already on screen after a /reload."] end
     if row.type ~= "color" then row.disabledIf = noIcon end
 end
