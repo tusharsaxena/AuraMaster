@@ -274,8 +274,8 @@ add a case proving a real bracket reaches it; add the row to `docs/performance.m
 
 ## Add a section to the Containers page
 
-1. Add the section key to `VALID_PAGES` in `settings/Schema.lua`: a section key is a page key, and
-   every row's `page` names it.
+1. Add the section key to `VALID_PAGES` in `settings/Schema_Validate.lua`: a section key is a
+   page key, and every row's `page` names it.
 2. Create `settings/<Section>.lua` registering its rows and calling
    `NS.RegisterContainerSection(key, L["Title"], spec)`, with `spec.tooltip` (the rail entry's
    tooltip) and, for a section that applies to one style only, `spec.style`. An addon-wide page is

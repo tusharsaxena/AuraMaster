@@ -1,6 +1,6 @@
 -- tests/test_style_text.lua — modules/Style_Text.lua: how one aura is dressed as a LINE OF TEXT. The
 -- nested clip, animation and text-area frames, the chain's anchors for every justify, each piece's
--- engine binding and its options, the blink, the loops, the icon, a refused stored template, the
+-- engine binding and its options, the blink, the loops, a refused stored template, the
 -- chain kept per template shape, and the preview fill.
 --
 -- One environment with the client's text APIs as recording stand-ins (tests/text_apis.lua), built
