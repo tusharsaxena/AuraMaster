@@ -10,7 +10,7 @@ marked as such rather than listed as a requirement.
 | Group | Who needs it | Short answer |
 |---|---|---|
 | Runtime (in-game) | Players | World of Warcraft (Retail), patch 12.1 or later. Nothing else. |
-| Development | Contributors | Lua **5.1** (+ `luac`), `luacheck`, `lizard`, `git`, `bash`, and a POSIX shell with `ls` and `grep` (`nproc` optional, for `-j auto`). |
+| Development | Contributors | Lua **5.1** (+ `luac`), `luacheck`, `lizard`, `git`, `bash`, `~/.claude/dev-copilot/bin/ka0s-bounded` (the dev-copilot plugin), and a POSIX shell with `ls` and `grep` (`nproc` optional, for `-j auto`). |
 | Release / assets | Whoever regenerates a committed asset | Python **3.8+** (the spell-research generator, `tools/spell-research/research.py`, which regenerates `defaults/CastToAura.lua`, and the combat-log tool `tools/spell-research/logs.py`) and a working internet connection for its non-`--replay` runs; Pillow (the 128 icon TGA). Not needed to build, run or test. |
 
 ## Runtime (in-game) — what a player needs
@@ -46,7 +46,8 @@ marked as such rather than listed as a requirement.
 | Tool | Version | Needed for | Evidence |
 |---|---|---|---|
 | `lua5.1` (+ `luac`) | **5.1 exactly** | the headless suite, `lua tests/run.lua`; the offline perf runner `lua tests/perf.lua`; the complexity suite's sighted shadow (`tests/_kit/lizard_sighted.lua`, run by the automated-test runner); one-file syntax checks `luac -p file.lua` | `tests/_kit/loader.lua:72` and `:91` call `setfenv`, `:89` calls `loadstring` |
-| `luacheck` | any recent | `luacheck .`, the other half of the green gate | `.luacheckrc` at the repo root |
+| `luacheck` | any recent | `~/.claude/dev-copilot/bin/ka0s-bounded luacheck .`, the other half of the green gate | `.luacheckrc` at the repo root |
+| `ka0s-bounded` | the dev-copilot plugin | `~/.claude/dev-copilot/bin/ka0s-bounded`, the bounded runner lint goes through, because `luacheck` loads no kit and cannot bound itself (testing-§15) | installed with the dev-copilot Claude Code plugin |
 | `lizard` | any recent | the `complexity` suite of `tests/_kit/run-automated-tests.sh` (automated-tests) | `tests/_kit/run-automated-tests.sh:168` probes `command -v lizard` |
 | `git` | any recent | the vendored-payload gate, the lint-config gate, the line-ending gate, the layout cap gate, the runner-mode (100755) case, and the runner's manifest | `tests/_kit/vendor_sync.lua:422` (`git -C … show`), `tests/test_lintconfig.lua:155` (`git ls-files`), `tests/_kit/test_eol.lua` (`git check-attr`), `tests/_kit/test_layout_cap.lua:171` (`git ls-files`), `tests/_kit/vendor_sync.lua:657` (`git ls-files -s`, the kit's runner-mode case), `tests/_kit/run-automated-tests.sh:172` (`git rev-parse`) |
 | `bash` | any recent | running the vendored automated-test runner, and the standard utilities it pipes through: `sed`, `grep`, `awk`, `date`, `find`, `wc`, `sort`, `head`, `tail`, `tr` | `tests/_kit/run-automated-tests.sh:1` is `#!/usr/bin/env bash` and uses bash arrays; `:69`, `:81` and `:94` (`sed`), `:81` and `:166` (`grep`), `:101` (`date`), `:78` (`head`), `:81` (`tr`); `awk` builds `PERF_SCENARIOS`, `PERF_TABLE` and `CCN_BAND_ROWS`, `find`, `wc` and `sort` build `CCN_BAND_ROWS`, and `tail` picks the lint `Total:` line and the tests `footer` |
@@ -163,7 +164,7 @@ python3 -c 'import PIL; print(PIL.__version__)'    # prints a version
 ```sh
 lua tests/run.lua                                     # the suite, sharded across CPUs — must be green
 lua tests/run.lua -j 1                                # same, serially; must match it (testing-§14)
-luacheck .                                            # must be 0 warnings / 0 errors
+~/.claude/dev-copilot/bin/ka0s-bounded luacheck .    # must be 0 warnings / 0 errors
 bash tests/_kit/run-automated-tests.sh --suite complexity   # the sighted complexity report (release-time)
 ```
 

@@ -10,7 +10,7 @@ Both must pass before **every** commit (testing-§4):
 | Check | Command | Expected |
 |---|---|---|
 | Headless suite | `lua tests/run.lua` | every suite green; exits non-zero on any failure |
-| Lint | `luacheck .` | `0 warnings / 0 errors` |
+| Lint | `~/.claude/dev-copilot/bin/ka0s-bounded luacheck .` | `0 warnings / 0 errors` |
 | Syntax-check one file | `luac -p path/to/file.lua` | no output |
 
 `tests/_kit/run-automated-tests.sh --suite lint --suite tests --no-bundle` runs exactly that pair and
@@ -32,7 +32,7 @@ answer differs between them (automated-tests-§3):
 
 | Suite | Command | Run + commit | Release tag |
 |---|---|---|---|
-| `lint` | `luacheck .` | **gates** | **gates** |
+| `lint` | `~/.claude/dev-copilot/bin/ka0s-bounded luacheck .` | **gates** | **gates** |
 | `tests` | `lua tests/run.lua` | **gates** | **gates** |
 | `perf` | `lua tests/perf.lua` | does not gate — recorded | **gates** — must be `pass` |
 | `complexity` | `bash tests/_kit/run-automated-tests.sh --suite complexity` (lizard over the kit's sighted shadow) | does not gate — recorded | **gates** — `pass` with zero functions above CCN 15 |
