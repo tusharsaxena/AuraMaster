@@ -2323,9 +2323,10 @@ Total.
 - layout: Mouse opens on Click-through, unheaded, then Tooltips and Clicks (AUR-L11)
 - layout: Scale and strata names the container and says what multiplies it (AUR-L-new3, AUR-L-new4, AUR-L25)
 
-### test_pages_bars.lua (13)
+### test_pages_bars.lua (14)
 
 - bars: the Icon tab holds the icon's four rows, then the composed icon-border block (B-1)
+- bars: with Icon position Hidden every Icon row but the position is dropped, and comes back (options-ui-§22)
 - bars: the General tab's Spark subsection turns the spark off on auras without a duration (B-3)
 - bars: the seven tabs are drawn in order, whatever the container shows (S-1: Size folded into General)
 - bars: General opens on Size (Width, Height) ahead of Fill, with paths unchanged (S-1)
@@ -2348,7 +2349,7 @@ Total.
 - icons: the Pandemic tab holds the time color and the highlight, in pandemic-window words, paths unchanged (B2-1)
 - icons: Defaults restores the selected container's icon look and leaves its bar look alone
 
-### test_pages_text.lua (32)
+### test_pages_text.lua (33)
 
 - text page: the five tabs are drawn in order, Pandemic before Animation (B2-1)
 - text page: General holds Size, the Template dropdown, box, Time format and Preview, then Placement, then the cheat sheet (AUR-L17, AUR-L19)
@@ -2360,10 +2361,11 @@ Total.
 - text page: /am set refuses a bad template with the parser's reason, indented under the refusal
 - text page: a gray note under Justify says what Center does and why, whatever the justify (item 3)
 - text page: Center on a multi-piece template draws the note naming its rows (feedback #1)
-- text page: each loop row is live only for the effects that use it
+- text page: each loop row is drawn only for the effects that use it, and comes back (options-ui-§22)
 - text page: without a duration token the pandemic-window rows dim, except the swatch, under a note
 - text page: the Pandemic tab holds the time color and the blink, in pandemic-window words, paths unchanged (B2-1)
-- text page: with Icon position None every Icon row but the position dims, the swatch excepted, under a note (item 6)
+- text page: with Icon position Hidden every Icon row but the position is dropped, under a note, and comes back (options-ui-§22)
+- text page: Icon position and Effect redraw an open page on the next frame, through the library's watch
 - text page: the blink row is engine-only, and the Font tab carries the composed font block, Glow and Dispel type
 - text page: Defaults restores the selected container's text look and nothing else
 - text page: the Template dropdown lists the aura type's built-ins, then Custom (feedback #5)
@@ -2714,9 +2716,9 @@ Total.
 | test_pages_filters_overrides.lua | 17 |
 | test_pages_situations.lua | 11 |
 | test_pages_layout.lua | 52 |
-| test_pages_bars.lua | 13 |
+| test_pages_bars.lua | 14 |
 | test_pages_icons.lua | 6 |
-| test_pages_text.lua | 32 |
+| test_pages_text.lua | 33 |
 | test_pages_tabs.lua | 6 |
 | test_pages_rail.lua | 20 |
 | test_pages_about.lua | 3 |
@@ -2737,4 +2739,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **2251** |
+| **Total** | **2253** |

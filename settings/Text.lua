@@ -14,8 +14,8 @@ local _, NS = ...
 --               but the toggle and the color pair dims while it is), then Dispel type
 --               (feedback #7: the word's color, a backdrop, an edge, each opt-in and off; moved here
 --               from Animation, smoke batch 2 item 5)
---     Icon      Icon (position, size, gap, zoom), Icon border; every row but the position (and the
---               border swatch) dims while the position is None, under a note
+--     Icon      Icon (position, size, gap, zoom), Icon border; every row but the position is
+--               dropped while the position is Hidden (options-ui-§22), under a note
 --     Pandemic  Time color (the duration tokens' color and blink in the pandemic window, once
 --               "Running out" on Animation; smoke batch 2, B2-1) and its note
 --     Animation Loop
@@ -77,14 +77,6 @@ local function textBlock()
     return c and c.text or {}
 end
 
---- A `disabledIf` predicate: the row is dimmed unless the selected container's loop effect is one
---- of `...`.
-local function unlessAnim(...)
-    local wanted = {}
-    for _, v in ipairs({ ... }) do wanted[v] = true end
-    return function() return not wanted[textBlock().anim or D.anim] end
-end
-
 --- A `disabledIf` predicate: the pandemic-window rows need a duration token in the template (the blink
 --- and the color ride the duration run's text).
 local function noDuration()
@@ -96,8 +88,8 @@ local function noDispel()
     return not TT.ForDraw(textBlock().template).hasDispel
 end
 
---- A `disabledIf` predicate: the Icon tab's rows draw nothing while Icon position is None (smoke
---- batch 2, item 6: the icon and its border draw only on Left or Right).
+--- Whether Icon position is Hidden: the icon and its border draw only on Left or Right (smoke batch
+--- 2, item 6), so the Icon tab's rows are dropped (ICON_SHOWN) and iconNote says why.
 local function noIcon()
     return (textBlock().icon or D.icon) == "NONE"
 end
@@ -112,6 +104,14 @@ end
 local function unlessOn(key)
     return function() return not textBlock()[key] end
 end
+
+-- The sections a selector picks (options-ui-§22): a row is drawn only while its dropdown picks a
+-- value it serves, and the library re-renders the page when the dropdown changes (LibKa0s#67).
+local ANIM = P .. "anim"
+local LOOP_ROW  = { path = ANIM, equals = { "pulse", "blink", "bounce" } }
+local FADE_ROW  = { path = ANIM, equals = { "pulse", "blink" } }
+local BOUNCE_ROW = { path = ANIM, equals = "bounce" }
+local ICON_SHOWN = { path = P .. "icon", equals = { "LEFT", "RIGHT" } }
 
 -- ── General ───────────────────────────────────────────────────────────────────────────────────
 
@@ -447,15 +447,15 @@ NS.RegisterSchemaRows({
 NS.RegisterSchemaRows({
     { path = P .. "icon", page = PAGE, group = G_ICON, subgroup = L["Icon"], type = "string",
       values = NS.Choices(C.TEXT_ICON_POSITIONS, C.TEXT_ICON_POSITION_LABELS), label = L["Icon position"],
-      desc = L["Where the aura's icon sits beside the text, or hide it."], onChange = structural },
+      desc = L["Where the aura's icon sits beside the text, or hide it."] },
     { path = P .. "iconSize", page = PAGE, group = G_ICON, subgroup = L["Icon"], type = "number", min = 0, max = 80, step = 1,
-      disabledIf = noIcon,
+      shownWhen = ICON_SHOWN,
       label = L["Icon size (0 = line height)"], desc = L["A square icon this many pixels wide."] },
     { path = P .. "iconGap", page = PAGE, group = G_ICON, subgroup = L["Icon"], type = "number", min = 0, max = 20, step = 1,
-      disabledIf = noIcon,
+      shownWhen = ICON_SHOWN,
       label = L["Icon gap (px)"], desc = L["Space between the icon and the text."] },
     { path = P .. "iconZoom", page = PAGE, group = G_ICON, subgroup = L["Icon"], type = "number", min = 0, max = 0.3, step = 0.01,
-      disabledIf = noIcon,
+      shownWhen = ICON_SHOWN,
       label = L["Icon zoom"], desc = L["Crop the icon's border art."] },
 })
 local iconBorder = H.BorderGroup({
@@ -463,14 +463,13 @@ local iconBorder = H.BorderGroup({
     keys = { borderShow = "iconBorderShow", borderStyle = "iconBorderStyle", borderSize = "iconBorderSize",
              borderColor = "iconBorderColor", useClassColorBorder = "useClassColorIconBorder" },
 })
--- Every border row dims with no icon (noIcon), except the swatch: a color row is never grayed
--- (anti-pattern #74, options-ui-§17), as the pandemic-window time swatch stays live on the Pandemic tab.
+-- Every border row, the swatch with them, is dropped with no icon (ICON_SHOWN).
 for _, row in ipairs(iconBorder) do
+    row.shownWhen = ICON_SHOWN
     if row.path == P .. "iconBorderShow" then row.tooltip = L["Draw a border around the icon; its art sits inside it."] end
     -- A style other than Solid is a backdrop, which a live button's secret size keeps from redrawing
     -- (modules/Style_Border.lua's ApplyBorder, B2-3): the tooltip says when it shows.
     if row.path == P .. "iconBorderStyle" then row.tooltip = L["The border texture. Solid redraws at once; any other texture, and a new thickness for one, reaches the aura buttons already on screen after a /reload."] end
-    if row.type ~= "color" then row.disabledIf = noIcon end
 end
 NS.RegisterSchemaRows(iconBorder)
 
@@ -509,17 +508,17 @@ NS.RegisterSchemaRows({
       values = NS.Choices(C.TEXT_ANIMS, C.TEXT_ANIM_LABELS), label = L["Effect"],
       desc = L["A looping effect on the whole line. Pulse fades it down and back, Blink switches it off and on, Bounce moves it up and down (give the box a few pixels of headroom). A change made in combat starts when combat ends."] },
     { path = P .. "animSpeed", page = PAGE, group = G_ANIM, subgroup = L["Loop"], type = "number",
-      min = 0.2, max = 3, step = 0.1, disabledIf = unlessAnim("pulse", "blink", "bounce"),
+      min = 0.2, max = 3, step = 0.1, shownWhen = LOOP_ROW,
       label = L["Seconds per cycle"], desc = L["How long one pulse, blink or bounce takes."] },
     { path = P .. "animIntensity", page = PAGE, group = G_ANIM, subgroup = L["Loop"], type = "number",
-      min = 0, max = 0.9, step = 0.05, isPercent = true, disabledIf = unlessAnim("pulse", "blink"),
+      min = 0, max = 0.9, step = 0.05, isPercent = true, shownWhen = FADE_ROW,
       label = L["Faded to"], desc = L["How visible the line stays at the low point of a pulse or blink."] },
     { path = P .. "animBounce", page = PAGE, group = G_ANIM, subgroup = L["Loop"], type = "number",
-      min = 1, max = 10, step = 1, disabledIf = unlessAnim("bounce"),
+      min = 1, max = 10, step = 1, shownWhen = BOUNCE_ROW,
       label = L["Bounce height (px)"], desc = L["How far the line moves up. The box clips it, so leave headroom."] },
 })
 
---- After the Icon tab's rows: why they are dimmed, when Icon position is None (smoke batch 2, item 6).
+--- After the Icon tab's position: why nothing follows it, when Icon position is Hidden (smoke batch 2, item 6).
 local function iconNote(ctx)
     if not noIcon() then return end
     H.TextRow(ctx, gray(L["Set Icon position to show the icon."]), SMALL)

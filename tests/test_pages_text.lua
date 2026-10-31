@@ -265,23 +265,28 @@ test("text page: Center on a multi-piece template draws the note naming its rows
     assertFalse(P.hasText(ws, note:sub(1, 30)), "Left needs no note")
 end)
 
-test("text page: each loop row is live only for the effects that use it", function()
+test("text page: each loop row is drawn only for the effects that use it, and comes back (options-ui-§22)", function()
     local NS, _, P = textPage()
-    local function states(anim)
+    local function drawn(anim)
         NS.SetByPath(P_ .. "anim", anim, 1)
         local ws = animationTab(NS, P)
         local out = {}
         for _, key in ipairs({ "animSpeed", "animIntensity", "animBounce" }) do
-            local n = #out
-            out[n + 1] = key .. "=" .. tostring(P.row(ws, P_ .. key).disabled and true or false)
+            local w = P.row(ws, P_ .. key)
+            if w then
+                out[#out + 1] = key
+                assertFalse(w.disabled and true or false, key .. " is live while it is drawn")
+            end
         end
         return table.concat(out, " ")
     end
-    -- red under: a loop row's disabledIf naming the wrong effect
-    assertEqual(states("none"), "animSpeed=true animIntensity=true animBounce=true")
-    assertEqual(states("pulse"), "animSpeed=false animIntensity=false animBounce=true")
-    assertEqual(states("blink"), "animSpeed=false animIntensity=false animBounce=true")
-    assertEqual(states("bounce"), "animSpeed=false animIntensity=true animBounce=false")
+    -- red under: a loop row dimmed through disabledIf instead of dropped, or a shownWhen naming the wrong effect
+    assertEqual(drawn("none"), "")
+    assertEqual(drawn("pulse"), "animSpeed animIntensity")
+    assertEqual(drawn("blink"), "animSpeed animIntensity")
+    assertEqual(drawn("bounce"), "animSpeed animBounce")
+    assertEqual(drawn("none"), "", "dropped again")
+    assertTrue(NS.FindSchemaRow(P_ .. "animBounce") ~= nil, "a hidden row stays in the schema")
 end)
 
 test("text page: without a duration token the pandemic-window rows dim, except the swatch, under a note", function()
@@ -351,9 +356,9 @@ end
 
 -- The Icon tab's rows that draw nothing while Icon position is None (smoke batch 2, item 6).
 local ICON_ROWS = { "iconSize", "iconGap", "iconZoom", "iconBorderShow", "iconBorderStyle", "iconBorderSize",
-    "useClassColorIconBorder" }
+    "iconBorderColor", "useClassColorIconBorder" }
 
-test("text page: with Icon position None every Icon row but the position dims, the swatch excepted, under a note (item 6)", function()
+test("text page: with Icon position Hidden every Icon row but the position is dropped, under a note, and comes back (options-ui-§22)", function()
     local NS, _, P = textPage()
     local note = NS.L["Set Icon position to show the icon."]
     assertEqual(NS.db.profile.containers[1].text.icon, "NONE", "the template's default: no icon")
@@ -362,19 +367,41 @@ test("text page: with Icon position None every Icon row but the position dims, t
     assertTrue(P.hasText(ws, note), "the note")
     assertFalse(P.row(ws, P_ .. "icon").disabled and true or false, "Icon position stays live")
     for _, key in ipairs(ICON_ROWS) do
-        -- red under: an Icon row without the noIcon predicate (it looks live and draws nothing)
-        assertTrue(P.row(ws, P_ .. key).disabled, key)
+        -- red under: an Icon row dimmed through disabledIf instead of dropped
+        assertEqual(P.row(ws, P_ .. key), nil, key)
     end
-    -- anti-pattern #74: a color swatch is never grayed
-    assertFalse(P.row(ws, P_ .. "iconBorderColor").disabled and true or false, "the swatch stays live")
-    -- red under: Icon position without its structural redraw (the note and the dim outlive the change)
-    assertTrue(NS.FindSchemaRow(P_ .. "icon").onChange ~= nil, "a position change redraws the page")
-    NS.SetByPath(P_ .. "icon", "LEFT", 1)
+    -- red under: the Icon border heading drawn over nothing
+    assertEqual(P.find(ws, "Heading", NS.L["Icon border"]), nil, "no heading over nothing")
+    -- red under: a hand-rolled redraw left on the selector, which shownWhen's watch already owns
+    assertEqual(NS.FindSchemaRow(P_ .. "icon").onChange, nil, "the library watches the selector")
+    for _, position in ipairs({ "LEFT", "RIGHT" }) do
+        NS.SetByPath(P_ .. "icon", position, 1)
+        ws = iconTab(NS, P)
+        assertFalse(P.hasText(ws, note), "no note with an icon")
+        for _, key in ipairs(ICON_ROWS) do
+            local w = P.row(ws, P_ .. key)
+            assertTrue(w ~= nil, key .. " comes back on " .. position)
+            assertFalse(w.disabled and true or false, key .. " is live on " .. position)
+        end
+    end
+    NS.SetByPath(P_ .. "icon", "NONE", 1)
     ws = iconTab(NS, P)
-    assertFalse(P.hasText(ws, note), "no note with an icon")
-    for _, key in ipairs(ICON_ROWS) do
-        assertFalse(P.row(ws, P_ .. key).disabled and true or false, key .. " is live on Left")
-    end
+    assertEqual(P.row(ws, P_ .. "iconSize"), nil, "dropped again")
+    assertTrue(P.hasText(ws, note), "the note again")
+end)
+
+test("text page: Icon position and Effect redraw an open page on the next frame, through the library's watch", function()
+    local NS, m, P = textPage()
+    NS.Helpers.__pageCtx.text.panel:Show()
+    local ws = iconTab(NS, P)
+    P.row(ws, P_ .. "icon"):__fire("OnValueChanged", "LEFT")
+    local redrawn = P.during(function() m.__fireTimers() end)
+    -- red under: a selector no row's shownWhen names (nothing watches it, so a scalar refresh draws nothing new)
+    assertTrue(P.row(redrawn, P_ .. "iconSize") ~= nil, "the Icon rows came back with no redraw of our own")
+    ws = animationTab(NS, P)
+    P.row(ws, P_ .. "anim"):__fire("OnValueChanged", "bounce")
+    redrawn = P.during(function() m.__fireTimers() end)
+    assertTrue(P.row(redrawn, P_ .. "animBounce") ~= nil, "Bounce height came back")
 end)
 
 test("text page: the blink row is engine-only, and the Font tab carries the composed font block, Glow and Dispel type", function()

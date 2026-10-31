@@ -1933,10 +1933,20 @@ animates; a change made in combat starts when combat ends. Result: pass (owner-m
 the color, then blinks, in the last N seconds; the rest of the line keeps the font color. Blink on and
 Recolor off → the alpha steps read as a blink, not a flicker or a smooth fade. Result: pass (owner-marked 2026-10-10)
 
-**TEXT-6. The Icon tab.** On a new Text container (Icon position None), the Icon tab's rows are dimmed
-under a gray "Set Icon position to show the icon.", except Icon position and the border's color
-swatch. Icon Left → the rows go live and the note goes at once. Show border on at thickness 2 in red →
-a red border frames the icon on every line, the art inside it. Result: pass (owner-marked 2026-10-10)
+**TEXT-6. The Icon tab.** On a new Text container (Icon position Hidden), the Icon tab shows Icon
+position and a gray "Set Icon position to show the icon." and no other row, no Icon border heading
+(rewritten by XX-67, options-ui-§22). Icon Left → the rows appear and the note goes, with no `/reload`.
+Show border on at thickness 2 in red → a red border frames the icon on every line, the art inside it.
+Back to Hidden and to Left → the size, gap, zoom and border keep what was set. Result:
+
+**TEXT-37. The Loop rows follow the effect (XX-67).** Text → Animation, Effect: None → only Effect shows.
+Pulse or Blink → Seconds per cycle and Faded to. Bounce → Seconds per cycle and Bounce height. Each
+change redraws the tab once, no flicker, and a value set before stays when its row comes back. `/am get
+container.text.animBounce` answers while the row is hidden. Fail: a dimmed row, or a Lua error. Result:
+
+**TEXT-38. The Bar style's Icon tab (XX-67).** On a Bars container, Icon → Icon position Hidden → only
+the position shows; Left or Right → the rows and the Icon border heading return, values kept. Fail: a
+row left drawn, or a Lua error. Result:
 
 **TEXT-7. An icon on the right.** Icon position Right, with the border → the text starts after the
 icon and its gap, and with Size to fit off a long line is cut at its box rather than drawn under the
@@ -2638,4 +2648,5 @@ Open from the 2026-10-31 findings remediation (Ka0sAddonsCommonTasks
 code with no change meant. **Fully exit and restart the client**: the two new files are not seen by
 `/reload`.
 
-Open from the same run's LibKa0s v1.84.0 adoption (M2_LIBRARY_RELEASE.md): SKIN-33 is new (XX-ADOPT).
+Open from the same run's LibKa0s v1.84.0 adoption (M2_LIBRARY_RELEASE.md): SKIN-33 is new (XX-ADOPT);
+TEXT-37 and TEXT-38 are new and TEXT-6 is re-opened (XX-67).
