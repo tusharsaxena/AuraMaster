@@ -1,0 +1,7 @@
+ka0s-review: AM-F01 + AM-F02 (2026-10-31 font pickers and skin faces, LibKa0s v1.83.0)
+
+Independent review reported no findings for this range, so nothing was fixed or rejected and no 'AM-F02: Review fixes' commit was made.
+
+Gate re-run at this head: lua tests/run.lua 2249 passed, 0 failed, 1 skipped (2250 total, 16 shards); luacheck 0 warnings / 0 errors in 193 files; largest Lua file 1344 lines (cap 1500); complexity suite max CCN 15.
+
+In-client smoke remains open with the owner (SKIN-3, SKIN-4, SKIN-10 re-opened in docs/smoke-tests.md).
