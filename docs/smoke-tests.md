@@ -2560,6 +2560,14 @@ width with its name re-shortened to fit the new face, and the one-icon strip gro
 title; nothing is cut off mid-letter or runs past the strip. In combat a switch is refused, so nothing
 moves. Fail: a strip still sized for the previous face until a `/reload`, or a Lua error. Result: Owner reported pass, 2026-10-31
 
+**SKIN-33. A capped strip's name after a scale change (LibKa0s#68, XX-ADOPT).** `/am unlock` with a
+long-named Bars container capped at its bar, its name shortened with "...". Layout → Scale and
+strata → **Container scale**: drag it down and up, then the same with General → Master controls →
+**Master scale** → after each, with no
+`/reload`, the strip stays at its bar's width and the shortened name fits inside it, nothing cut off
+mid-letter or run past the marks. Fail: a name that only corrects itself when renamed, or a Lua error.
+Result:
+
 ## Library-absent install
 
 **DEGRADED-1. Without the launcher libraries.** Rename `libs/LibDBIcon-1.0` aside, `/reload` → one
@@ -2629,3 +2637,5 @@ Open from the 2026-10-31 findings remediation (Ka0sAddonsCommonTasks
 `docs/2026-10-31-FINDINGS_REMEDIATION/`, FX-AM-SIZE): INSTALL-11 and STYLE-31 are new. Both cover moved
 code with no change meant. **Fully exit and restart the client**: the two new files are not seen by
 `/reload`.
+
+Open from the same run's LibKa0s v1.84.0 adoption (M2_LIBRARY_RELEASE.md): SKIN-33 is new (XX-ADOPT).

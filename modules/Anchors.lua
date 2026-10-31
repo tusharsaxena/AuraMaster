@@ -927,23 +927,33 @@ local function stripFace(handle)
     return tostring(path) .. "|" .. tostring(size) .. "|" .. tostring(flags)
 end
 
+--- The scale the strip draws at, which its measure follows (DragHandle minor 10, LibKa0s#68): a
+--- layout or Master scale change moves it under an unchanged name, room and face. It can read secret
+--- under an anchor attached to an engine frame, and every such read is the one fallback key.
+local function stripScale(handle)
+    if not handle.GetEffectiveScale then return 1 end
+    return NS.Secrets.NumberOr(handle:GetEffectiveScale(), 1)
+end
+
 --- The text the strip draws: the whole label on a natural-width strip or when it fits, else the
---- name shortened (shortened). Cached on the container by the whole label, the room it has and the
---- face it draws in, so an unchanged pass measures nothing. Config math and the widget's own measure
---- only: safe in combat.
+--- name shortened (shortened). Cached on the container by the whole label, the room it has, the
+--- face it draws in and its scale, so an unchanged pass measures nothing. Config math and the
+--- widget's own measure only: safe in combat.
 local function stripLabel(container, handle, cfg)
     local full = handleText(cfg)
     if not (handle.Reserve and cfg) then return full end
     local w = NS.Style.ElementSize(cfg)
     if not stripCapped(handle, w) then return full end
     local avail = w - handle:Reserve() * 2
-    local face = stripFace(handle)
-    if container.stripFull == full and container.stripAvail == avail and container.stripFace == face then
+    local face, scale = stripFace(handle), stripScale(handle)
+    if container.stripFull == full and container.stripAvail == avail and container.stripFace == face
+        and container.stripScale == scale then
         return container.stripText
     end
     local text = full
     if labelWidth(handle, full) > avail then text = shortened(handle, cfg, avail) end
-    container.stripFull, container.stripAvail, container.stripFace, container.stripText = full, avail, face, text
+    container.stripFull, container.stripAvail, container.stripFace = full, avail, face
+    container.stripScale, container.stripText = scale, text
     return text
 end
 

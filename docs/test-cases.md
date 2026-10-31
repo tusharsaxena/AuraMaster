@@ -1128,7 +1128,7 @@ Total.
 - collapse: Build pins the engine one unit behind its anchor's start corner and pads the start sides
 - collapse: a live update re-sends the same start padding (no rebuild)
 
-### test_anchors_width.lua (9)
+### test_anchors_width.lua (11)
 
 - width: a long name on a wide Bars container gives a strip exactly as wide as its bar, the name shortened with ...
 - width: in test mode the name is shortened, never the TEST tag, which stays after it
@@ -1138,6 +1138,8 @@ Total.
 - width: the label is worked out once per name and width, not on every pass
 - width: the strip hands the widget an onRefit, and a skin repaint re-shortens a capped label in the new face
 - width: the cached label is keyed by the strip's face as well as the name and the room
+- width: the cached label is keyed by the strip's scale as well, and a scale that moves nothing else measures again
+- width: a strip whose scale reads secret keeps its cache on the fallback and never raises
 - width: a hidden strip's repaint re-places nothing, and an onRefit under lockdown only relabels
 
 ### test_anchors_snap.lua (31)
@@ -2663,7 +2665,7 @@ Total.
 | test_anchors_points.lua | 18 |
 | test_anchors_steady.lua | 8 |
 | test_anchors_collapse.lua | 9 |
-| test_anchors_width.lua | 9 |
+| test_anchors_width.lua | 11 |
 | test_anchors_snap.lua | 31 |
 | test_anchors_drag.lua | 21 |
 | test_anchors_attach.lua | 22 |
@@ -2735,4 +2737,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **2249** |
+| **Total** | **2251** |

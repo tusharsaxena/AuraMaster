@@ -223,7 +223,7 @@ visibility pass re-places it when either appears or goes (`Anchors.RefreshSeam`,
 while it shows, locked or not, and its strip while that runs past its element (F4). The strip is as
 wide as the element (batch 11 T11): `Anchors.UpdateHandle` hands the widget a label whose name is
 shortened with "..." to fit between the marks (the TEST tag kept whole), measured through the
-widget's `SetLabel` and `Measure` and cached per name and width, and `placeHandle` sets the element's
+widget's `SetLabel` and `Measure` and cached per name, width, face and scale, and `placeHandle` sets the element's
 width, so `stripOverhang` is 0. Only an element too narrow for both reserves and 40 px of label
 keeps the natural width, `ApplyWidth(element)`, and runs past it. Nothing on screen
 marks the point where a container attached to another joins it (batch 11 G6 removed batch 9's join

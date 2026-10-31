@@ -330,7 +330,7 @@ Every surface Aura Master draws paints through the `LibKa0s-Skin-1.0` facade wit
   Quadrata), so the owner's Ka0s Kait Text containers and their glow came back (D-15).
 - **The drag strips re-fit after a repaint.** The widget calls `Anchors.Refit` (its `onRefit`,
   DragHandle minor 8, D-12) after every repaint of the skin: a shown strip takes its label again in
-  the new face (the shortened label is cached per face) and, out of combat, is re-placed.
+  the new face (the shortened label is cached per face and scale) and, out of combat, is re-placed.
 - **The unlock furniture** (the drag strip and its tooltips, the outline, the drag-to-attach marks,
   the frame picker) repaints from tokens on `OnLooksChanged`
   (`modules/Anchors.lua`, `Anchors_Snap.lua`, `Container.lua`, `FramePicker.lua`, `Preview.lua`); the
