@@ -9,7 +9,7 @@ Ka0s Aura Master draws player-built aura **containers**. A container is one unit
 `target`, `focus`, `pet` — `core/Constants.lua:39`), one aura type (`HELPFUL` or `HARMFUL` — `:45`;
 the player's temporary weapon enchants are the buff category `weaponEnchants`, schema v5) and one style (`bars`, `icons` or
 `text` — `:49`), plus its filters, placement and look. A profile holds any number of them; a fresh
-profile is seeded with four (`NS.STARTER_CONTAINERS`, `defaults/Profile.lua:332`).
+profile is seeded with four (`NS.STARTER_CONTAINERS`, `defaults/Profile.lua:333`).
 
 **The design is dictated by one client fact.** On Retail 12.1 an addon cannot read aura data while
 auras are secret — combat, encounters, Mythic+ and PvP (`core/Secrets.lua`, `docs/midnight-quirks.md`).
@@ -365,9 +365,14 @@ Every surface Aura Master draws paints through the `LibKa0s-Skin-1.0` facade wit
   saves it through `NS.WriteSkinChoice`, and a dismissal puts back what the window opened with.
 - **EllesmereUI.** The library's provider: with source `eui` and its gate holding, EllesmereUI's
   facade paints; otherwise the addon wears its Ka0s skin and the Skin tab says why.
-- **The color gate.** `tests/test_skin_literals.lua` fails on a numeric color literal in a paint call
-  or a `|cff` escape in code outside `core/SkinSetup.lua` and its named allow-list: chat output (X7),
-  the dispel-type and identity palettes (rung 4, D8) and the engine-tinted strips.
+- **The gates.** The kit's `test_skin_values` (kit revision 50) fails on a typed color or texture the
+  skin cannot reach, outside its own categories and the rows in `tests/skin_gate.lua`, each naming a
+  cause id. The kit's `test_skin_switch` flips Ka0s Default against a probe skin and fails a surface
+  `tests/skin_gate.lua` declares that drew the same.
+- **Borders.** `Style.BorderLook` is the one reading. A bar's own border goes through `S.BarBorder`: a
+  skin's None leaves Show border, the stored style and the thickness the player's, and a real style
+  wins over all three. The icon beside a bar or a text line takes the same None, and keeps its own Show
+  border, because Ka0s Default's icon style is a real Solid. An Icons element's border is the skin's.
 
 ## Frame layering
 

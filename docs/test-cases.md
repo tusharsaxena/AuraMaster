@@ -2024,12 +2024,6 @@ Total.
 - Skin seam: NS.ApplySkin hands the library this addon's owner
 - Skin seam: the drag strip is built for this addon's owner
 
-### test_skin_literals.lua (3)
-
-- no color literal outside core/SkinSetup.lua and the named allow-list
-- every allow-list entry carries its reason
-- the gate is falsifiable: a planted literal of each shape is reported
-
 ### test_skin_surfaces.lua (7)
 
 - skin surfaces: a skin switch repaints each strip's own edge in the new skin's handle.edge
@@ -2088,6 +2082,17 @@ Total.
 - skin flip: the step is the same write with the library absent, and creates only the skin table
 - skin flip: v16 on a stored profile with no skin table keeps the record, so the step runs once
 - skin flip: the ladder walks every stored profile, and a new profile takes the step on load
+
+### test_skin_border.lua (8)
+
+- bar border: a skin's None hands Show border on, the stored style and the stored thickness back
+- bar border: a skin's None leaves Show border off off
+- bar border: a real style wins, with Show border off and over the stored thickness
+- bar border: with the companion off the stored three stand under a real style
+- beside icon: a skin's None defers on a bar and on a text line, and the art's inset agrees
+- beside icon: Show border off stays off under a real style, so Ka0s Default keeps its pixels
+- icon element: a skin's None stays no border: the rule is the bars' and the beside icons'
+- degraded: S.BarBorder answers the stored three, so a stored border still draws
 
 ### test_skin_fix.lua (6)
 
@@ -2573,7 +2578,7 @@ Total.
 
 - prose: no authored file carries a British spelling from localization-§5's published list
 - prose: the gate carries localization-§5's two lists whole, and nothing of its own
-- prose: the exclusions this repository declared suppressed 11 of 241 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (11): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, docs/spell-research/2026-09-24-logs/CORRECTIONS.md, docs/spell-research/2026-09-24-logs/CURRENT_CATEGORIES.md, docs/spell-research/2026-09-24-logs/DECISIONS.md, docs/spell-research/2026-09-24-logs/FLAGS.md, docs/spell-research/2026-09-24-logs/PROPOSED_ADDITIONS.md, docs/spell-research/2026-09-24-logs/REVIEW.md, docs/spell-research/2026-09-24-logs/SOURCES.md, docs/spell-research/2026-09-24-logs/dictionary/AURAS.md
+- prose: the exclusions this repository declared suppressed 11 of 240 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (11): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, docs/spell-research/2026-09-24-logs/CORRECTIONS.md, docs/spell-research/2026-09-24-logs/CURRENT_CATEGORIES.md, docs/spell-research/2026-09-24-logs/DECISIONS.md, docs/spell-research/2026-09-24-logs/FLAGS.md, docs/spell-research/2026-09-24-logs/PROPOSED_ADDITIONS.md, docs/spell-research/2026-09-24-logs/REVIEW.md, docs/spell-research/2026-09-24-logs/SOURCES.md, docs/spell-research/2026-09-24-logs/dictionary/AURAS.md
 - prose: no path this repository narrows the gate by is loaded by a TOC
 - prose: every path this repository narrows the gate by is one .pkgmeta keeps out of the zip
 - prose self-test: the carve-out suppresses the named generated folder, and only it
@@ -2662,6 +2667,49 @@ Total.
 - lizard sighted: parity names every file whose counts differ, and only those
 - lizard sighted: lizard lists every function of a hazard fixture once it is sanitized
 
+### test_skin_values.lua (3)
+
+- skin values: every host row carries its file, substring, why and cause id
+- skin values: no typed value outside the kit's categories and the host's rows
+- skin values: the check is falsifiable, a planted value of each shape is reported
+
+### test_skin_switch.lua (34)
+
+- skin switch: the check is falsifiable, a surface that redraws a literal is reported
+- skin switch: a bar's fill changes
+- skin switch: a bar's background changes
+- skin switch: a bar's border, Show border on changes
+- skin switch: a bar's border, Show border off changes
+- skin switch: a bar's name changes
+- skin switch: a bar's time changes
+- skin switch: a bar's stacks changes
+- skin switch: the icon beside a bar's border changes
+- skin switch: an icon's border changes
+- skin switch: an icon's time changes
+- skin switch: an icon's stacks changes
+- skin switch: the icon beside a text line's border changes
+- skin switch: a text line's glow changes
+- skin switch: a text line's glow changes with the Scope ignored
+- skin switch: the name label changes
+- skin switch: the name label changes with the Scope ignored
+- skin switch: a drag strip's edge changes
+- skin switch: a drag strip's edge changes with the Scope ignored
+- skin switch: a drag strip's tooltip changes
+- skin switch: a drag strip's tooltip changes with the Scope ignored
+- skin switch: a drag strip's TEST tag changes
+- skin switch: a drag strip's TEST tag changes with the Scope ignored
+- skin switch: the unlocked outline changes
+- skin switch: the unlocked outline changes with the Scope ignored
+- skin switch: the frame picker's outline and name changes
+- skin switch: the frame picker's outline and name changes with the Scope ignored
+- skin switch: the drag-to-attach mark changes
+- skin switch: the drag-to-attach mark changes with the Scope ignored
+- skin switch: the Unit dropdown's values changes
+- skin switch: a settings page's muted note changes
+- skin switch: a plan warning's line changes
+- skin switch: the Filters section's link changes
+- skin switch: a settings tooltip's line changes
+
 ## Totals
 
 | Suite | Cases |
@@ -2747,10 +2795,10 @@ Total.
 | test_options_descriptor.lua | 19 |
 | test_pages_general.lua | 37 |
 | test_skinsetup.lua | 19 |
-| test_skin_literals.lua | 3 |
 | test_skin_surfaces.lua | 7 |
 | test_skin_hud.lua | 12 |
 | test_skin_flip.lua | 31 |
+| test_skin_border.lua | 8 |
 | test_skin_fix.lua | 6 |
 | test_skin_flags.lua | 7 |
 | test_skin_glow_restore.lua | 6 |
@@ -2786,5 +2834,7 @@ Total.
 | test_layout_cap.lua | 13 |
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
+| test_skin_values.lua | 3 |
+| test_skin_switch.lua | 34 |
 | Skipped | 1 |
-| **Total** | **2293** |
+| **Total** | **2335** |

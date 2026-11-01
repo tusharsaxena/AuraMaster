@@ -399,6 +399,10 @@ local GATES = {
 local TWIN_ENGINE_ONLY = { ["container.text.glow"] = true, ["container.text.glowX"] = true,
     ["container.text.glowY"] = true }
 
+-- The row a skin's None hands back to the player, so Ka0s Default cannot show it: it is walked under a
+-- skin that states a real bar border.
+local UNDER_SKIN = { ["container.bars.borderStyleFromSkin"] = "midnight" }
+
 --- Every row of `page` whose write leaves a side unchanged, as "<path> (<side>)", plus exemptions
 --- the row no longer needs.
 local function gaps(page)
@@ -416,6 +420,7 @@ local function gaps(page)
     assertTrue(#rows > 0, page .. " has rows")
     for _, row in ipairs(rows) do
         k.c[page] = NS.Database.DeepCopy(baseline)
+        NS.ApplySkinChoice("ka0s", UNDER_SKIN[row.path] or "ka0s")
         local liveA, prevA = record(k)
         local value = differing(row, NS.GetSetting(row.path, k.c.id))
         assertTrue(value ~= nil, row.path .. ": a value to write")
@@ -431,6 +436,7 @@ local function gaps(page)
         if cov == "engine-only" and prevMoved then push(out, row.path .. " (reaches the preview; drop engine-only)") end
         if cov == "preview-only" and liveMoved then push(out, row.path .. " (reaches the engine; drop preview-only)") end
     end
+    NS.ApplySkinChoice("ka0s", "ka0s")
     return out, #rows
 end
 

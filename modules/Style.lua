@@ -236,9 +236,8 @@ end
 
 --- The icon border's thickness when it draws, else 0: how far the art is inset inside the icon's box.
 function Style.IconInset(s, sdef)
-    if not Style.OrTemplate(s.iconBorderShow, sdef.iconBorderShow) then return 0 end
-    local style, size = Style.BorderLook(s, sdef, Style.BORDER_BESIDE)
-    if style == "None" then return 0 end
+    local style, size, _, show = Style.BorderLook(s, sdef, Style.BORDER_BESIDE)
+    if not show or style == "None" then return 0 end
     return size
 end
 

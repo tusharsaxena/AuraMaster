@@ -260,8 +260,8 @@ local function applySurfaces(am, b, preview)
     end
 
     -- Guarded (B2-3): a refused border costs the border, never Bars.Bind after it.
-    local style, size, color = Style.BorderLook(b, D.bars, Style.BORDER_BAR)
-    Style.GuardedBorder("bar border", am.border, b.borderShow, style, size, color, b.useClassColorBorder)
+    local style, size, color, show = Style.BorderLook(b, D.bars, Style.BORDER_BAR)
+    Style.GuardedBorder("bar border", am.border, show, style, size, color, b.useClassColorBorder)
 
     am.spark:SetShown(b.spark ~= false)
     am.spark:SetVertexColor(Style.Color(b.sparkColor, b.useClassColorSpark))

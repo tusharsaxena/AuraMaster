@@ -455,7 +455,7 @@ if not Skin then
         -- LibKa0s v1.85.0: nil is each getter's degraded answer. The three colors answer nothing, so
         -- the stored color draws; HudShadow's nil is "the stored fontShadow stands". BarGloss draws
         -- nothing: no skin, no gloss.
-        "HudTextColor", "HudLabelColor", "BarFillColor", "HudShadow", "BarGloss",
+        "HudTextColor", "HudLabelColor", "BarFillColor", "HudShadow", "BarGloss", "HoverArt",
     }) do S[name] = noop end
 
     S.Token = function(name)
@@ -492,6 +492,8 @@ if not Skin then
         local n = tonumber(size)
         return (n and n > 0) and n or 12
     end
+    -- No skin states a border, so the stored style, Show border and thickness stand.
+    S.BarBorder = function(style, show, size) return style, show, size end
     -- LibKa0s v1.85.0: a string a caller concatenates, so never nil; the art in its own color, there
     -- being no tint to read.
     S.MarkText = function(path, size)

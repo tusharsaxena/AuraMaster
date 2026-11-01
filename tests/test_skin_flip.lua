@@ -98,7 +98,8 @@ end)
 
 test("skin flip: the borders' thickness goes on the skin through the composer, the icon's on our token", function()
     local NS = fresh()
-    assertEqual(NS.FindSchemaRow("container.bars.borderSize").disabledIf, "container.bars.borderStyleFromSkin")
+    -- A predicate (OptionsCompose minor 18): a skin's None leaves the bar's thickness the player's.
+    assertEqual(type(NS.FindSchemaRow("container.bars.borderSize").disabledIf), "function")
     local row = NS.FindSchemaRow("container.icons.borderSize")
     assertEqual(row.disabledIf, "container.icons.borderStyleFromSkin")
     -- red under: the disabled row showing the library's 2 while the icon draws 1

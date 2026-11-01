@@ -238,7 +238,8 @@ NS.CONTAINER_TEMPLATE = {
         -- The fill and the background each follow the skin's `bar.texture` while their "Use the
         -- skin's texture" companion is on: default ON (X3), as the font's. The stored picks are kept.
         -- Every color and border has a companion too (schema v16). Class colors come first and have
-        -- none. Every skin's `bar.borderStyle` is None, so a followed bar border draws nothing today.
+        -- none. A skin's None `bar.borderStyle` leaves Show border and the stored style the player's,
+        -- so this block ships off; a skin's real style wins over both (modules/Style_Border.lua).
         barTexture = "Ka0s Default", barTextureFromSkin = true, barAlpha = 1.0,
         barColor = color(0.20, 0.55, 0.95, 1), barColorFromSkin = true, useClassColorBar = false,
         colorMode = "static",   -- "dispel" tints by the profile's dispelColors (schema v2)

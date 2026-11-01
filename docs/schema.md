@@ -136,13 +136,13 @@ backfills it onto every stored container, so it needs no schema step.
 | `bgColorMode` | `"static"` (`static`, `dispel`: tinted by the profile's `dispelColors`, feedback #7) | | |
 | `borderShow` | `false` | `borderStyle` | `"Solid"` |
 | `borderSize` | `1` | `borderColor` | `{ 0, 0, 0, 1 }` |
-| `borderStyleFromSkin` | `true` (style and thickness are the skin's `bar.borderStyle` and `bar.borderSize`; `borderShow` stays the player's) | `borderColorFromSkin` | `true` (`bar.border`) |
+| `borderStyleFromSkin` | `true` (`S.BarBorder`: a skin's None leaves `borderShow`, `borderStyle` and `borderSize` the player's; its real `bar.borderStyle` and `bar.borderSize` win over all three) | `borderColorFromSkin` | `true` (`bar.border`) |
 | `useClassColorBorder` | `false` | `icon` | `"LEFT"` (`LEFT`, `RIGHT`, `NONE`) |
 | `iconSize` | `0` (= bar height) | `iconGap` | `1` |
 | `iconZoom` | `0.08` | `iconBorderShow` | `false` |
 | `iconBorderStyle` | `"Solid"` | `iconBorderSize` | `1` |
 | `iconBorderColor` | `{ 0, 0, 0, 1 }` | `useClassColorIconBorder` | `false` |
-| `iconBorderStyleFromSkin` | `true` (`icon.borderStyle` and the owner token `am.iconBorderSize`) | `iconBorderColorFromSkin` | `true` (`icon.border`) |
+| `iconBorderStyleFromSkin` | `true` (`icon.borderStyle` and the owner token `am.iconBorderSize`; a skin's None leaves the stored style and thickness; `iconBorderShow` stays the player's) | `iconBorderColorFromSkin` | `true` (`icon.border`) |
 | `spark` | `true` | `sparkWidth` | `8` |
 | `sparkColor` | `{ 1, 1, 1, 0.9 }` | `useClassColorSpark` | `false` |
 | `sparkTimeless` | `true` (`false`: no spark on an aura without a duration) | `name` | text block: size 11, `LEFT`, x 4, y 0, justify `LEFT` |
@@ -223,7 +223,7 @@ rewritten, and with the companion off, or under Ignore fonts, it draws as stored
 
 ## The starter containers
 
-`NS.STARTER_CONTAINERS` (`defaults/Profile.lua:332`) seeds a brand-new profile once, each spec merged
+`NS.STARTER_CONTAINERS` (`defaults/Profile.lua:333`) seeds a brand-new profile once, each spec merged
 over the template:
 
 | Name | Unit | Type | Style | Differs from the template |

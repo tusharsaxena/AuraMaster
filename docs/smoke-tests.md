@@ -2595,9 +2595,13 @@ white text with no shadow, 1 px black icon borders, gold name label. Fail: any o
 **SKIN-36. The colors follow the skin (D2, D3, D4).** With a bars, an icons and a Text container and the
 name label on, pick Obsidian, Azeroth and High Contrast in turn → with no reload the fill, every string
 and the label change with each skin, and the icon borders take the skin's style and thickness. The bar
-background and bar border colors are the same in every skin today (`bar.bg`, `bar.border`), and every
-skin's bar border style is None, so a bar with **Show border** on draws no border while it follows the
-skin. Under WoW Default the icon border is a textured edge, which reaches a live button after a
+background, bar border and icon border colors are each skin's own (`bar.bg`, `bar.border`,
+`icon.border`), from its palette. Under Obsidian (the skin's bar border style is None) a bar with
+**Show border** on draws its stored style and thickness in the skin's color, and with it off draws none.
+Under Azeroth, High Contrast and WoW Midnight (Solid) and WoW Default (Blizzard Tooltip) a bar draws the
+skin's border and thickness even with **Show border** off, and that row reads ticked and dims. Untick
+**Use the skin's border** → the stored Show border, style and thickness draw again. The icon beside a bar
+or a text line keeps its **Show border** in every skin: off stays off. Under WoW Default a textured edge, which reaches a live button after a
 `/reload`, as the row's tooltip says; until then that button keeps a flat border in the skin's color
 and thickness, never none. Fail: a surface on the previous skin's color until `/reload`. Result:
 
@@ -2609,6 +2613,7 @@ skin. Fail: no visible shadow under Azeroth, or one left behind after a switch. 
 **SKIN-38. The companions (D2 to D6).** Bars → Fill, Background and border and each text tab, Icons →
 Border, Text → Font and Icon, and Layout → Label show **Use the skin's color** (the text tabs **Use the
 skin's shadow** too), and each border **Use the skin's border**, which dims its style and thickness.
+On a bar's own border they stay live under a skin whose bar border style is None (SKIN-36).
 Untick one → the stored value draws at once, and only that element moves. A color swatch is never
 grayed. Tick **Use class color** under Azeroth → the class color wins whatever the companion says. On a
 target container with that box ticked, target an NPC and re-apply → the skin's color draws. Fail: a
@@ -2624,7 +2629,7 @@ running-out colors and **Ignore settings panel** are as stored. Fail: a stored c
 toggle moved, or the step running twice. Result:
 
 **SKIN-40. Text glow (D5).** Text style → Font → **Glow behind the text** on Ka0s Default → the black ring
-as before. Pick any other skin → it turns the skin's glow color, gold today. Untick **Use the skin's
+as before. Pick any other skin → it turns that skin's own glow color. Untick **Use the skin's
 color** beside the Glow color → your stored color draws. The running-out and pandemic colors do not move.
 Fail: a glow on the previous color until the next dress, or a warning tint recolored. Result:
 
@@ -2721,4 +2726,5 @@ Open from the same run's re-cut v1.84.0 (M3, `Ka0sMedia_*` the only media picker
 Open from the full skinning run (Ka0sAddonsCommonTasks `docs/2026-11-01-FULL_SKINNING/`, FS-AM-FLIP,
 FS-AM-FIX, LibKa0s v1.85.0): SKIN-35 to SKIN-42 are new, and SKIN-1, SKIN-4, SKIN-9 and SKIN-31 are
 re-opened because their expected results moved. **Fully exit and restart the client**: the library's new
-icons are not seen by `/reload`.
+icons are not seen by `/reload`. SKIN-36 and SKIN-38 moved again at FS-AM-GATE, with the owner's rulings
+of 2026-11-01 on a skin's bar border, and SKIN-40 with every skin's own glow color.

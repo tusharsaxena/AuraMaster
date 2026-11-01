@@ -190,34 +190,59 @@ end
 -- `am.iconBorderSize` is core/SkinSetup.lua's: this addon's 1 px under Ka0s Default, `icon.borderSize`
 -- under every other skin.
 Style.BORDER_BAR = {
+    show = "borderShow", barEdge = true,
     style = "borderStyle", size = "borderSize", color = "borderColor", useClass = "useClassColorBorder",
     styleFromSkin = "borderStyleFromSkin", colorFromSkin = "borderColorFromSkin",
     styleToken = "bar.borderStyle", sizeToken = "bar.borderSize", colorToken = "bar.border",
 }
 Style.BORDER_ICON = {
+    show = "borderShow",
     style = "borderStyle", size = "borderSize", color = "borderColor", useClass = "useClassColorBorder",
     styleFromSkin = "borderStyleFromSkin", colorFromSkin = "borderColorFromSkin",
     styleToken = "icon.borderStyle", sizeToken = "am.iconBorderSize", colorToken = "icon.border",
 }
 Style.BORDER_BESIDE = {
+    show = "iconBorderShow", defersNone = true,
     style = "iconBorderStyle", size = "iconBorderSize", color = "iconBorderColor",
     useClass = "useClassColorIconBorder",
     styleFromSkin = "iconBorderStyleFromSkin", colorFromSkin = "iconBorderColorFromSkin",
     styleToken = "icon.borderStyle", sizeToken = "am.iconBorderSize", colorToken = "icon.border",
 }
 
---- The style, thickness and stored-shaped color block `s` draws its border in (`sdef` the template's
---- block, `k` one of the three above). "Use the skin's border" governs the style and the thickness,
---- "Use the skin's color" the color, and a class color comes first (Style.Followed). Show border
---- stays the player's: a border that is off stays off. One reading for the border and the art's
---- inset, so the two cannot disagree.
+--- The style, thickness and whether it shows, for the bar's own border: S.BarBorder. A skin's None is
+--- no border of its own, so the player's Show border, stored style and thickness stand; a real style
+--- in a skin wins, Show border off included. Without the library the stored three stand.
+local function barEdge(stored, show, storedSize, fromSkin)
+    return NS.Skin.BarBorder(stored, show, storedSize, fromSkin)
+end
+
+--- The same rule for the icon family, whose Ka0s Default style is a real Solid: a skin's None hands
+--- back the stored style and thickness, and Show border stays the player's under every style, so an
+--- icon that is off under Ka0s Default stays off (the owner, 2026-11-01).
+local function iconEdge(k, stored, storedSize, fromSkin, defersNone)
+    local style = Style.SkinKey(k.styleToken, stored, fromSkin)
+    if defersNone and fromSkin and style == "None" then return stored, storedSize end
+    return style, Style.SkinKey(k.sizeToken, storedSize, fromSkin)
+end
+
+--- The style, thickness, stored-shaped color and shown flag block `s` draws its border in (`sdef` the
+--- template's block, `k` one of the three above). "Use the skin's border" governs the style and the
+--- thickness, "Use the skin's color" the color, and a class color comes first (Style.Followed). A bar's
+--- border and the icon beside a bar or a text line take a skin's None as no border of its own
+--- (barEdge, iconEdge). One reading for the border and the art's inset, so the two cannot disagree.
 function Style.BorderLook(s, sdef, k)
     local fromSkin = Style.OrTemplate(s[k.styleFromSkin], sdef[k.styleFromSkin]) == true
-    local style = Style.SkinKey(k.styleToken, Style.OrTemplate(s[k.style], sdef[k.style]), fromSkin)
-    local size = Style.SkinKey(k.sizeToken, tonumber(s[k.size]) or sdef[k.size], fromSkin)
+    local stored, storedSize = Style.OrTemplate(s[k.style], sdef[k.style]), tonumber(s[k.size]) or sdef[k.size]
+    local show = Style.OrTemplate(s[k.show], sdef[k.show])
+    local style, size
+    if k.barEdge then
+        style, show, size = barEdge(stored, show, storedSize, fromSkin)
+    else
+        style, size = iconEdge(k, stored, storedSize, fromSkin, k.defersNone)
+    end
     local color = Style.Followed(s[k.color] or sdef[k.color],
         Style.OrTemplate(s[k.colorFromSkin], sdef[k.colorFromSkin]) == true, k.colorToken, s[k.useClass])
-    return style, size, color
+    return style, size, color, show
 end
 
 --- Style.ApplyBorder, guarded: a border the client refuses costs the border alone (hidden, and
