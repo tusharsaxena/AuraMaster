@@ -169,6 +169,7 @@ test("text page: the Preview box wears the skin's text color, the swatch with th
     end
     local c = NS.Database.FindContainer(1)
     c.text.font.fontColor = { r = 1, g = 0, b = 0, a = 1 }
+    c.text.font.fontColorFromSkin = true   -- off by default since SF-AM-3: this reads the followed arm
     -- red under: previewText reading font.fontColor, whatever the companion says
     assertEqual(preview(NS, P, P.rerender("Text")).text:sub(1, 10), escape(NS.Skin.HudTextColor()), "followed")
     c.text.font.fontColorFromSkin = false

@@ -1089,15 +1089,18 @@ end
 -- v15's turning it off for a player's own face: the ruling names no exception.
 
 local FOLLOW_LEAVES = {
-    "bars.barTextureFromSkin", "bars.bgTextureFromSkin", "bars.barColorFromSkin",
+    "bars.barTextureFromSkin", "bars.bgTextureFromSkin",
     "bars.borderStyleFromSkin",
-    "bars.iconBorderStyleFromSkin", "bars.iconBorderColorFromSkin",
-    "icons.borderStyleFromSkin", "icons.borderColorFromSkin",
-    "text.iconBorderStyleFromSkin", "text.iconBorderColorFromSkin",
+    "bars.iconBorderStyleFromSkin",
+    "icons.borderStyleFromSkin",
+    "text.iconBorderStyleFromSkin",
 }
 for _, block in ipairs(Database.FLAG_BLOCKS) do
     for _, leaf in ipairs({ "fontFromSkin", "fontColorFromSkin", "fontShadowFromSkin", "fontFlags" }) do
-        FOLLOW_LEAVES[#FOLLOW_LEAVES + 1] = block .. "." .. leaf
+        -- text.font.fontColorFromSkin is off by default (SF-AM-3), so the one-time step skips it.
+        if not (block == "text.font" and leaf == "fontColorFromSkin") then
+            FOLLOW_LEAVES[#FOLLOW_LEAVES + 1] = block .. "." .. leaf
+        end
     end
 end
 Database.SKIN_FOLLOW_LEAVES = FOLLOW_LEAVES
@@ -1112,6 +1115,11 @@ Database.V17_MOVES = {
     { path = "bars.bgColorFromSkin", from = true, to = false },
     { path = "bars.borderColorFromSkin", from = true, to = false },
     { path = "bars.borderShow", from = false, to = true },
+    { path = "bars.barColorFromSkin", from = true, to = false },
+    { path = "bars.iconBorderColorFromSkin", from = true, to = false },
+    { path = "icons.borderColorFromSkin", from = true, to = false },
+    { path = "text.iconBorderColorFromSkin", from = true, to = false },
+    { path = "text.font.fontColorFromSkin", from = true, to = false },
 }
 
 --- Move one stored profile's containers by V17_MOVES. Answers how many values moved.

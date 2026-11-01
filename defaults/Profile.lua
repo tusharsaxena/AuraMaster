@@ -145,6 +145,14 @@ local function font(size)
     }
 end
 
+--- The Text container's font: the six leaves with the color's companion off (SF-AM-3), so the
+--- stored color draws under every skin until the player ticks Use the skin's color.
+local function textFont(size)
+    local t = font(size)
+    t.fontColorFromSkin = false
+    return t
+end
+
 --- The name label's font: the six leaves, gold at 12 (the strip's own look).
 local function labelFont()
     local t = font(12)
@@ -241,7 +249,7 @@ NS.CONTAINER_TEMPLATE = {
         -- none. A skin's None `bar.borderStyle` leaves Show border and the stored style the player's,
         -- so this block ships off; a skin's real style wins over both (modules/Style_Border.lua).
         barTexture = "Ka0s Default", barTextureFromSkin = true, barAlpha = 1.0,
-        barColor = color(0.20, 0.55, 0.95, 1), barColorFromSkin = true, useClassColorBar = false,
+        barColor = color(0.20, 0.55, 0.95, 1), barColorFromSkin = false, useClassColorBar = false,
         colorMode = "static",   -- "dispel" tints by the profile's dispelColors (schema v2)
         drain = "left", smooth = false,
 
@@ -254,7 +262,7 @@ NS.CONTAINER_TEMPLATE = {
 
         icon = "LEFT", iconSize = 0, iconGap = 1, iconZoom = 0.08,
         iconBorderShow = false, iconBorderStyle = "Solid", iconBorderStyleFromSkin = true, iconBorderSize = 1,
-        iconBorderColor = color(0, 0, 0, 1), iconBorderColorFromSkin = true, useClassColorIconBorder = false,
+        iconBorderColor = color(0, 0, 0, 1), iconBorderColorFromSkin = false, useClassColorIconBorder = false,
 
         spark = true, sparkWidth = 8, sparkColor = color(1, 1, 1, 0.9), useClassColorSpark = false,
         sparkTimeless = true,   -- false: no spark on an aura without a duration (modules/Style_Bars.lua)
@@ -273,7 +281,7 @@ NS.CONTAINER_TEMPLATE = {
         width = 32, height = 32, zoom = 0.08,
 
         borderShow = true, borderStyle = "Solid", borderStyleFromSkin = true, borderSize = 1,
-        borderColor = color(0, 0, 0, 1), borderColorFromSkin = true, useClassColorBorder = false,
+        borderColor = color(0, 0, 0, 1), borderColorFromSkin = false, useClassColorBorder = false,
         dispelBorder = true,
 
         cooldown = true, cooldownReverse = false, cooldownEdge = true,
@@ -298,12 +306,12 @@ NS.CONTAINER_TEMPLATE = {
         autoSize = true,
         template = "$spellname$[ x$stacks$][ - $remainingduration$]",
         justifyH = "LEFT", justifyV = "MIDDLE", x = 2, y = 0,
-        font = font(12),
+        font = textFont(12),
         timeFormat = "blizzard",
 
         icon = "NONE", iconSize = 0, iconGap = 2, iconZoom = 0.08,
         iconBorderShow = false, iconBorderStyle = "Solid", iconBorderStyleFromSkin = true, iconBorderSize = 1,
-        iconBorderColor = color(0, 0, 0, 1), iconBorderColorFromSkin = true, useClassColorIconBorder = false,
+        iconBorderColor = color(0, 0, 0, 1), iconBorderColorFromSkin = false, useClassColorIconBorder = false,
 
         anim = "none", animSpeed = 1.0, animIntensity = 0.3, animBounce = 3,
 

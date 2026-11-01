@@ -20,8 +20,18 @@ local function rgba(...)
 end
 
 --- A template-shaped config on `NS`, `over` merged on.
+-- The companions that default OFF since the smoke feedback (SF-AM-1..3); this suite reads the followed
+-- arm, so its configs turn them on first and a test's own `over` still wins.
+local FOLLOWED = {
+    bars = { barColorFromSkin = true, bgColorFromSkin = true, borderColorFromSkin = true,
+        iconBorderColorFromSkin = true },
+    icons = { borderColorFromSkin = true },
+    text = { iconBorderColorFromSkin = true, glowColorFromSkin = true, font = { fontColorFromSkin = true } },
+}
+
 local function cfg(NS, over)
-    return NS.Database.Merge(NS.Database.DeepCopy(NS.CONTAINER_TEMPLATE), over or {})
+    local c = NS.Database.Merge(NS.Database.DeepCopy(NS.CONTAINER_TEMPLATE), NS.Database.DeepCopy(FOLLOWED))
+    return NS.Database.Merge(c, over or {})
 end
 
 --- Dress `c`, swap the regions for recorders and dress again, so every drawing call is on record.
@@ -68,7 +78,7 @@ test("skin flip: every listed companion is a bool row defaulting on, in the temp
             assertEqual(v, true, path .. " in the template")
         end
     end
-    assertEqual(n, 10 + 3 * 7, "the bars' 6, the icons' 2, the text's 2 and 3 per font block")
+    assertEqual(n, 5 + 3 * 7, "the bars' 4, the icons' 1, the text's 1 and 3 per font block")
 end)
 
 test("skin flip: no swatch carries disabledIf, and a class color has no companion", function()
@@ -476,7 +486,7 @@ test("skin flip: v16 sets every listed companion in every profile and keeps each
         assertEqual(c1.bars.barTextureFromSkin, true, name .. " a stored false moves")
         assertEqual(c1.bars.name.fontFromSkin, true, name .. " the player's face follows (the ruling)")
         assertEqual(c1.bars.name.fontColorFromSkin, true, name .. " an absent one is written")
-        assertEqual(c2.text.font.fontColorFromSkin, true, name)
+        assertEqual(c2.text.font.fontColorFromSkin, false, name .. " off by default since SF-AM-3: a stored false stays")
         assertTrue(c2.text.glowColorFromSkin ~= true, name .. " v17 moved the old default off the skin")
         assertEqual(c1.bars.name.fontFlags, "@skin", name .. " Font flags: on S.FontFlags")
         assertEqual(c1.bars.barColor.r, 0.3, name .. " a one-key color keeps its key (the backfill fills the rest)")
@@ -542,7 +552,7 @@ test("skin flip: a profile reset runs the step against defaults, which writes no
     p.skin.fullSkinReset = false
     assertEqual(NS.Database.FollowSkin(p), true)
     local c = NS.Database.FindContainer(p.containerOrder[1])
-    assertEqual(c.bars.barColorFromSkin, true)
+    assertEqual(c.bars.barTextureFromSkin, true)
 end)
 
 test("skin flip: the step is the same write with the library absent, and creates only the skin table", function()

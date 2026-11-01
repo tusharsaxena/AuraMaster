@@ -70,12 +70,13 @@ end)
 test("beside icon: a skin's None defers on a bar and on a text line, and the art's inset agrees", function()
     local NS, mocks = fresh()
     probe(NS, mocks, { ["icon.borderStyle"] = "None", ["icon.borderSize"] = 4 })
-    local am = dressed(NS, { bars = { iconBorderShow = true, iconBorderSize = 3 } })
+    local am = dressed(NS, { bars = { iconBorderShow = true, iconBorderSize = 3, iconBorderColorFromSkin = true } })
     -- red under: a skin's None hiding a border the player has on
     BS.assertSolid(am.iconBorder, 3, table.concat({ 0.44, 0.55, 0.66, 1 }, ","), "beside a bar")
     assertEqual(NS.Style.IconInset(NS.Database.Merge(NS.Database.DeepCopy(NS.CONTAINER_TEMPLATE.bars),
         { iconBorderShow = true, iconBorderSize = 3 }), NS.CONTAINER_TEMPLATE.bars), 3, "the inset")
-    local text = dressed(NS, { style = "text", text = { icon = "LEFT", iconBorderShow = true, iconBorderSize = 2 } })
+    local text = dressed(NS, { style = "text", text = { icon = "LEFT", iconBorderShow = true, iconBorderSize = 2,
+        iconBorderColorFromSkin = true } })
     BS.assertSolid(text.iconBorder, 2, table.concat({ 0.44, 0.55, 0.66, 1 }, ","), "beside a text line")
     assertTrue(not dressed(NS, {}).iconBorder:IsShown(), "Show border off stays off")
 end)
@@ -85,7 +86,7 @@ test("beside icon: Show border off stays off under a real style, so Ka0s Default
     assertTrue(not dressed(NS, {}).iconBorder:IsShown(), "Ka0s Default's Solid")
     probe(NS, mocks, { ["icon.borderStyle"] = "Solid", ["icon.borderSize"] = 4 })
     assertTrue(not dressed(NS, {}).iconBorder:IsShown(), "a skin's Solid")
-    BS.assertSolid(dressed(NS, { bars = { iconBorderShow = true } }).iconBorder, 4,
+    BS.assertSolid(dressed(NS, { bars = { iconBorderShow = true, iconBorderColorFromSkin = true } }).iconBorder, 4,
         table.concat({ 0.44, 0.55, 0.66, 1 }, ","), "shown, the skin's look")
 end)
 

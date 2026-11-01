@@ -51,3 +51,40 @@ test("v17: MigrateV17 moves a bar's old background and border defaults, not a pi
         assertEqual(b.borderShow, true, i)
     end
 end)
+
+test("v17: bar fill, Text font and icon border colors stay off the skin by default (SF-AM-3)", function()
+    local NS = fresh()
+    local D = NS.CONTAINER_TEMPLATE
+    -- red under: any of the five defaulting on, so a skin recolored a stored pick
+    assertEqual(D.bars.barColorFromSkin, false)
+    assertEqual(D.text.font.fontColorFromSkin, false)
+    assertEqual(D.icons.borderColorFromSkin, false)
+    assertEqual(D.bars.iconBorderColorFromSkin, false)
+    assertEqual(D.text.iconBorderColorFromSkin, false)
+    assertEqual(D.bars.name.fontColorFromSkin, true, "the other fonts are not named by the ruling")
+    assertEqual(D.label.font.fontColorFromSkin, true)
+end)
+
+test("v17: a new profile keeps the new defaults through the one-time follow step", function()
+    local NS = fresh()
+    local c = NS.Database.FindContainer(NS.db.profile.containerOrder[1])
+    NS.db.profile.skin.fullSkinReset = false
+    NS.Database.FollowSkin(NS.db.profile)
+    -- red under: FOLLOW_LEAVES still naming a moved leaf, so the step wrote it back on
+    assertEqual(c.bars.barColorFromSkin, false)
+    assertEqual(c.bars.bgColorFromSkin, false)
+end)
+
+test("v17: MigrateV17 moves the old fill, text font and icon border defaults", function()
+    local NS = fresh()
+    local p = { containers = { { bars = { barColorFromSkin = true, iconBorderColorFromSkin = true },
+        icons = { borderColorFromSkin = true },
+        text = { iconBorderColorFromSkin = true, font = { fontColorFromSkin = true } } } } }
+    assertEqual(NS.Database.MigrateV17(p), 5)
+    local c = p.containers[1]
+    assertEqual(c.bars.barColorFromSkin, false)
+    assertEqual(c.bars.iconBorderColorFromSkin, false)
+    assertEqual(c.icons.borderColorFromSkin, false)
+    assertEqual(c.text.iconBorderColorFromSkin, false)
+    assertEqual(c.text.font.fontColorFromSkin, false)
+end)

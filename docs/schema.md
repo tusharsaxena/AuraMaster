@@ -43,7 +43,7 @@ otherwise (`docs/profiles.md`).
 ## The container template
 
 A container is created at runtime, so it cannot be an AceDB default. `NS.CONTAINER_TEMPLATE`
-(`defaults/Profile.lua:163`) is deep-copied for every new container (`Database.NewContainerData`), and
+(`defaults/Profile.lua:171`) is deep-copied for every new container (`Database.NewContainerData`), and
 every stored container is backfilled from it on load (`Database.PrepareProfile`, below). Each stored
 container also carries its own `id`. The render path reads its fallbacks from the template too: a leaf
 that is missing or garbage when a container is drawn falls back to the template's value for that same
@@ -223,7 +223,7 @@ rewritten, and with the companion off, or under Ignore fonts, it draws as stored
 
 ## The starter containers
 
-`NS.STARTER_CONTAINERS` (`defaults/Profile.lua:333`) seeds a brand-new profile once, each spec merged
+`NS.STARTER_CONTAINERS` (`defaults/Profile.lua:341`) seeds a brand-new profile once, each spec merged
 over the template:
 
 | Name | Unit | Type | Style | Differs from the template |
