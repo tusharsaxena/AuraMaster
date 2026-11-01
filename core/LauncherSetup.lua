@@ -122,6 +122,7 @@ NS.Launcher = Launcher:New({
     --
     -- Enabled: the one enabled predicate, and `/am enable` / `/am disable`'s handler, handed the
     -- state the addon moves TO.
+    openSkinPicker = function() if NS.RunSkinVerb then NS.RunSkinVerb() end end,
     isEnabled  = function() return not (NS.IsDisabled and NS.IsDisabled()) end,
     setEnabled = function(on) NS.Slash.SetEnabled(on) end,
     -- Locked: the Lock frame row's `locked`, and `/am lock` / `/am unlock`'s handler.

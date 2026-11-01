@@ -87,6 +87,7 @@ Kit.run{
         "test_loadorder",
         "test_setups",
         "test_launcher",
+        "test_launcher_skin_entry",
         "test_database",
         "test_database_steps",
         "test_database_categories",
