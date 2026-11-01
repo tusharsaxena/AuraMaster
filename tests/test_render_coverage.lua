@@ -403,6 +403,10 @@ local TWIN_ENGINE_ONLY = { ["container.text.glow"] = true, ["container.text.glow
 -- skin that states a real bar border.
 local UNDER_SKIN = { ["container.bars.borderStyleFromSkin"] = "midnight" }
 
+local function wearSkinFor(NS, row)
+    NS.ApplySkinChoice("ka0s", UNDER_SKIN[row.path] or "ka0s")
+end
+
 --- Every row of `page` whose write leaves a side unchanged, as "<path> (<side>)", plus exemptions
 --- the row no longer needs.
 local function gaps(page)
@@ -420,7 +424,7 @@ local function gaps(page)
     assertTrue(#rows > 0, page .. " has rows")
     for _, row in ipairs(rows) do
         k.c[page] = NS.Database.DeepCopy(baseline)
-        NS.ApplySkinChoice("ka0s", UNDER_SKIN[row.path] or "ka0s")
+        wearSkinFor(NS, row)
         local liveA, prevA = record(k)
         local value = differing(row, NS.GetSetting(row.path, k.c.id))
         assertTrue(value ~= nil, row.path .. ": a value to write")
