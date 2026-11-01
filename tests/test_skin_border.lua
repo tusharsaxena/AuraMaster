@@ -38,7 +38,7 @@ local RED = { r = 1, g = 0, b = 0, a = 1 }
 test("bar border: a skin's None hands Show border on, the stored style and the stored thickness back", function()
     local NS, mocks = fresh()
     probe(NS, mocks, NONE)
-    local am = dressed(NS, { bars = { borderShow = true, borderSize = 3 } })
+    local am = dressed(NS, { bars = { borderShow = true, borderSize = 3, borderColorFromSkin = true } })
     -- red under: a followed None drawing no border, or the skin's thickness over the stored one
     BS.assertSolid(am.border, 3, table.concat({ 0.11, 0.22, 0.33, 1 }, ","), "stored Solid at 3")
 end)
@@ -52,7 +52,7 @@ end)
 test("bar border: a real style wins, with Show border off and over the stored thickness", function()
     local NS, mocks = fresh()
     probe(NS, mocks, REAL)
-    local am = dressed(NS, { bars = { borderShow = false, borderSize = 3 } })
+    local am = dressed(NS, { bars = { borderShow = false, borderSize = 3, borderColorFromSkin = true } })
     -- red under: drawing with the stored borderShow ahead of S.BarBorder
     BS.assertSolid(am.border, 4, table.concat({ 0.11, 0.22, 0.33, 1 }, ","), "the skin's Solid at 4")
 end)

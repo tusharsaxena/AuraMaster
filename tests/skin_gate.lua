@@ -107,7 +107,7 @@ return function(Kit, NS, mocks)
         element("a bar's background", {}, "bars.bgColorFromSkin", region("bg")),
         element("a bar's border, Show border on", { bars = { borderShow = true } },
             "bars.borderColorFromSkin", strips("border")),
-        element("a bar's border, Show border off", {}, "bars.borderStyleFromSkin", function(am)
+        element("a bar's border, Show border off", { bars = { borderShow = false } }, "bars.borderStyleFromSkin", function(am)
             return { am.border }
         end, function(am, o) o:SetText(am.border:IsShown() and "drawn" or "none") end),
         element("a bar's name", {}, "bars.name.fontColorFromSkin", region("name")),

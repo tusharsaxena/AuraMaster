@@ -25,3 +25,29 @@ test("v17: MigrateV17 moves an old default and keeps a pick", function()
     assertEqual(n, 1)
     assertEqual(NS.Database.MigrateV17({}), 0, "no containers")
 end)
+
+test("v17: a bar has a dark background and a black border whatever the skin (SF-AM-2)", function()
+    local NS = fresh()
+    local b = NS.CONTAINER_TEMPLATE.bars
+    -- red under: the background or the border color following the skin, or Show border off
+    assertEqual(b.bgColorFromSkin, false)
+    assertEqual(b.borderColorFromSkin, false)
+    assertEqual(b.borderShow, true)
+    assertEqual(b.bgTextureFromSkin, true, "the textures still follow the skin")
+    assertEqual(b.borderStyleFromSkin, true)
+end)
+
+test("v17: MigrateV17 moves a bar's old background and border defaults, not a pick", function()
+    local NS = fresh()
+    local p = { containers = {
+        { bars = { bgColorFromSkin = true, borderColorFromSkin = true, borderShow = false } },
+        { bars = { bgColorFromSkin = false, borderColorFromSkin = false, borderShow = true } },
+    } }
+    NS.Database.MigrateV17(p)
+    for i = 1, 2 do
+        local b = p.containers[i].bars
+        assertEqual(b.bgColorFromSkin, false, i)
+        assertEqual(b.borderColorFromSkin, false, i)
+        assertEqual(b.borderShow, true, i)
+    end
+end)

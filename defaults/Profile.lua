@@ -246,11 +246,11 @@ NS.CONTAINER_TEMPLATE = {
         drain = "left", smooth = false,
 
         bgTexture = "Ka0s Default", bgTextureFromSkin = true, bgAlpha = 1.0, bgColor = color(0, 0, 0, 0.5),
-        bgColorFromSkin = true, useClassColorBg = false,
+        bgColorFromSkin = false, useClassColorBg = false,
         bgColorMode = "static",   -- "dispel" tints the background as colorMode does the fill (feedback #7)
 
-        borderShow = false, borderStyle = "Solid", borderStyleFromSkin = true, borderSize = 1,
-        borderColor = color(0, 0, 0, 1), borderColorFromSkin = true, useClassColorBorder = false,
+        borderShow = true, borderStyle = "Solid", borderStyleFromSkin = true, borderSize = 1,
+        borderColor = color(0, 0, 0, 1), borderColorFromSkin = false, useClassColorBorder = false,
 
         icon = "LEFT", iconSize = 0, iconGap = 1, iconZoom = 0.08,
         iconBorderShow = false, iconBorderStyle = "Solid", iconBorderStyleFromSkin = true, iconBorderSize = 1,

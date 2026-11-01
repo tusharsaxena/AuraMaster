@@ -1089,8 +1089,8 @@ end
 -- v15's turning it off for a player's own face: the ruling names no exception.
 
 local FOLLOW_LEAVES = {
-    "bars.barTextureFromSkin", "bars.bgTextureFromSkin", "bars.barColorFromSkin", "bars.bgColorFromSkin",
-    "bars.borderStyleFromSkin", "bars.borderColorFromSkin",
+    "bars.barTextureFromSkin", "bars.bgTextureFromSkin", "bars.barColorFromSkin",
+    "bars.borderStyleFromSkin",
     "bars.iconBorderStyleFromSkin", "bars.iconBorderColorFromSkin",
     "icons.borderStyleFromSkin", "icons.borderColorFromSkin",
     "text.iconBorderStyleFromSkin", "text.iconBorderColorFromSkin",
@@ -1109,6 +1109,9 @@ Database.SKIN_FOLLOW_LEAVES = FOLLOW_LEAVES
 --- a player's pick of the same value read alike; docs/ARCHITECTURE.md records it.
 Database.V17_MOVES = {
     { path = "text.glowColorFromSkin", from = true, to = false },
+    { path = "bars.bgColorFromSkin", from = true, to = false },
+    { path = "bars.borderColorFromSkin", from = true, to = false },
+    { path = "bars.borderShow", from = false, to = true },
 }
 
 --- Move one stored profile's containers by V17_MOVES. Answers how many values moved.

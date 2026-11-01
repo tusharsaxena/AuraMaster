@@ -29,7 +29,7 @@ check's number is not reused. Checks with no recorded pass, and checks new or co
 | TEXT-1 to TEXT-36 | Text style | Templates and tokens, justify, the icon, dispel type word, backdrop and edge, animation, Size to fit, the glow behind the text |
 | LAYER-1 to LAYER-6 | Frame layering | Bar borders over the fill, the outline and the name label over the auras, the snap highlight over a Dialog container, the strip at low opacity, the Strata tooltip |
 | SETLAYOUT-1 to SETLAYOUT-9 | Settings layout (item 020) | Every settings page item 020 moved, regrouped or relabeled, read as `docs/settings-panel.md` describes, with no setting lost, moved or reset; the confirm buttons' ellipsis |
-| SKIN-1 to SKIN-43 | Skins | The skinning rollout: the one-time HUD reset under Ka0s Default, Ka0s Default otherwise unchanged, the Skin tab, each skin on the HUD, the unlock furniture, the settings pages and the tool windows, other addons stock, the font and texture companions and overrides, combat, EllesmereUI on, off and back, the copy, profiles, tooltips and popups, the first-run skin picker; the library follow-ups (each skin's HUD face, Ignore fonts on the HUD, the picker's title, the strings newly in the skin's face); the skin fonts run (the Font outline, From skin flags, `/am skin`, width parity, the HUD size scale, the own faces and glow back, the strips' re-fit) |
+| SKIN-1 to SKIN-44 | Skins | The skinning rollout: the one-time HUD reset under Ka0s Default, Ka0s Default otherwise unchanged, the Skin tab, each skin on the HUD, the unlock furniture, the settings pages and the tool windows, other addons stock, the font and texture companions and overrides, combat, EllesmereUI on, off and back, the copy, profiles, tooltips and popups, the first-run skin picker; the library follow-ups (each skin's HUD face, Ignore fonts on the HUD, the picker's title, the strings newly in the skin's face); the skin fonts run (the Font outline, From skin flags, `/am skin`, width parity, the HUD size scale, the own faces and glow back, the strips' re-fit) |
 | DEGRADED-1 | Library-absent install | The launcher libraries missing |
 | LOC-1 to LOC-2 | Non-English client | Spell names from the client, adding a spell by its localized name |
 
@@ -2654,6 +2654,12 @@ Glow color's **Use the skin's color** is unticked and the ring is black under Ka
 Azeroth and High Contrast. A profile that still held the old default has it unticked after the load.
 Fail: a colored ring under any skin. Result:
 
+**SKIN-44. Bars wear a dark background and border in every skin (SF-AM-2).** New Bars container, `/am test`:
+under Ka0s Default, Obsidian, Azeroth and High Contrast each bar has a dark background, a black border
+and the skin's own bar texture. Bar style → Background and border: **Use the skin's color** is unticked
+beside Background color and Border color, **Show border** is on. Fail: a light or tan background, or no
+border, under any skin. Result:
+
 ## Library-absent install
 
 **DEGRADED-1. Without the launcher libraries.** Rename `libs/LibDBIcon-1.0` aside, `/reload` → one
@@ -2736,4 +2742,4 @@ icons are not seen by `/reload`. SKIN-36 and SKIN-38 moved again at FS-AM-GATE, 
 of 2026-11-01 on a skin's bar border, and SKIN-40 with every skin's own glow color.
 
 Open from the smoke feedback run (Ka0sAddonsCommonTasks `docs/2026-11-01-SMOKE_FEEDBACK/`, SF-AM-1):
-SKIN-43 is new and SKIN-40 is re-opened, because its expected result moved.
+SKIN-43 and SKIN-44 are new and SKIN-40 is re-opened, because its expected result moved.

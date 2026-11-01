@@ -68,7 +68,7 @@ test("skin flip: every listed companion is a bool row defaulting on, in the temp
             assertEqual(v, true, path .. " in the template")
         end
     end
-    assertEqual(n, 12 + 3 * 7, "the bars' 8, the icons' 2, the text's 2 and 3 per font block")
+    assertEqual(n, 10 + 3 * 7, "the bars' 6, the icons' 2, the text's 2 and 3 per font block")
 end)
 
 test("skin flip: no swatch carries disabledIf, and a class color has no companion", function()
@@ -88,7 +88,7 @@ test("skin flip: the picks' defaults moved to the Ka0s picks; size, Show border 
     for _, t in ipairs({ D.bars.name, D.bars.time, D.bars.stacks, D.icons.time, D.icons.stacks, D.text.font, D.label.font }) do
         assertEqual(t.font, "Ka0s Prototype")
     end
-    assertEqual(D.bars.borderShow, false)
+    assertEqual(D.bars.borderShow, true)   -- on since SF-AM-2
     assertEqual(D.icons.borderShow, true)
     assertEqual(D.icons.borderSize, 1)
     -- red under: a flip writing the Scope (the settings panel stays stock by default)
@@ -157,7 +157,8 @@ end)
 test("skin flip: a stored background, border and glow color lose to the skin's token while followed", function()
     local NS, mocks = fresh()
     local red = { r = 1, g = 0, b = 0, a = 1 }
-    local c = cfg(NS, { bars = { bgColor = red, borderShow = true, borderColor = red, borderStyleFromSkin = false } })
+    local c = cfg(NS, { bars = { bgColor = red, bgColorFromSkin = true, borderShow = true, borderColor = red,
+        borderColorFromSkin = true, borderStyleFromSkin = false } })
     local am = dressed(NS, c)
     local bg, border = tokenOf(mocks, "ka0s", "bar.bg"), tokenOf(mocks, "ka0s", "bar.border")
     assertEqual(rgba(unpack(am.bg:__last("SetVertexColor"))), rgba(unpack(bg)))
@@ -270,7 +271,8 @@ test("skin flip: a dispel-colored bar's no-type color is the skin's, on the engi
     local key = skinWith(mocks, "bar.fill")
     NS.ApplySkinChoice("ka0s", key)
     local red = { r = 1, g = 0, b = 0, a = 1 }
-    local c = cfg(NS, { bars = { colorMode = "dispel", bgColorMode = "dispel", barColor = red, bgColor = red } })
+    local c = cfg(NS, { bars = { colorMode = "dispel", bgColorMode = "dispel", barColor = red, bgColor = red,
+        bgColorFromSkin = true } })
     local fill, bg = tokenOf(mocks, key, "bar.fill"), tokenOf(mocks, key, "bar.bg")
     local rgb = function(t) return rgba(t.r or t[1], t.g or t[2], t.b or t[3]) end
     local live = R()
