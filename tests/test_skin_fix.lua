@@ -136,3 +136,16 @@ test("frame picker: the label goes through the skin's Font, so a face and Ignore
     -- red under: the label left on GameFontNormalLarge's face
     assertEqual(seen, 1)
 end)
+
+test("skin gate: every allow row names a cause of the run's SKIN_CAUSES.md, or MC", function()
+    -- red under: an id such as FS-AM-01, which the kit's shape check takes and no document defines.
+    local f = assert(io.open("tests/skin_gate.lua", "rb"))
+    local src = f:read("*a")
+    f:close()
+    local count = 0
+    for cause in src:gmatch('cause = "([^"]+)"') do
+        count = count + 1
+        assertTrue(cause == "MC" or cause:find("^[LDA]%d+$") ~= nil, cause .. " is no cause id")
+    end
+    assertTrue(count > 0, "the rows were read")
+end)

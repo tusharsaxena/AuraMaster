@@ -2094,7 +2094,7 @@ Total.
 - icon element: a skin's None stays no border: the rule is the bars' and the beside icons'
 - degraded: S.BarBorder answers the stored three, so a stored border still draws
 
-### test_skin_fix.lua (6)
+### test_skin_fix.lua (7)
 
 - gloss: Glass shines the bar that lies over the drawn fill; Ka0s Default and a player's texture do not
 - gloss: the sheen is a clear, full bar anchored to the visible fill, never the engine's elapsed bar
@@ -2102,6 +2102,7 @@ Total.
 - typed colors: Unit, Aura type and Style values keep today's bytes on Ka0s Default and on an ignored panel
 - typed colors: with the Scope cleared a skin switch rewrites each value's escape, the label kept
 - frame picker: the label goes through the skin's Font, so a face and Ignore fonts reach it
+- skin gate: every allow row names a cause of the run's SKIN_CAUSES.md, or MC
 
 ### test_skin_flags.lua (7)
 
@@ -2578,7 +2579,7 @@ Total.
 
 - prose: no authored file carries a British spelling from localization-§5's published list
 - prose: the gate carries localization-§5's two lists whole, and nothing of its own
-- prose: the exclusions this repository declared suppressed 11 of 240 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (11): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, docs/spell-research/2026-09-24-logs/CORRECTIONS.md, docs/spell-research/2026-09-24-logs/CURRENT_CATEGORIES.md, docs/spell-research/2026-09-24-logs/DECISIONS.md, docs/spell-research/2026-09-24-logs/FLAGS.md, docs/spell-research/2026-09-24-logs/PROPOSED_ADDITIONS.md, docs/spell-research/2026-09-24-logs/REVIEW.md, docs/spell-research/2026-09-24-logs/SOURCES.md, docs/spell-research/2026-09-24-logs/dictionary/AURAS.md
+- prose: the exclusions this repository declared suppressed 11 of 242 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (11): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, docs/spell-research/2026-09-24-logs/CORRECTIONS.md, docs/spell-research/2026-09-24-logs/CURRENT_CATEGORIES.md, docs/spell-research/2026-09-24-logs/DECISIONS.md, docs/spell-research/2026-09-24-logs/FLAGS.md, docs/spell-research/2026-09-24-logs/PROPOSED_ADDITIONS.md, docs/spell-research/2026-09-24-logs/REVIEW.md, docs/spell-research/2026-09-24-logs/SOURCES.md, docs/spell-research/2026-09-24-logs/dictionary/AURAS.md
 - prose: no path this repository narrows the gate by is loaded by a TOC
 - prose: every path this repository narrows the gate by is one .pkgmeta keeps out of the zip
 - prose self-test: the carve-out suppresses the named generated folder, and only it
@@ -2799,7 +2800,7 @@ Total.
 | test_skin_hud.lua | 12 |
 | test_skin_flip.lua | 31 |
 | test_skin_border.lua | 8 |
-| test_skin_fix.lua | 6 |
+| test_skin_fix.lua | 7 |
 | test_skin_flags.lua | 7 |
 | test_skin_glow_restore.lua | 6 |
 | test_skin_outline.lua | 12 |
@@ -2837,4 +2838,4 @@ Total.
 | test_skin_values.lua | 3 |
 | test_skin_switch.lua | 34 |
 | Skipped | 1 |
-| **Total** | **2335** |
+| **Total** | **2336** |

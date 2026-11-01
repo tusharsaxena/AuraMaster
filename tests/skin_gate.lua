@@ -13,8 +13,8 @@ local PARTIAL = "a channel a stored color lacks, which the load backfill fills: 
 local ROWS = {
     { file = "core/Compat.lua", substring = "expiring.r or 1", cause = "D5",
       why = "the running-out tint: a warning tint carries its meaning, the owner's ruling on D5" },
-    { file = "core/Compat.lua", substring = "normal.r or 1", cause = "FS-AM-01", why = PARTIAL },
-    { file = "modules/Style.lua", substring = "fallback.r or 1", cause = "FS-AM-01", why = PARTIAL },
+    { file = "core/Compat.lua", substring = "normal.r or 1", cause = "A7", why = PARTIAL },
+    { file = "modules/Style.lua", substring = "fallback.r or 1", cause = "A7", why = PARTIAL },
     { file = "core/Compat.lua", substring = "region:SetVertexColor(c.r or 1", cause = "MC",
       why = "a dispel type's color off the client's palette: the color is the information" },
     { file = "modules/Style.lua", substring = "map[name] = _G.CreateColor", cause = "MC",
