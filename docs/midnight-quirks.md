@@ -253,7 +253,7 @@ remaining). Driven by remaining time, a permanent aura has none and draws empty.
 
 **What this addon does.** The status bar runs on **elapsed** time with an invisible texture, and the
 addon's own `fill` texture stretches from the bar's start to that texture's moving edge
-(`modules/Style_Bars.lua:165`). Zero elapsed is a full bar; a timed aura drains. The technique is
+(`modules/Style_Bars.lua:177`). Zero elapsed is a full bar; a timed aura drains. The technique is
 TinyBuffBars' (MIT).
 
 ## Nothing tells a region whether an aura has a duration
@@ -264,7 +264,7 @@ nor resets the bar for a permanent aura.
 
 **What this addon does.** With Bars → General → **Show the spark on auras without a duration** off, a
 live bar's spark rides a clip frame (`SetClipsChildren`) bounded by the elapsed region, the engine's
-status-bar texture, and sits wholly on that side of the moving edge (`modules/Style_Bars.lua:148`).
+status-bar texture, and sits wholly on that side of the moving edge (`modules/Style_Bars.lua:160`).
 A timeless aura has zero elapsed, so the clip frame has no width and the spark is clipped away. A
 timed bar's spark sits just inside its edge rather than centered on it. This rests on the client
 leaving a zero-duration bar's texture at zero width, which is an in-game check (smoke check STYLE-3). The
@@ -314,8 +314,8 @@ field's brackets (`$spellname$[-$stacks$]`) goes with the field, and the Text se
 **The restriction.** `AddDispelTypeTexture` and `AddPandemicRegion` append to the button.
 
 **What this addon does.** Every live restyle empties both lists FIRST, before any other binding,
-through `Style.ClearAdditiveBindings` (`modules/Style.lua:435`), and then adds again
-(`modules/Style_Bars.lua:339-346`, `modules/Style_Icons.lua:174`). The order matters: every `Set*` /
+through `Style.ClearAdditiveBindings` (`modules/Style.lua:436`), and then adds again
+(`modules/Style_Bars.lua:355-362`, `modules/Style_Icons.lua:174`). The order matters: every `Set*` /
 `Add*` binding re-runs the engine's whole apply pass, which re-tints, shows or hides each dispel
 texture still listed, while `ClearDispelTypeTextures` itself touches no region. A clear made after
 the bindings let a bar switched away from Color by → Dispel type keep the tint (B-4). For the same
@@ -722,7 +722,7 @@ smoke, 2026-10-15).
   string's shadow in the glow color at −2d, look the same as eight.
 
 **What this addon does.** A Text container with Glow on builds `C.TEXT_GLOW_TWINS` twin engines
-(`core/Constants.lua:348`: 4 under shadow pairing, `C.TEXT_GLOW_PAIRED`, else 8) beside its main
+(`core/Constants.lua:353`: 4 under shadow pairing, `C.TEXT_GLOW_PAIRED`, else 8) beside its main
 (`modules/Container_Twins.lua`). Each takes the main's unit, groups, view, enchant slots and flow
 through the same calls in the same order, hangs from a holder of ours at Thickness × its ring
 direction plus Offset X and Y, and sits three frame levels below the main, written before its first
@@ -857,7 +857,7 @@ does not set the flag.
   only while `Compat.AurasAreSecret()` is false, and through the `core/Secrets.lua` gates; chat and
   debug lines go through `NS.SafeToString`.
 - **Right-click cancel uses one click phase** (`RightButtonUp`) so a button reassigned between press
-  and release cannot cancel the wrong aura (`modules/Style.lua:786`).
+  and release cannot cancel the wrong aura (`modules/Style.lua:787`).
 - **Animations on engine buttons are set up at dress time only.** `modules/Style_Text.lua` builds its
   three AnimationGroups with the regions and calls `Stop`/`Play` only in a dress (initializeFrame or a
   restyle while auras are readable), each through `Style.Bind`, so a refusal costs one call and is

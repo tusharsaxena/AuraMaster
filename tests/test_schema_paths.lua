@@ -386,9 +386,9 @@ end)
 
 test("schema paths: Choices draws a colored key in its color and leaves an uncolored one plain", function()
     local NS2 = fresh()
-    local list = NS2.Choices({ "a", "b" }, { a = "A", b = "B" }, { a = "ff112233" })
+    local list = NS2.Choices({ "a", "b" }, { a = "A", b = "B" }, { a = "am.unitFocus" })
     -- red under: Choices ignoring its third argument
-    assertEqual(list[1].text, "|cff112233A|r")
+    assertEqual(list[1].text, "|c" .. NS2.Constants.UNIT_COLORS.focus .. "A|r")
     -- red under: a `|r` wrapped round a key with no color (closing a color the panel never opened)
     assertEqual(list[2].text, "B")
     assertEqual(list[1].value, "a", "the value stays bare: the CLI takes and lists values")

@@ -53,7 +53,8 @@ end
 --- and Ignore fonts leaves `bar.texture` alone.
 ---
 --- NOT a recorded primitive (S.BarTexture and friends): the regions this dresses sit on Blizzard's
---- pooled aura buttons, whose geometry reads secret and which a skin registry must never hold. A
+--- pooled aura buttons, whose geometry reads secret and which a skin registry must never hold (the
+--- gloss's own bar, modules/Style_Bars.lua's am.sheen, is the one exception, and it says why). A
 --- skin switch reaches them through the one OnLooksChanged listener (modules/ContainerManager.lua),
 --- which re-applies every container. Read per dress, never per aura event.
 function Style.SkinKey(token, key, fromSkin)

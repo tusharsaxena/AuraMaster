@@ -49,6 +49,17 @@ local function build(frame)
     am.bar:SetMinMaxValues(0, 1)
 
     am.fill = am.bar:CreateTexture(nil, "ARTWORK")
+    -- The gloss's bar (cause A3). S.BarGloss shines a status bar's own fill Texture, and am.bar's is
+    -- the invisible elapsed part, so this second bar, full, lies exactly over am.fill: the part that
+    -- draws. Its fill is clear too, and the library's gloss layer on it is the only thing it shows.
+    -- Over the fill and under the borders and the text. Ours alone, so it is the one region here a
+    -- skin registry may hold: S.BarGloss reads no geometry.
+    am.sheen = CreateFrame("StatusBar", nil, am.bar)
+    am.sheen:SetStatusBarTexture(C.WHITE_TEXTURE)
+    am.sheen:SetStatusBarColor(1, 1, 1, 0)
+    am.sheen:SetMinMaxValues(0, 1)
+    am.sheen:SetValue(1)
+    am.sheen:SetAllPoints(am.fill)
     -- The spark lives on a frame of its own, which clips it when a timeless aura must not show one
     -- (wireSpark).
     am.sparkClip = CreateFrame("Frame", nil, am.bar)
@@ -71,6 +82,7 @@ local function build(frame)
     -- which the engine anchors and whose level can read secret (docs/midnight-quirks.md).
     local level, V = am.bar:GetFrameLevel() - 1, C.LAYERS.LEVEL
     am.bar:SetFrameLevel(level + V.FILL)
+    am.sheen:SetFrameLevel(level + V.SPARK)
     am.sparkClip:SetFrameLevel(level + V.SPARK)
     am.border:SetFrameLevel(level + V.BORDER)
     am.iconBorder:SetFrameLevel(level + V.BORDER)
@@ -216,11 +228,15 @@ end
 --- Paint the fill and show it. The fill is shown every dress: the engine's no-aura pass hides a
 --- dispel texture, and clearing the binding does not show it again.
 local function paintFill(am, b, preview)
-    local key = Style.SkinKey("bar.texture", b.barTexture, Style.OrTemplate(b.barTextureFromSkin, D.bars.barTextureFromSkin))
+    local fromSkin = Style.OrTemplate(b.barTextureFromSkin, D.bars.barTextureFromSkin) == true
+    local key = Style.SkinKey("bar.texture", b.barTexture, fromSkin)
     am.fill:SetTexture(Style.Fetch("statusbar", key, C.FALLBACK_TEXTURE))
     paintSurface(am.fill, b.colorMode, fillColor(b), b.useClassColorBar, preview,
         tonumber(b.barAlpha) or D.bars.barAlpha)
     am.fill:Show()
+    -- The gloss belongs to the skin's texture, so a player's own texture stays plain. Every dress:
+    -- the companion may have moved; a skin change alone needs no call.
+    NS.Skin.BarGloss(am.sheen, fromSkin)
 end
 
 --- Paint the surfaces: the fill, the background, the border and the spark. Each surface's opacity

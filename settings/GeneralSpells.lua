@@ -398,7 +398,6 @@ local TYPE_MARK       = L["[{type}]"]
 -- when there is no color for it: a `|r` with no `|c` in front of it would close a color the panel
 -- never opened.
 local COLOR_END   = "|r"
-local TYPE_COLORS = { HELPFUL = "|c" .. C.AURA_TYPE_COLORS.HELPFUL, HARMFUL = "|c" .. C.AURA_TYPE_COLORS.HARMFUL }
 
 --- `text` in `color`, or `text` unchanged when there is no color for it.
 local function colored(color, text)
@@ -483,7 +482,8 @@ local function categoryLabel(def)
     -- MEASURED ON THE BARE WORD, before any color reaches it: `|cff73bf80` and `|r` are drawn as
     -- nothing, so padding out a colored marker would pad by twelve characters the player cannot see.
     local pad = (" "):rep(math.max(0, TYPE_WORD_CHARS - charCount(word)))
-    local mark = colored(TYPE_COLORS[auraType],
+    local token = C.AURA_TYPE_TOKENS[auraType]
+    local mark = colored(token and NS.PanelEscape(token),
         (TYPE_MARK:gsub("{type}", function() return word end)))
     return (CATEGORY_MARKER
         :gsub("{mark}", function() return mark end)
@@ -727,7 +727,8 @@ local function spellKind(def)
             if type(tip.SetSpellByID) == "function" then tip:SetSpellByID(id) end
             local line = overlapLine(def, id)
             if line and type(tip.AddLine) == "function" then
-                tip:AddLine(line, nil, nil, nil, true)
+                local r, g, b = NS.PanelTipLine()
+                tip:AddLine(line, r, g, b, true)
             end
         end,
     }

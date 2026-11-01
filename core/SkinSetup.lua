@@ -48,6 +48,8 @@ local addonName, NS = ...
 --                           written as a literal keeps its bytes on Ka0s Default (|cff888888).
 --   NS.PanelEscape(name)    the same for a settings page's markup, Ka0s Default's bytes while the
 --                           owner ignores its settings panel (D-03), so a page never mixes the two.
+--   NS.PanelTipLine()       r, g, b of a tooltip line a settings page writes: `gtip.line`, or nothing
+--                           while the owner ignores its settings panel.
 --   NS.SkinPaintAce(w)      an AceGUI widget this addon acquired itself, painted for this owner:
 --   NS.SkinPaintAceTree(c)  `Skin:PaintAce` / `Skin:PaintAceTree` with the owner bound (the facade
 --                           carries neither). Nothing while the owner ignores its settings panel;
@@ -103,6 +105,12 @@ local BRAND = "Ka0s Aura Master"
 --- back to the same byte (NS.SkinEscape) and nothing on Ka0s Default moves.
 local function byte(n) return n / 255 end
 
+--- core/Constants.lua's "aarrggbb" escape body as a token's default.
+local function hex(s)
+    return { tonumber(s:sub(3, 4), 16) / 255, tonumber(s:sub(5, 6), 16) / 255, tonumber(s:sub(7, 8), 16) / 255, 1 }
+end
+local C = NS.Constants
+
 -- THE OWNER TOKENS (skinning-§1; LK-01 of Ka0sAddonsCommonTasks docs/2026-10-29-SKINNING_ROLLOUT,
 -- decisions X1, X2 and X12). Each is a color AuraMaster draws today whose exact value no library
 -- token holds, so snapping it to the nearest one would move a Ka0s Default pixel. The name is in
@@ -134,6 +142,17 @@ NS.SKIN_TOKENS = {
     -- `icon.borderSize` (2) and `glow.color` (gold) are not. Every other skin draws those tokens.
     ["am.iconBorderSize"] = { default = 1, follow = "icon.borderSize" },
     ["am.textGlow"]     = { default = { 0, 0, 0, 1 }, follow = "glow.color" },
+    -- FS-AM-FIX (cause L5): the General page's Unit, Aura type and Style values. Each stays apart from
+    -- its neighbors in a dropdown, so each follows a different role; the aura types keep good and bad.
+    ["am.unitPlayer"]   = { default = hex(C.UNIT_COLORS.player), follow = "sem.info" },
+    ["am.unitTarget"]   = { default = hex(C.UNIT_COLORS.target), follow = "sem.warn" },
+    ["am.unitFocus"]    = { default = hex(C.UNIT_COLORS.focus), follow = "text.accent" },
+    ["am.unitPet"]      = { default = hex(C.UNIT_COLORS.pet), follow = "sem.good" },
+    ["am.auraHelpful"]  = { default = hex(C.AURA_TYPE_COLORS.HELPFUL), follow = "sem.good" },
+    ["am.auraHarmful"]  = { default = hex(C.AURA_TYPE_COLORS.HARMFUL), follow = "sem.bad" },
+    ["am.styleBars"]    = { default = hex(C.STYLE_COLORS.bars), follow = "sem.warn" },
+    ["am.styleIcons"]   = { default = hex(C.STYLE_COLORS.icons), follow = "sem.info" },
+    ["am.styleText"]    = { default = hex(C.STYLE_COLORS.text), follow = "text.accent" },
 }
 
 -- The Ka0s Default tokens the DEGRADED facade answers, copied from the library and limited to the
@@ -194,6 +213,14 @@ function NS.PanelEscape(name)
         if c then return escape(c[1], c[2], c[3]) end
     end
     return NS.SkinEscape(name)
+end
+
+--- The r, g, b of a line this addon writes on GameTooltip from a settings page (skinning-§7, cause
+--- L2): `gtip.line`, or nothing, the client's own line color, while the owner ignores its panel or the
+--- skin leaves the token alone. The library's own rows read the same token.
+function NS.PanelTipLine()
+    if Skin and type(Skin.GetIgnore) == "function" and Skin:GetIgnore(addonName) == true then return nil end
+    return NS.SkinColor("gtip.line")
 end
 
 -- The font outline modes (LibKa0s-Skin-1.0 minor 9's OUTLINE_MODES, in its order), with the Skin

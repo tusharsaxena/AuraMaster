@@ -74,19 +74,19 @@ local ROWS = {
     },
     {
         path = "container.unit", page = PAGE, group = GROUP, subgroup = S_SHOWS, type = "string",
-        values = NS.Choices(C.UNITS, C.UNIT_LABELS, C.UNIT_COLORS), label = L["Unit"],
+        values = NS.Choices(C.UNITS, C.UNIT_LABELS, C.UNIT_TOKENS), label = L["Unit"],
         desc = L["Whose auras this container shows."],
         onChange = structural,
     },
     {
         path = "container.auraType", page = PAGE, group = GROUP, subgroup = S_SHOWS, type = "string",
-        values = NS.Choices(C.AURA_TYPES, C.AURA_TYPE_LABELS, C.AURA_TYPE_COLORS), label = L["Aura type"],
+        values = NS.Choices(C.AURA_TYPES, C.AURA_TYPE_LABELS, C.AURA_TYPE_TOKENS), label = L["Aura type"],
         desc = L["Buffs or debuffs. The Filters section offers the categories of whichever you choose; your temporary weapon enchants are a buff category there."],
         onChange = structural,
     },
     {
         path = "container.style", page = PAGE, group = GROUP, subgroup = S_SHOWS, type = "string",
-        values = NS.Choices(C.STYLES, C.STYLE_LABELS, C.STYLE_COLORS), label = L["Style"],
+        values = NS.Choices(C.STYLES, C.STYLE_LABELS, C.STYLE_TOKENS), label = L["Style"],
         desc = L["Draw each aura as a bar, an icon or a line of text. Each has its own style section on this page's rail."],
         -- B5: a new style resets Fill (Layout -> Growth) to the one it suits, through the one write
         -- seam and for the same container, then the panel rebuilds once. Only on a real change: the
