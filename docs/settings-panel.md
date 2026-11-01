@@ -930,8 +930,9 @@ See `docs/profiles.md`.
 Every color that describes the player's taste has a **Use class color** checkbox immediately to its
 right, default off, declared with `classColorSource = "unit"` on both rows (options-ui-§17). The
 class is that of the unit the container tracks, read once per apply: a player container shows the
-player's, a target container the target's, and a unit with no class (an NPC) falls through to the
-swatch. The swatch is never disabled; its alpha applies under both modes.
+player's, a target container the target's, and a unit with no class (an NPC) falls through to what
+the surface draws with the box clear: the skin's color, or the swatch with "Use the skin's color"
+off. The swatch is never disabled; its alpha applies under both modes.
 With companions: Bars `barColor`, `sparkColor`, `bgColor`, `borderColor`, and `fontColor` on
 `name`/`time`/`stacks`; Icons `borderColor`, and `fontColor` on `time`/`stacks`.
 

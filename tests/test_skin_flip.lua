@@ -9,6 +9,7 @@ local test, assertEqual, assertTrue, assertNil = T.test, T.assertEqual, T.assert
 local fresh = dofile("tests/fresh_env.lua")
 local R = dofile("tests/region_recorder.lua")
 local BS = dofile("tests/border_strips.lua")
+local B = dofile("tests/region_builder.lua")
 
 local LEAVES_SUFFIX = "FromSkin$"
 
@@ -102,6 +103,11 @@ test("skin flip: the borders' thickness goes on the skin through the composer, t
     assertEqual(row.disabledIf, "container.icons.borderStyleFromSkin")
     -- red under: the disabled row showing the library's 2 while the icon draws 1
     assertEqual(row.skinValue(row), 1, "the row shows what draws under Ka0s Default")
+    for _, path in ipairs({ "container.bars.iconBorderSize", "container.text.iconBorderSize" }) do
+        local beside = NS.FindSchemaRow(path)
+        -- red under: NS.IconBorderSizeRow dropped from that page's icon border rows
+        assertEqual(beside.skinValue(beside), 1, path)
+    end
 end)
 
 -- ── what draws ──────────────────────────────────────────────────────────────────────────────────
@@ -168,6 +174,43 @@ test("skin flip: a stored background, border and glow color lose to the skin's t
     assertEqual(rgba(unpack(fs:__last("SetTextColor"))), rgba(g[1], g[2], g[3], (g[4] or 1) * 0.5), "the skin's")
 end)
 
+test("skin flip: a running-out curve returns to the skin's color on an icon and a text line", function()
+    local NS, mocks = fresh({ before = dofile("tests/text_apis.lua") })
+    local key = skinWith(mocks, "hud.text")
+    NS.ApplySkinChoice("ka0s", key)
+    local want = tokenOf(mocks, key, "hud.text")
+    local function normalOf(frame)
+        local n = frame:__last("SetDurationText")[2].textColor.curve:__last("AddPoint")[2]
+        return rgba(n.r, n.g, n.b)
+    end
+    local icon = R()
+    NS.Style.Element(icon, cfg(NS, { style = "icons", icons = { expiringColorOn = true } }), true)
+    -- red under: Style.BindDurationText handing the curve the stored time color
+    assertEqual(normalOf(icon), rgba(want[1], want[2], want[3]), "an icon's time")
+    local made = {}
+    local line = B.new(made)
+    local c = cfg(NS, { style = "text", text = { template = "$spellname$[ - $remainingduration$]",
+        expiringColorOn = true } })
+    B.during(mocks, made, function() NS.Style.Element(line, c, true) end)
+    -- red under: the duration binder's fallback read from the stored font color
+    assertEqual(normalOf(line), rgba(want[1], want[2], want[3]), "a text line's run")
+end)
+
+test("skin flip: a placeholder's run takes the skin's color, the live curve's own fallback", function()
+    local NS, mocks = fresh({ before = dofile("tests/text_apis.lua") })
+    local key = skinWith(mocks, "hud.text")
+    NS.ApplySkinChoice("ka0s", key)
+    local made = {}
+    local frame = B.new(made)
+    local c = cfg(NS, { style = "text", text = { template = "$spellname$[ - $remainingduration$]",
+        expiringBlink = true, expiringThreshold = 30 } })
+    B.during(mocks, made, function() NS.Style.Element(frame, c, false) end)
+    NS.Style.Text.FillPreview(frame, { name = "Bloodlust", icon = 1, remaining = 28, duration = 40, stacks = 1 }, c)
+    local got, want = frame.__am.piece2:__last("SetTextColor"), tokenOf(mocks, key, "hud.text")
+    -- red under: previewRunColor painting the stored font color
+    assertEqual(rgba(got[1], got[2], got[3]), rgba(want[1], want[2], want[3]))
+end)
+
 test("skin flip: a running-out curve follows the skin, and two skins never share one curve", function()
     local NS, mocks = fresh()
     local key = skinWith(mocks, "hud.text")
@@ -187,6 +230,126 @@ test("skin flip: a class color comes first, whatever the companion says", functi
     local c = cfg(NS, { bars = { barColor = { r = 0.1, g = 0.2, b = 0.3, a = 0.5 }, useClassColorBar = true } })
     local am = dressed(NS, c, class)
     assertEqual(rgba(unpack(am.fill:__last("SetVertexColor"))), rgba(0.9, 0.8, 0.7, 0.5), "the class, the stored alpha")
+end)
+
+test("skin flip: a class that does not resolve follows the skin; its toggle stays stored", function()
+    local NS, mocks = fresh()
+    local key = skinWith(mocks, "bar.fill")
+    NS.ApplySkinChoice("ka0s", key)
+    local mine = { r = 0.1, g = 0.2, b = 0.3, a = 0.5 }
+    local over = { bars = { barColor = mine, useClassColorBar = true,
+        name = { fontColor = mine, useClassColorFont = true } } }
+    local npc = {}
+    local am = dressed(NS, cfg(NS, over), npc)
+    -- red under: Style.Followed standing aside for the toggle whatever the class resolved to
+    assertEqual(rgba(unpack(am.fill:__last("SetVertexColor"))), rgba(unpack(tokenOf(mocks, key, "bar.fill"))), "the fill")
+    assertEqual(rgba(unpack(am.name:__last("SetTextColor"))), rgba(unpack(tokenOf(mocks, key, "hud.text"))), "the text")
+    local c = cfg(NS, over)
+    c.bars.barColorFromSkin = false
+    assertEqual(rgba(unpack(dressed(NS, c, npc).fill:__last("SetVertexColor"))), rgba(0.1, 0.2, 0.3, 0.5), "companion off")
+    assertTrue(c.bars.useClassColorBar, "the toggle is not written")
+    -- The name label names its class outright, outside any dress.
+    local D = NS.CONTAINER_TEMPLATE
+    local t = NS.Database.DeepCopy(D.label.font)
+    t.fontColor, t.useClassColorFont = mine, true
+    local fs = R()
+    NS.Style.ApplyFont(fs, t, D.label.font, npc)
+    -- red under: Style.ApplyFont not handing its class to Style.FontColor
+    assertEqual(rgba(unpack(fs:__last("SetTextColor"))), rgba(unpack(tokenOf(mocks, key, "hud.label"))), "the label, an NPC")
+    NS.Style.ApplyFont(fs, t, D.label.font, { r = 0.9, g = 0.8, b = 0.7 })
+    assertEqual(rgba(unpack(fs:__last("SetTextColor"))), rgba(0.9, 0.8, 0.7, 0.5), "the label, a resolved class")
+end)
+
+test("skin flip: a dispel-colored bar's no-type color is the skin's, on the engine's map and a placeholder", function()
+    local NS, mocks = fresh({ before = function(m)
+        m.Enum = m.Enum or {}
+        m.Enum.CustomAuraButtonDispelTypeTextureStyle = { Border = 31, PreserveAsset = 32 }
+    end })
+    local key = skinWith(mocks, "bar.fill")
+    NS.ApplySkinChoice("ka0s", key)
+    local red = { r = 1, g = 0, b = 0, a = 1 }
+    local c = cfg(NS, { bars = { colorMode = "dispel", bgColorMode = "dispel", barColor = red, bgColor = red } })
+    local fill, bg = tokenOf(mocks, key, "bar.fill"), tokenOf(mocks, key, "bar.bg")
+    local rgb = function(t) return rgba(t.r or t[1], t.g or t[2], t.b or t[3]) end
+    local live = R()
+    NS.Style.Element(live, c, true)
+    local maps = {}
+    for _, call in ipairs(live:__calls("AddDispelTypeTexture")) do maps[call[1]] = call[2].customDispelColorMap end
+    -- red under: Bars.Bind handing dispelTint the stored fill or background
+    assertEqual(rgb(maps[live.__am.fill].None), rgb(fill), "the live fill's fallback")
+    assertEqual(rgb(maps[live.__am.bg].None), rgb(bg), "the live background's fallback")
+    local placeholder = R()
+    NS.Style.Element(placeholder, c, false)
+    -- red under: am.fillNone or am.bgNone taken from the stored color
+    assertEqual(rgb(placeholder.__am.fillNone), rgb(fill), "a placeholder's fill")
+    assertEqual(rgb(placeholder.__am.bgNone), rgb(bg), "a placeholder's background")
+end)
+
+--- A registered skin other than Ka0s Default whose `icon.borderSize` is 2 and whose style is Solid:
+--- not the stored 5 of the cases below, Ka0s Default's 1 or the bar family's 1.
+local function thickIconSkin(mocks)
+    local Skin = mocks.LibStub("LibKa0s-Skin-1.0")
+    for _, def in ipairs(Skin:Skins()) do
+        local t = Skin:ResolveSkin(def.key)
+        if def.key ~= "ka0s" and t["icon.borderSize"] == 2 and t["icon.borderStyle"] == "Solid" then return def.key end
+    end
+end
+
+test("skin flip: an icon's inset and dispel edge take the skin's thickness, not the stored one", function()
+    local NS, mocks = fresh()
+    local key = thickIconSkin(mocks)
+    NS.ApplySkinChoice("ka0s", key)
+    local want = tokenOf(mocks, key, "icon.borderSize")
+    local am = dressed(NS, cfg(NS, { style = "icons", icons = { borderSize = 5 } }))
+    -- red under: layoutIcon reading ic.borderSize
+    assertEqual(am.icon:__last("SetPoint")[4], -want, "the art's inset")
+    -- red under: dispelSizeOf reading ic.borderSize
+    assertEqual(am.dispelTop:__last("SetHeight")[1], want, "the dispel edge lies over the border")
+end)
+
+test("skin flip: the icon beside a bar or a text line draws the icon family, not the bar's", function()
+    local NS, mocks = fresh({ before = dofile("tests/text_apis.lua") })
+    local key = thickIconSkin(mocks)
+    NS.ApplySkinChoice("ka0s", key)
+    local size = tokenOf(mocks, key, "icon.borderSize")
+    -- No shipped skin parts the two colors, so the bar family's answers apart here.
+    local color = { 0.1, 0.2, 0.3, 1 }
+    local skinColor = NS.Skin.Color
+    NS.Skin.Color = function(token)
+        if token == "icon.border" then return unpack(color) end
+        return skinColor(token)
+    end
+    local beside = { icon = "LEFT", iconBorderShow = true, iconBorderSize = 5 }
+    local am = dressed(NS, cfg(NS, { bars = beside }))
+    local strips = BS.strips(am.iconBorder)
+    -- red under: BORDER_BESIDE's sizeToken or colorToken on the bar family
+    assertEqual(strips[1]:__last("SetHeight")[1], size, "a bar's side icon, the thickness")
+    assertEqual(rgba(unpack(strips[1]:__last("SetColorTexture"))), rgba(unpack(color)), "a bar's side icon, the color")
+    local made = {}
+    local line = B.new(made)
+    local c = cfg(NS, { style = "text", text = beside })
+    B.during(mocks, made, function() NS.Style.Element(line, c, false) end)
+    strips = BS.strips(line.__am.iconBorder)
+    assertEqual(strips[1]:__last("SetHeight")[1], size, "a text line's icon, the thickness")
+    assertEqual(rgba(unpack(strips[1]:__last("SetColorTexture"))), rgba(unpack(color)), "a text line's icon, the color")
+end)
+
+test("skin flip: a live switch to WoW Default keeps a laid-out icon's border drawn, flat, in the skin's values", function()
+    local NS, mocks = fresh()
+    local Skin = mocks.LibStub("LibKa0s-Skin-1.0")
+    local key
+    for _, def in ipairs(Skin:Skins()) do
+        if Skin:ResolveSkin(def.key)["icon.borderStyle"] ~= "Solid" then key = key or def.key end
+    end
+    assertTrue(key ~= nil, "the one skin that is not Solid")
+    local c = cfg(NS, { style = "icons" })
+    local am, frame = dressed(NS, c)
+    mocks.__layOut(am.border)
+    NS.ApplySkinChoice("ka0s", key)
+    NS.Style.Element(frame, c, false)
+    -- red under: ApplyBorder hiding the strips while the backdrop was refused
+    BS.assertSolid(am.border, tokenOf(mocks, key, "icon.borderSize"),
+        table.concat(tokenOf(mocks, key, "icon.border"), ","), "the strips stand in")
 end)
 
 test("skin flip: a player's own values draw with the companions off, under any skin", function()
@@ -397,6 +560,20 @@ test("skin flip: the step is the same write with the library absent, and creates
     assertNil(p.containers[1].icons, "no table on the way")
     assertEqual(lib.FollowSkin(p), false, "the record gates")
     Skin.FollowOnce = keep
+end)
+
+test("skin flip: v16 on a stored profile with no skin table keeps the record, so the step runs once", function()
+    local bare = partial()
+    bare.skin = nil
+    local NS = ran({ Default = partial(), Parked = bare })
+    local p = NS.db.sv.profiles.Parked
+    -- red under: FollowSkin not carrying the view's skin table back, which loses the record
+    assertEqual(type(p.skin), "table", "the table persists")
+    assertEqual(p.skin.fullSkinReset, true, "and the record in it")
+    assertEqual(p.containers[1].bars.barTextureFromSkin, true, "the step ran")
+    p.containers[1].bars.barTextureFromSkin = false
+    assertEqual(NS.Database.FollowSkin(p), false, "the record gates a second run")
+    assertEqual(p.containers[1].bars.barTextureFromSkin, false)
 end)
 
 test("skin flip: the ladder walks every stored profile, and a new profile takes the step on load", function()

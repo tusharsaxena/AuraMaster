@@ -15,7 +15,7 @@ profile is seeded with four (`NS.STARTER_CONTAINERS`, `defaults/Profile.lua:332`
 auras are secret — combat, encounters, Mythic+ and PvP (`core/Secrets.lua`, `docs/midnight-quirks.md`).
 So this addon reads no aura at all. Every container is a Blizzard **AuraContainer**
 (`CreateFrame("AuraContainer", nil, anchor, "CustomAuraContainerTemplate")`,
-`modules/Container.lua:449`) that registers `UNIT_AURA` for its unit, gathers, sorts, lays out and
+`modules/Container.lua:450`) that registers `UNIT_AURA` for its unit, gathers, sorts, lays out and
 animates its buttons in Blizzard's own code. A Text container with Glow on adds `C.TEXT_GLOW_TWINS`
 twin engines with the same content, offset around the main and dressed in the glow color
 (`modules/Container_Twins.lua`), since no addon code can copy the engine's secret text. The addon's
@@ -247,7 +247,7 @@ optional. The full table and the reasons:
 | AceDB `OnProfileChanged` / `OnProfileCopied` / `OnProfileReset` | `core/Database.lua:274-278` | `NS.OnProfileChanged` / `NS.OnProfileCopied` / `NS.OnProfileReset` → re-prepare the registry, trace the event once in its own words (a switch `[Profile] changed -> X`; a copy or a reset one `[Set]` line, debug-logging-§10), rebuild, re-render |
 
 Each container's own `UNIT_AURA` belongs to its engine, and to each twin engine of a glowing Text
-container, which takes the same `SetUnit` (`modules/Container.lua:443`); none of it is addon code.
+container, which takes the same `SetUnit` (`modules/Container.lua:444`); none of it is addon code.
 The twelve `core/AuraMaster.lua` registrations are one module-level list, `LIFECYCLE_EVENTS`, which
 `RegisterLifecycleEvents` and `UnregisterLifecycleEvents` both walk, so the stand-down and the
 stand-up remove and restore the same list. With logging on, the world-entry, loading-screen, combat

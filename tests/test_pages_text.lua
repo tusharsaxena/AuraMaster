@@ -155,6 +155,26 @@ test("text page: the Preview is a disabled EditBox labeled Preview, PrettyChat's
     assertTrue(box.text:find(raw, 1, true) ~= nil, box.text)
 end)
 
+test("text page: the Preview box wears the skin's text color, the swatch with the companion off", function()
+    local NS, m, P = textPage()
+    local key
+    local Skin = m.LibStub("LibKa0s-Skin-1.0")
+    for _, def in ipairs(Skin:Skins()) do
+        if def.key ~= "ka0s" and not key then key = def.key end
+    end
+    NS.ApplySkinChoice("ka0s", key)
+    local function escape(r, g, b)
+        local function byte(v) return math.floor(v * 255 + 0.5) end
+        return ("|cff%02x%02x%02x"):format(byte(r), byte(g), byte(b))
+    end
+    local c = NS.Database.FindContainer(1)
+    c.text.font.fontColor = { r = 1, g = 0, b = 0, a = 1 }
+    -- red under: previewText reading font.fontColor, whatever the companion says
+    assertEqual(preview(NS, P, P.rerender("Text")).text:sub(1, 10), escape(NS.Skin.HudTextColor()), "followed")
+    c.text.font.fontColorFromSkin = false
+    assertEqual(preview(NS, P, P.rerender("Text")).text:sub(1, 10), escape(1, 0, 0), "the swatch")
+end)
+
 test("text page: the Preview box refreshes after a template change (Task 20)", function()
     local NS, m, P, ws = textPage()
     -- red under: the box seeded once and never rebuilt (nothing to refresh FROM)

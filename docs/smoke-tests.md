@@ -2598,7 +2598,8 @@ and the label change with each skin, and the icon borders take the skin's style 
 background and bar border colors are the same in every skin today (`bar.bg`, `bar.border`), and every
 skin's bar border style is None, so a bar with **Show border** on draws no border while it follows the
 skin. Under WoW Default the icon border is a textured edge, which reaches a live button after a
-`/reload`, as the row's tooltip says. Fail: a surface on the previous skin's color until `/reload`. Result:
+`/reload`, as the row's tooltip says; until then that button keeps a flat border in the skin's color
+and thickness, never none. Fail: a surface on the previous skin's color until `/reload`. Result:
 
 **SKIN-37. The shadow follows the skin (D6).** Under Azeroth the text shows the skin's shadow, under High
 Contrast a heavier one, under Ka0s Default none. Tick **Ignore fonts** under Azeroth → the stored *Font
@@ -2609,8 +2610,10 @@ skin. Fail: no visible shadow under Azeroth, or one left behind after a switch. 
 Border, Text → Font and Icon, and Layout → Label show **Use the skin's color** (the text tabs **Use the
 skin's shadow** too), and each border **Use the skin's border**, which dims its style and thickness.
 Untick one → the stored value draws at once, and only that element moves. A color swatch is never
-grayed. Tick **Use class color** under Azeroth → the class color wins whatever the companion says. Fail: a
-swatch grayed, a companion moving another element, or the skin over a class color. Result:
+grayed. Tick **Use class color** under Azeroth → the class color wins whatever the companion says. On a
+target container with that box ticked, target an NPC and re-apply → the skin's color draws. Fail: a
+swatch grayed, a companion moving another element, the skin over a class color, or the stored swatch on
+an NPC while its companion is on. Result:
 
 **SKIN-39. The one step on an existing profile (schema v16).** On the previous build give a profile its
 own bar, text and border colors, Font shadow on, THICKOUTLINE flags and a glow color. Update and log in

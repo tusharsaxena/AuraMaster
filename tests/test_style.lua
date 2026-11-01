@@ -261,7 +261,12 @@ test("style: a target container's class color is the target's, snapshotted at ap
     assertEqual(fillOf(target), table.concat({ priest.r, priest.g, priest.b, 0.6 }, ","),
         "read once per apply, not on every dress")
     target:Apply()
-    assertEqual(fillOf(target), "0.1,0.2,0.3,0.6", "an unresolvable class falls through to the swatch")
+    local inst = NS2.ContainerManager.instances[3]
+    inst:Cfg().bars.barColorFromSkin = false
+    assertEqual(fillOf(target), "0.1,0.2,0.3,0.6", "an unresolvable class falls through to the swatch, companion off")
+    inst:Cfg().bars.barColorFromSkin = true
+    -- red under: Style.Followed standing aside for the toggle alone, whatever the class resolved to
+    assertEqual(fillOf(target), table.concat({ NS2.Skin.BarFillColor() }, ","), "and to the skin's, companion on")
     assertEqual(fillOf(applied(1)), table.concat({ mage.r, mage.g, mage.b, 0.6 }, ","),
         "a player container keeps the player's class")
 end)
@@ -282,7 +287,7 @@ test("style: a tracked unit whose class lookup raises paints the swatch, and not
     local swatch = { r = 0.1, g = 0.2, b = 0.3, a = 0.6 }
     local inst = NS2.ContainerManager.instances[3]   -- Target debuffs (mine)
     local c = inst:Cfg()
-    c.style, c.bars.useClassColorBar, c.bars.barColor = "bars", true, swatch
+    c.style, c.bars.useClassColorBar, c.bars.barColor, c.bars.barColorFromSkin = "bars", true, swatch, false
     local ok, err = pcall(inst.Apply, inst)
     -- red under: ResolveUnitClass calling NS.ClassColor unguarded
     assertTrue(ok, tostring(err))

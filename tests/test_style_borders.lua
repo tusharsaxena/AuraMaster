@@ -157,6 +157,27 @@ test("style: a backdrop frame first made under a secret size applies nothing unt
     assertNil(f.__amBackdrop.__backdropApplies, "no backdrop applied on a secret size")
 end)
 
+test("style: a Solid border moved to another style under a secret size keeps its strips, never drawing nothing", function()
+    local NS2, m2 = fresh()
+    local f = R()
+    NS2.Style.ApplyBorder(f, true, "Solid", 1, { r = 1, g = 1, b = 1, a = 1 }, false)
+    m2.__layOut(f)
+    local ok, err = pcall(NS2.Style.ApplyBorder, f, true, "Uninstalled", 2, { r = 0, g = 1, b = 0, a = 1 }, false)
+    assertTrue(ok, tostring(err))
+    -- red under: the strips hidden on the style alone, the backdrop refused (blank until /reload)
+    assertSolid(f, 2, "0,1,0,1", "the strips stand in")
+    assertFalse(f.__amBackdrop:IsShown(), "no empty backdrop frame shown")
+    local g = R()
+    NS2.Style.ApplyBorder(g, true, "Uninstalled", 2, { r = 1, g = 1, b = 1, a = 1 }, false)
+    assertNil(strips(g)[1], "with a backdrop applied no strip is drawn")
+    m2.__layOut(g)
+    m2.__layOut(g.__amBackdrop)
+    NS2.Style.ApplyBorder(g, true, "Uninstalled", 4, { r = 0, g = 1, b = 0, a = 1 }, false)
+    -- red under: the strips drawn over a backdrop that stands
+    assertNil(strips(g)[1], "a standing backdrop keeps the job on a secret size")
+    assertTrue(g.__amBackdrop:IsShown())
+end)
+
 test("style: switching between Solid and another style hides the other drawing (B2-3)", function()
     local f = R()
     local color = { r = 1, g = 1, b = 1, a = 1 }

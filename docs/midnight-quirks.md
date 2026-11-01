@@ -52,7 +52,7 @@ replacement: the `AuraContainer` widget (`CustomAuraContainerTemplate`), which r
 itself, gathers auras against declared groups, and creates and fills `AuraButton`s in secure code.
 `SecureAuraHeaderTemplate` is no longer available on Retail.
 
-**What this addon does.** Every container is one main `AuraContainer` engine (`modules/Container.lua:449`). A Text
+**What this addon does.** Every container is one main `AuraContainer` engine (`modules/Container.lua:450`). A Text
 container with Glow on adds `C.TEXT_GLOW_TWINS` twin engines with the same groups, which draw only
 its glow (*A glyph glow needs twin engines*, below). The addon
 declares groups — `AddAuraGroup(key, filterString, { candidateFilters, sortMethod, sortDirection,
@@ -141,7 +141,7 @@ addon can no longer anchor it. Another frame may only anchor **to** an aura cont
 their geometry can be secret.
 
 **What this addon does.** The engine is anchored to its container's anchor frame *before* the first
-`AddAuraGroup` (`modules/Container.lua:457-460`). Every anchor frame, and the frame picker's outline,
+`AddAuraGroup` (`modules/Container.lua:458-461`). Every anchor frame, and the frame picker's outline,
 inherits `DisableUntrustedLayoutScriptsTemplate`, so a container can attach to another container's
 engine (`modules/Anchors.lua`) and the picker can outline one. Positions are computed from settings,
 never read back off an engine frame; the anchor is sized to one element from config.
@@ -162,7 +162,7 @@ where that rect reads secret.
 **What this addon does.** A plan of the same shape (group count, enchant slots and their
 hide-permanent flag, style, growth corner —
 `FilterCompiler.StructureKey`) is applied in place, calling only the setters whose values changed;
-candidate filters are compared with `FilterCompiler.Signature` first (`modules/Container.lua:341-344`). A
+candidate filters are compared with `FilterCompiler.Signature` first (`modules/Container.lua:342-345`). A
 new shape disables, hides and retires the old engine and builds a new one (`Container:Retire`).
 
 ## Spell-id filters apply only where Blizzard's predicate allows them
@@ -218,7 +218,7 @@ spell category is not drawn in the blizzard view. The empty-container prediction
 ids, so a container whose only aura is a blacklisted `NeverSecret` one (a blacklisted Sated on a
 debuff container) is predicted not empty while the engine draws nothing. That costs only a
 placeholder hang on an unlocked container, and is accepted.
-`ContainerClass:ApplyView` (`modules/Container.lua:380`) sends `SetAuraGroupFilterString` and
+`ContainerClass:ApplyView` (`modules/Container.lua:381`) sends `SetAuraGroupFilterString` and
 `SetAuraGroupCandidateFilters` only where the two views differ. Blizzard's Lua checks neither combat
 nor secrecy in either setter and both end in `UpdateAllAuras`, so the switch runs in combat. It runs at
 every build and update, on `PLAYER_TARGET_CHANGED` and `PLAYER_FOCUS_CHANGED` before the refresh, and
@@ -314,7 +314,7 @@ field's brackets (`$spellname$[-$stacks$]`) goes with the field, and the Text se
 **The restriction.** `AddDispelTypeTexture` and `AddPandemicRegion` append to the button.
 
 **What this addon does.** Every live restyle empties both lists FIRST, before any other binding,
-through `Style.ClearAdditiveBindings` (`modules/Style.lua:436`), and then adds again
+through `Style.ClearAdditiveBindings` (`modules/Style.lua:442`), and then adds again
 (`modules/Style_Bars.lua:355-362`, `modules/Style_Icons.lua:174`). The order matters: every `Set*` /
 `Add*` binding re-runs the engine's whole apply pass, which re-tints, shows or hides each dispel
 texture still listed, while `ClearDispelTypeTextures` itself touches no region. A clear made after
@@ -449,7 +449,7 @@ frames are never freed, so a rebuild per run would leak one engine frame per con
   creating a container, and tearing one down. A container that leaves the registry in combat is
   parked (engine disabled, anchor untouched) and destroyed once combat ends.
 - **Visibility in combat is the engine's `SetEnabled`**, not `Show`/`Hide` on an ancestry holding
-  aura buttons (`modules/Container.lua:764`).
+  aura buttons (`modules/Container.lua:765`).
 
 ## An unknown event name raises
 
@@ -590,7 +590,7 @@ The restyle stopped at the border, after `Style.ClearAdditiveBindings` had empti
 and before `Icons.Bind` could add it back: that is the lost highlight.
 
 **What this addon does.** No aura-button border reads a size (`Style.ApplyBorder`,
-`modules/Style_Border.lua:166`):
+`modules/Style_Border.lua:174`):
 - **Solid**, the default, is four strip textures of our own on the border frame, each anchored between
   two corners, its thickness a plain setting (the pattern of a Text line's dispel edge). Nothing is
   read, so a Solid border redraws on every restyle.
@@ -767,7 +767,7 @@ does not set the flag.
   #22) hangs it from `UIParent` before it moves, out of combat only, so the move never starts from
   the parent's geometry, which may read secret.
 - **The engine is anchored before its first `AddAuraGroup`**; after that an addon can no longer
-  anchor it (`modules/Container.lua:457-460`).
+  anchor it (`modules/Container.lua:458-461`).
 - **A twin engine is moved only through its holder, and only out of combat.** A glow twin hangs from
   a plain frame of ours pinned to the anchor (`modules/Container_Twins.lua`); a thickness or offset
   change re-points the holder in `Apply`, which never runs under `MustDefer`, so an engine's
@@ -777,7 +777,7 @@ does not set the flag.
   (`modules/ContainerManager.lua:217`) holds every build, update and restyle; aura buttons refuse addon
   access while auras are secret.
 - **Visibility in combat goes through the engine's `SetEnabled`**, never `Show`/`Hide` on an aura
-  button's ancestry (`modules/Container.lua:764`).
+  button's ancestry (`modules/Container.lua:765`).
 - **The font primer's frame hangs from `UIParent`, not from any anchor**, so nothing it does reaches
   an aura engine's ancestry. Its one engine call, the follow-up `UpdateAllAuras`, is not protected,
   reads no aura, and skips a disabled engine, which it would clear (`modules/FontPrimer.lua`).
@@ -857,7 +857,7 @@ does not set the flag.
   only while `Compat.AurasAreSecret()` is false, and through the `core/Secrets.lua` gates; chat and
   debug lines go through `NS.SafeToString`.
 - **Right-click cancel uses one click phase** (`RightButtonUp`) so a button reassigned between press
-  and release cannot cancel the wrong aura (`modules/Style.lua:787`).
+  and release cannot cancel the wrong aura (`modules/Style.lua:793`).
 - **Animations on engine buttons are set up at dress time only.** `modules/Style_Text.lua` builds its
   three AnimationGroups with the regions and calls `Stop`/`Play` only in a dress (initializeFrame or a
   restyle while auras are readable), each through `Style.Bind`, so a refusal costs one call and is

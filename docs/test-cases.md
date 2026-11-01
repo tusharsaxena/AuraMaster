@@ -1334,7 +1334,7 @@ Total.
 - style: a client that refuses the percent rule's step gets the plain "%d" rule, never none (feedback #5)
 - style: no format Aura Master itself authors carries a leading or trailing space (feedback #5)
 
-### test_style_borders.lua (22)
+### test_style_borders.lua (23)
 
 - style: a Solid border is four strips between the frame's corners, never a backdrop (B2-3)
 - style: a tint edge lays the Solid border's four strips, white, untinted and hidden, for the engine to show (DB-1)
@@ -1344,6 +1344,7 @@ Total.
 - style: another style applies its backdrop once per edge and size, and again when either moves (B2-3)
 - style: another style under a secret size keeps its last backdrop and only recolors (B2-3)
 - style: a backdrop frame first made under a secret size applies nothing until its size reads plain (B2-3)
+- style: a Solid border moved to another style under a secret size keeps its strips, never drawing nothing
 - style: switching between Solid and another style hides the other drawing (B2-3)
 - style: another style on a client without the backdrop mixin draws nothing and never raises
 - style: a binding the client lacks is skipped, and one it refuses costs that binding alone
@@ -1961,7 +1962,7 @@ Total.
 - options descriptor: OpenOptionsPage opens a registered page's category, a section's through Containers, and falls back to the panel otherwise
 - options descriptor: every stub composer answers an empty row list
 
-### test_pages_general.lua (36)
+### test_pages_general.lua (37)
 
 - general: the Enable checkbox writes the master switch through the seam
 - general: the four show-or-hide master rows are visibility passes; Master scale re-applies
@@ -1984,6 +1985,7 @@ Total.
 - general → spell categories: the list draws two columns, filled row-major, in the by-name order (owner 2026-09-20)
 - general → spell categories: a dropdown of the fifteen spell categories plus Weapon enchants, opening on the first
 - general → spell categories: every Category entry is prefixed with the aura type it filters (issue #10)
+- general → spell categories: with the Scope cleared the aura type mark takes the skin's token
 - general → spell categories: the markers are padded so every name starts at the same column (issue #10)
 - general → spell categories: the closed dropdown shows the marked label too (issue #10)
 - general → spell categories: a section heading separates the picker from the spell list (2026-09-20)
@@ -2053,7 +2055,7 @@ Total.
 - skin hud: v13 runs once, so a player's later pick survives the next load
 - skin hud: the v13 body seeds each companion before ResetToSkin, and sets them itself without it
 
-### test_skin_flip.lua (23)
+### test_skin_flip.lua (31)
 
 - skin flip: every listed companion is a bool row defaulting on, in the template and on the row
 - skin flip: no swatch carries disabledIf, and a class color has no companion
@@ -2063,8 +2065,15 @@ Total.
 - skin flip: a skin switch changes every flipped surface
 - skin flip: the name label reads hud.label, a text line hud.text
 - skin flip: a stored background, border and glow color lose to the skin's token while followed
+- skin flip: a running-out curve returns to the skin's color on an icon and a text line
+- skin flip: a placeholder's run takes the skin's color, the live curve's own fallback
 - skin flip: a running-out curve follows the skin, and two skins never share one curve
 - skin flip: a class color comes first, whatever the companion says
+- skin flip: a class that does not resolve follows the skin; its toggle stays stored
+- skin flip: a dispel-colored bar's no-type color is the skin's, on the engine's map and a placeholder
+- skin flip: an icon's inset and dispel edge take the skin's thickness, not the stored one
+- skin flip: the icon beside a bar or a text line draws the icon family, not the bar's
+- skin flip: a live switch to WoW Default keeps a laid-out icon's border drawn, flat, in the skin's values
 - skin flip: a player's own values draw with the companions off, under any skin
 - skin flip: a shadow follows the skin and goes when the skin's goes, on a string already drawn
 - skin flip: with the shadow's companion off the stored shadow draws under every skin
@@ -2077,6 +2086,7 @@ Total.
 - skin flip: every Defaults path keeps the record
 - skin flip: a profile reset runs the step against defaults, which writes nothing a player sees
 - skin flip: the step is the same write with the library absent, and creates only the skin table
+- skin flip: v16 on a stored profile with no skin table keeps the record, so the step runs once
 - skin flip: the ladder walks every stored profile, and a new profile takes the step on load
 
 ### test_skin_fix.lua (6)
@@ -2384,12 +2394,13 @@ Total.
 - icons: the Pandemic tab holds the time color and the highlight, in pandemic-window words, paths unchanged (B2-1)
 - icons: Defaults restores the selected container's icon look and leaves its bar look alone
 
-### test_pages_text.lua (33)
+### test_pages_text.lua (34)
 
 - text page: the five tabs are drawn in order, Pandemic before Animation (B2-1)
 - text page: General holds Size, the Template dropdown, box, Time format and Preview, then Placement, then the cheat sheet (AUR-L17, AUR-L19)
 - text page: the section is named Text template (Task 20, owner: rename this section)
 - text page: the Preview is a disabled EditBox labeled Preview, PrettyChat's own shape (Task 20)
+- text page: the Preview box wears the skin's text color, the swatch with the companion off
 - text page: the Preview box refreshes after a template change (Task 20)
 - text page: the cheat sheet has a Tokens heading, a Rules heading and one bullet per token (Task 20)
 - text page: a valid template is stored; a refused one is not, and the panel prints why
@@ -2710,7 +2721,7 @@ Total.
 | test_anchors_drop.lua | 25 |
 | test_texttemplate.lua | 26 |
 | test_style.lua | 38 |
-| test_style_borders.lua | 22 |
+| test_style_borders.lua | 23 |
 | test_castaura.lua | 7 |
 | test_timedspells.lua | 22 |
 | test_style_bars.lua | 63 |
@@ -2734,12 +2745,12 @@ Total.
 | test_debug_library_lines.lua | 11 |
 | test_optionssetup.lua | 21 |
 | test_options_descriptor.lua | 19 |
-| test_pages_general.lua | 36 |
+| test_pages_general.lua | 37 |
 | test_skinsetup.lua | 19 |
 | test_skin_literals.lua | 3 |
 | test_skin_surfaces.lua | 7 |
 | test_skin_hud.lua | 12 |
-| test_skin_flip.lua | 23 |
+| test_skin_flip.lua | 31 |
 | test_skin_fix.lua | 6 |
 | test_skin_flags.lua | 7 |
 | test_skin_glow_restore.lua | 6 |
@@ -2755,7 +2766,7 @@ Total.
 | test_pages_layout.lua | 52 |
 | test_pages_bars.lua | 14 |
 | test_pages_icons.lua | 6 |
-| test_pages_text.lua | 33 |
+| test_pages_text.lua | 34 |
 | test_pages_tabs.lua | 6 |
 | test_pages_rail.lua | 20 |
 | test_pages_about.lua | 3 |
@@ -2776,4 +2787,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **2282** |
+| **Total** | **2293** |

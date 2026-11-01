@@ -193,7 +193,8 @@ function NS.Container.ClassOf(unit)
 end
 
 --- The tracked unit's class as { r, g, b }, in a table reused per instance. When the class does not
---- resolve (an NPC, no such unit) the channels are nil, and Style.Color falls through to the swatch.
+--- resolve (an NPC, no such unit) the channels are nil, and Style.Color falls through to the color
+--- the surface draws with no class color on: the skin's, or the swatch with its companion off.
 function ContainerClass:ResolveUnitClass(unit)
     local c = self.classBuf or {}
     self.classBuf = c

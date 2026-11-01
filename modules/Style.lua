@@ -69,17 +69,28 @@ end
 -- channels move: the running-out curves and the dispel maps are memoized on a table's identity
 -- (curveSlot, Style.DispelColorMap), so an edited table would keep the last skin's curve.
 local followed = {}
+
+-- The class color of the dress in progress: the container's snapshot of its tracked unit's class
+-- ({ r, g, b }, with r nil when that class did not resolve), or nil for a player container. Set and
+-- cleared by Style.Element, so nothing between it and Style.Color has to thread it through.
+local dressClass
+
 -- The three tokens with a getter of their own on the facade (LibKa0s v1.85.0).
 local GETTERS = { ["hud.text"] = "HudTextColor", ["hud.label"] = "HudLabelColor", ["bar.fill"] = "BarFillColor" }
 
 --- The color a stored swatch draws, shaped as a stored color (r, g, b, a keys), so it goes through
 --- Style.Color and Style.CurveColor as the swatch does: `stored` itself while its "Use the skin's
---- color" companion `fromSkin` is off, while `useClass` is on (a class color comes first and has no
---- companion, and it keeps its stored alpha), when the skin leaves `token` alone or with no library;
---- else the skin's `token`. The stored color is never written. Same regions as Style.SkinKey, so a
---- skin switch reaches it the same way, and it allocates only when the skin's color moved.
-function Style.Followed(stored, fromSkin, token, useClass)
-    if fromSkin ~= true or useClass or NS.SkinDegraded then return stored end
+--- color" companion `fromSkin` is off, while a class color draws (`useClass` on and the class
+--- resolved: it comes first, has no companion and keeps its stored alpha), when the skin leaves
+--- `token` alone or with no library; else the skin's `token`. So a toggle on over a class that did not
+--- resolve (an NPC) follows the skin like any other surface. `class` names the class as
+--- Style.ColorWith's `classColor` does; nil reads the dress in progress. The stored color is never
+--- written. Same regions as Style.SkinKey, so a skin switch reaches it the same way, and it allocates
+--- only when the skin's color moved.
+function Style.Followed(stored, fromSkin, token, useClass, class)
+    if class == nil then class = dressClass end
+    local classDraws = useClass and not (class and class.r == nil)
+    if fromSkin ~= true or classDraws or NS.SkinDegraded then return stored end
     local S = NS.Skin
     local getter = GETTERS[token]
     local r, g, b, a
@@ -95,23 +106,18 @@ function Style.Followed(stored, fromSkin, token, useClass)
 end
 
 --- The color font block `t` draws (`tdef` the template's block, for a missing companion): the name
---- label's follows `hud.label`, every other text `hud.text`.
-function Style.FontColor(t, tdef)
+--- label's follows `hud.label`, every other text `hud.text`. `class` as Style.Followed.
+function Style.FontColor(t, tdef, class)
     return Style.Followed(t.fontColor, Style.OrTemplate(t.fontColorFromSkin, tdef.fontColorFromSkin),
-        tdef == D.label.font and "hud.label" or "hud.text", t.useClassColorFont)
+        tdef == D.label.font and "hud.label" or "hud.text", t.useClassColorFont, class)
 end
-
--- The class color of the dress in progress: the container's snapshot of its tracked unit's class
--- ({ r, g, b }, with r nil when that class did not resolve), or nil for a player container. Set and
--- cleared by Style.Element, so nothing between it and Style.Color has to thread it through.
-local dressClass
 
 --- r, g, b, a for a stored color and its class-color companion. The class is the one the surface
 --- describes (options-ui-§17): a container tracking another unit paints with that unit's class, as
 --- snapshotted at its last apply (modules/Container.lua's SnapshotClass), because buttons cannot be
 --- re-dressed while auras are secret and every button of one container must show one class. A
---- tracked unit whose class does not resolve (an NPC) falls through to the stored swatch; a player
---- container reads the player's class. The stored alpha always survives. The in-combat staleness
+--- tracked unit whose class does not resolve (an NPC) falls through to `stored`, which Style.Followed
+--- has already put on the skin while its companion is on; a player container reads the player's class. The stored alpha always survives. The in-combat staleness
 --- after a unit swap is the residual ratified in docs/ARCHITECTURE.md → Documented deviations.
 function Style.Color(stored, useClass)
     return Style.ColorWith(dressClass, stored, useClass)
@@ -189,7 +195,7 @@ function Style.ApplyFont(fs, t, tdef, classColor)
     hudFont.shadow = t.fontShadow and true or false
     hudFont.shadowFromSkin = Style.OrTemplate(t.fontShadowFromSkin, tdef.fontShadowFromSkin) == true
     NS.Skin.HudFont(fs, hudFont)
-    local stored = Style.FontColor(t, tdef)
+    local stored = Style.FontColor(t, tdef, classColor)
     if classColor ~= nil then
         fs:SetTextColor(Style.ColorWith(classColor, stored, t.useClassColorFont))
     else

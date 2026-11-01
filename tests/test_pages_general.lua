@@ -406,6 +406,19 @@ test("general → spell categories: every Category entry is prefixed with the au
     assertEqual(dd.list.hardCC, marked(NS, "hardCC", "HARMFUL"))
 end)
 
+test("general → spell categories: with the Scope cleared the aura type mark takes the skin's token", function()
+    local NS, _, P, _, tab = general()
+    local before = P.find(tab(NS.L["Spell categories"]), "Dropdown", NS.L["Category"]).list.hardCC
+    assertEqual(before:sub(1, 10), TYPE_COLOR.HARMFUL, "stock while the panel is ignored")
+    NS.ApplySkinIgnore(false)
+    NS.ApplySkinChoice("ka0s", "obsidian")
+    local mark = NS.PanelEscape("am.auraHarmful")
+    assertTrue(mark ~= TYPE_COLOR.HARMFUL, "the skin moves it")
+    local list = P.find(P.rerender("General"), "Dropdown", NS.L["Category"]).list
+    -- red under: categoryLabel back on the typed C.AURA_TYPE_COLORS
+    assertEqual(list.hardCC:sub(1, 10), mark)
+end)
+
 test("general → spell categories: the markers are padded so every name starts at the same column (issue #10)", function()
     local NS, _, P, ws = spells()
     local dd = P.find(ws, "Dropdown", NS.L["Category"])

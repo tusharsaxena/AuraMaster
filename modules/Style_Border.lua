@@ -22,7 +22,8 @@ local C = NS.Constants
 --     resize. SetBackdrop is applied only while that frame's size reads as a plain number, and only
 --     when the edge or size changed; otherwise the backdrop last applied stays and is recolored
 --     (SetBackdropBorderColor does no arithmetic). A live button therefore shows a new edge or size
---     after its next rebuild or /reload.
+--     after its next rebuild or /reload. One with no backdrop yet to keep (a skin switch from Solid)
+--     keeps the strips in the same place until then, so a switch never leaves it with no border.
 -- The border frame itself is a plain frame too (Style.NewBorder), never a BackdropTemplate. The other
 -- frames of ours that hang under geometry that can read secret (the unlocked outline, the drag
 -- handle, the frame picker's outline) draw their edges with the same strips (Style.DrawEdge).
@@ -144,25 +145,32 @@ end
 
 --- Draw `frame`'s backdrop in `edge` at `size`, colored (r, g, b, a), or hide it (`show` false). The
 --- backdrop is (re)applied only when the edge or size changed and the host's size reads plain.
+--- Answers whether a backdrop stands: false with none ever applied, or with no mixin to draw one.
 local function drawBackdrop(frame, show, edge, size, r, g, b, a)
     local host = frame.__amBackdrop
     if not show then
         if host then host:Hide() end
-        return
+        return false
     end
     host = backdropHost(frame)
-    if not host.SetBackdrop then return end
+    if not host.SetBackdrop then return false end
     if (host.__amEdge ~= edge or host.__amEdgeSize ~= size) and sizeReadable(host) then
         host:SetBackdrop({ edgeFile = edge, edgeSize = size })
         host.__amEdge, host.__amEdgeSize = edge, size
     end
+    if not host.__amEdge then
+        host:Hide()
+        return false
+    end
     host:SetBackdropBorderColor(r, g, b, a)
     host:Show()
+    return true
 end
 
 --- Dress a border frame (Style.NewBorder) as an element border: hidden when off, styled None or
 --- without a positive size; Solid as four strips; any other style as a guarded backdrop. The other
---- drawing is hidden, so a switch between Solid and another style never shows both.
+--- drawing is hidden, so a switch between Solid and another style never shows both. Another style
+--- with no backdrop standing (a laid-out button's secret size refused it) draws the strips instead.
 function Style.ApplyBorder(frame, show, styleKey, size, stored, useClass)
     if not frame then return end
     size = tonumber(size) or 0
@@ -172,9 +180,8 @@ function Style.ApplyBorder(frame, show, styleKey, size, stored, useClass)
     end
     local edge = Style.Fetch("border", styleKey, C.FALLBACK_BORDER)
     local r, g, b, a = Style.Color(stored, useClass)
-    local solid = isSolid(styleKey, edge)
-    drawStrips(frame, solid, size, r, g, b, a)
-    drawBackdrop(frame, not solid, edge, size, r, g, b, a)
+    local backdrop = drawBackdrop(frame, not isSolid(styleKey, edge), edge, size, r, g, b, a)
+    drawStrips(frame, not backdrop, size, r, g, b, a)
     frame:Show()
 end
 
