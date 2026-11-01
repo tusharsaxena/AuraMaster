@@ -121,7 +121,9 @@ return function(Kit, NS, mocks)
         element("the icon beside a text line's border", over(TEXT, { text = { icon = "LEFT", iconBorderShow = true } }),
             "text.iconBorderColorFromSkin", strips("iconBorder")),
         drawn(R, "a text line's glow", function(o)
-            NS.Style.Text.GlowFont(o, NS.Database.DeepCopy(NS.CONTAINER_TEMPLATE.text), 1)
+            local s = NS.Database.DeepCopy(NS.CONTAINER_TEMPLATE.text)
+            s.glowColorFromSkin = true   -- off by default (SF-AM-1); the probe wants the followed arm
+            NS.Style.Text.GlowFont(o, s, 1)
         end),
         drawn(R, "the name label", function(o)
             local D = NS.CONTAINER_TEMPLATE

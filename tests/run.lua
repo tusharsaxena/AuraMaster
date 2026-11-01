@@ -168,6 +168,7 @@ Kit.run{
         "test_skin_surfaces",
         "test_skin_hud",
         "test_skin_flip",
+        "test_defaults_v17",
         "test_skin_border",
         "test_skin_fix",
         "test_skin_flags",

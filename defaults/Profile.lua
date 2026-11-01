@@ -320,7 +320,7 @@ NS.CONTAINER_TEMPLATE = {
         -- shadow and never replaces them. glowIntensity scales the color's alpha; glowThickness is the
         -- ring's radius in px, glowX/glowY shift the whole ring (owner's defaults, 2026-10-16).
         glow = false,
-        glowColor = color(0, 0, 0, 1), glowColorFromSkin = true, useClassColorGlow = false,
+        glowColor = color(0, 0, 0, 1), glowColorFromSkin = false, useClassColorGlow = false,
         glowIntensity = 0.5, glowThickness = 4,
         glowX = -4, glowY = 0,
     },

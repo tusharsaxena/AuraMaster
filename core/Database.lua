@@ -487,6 +487,15 @@ local SCHEMA_STEPS = {
             end
         end)
     end },
+    { to = 17, apply = function(db)
+        -- Defaults moved off the skin (SF-AM-1..3): Database.MigrateV17 moves old defaults, not picks.
+        eachProfile(db, function(p, name)
+            local n = Database.MigrateV17(p)
+            if n > 0 and NS.DebugLog then
+                NS.DebugLog.DebugAtEnable("Migrate", "v17 profile '%s': %s value(s) moved to the new defaults", name, n)
+            end
+        end)
+    end },
 }
 
 --- Current schema version: the last step's `to`, or 0 (the defaults' "never migrated" stamp).

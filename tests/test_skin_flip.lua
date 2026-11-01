@@ -68,7 +68,7 @@ test("skin flip: every listed companion is a bool row defaulting on, in the temp
             assertEqual(v, true, path .. " in the template")
         end
     end
-    assertEqual(n, 13 + 3 * 7, "the bars' 8, the icons' 2, the text's 3 and 3 per font block")
+    assertEqual(n, 12 + 3 * 7, "the bars' 8, the icons' 2, the text's 2 and 3 per font block")
 end)
 
 test("skin flip: no swatch carries disabledIf, and a class color has no companion", function()
@@ -167,6 +167,7 @@ test("skin flip: a stored background, border and glow color lose to the skin's t
     local fs = R()
     local s = NS.Database.DeepCopy(NS.CONTAINER_TEMPLATE.text)
     s.glowColor = red
+    s.glowColorFromSkin = true   -- off by default now (SF-AM-1): this test is the followed arm
     NS.Style.Text.GlowFont(fs, s, 1)
     assertEqual(rgba(unpack(fs:__last("SetTextColor"))), rgba(0, 0, 0, 0.5), "black, at the intensity")
     NS.ApplySkinChoice("ka0s", key)
@@ -474,7 +475,7 @@ test("skin flip: v16 sets every listed companion in every profile and keeps each
         assertEqual(c1.bars.name.fontFromSkin, true, name .. " the player's face follows (the ruling)")
         assertEqual(c1.bars.name.fontColorFromSkin, true, name .. " an absent one is written")
         assertEqual(c2.text.font.fontColorFromSkin, true, name)
-        assertEqual(c2.text.glowColorFromSkin, true, name)
+        assertTrue(c2.text.glowColorFromSkin ~= true, name .. " v17 moved the old default off the skin")
         assertEqual(c1.bars.name.fontFlags, "@skin", name .. " Font flags: on S.FontFlags")
         assertEqual(c1.bars.barColor.r, 0.3, name .. " a one-key color keeps its key (the backfill fills the rest)")
         assertEqual(c1.bars.barTexture, want.containers[1].bars.barTexture, name)
@@ -581,5 +582,5 @@ test("skin flip: the ladder walks every stored profile, and a new profile takes 
     local NS = ran({ Default = partial(), Parked = partial() })
     assertEqual(NS.db.sv.profiles.Parked.skin.fullSkinReset, true, "an inactive profile")
     assertEqual(NS.db.global.schemaVersion, NS.SCHEMA_VERSION)
-    assertEqual(NS.SCHEMA_VERSION, 16)
+    assertEqual(NS.SCHEMA_VERSION, 17)
 end)

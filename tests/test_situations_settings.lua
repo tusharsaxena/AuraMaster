@@ -136,7 +136,7 @@ test("situations settings: the owner's real profile loads with both tables on ev
     local NS = fresh({ savedVariables = { profiles = { Default = default, Raid = raid },
         global = { schemaVersion = 11 } } })
     -- red under: a schema step added for keys the template backfill already stamps
-    assertEqual(NS.SCHEMA_VERSION, 16, "no step of their own (v12 is the CC split, v13 the skin reset, v14 the Font flags, v15 the own faces, v16 the skin): the load backfill reaches them")
+    assertEqual(NS.SCHEMA_VERSION, 17, "no step of their own (v12 is the CC split, v13 the skin reset, v14 the Font flags, v15 the own faces, v16 the skin): the load backfill reaches them")
     for _, id in ipairs(order) do
         local c = NS.Database.FindContainer(id)
         if id ~= 10 then

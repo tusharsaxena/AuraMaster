@@ -1093,7 +1093,7 @@ local FOLLOW_LEAVES = {
     "bars.borderStyleFromSkin", "bars.borderColorFromSkin",
     "bars.iconBorderStyleFromSkin", "bars.iconBorderColorFromSkin",
     "icons.borderStyleFromSkin", "icons.borderColorFromSkin",
-    "text.iconBorderStyleFromSkin", "text.iconBorderColorFromSkin", "text.glowColorFromSkin",
+    "text.iconBorderStyleFromSkin", "text.iconBorderColorFromSkin",
 }
 for _, block in ipairs(Database.FLAG_BLOCKS) do
     for _, leaf in ipairs({ "fontFromSkin", "fontColorFromSkin", "fontShadowFromSkin", "fontFlags" }) do
@@ -1101,6 +1101,30 @@ for _, block in ipairs(Database.FLAG_BLOCKS) do
     end
 end
 Database.SKIN_FOLLOW_LEAVES = FOLLOW_LEAVES
+
+--- Schema v17 (smoke feedback SF-AM-1..3, owner 2026-11-01): defaults that moved off the skin. Each
+--- leaf is no longer in FOLLOW_LEAVES, so a new profile takes the default in defaults/Profile.lua and
+--- v17 moves a stored container still holding the OLD default (`from`) to the new one (`to`). A value
+--- already different is a pick and stays. Deviation: v16 wrote explicit values, so an old default and
+--- a player's pick of the same value read alike; docs/ARCHITECTURE.md records it.
+Database.V17_MOVES = {
+    { path = "text.glowColorFromSkin", from = true, to = false },
+}
+
+--- Move one stored profile's containers by V17_MOVES. Answers how many values moved.
+function Database.MigrateV17(p)
+    if type(p) ~= "table" or type(p.containers) ~= "table" then return 0 end
+    local moved = 0
+    for _, c in pairs(p.containers) do
+        if type(c) == "table" then
+            for _, m in ipairs(Database.V17_MOVES) do
+                local parent, leaf = pickParent(c, m.path)
+                if parent and parent[leaf] == m.from then parent[leaf] = m.to; moved = moved + 1 end
+            end
+        end
+    end
+    return moved
+end
 
 --- Without the library, the same writes by hand: the record gates, a path through a missing table is
 --- skipped, and the `skin` table is the one table this may create.

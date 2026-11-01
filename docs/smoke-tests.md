@@ -29,7 +29,7 @@ check's number is not reused. Checks with no recorded pass, and checks new or co
 | TEXT-1 to TEXT-36 | Text style | Templates and tokens, justify, the icon, dispel type word, backdrop and edge, animation, Size to fit, the glow behind the text |
 | LAYER-1 to LAYER-6 | Frame layering | Bar borders over the fill, the outline and the name label over the auras, the snap highlight over a Dialog container, the strip at low opacity, the Strata tooltip |
 | SETLAYOUT-1 to SETLAYOUT-9 | Settings layout (item 020) | Every settings page item 020 moved, regrouped or relabeled, read as `docs/settings-panel.md` describes, with no setting lost, moved or reset; the confirm buttons' ellipsis |
-| SKIN-1 to SKIN-42 | Skins | The skinning rollout: the one-time HUD reset under Ka0s Default, Ka0s Default otherwise unchanged, the Skin tab, each skin on the HUD, the unlock furniture, the settings pages and the tool windows, other addons stock, the font and texture companions and overrides, combat, EllesmereUI on, off and back, the copy, profiles, tooltips and popups, the first-run skin picker; the library follow-ups (each skin's HUD face, Ignore fonts on the HUD, the picker's title, the strings newly in the skin's face); the skin fonts run (the Font outline, From skin flags, `/am skin`, width parity, the HUD size scale, the own faces and glow back, the strips' re-fit) |
+| SKIN-1 to SKIN-43 | Skins | The skinning rollout: the one-time HUD reset under Ka0s Default, Ka0s Default otherwise unchanged, the Skin tab, each skin on the HUD, the unlock furniture, the settings pages and the tool windows, other addons stock, the font and texture companions and overrides, combat, EllesmereUI on, off and back, the copy, profiles, tooltips and popups, the first-run skin picker; the library follow-ups (each skin's HUD face, Ignore fonts on the HUD, the picker's title, the strings newly in the skin's face); the skin fonts run (the Font outline, From skin flags, `/am skin`, width parity, the HUD size scale, the own faces and glow back, the strips' re-fit) |
 | DEGRADED-1 | Library-absent install | The launcher libraries missing |
 | LOC-1 to LOC-2 | Non-English client | Spell names from the client, adding a spell by its localized name |
 
@@ -2629,8 +2629,9 @@ running-out colors and **Ignore settings panel** are as stored. Fail: a stored c
 toggle moved, or the step running twice. Result:
 
 **SKIN-40. Text glow (D5).** Text style → Font → **Glow behind the text** on Ka0s Default → the black ring
-as before. Pick any other skin → it turns that skin's own glow color. Untick **Use the skin's
-color** beside the Glow color → your stored color draws. The running-out and pandemic colors do not move.
+as before. Pick any other skin → the ring stays black (**Use the skin's color** beside the Glow color is
+off on a new container since SF-AM-1; tick it → that skin's own glow color). With it off, your stored
+color draws. The running-out and pandemic colors do not move.
 Fail: a glow on the previous color until the next dress, or a warning tint recolored. Result:
 
 **SKIN-41. Gloss (A3).** Pick **Glass** with a bars container showing timed auras and with `/am test` →
@@ -2647,6 +2648,11 @@ in the spell lists follow. Hover a spell claimed by two categories → the overl
 tooltip color. With **Ignore settings panel** on, all of it is as before. `/am pick` → the frame name wears
 the skin's body face at its old size, and with **Ignore fonts** the client's. Fail: a typed color with the
 Scope cleared, a skin color behind a stock panel, or the frame name on the old face. Result:
+
+**SKIN-43. The glow is black in every skin (SF-AM-1).** New container (Text), Glow behind the text on:
+Glow color's **Use the skin's color** is unticked and the ring is black under Ka0s Default, Obsidian,
+Azeroth and High Contrast. A profile that still held the old default has it unticked after the load.
+Fail: a colored ring under any skin. Result:
 
 ## Library-absent install
 
@@ -2728,3 +2734,6 @@ FS-AM-FIX, LibKa0s v1.85.0): SKIN-35 to SKIN-42 are new, and SKIN-1, SKIN-4, SKI
 re-opened because their expected results moved. **Fully exit and restart the client**: the library's new
 icons are not seen by `/reload`. SKIN-36 and SKIN-38 moved again at FS-AM-GATE, with the owner's rulings
 of 2026-11-01 on a skin's bar border, and SKIN-40 with every skin's own glow color.
+
+Open from the smoke feedback run (Ka0sAddonsCommonTasks `docs/2026-11-01-SMOKE_FEEDBACK/`, SF-AM-1):
+SKIN-43 is new and SKIN-40 is re-opened, because its expected result moved.
