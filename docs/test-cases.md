@@ -128,7 +128,7 @@ Total.
 - v3: MigrateV3 returns the number of containers it walked
 - v3: a container skipped for an unrecognized auraType is not counted in the walked total, and logs its own line
 - v3: the whitelist lift never sweeps a category the aura type does not have
-- v12: the v12 step is on the ladder, below v13's skin reset, v14's Font flags and v15's own faces
+- v12: the v12 step is on the ladder, below v13's skin reset, v14's Font flags, v15's own faces and v16's skin
 - v3: RunMigrations migrates every stored profile, the inactive one included
 
 ### test_database_steps.lua (17)
@@ -1028,7 +1028,7 @@ Total.
 
 ### test_anchors_label.lua (23)
 
-- label: the template carries label = { show = false, justifyH = AUTO, x = 0, y = 0, font = gold Friz 12 OUTLINE }
+- label: the template carries label = { show = false, justifyH = AUTO, x = 0, y = 0, font = gold Ka0s Prototype 12 From skin }
 - label: a stored container without a label gains the whole block, and a stored one survives the backfill
 - label: off by default, no label frame is ever built
 - label: on and locked, the name shows in a plain, mouse-less frame; turned off it hides
@@ -2040,7 +2040,7 @@ Total.
 
 ### test_skin_hud.lua (12)
 
-- skin hud: every font block and both bar textures follow the skin by default; no border does
+- skin hud: every font block and both bar textures follow the skin by default, the borders too
 - skin hud: each companion is a schema row defaulting on, and its picker shows the skin's value while it is on
 - skin hud: while fonts are ignored a ticked face picker previews the stored face, a texture picker the skin's
 - skin hud: the name label's face picker dims for the label off or the skin's face on
@@ -2052,6 +2052,41 @@ Total.
 - skin hud: v13 puts every stored pick back on the skin in every profile, keeping each pick
 - skin hud: v13 runs once, so a player's later pick survives the next load
 - skin hud: the v13 body seeds each companion before ResetToSkin, and sets them itself without it
+
+### test_skin_flip.lua (23)
+
+- skin flip: every listed companion is a bool row defaulting on, in the template and on the row
+- skin flip: no swatch carries disabledIf, and a class color has no companion
+- skin flip: the picks' defaults moved to the Ka0s picks; size, Show border and Scope did not
+- skin flip: the borders' thickness goes on the skin through the composer, the icon's on our token
+- skin flip: Ka0s Default keeps this addon's pixels, stored defaults or skin alike
+- skin flip: a skin switch changes every flipped surface
+- skin flip: the name label reads hud.label, a text line hud.text
+- skin flip: a stored background, border and glow color lose to the skin's token while followed
+- skin flip: a running-out curve follows the skin, and two skins never share one curve
+- skin flip: a class color comes first, whatever the companion says
+- skin flip: a player's own values draw with the companions off, under any skin
+- skin flip: a shadow follows the skin and goes when the skin's goes, on a string already drawn
+- skin flip: with the shadow's companion off the stored shadow draws under every skin
+- skin flip: the shadow lands on a font object where the client has CreateFont
+- skin flip: a skin switch re-dresses a shown container through the one listener
+- skin flip: with no library a followed value is the stored one, the owner tokens included
+- skin flip: v16 sets every listed companion in every profile and keeps each stored value
+- skin flip: v16 writes no sentinel but the flags and makes no stray skin table
+- skin flip: a second run writes nothing, and a companion turned off afterwards stays off
+- skin flip: every Defaults path keeps the record
+- skin flip: a profile reset runs the step against defaults, which writes nothing a player sees
+- skin flip: the step is the same write with the library absent, and creates only the skin table
+- skin flip: the ladder walks every stored profile, and a new profile takes the step on load
+
+### test_skin_fix.lua (6)
+
+- gloss: Glass shines the bar that lies over the drawn fill; Ka0s Default and a player's texture do not
+- gloss: the sheen is a clear, full bar anchored to the visible fill, never the engine's elapsed bar
+- tooltip line: a spell list's overlap line takes gtip.line, and the client's color on an ignored panel
+- typed colors: Unit, Aura type and Style values keep today's bytes on Ka0s Default and on an ignored panel
+- typed colors: with the Scope cleared a skin switch rewrites each value's escape, the label kept
+- frame picker: the label goes through the skin's Font, so a face and Ignore fonts reach it
 
 ### test_skin_flags.lua (7)
 
@@ -2527,7 +2562,7 @@ Total.
 
 - prose: no authored file carries a British spelling from localization-§5's published list
 - prose: the gate carries localization-§5's two lists whole, and nothing of its own
-- prose: the exclusions this repository declared suppressed 11 of 238 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (11): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, docs/spell-research/2026-09-24-logs/CORRECTIONS.md, docs/spell-research/2026-09-24-logs/CURRENT_CATEGORIES.md, docs/spell-research/2026-09-24-logs/DECISIONS.md, docs/spell-research/2026-09-24-logs/FLAGS.md, docs/spell-research/2026-09-24-logs/PROPOSED_ADDITIONS.md, docs/spell-research/2026-09-24-logs/REVIEW.md, docs/spell-research/2026-09-24-logs/SOURCES.md, docs/spell-research/2026-09-24-logs/dictionary/AURAS.md
+- prose: the exclusions this repository declared suppressed 11 of 241 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (11): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, docs/spell-research/2026-09-24-logs/CORRECTIONS.md, docs/spell-research/2026-09-24-logs/CURRENT_CATEGORIES.md, docs/spell-research/2026-09-24-logs/DECISIONS.md, docs/spell-research/2026-09-24-logs/FLAGS.md, docs/spell-research/2026-09-24-logs/PROPOSED_ADDITIONS.md, docs/spell-research/2026-09-24-logs/REVIEW.md, docs/spell-research/2026-09-24-logs/SOURCES.md, docs/spell-research/2026-09-24-logs/dictionary/AURAS.md
 - prose: no path this repository narrows the gate by is loaded by a TOC
 - prose: every path this repository narrows the gate by is one .pkgmeta keeps out of the zip
 - prose self-test: the carve-out suppresses the named generated folder, and only it
@@ -2704,6 +2739,8 @@ Total.
 | test_skin_literals.lua | 3 |
 | test_skin_surfaces.lua | 7 |
 | test_skin_hud.lua | 12 |
+| test_skin_flip.lua | 23 |
+| test_skin_fix.lua | 6 |
 | test_skin_flags.lua | 7 |
 | test_skin_glow_restore.lua | 6 |
 | test_skin_outline.lua | 12 |
@@ -2739,4 +2776,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **2253** |
+| **Total** | **2282** |

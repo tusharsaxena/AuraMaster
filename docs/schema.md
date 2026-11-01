@@ -207,14 +207,16 @@ schema-version bump.
 
 Every Bars and Icons text element (`bars.name`, `bars.time`, `bars.stacks`, `icons.time`,
 `icons.stacks`) has the six canonical font leaves (options-ui-§16) and then its placement: `show`
-(`true`), `font` (`"Friz Quadrata TT"`), `fontSize`, `fontColor` (`{ 1, 1, 1, 1 }`),
+(`true`), `font` (`"Ka0s Prototype"`), `fontSize`, `fontColor` (`{ 1, 1, 1, 1 }`),
 `useClassColorFont` (`false`), `fontFlags` (`"@skin"`, From skin: the Skin tab's Font outline decides,
 LibKa0s v1.82.0, ruling D-07; any other value is the client flag drawn as picked), `fontShadow`
 (`false`), then the face's
 "Use the skin's font" companion `fontFromSkin` (`true`: the face is the skin's `hud.font` and `font` is
 kept, not read; X3, DECISIONS D2 of the skinning rollout), `point`, `x`, `y`, `justify` (the Text
-style's `text.font` carries the six font leaves and `fontFromSkin` only). The borders, sizes, flags
-and every color take no companion (D1, D3, D4): they stay the player's under every skin. While
+style's `text.font` carries the six font leaves and the three companions only). `fontColorFromSkin`
+(`true`: the skin's `hud.text`, or `hud.label` on the name label) and `fontShadowFromSkin` (`true`: the
+skin's HUD shadow, or none) each keep their stored value for when they go off. A class color comes
+first. Sizes take no companion (cause L11). While
 `fontFromSkin` is on the text draws at `S.HudFontSize(fontSize)`, the stored size scaled by the skin's
 HUD size over Ka0s Default's (D-09), so it is as wide in every skin; the stored `fontSize` is never
 rewritten, and with the companion off, or under Ignore fonts, it draws as stored.
@@ -834,8 +836,8 @@ The stamp follows savedvariables-§1 as ruled at WowAddonStandards v2.65.0:
   the `fontFromSkin` of every font block: `bars.name`, `bars.time`, `bars.stacks`, `icons.time`,
   `icons.stacks`, `text.font`, `label.font`) is set on through LibKa0s-Skin-1.0's `ResetToSkin`, or
   directly without the library. A companion that is not yet a bool is seeded `false` first, so
-  `ResetToSkin` never writes its `"@skin"` sentinel into a pick. The picks themselves, the borders
-  (DECISIONS D1), sizes, flags and colors are untouched, and an absent block is not created. The
+  `ResetToSkin` never writes its `"@skin"` sentinel into a pick. The picks themselves, the borders,
+  sizes, flags and colors are untouched (v16 moves the rest), and an absent block is not created. The
   template defaults every companion to `true` (X3), so a new container follows the skin too. The stamp
   makes it once: a companion the player turns off afterwards stays off (`tests/test_skin_hud.lua`).
 - **Schema v14** (`Database.MigrateV14`, `core/Database_Migrations.lua`, AM-01 of the 2026-10-30 skin

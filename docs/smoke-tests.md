@@ -29,7 +29,7 @@ check's number is not reused. Checks with no recorded pass, and checks new or co
 | TEXT-1 to TEXT-36 | Text style | Templates and tokens, justify, the icon, dispel type word, backdrop and edge, animation, Size to fit, the glow behind the text |
 | LAYER-1 to LAYER-6 | Frame layering | Bar borders over the fill, the outline and the name label over the auras, the snap highlight over a Dialog container, the strip at low opacity, the Strata tooltip |
 | SETLAYOUT-1 to SETLAYOUT-9 | Settings layout (item 020) | Every settings page item 020 moved, regrouped or relabeled, read as `docs/settings-panel.md` describes, with no setting lost, moved or reset; the confirm buttons' ellipsis |
-| SKIN-1 to SKIN-34 | Skins | The skinning rollout: the one-time HUD reset under Ka0s Default, Ka0s Default otherwise unchanged, the Skin tab, each skin on the HUD, the unlock furniture, the settings pages and the tool windows, other addons stock, the font and texture companions and overrides, combat, EllesmereUI on, off and back, the copy, profiles, tooltips and popups, the first-run skin picker; the library follow-ups (each skin's HUD face, Ignore fonts on the HUD, the picker's title, the strings newly in the skin's face); the skin fonts run (the Font outline, From skin flags, `/am skin`, width parity, the HUD size scale, the own faces and glow back, the strips' re-fit) |
+| SKIN-1 to SKIN-42 | Skins | The skinning rollout: the one-time HUD reset under Ka0s Default, Ka0s Default otherwise unchanged, the Skin tab, each skin on the HUD, the unlock furniture, the settings pages and the tool windows, other addons stock, the font and texture companions and overrides, combat, EllesmereUI on, off and back, the copy, profiles, tooltips and popups, the first-run skin picker; the library follow-ups (each skin's HUD face, Ignore fonts on the HUD, the picker's title, the strings newly in the skin's face); the skin fonts run (the Font outline, From skin flags, `/am skin`, width parity, the HUD size scale, the own faces and glow back, the strips' re-fit) |
 | DEGRADED-1 | Library-absent install | The launcher libraries missing |
 | LOC-1 to LOC-2 | Non-English client | Spell names from the client, adding a spell by its localized name |
 
@@ -2306,13 +2306,13 @@ stacks, icon time and stacks, Text lines, the name label) reads in **Oxanium**, 
 squared technical face, in place of Friz Quadrata (the pass below was recorded on LibKa0s v1.81.0; since
 v1.82.0 Ka0s Default's HUD face is **Prototype**, and schema v15 then takes a block's own-face pick other
 than the skin's face and Friz Quadrata back off the skin, SKIN-4 and SKIN-31). The customized container changed too: O2 puts
-every player's HUD back on the skin once. The borders, their style and thickness, every size,
-outline and shadow, the glow and every color are exactly as before. On the customized container,
+every player's HUD back on the skin once. Since schema v16 the colors, borders and shadow follow too
+(SKIN-39), and only every size is exactly as before. On the customized container,
 Bars → Name text → untick **Use the skin's font** → the names go back to Ka0s Prototype; Bars →
 General → untick **Use the skin's texture** → the fill's stored texture comes back (the picks were
 kept, never rewritten). `/reload` → both stay unticked (the reset ran once).
 Fail: a container still on Friz Quadrata or Blizzard's bar with its companion ticked, a changed
-border, size or color, a stored pick lost, or the reset running again after the reload. Result: pass (owner-marked 2026-10-30)
+size, a stored pick lost, or the reset running again after the reload. Result:
 
 **SKIN-2. Ka0s Default otherwise looks as before (AM-02, AM-04; X1).** On **Ka0s Default** with
 Ignore settings panel off, `/am unlock` and `/am test`, then walk the settings pages → apart from the
@@ -2345,11 +2345,12 @@ Glass Avant Garde, High Contrast Doris PP, Ember Emblem, WoW Midnight Segoe UI S
 Fira Sans SemiBold, WoW Default Ka0s Friz Quadrata TT, Ka0s Default Prototype; before the
 follow-ups every skin but Ka0s Default drew Friz Quadrata here), at the outlines you set and at sizes
 scaled to Ka0s Default's width (SKIN-30). Judge each face on the HUD: the
-owner rules on them here. Bar colors, dispel colors, borders, the spark, the pandemic wash and the glow keep
-their own colors in every skin. No name, time or stack count goes blank, or each fills in within about
+owner rules on them here. Text, fill and icon borders also follow the skin (SKIN-36). Dispel colors,
+the spark, the pandemic wash and the running-out color keep their own colors in every skin. No name,
+time or stack count goes blank, or each fills in within about
 1 s (the font primer). Fail: a container on the previous skin's face or texture until `/reload`, a
-fallback square, a white or missing fill, a recolored bar or border, or text that stays blank.
-Result: Owner reported pass, 2026-10-31 (re-opened 2026-10-31, AM-F01: Azeroth, Glass, High Contrast, Ember, WoW Midnight and WoW Default moved to LibKa0s v1.83.0's faces, D-06)
+fallback square, a white or missing fill, or text that stays blank.
+Result:
 
 **SKIN-5. The unlock furniture follows the skin (AM-02).** `/am unlock` and `/am test` with a chain
 (see *Before you start*), then pick **Azeroth** and **High Contrast** in turn → the drag strips' fill,
@@ -2398,10 +2399,9 @@ with no reload and looks as before the run, apart from those words in Oxanium (S
 texture. Untick it → the picker comes alive and the fill draws its pick; pick a texture, then switch
 skins → that fill stays on your pick while the background (still ticked) follows the skin. Tick it
 again → it follows the skin. Do the same with **Use the skin's font** on Bars → Name text, Icons →
-Time text, Text → Font and Layout → Label → each governs only its own element. There is no "Use the
-skin's border" anywhere. Click **New container** → its companions are ticked. Fail: a companion that
+Time text, Text → Font and Layout → Label → each governs only its own element. Click **New container** → its companions are ticked. Fail: a companion that
 moves another element, a dimmed picker that still writes, or a new container on the stored picks.
-Result: pass (owner-marked 2026-10-30)
+Result:
 
 **SKIN-10. The Font and texture overrides (AM-01, AM-03).** On the Skin tab pick a **Font** (any
 LibSharedMedia face) → every container string whose **Use the skin's font** is ticked redraws in it,
@@ -2554,14 +2554,14 @@ that moved, a skin's-face text that does not scale, stacked rows that overlap or
 short, or a Lua error.
 Result: Owner reported pass, 2026-10-31
 
-**SKIN-31. The own faces come back, and the glow with them (AM-03; D-15, schema v15).** On the
+**SKIN-31. The own faces wait behind their companion (AM-03; D-15, schema v15 and v16).** On the
 owner's account (the three `PLYR TXT` Text containers on **Ka0s Kait** with the glow on), log in on
-this build → each draws Ka0s Kait again, and the black glow behind the text is the dense drop it was
-before the skinning run (image-36's smudged double letters gone, red included). Text style → Font →
-**Use the skin's font** reads unticked on those three; on a container whose stored face is Ka0s
-Prototype, or the starting Friz Quadrata, it stays ticked. The glow's settings are as stored. Tick it
-again on one, `/reload` → it stays ticked (v15 ran once). Fail: Kait not back, the glow still smeared,
-a Prototype or Friz block taken off the skin, or a Lua error. Result: Owner reported pass, 2026-10-31
+this build → schema v16 puts them on the skin with everything else, so each draws the skin's face
+(the ruling of 2026-11-01 names no exception for v15's own faces). Text style → Font → untick **Use
+the skin's font** → Ka0s Kait draws again, and the black glow behind the text is the dense drop it was
+before the skinning run (image-36's smudged double letters gone, red included). The stored glow
+settings are unchanged. `/reload` → it stays unticked (v16 ran once). Fail: Kait lost, the glow still
+smeared after unticking, or a Lua error. Result:
 
 **SKIN-32. The drag strips re-fit after a skin switch (AM-03; D-12).** `/am unlock` and `/am test`
 with a long-named Bars container capped at its bar (its name shortened with "...") and a one-icon
@@ -2587,6 +2587,58 @@ skinned list with a swatch per border, the row lines up with its neighbors, and 
 Switch to another skin and open both again: they follow it. Fail: a stock-looking dropdown, a blank list
 or a Lua error.
 Result:
+
+**SKIN-35. Ka0s Default keeps its pixels (FS-AM-FLIP).** On a new profile on **Ka0s Default**, a bars, an
+icons and a Text container look as they did before this build: blue fill, half-black background,
+white text with no shadow, 1 px black icon borders, gold name label. Fail: any of those moved. Result:
+
+**SKIN-36. The colors follow the skin (D2, D3, D4).** With a bars, an icons and a Text container and the
+name label on, pick Obsidian, Azeroth and High Contrast in turn → with no reload the fill, every string
+and the label change with each skin, and the icon borders take the skin's style and thickness. The bar
+background and bar border colors are the same in every skin today (`bar.bg`, `bar.border`), and every
+skin's bar border style is None, so a bar with **Show border** on draws no border while it follows the
+skin. Under WoW Default the icon border is a textured edge, which reaches a live button after a
+`/reload`, as the row's tooltip says. Fail: a surface on the previous skin's color until `/reload`. Result:
+
+**SKIN-37. The shadow follows the skin (D6).** Under Azeroth the text shows the skin's shadow, under High
+Contrast a heavier one, under Ka0s Default none. Tick **Ignore fonts** under Azeroth → the stored *Font
+shadow* decides. Untick **Use the skin's shadow** on one text → its stored *Font shadow* draws under every
+skin. Fail: no visible shadow under Azeroth, or one left behind after a switch. Result:
+
+**SKIN-38. The companions (D2 to D6).** Bars → Fill, Background and border and each text tab, Icons →
+Border, Text → Font and Icon, and Layout → Label show **Use the skin's color** (the text tabs **Use the
+skin's shadow** too), and each border **Use the skin's border**, which dims its style and thickness.
+Untick one → the stored value draws at once, and only that element moves. A color swatch is never
+grayed. Tick **Use class color** under Azeroth → the class color wins whatever the companion says. Fail: a
+swatch grayed, a companion moving another element, or the skin over a class color. Result:
+
+**SKIN-39. The one step on an existing profile (schema v16).** On the previous build give a profile its
+own bar, text and border colors, Font shadow on, THICKOUTLINE flags and a glow color. Update and log in
+→ the HUD follows the skin and Font flags reads From skin. Untick each companion → your color and shadow
+come back unchanged. `/reload`, press Defaults on General and Bars, switch profile and back → a companion
+you left unticked stays unticked, unless that page's Defaults reset it. Class colors, dispel colors,
+running-out colors and **Ignore settings panel** are as stored. Fail: a stored color lost, a class
+toggle moved, or the step running twice. Result:
+
+**SKIN-40. Text glow (D5).** Text style → Font → **Glow behind the text** on Ka0s Default → the black ring
+as before. Pick any other skin → it turns the skin's glow color, gold today. Untick **Use the skin's
+color** beside the Glow color → your stored color draws. The running-out and pandemic colors do not move.
+Fail: a glow on the previous color until the next dress, or a warning tint recolored. Result:
+
+**SKIN-41. Gloss (A3).** Pick **Glass** with a bars container showing timed auras and with `/am test` →
+the fill shows a soft shine on its top half that ends where the fill ends and drains with it, in both
+drain directions. Any other skin, and Glass with **Use the skin's texture** unticked → none. Then in combat
+on a dummy with live bars, `/am set skin.skin ka0s` and back to `glass` → no Lua error or taint warning
+(the gloss is the one bar paint a skin switch replays at once). Fail: a shine on the drained part or past
+the fill, one that stays, or an error. Result:
+
+**SKIN-42. The General page and the picker with the Scope cleared (L2, L5, L8).** Clear **Ignore settings
+panel**, pick Azeroth → Container → the Unit, Aura type and Style values take the skin's colors in the
+closed box and the list, each still apart from its neighbors, and the **[Buffs]** and **[Debuffs]** markers
+in the spell lists follow. Hover a spell claimed by two categories → the overlap line reads in the skin's
+tooltip color. With **Ignore settings panel** on, all of it is as before. `/am pick` → the frame name wears
+the skin's body face at its old size, and with **Ignore fonts** the client's. Fail: a typed color with the
+Scope cleared, a skin color behind a stock panel, or the frame name on the old face. Result:
 
 ## Library-absent install
 
@@ -2662,3 +2714,8 @@ Open from the same run's LibKa0s v1.84.0 adoption (M2_LIBRARY_RELEASE.md): SKIN-
 TEXT-37 and TEXT-38 are new and TEXT-6 is re-opened (XX-67).
 
 Open from the same run's re-cut v1.84.0 (M3, `Ka0sMedia_*` the only media picker): SKIN-34 is new.
+
+Open from the full skinning run (Ka0sAddonsCommonTasks `docs/2026-11-01-FULL_SKINNING/`, FS-AM-FLIP,
+FS-AM-FIX, LibKa0s v1.85.0): SKIN-35 to SKIN-42 are new, and SKIN-1, SKIN-4, SKIN-9 and SKIN-31 are
+re-opened because their expected results moved. **Fully exit and restart the client**: the library's new
+icons are not seen by `/reload`.

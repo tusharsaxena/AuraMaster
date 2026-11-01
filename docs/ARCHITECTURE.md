@@ -315,8 +315,17 @@ Every surface Aura Master draws paints through the `LibKa0s-Skin-1.0` facade wit
   or override notwithstanding: the library's `S.Resolve` answers the stored value for `hud.font` then
   (LibKa0s v1.81.0, LK-01), so `Style.SkinKey` needs no check of its own, and a nil answer draws the
   stored pick. The composer's font pickers preview the same stored face. Since v1.81.0 each skin
-  carries a HUD face of its own (WoW Default keeps Friz Quadrata; SKIN-4 lists them). Borders,
-  sizes, flags and every HUD color stay the player's (X4; DECISIONS D1, D3, D4). Since LibKa0s
+  carries a HUD face of its own (WoW Default keeps Friz Quadrata; SKIN-4 lists them). Since
+  schema v16 (the owner's rulings of 2026-11-01, reversing X4 and D1) the colors, borders, shadow and
+  the text glow follow too, each under a companion of its own: `Style.Followed` answers a skin
+  color shaped as a stored one (`hud.text`, `hud.label`, `bar.fill`, `bar.bg`, `bar.border`,
+  `icon.border`, `am.textGlow`), `Style.BorderLook` a block's style, thickness and color, and
+  `S.HudFont` puts the face, size, flags and shadow on one font object per string. A class color
+  comes first and has no companion; dispel colors and the running-out and pandemic tints stay. Show
+  border and sizes stay the player's. Ka0s Default keeps this addon's pixels through two owner
+  tokens: `am.iconBorderSize` (1 px) and `am.textGlow` (black). The gloss is the one recorded paint
+  on a bar: `am.sheen`, a clear status bar laid over the visible fill, because `am.bar`'s own fill is
+  the invisible elapsed part. Since LibKa0s
   v1.82.0 two follow the skin without being rewritten: a block on the skin's face draws at
   `S.HudFontSize(stored)`, scaled to Ka0s Default's width (D-09), and a Font flags of *From skin*
   (`"@skin"`, every block's default; schema v14 moved the old default OUTLINE onto it, D-07) draws
@@ -327,7 +336,8 @@ Every surface Aura Master draws paints through the `LibKa0s-Skin-1.0` facade wit
   companion on once (O2), which visibly changes Ka0s Default's HUD (X5): Oxanium and the Ka0s
   Default bar in place of Friz Quadrata and Blizzard. Schema v15 turned it back off, once, on every
   block whose stored face is the player's own (neither the skin's HUD face nor the template's Friz
-  Quadrata), so the owner's Ka0s Kait Text containers and their glow came back (D-15).
+  Quadrata), so the owner's Ka0s Kait Text containers and their glow came back (D-15). Schema v16
+  turns it on again with every other companion; the stored face waits for the player to untick it.
 - **The drag strips re-fit after a repaint.** The widget calls `Anchors.Refit` (its `onRefit`,
   DragHandle minor 8, D-12) after every repaint of the skin: a shown strip takes its label again in
   the new face (the shortened label is cached per face and scale) and, out of combat, is re-placed.

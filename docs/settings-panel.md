@@ -418,9 +418,9 @@ selected, with the page moved to General/General) on one row. With no container,
 | Name | `container.name` | string, edit box | Non-blank; Enter applies; made unique; renames the handle and every picker; never reset (`noReset`) |
 | Enable this container | `container.enabled` | bool | A disabled container keeps its settings. Labeled *Enabled* until item 020 (AUR-L-new5, options-ui-§21's act names) |
 | *What it shows, and how* | — | subsection | An options-ui-§7 subgroup heading over the three rows below (batch 8): what the container watches and how it is drawn, against Name and Enable this container's "which container is this". Those two carry no heading of their own — one above a tab's first row only repeats the tab |
-| Unit | `container.unit` | string | `player` / `target` / `focus` / `pet`, each in its own color (`C.UNIT_COLORS`); structural |
-| Aura type | `container.auraType` | string | Buffs / Debuffs, green / red (`C.AURA_TYPE_COLORS`, the Spell categories markers' colors); structural (weapon enchants are a buff category, schema v5) |
-| Style | `container.style` | string | Bars / Icons / Text, each in its own color (`C.STYLE_COLORS`); structural (rebuilds the engine) |
+| Unit | `container.unit` | string | `player` / `target` / `focus` / `pet`, each in its own color (`C.UNIT_TOKENS`, drawn through `NS.PanelEscape`, so they follow the skin with the Scope cleared); structural |
+| Aura type | `container.auraType` | string | Buffs / Debuffs, green / red (`C.AURA_TYPE_TOKENS`, the Spell categories markers' colors); structural (weapon enchants are a buff category, schema v5) |
+| Style | `container.style` | string | Bars / Icons / Text, each in its own color (`C.STYLE_TOKENS`); structural (rebuilds the engine) |
 
 Changing Style resets Fill (Layout → Position and growth → Growth) to Columns for Bars and Text and to Rows for Icons;
 re-choosing the same style keeps a Fill set by hand (B5). A new container (**New container**, or
