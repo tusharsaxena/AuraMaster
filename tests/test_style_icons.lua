@@ -3,6 +3,7 @@
 -- texts, the engine bindings, and the preview fill.
 
 local T = _G.AM_TEST
+local own = dofile("tests/own_look.lua")
 local test, assertEqual, assertTrue, assertFalse, assertNil =
     T.test, T.assertEqual, T.assertTrue, T.assertFalse, T.assertNil
 local NS = T.NS
@@ -12,7 +13,7 @@ local BS = dofile("tests/border_strips.lua")
 local D = NS.CONTAINER_TEMPLATE
 
 local function cfg(over)
-    local c = NS.Database.Merge(NS.Database.DeepCopy(D), over or {})
+    local c = own(NS.Database.Merge(NS.Database.DeepCopy(D), over or {}))
     c.style = "icons"
     return c
 end
@@ -169,7 +170,7 @@ local function enumEnv(extra)
 end
 
 local function enumCfg(NS2, icons)
-    return NS2.Database.Merge(NS2.Database.DeepCopy(NS2.CONTAINER_TEMPLATE), { style = "icons", icons = icons })
+    return own(NS2.Database.Merge(own(NS2.Database.DeepCopy(NS2.CONTAINER_TEMPLATE)), { style = "icons", icons = icons }))
 end
 
 test("icons: the dispel border is our four strips, tinted by the engine (PreserveAsset), on harmful auras only (DB-1)", function()
@@ -388,7 +389,7 @@ end
 test("icons: a live re-dress with the border on under secret geometry re-binds the highlight and the time color (B2-3)", function()
     local NS2, m2 = fresh({ before = dofile("tests/text_apis.lua") })
     local function c(over)
-        local t = NS2.Database.Merge(NS2.Database.DeepCopy(NS2.CONTAINER_TEMPLATE), over)
+        local t = NS2.Database.Merge(own(NS2.Database.DeepCopy(NS2.CONTAINER_TEMPLATE)), over)
         t.style = "icons"
         return t
     end
@@ -413,7 +414,7 @@ test("icons: a border the client refuses costs the border alone: every binding s
             reported[n + 1] = tostring(e)
         end end
     end })
-    local c = NS2.Database.Merge(NS2.Database.DeepCopy(NS2.CONTAINER_TEMPLATE), { style = "icons",
+    local c = NS2.Database.Merge(own(NS2.Database.DeepCopy(NS2.CONTAINER_TEMPLATE)), { style = "icons",
         icons = { borderShow = true, borderStyle = "Solid", pandemic = true } })
     local frame = R()
     NS2.Style.Element(frame, c, true)
@@ -433,7 +434,7 @@ end)
 
 test("icons: a live resize under secret geometry runs no backdrop arithmetic (B2-3)", function()
     local NS2, m2 = fresh()
-    local c = NS2.Database.Merge(NS2.Database.DeepCopy(NS2.CONTAINER_TEMPLATE), { style = "icons",
+    local c = NS2.Database.Merge(own(NS2.Database.DeepCopy(NS2.CONTAINER_TEMPLATE)), { style = "icons",
         icons = { borderShow = true, borderStyle = "Uninstalled", borderSize = 2 } })
     local frame = R()
     NS2.Style.Element(frame, c, true)

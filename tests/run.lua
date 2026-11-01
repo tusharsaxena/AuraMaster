@@ -164,6 +164,7 @@ Kit.run{
         "test_skin_literals",
         "test_skin_surfaces",
         "test_skin_hud",
+        "test_skin_flip",
         "test_skin_flags",
         "test_skin_glow_restore",
         "test_skin_outline",

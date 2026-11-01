@@ -368,19 +368,28 @@ end
 -- "Use the skin's ..." companions (AM-03) are the other way about: OFF in the baseline, so the font
 -- and texture pickers they govern draw the stored pick and show a change; each companion is tested
 -- by turning it on, which draws the skin's face or texture in place of that pick.
-local OWN_FONT = { fontFromSkin = false }
+-- Each stored value below is one no skin draws, so a companion turned on shows as a change: the
+-- template's own picks and colors are now Ka0s Default's.
+local MINE = { r = 0.3, g = 0.4, b = 0.5, a = 1 }
+local OWN_FONT = { font = "Friz Quadrata TT", fontFromSkin = false, fontColor = MINE, fontColorFromSkin = false,
+    fontShadow = true, fontShadowFromSkin = false }
 local GATES = {
     bars = { borderShow = true, iconBorderShow = true, expiringColorOn = true,
-        barTextureFromSkin = false, bgTextureFromSkin = false,
+        barTexture = "Blizzard", bgTexture = "Blizzard", barColor = MINE, bgColor = MINE,
+        barTextureFromSkin = false, bgTextureFromSkin = false, barColorFromSkin = false, bgColorFromSkin = false,
+        borderSize = 3, borderColor = MINE, borderStyleFromSkin = false, borderColorFromSkin = false,
+        iconBorderSize = 3, iconBorderColor = MINE, iconBorderStyleFromSkin = false, iconBorderColorFromSkin = false,
         name = OWN_FONT, time = OWN_FONT, stacks = OWN_FONT },
-    icons = { borderShow = true, expiringColorOn = true, time = OWN_FONT, stacks = OWN_FONT },
+    icons = { borderShow = true, expiringColorOn = true, borderSize = 3, borderColor = MINE,
+        borderStyleFromSkin = false, borderColorFromSkin = false, time = OWN_FONT, stacks = OWN_FONT },
     -- Right, so Center (a multi-piece template stacks in rows, feedback #1) still moves the chain;
     -- an icon, so its rows reach one; a $dispeltype$ piece, so coloring its word has a word to color
     -- (feedback #7). Size to fit off, so Width and Height reach the element; turning it on then shows
     -- through the measurer rig() installs (batch 8, AS-1). The glow on, so its rows reach its sets
     -- (TG-03).
     text = { autoSize = false, icon = "LEFT", iconBorderShow = true, expiringColorOn = true, justifyH = "RIGHT",
-        glow = true, font = OWN_FONT,
+        iconBorderSize = 3, iconBorderColor = MINE, iconBorderStyleFromSkin = false, iconBorderColorFromSkin = false,
+        glowColor = MINE, glowColorFromSkin = false, glow = true, font = OWN_FONT,
         template = "$spellname$[ x$stacks$][ ($dispeltype$)][ - $remainingduration$]" },
 }
 

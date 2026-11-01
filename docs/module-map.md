@@ -324,7 +324,7 @@ All vendored under `libs/`, loaded by the `# Libraries` block of `AuraMaster.toc
 | AceEvent-3.0 | Lifecycle events and the message bus (`core/Bus.lua`) |
 | AceTimer-3.0 | The color picker's drag throttle, via the options descriptor's `scheduleTimer` |
 | AceConsole-3.0 | `/am` and `/auramaster` registration (`settings/Slash.lua:655-656`) |
-| AceDB-3.0 | `AuraMasterDB` and its profiles (`core/Database.lua:270`) |
+| AceDB-3.0 | `AuraMasterDB` and its profiles (`core/Database.lua:271`) |
 | AceGUI-3.0 | The settings panel body |
 | AceConfig-3.0, AceDBOptions-3.0 | The Profiles sub-page only (`settings/Profiles.lua`, options-ui-§3) |
 | LibSharedMedia-3.0 | Texture, border and font lookups through `LSM` (`modules/Style.lua:33`), and the lists behind the library's `Ka0sMedia_*` media pickers |

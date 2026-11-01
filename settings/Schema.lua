@@ -313,6 +313,32 @@ end
 --- and still answer the CLI, and the ordering test is what reports the mistake.
 --- @param rows table
 --- @param beforePath string|nil
+--- A color's or the shadow's "Use the skin's ..." companion (LibKa0s Options doc, "Moving to this
+--- version", step 3), a row for a composer's `extra`: `governs` is the label of the row it governs.
+--- That row keeps no `disabledIf`: it stays live and keeps its stored value for when this goes off.
+function NS.FollowRow(path, governs, what)
+    return {
+        path = path, type = "bool", label = NS.L[what == "shadow" and "Use the skin's shadow" or "Use the skin's color"],
+        desc = NS.L["Draw this in the skin's look."] .. " " .. governs .. " " .. NS.L["is not read while this is on."],
+    }
+end
+
+--- The two companions every composed font block carries past its own.
+function NS.FontFollowRows(prefix)
+    return { NS.FollowRow(prefix .. "fontColorFromSkin", NS.L["Font color"]),
+             NS.FollowRow(prefix .. "fontShadowFromSkin", NS.L["Font shadow"], "shadow") }
+end
+
+--- Point a composed `fromSkin = "icon"` thickness row at this addon's own token, so its disabled row
+--- shows what draws: 1 px under Ka0s Default, where the composer's `icon.borderSize` says 2.
+function NS.IconBorderSizeRow(row)
+    local skinValue = row.skinValue
+    row.skinValue = function(r)
+        if skinValue(r) == nil then return nil end
+        return NS.Skin.Resolve("am.iconBorderSize", nil, true)
+    end
+end
+
 function NS.RegisterSchemaRows(rows, beforePath)
     if type(rows) ~= "table" then return end
     local at = indexOf(beforePath)

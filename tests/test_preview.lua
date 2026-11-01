@@ -10,7 +10,7 @@ local D = NS.CONTAINER_TEMPLATE
 
 local function cfg(over, ns)
     ns = ns or NS
-    return ns.Database.Merge(ns.Database.DeepCopy(ns.CONTAINER_TEMPLATE), over or {})
+    return dofile("tests/own_look.lua")(ns.Database.Merge(ns.Database.DeepCopy(ns.CONTAINER_TEMPLATE), over or {}))
 end
 
 --- A container as Preview.Show sees one: its settings, its anchor, and a factory that counts the

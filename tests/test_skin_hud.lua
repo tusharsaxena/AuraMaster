@@ -3,8 +3,8 @@
 -- AuraMaster's HUD is dressed onto Blizzard's pooled aura buttons, so it never hands a region to a
 -- recorded primitive: each font and bar texture pick resolves through the owner's facade at dress
 -- time (Style.SkinKey over S.Resolve) while its "Use the skin's ..." companion is on, and one
--- OnLooksChanged listener re-applies every container on a skin change. Only texture and font follow
--- (X4): the borders take no companion (DECISIONS D1), and sizes, flags and colors stay the player's.
+-- OnLooksChanged listener re-applies every container on a skin change. This suite pins the texture
+-- and the font; the colors, borders and shadow are tests/test_skin_flip.lua's.
 -- The companions default on (X3), and schema v13 sets every stored one on, once, for every player.
 -- What each pick draws with its companion OFF is the owning suites' (tests/test_style*.lua,
 -- tests/test_fontprimer.lua, tests/test_render_coverage.lua), which turn the companion off.
@@ -73,7 +73,7 @@ end
 
 -- ── the defaults and the rows ───────────────────────────────────────────────────────────────────
 
-test("skin hud: every font block and both bar textures follow the skin by default; no border does", function()
+test("skin hud: every font block and both bar textures follow the skin by default, the borders too", function()
     local NS = fresh()
     local D = NS.CONTAINER_TEMPLATE
     local named = {}
@@ -95,12 +95,11 @@ test("skin hud: every font block and both bar textures follow the skin by defaul
         end
     end
     blocks(D, "")
-    -- red under: a border companion (every skin's bar.borderStyle is None: D1)
-    for _, key in ipairs({ "borderStyleFromSkin", "iconBorderStyleFromSkin" }) do
-        assertNil(D.bars[key], "bars." .. key)
-        assertNil(D.icons[key], "icons." .. key)
-        assertNil(D.text[key], "text." .. key)
-    end
+    -- Since FS-AM-FLIP the borders follow too (D4; D1's reason did not hold for the icon family).
+    assertEqual(D.bars.borderStyleFromSkin, true)
+    assertEqual(D.bars.iconBorderStyleFromSkin, true)
+    assertEqual(D.icons.borderStyleFromSkin, true)
+    assertEqual(D.text.iconBorderStyleFromSkin, true)
 end)
 
 test("skin hud: each companion is a schema row defaulting on, and its picker shows the skin's value while it is on", function()
@@ -289,6 +288,8 @@ end)
 local function v12profile()
     local PROTO = "Ka0s Prototype"
     return {
+        -- The record seeded: v16 moves borders and colors, which tests/test_skin_flip.lua pins.
+        skin = { fullSkinReset = true },
         seeded = true, nextContainerId = 3, containerOrder = { 1, 2 },
         containers = {
             [1] = { name = "Bars", unit = "player", auraType = "HELPFUL", style = "bars",
@@ -325,8 +326,7 @@ test("skin hud: v13 puts every stored pick back on the skin in every profile, ke
         assertEqual(c1.bars.bgTexture, "Minimalist", name)
         assertEqual(c1.bars.name.font, "Ka0s Prototype", name)
         assertEqual(c1.label.font.font, "Ka0s Prototype", name)
-        assertEqual(c1.bars.borderStyle, "Solid", name .. ": the border is not reset (D1)")
-        assertNil(c1.bars.borderStyleFromSkin, name .. ": and gets no companion")
+        assertEqual(c1.bars.borderStyle, "Solid", name .. ": the border's pick is kept")
     end
     assertNil(NS.db.sv.profiles.Raid.containers[2].icons, "an absent block is not created by the step")
 end)

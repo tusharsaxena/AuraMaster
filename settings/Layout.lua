@@ -586,6 +586,7 @@ NS.RegisterSchemaRows({
 local labelFont = H.FontGroup({
     prefix = "container.label.font.", page = PAGE, group = G_LABEL, subgroup = L["Font"],
     classColor = { source = "unit" }, fromSkin = true, flagsFromSkin = true,
+    extra = NS.FontFollowRows("container.label.font."),
 })
 for _, row in ipairs(labelFont) do
     local governedBy = row.disabledIf

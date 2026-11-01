@@ -64,6 +64,7 @@ local addonName, NS = ...
 --   NS.SkinPickerSpec()     the spec MaybeShowSkinPicker hands O.SkinPicker.
 --   NS.SkinPickerDue()      true while this profile has not closed the picker and the addon stands
 --                           up: what MaybeShowSkinPicker asks, and whether the login arms its timer.
+--   NS.SkinDegraded         true on the degraded arm alone: no skin to follow, so stored values draw.
 --
 -- ── WHERE IT LOADS ───────────────────────────────────────────────────────────────────────────
 --
@@ -129,6 +130,10 @@ NS.SKIN_TOKENS = {
     ["am.goldMuted"]    = { default = { byte(0xd9), byte(0xb8), byte(0x61), 1 }, follow = "text.headingAlt" },
     -- AM-G9: the Filters section's in-panel "See spells" link (|cff6699ff).
     ["am.link"]         = { default = { byte(0x66), byte(0x99), byte(0xff), 1 }, follow = "text.accent" },
+    -- FS-AM-FLIP: an icon border's 1 px and the text glow's black ring, which Ka0s Default's own
+    -- `icon.borderSize` (2) and `glow.color` (gold) are not. Every other skin draws those tokens.
+    ["am.iconBorderSize"] = { default = 1, follow = "icon.borderSize" },
+    ["am.textGlow"]     = { default = { 0, 0, 0, 1 }, follow = "glow.color" },
 }
 
 -- The Ka0s Default tokens the DEGRADED facade answers, copied from the library and limited to the
@@ -404,7 +409,7 @@ if not Skin then
             local own = NS.SKIN_TOKENS[name]
             c = own and own.default
         end
-        if c then return c[1], c[2], c[3], c[4] or 1 end
+        if type(c) == "table" then return c[1], c[2], c[3], c[4] or 1 end
     end
     local function noop() end
     local S = { owner = addonName, apiVersion = 3, FROM_SKIN = "@skin" }
@@ -481,6 +486,8 @@ if not Skin then
     end
 
     NS.Skin = S
+    -- A stored value stands wherever a companion follows the skin: Style.Followed and Style.SkinKey.
+    NS.SkinDegraded = true
     function NS.ApplySkinChoice() return false, false end
     function NS.ApplySkinIgnore() return false, false end
     function NS.ApplySkinOverride() return false end
@@ -495,6 +502,7 @@ end
 -- ── the live seam ────────────────────────────────────────────────────────────────────────────
 
 NS.Skin = Skin:For(addonName)
+NS.SkinDegraded = false
 Skin:RegisterOwner(addonName, {
     label  = BRAND,
     get    = NS.SkinChoice,

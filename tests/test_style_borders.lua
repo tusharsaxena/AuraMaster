@@ -3,6 +3,7 @@
 -- tests/test_style.lua by theme.
 
 local T = _G.AM_TEST
+local own = dofile("tests/own_look.lua")
 local spyConsole = dofile("tests/console_spy.lua")
 local R = dofile("tests/region_recorder.lua")
 local fresh = dofile("tests/fresh_env.lua")
@@ -12,7 +13,7 @@ local NS = T.NS
 local C, D = NS.Constants, NS.CONTAINER_TEMPLATE
 
 local function cfg(over)
-    return NS.Database.Merge(NS.Database.DeepCopy(NS.CONTAINER_TEMPLATE), over or {})
+    return own(NS.Database.Merge(NS.Database.DeepCopy(NS.CONTAINER_TEMPLATE), over or {}))
 end
 
 --- Dress a bar element, swap its regions for recorders, and dress it again (see test_style_bars).

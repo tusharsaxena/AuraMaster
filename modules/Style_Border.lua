@@ -178,6 +178,41 @@ function Style.ApplyBorder(frame, show, styleKey, size, stored, useClass)
     frame:Show()
 end
 
+-- One border block's keys and the skin's tokens for them: the bar's own, an icon element's, and the
+-- icon beside a bar or a text line (the icon family under the keys that block stores it in).
+-- `am.iconBorderSize` is core/SkinSetup.lua's: this addon's 1 px under Ka0s Default, `icon.borderSize`
+-- under every other skin.
+Style.BORDER_BAR = {
+    style = "borderStyle", size = "borderSize", color = "borderColor", useClass = "useClassColorBorder",
+    styleFromSkin = "borderStyleFromSkin", colorFromSkin = "borderColorFromSkin",
+    styleToken = "bar.borderStyle", sizeToken = "bar.borderSize", colorToken = "bar.border",
+}
+Style.BORDER_ICON = {
+    style = "borderStyle", size = "borderSize", color = "borderColor", useClass = "useClassColorBorder",
+    styleFromSkin = "borderStyleFromSkin", colorFromSkin = "borderColorFromSkin",
+    styleToken = "icon.borderStyle", sizeToken = "am.iconBorderSize", colorToken = "icon.border",
+}
+Style.BORDER_BESIDE = {
+    style = "iconBorderStyle", size = "iconBorderSize", color = "iconBorderColor",
+    useClass = "useClassColorIconBorder",
+    styleFromSkin = "iconBorderStyleFromSkin", colorFromSkin = "iconBorderColorFromSkin",
+    styleToken = "icon.borderStyle", sizeToken = "am.iconBorderSize", colorToken = "icon.border",
+}
+
+--- The style, thickness and stored-shaped color block `s` draws its border in (`sdef` the template's
+--- block, `k` one of the three above). "Use the skin's border" governs the style and the thickness,
+--- "Use the skin's color" the color, and a class color comes first (Style.Followed). Show border
+--- stays the player's: a border that is off stays off. One reading for the border and the art's
+--- inset, so the two cannot disagree.
+function Style.BorderLook(s, sdef, k)
+    local fromSkin = Style.OrTemplate(s[k.styleFromSkin], sdef[k.styleFromSkin]) == true
+    local style = Style.SkinKey(k.styleToken, Style.OrTemplate(s[k.style], sdef[k.style]), fromSkin)
+    local size = Style.SkinKey(k.sizeToken, tonumber(s[k.size]) or sdef[k.size], fromSkin)
+    local color = Style.Followed(s[k.color] or sdef[k.color],
+        Style.OrTemplate(s[k.colorFromSkin], sdef[k.colorFromSkin]) == true, k.colorToken, s[k.useClass])
+    return style, size, color
+end
+
 --- Style.ApplyBorder, guarded: a border the client refuses costs the border alone (hidden, and
 --- reported through Style.ReportError as `what`), never the rest of the dress, whose engine bindings
 --- come after it (B2-3).

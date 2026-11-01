@@ -10,6 +10,7 @@
 -- docs/superpowers/research/2026-10-16-text-glow-twins-design.md, sections 3 and 4.
 
 local T = _G.AM_TEST
+local own = dofile("tests/own_look.lua")
 local test, assertEqual, assertTrue, assertFalse, assertNil =
     T.test, T.assertEqual, T.assertTrue, T.assertFalse, T.assertNil
 local fresh = dofile("tests/fresh_env.lua")
@@ -134,7 +135,7 @@ end
 --- A Text container's settings, `over` merged onto the template's text block.
 local function text(over)
     local NS = E()
-    local c = NS.Database.DeepCopy(NS.CONTAINER_TEMPLATE)
+    local c = own(NS.Database.DeepCopy(NS.CONTAINER_TEMPLATE))
     c.style = "text"
     return NS.Database.Merge(c, { text = over or {} })
 end
@@ -257,7 +258,7 @@ test("text glow: a twin's chain is pulled back by the padding of the un-outlined
         return fs:__last("SetText")[1]:len() * 6 + (flags:find("OUTLINE") and 4 or 1)
     end
     NS.Style.__measurer = function() return fs end
-    local c = NS.Database.Merge(NS.Database.DeepCopy(NS.CONTAINER_TEMPLATE), { style = "text",
+    local c = NS.Database.Merge(own(NS.Database.DeepCopy(NS.CONTAINER_TEMPLATE)), { style = "text",
         text = { template = "$spellname$ - $remainingduration$", justifyH = "LEFT", fontFlags = "OUTLINE" } })
     local function chained(twin)
         local frame = B.new({})

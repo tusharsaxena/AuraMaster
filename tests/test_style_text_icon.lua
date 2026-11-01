@@ -2,6 +2,7 @@
 -- live re-dress and the icon's border. Peeled out of tests/test_style_text.lua by theme.
 
 local T = _G.AM_TEST
+local own = dofile("tests/own_look.lua")
 local spyConsole = dofile("tests/console_spy.lua")
 local test, assertEqual, assertTrue, assertFalse = T.test, T.assertEqual, T.assertTrue, T.assertFalse
 local B = dofile("tests/region_builder.lua")
@@ -18,7 +19,7 @@ end
 
 local function cfg(over)
     local NS = E()
-    return NS.Database.Merge(NS.Database.DeepCopy(NS.CONTAINER_TEMPLATE), over or {})
+    return own(NS.Database.Merge(NS.Database.DeepCopy(NS.CONTAINER_TEMPLATE), over or {}))
 end
 
 --- A text element dressed for `c`: the button, its regions, and every recorder the dress built.
@@ -113,7 +114,7 @@ local function refusedRedress(region, method, times)
         local n = #lines
         lines[n + 1] = tag .. ":" .. fmt:format(...)
     end)
-    local c = NS.Database.Merge(NS.Database.DeepCopy(NS.CONTAINER_TEMPLATE), { style = "text", text = {
+    local c = NS.Database.Merge(own(NS.Database.DeepCopy(NS.CONTAINER_TEMPLATE)), { style = "text", text = {
         icon = "LEFT", iconSize = 14, iconGap = 2, iconBorderShow = true, iconBorderStyle = "Solid",
         iconBorderSize = 2 } })
     local made = {}
@@ -222,7 +223,7 @@ test("text style: a live re-dress with the icon border on under secret geometry 
         lines[n + 1] = tag .. ":" .. fmt:format(...)
     end
     local function c(width)
-        return NS.Database.Merge(NS.Database.DeepCopy(NS.CONTAINER_TEMPLATE), { style = "text", text = {
+        return NS.Database.Merge(own(NS.Database.DeepCopy(NS.CONTAINER_TEMPLATE)), { style = "text", text = {
             width = width, icon = "LEFT", iconSize = 14, iconBorderShow = true, iconBorderStyle = "Solid",
             iconBorderSize = 2, iconBorderColor = { r = 0, g = 1, b = 0, a = 1 } } })
     end

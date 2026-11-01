@@ -73,17 +73,12 @@ local function build(frame)
     return am
 end
 
---- The border's thickness: the stored size, or the template's when that is missing or garbage. One
---- reading for the border itself and the art's inset, so the two cannot disagree.
-local function borderSizeOf(ic)
-    return tonumber(ic.borderSize) or D.icons.borderSize
-end
-
 --- Place the icon INSIDE the border, so a thick border never hides the art, and crop the zoom to
 --- the element's aspect ratio, so a non-square icon is cropped rather than squashed. Returns the inset.
 local function layoutIcon(am, frame, ic, w, h)
     local shown = Style.OrTemplate(ic.borderShow, D.icons.borderShow)
-    local inset = (shown and ic.borderStyle ~= "None") and borderSizeOf(ic) or 0
+    local style, size = Style.BorderLook(ic, D.icons, Style.BORDER_ICON)
+    local inset = (shown and style ~= "None") and size or 0
     am.icon:ClearAllPoints()
     am.icon:SetPoint("TOPLEFT", frame, "TOPLEFT", inset, -inset)
     am.icon:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -inset, inset)
@@ -102,8 +97,8 @@ end
 --- border is hidden, styled None or 0 thick, so a typed debuff still shows its color (DB-2).
 local function dispelSizeOf(ic)
     local shown = Style.OrTemplate(ic.borderShow, D.icons.borderShow)
-    local size = borderSizeOf(ic)
-    if shown and ic.borderStyle ~= "None" and size > 0 then return size end
+    local style, size = Style.BorderLook(ic, D.icons, Style.BORDER_ICON)
+    if shown and style ~= "None" and size > 0 then return size end
     return 1
 end
 
@@ -143,8 +138,9 @@ function Icons.Apply(frame, cfg, engine)
     layoutIcon(am, frame, ic, w, h)
     -- Guarded (B2-3): a border the client refuses costs the border, never Icons.Bind below, which
     -- re-adds the pandemic highlight and the time color the Clear above removed.
+    local style, size, color = Style.BorderLook(ic, D.icons, Style.BORDER_ICON)
     Style.GuardedBorder("icon border", am.border, Style.OrTemplate(ic.borderShow, D.icons.borderShow),
-        ic.borderStyle, borderSizeOf(ic), ic.borderColor, ic.useClassColorBorder)
+        style, size, color, ic.useClassColorBorder)
     applyCooldown(am.cd, ic)
 
     -- Each text is boxed to the icon's width, so its justification shows.

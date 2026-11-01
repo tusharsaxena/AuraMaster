@@ -2,11 +2,12 @@
 -- layout, and the bindings handed to the aura engine's buttons.
 
 local T = _G.AM_TEST
+local own = dofile("tests/own_look.lua")
 local test, assertEqual, assertTrue, assertNil = T.test, T.assertEqual, T.assertTrue, T.assertNil
 local NS, mocks = T.NS, T.mocks
 
 local function cfg(over)
-    return NS.Database.Merge(NS.Database.DeepCopy(NS.CONTAINER_TEMPLATE), over or {})
+    return own(NS.Database.Merge(NS.Database.DeepCopy(NS.CONTAINER_TEMPLATE), over or {}))
 end
 
 --- A stand-in for one of the engine's aura buttons: a frame whose binding methods are recorded.
@@ -301,7 +302,7 @@ test("style: a dress that raises still clears its class color, and the error rea
     -- Its own environment: the styler is replaced there, never on the shared one.
     local NS2, m2 = dofile("tests/fresh_env.lua")()
     NS2.Style.Bars.Apply = function() error("styler failed") end
-    local c = NS2.Database.Merge(NS2.Database.DeepCopy(NS2.CONTAINER_TEMPLATE), { style = "bars" })
+    local c = NS2.Database.Merge(own(NS2.Database.DeepCopy(NS2.CONTAINER_TEMPLATE)), { style = "bars" })
     local ok, err = pcall(NS2.Style.Element, m2.__stubFrame(), c, true, { r = 0.9, g = 0.8, b = 0.7 })
     assertTrue(not ok, "the styler's error is not swallowed")
     assertTrue(tostring(err):find("styler failed", 1, true) ~= nil, tostring(err))
@@ -318,7 +319,7 @@ test("style: a dress that raises hands the error handler the failing styler's st
         m.debugstack = function() return debug.traceback("stack:", 2) end
     end })
     NS2.Style.Bars.Apply = function() error("styler failed") end
-    local c = NS2.Database.Merge(NS2.Database.DeepCopy(NS2.CONTAINER_TEMPLATE), { style = "bars" })
+    local c = NS2.Database.Merge(own(NS2.Database.DeepCopy(NS2.CONTAINER_TEMPLATE)), { style = "bars" })
     local ok, err = pcall(NS2.Style.Element, m2.__stubFrame(), c, true, nil)
     assertTrue(not ok, "the styler's error is not swallowed")
     err = tostring(err)
@@ -335,7 +336,7 @@ test("style: a dress that raises a non-string value hands that value on unchange
     end })
     local raised = { reason = "styler failed" }
     NS2.Style.Bars.Apply = function() error(raised) end
-    local c = NS2.Database.Merge(NS2.Database.DeepCopy(NS2.CONTAINER_TEMPLATE), { style = "bars" })
+    local c = NS2.Database.Merge(own(NS2.Database.DeepCopy(NS2.CONTAINER_TEMPLATE)), { style = "bars" })
     local ok, err = pcall(NS2.Style.Element, m2.__stubFrame(), c, true, nil)
     assertTrue(not ok, "the styler's error is not swallowed")
     -- red under: withStack stringifying every error, whatever its type
@@ -383,7 +384,7 @@ test("style: buttons of one look share one formatter and curve; a new color buil
         for _, c in ipairs(b.__bound) do if c[1] == name then hit = c end end
         return hit
     end
-    local c = NS2.Database.Merge(NS2.Database.DeepCopy(NS2.CONTAINER_TEMPLATE), {
+    local c = NS2.Database.Merge(own(NS2.Database.DeepCopy(NS2.CONTAINER_TEMPLATE)), {
         style = "bars", bars = { timeFormat = "short", expiringColorOn = true, colorMode = "dispel" } })
     local dispelLeaves = 0
     for _, name in ipairs(NS2.Constants.DISPEL_TYPES) do
@@ -478,14 +479,17 @@ test("style: a font the client refuses falls back to the built-in font at the sa
     local NS2, registered = withMedia()
     registered["font:Gone"] = "Interface\\AddOns\\SomePack\\Gone.ttf"
     local fs = R()
-    fs.__answer.SetFont = function(_, path) return path == C.FALLBACK_FONT end
+    local saved = rawget(_G, "STANDARD_TEXT_FONT")
+    rawset(_G, "STANDARD_TEXT_FONT", "Fonts\\FRIZQT__.TTF")
+    fs.__answer.SetFont = function(_, path) return path == "Fonts\\FRIZQT__.TTF" end
     -- The player's own face (its "Use the skin's font" off), which is the one the client refuses.
     NS2.Style.ApplyText(fs, { font = "Gone", fontFromSkin = false, fontSize = 13, fontFlags = "OUTLINE" }, R(), D.bars.name)
+    rawset(_G, "STANDARD_TEXT_FONT", saved)
     local calls = fs:__calls("SetFont")
     assertEqual(calls[1][1], registered["font:Gone"], "the listed font is tried first")
     -- red under: ApplyText ignoring SetFont's answer (the text draws in no font at all)
     assertEqual(#calls, 2)
-    assertEqual(table.concat({ calls[2][1], calls[2][2], calls[2][3] }, ","), C.FALLBACK_FONT .. ",13,OUTLINE")
+    assertEqual(table.concat({ calls[2][1], calls[2][2], calls[2][3] }, ","), "Fonts\\FRIZQT__.TTF,13,OUTLINE")
 end)
 
 test("style: each outline setting reaches the font as the client's flag string", function()
@@ -509,14 +513,15 @@ end)
 
 test("style: a font shadow is a one-pixel black drop when on, and no offset when off", function()
     local fs = R()
-    NS.Style.ApplyText(fs, { fontShadow = true }, R(), D.bars.name)
+    NS.Style.ApplyText(fs, { fontShadow = true, fontShadowFromSkin = false }, R(), D.bars.name)
     assertEqual(fs:__joined("SetShadowColor"), "0,0,0,1")
     assertEqual(fs:__joined("SetShadowOffset"), "1,-1")
     fs = R()
-    NS.Style.ApplyText(fs, { fontShadow = false }, R(), D.bars.name)
+    NS.Style.ApplyText(fs, { fontShadow = false, fontShadowFromSkin = false }, R(), D.bars.name)
     -- red under: the shadow's offset left at the font object's default when turned off
     assertEqual(fs:__joined("SetShadowOffset"), "0,0")
-    assertEqual(fs:__count("SetShadowColor"), 0)
+    -- S.HudFont writes both arms, so a string that held a shadow loses it.
+    assertEqual(fs:__joined("SetShadowColor"), "0,0,0,0")
 end)
 
 test("style: a text's corner, offsets and justification come from its block, the template filling what is missing", function()

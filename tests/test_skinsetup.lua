@@ -75,13 +75,19 @@ test("Skin seam: every owner token draws today's color on Ka0s Default, and foll
     for name, def in pairs(NS.SKIN_TOKENS) do
         n = n + 1
         assertEqual(name:sub(1, 3), "am.", name .. ": the owner's namespace")
-        local r, g, b, a = NS.Skin.Color(name)
-        assertTrue(r ~= nil, name .. ": the library refused the owner token")
-        local want = def.default
-        for i, v in ipairs({ r, g, b, a }) do
-            assertTrue(math.abs(v - (want[i] or 1)) < 1e-6, ("%s[%d]: %s, today %s"):format(name, i, v, want[i] or 1))
+        if type(def.default) == "number" then
+            -- A thickness, not a color: FS-AM-FLIP's 1 px where Ka0s Default's icon.borderSize is 2.
+            assertEqual(NS.Skin.Token(name), def.default, name)
+            assertEqual(type(base[def.follow]), "number", name .. " follows a number token")
+        else
+            local r, g, b, a = NS.Skin.Color(name)
+            assertTrue(r ~= nil, name .. ": the library refused the owner token")
+            local want = def.default
+            for i, v in ipairs({ r, g, b, a }) do
+                assertTrue(math.abs(v - (want[i] or 1)) < 1e-6, ("%s[%d]: %s, today %s"):format(name, i, v, want[i] or 1))
+            end
+            assertTrue(type(base[def.follow]) == "table", name .. " follows " .. tostring(def.follow) .. ", not a library color")
         end
-        assertTrue(type(base[def.follow]) == "table", name .. " follows " .. tostring(def.follow) .. ", not a library color")
     end
     assertTrue(n >= 9, "the owner tokens are missing")
 end)

@@ -9,6 +9,7 @@
 -- `fontSize / 2` per character plus 2 of padding, so a 12pt string is 6 per character plus 2.
 
 local T = _G.AM_TEST
+local own = dofile("tests/own_look.lua")
 local test, assertEqual, assertTrue =
     T.test, T.assertEqual, T.assertTrue
 local B = dofile("tests/region_builder.lua")
@@ -41,7 +42,7 @@ local function env(answer, before)
     end
     NS.Style.__measurer = function() return fs end
     local function textCfg(over, auraType)
-        return NS.Database.Merge(NS.Database.DeepCopy(NS.CONTAINER_TEMPLATE),
+        return NS.Database.Merge(own(NS.Database.DeepCopy(NS.CONTAINER_TEMPLATE)),
             { style = "text", auraType = auraType or "HELPFUL", text = over or {} })
     end
     return NS, m, fs, textCfg

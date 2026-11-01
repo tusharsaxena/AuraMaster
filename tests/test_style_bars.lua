@@ -3,6 +3,7 @@
 -- the spark follow, the texts, the engine bindings, and the preview fill.
 
 local T = _G.AM_TEST
+local own = dofile("tests/own_look.lua")
 local test, assertEqual, assertTrue, assertFalse, assertNil =
     T.test, T.assertEqual, T.assertTrue, T.assertFalse, T.assertNil
 local NS = T.NS
@@ -11,7 +12,7 @@ local BS = dofile("tests/border_strips.lua")
 local D = NS.CONTAINER_TEMPLATE
 
 local function cfg(over)
-    return NS.Database.Merge(NS.Database.DeepCopy(D), over or {})
+    return own(NS.Database.Merge(NS.Database.DeepCopy(D), over or {}))
 end
 
 --- Dress a bar element for `c`, swap each of its regions for a recorder, and dress it again, so
@@ -532,7 +533,7 @@ end)
 
 test("bars: the engine drives the timer bar by elapsed time, eased only when smoothing is on", function()
     local NS2 = withEnums()
-    local c = NS2.Database.Merge(NS2.Database.DeepCopy(NS2.CONTAINER_TEMPLATE), { bars = { smooth = true } })
+    local c = NS2.Database.Merge(own(NS2.Database.DeepCopy(NS2.CONTAINER_TEMPLATE)), { bars = { smooth = true } })
     local frame, am = dressed(c, true, nil, NS2)
     local bind = frame:__last("SetDurationBar")
     assertTrue(bind[1] == am.bar, "the engine's own status bar")
@@ -568,7 +569,7 @@ end)
 
 test("bars: dispel coloring tints the fill through the engine with the stored dispel colors", function()
     local NS2 = withEnums()
-    local c = NS2.Database.Merge(NS2.Database.DeepCopy(NS2.CONTAINER_TEMPLATE), { bars = { colorMode = "dispel" } })
+    local c = NS2.Database.Merge(own(NS2.Database.DeepCopy(NS2.CONTAINER_TEMPLATE)), { bars = { colorMode = "dispel" } })
     local frame, am = dressed(c, true, nil, NS2)
     local add = frame:__last("AddDispelTypeTexture")
     assertTrue(add[1] == am.fill, "the fill carries the tint")
@@ -589,7 +590,7 @@ end)
 
 test("bars: Color by dispel type on the background tints it through the engine, no type keeping the background color (feedback #7)", function()
     local NS2 = withEnums()
-    local c = NS2.Database.Merge(NS2.Database.DeepCopy(NS2.CONTAINER_TEMPLATE), { bars = { bgColorMode = "dispel" } })
+    local c = NS2.Database.Merge(own(NS2.Database.DeepCopy(NS2.CONTAINER_TEMPLATE)), { bars = { bgColorMode = "dispel" } })
     local frame, am = dressed(c, true, nil, NS2)
     local add = frame:__last("AddDispelTypeTexture")
     -- red under: no background binding at all
@@ -611,7 +612,7 @@ end)
 
 test("bars: a dispel-colored background carries its opacity times its color's alpha on the region, the map opaque", function()
     local NS2 = withEnums()
-    local c = NS2.Database.Merge(NS2.Database.DeepCopy(NS2.CONTAINER_TEMPLATE), { bars = {
+    local c = NS2.Database.Merge(own(NS2.Database.DeepCopy(NS2.CONTAINER_TEMPLATE)), { bars = {
         bgColorMode = "dispel", bgAlpha = 0.4, bgColor = { r = 0.1, g = 0.2, b = 0.3, a = 0.5 } } })
     local frame, am = dressed(c, true, nil, NS2)
     -- red under: the region keeping bgAlpha alone while the engine's tint paints the color at alpha 1
@@ -625,7 +626,7 @@ end)
 
 test("bars: a dispel-colored fill carries its opacity times its color's alpha on the region", function()
     local NS2 = withEnums()
-    local c = NS2.Database.Merge(NS2.Database.DeepCopy(NS2.CONTAINER_TEMPLATE), { bars = {
+    local c = NS2.Database.Merge(own(NS2.Database.DeepCopy(NS2.CONTAINER_TEMPLATE)), { bars = {
         colorMode = "dispel", barAlpha = 0.6, barColor = { r = 0.9, g = 0.5, b = 0.1, a = 0.5 },
         useClassColorBar = false } })
     local frame, am = dressed(c, true, nil, NS2)
@@ -656,7 +657,7 @@ local MAGIC = { 0.2, 0.4, 1, 1 }   -- the engine's dispel tint, a color no swatc
 --- emptied before the last dress, so the logs hold that dress alone.
 local function toggled(modes, aura)
     local NS2 = withEnums()
-    local c = NS2.Database.Merge(NS2.Database.DeepCopy(NS2.CONTAINER_TEMPLATE),
+    local c = NS2.Database.Merge(own(NS2.Database.DeepCopy(NS2.CONTAINER_TEMPLATE)),
         { bars = { barColor = { r = 0.9, g = 0.5, b = 0.1, a = 1 }, useClassColorBar = false } })
     local frame = R()
     NS2.Style.Element(frame, c, true)
@@ -700,7 +701,7 @@ end)
 --- The background's twin of `toggled`: dress ONE live bar button for each bgColorMode in `modes`.
 local function toggledBg(modes, aura)
     local NS2 = withEnums()
-    local c = NS2.Database.Merge(NS2.Database.DeepCopy(NS2.CONTAINER_TEMPLATE),
+    local c = NS2.Database.Merge(own(NS2.Database.DeepCopy(NS2.CONTAINER_TEMPLATE)),
         { bars = { bgColor = { r = 0.1, g = 0.1, b = 0.1, a = 0.5 }, useClassColorBg = false } })
     local frame = R()
     NS2.Style.Element(frame, c, true)
@@ -745,7 +746,7 @@ end)
 test("bars: with the time's class color on, the running-out curve returns to the class color, one curve per container", function()
     local ns = dofile("tests/fresh_env.lua")({ before = dofile("tests/text_apis.lua") })
     local class = { r = 0.2, g = 0.4, b = 0.6 }
-    local c = ns.Database.Merge(ns.Database.DeepCopy(ns.CONTAINER_TEMPLATE), { bars = { expiringColorOn = true,
+    local c = ns.Database.Merge(own(ns.Database.DeepCopy(ns.CONTAINER_TEMPLATE)), { bars = { expiringColorOn = true,
         time = { fontColor = { r = 1, g = 1, b = 1, a = 0.7 }, useClassColorFont = true } } })
     local a = dressed(c, true, class, ns)
     local b = dressed(c, true, class, ns)
@@ -764,7 +765,7 @@ end)
 
 test("bars: a live re-dress with both borders on under secret geometry draws them and re-binds everything (B2-3)", function()
     local ns, m = dofile("tests/fresh_env.lua")({ before = dofile("tests/text_apis.lua") })
-    local function c(over) return ns.Database.Merge(ns.Database.DeepCopy(ns.CONTAINER_TEMPLATE), over) end
+    local function c(over) return ns.Database.Merge(own(ns.Database.DeepCopy(ns.CONTAINER_TEMPLATE)), over) end
     local borders = { icon = "LEFT", borderShow = true, borderStyle = "Solid", borderSize = 2,
         borderColor = { r = 1, g = 0, b = 0, a = 1 }, iconBorderShow = true, iconBorderStyle = "Solid",
         iconBorderSize = 1, iconBorderColor = { r = 0, g = 0, b = 1, a = 1 } }
@@ -796,7 +797,7 @@ local function refusedBorder(region, method)
             reported[n + 1] = tostring(e)
         end end
     end })
-    local c = ns.Database.Merge(ns.Database.DeepCopy(ns.CONTAINER_TEMPLATE), { bars = { icon = "LEFT",
+    local c = ns.Database.Merge(own(ns.Database.DeepCopy(ns.CONTAINER_TEMPLATE)), { bars = { icon = "LEFT",
         borderShow = true, borderStyle = "Solid", iconBorderShow = true, iconBorderStyle = "Solid", pandemic = true } })
     local frame = R()
     ns.Style.Element(frame, c, true)

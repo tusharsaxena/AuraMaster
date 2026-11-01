@@ -2,7 +2,7 @@ local _, NS = ...
 
 -- core/Database.lua — AceDB, the schema migration runner, and the pure data helpers over the
 -- container registry. Called from core/AuraMaster.lua's OnInitialize and headlessly by the harness.
--- The step bodies the ladder runs (Database.MigrateV2 .. MigrateV15) are core/Database_Migrations.lua.
+-- The step bodies the ladder runs (Database.MigrateV2 .. MigrateV15, FollowSkin) are core/Database_Migrations.lua.
 --
 -- NOTHING HERE TOUCHES A FRAME. The registry's CRUD with its messages and live instances is
 -- modules/ContainerManager.lua; this file only knows what a container looks like on disk.
@@ -257,6 +257,7 @@ function Database.PrepareProfile(p)
     local maxId = backfillContainers(p)
     if (p.nextContainerId or 1) <= maxId then p.nextContainerId = maxId + 1 end
     rebuildOrder(p)
+    Database.FollowSkin(p)
     return seeded
 end
 
@@ -474,6 +475,15 @@ local SCHEMA_STEPS = {
             local n = Database.MigrateV15(p, hudFace(p))
             if NS.DebugLog then
                 NS.DebugLog.DebugAtEnable("Migrate", "v15 profile '%s': Use the skin's font turned off on %s text block(s) with a face of their own", name, n)
+            end
+        end)
+    end },
+    { to = 16, apply = function(db)
+        -- Colors, borders and shadow onto the skin (the owner's rulings of 2026-11-01), recorded per
+        -- profile: Database.FollowSkin.
+        eachProfile(db, function(p, name)
+            if Database.FollowSkin(p) and NS.DebugLog then
+                NS.DebugLog.DebugAtEnable("Migrate", "v16 profile '%s': put on the skin", name)
             end
         end)
     end },

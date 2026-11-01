@@ -57,11 +57,47 @@ end
 --- skin switch reaches them through the one OnLooksChanged listener (modules/ContainerManager.lua),
 --- which re-applies every container. Read per dress, never per aura event.
 function Style.SkinKey(token, key, fromSkin)
-    if fromSkin ~= true then return key end
+    if fromSkin ~= true or NS.SkinDegraded then return key end
     local S = NS.Skin
     local v = S and S.Resolve and S.Resolve(token, key, true)
     if v == nil then return key end
     return v
+end
+
+-- The color tables Style.Followed answers, one per token. Replaced, never edited, when the skin's
+-- channels move: the running-out curves and the dispel maps are memoized on a table's identity
+-- (curveSlot, Style.DispelColorMap), so an edited table would keep the last skin's curve.
+local followed = {}
+-- The three tokens with a getter of their own on the facade (LibKa0s v1.85.0).
+local GETTERS = { ["hud.text"] = "HudTextColor", ["hud.label"] = "HudLabelColor", ["bar.fill"] = "BarFillColor" }
+
+--- The color a stored swatch draws, shaped as a stored color (r, g, b, a keys), so it goes through
+--- Style.Color and Style.CurveColor as the swatch does: `stored` itself while its "Use the skin's
+--- color" companion `fromSkin` is off, while `useClass` is on (a class color comes first and has no
+--- companion, and it keeps its stored alpha), when the skin leaves `token` alone or with no library;
+--- else the skin's `token`. The stored color is never written. Same regions as Style.SkinKey, so a
+--- skin switch reaches it the same way, and it allocates only when the skin's color moved.
+function Style.Followed(stored, fromSkin, token, useClass)
+    if fromSkin ~= true or useClass or NS.SkinDegraded then return stored end
+    local S = NS.Skin
+    local getter = GETTERS[token]
+    local r, g, b, a
+    if getter then r, g, b, a = S[getter]() else r, g, b, a = S.Color(token) end
+    if r == nil then return stored end
+    a = a or 1
+    local c = followed[token]
+    if not (c and c.r == r and c.g == g and c.b == b and c.a == a) then
+        c = { r = r, g = g, b = b, a = a }
+        followed[token] = c
+    end
+    return c
+end
+
+--- The color font block `t` draws (`tdef` the template's block, for a missing companion): the name
+--- label's follows `hud.label`, every other text `hud.text`.
+function Style.FontColor(t, tdef)
+    return Style.Followed(t.fontColor, Style.OrTemplate(t.fontColorFromSkin, tdef.fontColorFromSkin),
+        tdef == D.label.font and "hud.label" or "hud.text", t.useClassColorFont)
 end
 
 -- The class color of the dress in progress: the container's snapshot of its tracked unit's class
@@ -138,23 +174,25 @@ local function textWidth(boxWidth, x)
     return math.max(1, boxWidth - math.abs(x))
 end
 
---- Apply the six canonical font leaves of `t` (options-ui-§16) to a FontString: face, size, flags,
---- color (with its class-color companion) and shadow. `tdef` is the template's block for the same
+-- The one opts table S.HudFont is handed: it keeps nothing of it, and every field is refilled before
+-- each call, so a dress costs no table per string.
+local hudFont = {}
+
+--- Apply the six canonical font leaves of `t` (options-ui-§16) to a FontString: face, size, flags and
+--- shadow through S.HudFont, the only way a 12.0.7 client draws a shadow, then the color (the skin's,
+--- or the swatch's with its class-color companion). `tdef` is the template's block for the same
 --- text, which the size falls back to. `classColor`, when given (a snapshot, or false for the
 --- player), names the class outright instead of reading the dress in progress (Style.ColorWith).
 function Style.ApplyFont(fs, t, tdef, classColor)
-    local path, size, flags = Style.FontKey(t, tdef)
-    if not fs:SetFont(path, size, flags) then fs:SetFont(C.FALLBACK_FONT, size, flags) end
+    hudFont.face, hudFont.size, hudFont.flags = Style.FontKey(t, tdef)
+    hudFont.shadow = t.fontShadow and true or false
+    hudFont.shadowFromSkin = Style.OrTemplate(t.fontShadowFromSkin, tdef.fontShadowFromSkin) == true
+    NS.Skin.HudFont(fs, hudFont)
+    local stored = Style.FontColor(t, tdef)
     if classColor ~= nil then
-        fs:SetTextColor(Style.ColorWith(classColor, t.fontColor, t.useClassColorFont))
+        fs:SetTextColor(Style.ColorWith(classColor, stored, t.useClassColorFont))
     else
-        fs:SetTextColor(Style.Color(t.fontColor, t.useClassColorFont))
-    end
-    if t.fontShadow then
-        fs:SetShadowColor(0, 0, 0, 1)
-        fs:SetShadowOffset(1, -1)
-    else
-        fs:SetShadowOffset(0, 0)
+        fs:SetTextColor(Style.Color(stored, t.useClassColorFont))
     end
 end
 
@@ -192,8 +230,9 @@ end
 --- The icon border's thickness when it draws, else 0: how far the art is inset inside the icon's box.
 function Style.IconInset(s, sdef)
     if not Style.OrTemplate(s.iconBorderShow, sdef.iconBorderShow) then return 0 end
-    if Style.OrTemplate(s.iconBorderStyle, sdef.iconBorderStyle) == "None" then return 0 end
-    return tonumber(s.iconBorderSize) or sdef.iconBorderSize
+    local style, size = Style.BorderLook(s, sdef, Style.BORDER_BESIDE)
+    if style == "None" then return 0 end
+    return size
 end
 
 --- Place the icon's `size` box at `side` ("LEFT" | "RIGHT") of `host`: the icon border (am.iconBorder)
@@ -206,8 +245,7 @@ function Style.LayoutIcon(host, am, s, sdef, side, size, guard)
     am.iconBorder:ClearAllPoints()
     am.iconBorder:SetSize(size, size)
     am.iconBorder:SetPoint(side, host, side, 0, 0)
-    local style = Style.OrTemplate(s.iconBorderStyle, sdef.iconBorderStyle)
-    local color = s.iconBorderColor or sdef.iconBorderColor
+    local style, _, color = Style.BorderLook(s, sdef, Style.BORDER_BESIDE)
     if guard then
         Style.GuardedBorder(guard, am.iconBorder, inset > 0, style, inset, color, s.useClassColorIconBorder)
     else
@@ -759,7 +797,7 @@ function Style.BindDurationText(frame, fs, s, sdef)
     if s.expiringColorOn then
         local t = s.time or NO_COLOR
         opts.textColor = curveFor(tonumber(s.expiringThreshold) or sdef.expiringThreshold, s.expiringColor or NO_COLOR,
-            Style.CurveColor(t.fontColor, t.useClassColorFont))
+            Style.CurveColor(Style.FontColor(t, sdef.time), t.useClassColorFont))
     end
     Style.Bind(frame, "SetDurationText", fs, opts)
 end

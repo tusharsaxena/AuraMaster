@@ -28,7 +28,8 @@ local function v14profile(skin)
             label = { font = font(FRIZ) } }
     end
     return {
-        skin = skin and { skin = skin } or { pickerSeen = true },
+        -- The record seeded: v16, which this file does not pin, would put every companion back on.
+        skin = skin and { skin = skin, fullSkinReset = true } or { pickerSeen = true, fullSkinReset = true },
         containers = {
             [13] = textC("[4] PLYR TXT Offensive CD"),
             [14] = textC("[5] PLYR TXT Defensive CD"),

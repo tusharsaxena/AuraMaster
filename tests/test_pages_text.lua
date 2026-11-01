@@ -381,7 +381,9 @@ test("text page: with Icon position Hidden every Icon row but the position is dr
         for _, key in ipairs(ICON_ROWS) do
             local w = P.row(ws, P_ .. key)
             assertTrue(w ~= nil, key .. " comes back on " .. position)
-            assertFalse(w.disabled and true or false, key .. " is live on " .. position)
+            -- The style and the thickness dim under "Use the skin's border", which starts on.
+            local governed = key == "iconBorderStyle" or key == "iconBorderSize"
+            assertEqual(w.disabled and true or false, governed, key .. " on " .. position)
         end
     end
     NS.SetByPath(P_ .. "icon", "NONE", 1)
@@ -421,8 +423,9 @@ test("text page: the blink row is engine-only, and the Font tab carries the comp
     -- "Use the skin's font" companion anywhere but last in it (the composer's fromSkin, AM-03)
     assertEqual(table.concat(paths, ","), table.concat({ P_ .. "font.font", P_ .. "font.fontSize",
         P_ .. "font.fontColor", P_ .. "font.useClassColorFont", P_ .. "font.fontFlags",
-        P_ .. "font.fontShadow", P_ .. "font.fontFromSkin", P_ .. "glow", P_ .. "glowColor", P_ .. "useClassColorGlow",
-        P_ .. "glowIntensity", P_ .. "glowThickness", P_ .. "glowX", P_ .. "glowY",
+        P_ .. "font.fontShadow", P_ .. "font.fontFromSkin", P_ .. "font.fontColorFromSkin",
+        P_ .. "font.fontShadowFromSkin", P_ .. "glow", P_ .. "glowColor", P_ .. "useClassColorGlow",
+        P_ .. "glowColorFromSkin", P_ .. "glowIntensity", P_ .. "glowThickness", P_ .. "glowX", P_ .. "glowY",
         P_ .. "dispelTypeColor", P_ .. "dispelBackdrop", P_ .. "dispelBackdropAlpha", P_ .. "dispelEdge",
         P_ .. "dispelEdgeSize" }, ","))
     assertEqual(NS.FindSchemaRow(P_ .. "font.fontColor").classColorSource, "unit")
@@ -706,7 +709,7 @@ end)
 -- ── glow behind the text (TG-03, spec G4; rows per the glyph glow addendum, TG-09) ─────────────
 
 -- The Glow subgroup's rows, in the order the addendum registers them.
-local GLOW_KEYS = { "glow", "glowColor", "useClassColorGlow", "glowIntensity", "glowThickness", "glowX", "glowY" }
+local GLOW_KEYS = { "glow", "glowColor", "useClassColorGlow", "glowColorFromSkin", "glowIntensity", "glowThickness", "glowX", "glowY" }
 -- The rows that dim while the glow is off: all but the toggle and the class-colored pair.
 local GLOW_DIMMED = { "glowIntensity", "glowThickness", "glowX", "glowY" }
 

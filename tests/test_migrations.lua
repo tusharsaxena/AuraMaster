@@ -146,6 +146,8 @@ test("migrations: every step is idempotent on a fresh default profile", function
     local freshProfile = NS.Database.DeepCopy(NS.defaults.profile)
     NS.db.sv.profiles = { Fresh = freshProfile }
     local before = NS.Database.DeepCopy(freshProfile)
+    -- v16's one write on a fresh profile: its record, which is what makes every later run write nothing.
+    before.skin.fullSkinReset = true
     local printed = {}
     NS.Print = function(...)
         local n = #printed
