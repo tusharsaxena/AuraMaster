@@ -2312,7 +2312,7 @@ Bars → Name text → untick **Use the skin's font** → the names go back to K
 General → untick **Use the skin's texture** → the fill's stored texture comes back (the picks were
 kept, never rewritten). `/reload` → both stay unticked (the reset ran once).
 Fail: a container still on Friz Quadrata or Blizzard's bar with its companion ticked, a changed
-size, a stored pick lost, or the reset running again after the reload. Result:
+size, a stored pick lost, or the reset running again after the reload. Result: Passed (owner, 2026-11-02)
 
 **SKIN-2. Ka0s Default otherwise looks as before (AM-02, AM-04; X1).** On **Ka0s Default** with
 Ignore settings panel off, `/am unlock` and `/am test`, then walk the settings pages → apart from the
@@ -2401,7 +2401,7 @@ skins → that fill stays on your pick while the background (still ticked) follo
 again → it follows the skin. Do the same with **Use the skin's font** on Bars → Name text, Icons →
 Time text, Text → Font and Layout → Label → each governs only its own element. Click **New container** → its companions are ticked. Fail: a companion that
 moves another element, a dimmed picker that still writes, or a new container on the stored picks.
-Result:
+Result: Passed (owner, 2026-11-02)
 
 **SKIN-10. The Font and texture overrides (AM-01, AM-03).** On the Skin tab pick a **Font** (any
 LibSharedMedia face) → every container string whose **Use the skin's font** is ticked redraws in it,
@@ -2561,7 +2561,7 @@ this build → schema v16 puts them on the skin with everything else, so each dr
 the skin's font** → Ka0s Kait draws again, and the black glow behind the text is the dense drop it was
 before the skinning run (image-36's smudged double letters gone, red included). The stored glow
 settings are unchanged. `/reload` → it stays unticked (v16 ran once). Fail: Kait lost, the glow still
-smeared after unticking, or a Lua error. Result:
+smeared after unticking, or a Lua error. Result: Passed (owner, 2026-11-02)
 
 **SKIN-32. The drag strips re-fit after a skin switch (AM-03; D-12).** `/am unlock` and `/am test`
 with a long-named Bars container capped at its bar (its name shortened with "...") and a one-icon
@@ -2590,7 +2590,7 @@ Result:
 
 **SKIN-35. Ka0s Default keeps its pixels (FS-AM-FLIP).** On a new profile on **Ka0s Default**, a bars, an
 icons and a Text container look as they did before this build: blue fill, half-black background,
-white text with no shadow, 1 px black icon borders, gold name label. Fail: any of those moved. Result:
+white text with no shadow, 1 px black icon borders, gold name label. Fail: any of those moved. Result: Failed (owner, 2026-11-02): re-opened as R3-L3
 
 **SKIN-36. The colors follow the skin (D2, D3, D4).** With a bars, an icons and a Text container and the
 name label on, pick Obsidian, Azeroth and High Contrast in turn → with no reload the fill, every string
@@ -2603,12 +2603,12 @@ skin's border and thickness even with **Show border** off, and that row reads ti
 **Use the skin's border** → the stored Show border, style and thickness draw again. The icon beside a bar
 or a text line keeps its **Show border** in every skin: off stays off. Under WoW Default a textured edge, which reaches a live button after a
 `/reload`, as the row's tooltip says; until then that button keeps a flat border in the skin's color
-and thickness, never none. Fail: a surface on the previous skin's color until `/reload`. Result:
+and thickness, never none. Fail: a surface on the previous skin's color until `/reload`. Result: Failed (owner, 2026-11-02): re-opened as R3-L3
 
 **SKIN-37. The shadow follows the skin (D6).** Under Azeroth the text shows the skin's shadow, under High
 Contrast a heavier one, under Ka0s Default none. Tick **Ignore fonts** under Azeroth → the stored *Font
 shadow* decides. Untick **Use the skin's shadow** on one text → its stored *Font shadow* draws under every
-skin. Fail: no visible shadow under Azeroth, or one left behind after a switch. Result:
+skin. Fail: no visible shadow under Azeroth, or one left behind after a switch. Result: Passed (owner, 2026-11-02)
 
 **SKIN-38. The companions (D2 to D6).** Bars → Fill, Background and border and each text tab, Icons →
 Border, Text → Font and Icon, and Layout → Label show **Use the skin's color** (the text tabs **Use the
@@ -2618,7 +2618,7 @@ Untick one → the stored value draws at once, and only that element moves. A co
 grayed. Tick **Use class color** under Azeroth → the class color wins whatever the companion says. On a
 target container with that box ticked, target an NPC and re-apply → the skin's color draws. Fail: a
 swatch grayed, a companion moving another element, the skin over a class color, or the stored swatch on
-an NPC while its companion is on. Result:
+an NPC while its companion is on. Result: Passed (owner, 2026-11-02)
 
 **SKIN-39. The one step on an existing profile (schema v16).** On the previous build give a profile its
 own bar, text and border colors, Font shadow on, THICKOUTLINE flags and a glow color. Update and log in
@@ -2626,20 +2626,20 @@ own bar, text and border colors, Font shadow on, THICKOUTLINE flags and a glow c
 come back unchanged. `/reload`, press Defaults on General and Bars, switch profile and back → a companion
 you left unticked stays unticked, unless that page's Defaults reset it. Class colors, dispel colors,
 running-out colors and **Ignore settings panel** are as stored. Fail: a stored color lost, a class
-toggle moved, or the step running twice. Result:
+toggle moved, or the step running twice. Result: Passed (owner, 2026-11-02)
 
 **SKIN-40. Text glow (D5).** Text style → Font → **Glow behind the text** on Ka0s Default → the black ring
 as before. Pick any other skin → the ring stays black (**Use the skin's color** beside the Glow color is
 off on a new container since SF-AM-1; tick it → that skin's own glow color). With it off, your stored
 color draws. The running-out and pandemic colors do not move.
-Fail: a glow on the previous color until the next dress, or a warning tint recolored. Result:
+Fail: a glow on the previous color until the next dress, or a warning tint recolored. Result: Passed (owner, 2026-11-02)
 
 **SKIN-41. Gloss (A3).** Pick **Glass** with a bars container showing timed auras and with `/am test` →
 the fill shows a soft shine on its top half that ends where the fill ends and drains with it, in both
 drain directions. Any other skin, and Glass with **Use the skin's texture** unticked → none. Then in combat
 on a dummy with live bars, `/am set skin.skin ka0s` and back to `glass` → no Lua error or taint warning
 (the gloss is the one bar paint a skin switch replays at once). Fail: a shine on the drained part or past
-the fill, one that stays, or an error. Result:
+the fill, one that stays, or an error. Result: Passed (owner, 2026-11-02)
 
 **SKIN-42. The General page and the picker with the Scope cleared (L2, L5, L8).** Clear **Ignore settings
 panel**, pick Azeroth → Container → the Unit, Aura type and Style values take the skin's colors in the
@@ -2647,18 +2647,18 @@ closed box and the list, each still apart from its neighbors, and the **[Buffs]*
 in the spell lists follow. Hover a spell claimed by two categories → the overlap line reads in the skin's
 tooltip color. With **Ignore settings panel** on, all of it is as before. `/am pick` → the frame name wears
 the skin's body face at its old size, and with **Ignore fonts** the client's. Fail: a typed color with the
-Scope cleared, a skin color behind a stock panel, or the frame name on the old face. Result:
+Scope cleared, a skin color behind a stock panel, or the frame name on the old face. Result: Passed (owner, 2026-11-02)
 
 **SKIN-43. The glow is black in every skin (SF-AM-1).** New container (Text), Glow behind the text on:
 Glow color's **Use the skin's color** is unticked and the ring is black under Ka0s Default, Obsidian,
 Azeroth and High Contrast. A profile that still held the old default has it unticked after the load.
-Fail: a colored ring under any skin. Result:
+Fail: a colored ring under any skin. Result: Passed (owner, 2026-11-02)
 
 **SKIN-44. Bars wear a dark background and border in every skin (SF-AM-2).** New Bars container, `/am test`:
 under Ka0s Default, Obsidian, Azeroth and High Contrast each bar has a dark background, a black border
 and the skin's own bar texture. Bar style → Background and border: **Use the skin's color** is unticked
 beside Background color and Border color, **Show border** is on. Fail: a light or tan background, or no
-border, under any skin. Result:
+border, under any skin. Result: Passed (owner, 2026-11-02)
 
 **SKIN-45. Fill, Text font and icon border colors stay yours (SF-AM-3).** New Bars, Text and Icons
 containers under Obsidian: Bar style → General **Use the skin's color** under the Fill is unticked, Text
@@ -2666,7 +2666,7 @@ style → Font **Use the skin's color** is unticked, and Icon style → Border *
 beside-icon border's are unticked; each stored color draws, unchanged by a skin switch. Tick one → it takes
 the skin's color. The other fonts (bar name, time, stacks) still follow the skin. A profile that still held
 the old defaults has them unticked after the load. Fail: a skin recoloring a stored fill, Text font or icon
-border. Result:
+border. Result: Passed (owner, 2026-11-02)
 
 **SKIN-46. A stored pick of the deleted Friz lands on Ka0s Ubuntu (R3-FRIZ, schema v18).** On the previous
 build, set one container's bar name Font (or the Skin tab's Font) to *Ka0s Friz Quadrata TT* in two profiles
@@ -2762,3 +2762,5 @@ SKIN-43 to SKIN-45 are new, and SKIN-36, SKIN-38 and SKIN-40 are re-opened, beca
 Open from the owner's third smoke round (Ka0sAddonsCommonTasks `docs/2026-11-02-SMOKE_ROUND3/`, R3-FRIZ):
 SKIN-46 is new, and SKIN-4 names Ka0s Ubuntu as WoW Default's face. **Fully exit and restart the client**:
 the library's new font file is not seen by `/reload`.
+
+On 2026-11-02 the owner reported that every check on the smoke lists of the full skinning run and its smoke feedback batch (Ka0sAddonsCommonTasks `docs/2026-11-01-FULL_SKINNING/` and `docs/2026-11-01-SMOKE_FEEDBACK/`) passed, apart from DpsRace's clock font, the skinned look of the AceGUI Dropdown and the Ka0sMedia_Font and Ka0sMedia_Statusbar pickers, FadeNineSlice and IconBorder (`docs/2026-11-02-SMOKE_ROUND3/`, R3-SMOKE). Passed, recorded on each `Result:` line as `Passed (owner, 2026-11-02)`: SKIN-1, SKIN-9, SKIN-31, SKIN-37, SKIN-38, SKIN-39, SKIN-40, SKIN-41, SKIN-42, SKIN-43, SKIN-44 and SKIN-45. Failed, re-opened as R3-L3 (IconBorder's 1 px outline and zoom) and recorded as `Failed (owner, 2026-11-02): re-opened as R3-L3`: SKIN-35 and SKIN-36. Still owed: SKIN-4, whose expected result the third smoke round itself changed after the owner's run.
