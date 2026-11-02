@@ -2342,7 +2342,7 @@ Bar, High Contrast Ka0s Solid, Ember Ka0s Forge, WoW Midnight Ka0s Satin, WoW Fo
 Default Blizzard, Ka0s Default Ka0s Default), and every string the skin's own HUD face (*follow-ups*,
 LK-04, LibKa0s v1.82.0, and v1.83.0's faces, D-06: Obsidian Expressway, Azeroth Open Sans Semibold,
 Glass Avant Garde, High Contrast Doris PP, Ember Emblem, WoW Midnight Segoe UI Semibold, WoW Forever
-Fira Sans SemiBold, WoW Default Ka0s Friz Quadrata TT, Ka0s Default Prototype; before the
+Fira Sans SemiBold, WoW Default Ka0s Ubuntu (R3-FRIZ; Ka0s Friz Quadrata TT before), Ka0s Default Prototype; before the
 follow-ups every skin but Ka0s Default drew Friz Quadrata here), at the outlines you set and at sizes
 scaled to Ka0s Default's width (SKIN-30). Judge each face on the HUD: the
 owner rules on them here. Text, fill and icon borders also follow the skin (SKIN-36). Dispel colors,
@@ -2668,6 +2668,13 @@ the skin's color. The other fonts (bar name, time, stacks) still follow the skin
 the old defaults has them unticked after the load. Fail: a skin recoloring a stored fill, Text font or icon
 border. Result:
 
+**SKIN-46. A stored pick of the deleted Friz lands on Ka0s Ubuntu (R3-FRIZ, schema v18).** On the previous
+build, set one container's bar name Font (or the Skin tab's Font) to *Ka0s Friz Quadrata TT* in two profiles
+and log out. Install the re-vendored build and fully restart the client (a new font file) → that text draws in
+Ubuntu and the Font row reads *Ka0s Ubuntu*; switch to the other profile → the same. A font set to Blizzard's
+own *Friz Quadrata TT* keeps it. Fail: the text on the game's default face, or a row still naming Ka0s Friz
+Quadrata TT. Result: not run
+
 ## Library-absent install
 
 **DEGRADED-1. Without the launcher libraries.** Rename `libs/LibDBIcon-1.0` aside, `/reload` → one
@@ -2751,3 +2758,7 @@ of 2026-11-01 on a skin's bar border, and SKIN-40 with every skin's own glow col
 
 Open from the smoke feedback run (Ka0sAddonsCommonTasks `docs/2026-11-01-SMOKE_FEEDBACK/`, SF-AM-1):
 SKIN-43 to SKIN-45 are new, and SKIN-36, SKIN-38 and SKIN-40 are re-opened, because their expected results moved.
+
+Open from the owner's third smoke round (Ka0sAddonsCommonTasks `docs/2026-11-02-SMOKE_ROUND3/`, R3-FRIZ):
+SKIN-46 is new, and SKIN-4 names Ka0s Ubuntu as WoW Default's face. **Fully exit and restart the client**:
+the library's new font file is not seen by `/reload`.

@@ -869,6 +869,12 @@ The stamp follows savedvariables-§1 as ruled at WowAddonStandards v2.65.0:
   template's `"Friz Quadrata TT"`, which no player picked, has `fontFromSkin` turned off, so the stored
   face draws again at its stored size. The face, the glow, sizes, flags and colors are untouched. The
   stamp makes it once: a companion ticked again afterwards stays on (`tests/test_skin_glow_restore.lua`).
+- **Schema v18** (`Database.RetireFonts`, `core/Database_Migrations.lua`, R3-FRIZ of the owner's third
+  smoke round) runs over **every** stored profile and logs one `[Migrate] v18 profile '<name>'` line for a
+  profile it moved. LibKa0s v1.85.0 deleted `Ka0s Friz Quadrata TT` (R3-L7) and WoW Default draws
+  `Ka0s Ubuntu` (R3-L6), so every stored string naming the deleted face, at any depth (a container's
+  face, the skin override), becomes `Ka0s Ubuntu`. Blizzard's own `Friz Quadrata TT`, the template's,
+  stays (`tests/test_migrations.lua`).
 - **Migration lesson (batch 10 F7): a step already pushed is never extended again.** A step's
   version stamp is written once per account, so a half added to a step after any build carrying it
   has been pushed never reaches an install that already ran that build: the owner's v9 install

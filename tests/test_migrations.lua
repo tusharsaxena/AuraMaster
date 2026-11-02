@@ -715,3 +715,25 @@ test("migrations: on load a stored point that is not one of the nine is read as 
     assertNil(NS.Database.FindContainer(1).attach.childPoint)
     assertEqual(NS.Database.FindContainer(1).attach.relPoint, "TOPRIGHT")
 end)
+
+-- R3-FRIZ: LibKa0s v1.85.0 deleted Ka0s Friz Quadrata TT (R3-L7); v18 moves a stored pick of it to
+-- Ka0s Ubuntu in every stored profile, at any depth. red under: no v18 step, one that walks only the
+-- active profile or only the top level, or one that rewrites Blizzard's own "Friz Quadrata TT".
+test("migrations: v18 moves a stored Ka0s Friz Quadrata TT to Ka0s Ubuntu in every profile, Blizzard's Friz kept", function()
+    local FRIZ = "Ka0s Friz Quadrata TT"
+    local function stored(face)
+        return { containers = { [1] = { name = "Bars", style = "bars",
+            bars = { name = { font = { font = face } } }, label = { font = { font = "Friz Quadrata TT" } } } },
+            skin = { font = face } }
+    end
+    local NS = fresh({ savedVariables = { profiles = { Default = stored(FRIZ), Raid = stored(FRIZ) },
+        global = { schemaVersion = 17 } } })
+    for _, name in ipairs({ "Default", "Raid" }) do
+        local p = NS.db.sv.profiles[name]
+        assertEqual(p.containers[1].bars.name.font.font, "Ka0s Ubuntu", name .. ": a container's face")
+        assertEqual(p.skin.font, "Ka0s Ubuntu", name .. ": the skin override")
+        assertEqual(p.containers[1].label.font.font, "Friz Quadrata TT", name .. ": Blizzard's own Friz stays")
+    end
+    assertEqual(NS.db.global.schemaVersion, 18)
+    assertEqual(NS.Database.RetireFonts(NS.db.sv.profiles.Raid), 0, "a second pass moves nothing")
+end)

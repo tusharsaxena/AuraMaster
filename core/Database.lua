@@ -496,6 +496,16 @@ local SCHEMA_STEPS = {
             end
         end)
     end },
+    { to = 18, apply = function(db)
+        -- LibKa0s v1.85.0 deleted Ka0s Friz Quadrata TT (R3-L7); a stored pick of it moves to Ka0s
+        -- Ubuntu, WoW Default's face now (R3-FRIZ): Database.RetireFonts.
+        eachProfile(db, function(p, name)
+            local n = Database.RetireFonts(p)
+            if n > 0 and NS.DebugLog then
+                NS.DebugLog.DebugAtEnable("Migrate", "v18 profile '%s': %s font pick(s) moved to Ka0s Ubuntu", name, n)
+            end
+        end)
+    end },
 }
 
 --- Current schema version: the last step's `to`, or 0 (the defaults' "never migrated" stamp).

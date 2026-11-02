@@ -72,6 +72,10 @@ Total.
 - launcher: with LibKa0s absent the stub answers every member, and the row still stores
 - parity: the Launcher stub carries every member of the live instance
 
+### test_launcher_skin_entry.lua (1)
+
+- launcher descriptor passes openSkinPicker, which runs the skin verb
+
 ### test_database.lua (56)
 
 - database: a fresh profile is seeded with the three starter containers, once
@@ -182,7 +186,7 @@ Total.
 - user categories: the name cap counts characters, so a non-ASCII name is never cut mid-sequence
 - user categories: a deleted category is gone from the grid and from the union, and Uncategorized is still last
 
-### test_migrations.lua (29)
+### test_migrations.lua (30)
 
 - migrations: NS.SCHEMA_VERSION is the runner's target, the last step's version
 - migrations: a legacy v1 account with NO stamp runs every step
@@ -213,6 +217,7 @@ Total.
 - migrations: a v10 account reaches v11 in every profile, each converted under its own chain
 - migrations: v9, v8 and v1 accounts reach v11 with no attach side left and every chain Automatic
 - migrations: on load a stored point that is not one of the nine is read as Automatic, and a known one kept
+- migrations: v18 moves a stored Ka0s Friz Quadrata TT to Ka0s Ubuntu in every profile, Blizzard's Friz kept
 
 ### test_schema.lua (38)
 
@@ -2083,6 +2088,16 @@ Total.
 - skin flip: v16 on a stored profile with no skin table keeps the record, so the step runs once
 - skin flip: the ladder walks every stored profile, and a new profile takes the step on load
 
+### test_defaults_v17.lua (7)
+
+- v17: the text glow's color does not follow the skin by default (SF-AM-1)
+- v17: MigrateV17 moves an old default and keeps a pick
+- v17: a bar has a dark background and a black border whatever the skin (SF-AM-2)
+- v17: MigrateV17 moves a bar's old background and border defaults, not a pick
+- v17: bar fill, Text font and icon border colors stay off the skin by default (SF-AM-3)
+- v17: a new profile keeps the new defaults through the one-time follow step
+- v17: MigrateV17 moves the old fill, text font and icon border defaults
+
 ### test_skin_border.lua (8)
 
 - bar border: a skin's None hands Show border on, the stored style and the stored thickness back
@@ -2579,7 +2594,7 @@ Total.
 
 - prose: no authored file carries a British spelling from localization-§5's published list
 - prose: the gate carries localization-§5's two lists whole, and nothing of its own
-- prose: the exclusions this repository declared suppressed 11 of 242 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (11): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, docs/spell-research/2026-09-24-logs/CORRECTIONS.md, docs/spell-research/2026-09-24-logs/CURRENT_CATEGORIES.md, docs/spell-research/2026-09-24-logs/DECISIONS.md, docs/spell-research/2026-09-24-logs/FLAGS.md, docs/spell-research/2026-09-24-logs/PROPOSED_ADDITIONS.md, docs/spell-research/2026-09-24-logs/REVIEW.md, docs/spell-research/2026-09-24-logs/SOURCES.md, docs/spell-research/2026-09-24-logs/dictionary/AURAS.md
+- prose: the exclusions this repository declared suppressed 11 of 244 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (11): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, docs/spell-research/2026-09-24-logs/CORRECTIONS.md, docs/spell-research/2026-09-24-logs/CURRENT_CATEGORIES.md, docs/spell-research/2026-09-24-logs/DECISIONS.md, docs/spell-research/2026-09-24-logs/FLAGS.md, docs/spell-research/2026-09-24-logs/PROPOSED_ADDITIONS.md, docs/spell-research/2026-09-24-logs/REVIEW.md, docs/spell-research/2026-09-24-logs/SOURCES.md, docs/spell-research/2026-09-24-logs/dictionary/AURAS.md
 - prose: no path this repository narrows the gate by is loaded by a TOC
 - prose: every path this repository narrows the gate by is one .pkgmeta keeps out of the zip
 - prose self-test: the carve-out suppresses the named generated folder, and only it
@@ -2718,10 +2733,11 @@ Total.
 | test_loadorder.lua | 10 |
 | test_setups.lua | 15 |
 | test_launcher.lua | 30 |
+| test_launcher_skin_entry.lua | 1 |
 | test_database.lua | 56 |
 | test_database_steps.lua | 17 |
 | test_database_categories.lua | 28 |
-| test_migrations.lua | 29 |
+| test_migrations.lua | 30 |
 | test_schema.lua | 38 |
 | test_schema_paths.lua | 38 |
 | test_settings_pin.lua | 1 |
@@ -2799,6 +2815,7 @@ Total.
 | test_skin_surfaces.lua | 7 |
 | test_skin_hud.lua | 12 |
 | test_skin_flip.lua | 31 |
+| test_defaults_v17.lua | 7 |
 | test_skin_border.lua | 8 |
 | test_skin_fix.lua | 7 |
 | test_skin_flags.lua | 7 |
@@ -2838,4 +2855,4 @@ Total.
 | test_skin_values.lua | 3 |
 | test_skin_switch.lua | 34 |
 | Skipped | 1 |
-| **Total** | **2336** |
+| **Total** | **2345** |

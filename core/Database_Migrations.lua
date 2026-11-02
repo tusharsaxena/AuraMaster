@@ -1137,6 +1137,25 @@ function Database.MigrateV17(p)
     return moved
 end
 
+-- The shipped faces LibKa0s retired, each to its successor (R3-FRIZ; LibKa0s R3-L7). Blizzard's own
+-- "Friz Quadrata TT" is another key and stays.
+Database.RETIRED_FONTS = { ["Ka0s Friz Quadrata TT"] = "Ka0s Ubuntu" }
+
+--- Move every stored string naming a retired face, at any depth of `t`, to its successor: a
+--- container's font, the HUD face, the skin override. Answers how many moved.
+function Database.RetireFonts(t)
+    if type(t) ~= "table" then return 0 end
+    local n = 0
+    for k, v in pairs(t) do
+        if type(v) == "table" then
+            n = n + Database.RetireFonts(v)
+        elseif Database.RETIRED_FONTS[v] then
+            t[k], n = Database.RETIRED_FONTS[v], n + 1
+        end
+    end
+    return n
+end
+
 --- Without the library, the same writes by hand: the record gates, a path through a missing table is
 --- skipped, and the `skin` table is the one table this may create.
 local function followByHand(p)

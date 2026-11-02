@@ -859,9 +859,10 @@ test("v12: the v12 step is on the ladder, below v13's skin reset, v14's Font fla
     -- From skin (LibKa0s v1.82.0, ruling D-07, tests/test_skin_flags.lua), v15 the player's own faces
     -- back off the skin (ruling D-15, tests/test_skin_glow_restore.lua), v16 everything else onto
     -- the skin (the owner's rulings of 2026-11-01, tests/test_skin_flip.lua), v17 the defaults moved
-    -- back off it (SF-AM-1..3, tests/test_defaults_v17.lua)
-    assertEqual(NS.Database.CurrentSchemaVersion(), 17)
-    assertEqual(NS.db.global.schemaVersion, 17)
+    -- back off it (SF-AM-1..3, tests/test_defaults_v17.lua), v18 a stored Ka0s Friz Quadrata TT
+    -- to Ka0s Ubuntu (R3-FRIZ)
+    assertEqual(NS.Database.CurrentSchemaVersion(), 18)
+    assertEqual(NS.db.global.schemaVersion, 18)
 end)
 
 test("v3: RunMigrations migrates every stored profile, the inactive one included", function()
