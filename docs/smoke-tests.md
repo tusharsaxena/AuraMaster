@@ -29,7 +29,7 @@ check's number is not reused. Checks with no recorded pass, and checks new or co
 | TEXT-1 to TEXT-36 | Text style | Templates and tokens, justify, the icon, dispel type word, backdrop and edge, animation, Size to fit, the glow behind the text |
 | LAYER-1 to LAYER-6 | Frame layering | Bar borders over the fill, the outline and the name label over the auras, the snap highlight over a Dialog container, the strip at low opacity, the Strata tooltip |
 | SETLAYOUT-1 to SETLAYOUT-9 | Settings layout (item 020) | Every settings page item 020 moved, regrouped or relabeled, read as `docs/settings-panel.md` describes, with no setting lost, moved or reset; the confirm buttons' ellipsis |
-| SKIN-1 to SKIN-45 | Skins | The skinning rollout: the one-time HUD reset under Ka0s Default, Ka0s Default otherwise unchanged, the Skin tab, each skin on the HUD, the unlock furniture, the settings pages and the tool windows, other addons stock, the font and texture companions and overrides, combat, EllesmereUI on, off and back, the copy, profiles, tooltips and popups, the first-run skin picker; the library follow-ups (each skin's HUD face, Ignore fonts on the HUD, the picker's title, the strings newly in the skin's face); the skin fonts run (the Font outline, From skin flags, `/am skin`, width parity, the HUD size scale, the own faces and glow back, the strips' re-fit) |
+| SKIN-1 to SKIN-47 | Skins | The skinning rollout: the one-time HUD reset under Ka0s Default, Ka0s Default otherwise unchanged, the Skin tab, each skin on the HUD, the unlock furniture, the settings pages and the tool windows, other addons stock, the font and texture companions and overrides, combat, EllesmereUI on, off and back, the copy, profiles, tooltips and popups, the first-run skin picker; the library follow-ups (each skin's HUD face, Ignore fonts on the HUD, the picker's title, the strings newly in the skin's face); the skin fonts run (the Font outline, From skin flags, `/am skin`, width parity, the HUD size scale, the own faces and glow back, the strips' re-fit) |
 | DEGRADED-1 | Library-absent install | The launcher libraries missing |
 | LOC-1 to LOC-2 | Non-English client | Spell names from the client, adding a spell by its localized name |
 
@@ -2675,6 +2675,14 @@ Ubuntu and the Font row reads *Ka0s Ubuntu*; switch to the other profile → the
 own *Friz Quadrata TT* keeps it. Fail: the text on the game's default face, or a row still naming Ka0s Friz
 Quadrata TT. Result: not run
 
+**SKIN-47. No line under the debug console's title, and Ka0s Default's gold band (R4-RV2, LibKa0s v1.85.0).**
+Pick Ka0s Default, bare `/am debug` opens the console; press its Copy button for the copy window → each title band is
+the dark gold gradient (#3A2F0A at the top to #1F1905 at the bottom), and no line is drawn between the band
+and the body, as in the Skin Tester's showroom. Switch to Obsidian and to WoW Midnight → still no line under
+either title. The console's row lines and body are unchanged. The HUD's icon and bar edges are unchanged under
+every skin (icon.border did not move). Fail: a divider under either title in any skin, or a near-black band
+under Ka0s Default. Result:
+
 ## Library-absent install
 
 **DEGRADED-1. Without the launcher libraries.** Rename `libs/LibDBIcon-1.0` aside, `/reload` → one
@@ -2764,3 +2772,6 @@ SKIN-46 is new, and SKIN-4 names Ka0s Ubuntu as WoW Default's face. **Fully exit
 the library's new font file is not seen by `/reload`.
 
 On 2026-11-02 the owner reported that every check on the smoke lists of the full skinning run and its smoke feedback batch (Ka0sAddonsCommonTasks `docs/2026-11-01-FULL_SKINNING/` and `docs/2026-11-01-SMOKE_FEEDBACK/`) passed, apart from DpsRace's clock font, the skinned look of the AceGUI Dropdown and the Ka0sMedia_Font and Ka0sMedia_Statusbar pickers, FadeNineSlice and IconBorder (`docs/2026-11-02-SMOKE_ROUND3/`, R3-SMOKE). Passed, recorded on each `Result:` line as `Passed (owner, 2026-11-02)`: SKIN-1, SKIN-9, SKIN-31, SKIN-37, SKIN-38, SKIN-39, SKIN-40, SKIN-41, SKIN-42, SKIN-43, SKIN-44 and SKIN-45. Failed, re-opened as R3-L3 (IconBorder's 1 px outline and zoom) and recorded as `Failed (owner, 2026-11-02): re-opened as R3-L3`: SKIN-35 and SKIN-36. Still owed: SKIN-4, whose expected result the third smoke round itself changed after the owner's run.
+
+Open from the owner's fourth smoke round (Ka0sAddonsCommonTasks `docs/2026-11-03-SMOKE_ROUND4/`, R4-RV2):
+SKIN-47 is new.
