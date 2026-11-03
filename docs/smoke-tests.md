@@ -16,7 +16,7 @@ check's number is not reused. Checks with no recorded pass, and checks new or co
 |---|---|---|
 | INSTALL-1 to INSTALL-11 | Install, load and upgrade | First login, the starter containers, `/reload`, and SavedVariables from older builds |
 | SLASH-1 to SLASH-11 | Slash commands | `/am` and `/auramaster`, help, unknown verbs, the container verbs, the schema CLI and `/am redraw` |
-| PANEL-1 to PANEL-27 | Settings panel and launcher | The tree, landing page, General page, the Containers band and rail, Blizzard frames, the minimap button and broker |
+| PANEL-1 to PANEL-28 | Settings panel and launcher | The tree, landing page, General page, the Containers band and rail, Blizzard frames, the minimap button and broker |
 | PROFILE-1 to PROFILE-13 | Profiles | The Profiles page, the `/am profile` verb, and what a profile holds |
 | STATE-1 to STATE-5 | Master switch | Enable and disable, visibility, the inert disabled addon |
 | COMBAT-1 to COMBAT-7 | Combat and restrictions | Deferred changes, the settings lock, resets in combat, Mythic+ keys |
@@ -334,6 +334,12 @@ while every other General row goes back to its default. `/am get global.minimap.
 Aura Master* as a plugin → one row labeled exactly that, grouped with the other Ka0s addons rather
 than filed under `A`, the same logo, no empty value cell. Its left click opens the settings, and its
 right click the same three-entry menu as the minimap button's. Result: pass (owner-marked 2026-10-10)
+
+**PANEL-28. Master controls after the sim checkbox library (R6-RV2, LibKa0s v1.85.0 round 6 second
+re-cut).** General → Master controls reads exactly as PANEL-2 says: **Test mode** beside **Minimap
+button**, and no **Sim mode** checkbox anywhere on the tab, because Aura Master has no simulation.
+Tick and untick **Test mode** → the containers show and drop their placeholders as before, with no Lua
+error. Fail: a Sim mode row, a moved or missing row, or a Lua error. Result:
 
 ## Profiles
 
@@ -2838,4 +2844,4 @@ SKIN-49 to SKIN-51 are new, and SKIN-47's band is darker than it said.
 
 Open from the owner's sixth smoke round (Ka0sAddonsCommonTasks `docs/2026-11-03-SMOKE_ROUND6/`, R6-RV):
 SKIN-52 is new, and SKIN-53 from R6-PV. SKIN-19's eye now toggles test mode, and the picker turns
-it on as it opens (SKIN-53); SKIN-19 keeps its recorded pass for the rest of its steps.
+it on as it opens (SKIN-53); SKIN-19 keeps its recorded pass for the rest of its steps. PANEL-28 is new from R6-RV2.
