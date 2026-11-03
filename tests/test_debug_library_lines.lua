@@ -114,7 +114,9 @@ end)
 -- ── Launcher and the at-enable queue (Launcher 5, DebugLogGates 1) ───────────────────────────────
 
 test("library lines: the Launcher's dependency line, written at OnEnable with logging off, lands when logging is turned on, once", function()
-    local NS = fresh()   -- the harness loads no LibDataBroker-1.1
+    -- The held at-enable queue keeps its first 32 lines (DebugLogGates AT_ENABLE_MAX): a stamp near the top
+    -- keeps the whole ladder's lines from crowding the Launcher line out as steps are added.
+    local NS = fresh({ savedVariables = { global = { schemaVersion = 16 } } })   -- the harness loads no LibDataBroker-1.1
     assertEqual(count(NS.DebugLog.buffer, "[Launcher]"), 0, "gated off at load")
     NS.DebugLog:SetEnabled(true)
     local lines = since(NS)

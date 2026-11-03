@@ -941,7 +941,7 @@ end
 -- Every stored container's fonts and bar textures follow the skin again, once, for every player:
 -- each "Use the skin's ..." companion (LibKa0s OptionsCompose's `fromSkin`) is set on, through
 -- LibKa0s-Skin-1.0's ResetToSkin. The stored picks are kept (a companion turned off brings them
--- back), and the borders, sizes, flags and colors are never touched (DECISIONS D1, D4, X4). The
+-- back), and the borders, sizes, flags and colors are left to v16 below. The
 -- account-wide stamp is what makes it once: a player who unticks a companion afterwards keeps that
 -- pick, because this step never runs again.
 --
@@ -953,6 +953,8 @@ end
 -- mean nothing until it loads, and then they must already say "follow". Only a block that exists is
 -- touched; a partial container gets the rest from the load backfill, whose template says true.
 
+-- Schema v16 (below) adds the borders, the colors and the shadow, and reverses what this step left
+-- the player's.
 -- Each followed pick, container-relative: the font of every text block and the two bar textures.
 Database.SKIN_PICKS = {
     "bars.barTexture", "bars.bgTexture",
@@ -1073,4 +1075,126 @@ function Database.MigrateV15(p, hudFace)
         end
     end
     return moved
+end
+
+-- ---------------------------------------------------------------------------
+-- Schema v16: everything else onto the skin (Ka0sAddonsCommonTasks docs/2026-11-01-FULL_SKINNING)
+-- ---------------------------------------------------------------------------
+--
+-- The owner's rulings of 2026-11-01: existing profiles follow the skin, HUD colors included, and a
+-- class or meaning color is never touched. Each key below is a companion, or a Font flags leaf this
+-- addon reads through S.FontFlags, so every stored color and pick stays exactly as it was for a
+-- player who turns its companion off. Not listed: a size (L11), a class color or its toggle, a dispel
+-- or running-out color, skin.ignorePanel and skin.ignoreFonts. fontFromSkin IS listed, which reverses
+-- v15's turning it off for a player's own face: the ruling names no exception.
+
+local FOLLOW_LEAVES = {
+    "bars.barTextureFromSkin", "bars.bgTextureFromSkin",
+    "bars.borderStyleFromSkin",
+    "bars.iconBorderStyleFromSkin",
+    "icons.borderStyleFromSkin",
+    "text.iconBorderStyleFromSkin",
+}
+for _, block in ipairs(Database.FLAG_BLOCKS) do
+    for _, leaf in ipairs({ "fontFromSkin", "fontColorFromSkin", "fontShadowFromSkin", "fontFlags" }) do
+        -- text.font.fontColorFromSkin is off by default (SF-AM-3), so the one-time step skips it.
+        if not (block == "text.font" and leaf == "fontColorFromSkin") then
+            FOLLOW_LEAVES[#FOLLOW_LEAVES + 1] = block .. "." .. leaf
+        end
+    end
+end
+Database.SKIN_FOLLOW_LEAVES = FOLLOW_LEAVES
+
+--- Schema v17 (smoke feedback SF-AM-1..3, owner 2026-11-01): defaults that moved off the skin. Each
+--- leaf is no longer in FOLLOW_LEAVES, so a new profile takes the default in defaults/Profile.lua and
+--- v17 moves a stored container still holding the OLD default (`from`) to the new one (`to`). A value
+--- already different is a pick and stays. Deviation: v16 wrote explicit values, so an old default and
+--- a player's pick of the same value read alike; docs/ARCHITECTURE.md records it.
+Database.V17_MOVES = {
+    { path = "text.glowColorFromSkin", from = true, to = false },
+    { path = "bars.bgColorFromSkin", from = true, to = false },
+    { path = "bars.borderColorFromSkin", from = true, to = false },
+    { path = "bars.borderShow", from = false, to = true },
+    { path = "bars.barColorFromSkin", from = true, to = false },
+    { path = "bars.iconBorderColorFromSkin", from = true, to = false },
+    { path = "icons.borderColorFromSkin", from = true, to = false },
+    { path = "text.iconBorderColorFromSkin", from = true, to = false },
+    { path = "text.font.fontColorFromSkin", from = true, to = false },
+}
+
+--- Move one stored profile's containers by V17_MOVES. Answers how many values moved.
+function Database.MigrateV17(p)
+    if type(p) ~= "table" or type(p.containers) ~= "table" then return 0 end
+    local moved = 0
+    for _, c in pairs(p.containers) do
+        if type(c) == "table" then
+            for _, m in ipairs(Database.V17_MOVES) do
+                local parent, leaf = pickParent(c, m.path)
+                if parent and parent[leaf] == m.from then parent[leaf] = m.to; moved = moved + 1 end
+            end
+        end
+    end
+    return moved
+end
+
+-- The shipped faces LibKa0s retired, each to its successor (R3-FRIZ; LibKa0s R3-L7). Blizzard's own
+-- "Friz Quadrata TT" is another key and stays.
+Database.RETIRED_FONTS = { ["Ka0s Friz Quadrata TT"] = "Ka0s Ubuntu" }
+
+--- Move every stored string naming a retired face, at any depth of `t`, to its successor: a
+--- container's font, the HUD face, the skin override. Answers how many moved.
+function Database.RetireFonts(t)
+    if type(t) ~= "table" then return 0 end
+    local n = 0
+    for k, v in pairs(t) do
+        if type(v) == "table" then
+            n = n + Database.RetireFonts(v)
+        elseif Database.RETIRED_FONTS[v] then
+            t[k], n = Database.RETIRED_FONTS[v], n + 1
+        end
+    end
+    return n
+end
+
+--- Without the library, the same writes by hand: the record gates, a path through a missing table is
+--- skipped, and the `skin` table is the one table this may create.
+local function followByHand(p)
+    if type(p.skin) == "table" and p.skin.fullSkinReset == true then return false end
+    for _, c in pairs(type(p.containers) == "table" and p.containers or {}) do
+        if type(c) == "table" then
+            for _, path in ipairs(FOLLOW_LEAVES) do
+                local parent, leaf = pickParent(c, path)
+                if parent then parent[leaf] = leaf == "fontFlags" and FROM_SKIN_FLAGS or true end
+            end
+        end
+    end
+    if type(p.skin) ~= "table" then p.skin = {} end
+    p.skin.fullSkinReset = true
+    return true
+end
+
+--- The one step onto the skin, per profile and recorded per profile in `skin.fullSkinReset`, through
+--- Skin.FollowOnce: run by the ladder's v16 over every stored profile and by every
+--- Database.PrepareProfile, so a new, copied or reset profile takes it too, and a companion turned
+--- off afterwards stays off. Answers true when it ran.
+---
+--- THE VIEW. Skin.FollowOnce's paths are dotted strings, and a container is keyed by a NUMBER, which
+--- a string segment never reaches: `containers.1.bars...` would skip every container and still write
+--- the record. So FollowOnce walks one profile-shaped table holding the same container tables under
+--- string keys, and the record it writes is carried back.
+function Database.FollowSkin(p)
+    if type(p) ~= "table" then return false end
+    local Skin = LibStub and LibStub("LibKa0s-Skin-1.0", true)
+    if not (Skin and type(Skin.FollowOnce) == "function") then return followByHand(p) end
+    local view, keys = { skin = p.skin, containers = {} }, {}
+    for id, c in pairs(type(p.containers) == "table" and p.containers or {}) do
+        local key = tostring(id)
+        view.containers[key] = c
+        for _, path in ipairs(FOLLOW_LEAVES) do
+            keys[#keys + 1] = "containers." .. key .. "." .. path
+        end
+    end
+    local ran = Skin.FollowOnce(view, keys)
+    p.skin = view.skin
+    return ran
 end

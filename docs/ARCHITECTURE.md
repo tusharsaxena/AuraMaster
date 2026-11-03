@@ -9,13 +9,13 @@ Ka0s Aura Master draws player-built aura **containers**. A container is one unit
 `target`, `focus`, `pet` — `core/Constants.lua:39`), one aura type (`HELPFUL` or `HARMFUL` — `:45`;
 the player's temporary weapon enchants are the buff category `weaponEnchants`, schema v5) and one style (`bars`, `icons` or
 `text` — `:49`), plus its filters, placement and look. A profile holds any number of them; a fresh
-profile is seeded with four (`NS.STARTER_CONTAINERS`, `defaults/Profile.lua:324`).
+profile is seeded with four (`NS.STARTER_CONTAINERS`, `defaults/Profile.lua:341`).
 
 **The design is dictated by one client fact.** On Retail 12.1 an addon cannot read aura data while
 auras are secret — combat, encounters, Mythic+ and PvP (`core/Secrets.lua`, `docs/midnight-quirks.md`).
 So this addon reads no aura at all. Every container is a Blizzard **AuraContainer**
 (`CreateFrame("AuraContainer", nil, anchor, "CustomAuraContainerTemplate")`,
-`modules/Container.lua:449`) that registers `UNIT_AURA` for its unit, gathers, sorts, lays out and
+`modules/Container.lua:450`) that registers `UNIT_AURA` for its unit, gathers, sorts, lays out and
 animates its buttons in Blizzard's own code. A Text container with Glow on adds `C.TEXT_GLOW_TWINS`
 twin engines with the same content, offset around the main and dressed in the glow color
 (`modules/Container_Twins.lua`), since no addon code can copy the engine's secret text. The addon's
@@ -82,8 +82,8 @@ Every non-vendored file, its responsibility and the full load order: `docs/modul
 
 ## Settings Schema
 
-`NS.Schema` holds **293** rows across seven pages (General 26, Containers 5, Filters 57, Layout 39,
-Bars 77, Icons 44, Text 45), plus one runtime row per user category. It drives the panel,
+`NS.Schema` holds **318** rows across seven pages (General 26, Containers 5, Filters 57, Layout 41,
+Bars 89, Icons 50, Text 50), plus one runtime row per user category. It drives the panel,
 `/am list|get|set|reset` and the resets through one write seam, `NS.SetByPath`.
 
 - **Containers registry** (architecture-§5): keys `containers`, `containerOrder`, `nextContainerId`,
@@ -145,8 +145,8 @@ pass on.
 
 | Message | Sender | Payload | Consumers |
 |---|---|---|---|
-| `Ka0s_AuraMaster_ContainersChanged` (`NS.MSG.CONTAINERS_CHANGED`) | `modules/ContainerManager.lua` — create, delete, rename, duplicate, profile change (copy-from and reset positions are settings writes, announced by `CONFIG_CHANGED`) | none | `settings/OptionsSetup.lua:431` — `NS.RequestPanelRefresh`, a coalesced panel re-render (every banner lists containers); `modules/TimedSpells.lua:204` — `TS.Sync`, which starts or stops the timed-spell scan (a container added or removed can change whether any needs it) |
-| `Ka0s_AuraMaster_ConfigChanged` (`NS.MSG.CONFIG_CHANGED`) | `settings/Schema.lua:603` — the write seam, once per write; never for a session row | `{ section, containerId, path }`; `containerId` nil for an addon-wide row, `path` the row written | `modules/ContainerManager.lua:866` — first `FontPrimer.PrimeAll` (a new font is drawn before anything is applied in it), then by the row's `effect`: `"visibility"` (the master enable, visibility, lock and alpha, a container's enable, its six `filter.zones` rows and its two `filter.unitFilter` rows) runs `ApplyVisibility()` at once, `"none"` queues nothing, `"view"` (the two `filter.situations` rows) runs `CM.ApplyViews` for that container at once, in combat too and never held, otherwise `RequestApply(containerId)` (nil re-applies all), a write to a flow or attachment path also re-applies every container following that one (`Anchors.Followers`), and a write to a container's attach points, mode or target also re-applies the container it attaches to (`requestParents`); `modules/TimedSpells.lua:203` — `TS.Sync`, the same re-sync (a filter write can change whether any container needs the scan) |
+| `Ka0s_AuraMaster_ContainersChanged` (`NS.MSG.CONTAINERS_CHANGED`) | `modules/ContainerManager.lua` — create, delete, rename, duplicate, profile change (copy-from and reset positions are settings writes, announced by `CONFIG_CHANGED`) | none | `settings/OptionsSetup.lua:433` — `NS.RequestPanelRefresh`, a coalesced panel re-render (every banner lists containers); `modules/TimedSpells.lua:204` — `TS.Sync`, which starts or stops the timed-spell scan (a container added or removed can change whether any needs it) |
+| `Ka0s_AuraMaster_ConfigChanged` (`NS.MSG.CONFIG_CHANGED`) | `settings/Schema.lua:629` — the write seam, once per write; never for a session row | `{ section, containerId, path }`; `containerId` nil for an addon-wide row, `path` the row written | `modules/ContainerManager.lua:866` — first `FontPrimer.PrimeAll` (a new font is drawn before anything is applied in it), then by the row's `effect`: `"visibility"` (the master enable, visibility, lock and alpha, a container's enable, its six `filter.zones` rows and its two `filter.unitFilter` rows) runs `ApplyVisibility()` at once, `"none"` queues nothing, `"view"` (the two `filter.situations` rows) runs `CM.ApplyViews` for that container at once, in combat too and never held, otherwise `RequestApply(containerId)` (nil re-applies all), a write to a flow or attachment path also re-applies every container following that one (`Anchors.Followers`), and a write to a container's attach points, mode or target also re-applies the container it attaches to (`requestParents`); `modules/TimedSpells.lua:203` — `TS.Sync`, the same re-sync (a filter write can change whether any container needs the scan) |
 | `Ka0s_AuraMaster_VisibilityChanged` (`NS.MSG.VISIBILITY_CHANGED`) | `core/AuraMaster.lua` — entering the world, combat start and end; `modules/Preview.lua` — `Preview.SetTestMode`, when test mode switches on or off | none | `modules/ContainerManager.lua:879` — `ApplyVisibility()` over every container |
 | `Ka0s_AuraMaster_TimedSpellsChanged` (`NS.MSG.TIMED_SPELLS_CHANGED`) | `modules/TimedSpells.lua` — a scan learned timed spells, or `/am forgettimed` emptied the set | none from a scan; `{ byPlayer = true }` from `/am forgettimed` | `modules/ContainerManager.lua` `CM.Init` — `RequestApply(nil, system)` over every container (their excluded ids moved); a scan's request is the addon's own, so a deferral of it prints no notice |
 
@@ -214,10 +214,12 @@ answers while the addon is disabled (slash-commands-§2). What disabling *does* 
 
 One LibDataBroker `launcher` object, built by `core/LauncherSetup.lua` through `LibKa0s-Launcher-1.0`
 and registered with LibDBIcon under the folder name (launcher-§1). Left click opens the settings
-panel; right click opens the library's context menu with three entries, *Enabled*, *Locked* and
+panel; right click opens the library's context menu with three checkboxes, *Enabled*, *Locked* and
 *Test mode*, each wired to the same `NS.Slash` handler its verb runs (launcher-§2, LibKa0s-Launcher
-minor 4; no *Show window*, as the addon has no primary window). While disabled, *Locked* and *Test
-mode* are grayed. The Minimap button row stores LibDBIcon's own `global.minimap.hide`. The hover
+minor 4; no *Show window*, as the addon has no primary window), then two buttons, *Open settings*
+and *Open skin selector* (the descriptor's `openSkinPicker`, which runs `NS.RunSkinVerb`, what
+`/am skin` runs; LibKa0s-Launcher minor 6, SF-F2). While disabled, *Locked*, *Test mode* and *Open
+skin selector* are grayed. The Minimap button row stores LibDBIcon's own `global.minimap.hide`. The hover
 tooltip is the library's (enabled, locked and test-mode status and the fixed click hints, drawn
 while disabled too); the descriptor only answers its questions. Both broker libraries are
 optional. The full table and the reasons:
@@ -244,10 +246,10 @@ optional. The full table and the reasons:
 | `UNIT_FACTION`, `UNIT_FLAGS` for `target` and `focus` | `modules/ContainerManager.lua:820` — the module's one private frame, `CM.viewFrame` (the same carve-out), through `NS.SafeRegisterUnitEvent`; built once, hidden and reused, opened by `CM.StartListening` and unregistered by hand in `CM.StopListening` | `onViewEvent`: proves the unit a safe key, then `CM.ApplyViews(unit)`: a reaction change without a swap (a duel, mind control, an NPC turning hostile) switches the view; the two setters redraw, so no refresh follows; then `CM.ApplyUnitGate(unit)` re-runs the visibility pass of each container whose Unit type answer moved (filter situations S6). Combat-legal, never held. When a view moved, `EW.OnViewsMoved` re-predicts at once (gated on unlocked, out of combat and auras readable), so the empty prediction follows the engine |
 | `UNIT_FACTION`, `UNIT_FLAGS` for `player` | `modules/ContainerManager.lua` — a second private frame, `CM.viewPlayerFrame`, built, opened and closed with `CM.viewFrame` (`RegisterUnitEvent` takes two units, and a second call replaces the first) | `onPlayerViewEvent`: proves the unit a safe key, then `CM.ApplyViews` for `target` and for `focus`, quietly, and one `EW.OnViewsMoved` if either moved: the player's own side changing (mind control) moves whether a target or focus can be assisted with no event for that unit (SV-05); then `CM.ApplyUnitGate` for `target` and for `focus`, since the same change moves their reaction to you |
 | `PLAYER_REGEN_DISABLED`, `PLAYER_REGEN_ENABLED`, `ADDON_RESTRICTION_STATE_CHANGED` | `modules/TimedSpells.lua` (AceEvent, on its own target) — while a container uses "without a duration" and the addon is not suspended | `syncAuraListen`: `PLAYER_REGEN_DISABLED` closes the readable gate by itself (it fires before combat lockdown begins); the other two re-check it, dropping or restoring `UNIT_AURA`; reopening schedules one scan |
-| AceDB `OnProfileChanged` / `OnProfileCopied` / `OnProfileReset` | `core/Database.lua:273-277` | `NS.OnProfileChanged` / `NS.OnProfileCopied` / `NS.OnProfileReset` → re-prepare the registry, trace the event once in its own words (a switch `[Profile] changed -> X`; a copy or a reset one `[Set]` line, debug-logging-§10), rebuild, re-render |
+| AceDB `OnProfileChanged` / `OnProfileCopied` / `OnProfileReset` | `core/Database.lua:274-278` | `NS.OnProfileChanged` / `NS.OnProfileCopied` / `NS.OnProfileReset` → re-prepare the registry, trace the event once in its own words (a switch `[Profile] changed -> X`; a copy or a reset one `[Set]` line, debug-logging-§10), rebuild, re-render |
 
 Each container's own `UNIT_AURA` belongs to its engine, and to each twin engine of a glowing Text
-container, which takes the same `SetUnit` (`modules/Container.lua:443`); none of it is addon code.
+container, which takes the same `SetUnit` (`modules/Container.lua:444`); none of it is addon code.
 The twelve `core/AuraMaster.lua` registrations are one module-level list, `LIFECYCLE_EVENTS`, which
 `RegisterLifecycleEvents` and `UnregisterLifecycleEvents` both walk, so the stand-down and the
 stand-up remove and restore the same list. With logging on, the world-entry, loading-screen, combat
@@ -315,8 +317,20 @@ Every surface Aura Master draws paints through the `LibKa0s-Skin-1.0` facade wit
   or override notwithstanding: the library's `S.Resolve` answers the stored value for `hud.font` then
   (LibKa0s v1.81.0, LK-01), so `Style.SkinKey` needs no check of its own, and a nil answer draws the
   stored pick. The composer's font pickers preview the same stored face. Since v1.81.0 each skin
-  carries a HUD face of its own (WoW Default keeps Friz Quadrata; SKIN-4 lists them). Borders,
-  sizes, flags and every HUD color stay the player's (X4; DECISIONS D1, D3, D4). Since LibKa0s
+  carries a HUD face of its own (WoW Default keeps Friz Quadrata; SKIN-4 lists them). Since
+  schema v16 (the owner's rulings of 2026-11-01, reversing X4 and D1) the colors, borders, shadow and
+  the text glow follow too, each under a companion of its own: `Style.Followed` answers a skin
+  color shaped as a stored one (`hud.text`, `hud.label`, `bar.fill`, `bar.bg`, `bar.border`,
+  `icon.border`, `am.textGlow`), `Style.BorderLook` a block's style, thickness and color, and
+  `S.HudFont` puts the face, size, flags and shadow on one font object per string. A class color
+  comes first and has no companion; dispel colors and the running-out and pandemic tints stay. Show
+  border and sizes stay the player's. Schema v17 (the owner's smoke rulings SF-AM-1..3) took nine
+  defaults back off the skin: the text glow's color, a bar's fill, background and border colors, the
+  Text font color and the icon border colors ship off, and a bar's Show border ships on
+  (`Database.V17_MOVES`, `docs/schema.md`). Ka0s Default keeps this addon's pixels through two owner
+  tokens: `am.iconBorderSize` (1 px) and `am.textGlow` (black). The gloss is the one recorded paint
+  on a bar: `am.sheen`, a clear status bar laid over the visible fill, because `am.bar`'s own fill is
+  the invisible elapsed part. Since LibKa0s
   v1.82.0 two follow the skin without being rewritten: a block on the skin's face draws at
   `S.HudFontSize(stored)`, scaled to Ka0s Default's width (D-09), and a Font flags of *From skin*
   (`"@skin"`, every block's default; schema v14 moved the old default OUTLINE onto it, D-07) draws
@@ -327,7 +341,8 @@ Every surface Aura Master draws paints through the `LibKa0s-Skin-1.0` facade wit
   companion on once (O2), which visibly changes Ka0s Default's HUD (X5): Oxanium and the Ka0s
   Default bar in place of Friz Quadrata and Blizzard. Schema v15 turned it back off, once, on every
   block whose stored face is the player's own (neither the skin's HUD face nor the template's Friz
-  Quadrata), so the owner's Ka0s Kait Text containers and their glow came back (D-15).
+  Quadrata), so the owner's Ka0s Kait Text containers and their glow came back (D-15). Schema v16
+  turns it on again with every other companion; the stored face waits for the player to untick it.
 - **The drag strips re-fit after a repaint.** The widget calls `Anchors.Refit` (its `onRefit`,
   DragHandle minor 8, D-12) after every repaint of the skin: a shown strip takes its label again in
   the new face (the shortened label is cached per face and scale) and, out of combat, is re-placed.
@@ -347,17 +362,27 @@ Every surface Aura Master draws paints through the `LibKa0s-Skin-1.0` facade wit
   their strings obey Ignore fonts (D-01).
 - **The first-run skin picker.** `NS.MaybeShowSkinPicker` shows `O.SkinPicker` two seconds after the
   first world entry and after every profile event while the profile's `skin.pickerSeen` is false and
-  the addon stands up (O3); in combat it waits for `PLAYER_REGEN_ENABLED`. Its eye turns test mode
-  on; the player's close writes `pickerSeen`, and a close the addon makes (`NS.HideSkinPicker`) does
-  not. `/am skin` (`NS.RunSkinVerb`, LibKa0s v1.82.0's `O.SkinVerb`, D-16) shows the same picker on
+  the addon stands up (O3); in combat it waits for `PLAYER_REGEN_ENABLED`. Its preview is test mode
+  (`spec.preview`, LibKa0s OptionsSkinPicker minor 11, R6-PV): AuraMaster has no main window, so a
+  picker that shows with test mode off turns it on, the eye toggles it, and every close (Apply, Apply
+  to all, the gear, the close control, Escape, `NS.HideSkinPicker`) puts back the state the picker
+  opened with. Each switch is `Preview.SetTestMode(on, "skin picker")`, the one writer `/am test`, the
+  launcher and the Master controls checkbox use, so a start in combat is refused there and the
+  library undoes nothing. The player's close writes `pickerSeen`, and a close the addon makes
+  (`NS.HideSkinPicker`) does not. `/am skin` (`NS.RunSkinVerb`, LibKa0s v1.82.0's `O.SkinVerb`, D-16) shows the same picker on
   demand, whatever `pickerSeen` says. Since LibKa0s v1.83.0 the picker also carries the Skin tab's
   Font, Texture, Font outline and Scope rows: a change previews and writes nothing, Apply or the gear
   saves it through `NS.WriteSkinChoice`, and a dismissal puts back what the window opened with.
 - **EllesmereUI.** The library's provider: with source `eui` and its gate holding, EllesmereUI's
   facade paints; otherwise the addon wears its Ka0s skin and the Skin tab says why.
-- **The color gate.** `tests/test_skin_literals.lua` fails on a numeric color literal in a paint call
-  or a `|cff` escape in code outside `core/SkinSetup.lua` and its named allow-list: chat output (X7),
-  the dispel-type and identity palettes (rung 4, D8) and the engine-tinted strips.
+- **The gates.** The kit's `test_skin_values` (kit revision 50) fails on a typed color or texture the
+  skin cannot reach, outside its own categories and the rows in `tests/skin_gate.lua`, each naming a
+  cause id. The kit's `test_skin_switch` flips Ka0s Default against a probe skin and fails a surface
+  `tests/skin_gate.lua` declares that drew the same.
+- **Borders.** `Style.BorderLook` is the one reading. A bar's own border goes through `S.BarBorder`: a
+  skin's None leaves Show border, the stored style and the thickness the player's, and a real style
+  wins over all three. The icon beside a bar or a text line takes the same None, and keeps its own Show
+  border, because Ka0s Default's icon style is a real Solid. An Icons element's border is the skin's.
 
 ## Frame layering
 
@@ -466,6 +491,7 @@ span bundle is `<date>-v<A>-v<B>/`, and the one untagged bundle is `docs/revendo
 | `options-ui-§17` | The "One resolver" clause: a unit-scoped container caches another unit's class. Each apply snapshots it (`ContainerClass:SnapshotClass` / `ResolveUnitClass`) and `Style.Color` paints from that snapshot, so after a target, focus or pet swap while auras are secret or under combat lockdown the container keeps the previous unit's class until it re-applies. Under lockdown alone (open world, auras readable) `ReapplyStaleClass` catches up on `PLAYER_REGEN_ENABLED`; while auras are secret it catches up when the restriction lifts (`ADDON_RESTRICTION_STATE_CHANGED`) | While auras are secret a re-dress is impossible: the engine dresses buttons in initializeFrame and forbids restyling them (DenyTaintedAccessWhenAurasAreSecret). Under combat lockdown alone, with auras readable, the wait is the addon's choice: `ContainerManager.MustDefer` holds every apply until combat ends, because an apply re-places the anchor and may retire and rebuild the engine, structural work that events-frames-taint-§2 keeps out of combat. Conforming there would take a second, restyle-only path that runs in combat beside the deferred apply, only to repaint a swatch that `ReapplyStaleClass` corrects on `PLAYER_REGEN_ENABLED`; audit docs/audits/2026-09-11 AM-03. Ratified by the owner 2026-09-12. | 2026-09-12 | The secret-auras half ends when the aura engine offers a class-color binding it resolves per button itself, or addon restyling of engine buttons becomes legal while auras are secret; the lockdown-only half ends when a restyle-only path may run under combat lockdown (`ContainerManager.MustDefer` stops holding a class-only re-dress). The row is retired when both halves have ended |
 | `frame-layering-§3` | Two levels are counted from a sibling, not the parent. The mouse blocker sits `LAYERS.LEVEL.BLOCKER` under the engine's current level (`ContainerClass:ApplyBlocker`). Each text-glow twin sits `GLOW_GAP` under the main engine, and its holder `GLOW_HOLDER` under that (`modules/Container_Twins.lua`). With `L = 5` a holder sits below the anchor. | A later `layout.level` raises the anchor, but the engine does not follow it, so only the engine's own current level keeps the blocker under it. The twins must sit under the main's whole text-and-icon stack, which is a fixed gap below the main and not a band over the anchor. The holders carry glow copies only. | 2026-10-24, the owner accepted AUR-Z10 (the frame-layering run, item 030). The values are unchanged and named in `NS.Constants.LAYERS`. | The engine follows its anchor's level, or the glow stops using twin engines. |
 | `layout-§1` | `defaults/Categories.lua` stays in the 1000–1500 band (1344 lines). `Cat.HELPFUL` and `Cat.HARMFUL` are not split across files. | The file is data: hand-curated spell ids, 8 functions, max CCN 4. `tools/spell-research/logs.py` is the only writer of those lists and rewrites this one path, and `sid_db2.py` tells a buff list from a debuff list by where it sits around `Cat.HARMFUL =` in this one file. A split would change the tool chain, so it is not a pure move. Tracks anti-pattern #53. | 2026-10-31 (FX-AM-SIZE) | The file reaches 1400 lines, or the spell-research tools are reworked to read more than one file. |
+| `skinning-§1` (follow the skin by default) | Container defaults sit off the skin: `text.glowColorFromSkin` (SF-AM-1); a bar's background and border color, and Show border on (SF-AM-2); a bar's fill color, the Text font color, and the icon border color on icons, beside a bar and beside a text line (SF-AM-3). | The owner's smoke ruling of 2026-11-01: a black glow, a dark background and border on a bar, and the fill, Text font and icon border colors the player's own. Other fonts still follow. Schema v17 moves a stored container still holding the old default; a value already different stays. v16 wrote explicit values, so an old default and a player's pick of the same value read alike, and v17 moves both. | 2026-11-02 | The standard rules on a per-leaf follow default, or a skin gains a glow the owner wants followed |
 
 ### Files over the 1500-line cap
 

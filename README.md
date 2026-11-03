@@ -1,12 +1,12 @@
-# Ka0s Aura Master
+# Aura Master
 
 ![WoW](https://img.shields.io/badge/WoW-Midnight_12.1.5-purple)
 ![CurseForge Version](https://img.shields.io/curseforge/v/1698345)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-2253%2F2253_passing-green)
+![Tests](https://img.shields.io/badge/Tests-2355%2F2355_passing-green)
 
-Ka0s Aura Master lets you build your own buff and debuff displays. Each one is a container. You pick
+Aura Master lets you build your own buff and debuff displays. Each one is a container. You pick
 whose auras it shows (yours, your target's, your focus's or your pet's), whether it shows buffs,
 debuffs or your weapon enchants, and whether they draw as timer bars, as icons or as lines of text.
 

@@ -8,6 +8,7 @@
 -- own calls, and nothing below writes to the environment.
 
 local T = _G.AM_TEST
+local own = dofile("tests/own_look.lua")
 local spyConsole = dofile("tests/console_spy.lua")
 local test, assertEqual, assertTrue, assertFalse, assertNil =
     T.test, T.assertEqual, T.assertTrue, T.assertFalse, T.assertNil
@@ -24,7 +25,7 @@ end
 
 local function cfg(over)
     local NS = E()
-    return NS.Database.Merge(NS.Database.DeepCopy(NS.CONTAINER_TEMPLATE), over or {})
+    return own(NS.Database.Merge(NS.Database.DeepCopy(NS.CONTAINER_TEMPLATE), over or {}))
 end
 
 --- A text element dressed for `c`: the button, its regions, and every recorder the dress built.
@@ -136,7 +137,7 @@ local function padded(answer)
         return frame.__am
     end
     local function textCfg(over)
-        return NS.Database.Merge(NS.Database.DeepCopy(NS.CONTAINER_TEMPLATE), { style = "text", text = over })
+        return own(NS.Database.Merge(NS.Database.DeepCopy(NS.CONTAINER_TEMPLATE), { style = "text", text = over }))
     end
     return NS, fs, dress, textCfg
 end

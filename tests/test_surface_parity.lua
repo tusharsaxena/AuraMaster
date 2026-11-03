@@ -157,12 +157,16 @@ test("parity: the degraded facade answers the owner tokens' Ka0s Default values"
     -- Without the library the owner tokens are still read (AM-02's surfaces): the host stub answers
     -- each one's `default`, the value the live library answers on Ka0s Default.
     local NS2 = loadDegraded()
-    for name in pairs(NS.SKIN_TOKENS) do
-        local a = { NS.Skin.Color(name) }
-        local b = { NS2.Skin.Color(name) }
-        assertTrue(#a == 4 and #b == 4, name .. ": both facades answer four components")
-        for i = 1, 4 do
-            assertTrue(math.abs(a[i] - b[i]) < 1e-6, ("%s[%d]: live %s, degraded %s"):format(name, i, a[i], b[i]))
+    for name, def in pairs(NS.SKIN_TOKENS) do
+        if type(def.default) == "number" then
+            assertTrue(NS2.Skin.Token(name) == NS.Skin.Token(name), name)
+        else
+            local a = { NS.Skin.Color(name) }
+            local b = { NS2.Skin.Color(name) }
+            assertTrue(#a == 4 and #b == 4, name .. ": both facades answer four components")
+            for i = 1, 4 do
+                assertTrue(math.abs(a[i] - b[i]) < 1e-6, ("%s[%d]: live %s, degraded %s"):format(name, i, a[i], b[i]))
+            end
         end
     end
 end)

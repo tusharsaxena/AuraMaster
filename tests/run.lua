@@ -70,6 +70,10 @@ Kit.diagnostics = {
     end,
 }
 
+-- The kit's typed-value gate and skin-switch test (skinning-§1, kit revision 50). The facts are
+-- tests/skin_gate.lua's.
+dofile("tests/skin_gate.lua")(Kit, NS, mocks)
+
 -- Suites, in load-order-sensitive order. `dir` is explicit, so Kit.run asserts the inventory: a
 -- tests/test_*.lua on disk but missing here, or listed but absent, takes the run down.
 --
@@ -83,6 +87,7 @@ Kit.run{
         "test_loadorder",
         "test_setups",
         "test_launcher",
+        "test_launcher_skin_entry",
         "test_database",
         "test_database_steps",
         "test_database_categories",
@@ -161,9 +166,12 @@ Kit.run{
         "test_options_descriptor",
         "test_pages_general",
         "test_skinsetup",
-        "test_skin_literals",
         "test_skin_surfaces",
         "test_skin_hud",
+        "test_skin_flip",
+        "test_defaults_v17",
+        "test_skin_border",
+        "test_skin_fix",
         "test_skin_flags",
         "test_skin_glow_restore",
         "test_skin_outline",
@@ -198,5 +206,7 @@ Kit.run{
         { name = "test_layout_cap", dir = "tests/_kit/" },
         { name = "test_diagnostics_contract", dir = "tests/_kit/" },
         { name = "test_lizard_sighted", dir = "tests/_kit/" },
+        { name = "test_skin_values", dir = "tests/_kit/" },
+        { name = "test_skin_switch", dir = "tests/_kit/" },
     },
 }

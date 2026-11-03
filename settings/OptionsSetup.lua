@@ -315,6 +315,8 @@ if not lib then
         -- renderers and widget makers
         "RenderRows", "RenderGrid", "RenderField", "RenderSchema", "RenderTabbedSchema", "Section",
         "AddSpacer", "TextRow", "TabStrip", "SubTabStrip", "PageHeader", "PageBanner", "PositionBlock",
+        -- A label's font (LibKa0s v1.85.0, OptionsWidgets minor 43): no library, no widget to set it on.
+        "LabelFont",
         "InlineButtonPair", "SessionCheckbox", "AttachTooltip", "ChoiceGrid", "ResolveId", "IdInput",
         "IdList", "Drawer", "UnnamedCandidates", "SelectTab", "NavRail", "SelectSection",
         -- Keybindings tab, strata and Reset-all tooltips (OptionsKeybinds 2, OptionsCompose 8 and 11)
@@ -347,6 +349,7 @@ if not lib then
     -- `/am skin`'s act (LibKa0s v1.82.0, OptionsSkinPicker minor 3's O.SkinVerb, ruling D-16):
     -- without the library nothing opens, and the reason is "absent", which NS.RunSkinVerb words.
     Helpers.SkinVerb = function() return nil, "absent" end
+    Helpers.SkinNotice = function() return nil, "unavailable" end
     -- The gap RenderWarnings leaves under its orange lines: a zero placeholder, never a plausible
     -- figure, since nothing is drawn without the library (RenderWarnings is a no-op above).
     Helpers.WARNINGS_GAP = 0

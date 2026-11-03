@@ -72,6 +72,10 @@ Total.
 - launcher: with LibKa0s absent the stub answers every member, and the row still stores
 - parity: the Launcher stub carries every member of the live instance
 
+### test_launcher_skin_entry.lua (1)
+
+- launcher descriptor passes openSkinPicker, which runs the skin verb
+
 ### test_database.lua (56)
 
 - database: a fresh profile is seeded with the three starter containers, once
@@ -128,7 +132,7 @@ Total.
 - v3: MigrateV3 returns the number of containers it walked
 - v3: a container skipped for an unrecognized auraType is not counted in the walked total, and logs its own line
 - v3: the whitelist lift never sweeps a category the aura type does not have
-- v12: the v12 step is on the ladder, below v13's skin reset, v14's Font flags and v15's own faces
+- v12: the v12 step is on the ladder, below v13's skin reset, v14's Font flags, v15's own faces and v16's skin
 - v3: RunMigrations migrates every stored profile, the inactive one included
 
 ### test_database_steps.lua (17)
@@ -182,7 +186,7 @@ Total.
 - user categories: the name cap counts characters, so a non-ASCII name is never cut mid-sequence
 - user categories: a deleted category is gone from the grid and from the union, and Uncategorized is still last
 
-### test_migrations.lua (29)
+### test_migrations.lua (30)
 
 - migrations: NS.SCHEMA_VERSION is the runner's target, the last step's version
 - migrations: a legacy v1 account with NO stamp runs every step
@@ -213,6 +217,7 @@ Total.
 - migrations: a v10 account reaches v11 in every profile, each converted under its own chain
 - migrations: v9, v8 and v1 accounts reach v11 with no attach side left and every chain Automatic
 - migrations: on load a stored point that is not one of the nine is read as Automatic, and a known one kept
+- migrations: v18 moves a stored Ka0s Friz Quadrata TT to Ka0s Ubuntu in every profile, Blizzard's Friz kept
 
 ### test_schema.lua (38)
 
@@ -1028,7 +1033,7 @@ Total.
 
 ### test_anchors_label.lua (23)
 
-- label: the template carries label = { show = false, justifyH = AUTO, x = 0, y = 0, font = gold Friz 12 OUTLINE }
+- label: the template carries label = { show = false, justifyH = AUTO, x = 0, y = 0, font = gold Ka0s Prototype 12 From skin }
 - label: a stored container without a label gains the whole block, and a stored one survives the backfill
 - label: off by default, no label frame is ever built
 - label: on and locked, the name shows in a plain, mouse-less frame; turned off it hides
@@ -1334,7 +1339,7 @@ Total.
 - style: a client that refuses the percent rule's step gets the plain "%d" rule, never none (feedback #5)
 - style: no format Aura Master itself authors carries a leading or trailing space (feedback #5)
 
-### test_style_borders.lua (22)
+### test_style_borders.lua (23)
 
 - style: a Solid border is four strips between the frame's corners, never a backdrop (B2-3)
 - style: a tint edge lays the Solid border's four strips, white, untinted and hidden, for the engine to show (DB-1)
@@ -1344,6 +1349,7 @@ Total.
 - style: another style applies its backdrop once per edge and size, and again when either moves (B2-3)
 - style: another style under a secret size keeps its last backdrop and only recolors (B2-3)
 - style: a backdrop frame first made under a secret size applies nothing until its size reads plain (B2-3)
+- style: a Solid border moved to another style under a secret size keeps its strips, never drawing nothing
 - style: switching between Solid and another style hides the other drawing (B2-3)
 - style: another style on a client without the backdrop mixin draws nothing and never raises
 - style: a binding the client lacks is skipped, and one it refuses costs that binding alone
@@ -1961,7 +1967,7 @@ Total.
 - options descriptor: OpenOptionsPage opens a registered page's category, a section's through Containers, and falls back to the panel otherwise
 - options descriptor: every stub composer answers an empty row list
 
-### test_pages_general.lua (36)
+### test_pages_general.lua (37)
 
 - general: the Enable checkbox writes the master switch through the seam
 - general: the four show-or-hide master rows are visibility passes; Master scale re-applies
@@ -1984,6 +1990,7 @@ Total.
 - general → spell categories: the list draws two columns, filled row-major, in the by-name order (owner 2026-09-20)
 - general → spell categories: a dropdown of the fifteen spell categories plus Weapon enchants, opening on the first
 - general → spell categories: every Category entry is prefixed with the aura type it filters (issue #10)
+- general → spell categories: with the Scope cleared the aura type mark takes the skin's token
 - general → spell categories: the markers are padded so every name starts at the same column (issue #10)
 - general → spell categories: the closed dropdown shows the marked label too (issue #10)
 - general → spell categories: a section heading separates the picker from the spell list (2026-09-20)
@@ -2022,12 +2029,6 @@ Total.
 - Skin seam: NS.ApplySkin hands the library this addon's owner
 - Skin seam: the drag strip is built for this addon's owner
 
-### test_skin_literals.lua (3)
-
-- no color literal outside core/SkinSetup.lua and the named allow-list
-- every allow-list entry carries its reason
-- the gate is falsifiable: a planted literal of each shape is reported
-
 ### test_skin_surfaces.lua (7)
 
 - skin surfaces: a skin switch repaints each strip's own edge in the new skin's handle.edge
@@ -2040,7 +2041,7 @@ Total.
 
 ### test_skin_hud.lua (12)
 
-- skin hud: every font block and both bar textures follow the skin by default; no border does
+- skin hud: every font block and both bar textures follow the skin by default, the borders too
 - skin hud: each companion is a schema row defaulting on, and its picker shows the skin's value while it is on
 - skin hud: while fonts are ignored a ticked face picker previews the stored face, a texture picker the skin's
 - skin hud: the name label's face picker dims for the label off or the skin's face on
@@ -2052,6 +2053,73 @@ Total.
 - skin hud: v13 puts every stored pick back on the skin in every profile, keeping each pick
 - skin hud: v13 runs once, so a player's later pick survives the next load
 - skin hud: the v13 body seeds each companion before ResetToSkin, and sets them itself without it
+
+### test_skin_flip.lua (31)
+
+- skin flip: every listed companion is a bool row defaulting on, in the template and on the row
+- skin flip: no swatch carries disabledIf, and a class color has no companion
+- skin flip: the picks' defaults moved to the Ka0s picks; size, Show border and Scope did not
+- skin flip: the borders' thickness goes on the skin through the composer, the icon's on our token
+- skin flip: Ka0s Default keeps this addon's pixels, stored defaults or skin alike
+- skin flip: a skin switch changes every flipped surface
+- skin flip: the name label reads hud.label, a text line hud.text
+- skin flip: a stored background, border and glow color lose to the skin's token while followed
+- skin flip: a running-out curve returns to the skin's color on an icon and a text line
+- skin flip: a placeholder's run takes the skin's color, the live curve's own fallback
+- skin flip: a running-out curve follows the skin, and two skins never share one curve
+- skin flip: a class color comes first, whatever the companion says
+- skin flip: a class that does not resolve follows the skin; its toggle stays stored
+- skin flip: a dispel-colored bar's no-type color is the skin's, on the engine's map and a placeholder
+- skin flip: an icon's inset and dispel edge take the skin's thickness, not the stored one
+- skin flip: the icon beside a bar or a text line draws the icon family, not the bar's
+- skin flip: a live switch to a skin whose icon border is art keeps a laid-out icon's border drawn, flat
+- skin flip: a player's own values draw with the companions off, under any skin
+- skin flip: a shadow follows the skin and goes when the skin's goes, on a string already drawn
+- skin flip: with the shadow's companion off the stored shadow draws under every skin
+- skin flip: the shadow lands on a font object where the client has CreateFont
+- skin flip: a skin switch re-dresses a shown container through the one listener
+- skin flip: with no library a followed value is the stored one, the owner tokens included
+- skin flip: v16 sets every listed companion in every profile and keeps each stored value
+- skin flip: v16 writes no sentinel but the flags and makes no stray skin table
+- skin flip: a second run writes nothing, and a companion turned off afterwards stays off
+- skin flip: every Defaults path keeps the record
+- skin flip: a profile reset runs the step against defaults, which writes nothing a player sees
+- skin flip: the step is the same write with the library absent, and creates only the skin table
+- skin flip: v16 on a stored profile with no skin table keeps the record, so the step runs once
+- skin flip: the ladder walks every stored profile, and a new profile takes the step on load
+
+### test_defaults_v17.lua (7)
+
+- v17: the text glow's color does not follow the skin by default (SF-AM-1)
+- v17: MigrateV17 moves an old default and keeps a pick
+- v17: a bar has a dark background and a black border whatever the skin (SF-AM-2)
+- v17: MigrateV17 moves a bar's old background and border defaults, not a pick
+- v17: bar fill, Text font and icon border colors stay off the skin by default (SF-AM-3)
+- v17: a new profile keeps the new defaults through the one-time follow step
+- v17: MigrateV17 moves the old fill, text font and icon border defaults
+
+### test_skin_border.lua (10)
+
+- bar border: a skin's None hands Show border on, the stored style and the stored thickness back
+- bar border: a skin's None leaves Show border off off
+- bar border: a real style wins, with Show border off and over the stored thickness
+- bar border: with the companion off the stored three stand under a real style
+- beside icon: a skin's None defers on a bar and on a text line, and the art's inset agrees
+- beside icon: Show border off stays off under a real style, so Ka0s Default keeps its pixels
+- icon element: a skin's None stays no border: the rule is the bars' and the beside icons'
+- HUD icon edges: Ka0s Default draws them black, never the window outline
+- HUD icon edges: a skin's color is its icon.border, never its icon.outline
+- degraded: S.BarBorder answers the stored three, so a stored border still draws
+
+### test_skin_fix.lua (7)
+
+- gloss: Glass shines the bar that lies over the drawn fill; Ka0s Default and a player's texture do not
+- gloss: the sheen is a clear, full bar anchored to the visible fill, never the engine's elapsed bar
+- tooltip line: a spell list's overlap line takes gtip.line, and the client's color on an ignored panel
+- typed colors: Unit, Aura type and Style values keep today's bytes on Ka0s Default and on an ignored panel
+- typed colors: with the Scope cleared a skin switch rewrites each value's escape, the label kept
+- frame picker: the label goes through the skin's Font, so a face and Ignore fonts reach it
+- skin gate: every allow row names a cause of the run's SKIN_CAUSES.md, or MC
 
 ### test_skin_flags.lua (7)
 
@@ -2096,7 +2164,7 @@ Total.
 - skin verb: refused while the addon is disabled, and no picker shows
 - skin verb: without LibKa0s the verb prints the library-absent line
 
-### test_skin_picker.lua (19)
+### test_skin_picker.lua (27)
 
 - Skin picker: the spec names this owner, its seams, General's Skin tab and the eye
 - Skin picker: an unseen profile shows it; a seen one does not
@@ -2109,8 +2177,16 @@ Total.
 - Skin picker: the player's close marks it seen; this addon's own hide does not
 - Skin picker: the stand-down takes a shown picker down, unmarked
 - Skin picker: a profile that has seen it takes a shown picker down, unmarked
-- Skin picker: the eye starts test mode, and leaves a running one alone
-- Skin picker: the eye in combat starts nothing
+- Skin picker: opened with test mode off, test mode turns on through the write seam
+- Skin picker: the eye toggles test mode, lit while it is on
+- Skin picker: closing by the close control turns off the test mode it turned on
+- Skin picker: closing by Escape turns off the test mode it turned on
+- Skin picker: closing by Apply turns off the test mode it turned on
+- Skin picker: closing by Apply to all turns off the test mode it turned on
+- Skin picker: closing by the gear turns off the test mode it turned on
+- Skin picker: closing by HideSkinPicker turns off the test mode it turned on
+- Skin picker: a test mode already on is left alone, and the eye's stop is put back
+- Skin picker: the eye in combat starts nothing, and the close undoes nothing
 - Skin widgets: a hand-built dropdown is painted for this owner
 - Skin widgets: SkinPaintAce paints a widget acquired past the proxy, for this owner
 - Skin widgets: with the settings panel ignored (the new-profile default) nothing is painted
@@ -2349,12 +2425,13 @@ Total.
 - icons: the Pandemic tab holds the time color and the highlight, in pandemic-window words, paths unchanged (B2-1)
 - icons: Defaults restores the selected container's icon look and leaves its bar look alone
 
-### test_pages_text.lua (33)
+### test_pages_text.lua (34)
 
 - text page: the five tabs are drawn in order, Pandemic before Animation (B2-1)
 - text page: General holds Size, the Template dropdown, box, Time format and Preview, then Placement, then the cheat sheet (AUR-L17, AUR-L19)
 - text page: the section is named Text template (Task 20, owner: rename this section)
 - text page: the Preview is a disabled EditBox labeled Preview, PrettyChat's own shape (Task 20)
+- text page: the Preview box wears the skin's text color, the swatch with the companion off
 - text page: the Preview box refreshes after a template change (Task 20)
 - text page: the cheat sheet has a Tokens heading, a Rules heading and one bullet per token (Task 20)
 - text page: a valid template is stored; a refused one is not, and the panel prints why
@@ -2527,7 +2604,7 @@ Total.
 
 - prose: no authored file carries a British spelling from localization-§5's published list
 - prose: the gate carries localization-§5's two lists whole, and nothing of its own
-- prose: the exclusions this repository declared suppressed 11 of 238 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (11): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, docs/spell-research/2026-09-24-logs/CORRECTIONS.md, docs/spell-research/2026-09-24-logs/CURRENT_CATEGORIES.md, docs/spell-research/2026-09-24-logs/DECISIONS.md, docs/spell-research/2026-09-24-logs/FLAGS.md, docs/spell-research/2026-09-24-logs/PROPOSED_ADDITIONS.md, docs/spell-research/2026-09-24-logs/REVIEW.md, docs/spell-research/2026-09-24-logs/SOURCES.md, docs/spell-research/2026-09-24-logs/dictionary/AURAS.md
+- prose: the exclusions this repository declared suppressed 11 of 244 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (11): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, docs/spell-research/2026-09-24-logs/CORRECTIONS.md, docs/spell-research/2026-09-24-logs/CURRENT_CATEGORIES.md, docs/spell-research/2026-09-24-logs/DECISIONS.md, docs/spell-research/2026-09-24-logs/FLAGS.md, docs/spell-research/2026-09-24-logs/PROPOSED_ADDITIONS.md, docs/spell-research/2026-09-24-logs/REVIEW.md, docs/spell-research/2026-09-24-logs/SOURCES.md, docs/spell-research/2026-09-24-logs/dictionary/AURAS.md
 - prose: no path this repository narrows the gate by is loaded by a TOC
 - prose: every path this repository narrows the gate by is one .pkgmeta keeps out of the zip
 - prose self-test: the carve-out suppresses the named generated folder, and only it
@@ -2616,6 +2693,49 @@ Total.
 - lizard sighted: parity names every file whose counts differ, and only those
 - lizard sighted: lizard lists every function of a hazard fixture once it is sanitized
 
+### test_skin_values.lua (3)
+
+- skin values: every host row carries its file, substring, why and cause id
+- skin values: no typed value outside the kit's categories and the host's rows
+- skin values: the check is falsifiable, a planted value of each shape is reported
+
+### test_skin_switch.lua (34)
+
+- skin switch: the check is falsifiable, a surface that redraws a literal is reported
+- skin switch: a bar's fill changes
+- skin switch: a bar's background changes
+- skin switch: a bar's border, Show border on changes
+- skin switch: a bar's border, Show border off changes
+- skin switch: a bar's name changes
+- skin switch: a bar's time changes
+- skin switch: a bar's stacks changes
+- skin switch: the icon beside a bar's border changes
+- skin switch: an icon's border changes
+- skin switch: an icon's time changes
+- skin switch: an icon's stacks changes
+- skin switch: the icon beside a text line's border changes
+- skin switch: a text line's glow changes
+- skin switch: a text line's glow changes with the Scope ignored
+- skin switch: the name label changes
+- skin switch: the name label changes with the Scope ignored
+- skin switch: a drag strip's edge changes
+- skin switch: a drag strip's edge changes with the Scope ignored
+- skin switch: a drag strip's tooltip changes
+- skin switch: a drag strip's tooltip changes with the Scope ignored
+- skin switch: a drag strip's TEST tag changes
+- skin switch: a drag strip's TEST tag changes with the Scope ignored
+- skin switch: the unlocked outline changes
+- skin switch: the unlocked outline changes with the Scope ignored
+- skin switch: the frame picker's outline and name changes
+- skin switch: the frame picker's outline and name changes with the Scope ignored
+- skin switch: the drag-to-attach mark changes
+- skin switch: the drag-to-attach mark changes with the Scope ignored
+- skin switch: the Unit dropdown's values changes
+- skin switch: a settings page's muted note changes
+- skin switch: a plan warning's line changes
+- skin switch: the Filters section's link changes
+- skin switch: a settings tooltip's line changes
+
 ## Totals
 
 | Suite | Cases |
@@ -2623,10 +2743,11 @@ Total.
 | test_loadorder.lua | 10 |
 | test_setups.lua | 15 |
 | test_launcher.lua | 30 |
+| test_launcher_skin_entry.lua | 1 |
 | test_database.lua | 56 |
 | test_database_steps.lua | 17 |
 | test_database_categories.lua | 28 |
-| test_migrations.lua | 29 |
+| test_migrations.lua | 30 |
 | test_schema.lua | 38 |
 | test_schema_paths.lua | 38 |
 | test_settings_pin.lua | 1 |
@@ -2675,7 +2796,7 @@ Total.
 | test_anchors_drop.lua | 25 |
 | test_texttemplate.lua | 26 |
 | test_style.lua | 38 |
-| test_style_borders.lua | 22 |
+| test_style_borders.lua | 23 |
 | test_castaura.lua | 7 |
 | test_timedspells.lua | 22 |
 | test_style_bars.lua | 63 |
@@ -2699,16 +2820,19 @@ Total.
 | test_debug_library_lines.lua | 11 |
 | test_optionssetup.lua | 21 |
 | test_options_descriptor.lua | 19 |
-| test_pages_general.lua | 36 |
+| test_pages_general.lua | 37 |
 | test_skinsetup.lua | 19 |
-| test_skin_literals.lua | 3 |
 | test_skin_surfaces.lua | 7 |
 | test_skin_hud.lua | 12 |
+| test_skin_flip.lua | 31 |
+| test_defaults_v17.lua | 7 |
+| test_skin_border.lua | 10 |
+| test_skin_fix.lua | 7 |
 | test_skin_flags.lua | 7 |
 | test_skin_glow_restore.lua | 6 |
 | test_skin_outline.lua | 12 |
 | test_skin_verb.lua | 6 |
-| test_skin_picker.lua | 19 |
+| test_skin_picker.lua | 27 |
 | test_glyphs.lua | 1 |
 | test_pages_general_categories.lua | 32 |
 | test_pages_containers.lua | 35 |
@@ -2718,7 +2842,7 @@ Total.
 | test_pages_layout.lua | 52 |
 | test_pages_bars.lua | 14 |
 | test_pages_icons.lua | 6 |
-| test_pages_text.lua | 33 |
+| test_pages_text.lua | 34 |
 | test_pages_tabs.lua | 6 |
 | test_pages_rail.lua | 20 |
 | test_pages_about.lua | 3 |
@@ -2738,5 +2862,7 @@ Total.
 | test_layout_cap.lua | 13 |
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
+| test_skin_values.lua | 3 |
+| test_skin_switch.lua | 34 |
 | Skipped | 1 |
-| **Total** | **2253** |
+| **Total** | **2355** |

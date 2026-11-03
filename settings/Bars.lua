@@ -56,6 +56,7 @@ NS.RegisterSchemaRows(H.BarGroup({
         -- once, at a fixed fraction, and never moves (tests/test_render_coverage.lua).
         { path = P .. "smooth", type = "bool", label = L["Smooth animation"], coverage = "engine-only",
           desc = L["Ease the bar between updates instead of stepping."] },
+        NS.FollowRow(P .. "barColorFromSkin", L["Bar color"]),
     },
 }))
 
@@ -83,13 +84,14 @@ NS.RegisterSchemaRows({
 -- a surface with no texture, and this one has a live texture (modules/Style_Bars.lua paints it). The
 -- composer's own tooltips describe a fill, so each row's is replaced, found by path.
 -- Its own "Use the skin's texture" companion (bars.bgTextureFromSkin): the background follows the
--- skin's `bar.texture` apart from the fill. The borders take none (DECISIONS D1).
+-- skin's `bar.texture` apart from the fill.
 local bg = H.BarGroup({
     prefix = P, page = PAGE, group = G_BG, subgroup = L["Background"], classColor = UNIT, fromSkin = true,
     keys = { barTexture = "bgTexture", barAlpha = "bgAlpha", barColor = "bgColor", useClassColorBar = "useClassColorBg" },
     labels = { barTexture = L["Background texture"], barAlpha = L["Background opacity"], barColor = L["Background color"] },
     -- feedback #7: the background colors by dispel type as the fill does, from the same palette.
     extra = {
+        NS.FollowRow(P .. "bgColorFromSkin", L["Background color"]),
         { path = P .. "bgColorMode", type = "string", values = NS.Choices(C.BAR_COLOR_MODES, C.BAR_COLOR_MODE_LABELS),
           label = L["Color by"] },
     },
@@ -104,7 +106,8 @@ local BG_TOOLTIPS = {
 for _, row in ipairs(bg) do row.tooltip = BG_TOOLTIPS[row.path] or row.tooltip end
 NS.RegisterSchemaRows(bg)
 local border = H.BorderGroup({
-    prefix = P, page = PAGE, group = G_BG, subgroup = L["Border"], show = true, classColor = UNIT,
+    prefix = P, page = PAGE, group = G_BG, subgroup = L["Border"], show = true, classColor = UNIT, fromSkin = "bar",
+    extra = { NS.FollowRow(P .. "borderColorFromSkin", L["Border color"]) },
 })
 for _, row in ipairs(border) do
     if row.path == P .. "borderStyle" then row.tooltip = L["The border texture. Solid redraws at once; any other texture, and a new thickness for one, reaches the aura buttons already on screen after a /reload."] end
@@ -125,7 +128,7 @@ local function textRows(leaf, group, extras)
     })
     NS.RegisterSchemaRows(H.FontGroup({
         prefix = prefix, page = PAGE, group = group, subgroup = L["Font"], classColor = UNIT, fromSkin = true,
-        flagsFromSkin = true,
+        flagsFromSkin = true, extra = NS.FontFollowRows(prefix),
     }))
     local rows = {
         { path = prefix .. "justify", page = PAGE, group = group, subgroup = L["Placement"], type = "string",
@@ -178,14 +181,16 @@ NS.RegisterSchemaRows({
 -- The composed border block (options-ui-§16) on the icon's own leaves; modules/Style_Bars.lua draws
 -- it around the icon's box and insets the art inside it.
 local iconBorder = H.BorderGroup({
-    prefix = P, page = PAGE, group = G_ICON, subgroup = L["Icon border"], show = true, classColor = UNIT,
+    prefix = P, page = PAGE, group = G_ICON, subgroup = L["Icon border"], show = true, classColor = UNIT, fromSkin = "icon",
     keys = { borderShow = "iconBorderShow", borderStyle = "iconBorderStyle", borderSize = "iconBorderSize",
              borderColor = "iconBorderColor", useClassColorBorder = "useClassColorIconBorder" },
+    extra = { NS.FollowRow(P .. "iconBorderColorFromSkin", L["Border color"]) },
 })
 -- A style other than Solid is a backdrop, which a live button's secret size keeps from redrawing
 -- (modules/Style_Border.lua's ApplyBorder, B2-3): the Border style tooltips say when it shows.
 for _, row in ipairs(iconBorder) do
     row.shownWhen = ICON_SHOWN
+    if row.path == P .. "iconBorderSize" then NS.IconBorderSizeRow(row) end
     if row.path == P .. "iconBorderShow" then row.tooltip = L["Draw a border around the icon; its art sits inside it."] end
     if row.path == P .. "iconBorderStyle" then row.tooltip = L["The border texture. Solid redraws at once; any other texture, and a new thickness for one, reaches the aura buttons already on screen after a /reload."] end
 end

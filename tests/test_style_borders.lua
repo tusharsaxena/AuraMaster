@@ -3,6 +3,7 @@
 -- tests/test_style.lua by theme.
 
 local T = _G.AM_TEST
+local own = dofile("tests/own_look.lua")
 local spyConsole = dofile("tests/console_spy.lua")
 local R = dofile("tests/region_recorder.lua")
 local fresh = dofile("tests/fresh_env.lua")
@@ -12,7 +13,7 @@ local NS = T.NS
 local C, D = NS.Constants, NS.CONTAINER_TEMPLATE
 
 local function cfg(over)
-    return NS.Database.Merge(NS.Database.DeepCopy(NS.CONTAINER_TEMPLATE), over or {})
+    return own(NS.Database.Merge(NS.Database.DeepCopy(NS.CONTAINER_TEMPLATE), over or {}))
 end
 
 --- Dress a bar element, swap its regions for recorders, and dress it again (see test_style_bars).
@@ -154,6 +155,27 @@ test("style: a backdrop frame first made under a secret size applies nothing unt
     assertTrue(ok, tostring(err))
     -- a frame made under a laid-out one reads secret too (tests/wow_mock.lua's CreateFrame)
     assertNil(f.__amBackdrop.__backdropApplies, "no backdrop applied on a secret size")
+end)
+
+test("style: a Solid border moved to another style under a secret size keeps its strips, never drawing nothing", function()
+    local NS2, m2 = fresh()
+    local f = R()
+    NS2.Style.ApplyBorder(f, true, "Solid", 1, { r = 1, g = 1, b = 1, a = 1 }, false)
+    m2.__layOut(f)
+    local ok, err = pcall(NS2.Style.ApplyBorder, f, true, "Uninstalled", 2, { r = 0, g = 1, b = 0, a = 1 }, false)
+    assertTrue(ok, tostring(err))
+    -- red under: the strips hidden on the style alone, the backdrop refused (blank until /reload)
+    assertSolid(f, 2, "0,1,0,1", "the strips stand in")
+    assertFalse(f.__amBackdrop:IsShown(), "no empty backdrop frame shown")
+    local g = R()
+    NS2.Style.ApplyBorder(g, true, "Uninstalled", 2, { r = 1, g = 1, b = 1, a = 1 }, false)
+    assertNil(strips(g)[1], "with a backdrop applied no strip is drawn")
+    m2.__layOut(g)
+    m2.__layOut(g.__amBackdrop)
+    NS2.Style.ApplyBorder(g, true, "Uninstalled", 4, { r = 0, g = 1, b = 0, a = 1 }, false)
+    -- red under: the strips drawn over a backdrop that stands
+    assertNil(strips(g)[1], "a standing backdrop keeps the job on a secret size")
+    assertTrue(g.__amBackdrop:IsShown())
 end)
 
 test("style: switching between Solid and another style hides the other drawing (B2-3)", function()

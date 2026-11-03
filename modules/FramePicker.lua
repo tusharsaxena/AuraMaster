@@ -58,14 +58,16 @@ end
 local hintAttach, hintPoint = "", ""
 
 --- The picker's own chrome from the skin: the outline's 2px edge in the owner token `am.pick`
---- (Ka0s Default's blue), the frame name in `text.accent` (GameFontNormalLarge's gold) and the two
---- hint lines. The face stays the font object's. Run at build and on every skin switch.
+--- (Ka0s Default's blue), the frame name in `text.accent` (GameFontNormalLarge's gold) and the skin's
+--- body face at the font object's size (S.Font, so Ignore fonts reaches it), and the two hint lines.
+--- Run at build and on every skin switch.
 local function paint()
     if not outline then return end
     hintAttach = "\n" .. hint(NS.L["Left-click to attach, right-click to cancel"])
     hintPoint = hint(NS.L["Point at a named frame. Right-click to cancel."])
     local r, g, b, a = NS.Skin.Color("am.pick")
     NS.Style.DrawEdge(outline, 2, r, g, b, a)
+    NS.Skin.Font(label)
     label:SetTextColor(NS.SkinColor("text.accent"))
 end
 NS.Skin.OnLooksChanged(paint)

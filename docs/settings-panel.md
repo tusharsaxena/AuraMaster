@@ -1,7 +1,7 @@
 # Settings panel
 
 How the options are organized, what each control does, and which schema key it writes. The rows
-below are derived from the live schema (`NS.Schema`, 293 rows on a profile with no categories of the
+below are derived from the live schema (`NS.Schema`, 318 rows on a profile with no categories of the
 player's own — each of those adds one more `container.filter.categories.<key>` row at runtime) by
 loading the addon headlessly and
 walking it page → group → subgroup; a page, tab or row listed here that the schema does not produce
@@ -62,7 +62,7 @@ layout after it; the earlier names are noted where a row moved.
   returns to the tab you left. General, the addon page, is addon-wide, renders through
   `Helpers.RenderPage` and draws no banner.
 - **Rows that do not apply to the selected container are not drawn.** A row may carry `auraTypes`
-  (`settings/Schema.lua:385`): the buff categories and Hide enchants without a duration are not
+  (`settings/Schema.lua:411`): the buff categories and Hide enchants without a duration are not
   offered on a debuff container.
 - **Structural rows re-render the panel.** Changing a container's unit, aura type or style, or its
   attach mode, calls `NS.RequestPanelRefresh` (next frame, coalesced), because the set of rows other
@@ -418,9 +418,9 @@ selected, with the page moved to General/General) on one row. With no container,
 | Name | `container.name` | string, edit box | Non-blank; Enter applies; made unique; renames the handle and every picker; never reset (`noReset`) |
 | Enable this container | `container.enabled` | bool | A disabled container keeps its settings. Labeled *Enabled* until item 020 (AUR-L-new5, options-ui-§21's act names) |
 | *What it shows, and how* | — | subsection | An options-ui-§7 subgroup heading over the three rows below (batch 8): what the container watches and how it is drawn, against Name and Enable this container's "which container is this". Those two carry no heading of their own — one above a tab's first row only repeats the tab |
-| Unit | `container.unit` | string | `player` / `target` / `focus` / `pet`, each in its own color (`C.UNIT_COLORS`); structural |
-| Aura type | `container.auraType` | string | Buffs / Debuffs, green / red (`C.AURA_TYPE_COLORS`, the Spell categories markers' colors); structural (weapon enchants are a buff category, schema v5) |
-| Style | `container.style` | string | Bars / Icons / Text, each in its own color (`C.STYLE_COLORS`); structural (rebuilds the engine) |
+| Unit | `container.unit` | string | `player` / `target` / `focus` / `pet`, each in its own color (`C.UNIT_TOKENS`, drawn through `NS.PanelEscape`, so they follow the skin with the Scope cleared); structural |
+| Aura type | `container.auraType` | string | Buffs / Debuffs, green / red (`C.AURA_TYPE_TOKENS`, the Spell categories markers' colors); structural (weapon enchants are a buff category, schema v5) |
+| Style | `container.style` | string | Bars / Icons / Text, each in its own color (`C.STYLE_TOKENS`); structural (rebuilds the engine) |
 
 Changing Style resets Fill (Layout → Position and growth → Growth) to Columns for Bars and Text and to Rows for Icons;
 re-choosing the same style keeps a Fill set by hand (B5). A new container (**New container**, or
@@ -618,7 +618,7 @@ A container that shows only weapon enchants is a buff container (schema v5): on 
 every category is Hide but **Weapon enchants**, and **Show all** / **Hide all** (feedback #10) reach
 it like any other.
 
-### Layout (39 rows, `settings/Layout.lua`) — a section of Containers (#6)
+### Layout (41 rows, `settings/Layout.lua`) — a section of Containers (#6)
 
 Four tabs since item 020 (was five): **Scale and strata**, **Position and growth** (the former Anchor
 and Growth tabs, AUR-L09), **Mouse**, **Label**. The rail tooltip reads "Its scale and strata, where it
@@ -740,10 +740,12 @@ position `container.behavior.tooltipAnchor`; then *Clicks*: Right-click to cance
 **Label** (batch 8 NL-1..NL-4, owner feedback #8) — Show name label `container.label.show`,
 Justify `container.label.justifyH` (Left, Center, Right; batch 9 LJ-1, E7), X
 offset `container.label.x` and Y offset `container.label.y` (-200 to 200), then a *Font* subgroup, the
-composed font block on `container.label.font.` (gold 12 OUTLINE by default, the strip's own
-look; class color from the container's unit), with its *Use the skin's font* companion
+composed font block on `container.label.font.` (gold 12, Font flags From skin by default, the strip's
+own look; class color from the container's unit), with its *Use the skin's font* companion
 `container.label.font.fontFromSkin` (default on, X3: the label draws in the skin's `hud.font` and the
-face picker dims while it is on; off, the stored pick, Friz Quadrata by default). Eleven rows. Justify is stored `"AUTO"` until the player
+face picker dims while it is on; off, the stored pick, Ka0s Prototype by default) and its *Use the
+skin's color* and *Use the skin's shadow* companions `fontColorFromSkin` and `fontShadowFromSkin`
+(default on, schema v16). Thirteen rows. Justify is stored `"AUTO"` until the player
 picks one, and the dropdown shows the justify in effect (the row's `panelGet`,
 `Anchors.LabelJustify`): Bars and Text center the name, Icons line it up with the first icon (Left,
 Right when the icons grow left, mirrored above a Left-attached follower, whose label lines up with
@@ -757,22 +759,22 @@ the label's height plus the strip gap (D6, `Anchors.PlaceLabel`), so the order i
 block. A follower's seam makes room for both (F2). The rows carry no `effect`: a write re-applies
 the selected container.
 
-### Bar style (77 rows, `settings/Bars.lua`) — a section of Containers (#6)
+### Bar style (89 rows, `settings/Bars.lua`) — a section of Containers (#6)
 
 This section is on the rail only for a container drawn as bars (#6). A container drawn in another style shows its own style's section instead, so nothing here is ever drawn disabled.
 
 | Tab | Rows (all under `container.bars.`) |
 |---|---|
-| General (15) | *Size:* `width` 40–600, `height` 6–80; *Fill:* the composed bar block `barTexture` · `barAlpha` / `barColor` · `useClassColorBar` · `barTextureFromSkin` (Use the skin's texture), then `colorMode` (one color / by dispel type), `drain` (toward left / right), `smooth`; *Spark:* `spark`, `sparkWidth` 1–32, `sparkColor` · `useClassColorSpark`, `sparkTimeless` (show the spark on auras without a duration) |
-| Background and border (11) | *Background:* the composed bar block on the background leaves `bgTexture` · `bgAlpha` / `bgColor` · `useClassColorBg` · `bgTextureFromSkin` (Use the skin's texture), then `bgColorMode` (one color / by dispel type); *Border:* the composed border block `borderShow`, `borderStyle` · `borderSize` / `borderColor` · `useClassColorBorder` |
-| Name text (12) | `name.show` (Show) first, alone on its line and unheaded (AUR-L12); *Font:* the composed font block on `name.` (`font` · `fontSize` / `fontColor` · `useClassColorFont` / `fontFlags` · `fontShadow`, then `fontFromSkin`, Use the skin's font); *Placement:* `name.justify`, `name.point` (Anchor point, AUR-L13), `name.x`, `name.y` |
-| Time text (13) | The same on `time.`, plus *Countdown:* `timeFormat` (Blizzard / short / detailed) |
-| Stack text (12) | The same on `stacks.` |
-| Icon (9) | *Icon:* `icon` (left / right / hidden), `iconSize` 0–80 (0 = bar height), `iconGap` 0–20, `iconZoom` 0–0.3; *Icon border:* the composed border block on the icon's leaves `iconBorderShow`, `iconBorderStyle` · `iconBorderSize` / `iconBorderColor` · `useClassColorIconBorder` |
+| General (16) | *Size:* `width` 40–600, `height` 6–80; *Fill:* the composed bar block `barTexture` · `barAlpha` / `barColor` · `useClassColorBar` · `barTextureFromSkin` (Use the skin's texture) · `barColorFromSkin` (Use the skin's color, off by default, SF-AM-3), then `colorMode` (one color / by dispel type), `drain` (toward left / right), `smooth`; *Spark:* `spark`, `sparkWidth` 1–32, `sparkColor` · `useClassColorSpark`, `sparkTimeless` (show the spark on auras without a duration) |
+| Background and border (14) | *Background:* the composed bar block on the background leaves `bgTexture` · `bgAlpha` / `bgColor` · `useClassColorBg` · `bgTextureFromSkin` (Use the skin's texture) · `bgColorFromSkin` (Use the skin's color, off by default, SF-AM-2), then `bgColorMode` (one color / by dispel type); *Border:* the composed border block `borderShow` (on by default, SF-AM-2), `borderStyle` · `borderSize` · `borderStyleFromSkin` (Use the skin's border) / `borderColor` · `useClassColorBorder` · `borderColorFromSkin` (Use the skin's color, off by default, SF-AM-2) |
+| Name text (14) | `name.show` (Show) first, alone on its line and unheaded (AUR-L12); *Font:* the composed font block on `name.` (`font` · `fontSize` / `fontColor` · `useClassColorFont` / `fontFlags` · `fontShadow`, then the companions `fontFromSkin`, `fontColorFromSkin` and `fontShadowFromSkin`, Use the skin's font, color and shadow); *Placement:* `name.justify`, `name.point` (Anchor point, AUR-L13), `name.x`, `name.y` |
+| Time text (15) | The same on `time.`, plus *Countdown:* `timeFormat` (Blizzard / short / detailed) |
+| Stack text (14) | The same on `stacks.` |
+| Icon (11) | *Icon:* `icon` (left / right / hidden), `iconSize` 0–80 (0 = bar height), `iconGap` 0–20, `iconZoom` 0–0.3; *Icon border:* the composed border block on the icon's leaves `iconBorderShow`, `iconBorderStyle` · `iconBorderSize` · `iconBorderStyleFromSkin` / `iconBorderColor` · `useClassColorIconBorder` · `iconBorderColorFromSkin` (off by default, SF-AM-3) |
 | Pandemic (5) | *Time color:* `expiringColorOn` (Recolor the time in the pandemic window), `expiringThreshold` 1–60 (Pandemic window (seconds left)), `expiringColor` (Pandemic-window time color); *Highlight:* `pandemic` (Highlight the pandemic window), `pandemicColor` (Pandemic-window highlight color). Once the Highlights tab's *Running out* and *Refresh window* (smoke batch 2, B2-1: labels only, paths unchanged). The dispel type colors are the profile's, on General → Dispel colors |
 
 Behavior worth knowing: the fill is anchored to the edge of an invisible elapsed-time status bar, so
-a permanent aura draws full and `drain` picks which end empties (`modules/Style_Bars.lua:165`);
+a permanent aura draws full and `drain` picks which end empties (`modules/Style_Bars.lua:177`);
 `sparkTimeless` off clips a live spark to the elapsed region, which a timeless aura leaves empty
 (docs/midnight-quirks.md); the icon border takes the icon's whole box and the art is inset inside it;
 `smooth` selects the engine's eased interpolation; `colorMode = dispel` hands the fill to the engine
@@ -801,7 +803,7 @@ any other texture, and a new thickness for one, reaches the aura buttons already
 laid-out button because its size reads secret (`Style.ApplyBorder`, B2-3, docs/midnight-quirks.md).
 Its color still changes at once.
 
-### Icon style (44 rows, `settings/Icons.lua`) — a section of Containers (#6)
+### Icon style (50 rows, `settings/Icons.lua`) — a section of Containers (#6)
 
 Bars folded its two-slider `Size` tab into a renamed `General` tab (`S-1`) because a whole tab for
 two sliders did not earn its place. Icons kept its own `Size` tab then, because folded into `Border`
@@ -814,9 +816,9 @@ This section is on the rail only for a container drawn as icons (#6); another st
 | Tab | Rows (all under `container.icons.`) |
 |---|---|
 | General (8) | *Size:* `width` 8–128, `height` 8–128 (a non-square icon is cropped, never squashed), `zoom` 0–0.3; *Cooldown:* `cooldown`, `cooldownReverse`, `cooldownEdge`, `swipeAlpha` 0–1, `blizzardNumbers` |
-| Border (6) | *Border:* the composed border block `borderShow`, `borderStyle` · `borderSize` / `borderColor` · `useClassColorBorder`, then `dispelBorder` |
-| Time text (13) | `time.show` first, alone and unheaded (AUR-L12); *Font:* the composed font block on `time.` with its `fontFromSkin` companion; *Placement:* `.justify`, `.point` (Anchor point), `.x`, `.y`; *Countdown:* `timeFormat` |
-| Stack text (12) | The same on `stacks.` without the countdown |
+| Border (8) | *Border:* the composed border block `borderShow`, `borderStyle` · `borderSize` · `borderStyleFromSkin` / `borderColor` · `useClassColorBorder` · `borderColorFromSkin` (off by default, SF-AM-3), then `dispelBorder` |
+| Time text (15) | `time.show` first, alone and unheaded (AUR-L12); *Font:* the composed font block on `time.` with its `fontFromSkin`, `fontColorFromSkin` and `fontShadowFromSkin` companions; *Placement:* `.justify`, `.point` (Anchor point), `.x`, `.y`; *Countdown:* `timeFormat` |
+| Stack text (14) | The same on `stacks.` without the countdown |
 | Pandemic (5) | *Time color:* `expiringColorOn`, `expiringThreshold`, `expiringColor`; *Highlight:* `pandemic`, `pandemicColor` — the Bars section's labels (smoke batch 2, B2-1; once Highlights) |
 
 `dispelBorder` has the engine tint four white strips in Blizzard's own dispel color, on harmful
@@ -828,7 +830,7 @@ icon shows your border. In test mode the placeholders are tinted the same way
 frame draws it, and Show cooldown swipe hides that frame, so its tooltip ends "Needs Show cooldown
 swipe." (AUR-L16; wording only, no dim).
 
-### Text style (45 rows, `settings/Text.lua`) — a section of Containers (#6)
+### Text style (50 rows, `settings/Text.lua`) — a section of Containers (#6)
 
 Five tabs. **General** is drawn bespoke, not by the ordinary schema-group renderer, so it can put the
 built-in picker, the preview and the read-only text among its rows (feedback #5). Since item 020
@@ -913,8 +915,8 @@ This section is on the rail only for a container drawn as text (#6); another sty
 | Tab | Rows (all under `container.text.`) |
 |---|---|
 | General | Size: `autoSize` (Size to fit; `width` and `height` dim under a note while it is on, batch 8 AS-1), `width`, `height`. Text template: the Template dropdown, `template` (Custom only), `timeFormat`, the Preview box. Placement: `justifyH`, `justifyV` (+ the Justify note), `x`, `y` (+ the centering note). Template reference: the Tokens/Rules cheat sheet |
-| Font | the composed font block under `font.` with its `fontFromSkin` companion; Glow: `glow`, `glowColor` · `useClassColorGlow`, `glowIntensity`, `glowThickness`, `glowX`, `glowY`. Dispel type: `dispelTypeColor`, `dispelBackdrop`, `dispelBackdropAlpha`, `dispelEdge`, `dispelEdgeSize` |
-| Icon | `icon`, `iconSize`, `iconGap`, `iconZoom`; the composed icon-border block |
+| Font | the composed font block under `font.` with its `fontFromSkin`, `fontColorFromSkin` (off by default here, SF-AM-3) and `fontShadowFromSkin` companions; Glow: `glow`, `glowColor` · `useClassColorGlow` · `glowColorFromSkin` (off by default, SF-AM-1), `glowIntensity`, `glowThickness`, `glowX`, `glowY`. Dispel type: `dispelTypeColor`, `dispelBackdrop`, `dispelBackdropAlpha`, `dispelEdge`, `dispelEdgeSize` |
+| Icon | `icon`, `iconSize`, `iconGap`, `iconZoom`; the composed icon-border block with `iconBorderStyleFromSkin` and `iconBorderColorFromSkin` (off by default, SF-AM-3) |
 | Pandemic | Time color: `expiringColorOn` (Recolor the time in the pandemic window), `expiringThreshold` (Pandemic window (seconds left)), `expiringColor` (Pandemic-window time color), `expiringBlink` (Blink in the pandemic window; engine-only) (+ the duration-token note) |
 | Animation | Loop: `anim`, `animSpeed`, `animIntensity`, `animBounce` |
 
@@ -930,8 +932,9 @@ See `docs/profiles.md`.
 Every color that describes the player's taste has a **Use class color** checkbox immediately to its
 right, default off, declared with `classColorSource = "unit"` on both rows (options-ui-§17). The
 class is that of the unit the container tracks, read once per apply: a player container shows the
-player's, a target container the target's, and a unit with no class (an NPC) falls through to the
-swatch. The swatch is never disabled; its alpha applies under both modes.
+player's, a target container the target's, and a unit with no class (an NPC) falls through to what
+the surface draws with the box clear: the skin's color, or the swatch with "Use the skin's color"
+off. The swatch is never disabled; its alpha applies under both modes.
 With companions: Bars `barColor`, `sparkColor`, `bgColor`, `borderColor`, and `fontColor` on
 `name`/`time`/`stacks`; Icons `borderColor`, and `fontColor` on `time`/`stacks`.
 
@@ -954,7 +957,7 @@ from `OnInitialize` after `InitDB`, and is idempotent.
 | Icon | `C.LOGO_ICON_PATH`, the same file `## IconTexture` names (launcher-§4) |
 | Label | `Ka0s Aura Master` — the **brand name in plain text** (launcher-§1). What a broker display prints in its row, beside the other ten Ka0s addons, so it is spelled the way they are. Deliberately not the TOC `## Title` (a Title may carry color escapes) and not the folder name |
 | Left click | **Opens the settings panel** (`openSettings` → `NS.OpenOptionsPanel`), in either state (launcher-§2, `LibKa0s-Launcher-1.0` minor 4): the panel is where a disabled addon is switched back on |
-| Right click | **Opens the options menu** — the client's context menu, drawn by the library, titled `Ka0s Aura Master`, with one checkbox per pair the descriptor passes: **Enabled** (`isEnabled` + `setEnabled` → `NS.Slash.SetEnabled`, what `/am enable`/`disable` run), **Locked** (`isLocked` + `toggleLock` → `NS.Slash.ToggleLock`, what `/am lock`/`unlock` run) and **Test mode** (`isTestMode` + `toggleTestMode` → `NS.Slash.ToggleTestMode`, what a bare `/am test` runs). No *Show window*: the addon has no primary window. Each state is read when the menu opens; each click runs the verb's own handler, so the refusals and chat lines are the verb's. **While the addon is disabled** *Locked* and *Test mode* are grayed (`(enable the addon first)`) and *Enabled* stays live. On a client without `MenuUtil` the right click opens the panel instead |
+| Right click | **Opens the options menu** — the client's context menu, drawn by the library, titled `Ka0s Aura Master`, with one checkbox per pair the descriptor passes: **Enabled** (`isEnabled` + `setEnabled` → `NS.Slash.SetEnabled`, what `/am enable`/`disable` run), **Locked** (`isLocked` + `toggleLock` → `NS.Slash.ToggleLock`, what `/am lock`/`unlock` run) and **Test mode** (`isTestMode` + `toggleTestMode` → `NS.Slash.ToggleTestMode`, what a bare `/am test` runs), then two buttons: **Open settings** and **Open skin selector** (`openSkinPicker` → `NS.RunSkinVerb`, what `/am skin` runs; LibKa0s-Launcher minor 6, SF-F2, offered while the addon is a registered skin owner). No *Show window*: the addon has no primary window. Each state is read when the menu opens; each click runs the verb's own handler, so the refusals and chat lines are the verb's. **While the addon is disabled** *Locked*, *Test mode* and *Open skin selector* are grayed (`(enable the addon first)`) and *Enabled* and *Open settings* stay live. On a client without `MenuUtil` the right click opens the panel instead |
 | Tooltip | **Drawn by `LibKa0s-Launcher-1.0`** (minor 3, launcher-§1) on every hover, **including while the addon is disabled**: `Ka0s Aura Master  v<version>` (the TOC's `## Version`, through `NS.Version`), `Enabled: Yes\|No`, `Locked: Yes\|No` (the Lock frame row's `locked`), `Test mode: On\|Off` (the Test mode row's `state.testMode`), `Left-click: Open settings`, `Right-click: Options menu` (fixed since minor 4, the same in either state). The descriptor only answers the questions (`version`, `isEnabled`, `isLocked`, `isTestMode`), each asked on the show and never cached. No `onTooltipShow`: the addon has no lines of its own, and a hook drawing a title or a click hint would draw a second copy (anti-pattern #89) |
 | Visibility | The **Minimap button** row. Its CLI path is `global.minimap.shown`, which answers true while the button shows; its storage is LibDBIcon's own `global.minimap.hide`, in the global store, never a second `shown` key (launcher-§3, anti-pattern #81, General's Master controls in this file) |
 | Survives every reset | A per-installation display preference, like the button's position, so **no** reset the panel runs may move it — neither *Reset all settings* nor the General page's **Defaults** button. The one veto is `vetoedFromPanelReset` in the options descriptor's `applyDefault`, the library's single reset seam. `/am reset global.minimap.shown` is deliberately **not** vetoed: that is the player naming this one row |

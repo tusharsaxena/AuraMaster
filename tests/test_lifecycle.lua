@@ -7,6 +7,14 @@ local test, assertEqual, assertTrue, assertFalse, assertNil =
     T.test, T.assertEqual, T.assertTrue, T.assertFalse, T.assertNil
 local fresh = dofile("tests/fresh_env.lua")
 
+--- Keep the first-run skin picker out of a case about something else: a profile event on a profile
+--- that has not closed it shows it, and since R6-PV (spec.preview) a picker over a hidden HUD turns
+--- test mode on, which disables every engine while it is up. tests/test_skin_picker.lua owns that.
+local function withoutPicker(NS)
+    NS.Helpers.SkinPicker = function() return nil end
+    return NS
+end
+
 -- Every lifecycle event and the method it is registered to (core/AuraMaster.lua).
 local LIFECYCLE = {
     PLAYER_ENTERING_WORLD = "OnEnterWorld",
@@ -120,6 +128,7 @@ end)
 
 test("lifecycle: a profile switch out of combat rebuilds every container for the new profile at once", function()
     local NS, mocks = fresh()
+    withoutPicker(NS)
     local CM = NS.ContainerManager
     local id = CM.Create({})
     assertTrue(NS.SetByPath("container.unit", "focus", 1))

@@ -48,6 +48,8 @@ local addonName, NS = ...
 --                           written as a literal keeps its bytes on Ka0s Default (|cff888888).
 --   NS.PanelEscape(name)    the same for a settings page's markup, Ka0s Default's bytes while the
 --                           owner ignores its settings panel (D-03), so a page never mixes the two.
+--   NS.PanelTipLine()       r, g, b of a tooltip line a settings page writes: `gtip.line`, or nothing
+--                           while the owner ignores its settings panel.
 --   NS.SkinPaintAce(w)      an AceGUI widget this addon acquired itself, painted for this owner:
 --   NS.SkinPaintAceTree(c)  `Skin:PaintAce` / `Skin:PaintAceTree` with the owner bound (the facade
 --                           carries neither). Nothing while the owner ignores its settings panel;
@@ -64,6 +66,7 @@ local addonName, NS = ...
 --   NS.SkinPickerSpec()     the spec MaybeShowSkinPicker hands O.SkinPicker.
 --   NS.SkinPickerDue()      true while this profile has not closed the picker and the addon stands
 --                           up: what MaybeShowSkinPicker asks, and whether the login arms its timer.
+--   NS.SkinDegraded         true on the degraded arm alone: no skin to follow, so stored values draw.
 --
 -- ── WHERE IT LOADS ───────────────────────────────────────────────────────────────────────────
 --
@@ -102,6 +105,12 @@ local BRAND = "Ka0s Aura Master"
 --- back to the same byte (NS.SkinEscape) and nothing on Ka0s Default moves.
 local function byte(n) return n / 255 end
 
+--- core/Constants.lua's "aarrggbb" escape body as a token's default.
+local function hex(s)
+    return { tonumber(s:sub(3, 4), 16) / 255, tonumber(s:sub(5, 6), 16) / 255, tonumber(s:sub(7, 8), 16) / 255, 1 }
+end
+local C = NS.Constants
+
 -- THE OWNER TOKENS (skinning-§1; LK-01 of Ka0sAddonsCommonTasks docs/2026-10-29-SKINNING_ROLLOUT,
 -- decisions X1, X2 and X12). Each is a color AuraMaster draws today whose exact value no library
 -- token holds, so snapping it to the nearest one would move a Ka0s Default pixel. The name is in
@@ -129,6 +138,23 @@ NS.SKIN_TOKENS = {
     ["am.goldMuted"]    = { default = { byte(0xd9), byte(0xb8), byte(0x61), 1 }, follow = "text.headingAlt" },
     -- AM-G9: the Filters section's in-panel "See spells" link (|cff6699ff).
     ["am.link"]         = { default = { byte(0x66), byte(0x99), byte(0xff), 1 }, follow = "text.accent" },
+    -- FS-AM-FLIP: an icon border's 1 px and the text glow's black ring, which Ka0s Default's own
+    -- `glow.color` (gold) is not. Every other skin draws those tokens. Ka0s Default's `icon.borderSize`
+    -- was 2 until LibKa0s v1.85.0's R3-FIX made every skin's icon border Solid 1px; the token stays so
+    -- this addon's 1 px never rides on the library's value.
+    ["am.iconBorderSize"] = { default = 1, follow = "icon.borderSize" },
+    ["am.textGlow"]     = { default = { 0, 0, 0, 1 }, follow = "glow.color" },
+    -- FS-AM-FIX (cause L5): the General page's Unit, Aura type and Style values. Each stays apart from
+    -- its neighbors in a dropdown, so each follows a different role; the aura types keep good and bad.
+    ["am.unitPlayer"]   = { default = hex(C.UNIT_COLORS.player), follow = "sem.info" },
+    ["am.unitTarget"]   = { default = hex(C.UNIT_COLORS.target), follow = "sem.warn" },
+    ["am.unitFocus"]    = { default = hex(C.UNIT_COLORS.focus), follow = "text.accent" },
+    ["am.unitPet"]      = { default = hex(C.UNIT_COLORS.pet), follow = "sem.good" },
+    ["am.auraHelpful"]  = { default = hex(C.AURA_TYPE_COLORS.HELPFUL), follow = "sem.good" },
+    ["am.auraHarmful"]  = { default = hex(C.AURA_TYPE_COLORS.HARMFUL), follow = "sem.bad" },
+    ["am.styleBars"]    = { default = hex(C.STYLE_COLORS.bars), follow = "sem.warn" },
+    ["am.styleIcons"]   = { default = hex(C.STYLE_COLORS.icons), follow = "sem.info" },
+    ["am.styleText"]    = { default = hex(C.STYLE_COLORS.text), follow = "text.accent" },
 }
 
 -- The Ka0s Default tokens the DEGRADED facade answers, copied from the library and limited to the
@@ -189,6 +215,14 @@ function NS.PanelEscape(name)
         if c then return escape(c[1], c[2], c[3]) end
     end
     return NS.SkinEscape(name)
+end
+
+--- The r, g, b of a line this addon writes on GameTooltip from a settings page (skinning-§7, cause
+--- L2): `gtip.line`, or nothing, the client's own line color, while the owner ignores its panel or the
+--- skin leaves the token alone. The library's own rows read the same token.
+function NS.PanelTipLine()
+    if Skin and type(Skin.GetIgnore) == "function" and Skin:GetIgnore(addonName) == true then return nil end
+    return NS.SkinColor("gtip.line")
 end
 
 -- The font outline modes (LibKa0s-Skin-1.0 minor 9's OUTLINE_MODES, in its order), with the Skin
@@ -283,9 +317,17 @@ end
 --
 -- PREVIEW. A pick only previews (the Skin major moves and this addon repaints); `set`
 -- (NS.WriteSkinChoice) runs only on Apply, the gear or Apply to all, and the close control and
--- Escape put back the stored choice as `get` reads it at the close. The eye (X6: AuraMaster has a
--- test mode to preview in) starts test mode, so the player sees the skin on the containers'
--- placeholders; the library raises its DIALOG window after onPreview returns.
+-- Escape put back the stored choice as `get` reads it at the close.
+--
+-- THE PREVIEW MODE (R6-PV, LibKa0s OptionsSkinPicker minor 11's spec.preview; Ka0sAddonsCommonTasks
+-- docs/2026-11-03-SMOKE_ROUND6, the lead's call 2). AuraMaster previews in its test mode, so the
+-- player sees the skin on every container's placeholders. It has no main window, so it passes no
+-- isShown and the library counts the HUD hidden: a picker that shows with test mode off turns it on,
+-- the eye toggles it, and every close (Apply, Apply to all, the gear, the close control, Escape,
+-- NS.HideSkinPicker) puts back the state the picker opened with. Each switch is Preview.SetTestMode,
+-- the one writer `/am test`, the launcher and the Master controls checkbox use, so they all read the
+-- same state and a start in combat is refused with the seam's own line (the library then undoes
+-- nothing). The library raises its DIALOG window after each call.
 --
 -- QUEUED. One picker is up at a time across every Ka0s addon: while another addon's is up,
 -- O.SkinPicker queues this one and answers nil, "queued", which NS.MaybeShowSkinPicker passes
@@ -295,13 +337,21 @@ local PICKER_PATH = "skin.pickerSeen"
 local pickerTarget       -- the one-shot PLAYER_REGEN_ENABLED target, while a start is held
 local quietClose = false -- true while NS.HideSkinPicker takes the picker down
 
---- The eye: test mode on, so every container draws its placeholders in the previewed skin. A mode
---- already on needs nothing; a refused start (combat) prints its own line.
-local function previewSkin()
+--- Switch test mode through the write seam; answers false when it refused (a start in combat), so
+--- the library records no change to undo.
+local function setPreviewTestMode(on)
     local P = NS.Preview
-    if not (P and P.SetTestMode) then return end
-    if not (NS.State and NS.State.testMode) then P.SetTestMode(true, "skin picker") end
+    if not (P and P.SetTestMode) then return false end
+    if P.SetTestMode(on, "skin picker") == false then return false end
 end
+
+--- spec.preview: the picker's test mode, entered and left only through Preview.SetTestMode.
+local PICKER_PREVIEW = {
+    mode = "test",
+    enter = function() return setPreviewTestMode(true) end,
+    exit = function() return setPreviewTestMode(false) end,
+    isActive = function() return (NS.State and NS.State.testMode) == true end,
+}
 
 --- The player's close: the picker seen, and nothing else. The library's put-back already wears the
 --- stored choice, so the skin is not this callback's to move.
@@ -318,7 +368,7 @@ function NS.SkinPickerSpec()
     return {
         owner = addonName, get = NS.SkinChoice, set = NS.WriteSkinChoice,
         page = "general", tab = "Appearance",
-        onPreview = previewSkin, onClose = pickerClosed,
+        preview = PICKER_PREVIEW, onClose = pickerClosed,
     }
 end
 
@@ -385,6 +435,51 @@ function NS.MaybeShowSkinPicker()
     return O.SkinPicker(NS.SkinPickerSpec())
 end
 
+-- ── the one-time skin notice (LibKa0s OptionsSkinPicker minor 9, SG-L3) ────────────────────────
+-- A release that wants every account to learn skins exist raises lib.SKIN_NOTICE_VERSION. The first
+-- addon to ask in a session claims the notice and shows the picker; every other addon records the
+-- version and stays quiet. The record is `db.global.skinNotice`, a number: account-wide, so a profile
+-- switch never shows it twice. In combat nothing is claimed; it asks again every NOTICE_RETRY seconds until combat ends.
+local NOTICE_RETRY = 5   -- seconds between asks while the player is in combat
+local noticeWaiting = false
+
+local function noticeGlobal()
+    local d = NS.db or (NS.addon and NS.addon.db)
+    return d and d.global or nil
+end
+
+local noticeStore = {
+    get = function() local g = noticeGlobal(); return g and g.skinNotice or nil end,
+    set = function(v) local g = noticeGlobal(); if g then g.skinNotice = v end end,
+}
+
+function NS.MaybeShowSkinNotice()
+    local O = NS.Helpers
+    if not (O and type(O.SkinNotice) == "function" and noticeGlobal()) then return nil, "unavailable" end
+    if NS.IsStoodDown and NS.IsStoodDown() then
+        -- A stood-down addon shows nothing, but a seen record still silences the rest (SG-L3).
+        O.SkinNotice(nil, noticeStore, true)
+        return nil, "standdown"
+    end
+    local spec = NS.SkinPickerSpec()
+    local frame, why = O.SkinNotice(spec, noticeStore)
+    if why == "combat" and not noticeWaiting and type(_G.C_Timer) == "table" and _G.C_Timer.After then
+        noticeWaiting = true
+        _G.C_Timer.After(NOTICE_RETRY, function()
+            noticeWaiting = false
+            NS.MaybeShowSkinNotice()
+        end)
+    end
+    return frame, why
+end
+
+local pickerFirstRun = NS.MaybeShowSkinPicker
+function NS.MaybeShowSkinPicker()
+    local frame, why = NS.MaybeShowSkinNotice()
+    if frame or why == "queued" then return frame, why end
+    return pickerFirstRun()
+end
+
 -- AceGUI keeps ONE callback per event name (options-ui-§19). Without the library's chain there is
 -- no skin restore to share the release with, so the host's work takes the callback.
 local function releaseByCallback(widget, fn)
@@ -404,7 +499,7 @@ if not Skin then
             local own = NS.SKIN_TOKENS[name]
             c = own and own.default
         end
-        if c then return c[1], c[2], c[3], c[4] or 1 end
+        if type(c) == "table" then return c[1], c[2], c[3], c[4] or 1 end
     end
     local function noop() end
     local S = { owner = addonName, apiVersion = 3, FROM_SKIN = "@skin" }
@@ -419,7 +514,14 @@ if not Skin then
         "GetAccentColor", "GetPanelColor", "GetFont",
         "TitleBar", "Divider", "Footer", "Card", "Slider", "NavItem", "Drawer", "ListRow", "MenuFrame",
         "Tooltip", "Strip", "Cover", "Text", "ChartStyle", "BarStyle", "IconBorder", "GlowColor",
-        "BarTexture", "FontFlags", "HudFontSize",
+        "BarTexture", "FontFlags", "HudFontSize", "Mark",
+        -- LibKa0s v1.85.0: nil is each getter's degraded answer. The three colors answer nothing, so
+        -- the stored color draws; HudShadow's nil is "the stored fontShadow stands". BarGloss draws
+        -- nothing: no skin, no gloss.
+        "HudTextColor", "HudLabelColor", "BarFillColor", "HudShadow", "BarGloss", "HoverArt",
+        -- LibKa0s v1.85.0 round 5 (R5-L3): there is no header band without the library, so Band
+        -- answers nil and Header places nothing.
+        "Band", "Header",
     }) do S[name] = noop end
 
     S.Token = function(name)
@@ -456,8 +558,31 @@ if not Skin then
         local n = tonumber(size)
         return (n and n > 0) and n or 12
     end
+    -- No skin states a border, so the stored style, Show border and thickness stand.
+    S.BarBorder = function(style, show, size) return style, show, size end
+    -- LibKa0s v1.85.0: a string a caller concatenates, so never nil; the art in its own color, there
+    -- being no tint to read.
+    S.MarkText = function(path, size)
+        size = size or 14
+        return ("|T%s:%d:%d|t"):format(path, size, size)
+    end
+    -- The one member that must draw, or a string has no face (Options docs, "The degradation
+    -- facade"). Flags go through S.FontFlags, because a host stores "@skin". No font object is built,
+    -- so a client that draws only an object's shadow draws none here, which is accepted.
+    S.HudFont = function(fs, opts)
+        opts = type(opts) == "table" and opts or {}
+        local face = opts.face
+        if type(face) ~= "string" or face == "" then face = STANDARD_TEXT_FONT end
+        if type(face) ~= "string" then return nil end
+        fs:SetFont(face, S.HudFontSize(opts.size), S.FontFlags(opts.flags))
+        local on = opts.shadow and true or false
+        fs:SetShadowColor(0, 0, 0, on and 1 or 0)
+        fs:SetShadowOffset(on and 1 or 0, on and -1 or 0)
+    end
 
     NS.Skin = S
+    -- A stored value stands wherever a companion follows the skin: Style.Followed and Style.SkinKey.
+    NS.SkinDegraded = true
     function NS.ApplySkinChoice() return false, false end
     function NS.ApplySkinIgnore() return false, false end
     function NS.ApplySkinOverride() return false end
@@ -472,6 +597,7 @@ end
 -- ── the live seam ────────────────────────────────────────────────────────────────────────────
 
 NS.Skin = Skin:For(addonName)
+NS.SkinDegraded = false
 Skin:RegisterOwner(addonName, {
     label  = BRAND,
     get    = NS.SkinChoice,

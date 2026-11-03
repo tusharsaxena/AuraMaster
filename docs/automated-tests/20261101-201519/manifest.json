@@ -1,0 +1,19 @@
+{
+  "schema": 1,
+  "addon": "AuraMaster",
+  "addonVersion": "1.1.0",
+  "run": "20261101-201519",
+  "startedAt": "2026-11-01T20:15:19+05:30",
+  "durationMs": 43899,
+  "label": "FS-AM-GATE: re-cut v1.85.0, kit 50 gates",
+  "release": null,
+  "git": { "sha": "72c566c3b47bf28f6d8e79fd876530718a4c64b1", "branch": "feat/2026-11-01-full-skinning", "dirty": false },
+  "host": { "lua": "Lua 5.1.5  Copyright (C) 1994-2012 Lua.org, PUC-Rio", "luacheck": "Luacheck: 1.2.0", "lizard": "1.24.0", "timingSource": "date +%s%3N" },
+  "suites": {
+    "lint": { "status": "pass", "durationMs": 7451, "warnings": 0, "errors": 0, "files": 205, "gating": true, "gates": { "commit": true, "release": true } },
+    "tests": { "status": "pass", "durationMs": 22845, "passed": 2335, "failed": 0, "skipped": 1, "total": 2336, "gating": true, "gates": { "commit": true, "release": true } },
+    "perf": { "status": "pass", "durationMs": 3551, "scenarios": 12, "gating": false, "gates": { "commit": false, "release": true } },
+    "complexity": { "status": "pass", "durationMs": 6397, "warnings": 0, "maxCcn": 15, "nloc": 56403, "functions": 6138, "avgCcn": 2.3, "avgNloc": 8.3, "avgToken": 75.8, "warnFunRatio": 0.00, "warnNlocRatio": 0.00, "bandFiles": 7, "overCapFiles": 0, "blindFiles": 0, "crashedFiles": 0, "gating": false, "gates": { "commit": false, "release": true } }
+  },
+  "verdict": "green"
+}

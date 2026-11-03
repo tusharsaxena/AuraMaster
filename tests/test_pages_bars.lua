@@ -27,7 +27,8 @@ test("bars: the Icon tab holds the icon's four rows, then the composed icon-bord
     -- the bar border's own leaves)
     assertEqual(table.concat(paths, ","), table.concat({ pre .. "icon", pre .. "iconSize", pre .. "iconGap",
         pre .. "iconZoom", pre .. "iconBorderShow", pre .. "iconBorderStyle", pre .. "iconBorderSize",
-        pre .. "iconBorderColor", pre .. "useClassColorIconBorder" }, ","))
+        pre .. "iconBorderColor", pre .. "useClassColorIconBorder", pre .. "iconBorderStyleFromSkin",
+        pre .. "iconBorderColorFromSkin" }, ","))
     assertEqual(NS.FindSchemaRow(pre .. "iconBorderShow").subgroup, L["Icon border"])
     assertEqual(NS.FindSchemaRow(pre .. "iconBorderColor").classColorSource, "unit", "the tracked unit's class")
     local ws = P.tab("bars", L["Icon"])

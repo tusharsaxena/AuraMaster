@@ -335,11 +335,16 @@ end)
 test("handle: with no media catalog the help mark falls back to Blizzard's information icon", function()
     -- The ladder is the widget's last rung now, reached by handing it no `helpIcon` at all. A client
     -- that unzipped LibKa0s without its media, or a catalog that stops carrying `help`, still gets a
-    -- mark rather than an invisible button.
+    -- mark rather than an invisible button. Since LibKa0s v1.85.0 the widget first asks Media itself
+    -- for the owner's mark, so "no catalog" means both seams answer nothing.
     local NS, mocks = fresh()
     NS.Icon = function() return nil end
+    local media = mocks.LibStub("LibKa0s-Media-1.0", true)
+    local keep = media.Icon
+    media.Icon = function() return nil end
     local inst = NS.ContainerManager.instances[1]
     local h = recordedHandle(mocks, NS, inst)
+    media.Icon = keep
     assertEqual(last(h.help, "SetTexture")[1], [[Interface\FriendsFrame\InformationIcon]])
 end)
 

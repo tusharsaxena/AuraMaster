@@ -55,6 +55,11 @@ C.STYLE_LABELS = { bars = "Bars", icons = "Icons", text = "Text" }
 C.UNIT_COLORS = { player = "ff66b3ff", target = "ffff8c40", focus = "ffb38cff", pet = "ff66d9a6" }
 C.AURA_TYPE_COLORS = { HELPFUL = "ff73bf80", HARMFUL = "ffcc7373" }
 C.STYLE_COLORS = { bars = "ffffb366", icons = "ff80d4ff", text = "ffe699e6" }
+-- Each of those as the owner token that draws it (core/SkinSetup.lua): today's byte under Ka0s Default
+-- and with the settings panel ignored, and a library role under every other skin (cause L5).
+C.UNIT_TOKENS = { player = "am.unitPlayer", target = "am.unitTarget", focus = "am.unitFocus", pet = "am.unitPet" }
+C.AURA_TYPE_TOKENS = { HELPFUL = "am.auraHelpful", HARMFUL = "am.auraHarmful" }
+C.STYLE_TOKENS = { bars = "am.styleBars", icons = "am.styleIcons", text = "am.styleText" }
 
 -- The addon's own AceGUI dropdown type: the stock Dropdown with its closed box justified LEFT
 -- (settings/OptionsSetup.lua's NS.RegisterDropdownWidget). Its own name gives it its own pool, so a

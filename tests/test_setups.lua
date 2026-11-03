@@ -67,10 +67,14 @@ end)
 -- surfaces it wires: close, copy and clear on the debug console (core/DebugLogSetup.lua passes
 -- addonName), close on the perf panel, info on every O.IdList help mark (no list passes helpIcon),
 -- and eye and settings on the first-run skin picker (LibKa0s OptionsSkinPicker minor 1, declared at
--- the v1.80.0 re-vendor: the eye previews in test mode, the gear opens General > Appearance).
+-- the v1.80.0 re-vendor: the eye previews in test mode, the gear opens General > Appearance), and the
+-- marks every consumer owes from LibKa0s v1.85.0 (docs/releasing.md, Step 8 for v1.85.0): the library
+-- draws confirm, reset, move, volume-high and the two chevrons on its own controls once skinned.
 -- red under: a new NS.Icon("x") call site with x undeclared, or a stale extra name on the line.
 test("media: the LibKa0s icons line declares exactly the marks this addon and its library hosts draw", function()
-    local want = { close = true, copy = true, clear = true, info = true, eye = true, settings = true }
+    local want = { close = true, copy = true, clear = true, info = true, eye = true, settings = true,
+        ["chevron-down"] = true, ["chevron-up"] = true, confirm = true, move = true, reset = true,
+        ["volume-high"] = true }
     local p = io.popen("grep -rhoE 'NS\\.Icon\\(\"[^\"]+\"\\)' --include='*.lua' core modules settings")
     local calls = 0
     for line in p:lines() do

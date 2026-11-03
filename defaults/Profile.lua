@@ -54,6 +54,9 @@ NS.defaults.profile = {
     skin = {
         source = "ka0s", skin = "ka0s", ignorePanel = true, ignoreFonts = false,
         font = "", texture = "", outline = "hud", pickerSeen = false,
+        -- The record of the one step onto the skin (core/Database.lua's Database.FollowSkin): no schema
+        -- row, so no Defaults path walks it and a companion turned off afterwards stays off.
+        fullSkinReset = false,
     },
 
     -- Profile-wide since schema v2 (core/Database_Migrations.lua's MigrateV2 lifted them off the
@@ -125,18 +128,29 @@ NS.defaults.global = {
 --- Font outline decides, LibKa0s v1.82.0, ruling D-07), no shadow, at `size`; and the
 --- face's "Use the skin's font" companion (LibKa0s OptionsCompose's `fromSkin`), default ON (the
 --- rollout's X3), so a new container follows the skin's `hud.font` the way a stored one does after
---- the v13 reset (core/Database_Migrations.lua). The stored face is kept for when the player turns
---- the companion off. Size, flags and color stay the player's (DECISIONS D4, X4).
+--- the v13 reset (core/Database_Migrations.lua). The color and the shadow have a companion of their
+--- own, default ON too (schema v16, the owner's rulings of 2026-11-01). Each stored value is kept for
+--- when the player turns its companion off. Size stays the player's (cause L11).
 local function font(size)
     return {
-        font              = "Friz Quadrata TT",
+        font              = "Ka0s Prototype",
         fontFromSkin      = true,
         fontSize          = size,
         fontColor         = color(1, 1, 1, 1),
+        fontColorFromSkin = true,
         useClassColorFont = false,
         fontFlags         = "@skin",
         fontShadow        = false,
+        fontShadowFromSkin = true,
     }
+end
+
+--- The Text container's font: the six leaves with the color's companion off (SF-AM-3), so the
+--- stored color draws under every skin until the player ticks Use the skin's color.
+local function textFont(size)
+    local t = font(size)
+    t.fontColorFromSkin = false
+    return t
 end
 
 --- The name label's font: the six leaves, gold at 12 (the strip's own look).
@@ -231,21 +245,24 @@ NS.CONTAINER_TEMPLATE = {
 
         -- The fill and the background each follow the skin's `bar.texture` while their "Use the
         -- skin's texture" companion is on: default ON (X3), as the font's. The stored picks are kept.
-        -- The borders have no companion (DECISIONS D1): every skin's `bar.borderStyle` is None.
-        barTexture = "Blizzard", barTextureFromSkin = true, barAlpha = 1.0,
-        barColor = color(0.20, 0.55, 0.95, 1), useClassColorBar = false,
+        -- Every color and border has a companion too (schema v16). Class colors come first and have
+        -- none. A skin's None `bar.borderStyle` leaves Show border and the stored style the player's,
+        -- so this block ships off; a skin's real style wins over both (modules/Style_Border.lua).
+        barTexture = "Ka0s Default", barTextureFromSkin = true, barAlpha = 1.0,
+        barColor = color(0.20, 0.55, 0.95, 1), barColorFromSkin = false, useClassColorBar = false,
         colorMode = "static",   -- "dispel" tints by the profile's dispelColors (schema v2)
         drain = "left", smooth = false,
 
-        bgTexture = "Blizzard", bgTextureFromSkin = true, bgAlpha = 1.0, bgColor = color(0, 0, 0, 0.5), useClassColorBg = false,
+        bgTexture = "Ka0s Default", bgTextureFromSkin = true, bgAlpha = 1.0, bgColor = color(0, 0, 0, 0.5),
+        bgColorFromSkin = false, useClassColorBg = false,
         bgColorMode = "static",   -- "dispel" tints the background as colorMode does the fill (feedback #7)
 
-        borderShow = false, borderStyle = "Solid", borderSize = 1,
-        borderColor = color(0, 0, 0, 1), useClassColorBorder = false,
+        borderShow = true, borderStyle = "Solid", borderStyleFromSkin = true, borderSize = 1,
+        borderColor = color(0, 0, 0, 1), borderColorFromSkin = false, useClassColorBorder = false,
 
         icon = "LEFT", iconSize = 0, iconGap = 1, iconZoom = 0.08,
-        iconBorderShow = false, iconBorderStyle = "Solid", iconBorderSize = 1,
-        iconBorderColor = color(0, 0, 0, 1), useClassColorIconBorder = false,
+        iconBorderShow = false, iconBorderStyle = "Solid", iconBorderStyleFromSkin = true, iconBorderSize = 1,
+        iconBorderColor = color(0, 0, 0, 1), iconBorderColorFromSkin = false, useClassColorIconBorder = false,
 
         spark = true, sparkWidth = 8, sparkColor = color(1, 1, 1, 0.9), useClassColorSpark = false,
         sparkTimeless = true,   -- false: no spark on an aura without a duration (modules/Style_Bars.lua)
@@ -263,8 +280,8 @@ NS.CONTAINER_TEMPLATE = {
     icons = {
         width = 32, height = 32, zoom = 0.08,
 
-        borderShow = true, borderStyle = "Solid", borderSize = 1,
-        borderColor = color(0, 0, 0, 1), useClassColorBorder = false,
+        borderShow = true, borderStyle = "Solid", borderStyleFromSkin = true, borderSize = 1,
+        borderColor = color(0, 0, 0, 1), borderColorFromSkin = false, useClassColorBorder = false,
         dispelBorder = true,
 
         cooldown = true, cooldownReverse = false, cooldownEdge = true,
@@ -289,12 +306,12 @@ NS.CONTAINER_TEMPLATE = {
         autoSize = true,
         template = "$spellname$[ x$stacks$][ - $remainingduration$]",
         justifyH = "LEFT", justifyV = "MIDDLE", x = 2, y = 0,
-        font = font(12),
+        font = textFont(12),
         timeFormat = "blizzard",
 
         icon = "NONE", iconSize = 0, iconGap = 2, iconZoom = 0.08,
-        iconBorderShow = false, iconBorderStyle = "Solid", iconBorderSize = 1,
-        iconBorderColor = color(0, 0, 0, 1), useClassColorIconBorder = false,
+        iconBorderShow = false, iconBorderStyle = "Solid", iconBorderStyleFromSkin = true, iconBorderSize = 1,
+        iconBorderColor = color(0, 0, 0, 1), iconBorderColorFromSkin = false, useClassColorIconBorder = false,
 
         anim = "none", animSpeed = 1.0, animIntensity = 0.3, animBounce = 3,
 
@@ -311,7 +328,7 @@ NS.CONTAINER_TEMPLATE = {
         -- shadow and never replaces them. glowIntensity scales the color's alpha; glowThickness is the
         -- ring's radius in px, glowX/glowY shift the whole ring (owner's defaults, 2026-10-16).
         glow = false,
-        glowColor = color(0, 0, 0, 1), useClassColorGlow = false,
+        glowColor = color(0, 0, 0, 1), glowColorFromSkin = false, useClassColorGlow = false,
         glowIntensity = 0.5, glowThickness = 4,
         glowX = -4, glowY = 0,
     },

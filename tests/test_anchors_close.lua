@@ -68,7 +68,12 @@ end)
 test("close: with no media catalog the X falls back to the library's Blizzard stop button", function()
     local NS, mocks = fresh()
     NS.Icon = function() return nil end
+    -- Since LibKa0s v1.85.0 the widget first asks Media itself for the owner's mark.
+    local media = mocks.LibStub("LibKa0s-Media-1.0", true)
+    local keep = media.Icon
+    media.Icon = function() return nil end
     local h = recordedHandle(mocks, NS, NS.ContainerManager.instances[1])
+    media.Icon = keep
     assertEqual(last(h.close, "SetTexture")[1], [[Interface\Buttons\UI-StopButton]])
 end)
 

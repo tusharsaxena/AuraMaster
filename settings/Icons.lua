@@ -43,8 +43,9 @@ NS.RegisterSchemaRows({
 })
 
 local border = H.BorderGroup({
-    prefix = P, page = PAGE, group = G_BORDER, subgroup = L["Border"], show = true, classColor = UNIT,
+    prefix = P, page = PAGE, group = G_BORDER, subgroup = L["Border"], show = true, classColor = UNIT, fromSkin = "icon",
     extra = {
+        NS.FollowRow(P .. "borderColorFromSkin", L["Border color"]),
         { path = P .. "dispelBorder", type = "bool", label = L["Color the border by dispel type"],
           desc = L["Where a debuff has a dispel type, this border replaces yours in the dispel color."] },
     },
@@ -52,6 +53,7 @@ local border = H.BorderGroup({
 -- A style other than Solid is a backdrop, which a live button's secret size keeps from redrawing
 -- (modules/Style_Border.lua's ApplyBorder, B2-3): the tooltip says when it shows.
 for _, row in ipairs(border) do
+    if row.path == P .. "borderSize" then NS.IconBorderSizeRow(row) end
     if row.path == P .. "borderStyle" then row.tooltip = L["The border texture. Solid redraws at once; any other texture, and a new thickness for one, reaches the aura buttons already on screen after a /reload."] end
 end
 NS.RegisterSchemaRows(border)
@@ -83,7 +85,7 @@ local function textRows(leaf, group, extras)
     })
     NS.RegisterSchemaRows(H.FontGroup({
         prefix = prefix, page = PAGE, group = group, subgroup = L["Font"], classColor = UNIT, fromSkin = true,
-        flagsFromSkin = true,
+        flagsFromSkin = true, extra = NS.FontFollowRows(prefix),
     }))
     local rows = {
         { path = prefix .. "justify", page = PAGE, group = group, subgroup = L["Placement"], type = "string",

@@ -49,6 +49,17 @@ local function build(frame)
     am.bar:SetMinMaxValues(0, 1)
 
     am.fill = am.bar:CreateTexture(nil, "ARTWORK")
+    -- The gloss's bar (cause A3). S.BarGloss shines a status bar's own fill Texture, and am.bar's is
+    -- the invisible elapsed part, so this second bar, full, lies exactly over am.fill: the part that
+    -- draws. Its fill is clear too, and the library's gloss layer on it is the only thing it shows.
+    -- Over the fill and under the borders and the text. Ours alone, so it is the one region here a
+    -- skin registry may hold: S.BarGloss reads no geometry.
+    am.sheen = CreateFrame("StatusBar", nil, am.bar)
+    am.sheen:SetStatusBarTexture(C.WHITE_TEXTURE)
+    am.sheen:SetStatusBarColor(1, 1, 1, 0)
+    am.sheen:SetMinMaxValues(0, 1)
+    am.sheen:SetValue(1)
+    am.sheen:SetAllPoints(am.fill)
     -- The spark lives on a frame of its own, which clips it when a timeless aura must not show one
     -- (wireSpark).
     am.sparkClip = CreateFrame("Frame", nil, am.bar)
@@ -71,6 +82,7 @@ local function build(frame)
     -- which the engine anchors and whose level can read secret (docs/midnight-quirks.md).
     local level, V = am.bar:GetFrameLevel() - 1, C.LAYERS.LEVEL
     am.bar:SetFrameLevel(level + V.FILL)
+    am.sheen:SetFrameLevel(level + V.SPARK)
     am.sparkClip:SetFrameLevel(level + V.SPARK)
     am.border:SetFrameLevel(level + V.BORDER)
     am.iconBorder:SetFrameLevel(level + V.BORDER)
@@ -200,14 +212,31 @@ local function paintSurface(tex, mode, stored, useClass, preview, opacity)
     tex:SetAlpha(opacity * a)
 end
 
+--- The color the fill draws: the skin's `bar.fill` while "Use the skin's color" is on. A class color
+--- comes first (Style.Followed), and a dispel tint goes over it on the engine's side.
+local function fillColor(b)
+    return Style.Followed(b.barColor, Style.OrTemplate(b.barColorFromSkin, D.bars.barColorFromSkin) == true,
+        "bar.fill", b.useClassColorBar)
+end
+
+--- The color the background draws: the skin's `bar.bg`, by the same rules.
+local function bgColor(b)
+    return Style.Followed(b.bgColor, Style.OrTemplate(b.bgColorFromSkin, D.bars.bgColorFromSkin) == true,
+        "bar.bg", b.useClassColorBg)
+end
+
 --- Paint the fill and show it. The fill is shown every dress: the engine's no-aura pass hides a
 --- dispel texture, and clearing the binding does not show it again.
 local function paintFill(am, b, preview)
-    local key = Style.SkinKey("bar.texture", b.barTexture, Style.OrTemplate(b.barTextureFromSkin, D.bars.barTextureFromSkin))
+    local fromSkin = Style.OrTemplate(b.barTextureFromSkin, D.bars.barTextureFromSkin) == true
+    local key = Style.SkinKey("bar.texture", b.barTexture, fromSkin)
     am.fill:SetTexture(Style.Fetch("statusbar", key, C.FALLBACK_TEXTURE))
-    paintSurface(am.fill, b.colorMode, b.barColor, b.useClassColorBar, preview,
+    paintSurface(am.fill, b.colorMode, fillColor(b), b.useClassColorBar, preview,
         tonumber(b.barAlpha) or D.bars.barAlpha)
     am.fill:Show()
+    -- The gloss belongs to the skin's texture, so a player's own texture stays plain. Every dress:
+    -- the companion may have moved; a skin change alone needs no call.
+    NS.Skin.BarGloss(am.sheen, fromSkin)
 end
 
 --- Paint the surfaces: the fill, the background, the border and the spark. Each surface's opacity
@@ -220,19 +249,19 @@ local function applySurfaces(am, b, preview)
     -- background-texture token, and the player's background color still tints it.
     local bgKey = Style.SkinKey("bar.texture", b.bgTexture, Style.OrTemplate(b.bgTextureFromSkin, D.bars.bgTextureFromSkin))
     am.bg:SetTexture(Style.Fetch("statusbar", bgKey, C.FALLBACK_TEXTURE))
-    paintSurface(am.bg, b.bgColorMode, b.bgColor, b.useClassColorBg, preview,
+    paintSurface(am.bg, b.bgColorMode, bgColor(b), b.useClassColorBg, preview,
         tonumber(b.bgAlpha) or D.bars.bgAlpha)
     am.bg:Show()
     -- The color an untyped placeholder keeps (previewDispelPaint), taken HERE, inside the dress, where
     -- the container's class snapshot is set: FillPreview runs after Style.Element has cleared it.
     if preview then
-        am.fillNone = Style.CurveColor(b.barColor, b.useClassColorBar)
-        am.bgNone = Style.CurveColor(b.bgColor, b.useClassColorBg)
+        am.fillNone = Style.CurveColor(fillColor(b), b.useClassColorBar)
+        am.bgNone = Style.CurveColor(bgColor(b), b.useClassColorBg)
     end
 
     -- Guarded (B2-3): a refused border costs the border, never Bars.Bind after it.
-    Style.GuardedBorder("bar border", am.border, b.borderShow, b.borderStyle,
-        tonumber(b.borderSize) or D.bars.borderSize, b.borderColor, b.useClassColorBorder)
+    local style, size, color, show = Style.BorderLook(b, D.bars, Style.BORDER_BAR)
+    Style.GuardedBorder("bar border", am.border, show, style, size, color, b.useClassColorBorder)
 
     am.spark:SetShown(b.spark ~= false)
     am.spark:SetVertexColor(Style.Color(b.sparkColor, b.useClassColorSpark))
@@ -335,11 +364,11 @@ function Bars.Bind(frame, am, cfg, b)
     local palette = Style.ProfileDispelColors()
     if b.colorMode == "dispel" then
         Style.Bind(frame, "AddDispelTypeTexture", am.fill,
-            dispelTint(Compat, palette, Style.CurveColor(b.barColor, b.useClassColorBar)))
+            dispelTint(Compat, palette, Style.CurveColor(fillColor(b), b.useClassColorBar)))
     end
     if b.bgColorMode == "dispel" then
         Style.Bind(frame, "AddDispelTypeTexture", am.bg,
-            dispelTint(Compat, palette, Style.CurveColor(b.bgColor, b.useClassColorBg)))
+            dispelTint(Compat, palette, Style.CurveColor(bgColor(b), b.useClassColorBg)))
     end
     if b.pandemic then Style.Bind(frame, "AddPandemicRegion", am.pandemic) end
 

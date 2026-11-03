@@ -283,7 +283,7 @@ local function previewText(cfg, sample)
     local raw = (NS.Style.Text.PreviewLine(cfg.text, sample):gsub("\n", " / "))
     raw = NS.Style.Text.EscapeStrayPipes(raw)
     local font = (cfg.text and cfg.text.font) or D.font
-    local r, g, b = NS.Style.Color(font.fontColor, font.useClassColorFont)
+    local r, g, b = NS.Style.Color(NS.Style.FontColor(font, D.font), font.useClassColorFont)
     -- Rounded, not truncated, and clamped (Style_Text.lua's own `hex`): a stored 196/255 can float
     -- back to 195.999..., which %x truncates to 0xc3 instead of 0xc4.
     local function hex(v) return math.floor(math.max(0, math.min(1, v or 1)) * 255 + 0.5) end
@@ -385,7 +385,7 @@ end
 
 NS.RegisterSchemaRows(H.FontGroup({
     prefix = P .. "font.", page = PAGE, group = G_FONT, subgroup = L["Font"], classColor = UNIT, fromSkin = true,
-    flagsFromSkin = true,
+    flagsFromSkin = true, extra = NS.FontFollowRows(P .. "font."),
 }))
 -- The glow behind the text (text glow, spec G4; rows per the glyph glow addendum, TG-09): drawn by
 -- modules/Style_TextGlow.lua in addition to the font's outline and shadow, behind the text, never in
@@ -399,6 +399,7 @@ NS.RegisterSchemaRows({
 NS.RegisterSchemaRows(H.ColorPair({
     prefix = P, page = PAGE, group = G_FONT, subgroup = S_GLOW, key = "glowColor",
     companionKey = "useClassColorGlow", label = L["Glow color"], classColor = UNIT,
+    extra = { NS.FollowRow(P .. "glowColorFromSkin", L["Glow color"]) },
 }))
 NS.RegisterSchemaRows({
     { path = P .. "glowIntensity", page = PAGE, group = G_FONT, subgroup = S_GLOW, type = "number",
@@ -459,13 +460,15 @@ NS.RegisterSchemaRows({
       label = L["Icon zoom"], desc = L["Crop the icon's border art."] },
 })
 local iconBorder = H.BorderGroup({
-    prefix = P, page = PAGE, group = G_ICON, subgroup = L["Icon border"], show = true, classColor = UNIT,
+    prefix = P, page = PAGE, group = G_ICON, subgroup = L["Icon border"], show = true, classColor = UNIT, fromSkin = "icon",
+    extra = { NS.FollowRow(P .. "iconBorderColorFromSkin", L["Border color"]) },
     keys = { borderShow = "iconBorderShow", borderStyle = "iconBorderStyle", borderSize = "iconBorderSize",
              borderColor = "iconBorderColor", useClassColorBorder = "useClassColorIconBorder" },
 })
 -- Every border row, the swatch with them, is dropped with no icon (ICON_SHOWN).
 for _, row in ipairs(iconBorder) do
     row.shownWhen = ICON_SHOWN
+    if row.path == P .. "iconBorderSize" then NS.IconBorderSizeRow(row) end
     if row.path == P .. "iconBorderShow" then row.tooltip = L["Draw a border around the icon; its art sits inside it."] end
     -- A style other than Solid is a backdrop, which a live button's secret size keeps from redrawing
     -- (modules/Style_Border.lua's ApplyBorder, B2-3): the tooltip says when it shows.

@@ -544,7 +544,7 @@ local BINDERS = {
         if twin then return Style.BindDurationFormat(frame, fs, textFormat, bindingFor(am, false), NO_RUN, D) end
         local font = s.font or D.font
         Style.BindDurationFormat(frame, fs, textFormat, bindingFor(am, s.expiringBlink and true or false), s, D,
-            Style.CurveColor(font.fontColor, font.useClassColorFont))
+            Style.CurveColor(Style.FontColor(font, D.font), font.useClassColorFont))
     end,
 }
 
@@ -660,7 +660,9 @@ local PIECE_TEXT = {
 local function previewRunColor(fs, aura, s)
     if aura.duration <= 0 or not (s.expiringColorOn or s.expiringBlink) then return end
     if aura.remaining < number(s.expiringThreshold, D.expiringThreshold) then
-        fs:SetTextColor(Style.Color(s.expiringColorOn and s.expiringColor or (s.font or D.font).fontColor, false))
+        local font = s.font or D.font
+        fs:SetTextColor(Style.Color(s.expiringColorOn and s.expiringColor or Style.FontColor(font, D.font),
+            false))
     end
 end
 

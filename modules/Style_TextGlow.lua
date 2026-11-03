@@ -108,7 +108,9 @@ end
 function Text.GlowFont(fs, s, k)
     local path, size, flags = Text.GlowFontKey(s)
     if not fs:SetFont(path, size, flags) then fs:SetFont(C.FALLBACK_FONT, size, flags) end
-    local r, g, b, a = Style.Color(s.glowColor or D.glowColor, s.useClassColorGlow)
+    local color = Style.Followed(s.glowColor or D.glowColor,
+        Style.OrTemplate(s.glowColorFromSkin, D.glowColorFromSkin) == true, "am.textGlow", s.useClassColorGlow)
+    local r, g, b, a = Style.Color(color, s.useClassColorGlow)
     a = (a or 1) * number(s.glowIntensity, D.glowIntensity)
     fs:SetTextColor(r, g, b, a)
     if not C.TEXT_GLOW_PAIRED then return fs:SetShadowOffset(0, 0) end

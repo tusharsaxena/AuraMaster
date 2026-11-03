@@ -313,6 +313,32 @@ end
 --- and still answer the CLI, and the ordering test is what reports the mistake.
 --- @param rows table
 --- @param beforePath string|nil
+--- A color's or the shadow's "Use the skin's ..." companion (LibKa0s Options doc, "Moving to this
+--- version", step 3), a row for a composer's `extra`: `governs` is the label of the row it governs.
+--- That row keeps no `disabledIf`: it stays live and keeps its stored value for when this goes off.
+function NS.FollowRow(path, governs, what)
+    return {
+        path = path, type = "bool", label = NS.L[what == "shadow" and "Use the skin's shadow" or "Use the skin's color"],
+        desc = NS.L["Draw this in the skin's look."] .. " " .. governs .. " " .. NS.L["is not read while this is on."],
+    }
+end
+
+--- The two companions every composed font block carries past its own.
+function NS.FontFollowRows(prefix)
+    return { NS.FollowRow(prefix .. "fontColorFromSkin", NS.L["Font color"]),
+             NS.FollowRow(prefix .. "fontShadowFromSkin", NS.L["Font shadow"], "shadow") }
+end
+
+--- Point a composed `fromSkin = "icon"` thickness row at this addon's own token, so its disabled row
+--- shows what draws: 1 px under Ka0s Default, where the composer's `icon.borderSize` says 2.
+function NS.IconBorderSizeRow(row)
+    local skinValue = row.skinValue
+    row.skinValue = function(r)
+        if skinValue(r) == nil then return nil end
+        return NS.Skin.Resolve("am.iconBorderSize", nil, true)
+    end
+end
+
 function NS.RegisterSchemaRows(rows, beforePath)
     if type(rows) ~= "table" then return end
     local at = indexOf(beforePath)
@@ -960,16 +986,32 @@ end
 -- ---------------------------------------------------------------------------
 
 --- An ordered `{ value, text }` list from one of core/Constants.lua's key arrays and its labels,
---- localized. The ordered-array shape keeps the declared order in the dropdown. `colors`, when
---- given, maps a key to the AARRGGBB body of a "|c" escape its text is drawn in; the CLI accepts and
---- lists the VALUE, never the text, so the escape reaches only what is drawn.
-function NS.Choices(keys, labels, colors)
+--- localized. The ordered-array shape keeps the declared order in the dropdown. `tokens`, when
+--- given, maps a key to the color token its text is drawn in, through NS.PanelEscape: the rows hold
+--- this list from file load, so each colored entry's text is rewritten in place on a skin change
+--- (cause L5). The CLI accepts and lists the VALUE, never the text, so the escape reaches only what
+--- is drawn.
+local tinted = {}
+
+local function paintChoice(t)
+    t.entry.text = NS.PanelEscape(t.token) .. t.label .. "|r"
+end
+
+NS.Skin.OnLooksChanged(function()
+    for _, t in ipairs(tinted) do paintChoice(t) end
+end)
+
+function NS.Choices(keys, labels, tokens)
     local out = {}
     for i, k in ipairs(keys) do
         local text = L[labels[k] or tostring(k)]
-        local color = colors and colors[k]
-        if type(color) == "string" and color ~= "" then text = "|c" .. color .. text .. "|r" end
         out[i] = { value = k, text = text }
+        local token = tokens and tokens[k]
+        if type(token) == "string" and token ~= "" then
+            local t = { entry = out[i], label = text, token = token }
+            tinted[#tinted + 1] = t
+            paintChoice(t)
+        end
     end
     return out
 end

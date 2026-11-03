@@ -29,6 +29,8 @@ end
 local function v13profile()
     local function font(flags) return { font = "Friz Quadrata TT", fontSize = 12, fontFlags = flags } end
     return {
+        -- The record seeded: v16 writes From skin over a pick, which tests/test_skin_flip.lua pins.
+        skin = { fullSkinReset = true },
         containers = {
             [1] = { name = "Bars", style = "bars",
                 bars = { name = font("OUTLINE"), time = font("THICKOUTLINE"), stacks = font("OUTLINE") },
