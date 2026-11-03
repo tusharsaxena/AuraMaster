@@ -348,14 +348,14 @@ test("skin flip: the icon beside a bar or a text line draws the icon family, not
     assertEqual(rgba(unpack(strips[1]:__last("SetColorTexture"))), rgba(unpack(color)), "a text line's icon, the color")
 end)
 
-test("skin flip: a live switch to WoW Default keeps a laid-out icon's border drawn, flat, in the skin's values", function()
+test("skin flip: a live switch to a skin whose icon border is art keeps a laid-out icon's border drawn, flat", function()
     local NS, mocks = fresh()
     local Skin = mocks.LibStub("LibKa0s-Skin-1.0")
-    local key
-    for _, def in ipairs(Skin:Skins()) do
-        if Skin:ResolveSkin(def.key)["icon.borderStyle"] ~= "Solid" then key = key or def.key end
-    end
-    assertTrue(key ~= nil, "the one skin that is not Solid")
+    -- Every shipped skin's icon border is Solid 1px since LibKa0s v1.85.0's R3-FIX (WoW Default's was
+    -- the Blizzard Tooltip art), so the art case is a skin of the test's own.
+    local key = "tooltipedge"
+    Skin:RegisterSkin({ key = key, tokens = { ["icon.borderStyle"] = "Blizzard Tooltip", ["icon.borderSize"] = 2 } })
+    assertEqual(Skin:ResolveSkin(key)["icon.borderStyle"], "Blizzard Tooltip", "a skin that is not Solid")
     local c = cfg(NS, { style = "icons" })
     local am, frame = dressed(NS, c)
     mocks.__layOut(am.border)
