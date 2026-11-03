@@ -317,9 +317,17 @@ end
 --
 -- PREVIEW. A pick only previews (the Skin major moves and this addon repaints); `set`
 -- (NS.WriteSkinChoice) runs only on Apply, the gear or Apply to all, and the close control and
--- Escape put back the stored choice as `get` reads it at the close. The eye (X6: AuraMaster has a
--- test mode to preview in) starts test mode, so the player sees the skin on the containers'
--- placeholders; the library raises its DIALOG window after onPreview returns.
+-- Escape put back the stored choice as `get` reads it at the close.
+--
+-- THE PREVIEW MODE (R6-PV, LibKa0s OptionsSkinPicker minor 11's spec.preview; Ka0sAddonsCommonTasks
+-- docs/2026-11-03-SMOKE_ROUND6, the lead's call 2). AuraMaster previews in its test mode, so the
+-- player sees the skin on every container's placeholders. It has no main window, so it passes no
+-- isShown and the library counts the HUD hidden: a picker that shows with test mode off turns it on,
+-- the eye toggles it, and every close (Apply, Apply to all, the gear, the close control, Escape,
+-- NS.HideSkinPicker) puts back the state the picker opened with. Each switch is Preview.SetTestMode,
+-- the one writer `/am test`, the launcher and the Master controls checkbox use, so they all read the
+-- same state and a start in combat is refused with the seam's own line (the library then undoes
+-- nothing). The library raises its DIALOG window after each call.
 --
 -- QUEUED. One picker is up at a time across every Ka0s addon: while another addon's is up,
 -- O.SkinPicker queues this one and answers nil, "queued", which NS.MaybeShowSkinPicker passes
@@ -329,13 +337,21 @@ local PICKER_PATH = "skin.pickerSeen"
 local pickerTarget       -- the one-shot PLAYER_REGEN_ENABLED target, while a start is held
 local quietClose = false -- true while NS.HideSkinPicker takes the picker down
 
---- The eye: test mode on, so every container draws its placeholders in the previewed skin. A mode
---- already on needs nothing; a refused start (combat) prints its own line.
-local function previewSkin()
+--- Switch test mode through the write seam; answers false when it refused (a start in combat), so
+--- the library records no change to undo.
+local function setPreviewTestMode(on)
     local P = NS.Preview
-    if not (P and P.SetTestMode) then return end
-    if not (NS.State and NS.State.testMode) then P.SetTestMode(true, "skin picker") end
+    if not (P and P.SetTestMode) then return false end
+    if P.SetTestMode(on, "skin picker") == false then return false end
 end
+
+--- spec.preview: the picker's test mode, entered and left only through Preview.SetTestMode.
+local PICKER_PREVIEW = {
+    mode = "test",
+    enter = function() return setPreviewTestMode(true) end,
+    exit = function() return setPreviewTestMode(false) end,
+    isActive = function() return (NS.State and NS.State.testMode) == true end,
+}
 
 --- The player's close: the picker seen, and nothing else. The library's put-back already wears the
 --- stored choice, so the skin is not this callback's to move.
@@ -352,7 +368,7 @@ function NS.SkinPickerSpec()
     return {
         owner = addonName, get = NS.SkinChoice, set = NS.WriteSkinChoice,
         page = "general", tab = "Appearance",
-        onPreview = previewSkin, onClose = pickerClosed,
+        preview = PICKER_PREVIEW, onClose = pickerClosed,
     }
 end
 

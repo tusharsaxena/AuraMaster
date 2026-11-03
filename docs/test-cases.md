@@ -2164,7 +2164,7 @@ Total.
 - skin verb: refused while the addon is disabled, and no picker shows
 - skin verb: without LibKa0s the verb prints the library-absent line
 
-### test_skin_picker.lua (19)
+### test_skin_picker.lua (26)
 
 - Skin picker: the spec names this owner, its seams, General's Skin tab and the eye
 - Skin picker: an unseen profile shows it; a seen one does not
@@ -2177,8 +2177,15 @@ Total.
 - Skin picker: the player's close marks it seen; this addon's own hide does not
 - Skin picker: the stand-down takes a shown picker down, unmarked
 - Skin picker: a profile that has seen it takes a shown picker down, unmarked
-- Skin picker: the eye starts test mode, and leaves a running one alone
-- Skin picker: the eye in combat starts nothing
+- Skin picker: opened with test mode off, test mode turns on through the write seam
+- Skin picker: the eye toggles test mode, lit while it is on
+- Skin picker: closing by the close control turns off the test mode it turned on
+- Skin picker: closing by Escape turns off the test mode it turned on
+- Skin picker: closing by Apply turns off the test mode it turned on
+- Skin picker: closing by the gear turns off the test mode it turned on
+- Skin picker: closing by HideSkinPicker turns off the test mode it turned on
+- Skin picker: a test mode already on is left alone, and the eye's stop is put back
+- Skin picker: the eye in combat starts nothing, and the close undoes nothing
 - Skin widgets: a hand-built dropdown is painted for this owner
 - Skin widgets: SkinPaintAce paints a widget acquired past the proxy, for this owner
 - Skin widgets: with the settings panel ignored (the new-profile default) nothing is painted
@@ -2824,7 +2831,7 @@ Total.
 | test_skin_glow_restore.lua | 6 |
 | test_skin_outline.lua | 12 |
 | test_skin_verb.lua | 6 |
-| test_skin_picker.lua | 19 |
+| test_skin_picker.lua | 26 |
 | test_glyphs.lua | 1 |
 | test_pages_general_categories.lua | 32 |
 | test_pages_containers.lua | 35 |
@@ -2857,4 +2864,4 @@ Total.
 | test_skin_values.lua | 3 |
 | test_skin_switch.lua | 34 |
 | Skipped | 1 |
-| **Total** | **2347** |
+| **Total** | **2354** |

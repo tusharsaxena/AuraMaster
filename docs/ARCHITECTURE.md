@@ -357,9 +357,14 @@ Every surface Aura Master draws paints through the `LibKa0s-Skin-1.0` facade wit
   their strings obey Ignore fonts (D-01).
 - **The first-run skin picker.** `NS.MaybeShowSkinPicker` shows `O.SkinPicker` two seconds after the
   first world entry and after every profile event while the profile's `skin.pickerSeen` is false and
-  the addon stands up (O3); in combat it waits for `PLAYER_REGEN_ENABLED`. Its eye turns test mode
-  on; the player's close writes `pickerSeen`, and a close the addon makes (`NS.HideSkinPicker`) does
-  not. `/am skin` (`NS.RunSkinVerb`, LibKa0s v1.82.0's `O.SkinVerb`, D-16) shows the same picker on
+  the addon stands up (O3); in combat it waits for `PLAYER_REGEN_ENABLED`. Its preview is test mode
+  (`spec.preview`, LibKa0s OptionsSkinPicker minor 11, R6-PV): AuraMaster has no main window, so a
+  picker that shows with test mode off turns it on, the eye toggles it, and every close (Apply, Apply
+  to all, the gear, the close control, Escape, `NS.HideSkinPicker`) puts back the state the picker
+  opened with. Each switch is `Preview.SetTestMode(on, "skin picker")`, the one writer `/am test`, the
+  launcher and the Master controls checkbox use, so a start in combat is refused there and the
+  library undoes nothing. The player's close writes `pickerSeen`, and a close the addon makes
+  (`NS.HideSkinPicker`) does not. `/am skin` (`NS.RunSkinVerb`, LibKa0s v1.82.0's `O.SkinVerb`, D-16) shows the same picker on
   demand, whatever `pickerSeen` says. Since LibKa0s v1.83.0 the picker also carries the Skin tab's
   Font, Texture, Font outline and Scope rows: a change previews and writes nothing, Apply or the gear
   saves it through `NS.WriteSkinChoice`, and a dismissal puts back what the window opened with.

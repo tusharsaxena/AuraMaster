@@ -6,6 +6,14 @@ local test, assertEqual, assertTrue, assertFalse, assertNil =
     T.test, T.assertEqual, T.assertTrue, T.assertFalse, T.assertNil
 local fresh = dofile("tests/fresh_env.lua")
 
+--- Keep the first-run skin picker out of a case about something else: a profile event on a profile
+--- that has not closed it shows it, and since R6-PV (spec.preview) a picker over a hidden HUD turns
+--- test mode on, which disables every engine while it is up. tests/test_skin_picker.lua owns that.
+local function withoutPicker(NS)
+    NS.Helpers.SkinPicker = function() return nil end
+    return NS
+end
+
 local function chat(mocks)
     local lines = {}
     rawset(mocks.DEFAULT_CHAT_FRAME, "AddMessage", function(_, msg)
@@ -436,6 +444,7 @@ end)
 --- rebuilds it for the new container 1 (unit "player") once combat ends.
 local function keptIdStaysParked(change, prepare)
     local NS, mocks = fresh()
+    withoutPicker(NS)
     local CM = NS.ContainerManager
     if prepare then prepare(NS, mocks) end
     assertTrue(NS.SetByPath("container.unit", "focus", 1))
@@ -509,6 +518,7 @@ end)
 
 test("manager: an id a later Create reuses after a profile reset while auras are secret stays parked until the deferred apply", function()
     local NS, mocks = fresh()
+    withoutPicker(NS)
     local CM = NS.ContainerManager
     local id = CM.Create({})
     mocks.__fireTimers()
@@ -551,6 +561,7 @@ end
 
 test("manager: an id that returns out of combat revives its destroyed instance", function()
     local NS, mocks = fresh()
+    withoutPicker(NS)
     local CM = NS.ContainerManager
     local home = NS.db:GetCurrentProfile()
     assertEqual(CM.Create({}), 5, "profile A holds containers 1-5")
@@ -580,6 +591,7 @@ end)
 
 test("manager: an id a profile reset hands out again out of combat revives its destroyed instance", function()
     local NS, mocks = fresh()
+    withoutPicker(NS)
     local CM = NS.ContainerManager
     assertEqual(CM.Create({}), 5)
     mocks.__fireTimers()

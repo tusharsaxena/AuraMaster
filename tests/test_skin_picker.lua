@@ -6,7 +6,8 @@
 -- O.SkinPicker (its owner, its two seams, General's Skin tab, the eye, the close); WHEN it shows (a
 -- profile whose `skin.pickerSeen` is false, once after the first world entry and after every
 -- profile event, never while the addon stands down, held through combat); that only the player's
--- close marks it seen; and that the eye starts test mode. Then the widgets: every hand-acquired one
+-- close marks it seen; and the preview (spec.preview): test mode on while the picker shows over a
+-- hidden HUD, the eye toggling it, every close putting it back. Then the widgets: every hand-acquired one
 -- and the Profiles page's AceConfigDialog tree painted for this owner, and the seam's degraded arm.
 -- Every case builds a fresh environment, so no shown picker, queue entry or skin leaks between them.
 
@@ -60,7 +61,14 @@ test("Skin picker: the spec names this owner, its seams, General's Skin tab and 
     assertTrue(rawequal(spec.set, NS.WriteSkinChoice), "set is the write seam")
     assertEqual(spec.page, "general", "X6: the gear opens General")
     assertEqual(spec.tab, "Appearance", "the key settings/General.lua gives O.AppearanceTab")
-    assertEqual(type(spec.onPreview), "function", "X6: AuraMaster has a test mode, so the eye is offered")
+    local pv = spec.preview
+    assertTrue(type(pv) == "table", "R6-PV: the eye is spec.preview, the library's preview contract")
+    assertEqual(pv.mode, "test", "R6-PV: AuraMaster previews in its test mode (/am test)")
+    for _, k in ipairs({ "enter", "exit", "isActive" }) do
+        assertEqual(type(pv[k]), "function", "spec.preview." .. k)
+    end
+    assertEqual(pv.isShown, nil, "no main window: the HUD is hidden while test mode is off")
+    assertEqual(spec.onPreview, nil, "R6-PV: the one-shot enter-only eye is gone")
     assertEqual(type(spec.onClose), "function")
 end)
 
@@ -193,21 +201,111 @@ test("Skin picker: a profile that has seen it takes a shown picker down, unmarke
     assertFalse(f:IsShown(), "the picker stayed up on a profile that has seen it")
 end)
 
-test("Skin picker: the eye starts test mode, and leaves a running one alone", function()
+-- ── the preview (R6-PV, LibKa0s OptionsSkinPicker minor 11's spec.preview) ───────────────────
+--
+-- The owner's rule (Ka0sAddonsCommonTasks docs/2026-11-03-SMOKE_ROUND6): when the picker shows and
+-- the HUD is hidden (test mode off), test mode turns on; the eye toggles it; every close puts back
+-- the state the picker opened with. Each switch goes through Preview.SetTestMode, the one writer the
+-- Master controls checkbox, `/am test` and the launcher use, so all of them read the same state.
+
+--- The real picker, shown by `/am skin` on a fresh login.
+local function shownPicker(NS, m)
+    local f
+    quietly(m, function() f = NS.RunSkinVerb() end)
+    assertTrue(f ~= nil and f:IsShown(), "the library's picker did not show")
+    return f
+end
+
+--- Every Preview.SetTestMode call from now on, as "on:why" or "off:why".
+local function spySeam(NS)
+    local calls, live = {}, NS.Preview.SetTestMode
+    NS.Preview.SetTestMode = function(on, why)
+        calls[#calls + 1] = (on and "on" or "off") .. ":" .. tostring(why)
+        return live(on, why)
+    end
+    return calls
+end
+
+local function testMode(NS) return NS.State.testMode == true end
+
+test("Skin picker: opened with test mode off, test mode turns on through the write seam", function()
+    -- red under: onPreview, which runs only on the eye, so the picker shows with the HUD hidden.
     local NS, m = fresh()
-    quietly(m, function() NS.SkinPickerSpec().onPreview() end)
-    assertTrue(NS.State.testMode == true, "the eye did not start test mode")
-    quietly(m, function() NS.SkinPickerSpec().onPreview() end)
-    assertTrue(NS.State.testMode == true, "a second press turned test mode off")
+    NS.HideSkinPicker()
+    local calls = spySeam(NS)
+    shownPicker(NS, m)
+    assertTrue(testMode(NS), "the picker opened and test mode stayed off")
+    assertEqual(table.concat(calls, ","), "on:skin picker", "one start, through Preview.SetTestMode")
+    assertEqual(NS.GetSetting("state.testMode"), true, "the checkbox and the launcher read it on")
 end)
 
-test("Skin picker: the eye in combat starts nothing", function()
+test("Skin picker: the eye toggles test mode, lit while it is on", function()
+    -- red under: the enter-only eye, whose second press left test mode on.
+    local NS, m = fresh()
+    NS.HideSkinPicker()
+    local f = shownPicker(NS, m)
+    assertTrue(f.preview.lit == true, "the eye is lit while test mode is on")
+    quietly(m, function() f.preview:__fire("OnClick") end)
+    assertFalse(testMode(NS), "the eye did not turn test mode off")
+    assertFalse(f.preview.lit == true, "the eye is dimmed while test mode is off")
+    quietly(m, function() f.preview:__fire("OnClick") end)
+    assertTrue(testMode(NS), "the eye did not turn test mode back on")
+end)
+
+--- Every close route: each one leaves test mode as it was when the picker opened.
+local ROUTES = {
+    { "the close control", function(f) f.close:__fire("OnClick") end },
+    { "Escape", function(f) f:Hide(); f:__fire("OnHide") end },
+    { "Apply", function(f) f.apply:__fire("OnClick") end },
+    { "the gear", function(f) f.settings:__fire("OnClick") end },
+    { "HideSkinPicker", function(_, NS) NS.HideSkinPicker() end },
+}
+
+for _, route in ipairs(ROUTES) do
+    test("Skin picker: closing by " .. route[1] .. " turns off the test mode it turned on", function()
+        -- red under: no restore, so test mode stayed on after the picker closed.
+        local NS, m = fresh()
+        NS.HideSkinPicker()
+        local f = shownPicker(NS, m)
+        assertTrue(testMode(NS))
+        local calls = spySeam(NS)
+        quietly(m, function() route[2](f, NS) end)
+        assertFalse(f:IsShown(), route[1] .. " left the picker up")
+        assertFalse(testMode(NS), route[1] .. " left test mode on")
+        assertEqual(table.concat(calls, ","), "off:skin picker", "one stop, through the seam")
+    end)
+end
+
+test("Skin picker: a test mode already on is left alone, and the eye's stop is put back", function()
+    -- red under: a restore that stops a test mode the player had on before the picker opened.
+    local NS, m = fresh()
+    NS.HideSkinPicker()
+    quietly(m, function() NS.Preview.SetTestMode(true, "/am test") end)
+    local calls = spySeam(NS)
+    local f = shownPicker(NS, m)
+    assertEqual(#calls, 0, "a test mode already on was entered again")
+    quietly(m, function() f.close:__fire("OnClick") end)
+    assertTrue(testMode(NS), "the close stopped the player's own test mode")
+    f = shownPicker(NS, m)
+    quietly(m, function() f.preview:__fire("OnClick") end)
+    assertFalse(testMode(NS), "the eye did not stop it")
+    quietly(m, function() f.close:__fire("OnClick") end)
+    assertTrue(testMode(NS), "the close did not put back the test mode the eye stopped")
+end)
+
+test("Skin picker: the eye in combat starts nothing, and the close undoes nothing", function()
     -- Preview.SetTestMode refuses in combat with its own line; the eye adds no path around it.
     local NS, m = fresh()
+    NS.HideSkinPicker()
+    local f = shownPicker(NS, m)
+    quietly(m, function() f.preview:__fire("OnClick") end)
+    assertFalse(testMode(NS))
     m.__lockdown = true
-    quietly(m, function() NS.SkinPickerSpec().onPreview() end)
+    quietly(m, function() f.preview:__fire("OnClick") end)
+    assertFalse(testMode(NS), "the eye started test mode in combat")
+    quietly(m, function() f.close:__fire("OnClick") end)
     m.__lockdown = false
-    assertFalse(NS.State.testMode == true, "the eye started test mode in combat")
+    assertFalse(testMode(NS), "the close started test mode")
 end)
 
 -- ── the AceGUI widgets this addon acquires ───────────────────────────────────────────────────

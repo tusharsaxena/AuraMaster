@@ -105,6 +105,9 @@ end)
 
 test("general: combat starting ends test mode, and Reset all settings ends it too (B1)", function()
     local NS, _, P = general()
+    -- The reset's profile event shows the first-run picker, which since R6-PV turns test mode on
+    -- over a hidden HUD; tests/test_skin_picker.lua owns that, so it is kept out of this case.
+    NS.Helpers.SkinPicker = function() return nil end
     NS.Preview.SetTestMode(true)
     NS.addon:OnCombatChanged("PLAYER_REGEN_DISABLED")
     -- red under: OnCombatChanged not ending test mode (a placeholder covering real auras in a fight)

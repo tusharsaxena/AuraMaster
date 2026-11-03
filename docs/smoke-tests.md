@@ -29,7 +29,7 @@ check's number is not reused. Checks with no recorded pass, and checks new or co
 | TEXT-1 to TEXT-36 | Text style | Templates and tokens, justify, the icon, dispel type word, backdrop and edge, animation, Size to fit, the glow behind the text |
 | LAYER-1 to LAYER-6 | Frame layering | Bar borders over the fill, the outline and the name label over the auras, the snap highlight over a Dialog container, the strip at low opacity, the Strata tooltip |
 | SETLAYOUT-1 to SETLAYOUT-9 | Settings layout (item 020) | Every settings page item 020 moved, regrouped or relabeled, read as `docs/settings-panel.md` describes, with no setting lost, moved or reset; the confirm buttons' ellipsis |
-| SKIN-1 to SKIN-52 | Skins | The skinning rollout: the one-time HUD reset under Ka0s Default, Ka0s Default otherwise unchanged, the Skin tab, each skin on the HUD, the unlock furniture, the settings pages and the tool windows, other addons stock, the font and texture companions and overrides, combat, EllesmereUI on, off and back, the copy, profiles, tooltips and popups, the first-run skin picker; the library follow-ups (each skin's HUD face, Ignore fonts on the HUD, the picker's title, the strings newly in the skin's face); the skin fonts run (the Font outline, From skin flags, `/am skin`, width parity, the HUD size scale, the own faces and glow back, the strips' re-fit) |
+| SKIN-1 to SKIN-53 | Skins | The skinning rollout: the one-time HUD reset under Ka0s Default, Ka0s Default otherwise unchanged, the Skin tab, each skin on the HUD, the unlock furniture, the settings pages and the tool windows, other addons stock, the font and texture companions and overrides, combat, EllesmereUI on, off and back, the copy, profiles, tooltips and popups, the first-run skin picker; the library follow-ups (each skin's HUD face, Ignore fonts on the HUD, the picker's title, the strings newly in the skin's face); the skin fonts run (the Font outline, From skin flags, `/am skin`, width parity, the HUD size scale, the own faces and glow back, the strips' re-fit) |
 | DEGRADED-1 | Library-absent install | The launcher libraries missing |
 | LOC-1 to LOC-2 | Non-English client | Spell names from the client, adding a spell by its localized name |
 
@@ -2725,6 +2725,21 @@ the window with no Lua error; the close control and Escape put the skin you had 
 keep the pick, and the gear opens the settings on the Skin tab. Fail: a Lua error, a window that stays up, or
 a close that keeps an unapplied pick. Result:
 
+**SKIN-53. The skin picker previews in test mode (R6-PV, LibKa0s v1.85.0 round 6, `spec.preview`).**
+With test mode off (`/am test off`), `/am skin` → test mode turns on while the picker is up: every
+container shows its placeholders in the previewed skin, the Master controls **Test mode** checkbox is
+ticked and the launcher menu's Test mode entry reads on, and the eye is lit; hover it → its tooltip
+says test mode is on. Press the eye → test mode turns off (the placeholders go, the checkbox unticks)
+and the eye dims; press it again → back on. Close the picker → test mode is off again. Repeat, closing
+with Escape, Apply, the gear and a switch to a profile that has already closed the picker: each
+leaves test mode off. Now
+`/am test on` first, then `/am skin` → test mode stays on and the eye is lit; press the eye (off), close
+→ test mode is back on. Finally open the picker, enter combat with it up → test mode ends as it always
+does in combat; press the eye in combat → one gray "Test mode can't start in combat." line and nothing
+starts. Fail: the picker opening over a hidden HUD with test mode off, an eye that does not toggle, a
+close that leaves test mode other than it was before the picker, or the checkbox disagreeing with the
+HUD. Result:
+
 ## Library-absent install
 
 **DEGRADED-1. Without the launcher libraries.** Rename `libs/LibDBIcon-1.0` aside, `/reload` → one
@@ -2822,4 +2837,5 @@ Open from the owner's fifth smoke round (Ka0sAddonsCommonTasks `docs/2026-11-03-
 SKIN-49 to SKIN-51 are new, and SKIN-47's band is darker than it said.
 
 Open from the owner's sixth smoke round (Ka0sAddonsCommonTasks `docs/2026-11-03-SMOKE_ROUND6/`, R6-RV):
-SKIN-52 is new.
+SKIN-52 is new, and SKIN-53 from R6-PV. SKIN-19's eye now toggles test mode, and the picker turns
+it on as it opens (SKIN-53); SKIN-19 keeps its recorded pass for the rest of its steps.
