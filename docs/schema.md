@@ -126,23 +126,23 @@ backfills it onto every stored container, so it needs no schema step.
 | `barTexture` | `"Ka0s Default"` | `barAlpha` | `1.0` |
 | `barTextureFromSkin` | `true` (the fill draws the skin's `bar.texture`; `barTexture` is kept, not read, X3) | | |
 | `barColor` | `{ r=0.20, g=0.55, b=0.95, a=1 }` | `useClassColorBar` | `false` |
-| `barColorFromSkin` | `true` (the fill draws the skin's `bar.fill`; a class color comes first) | | |
+| `barColorFromSkin` | `false` (on: the fill draws the skin's `bar.fill`; a class color comes first; schema v17, SF-AM-3) | | |
 | `colorMode` | `"static"` (`static`, `dispel`: tinted by the profile's `dispelColors`) | | |
 | `drain` | `"left"` (`left`, `right`) | `smooth` | `false` |
 | `bgTexture` | `"Ka0s Default"` | `bgAlpha` | `1.0` |
 | `bgTextureFromSkin` | `true` (the background draws the skin's `bar.texture`; `bgTexture` is kept, not read, X3) | | |
 | `bgColor` | `{ 0, 0, 0, 0.5 }` | `useClassColorBg` | `false` |
-| `bgColorFromSkin` | `true` (the background draws the skin's `bar.bg`) | | |
+| `bgColorFromSkin` | `false` (on: the background draws the skin's `bar.bg`; schema v17, SF-AM-2) | | |
 | `bgColorMode` | `"static"` (`static`, `dispel`: tinted by the profile's `dispelColors`, feedback #7) | | |
-| `borderShow` | `false` | `borderStyle` | `"Solid"` |
+| `borderShow` | `true` (schema v17, SF-AM-2) | `borderStyle` | `"Solid"` |
 | `borderSize` | `1` | `borderColor` | `{ 0, 0, 0, 1 }` |
-| `borderStyleFromSkin` | `true` (`S.BarBorder`: a skin's None leaves `borderShow`, `borderStyle` and `borderSize` the player's; its real `bar.borderStyle` and `bar.borderSize` win over all three) | `borderColorFromSkin` | `true` (`bar.border`) |
+| `borderStyleFromSkin` | `true` (`S.BarBorder`: a skin's None leaves `borderShow`, `borderStyle` and `borderSize` the player's; its real `bar.borderStyle` and `bar.borderSize` win over all three) | `borderColorFromSkin` | `false` (on: `bar.border`; schema v17, SF-AM-2) |
 | `useClassColorBorder` | `false` | `icon` | `"LEFT"` (`LEFT`, `RIGHT`, `NONE`) |
 | `iconSize` | `0` (= bar height) | `iconGap` | `1` |
 | `iconZoom` | `0.08` | `iconBorderShow` | `false` |
 | `iconBorderStyle` | `"Solid"` | `iconBorderSize` | `1` |
 | `iconBorderColor` | `{ 0, 0, 0, 1 }` | `useClassColorIconBorder` | `false` |
-| `iconBorderStyleFromSkin` | `true` (`icon.borderStyle` and the owner token `am.iconBorderSize`; a skin's None leaves the stored style and thickness; `iconBorderShow` stays the player's) | `iconBorderColorFromSkin` | `true` (`icon.border`) |
+| `iconBorderStyleFromSkin` | `true` (`icon.borderStyle` and the owner token `am.iconBorderSize`; a skin's None leaves the stored style and thickness; `iconBorderShow` stays the player's) | `iconBorderColorFromSkin` | `false` (on: `icon.border`; schema v17, SF-AM-3) |
 | `spark` | `true` | `sparkWidth` | `8` |
 | `sparkColor` | `{ 1, 1, 1, 0.9 }` | `useClassColorSpark` | `false` |
 | `sparkTimeless` | `true` (`false`: no spark on an aura without a duration) | `name` | text block: size 11, `LEFT`, x 4, y 0, justify `LEFT` |
@@ -166,6 +166,7 @@ with no dispel type takes the surface's own color instead (feedback #7); schema 
 | `borderShow` | `true` | `borderStyle` | `"Solid"` |
 | `borderSize` | `1` | `borderColor` | `{ 0, 0, 0, 1 }` |
 | `useClassColorBorder` | `false` | `cooldown` | `true` |
+| `borderStyleFromSkin` | `true` (`icon.borderStyle`; a skin's None leaves the stored style and thickness) | `borderColorFromSkin` | `false` (on: `icon.border`; schema v17, SF-AM-3) |
 | `cooldownReverse` | `false` | `cooldownEdge` | `true` |
 | `swipeAlpha` | `0.6` | `blizzardNumbers` | `false` |
 | `time` | text block: size 11, `BOTTOM`, x 0, y −12, justify `CENTER` | `stacks` | text block: size 11, `BOTTOMRIGHT`, x −1, y 1, justify `RIGHT` |
@@ -182,11 +183,11 @@ removes the value from bars and icons containers), `width` (220), `height` (16);
 (`"$spellname$[ x$stacks$][ - $remainingduration$]"`, validated by `modules/TextTemplate.lua`; a
 refused stored template draws the default); `justifyH` (`"LEFT"`; `"CENTER"` on a template of more
 than one piece STACKS it, one centered row per field, text outside `[ ]` not drawn — feedback #1,
-`Style.Text.Stacked`), `justifyV` (`"MIDDLE"`), `x` (2), `y` (0); `font` (the six canonical font leaves and `fontFromSkin`,
-`fontColorFromSkin` and `fontShadowFromSkin` `true`, size 12); `timeFormat` (`"blizzard"`); the icon — `icon` (`"NONE"`), `iconSize` (0 = the line's height),
+`Style.Text.Stacked`), `justifyV` (`"MIDDLE"`), `x` (2), `y` (0); `font` (the six canonical font leaves, `fontFromSkin` and
+`fontShadowFromSkin` `true` and `fontColorFromSkin` `false` (SF-AM-3, schema v17), size 12); `timeFormat` (`"blizzard"`); the icon — `icon` (`"NONE"`), `iconSize` (0 = the line's height),
 `iconGap` (2), `iconZoom` (0.08) and the composed icon-border block (`iconBorderShow` false,
 `iconBorderStyle` `"Solid"`, `iconBorderStyleFromSkin` true, `iconBorderSize` 1, `iconBorderColor`
-black, `iconBorderColorFromSkin` true, `useClassColorIconBorder` false); the loop — `anim` (`"none"`, `"pulse"`, `"blink"`, `"bounce"`), `animSpeed` (1.0 s per cycle),
+black, `iconBorderColorFromSkin` false since schema v17, `useClassColorIconBorder` false); the loop — `anim` (`"none"`, `"pulse"`, `"blink"`, `"bounce"`), `animSpeed` (1.0 s per cycle),
 `animIntensity` (0.3, the lowest alpha), `animBounce` (3 px); the pandemic window — `expiringColorOn`
 (false), `expiringThreshold` (5), `expiringColor`, `expiringBlink` (false); by dispel type (feedback
 #7, each opt-in) — `dispelTypeColor` (false: the `$dispeltype$` word in the profile's `dispelColors`),
@@ -195,8 +196,8 @@ the glow behind the text (text glow, owner 2026-10-15; glyph glow addendum 2026-
 glow-colored copies of each letter, drawn live by `C.TEXT_GLOW_TWINS` twin engines; off, and added to
 the font's outline and shadow, never in place of them) — `glow` (false; on or off is part of the
 structure key, so it builds or retires the twins), `glowColor` (black, `{ 0, 0, 0, 1 }`),
-`glowColorFromSkin` (true: the owner token `am.textGlow`, black under Ka0s Default and `glow.color` under
-every other skin), `useClassColorGlow` (false, the swatch's class-color companion), `glowIntensity` (0.5, 0.05 to 1:
+`glowColorFromSkin` (false since schema v17, SF-AM-1; on: the owner token `am.textGlow`, black under Ka0s
+Default and `glow.color` under every other skin), `useClassColorGlow` (false, the swatch's class-color companion), `glowIntensity` (0.5, 0.05 to 1:
 each copy's alpha is the color's alpha × it), `glowThickness` (4, 1 to 6 px: the ring's radius),
 `glowX` (-4) and `glowY` (0), -20 to 20 px, shifting the whole ring; the defaults are the owner's
 (2026-10-16).
@@ -214,7 +215,8 @@ LibKa0s v1.82.0, ruling D-07; any other value is the client flag drawn as picked
 "Use the skin's font" companion `fontFromSkin` (`true`: the face is the skin's `hud.font` and `font` is
 kept, not read; X3, DECISIONS D2 of the skinning rollout), `point`, `x`, `y`, `justify` (the Text
 style's `text.font` carries the six font leaves and the three companions only). `fontColorFromSkin`
-(`true`: the skin's `hud.text`, or `hud.label` on the name label) and `fontShadowFromSkin` (`true`: the
+(`true`: the skin's `hud.text`, or `hud.label` on the name label; `false` on the Text style's `text.font`,
+SF-AM-3) and `fontShadowFromSkin` (`true`: the
 skin's HUD shadow, or none) each keep their stored value for when they go off. A class color comes
 first. Sizes take no companion (cause L11). While
 `fontFromSkin` is on the text draws at `S.HudFontSize(fontSize)`, the stored size scaled by the skin's
@@ -853,7 +855,10 @@ The stamp follows savedvariables-§1 as ruled at WowAddonStandards v2.65.0:
   of 2026-11-01) runs over **every** stored profile and from every `Database.PrepareProfile`, gated per
   profile on `skin.fullSkinReset` through `Skin.FollowOnce`, and logs one `[Migrate] v16 profile '<name>'`
   line for a profile it moved. It sets every key of `Database.SKIN_FOLLOW_LEAVES`: each companion of the
-  textures, colors, borders, shadow and glow, and each Font flags leaf to `"@skin"`. Every stored color,
+  textures, border styles, font faces, font colors and shadows, and each Font flags leaf to `"@skin"`.
+  The nine leaves schema v17 moved off the skin (the glow, bar and icon border colors, a bar's fill and
+  background colors, the Text font color) are no longer listed, so a profile v16 reaches today leaves
+  them at their defaults. Every stored color,
   pick and size is kept; a class color, a dispel or running-out color and the Scope are not listed.
   `fontFromSkin` is listed, so v15's own faces follow the skin again until the player turns it off.
   `skin.fullSkinReset` has no schema row, so no Defaults path walks it. Containers are keyed by number,
@@ -869,6 +874,16 @@ The stamp follows savedvariables-§1 as ruled at WowAddonStandards v2.65.0:
   template's `"Friz Quadrata TT"`, which no player picked, has `fontFromSkin` turned off, so the stored
   face draws again at its stored size. The face, the glow, sizes, flags and colors are untouched. The
   stamp makes it once: a companion ticked again afterwards stays on (`tests/test_skin_glow_restore.lua`).
+- **Schema v17** (`Database.MigrateV17`, `core/Database_Migrations.lua`, the owner's smoke rulings
+  SF-AM-1..3 of 2026-11-01) runs over **every** stored profile and logs one `[Migrate] v17 profile '<name>'`
+  line for a profile it moved. Nine defaults left the skin (`Database.V17_MOVES`): `text.glowColorFromSkin`,
+  `bars.bgColorFromSkin`, `bars.borderColorFromSkin`, `bars.barColorFromSkin`,
+  `bars.iconBorderColorFromSkin`, `icons.borderColorFromSkin`, `text.iconBorderColorFromSkin` and
+  `text.font.fontColorFromSkin` go from `true` to `false`, and `bars.borderShow` from `false` to `true`.
+  On every stored container a leaf still holding the old default takes the new one, and any other
+  value stays. v16 wrote explicit values, so an old default and a pick of the same value read alike and
+  both move (the deviation `docs/ARCHITECTURE.md` records). None of the nine is in
+  `Database.SKIN_FOLLOW_LEAVES` any more, so v16 no longer turns them on (`tests/test_defaults_v17.lua`).
 - **Schema v18** (`Database.RetireFonts`, `core/Database_Migrations.lua`, R3-FRIZ of the owner's third
   smoke round) runs over **every** stored profile and logs one `[Migrate] v18 profile '<name>'` line for a
   profile it moved. LibKa0s v1.85.0 deleted `Ka0s Friz Quadrata TT` (R3-L7) and WoW Default draws

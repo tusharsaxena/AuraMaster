@@ -82,8 +82,8 @@ Every non-vendored file, its responsibility and the full load order: `docs/modul
 
 ## Settings Schema
 
-`NS.Schema` holds **293** rows across seven pages (General 26, Containers 5, Filters 57, Layout 39,
-Bars 77, Icons 44, Text 45), plus one runtime row per user category. It drives the panel,
+`NS.Schema` holds **318** rows across seven pages (General 26, Containers 5, Filters 57, Layout 41,
+Bars 89, Icons 50, Text 50), plus one runtime row per user category. It drives the panel,
 `/am list|get|set|reset` and the resets through one write seam, `NS.SetByPath`.
 
 - **Containers registry** (architecture-§5): keys `containers`, `containerOrder`, `nextContainerId`,
@@ -214,10 +214,12 @@ answers while the addon is disabled (slash-commands-§2). What disabling *does* 
 
 One LibDataBroker `launcher` object, built by `core/LauncherSetup.lua` through `LibKa0s-Launcher-1.0`
 and registered with LibDBIcon under the folder name (launcher-§1). Left click opens the settings
-panel; right click opens the library's context menu with three entries, *Enabled*, *Locked* and
+panel; right click opens the library's context menu with three checkboxes, *Enabled*, *Locked* and
 *Test mode*, each wired to the same `NS.Slash` handler its verb runs (launcher-§2, LibKa0s-Launcher
-minor 4; no *Show window*, as the addon has no primary window). While disabled, *Locked* and *Test
-mode* are grayed. The Minimap button row stores LibDBIcon's own `global.minimap.hide`. The hover
+minor 4; no *Show window*, as the addon has no primary window), then two buttons, *Open settings*
+and *Open skin selector* (the descriptor's `openSkinPicker`, which runs `NS.RunSkinVerb`, what
+`/am skin` runs; LibKa0s-Launcher minor 6, SF-F2). While disabled, *Locked*, *Test mode* and *Open
+skin selector* are grayed. The Minimap button row stores LibDBIcon's own `global.minimap.hide`. The hover
 tooltip is the library's (enabled, locked and test-mode status and the fixed click hints, drawn
 while disabled too); the descriptor only answers its questions. Both broker libraries are
 optional. The full table and the reasons:
@@ -322,7 +324,10 @@ Every surface Aura Master draws paints through the `LibKa0s-Skin-1.0` facade wit
   `icon.border`, `am.textGlow`), `Style.BorderLook` a block's style, thickness and color, and
   `S.HudFont` puts the face, size, flags and shadow on one font object per string. A class color
   comes first and has no companion; dispel colors and the running-out and pandemic tints stay. Show
-  border and sizes stay the player's. Ka0s Default keeps this addon's pixels through two owner
+  border and sizes stay the player's. Schema v17 (the owner's smoke rulings SF-AM-1..3) took nine
+  defaults back off the skin: the text glow's color, a bar's fill, background and border colors, the
+  Text font color and the icon border colors ship off, and a bar's Show border ships on
+  (`Database.V17_MOVES`, `docs/schema.md`). Ka0s Default keeps this addon's pixels through two owner
   tokens: `am.iconBorderSize` (1 px) and `am.textGlow` (black). The gloss is the one recorded paint
   on a bar: `am.sheen`, a clear status bar laid over the visible fill, because `am.bar`'s own fill is
   the invisible elapsed part. Since LibKa0s
