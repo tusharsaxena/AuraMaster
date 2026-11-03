@@ -139,7 +139,9 @@ NS.SKIN_TOKENS = {
     -- AM-G9: the Filters section's in-panel "See spells" link (|cff6699ff).
     ["am.link"]         = { default = { byte(0x66), byte(0x99), byte(0xff), 1 }, follow = "text.accent" },
     -- FS-AM-FLIP: an icon border's 1 px and the text glow's black ring, which Ka0s Default's own
-    -- `icon.borderSize` (2) and `glow.color` (gold) are not. Every other skin draws those tokens.
+    -- `glow.color` (gold) is not. Every other skin draws those tokens. Ka0s Default's `icon.borderSize`
+    -- was 2 until LibKa0s v1.85.0's R3-FIX made every skin's icon border Solid 1px; the token stays so
+    -- this addon's 1 px never rides on the library's value.
     ["am.iconBorderSize"] = { default = 1, follow = "icon.borderSize" },
     ["am.textGlow"]     = { default = { 0, 0, 0, 1 }, follow = "glow.color" },
     -- FS-AM-FIX (cause L5): the General page's Unit, Aura type and Style values. Each stays apart from

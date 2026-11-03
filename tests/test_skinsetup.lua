@@ -76,7 +76,7 @@ test("Skin seam: every owner token draws today's color on Ka0s Default, and foll
         n = n + 1
         assertEqual(name:sub(1, 3), "am.", name .. ": the owner's namespace")
         if type(def.default) == "number" then
-            -- A thickness, not a color: FS-AM-FLIP's 1 px where Ka0s Default's icon.borderSize is 2.
+            -- A thickness, not a color: FS-AM-FLIP's 1 px (Ka0s Default's icon.borderSize is 1 too since R3-FIX).
             assertEqual(NS.Skin.Token(name), def.default, name)
             assertEqual(type(base[def.follow]), "number", name .. " follows a number token")
         else
