@@ -503,6 +503,9 @@ if not Skin then
         -- the stored color draws; HudShadow's nil is "the stored fontShadow stands". BarGloss draws
         -- nothing: no skin, no gloss.
         "HudTextColor", "HudLabelColor", "BarFillColor", "HudShadow", "BarGloss", "HoverArt",
+        -- LibKa0s v1.85.0 round 5 (R5-L3): there is no header band without the library, so Band
+        -- answers nil and Header places nothing.
+        "Band", "Header",
     }) do S[name] = noop end
 
     S.Token = function(name)

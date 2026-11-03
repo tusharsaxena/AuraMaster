@@ -29,7 +29,7 @@ check's number is not reused. Checks with no recorded pass, and checks new or co
 | TEXT-1 to TEXT-36 | Text style | Templates and tokens, justify, the icon, dispel type word, backdrop and edge, animation, Size to fit, the glow behind the text |
 | LAYER-1 to LAYER-6 | Frame layering | Bar borders over the fill, the outline and the name label over the auras, the snap highlight over a Dialog container, the strip at low opacity, the Strata tooltip |
 | SETLAYOUT-1 to SETLAYOUT-9 | Settings layout (item 020) | Every settings page item 020 moved, regrouped or relabeled, read as `docs/settings-panel.md` describes, with no setting lost, moved or reset; the confirm buttons' ellipsis |
-| SKIN-1 to SKIN-48 | Skins | The skinning rollout: the one-time HUD reset under Ka0s Default, Ka0s Default otherwise unchanged, the Skin tab, each skin on the HUD, the unlock furniture, the settings pages and the tool windows, other addons stock, the font and texture companions and overrides, combat, EllesmereUI on, off and back, the copy, profiles, tooltips and popups, the first-run skin picker; the library follow-ups (each skin's HUD face, Ignore fonts on the HUD, the picker's title, the strings newly in the skin's face); the skin fonts run (the Font outline, From skin flags, `/am skin`, width parity, the HUD size scale, the own faces and glow back, the strips' re-fit) |
+| SKIN-1 to SKIN-51 | Skins | The skinning rollout: the one-time HUD reset under Ka0s Default, Ka0s Default otherwise unchanged, the Skin tab, each skin on the HUD, the unlock furniture, the settings pages and the tool windows, other addons stock, the font and texture companions and overrides, combat, EllesmereUI on, off and back, the copy, profiles, tooltips and popups, the first-run skin picker; the library follow-ups (each skin's HUD face, Ignore fonts on the HUD, the picker's title, the strings newly in the skin's face); the skin fonts run (the Font outline, From skin flags, `/am skin`, width parity, the HUD size scale, the own faces and glow back, the strips' re-fit) |
 | DEGRADED-1 | Library-absent install | The launcher libraries missing |
 | LOC-1 to LOC-2 | Non-English client | Spell names from the client, adding a spell by its localized name |
 
@@ -2677,7 +2677,7 @@ Quadrata TT. Result: not run
 
 **SKIN-47. No line under the debug console's title, and Ka0s Default's gold band (R4-RV2, LibKa0s v1.85.0).**
 Pick Ka0s Default, bare `/am debug` opens the console; press its Copy button for the copy window → each title band is
-the dark gold gradient (#3A2F0A at the top to #1F1905 at the bottom), and no line is drawn between the band
+the dark gold gradient (since round 5 darker than round 4, SKIN-49), and no line is drawn between the band
 and the body, as in the Skin Tester's showroom. Switch to Obsidian and to WoW Midnight → still no line under
 either title. The console's row lines and body are unchanged. The HUD's icon and bar edges are unchanged under
 every skin (icon.border did not move). Fail: a divider under either title in any skin, or a near-black band
@@ -2691,6 +2691,29 @@ unticked (SKIN-45); tick it on the Icon style → Border and the beside-icon bor
 skin's `icon.border` (SKIN-36), never its window outline. Back on Ka0s Default with it ticked → black
 again. AuraMaster draws these edges itself and calls no S.IconBorder, so the library's new `hud` option
 moves nothing here. Fail: a gray or any other non-black icon edge under Ka0s Default. Result:
+
+**SKIN-49. The library windows' header band (R5-RV, LibKa0s v1.85.0 round 5).** Pick Ka0s Default. Bare
+`/am debug` opens the console, its Copy button opens the copy window, `/am perf` opens the perf panel, and
+`/am skin` opens the skin picker. Each title band is the dark gold gradient, darker than round 4 (SKIN-47)
+and still clearly lighter than the body. It sits flush inside the window edge with no strip of body color
+between the edge and the band, as in LootHistory, and each window shows exactly one band. The title, the
+close button and any other header button sit on the band's vertical middle. Switch to Obsidian and to WoW
+Midnight: the same, in each skin's own band. Fail: a band missing, two bands, a dark strip between the edge
+and the band, or a title or button visibly above or below the band's middle. Result:
+
+**SKIN-50. The skin picker's list closes on an outside press (R5-RV, LibKa0s v1.85.0 round 5).** `/am skin`,
+then open the skin list (the first dropdown). Press the picker window's body: the list closes. Open it again
+and press the game world: it closes. Open it again and press the Font dropdown: the list closes and the Font
+list opens. A press on a row of the skin list still picks that skin, and a second press on the dropdown
+button still closes the list. Repeat from the settings Skin tab's picker. Escape still closes the whole
+window. Fail: a list that stays open after a press outside it. Result:
+
+**SKIN-51. Spell list icons are cropped and edged (R5-RV, LibKa0s v1.85.0 round 5).** Open General → Spell
+categories with a category that holds spells, and a container's Filters page with an aura id list. Each
+spell icon beside a list row shows no rough gray Blizzard corner (it is cropped) and has a 1 px edge in the
+skin's window outline color. Switch skins: the edge follows each skin. Scroll the list and remove a row:
+no edge is left behind on another row or on a plain text label elsewhere in the settings. Fail: a raw
+icon corner, no edge, or a stray edge on a text row. Result:
 
 ## Library-absent install
 
@@ -2784,3 +2807,6 @@ On 2026-11-02 the owner reported that every check on the smoke lists of the full
 
 Open from the owner's fourth smoke round (Ka0sAddonsCommonTasks `docs/2026-11-03-SMOKE_ROUND4/`, R4-RV2):
 SKIN-47 is new, and SKIN-48 from R4-RV3.
+
+Open from the owner's fifth smoke round (Ka0sAddonsCommonTasks `docs/2026-11-03-SMOKE_ROUND5/`, R5-RV):
+SKIN-49 to SKIN-51 are new, and SKIN-47's band is darker than it said.
