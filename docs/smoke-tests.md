@@ -2731,7 +2731,7 @@ container shows its placeholders in the previewed skin, the Master controls **Te
 ticked and the launcher menu's Test mode entry reads on, and the eye is lit; hover it → its tooltip
 says test mode is on. Press the eye → test mode turns off (the placeholders go, the checkbox unticks)
 and the eye dims; press it again → back on. Close the picker → test mode is off again. Repeat, closing
-with Escape, Apply, the gear and a switch to a profile that has already closed the picker: each
+with Escape, Apply, Apply to all, the gear and a switch to a profile that has already closed the picker: each
 leaves test mode off. Now
 `/am test on` first, then `/am skin` → test mode stays on and the eye is lit; press the eye (off), close
 → test mode is back on. Finally open the picker, enter combat with it up → test mode ends as it always

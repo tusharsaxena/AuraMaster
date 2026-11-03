@@ -2164,7 +2164,7 @@ Total.
 - skin verb: refused while the addon is disabled, and no picker shows
 - skin verb: without LibKa0s the verb prints the library-absent line
 
-### test_skin_picker.lua (26)
+### test_skin_picker.lua (27)
 
 - Skin picker: the spec names this owner, its seams, General's Skin tab and the eye
 - Skin picker: an unseen profile shows it; a seen one does not
@@ -2182,6 +2182,7 @@ Total.
 - Skin picker: closing by the close control turns off the test mode it turned on
 - Skin picker: closing by Escape turns off the test mode it turned on
 - Skin picker: closing by Apply turns off the test mode it turned on
+- Skin picker: closing by Apply to all turns off the test mode it turned on
 - Skin picker: closing by the gear turns off the test mode it turned on
 - Skin picker: closing by HideSkinPicker turns off the test mode it turned on
 - Skin picker: a test mode already on is left alone, and the eye's stop is put back
@@ -2831,7 +2832,7 @@ Total.
 | test_skin_glow_restore.lua | 6 |
 | test_skin_outline.lua | 12 |
 | test_skin_verb.lua | 6 |
-| test_skin_picker.lua | 26 |
+| test_skin_picker.lua | 27 |
 | test_glyphs.lua | 1 |
 | test_pages_general_categories.lua | 32 |
 | test_pages_containers.lua | 35 |
@@ -2864,4 +2865,4 @@ Total.
 | test_skin_values.lua | 3 |
 | test_skin_switch.lua | 34 |
 | Skipped | 1 |
-| **Total** | **2354** |
+| **Total** | **2355** |

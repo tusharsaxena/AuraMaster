@@ -257,6 +257,7 @@ local ROUTES = {
     { "the close control", function(f) f.close:__fire("OnClick") end },
     { "Escape", function(f) f:Hide(); f:__fire("OnHide") end },
     { "Apply", function(f) f.apply:__fire("OnClick") end },
+    { "Apply to all", function(f) f.applyAll:__fire("OnClick") end },
     { "the gear", function(f) f.settings:__fire("OnClick") end },
     { "HideSkinPicker", function(_, NS) NS.HideSkinPicker() end },
 }
