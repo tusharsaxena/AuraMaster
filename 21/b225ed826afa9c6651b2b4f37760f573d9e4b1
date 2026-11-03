@@ -1,0 +1,2 @@
+ka0s-review (R6 independent reviewer, 2026-11-04): R6-RV 21b225e PASS.
+libs/LibKa0s matches LibKa0s v1.85.0 (79d043d) file for file, ignoring CRLF (code, LICENSE, xml, media text and binary; icons a pruned subset of the tag's). tests/_kit matches testkit/ at the tag, no missing or extra files. Provenance line v1.85.0 unchanged and correct. SKIN-52 added, Result blank. Gate fresh: 2355 passed / 0 failed / 1 skipped (after 2bb3586), luacheck 0/0.
