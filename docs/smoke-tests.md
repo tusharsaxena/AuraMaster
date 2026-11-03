@@ -2696,8 +2696,9 @@ moves nothing here. Fail: a gray or any other non-black icon edge under Ka0s Def
 `/am debug` opens the console, its Copy button opens the copy window, `/am perf` opens the perf panel, and
 `/am skin` opens the skin picker. Each title band is the dark gold gradient, darker than round 4 (SKIN-47)
 and still clearly lighter than the body. It sits flush inside the window edge with no strip of body color
-between the edge and the band, as in LootHistory, and each window shows exactly one band. The title, the
-close button and any other header button sit on the band's vertical middle. Switch to Obsidian and to WoW
+between the edge and the band, as in LootHistory, and each window shows exactly one band. The title is
+centered across the band, and the title, the close button and any other header button sit on the band's
+vertical middle. Switch to Obsidian and to WoW
 Midnight: the same, in each skin's own band. Fail: a band missing, two bands, a dark strip between the edge
 and the band, or a title or button visibly above or below the band's middle. Result:
 
@@ -2712,8 +2713,10 @@ window. Fail: a list that stays open after a press outside it. Result:
 categories with a category that holds spells, and a container's Filters page with an aura id list. Each
 spell icon beside a list row shows no rough gray Blizzard corner (it is cropped) and has a 1 px edge in the
 skin's window outline color. Switch skins: the edge follows each skin. Scroll the list and remove a row:
-no edge is left behind on another row or on a plain text label elsewhere in the settings. Fail: a raw
-icon corner, no edge, or a stray edge on a text row. Result:
+no edge is left behind on another row or on a plain text label elsewhere in the settings. Type part of a
+spell name into either list's add box: each suggestion row's icon is cropped and edged the same way, and a
+row with no icon shows no empty edge. Fail: a raw icon corner, no edge, or a stray edge on a text row or a
+suggestion row. Result:
 
 ## Library-absent install
 
