@@ -96,6 +96,32 @@ test("icon element: a skin's None stays no border: the rule is the bars' and the
     assertTrue(not dressed(NS, { style = "icons" }).border:IsShown())
 end)
 
+-- R4-RV3 (Ka0sAddonsCommonTasks docs/2026-11-03-SMOKE_ROUND4, R4_ADDENDUM_HUD_ICON_EDGE.md): the HUD's
+-- icon edges keep the HUD token `icon.border` and never read the window outline `icon.outline`
+-- (#4D4D57 under Ka0s Default), so under Ka0s Default they stay black.
+test("HUD icon edges: Ka0s Default draws them black, never the window outline", function()
+    local NS = fresh()
+    local icons = dressed(NS, { style = "icons", icons = { borderColorFromSkin = true } })
+    local bars = dressed(NS, { bars = { iconBorderShow = true, iconBorderColorFromSkin = true } })
+    -- red under: the icon family's colorToken moved to icon.outline (0.302,0.302,0.341,1)
+    BS.assertSolid(icons.border, 1, "0,0,0,1", "an icon element under Ka0s Default")
+    BS.assertSolid(bars.iconBorder, 1, "0,0,0,1", "the icon beside a bar under Ka0s Default")
+end)
+
+test("HUD icon edges: a skin's color is its icon.border, never its icon.outline", function()
+    local NS, mocks = fresh()
+    probe(NS, mocks, { ["icon.borderStyle"] = "Solid", ["icon.borderSize"] = 2,
+        ["icon.outline"] = { 0.9, 0.8, 0.7, 1 } })
+    local want = table.concat({ 0.44, 0.55, 0.66, 1 }, ",")
+    -- red under: the icon family's colorToken moved to icon.outline (0.9,0.8,0.7,1)
+    BS.assertSolid(dressed(NS, { style = "icons", icons = { borderColorFromSkin = true } }).border, 2, want,
+        "an icon element")
+    BS.assertSolid(dressed(NS, { bars = { iconBorderShow = true, iconBorderColorFromSkin = true } }).iconBorder, 2,
+        want, "the icon beside a bar")
+    BS.assertSolid(dressed(NS, { style = "text", text = { icon = "LEFT", iconBorderShow = true,
+        iconBorderColorFromSkin = true } }).iconBorder, 2, want, "the icon beside a text line")
+end)
+
 test("degraded: S.BarBorder answers the stored three, so a stored border still draws", function()
     local NS2 = dofile("tests/degraded_env.lua")()
     local style, show, size = NS2.Skin.BarBorder("Solid", true, 3, true)

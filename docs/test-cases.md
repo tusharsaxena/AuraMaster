@@ -2072,7 +2072,7 @@ Total.
 - skin flip: a dispel-colored bar's no-type color is the skin's, on the engine's map and a placeholder
 - skin flip: an icon's inset and dispel edge take the skin's thickness, not the stored one
 - skin flip: the icon beside a bar or a text line draws the icon family, not the bar's
-- skin flip: a live switch to WoW Default keeps a laid-out icon's border drawn, flat, in the skin's values
+- skin flip: a live switch to a skin whose icon border is art keeps a laid-out icon's border drawn, flat
 - skin flip: a player's own values draw with the companions off, under any skin
 - skin flip: a shadow follows the skin and goes when the skin's goes, on a string already drawn
 - skin flip: with the shadow's companion off the stored shadow draws under every skin
@@ -2098,7 +2098,7 @@ Total.
 - v17: a new profile keeps the new defaults through the one-time follow step
 - v17: MigrateV17 moves the old fill, text font and icon border defaults
 
-### test_skin_border.lua (8)
+### test_skin_border.lua (10)
 
 - bar border: a skin's None hands Show border on, the stored style and the stored thickness back
 - bar border: a skin's None leaves Show border off off
@@ -2107,6 +2107,8 @@ Total.
 - beside icon: a skin's None defers on a bar and on a text line, and the art's inset agrees
 - beside icon: Show border off stays off under a real style, so Ka0s Default keeps its pixels
 - icon element: a skin's None stays no border: the rule is the bars' and the beside icons'
+- HUD icon edges: Ka0s Default draws them black, never the window outline
+- HUD icon edges: a skin's color is its icon.border, never its icon.outline
 - degraded: S.BarBorder answers the stored three, so a stored border still draws
 
 ### test_skin_fix.lua (7)
@@ -2816,7 +2818,7 @@ Total.
 | test_skin_hud.lua | 12 |
 | test_skin_flip.lua | 31 |
 | test_defaults_v17.lua | 7 |
-| test_skin_border.lua | 8 |
+| test_skin_border.lua | 10 |
 | test_skin_fix.lua | 7 |
 | test_skin_flags.lua | 7 |
 | test_skin_glow_restore.lua | 6 |
@@ -2855,4 +2857,4 @@ Total.
 | test_skin_values.lua | 3 |
 | test_skin_switch.lua | 34 |
 | Skipped | 1 |
-| **Total** | **2345** |
+| **Total** | **2347** |

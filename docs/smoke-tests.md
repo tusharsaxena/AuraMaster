@@ -2686,9 +2686,11 @@ under Ka0s Default. Result:
 **SKIN-48. The HUD's icon edges stay black under Ka0s Default (R4-RV3, LibKa0s v1.85.0).**
 Pick Ka0s Default, with an icons container and a bars container whose icon has **Show border** on →
 every icon edge is black, as before the round, and not the window outline gray (#4D4D57). Switch to
-Obsidian, Azeroth and WoW Midnight → the edges take each skin's `icon.border`, as in SKIN-36. AuraMaster
-draws these edges itself and calls no S.IconBorder, so the library's new `hud` option moves nothing here.
-Fail: a gray or any other non-black icon edge under Ka0s Default. Result:
+Obsidian, Azeroth and WoW Midnight → the edges keep their stored black while **Use the skin's color** is
+unticked (SKIN-45); tick it on the Icon style → Border and the beside-icon border → the edges take each
+skin's `icon.border` (SKIN-36), never its window outline. Back on Ka0s Default with it ticked → black
+again. AuraMaster draws these edges itself and calls no S.IconBorder, so the library's new `hud` option
+moves nothing here. Fail: a gray or any other non-black icon edge under Ka0s Default. Result:
 
 ## Library-absent install
 
