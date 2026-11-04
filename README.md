@@ -81,10 +81,12 @@ mode back as it was. Nothing sticks until you press Apply; the close button or E
 skin you had. The same choices live on General → Skin, which can also follow EllesmereUI's look when
 that addon is loaded. The skin repaints the handles, the debug console and, once you turn off
 **Ignore settings panel** (it starts on), the settings pages. On your containers it sets the fonts
-and bar textures, unless you turn off **Use the skin's font** or **Use the skin's texture** on a
-style tab, or turn on **Ignore fonts** to keep every font as you picked it, and it never changes your
-colors or borders. Some skins draw their font a little larger or smaller so text is as wide as in
-Ka0s Default, without touching the size you set. The rest of the Skin tab is covered in the
+and their shadows, the bar textures, the border styles and the font colors (a Text container's
+excepted), each unless you untick its **Use the skin's** box on a style tab to keep your own;
+**Ignore fonts** keeps every font as you picked it. Bar, background and border colors stay yours
+unless you tick their **Use the skin's color**. Some skins draw their font a little larger or
+smaller so text is as wide as in Ka0s Default; the size you set is kept, and text in your own font
+draws at it. The rest of the Skin tab is covered in the
 [settings panel guide](https://github.com/tusharsaxena/AuraMaster/blob/master/docs/settings-panel.md).
 
 If you change something mid-fight, it waits until combat ends (or until the encounter, key or match
