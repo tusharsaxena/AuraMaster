@@ -44,70 +44,57 @@ _[Watch on YouTube](https://www.youtube.com/watch?v=lJoZiVA_SBE)_
 A fresh install gives you four containers to start from: your buffs as bars near the top right, your
 debuffs as a row of icons above them, the debuffs you've put on your target as icons just below the
 middle of the screen, and your offensive and defensive cooldowns as a line of text near the middle.
-They start locked. `/am unlock` puts a handle on each one, and you drag a container by its handle to
-wherever you want it. Drop it next to another container and it attaches there, following that one as
-it grows: that container's handle lights up with a green edge before you let go. Drag an attached one
-away to put it back on the screen: once you're far enough from where it was attached the marks turn
-red, and letting go then detaches it. Let go sooner and it snaps back. Hold Shift while you drop to
-place it without attaching.
-`/am lock` puts the handles away again. Test mode (`/am test`, or the checkbox on General → Master controls) fills every
-container with sample auras, so you can see what you're building without waiting for a real buff.
-It switches itself off when combat starts.
+They start locked. `/am unlock` puts a handle on each one so you can drag it where you want it, and
+`/am lock` puts the handles away again. Drop a container next to another one and it attaches there,
+following that one as it grows: the other container's handle lights up with a green edge before you
+let go, and holding Shift as you drop places it without attaching. To detach one, drag it away until
+the marks turn red and let go; let go sooner and it snaps back. Test mode (`/am test`, or the
+checkbox on General → Master controls) fills every container with sample auras, so you can see what
+you're building without waiting for a real buff. It switches itself off when combat starts.
 
 Building your own display takes four steps, all on the Containers page. The Container dropdown at
 the top picks which container you're working on, and the list down the left side takes you through
 the rest.
 
 - **Create a container**. Click New container, or type `/am new target debuffs icons` in chat. On General, pick whose auras it shows (yours, your target's, your focus's or your pet's), whether it shows buffs or debuffs, and whether it draws them as bars, icons or text. You can rename, duplicate or delete it there too, or copy another container's settings onto it.
-- **Choose what it shows**. Filters decides which auras make the cut: who cast them, timed or permanent, a maximum duration, how they're sorted and how many show, and the spell categories. Each category is set to Show or Hide, and an aura in any category set to Show gets drawn. The Overrides tab holds a whitelist and a blacklist for single spells, and the whitelist always wins. General → Spell categories is where you change which spells a category holds, or make your own. The top of the Categories tab covers the places spell lists can't reach. The Situations tab, last on Filters, covers the kinds of zone the container shows in and which kinds of unit it shows for. If a filter can't work where you've put it, an orange line at the top of the page says why.
-- **Place it**. Layout decides where the container lives: anywhere on screen, following another container as that one grows, or attached to a frame such as your unit frame or an action bar. While unlocked you can also just drop a container onto another one to attach it. **Pick a frame…** closes the settings so you can just click the one you want. Growth direction and spacing sit on the same Position and growth tab, and scale, strata and the optional name label are on Layout too.
+- **Choose what it shows**. Filters decides which auras make the cut: who cast them, timed or permanent, a maximum duration, how they're sorted and how many show, and the spell categories. Each category is set to Show or Hide, and an aura in any category set to Show gets drawn. The Overrides tab holds a whitelist and a blacklist for single spells, and the whitelist always wins. General → Spell categories is where you change which spells a category holds, or make your own. If a filter can't work where you've put it, an orange line at the top of the page says why.
+- **Place it**. Layout decides where the container lives: anywhere on screen, following another container as that one grows, or attached to a frame such as your unit frame or an action bar. **Pick a frame…** closes the settings so you can just click the one you want. Growth direction and spacing sit on the same Position and growth tab, and scale, strata and the optional name label are on Layout too.
 - **Make it look right**. The last entry in the list is the container's style, Bar style, Icon style or Text style, with its textures, fonts, colors and borders. A Text container draws each aura as one line from a template such as `$spellname$[ x$stacks$][ - $remainingduration$]`, and the page lists every token it understands. Its text can also glow: a ring of color around each letter, in the color, strength, thickness and offset you pick, in addition to the font's outline and shadow. General → Dispel colors picks the color for each dispel type.
 
-General → Skin dresses Aura Master in one of nine skins, or in EllesmereUI's look when that addon is
-loaded. The skin repaints the handles and outlines you see while unlocked and the debug console, and
-the settings pages too once you turn off **Ignore settings panel** on the Skin tab (it starts on). On
-your containers it sets the fonts and the bar textures, unless you turn off **Use the skin's font** or
-**Use the skin's texture** on a style tab to keep your own; **Ignore fonts** keeps every font as you
-picked it. Text on the skin's font is drawn a little larger or smaller in some skins, so it is as
-wide as in Ka0s Default; the size you set is kept, and text in your own font draws at it. Each
-font's **Font flags** start on *From skin*, which follows the Skin tab's **Font outline**: HUD text
-only (the default), all text, or off. Pick a flag to keep your own. Your colors and borders are never
-changed. Choosing another skin puts the Skin tab's Font and Texture back to that skin's default. The
-first time you log in, a small window offers the skins with a preview, which turns on test mode so
-you can see them on your containers; `/am skin` opens it again whenever you want it. That window has
-the Skin tab's Font, Texture, Font outline and Ignore rows as well. Changes there are only a preview
-until you press Apply. The font and texture lists show each entry in its own face or as a swatch.
-
 Spell categories and the Overrides lists don't work everywhere, because the game only filters by
-spell in some places. On your target or focus they work for buffs while you can help that unit
-(a friend, a party member) and for debuffs while you can't (an enemy, or a neutral mob). On your
-own and your pet's buffs they always work, and on your own and your pet's debuffs they never do.
-Where they don't work, **Where spell lists don't apply**, at the top of the container's Categories tab, decides what it shows, separately for NPCs
-and for players (or, on your own and your pet's debuffs, with one choice). **Every aura, once** (the
-default) shows every aura that gets past Cast by, Duration, Maximum duration and the Blizzard, Dispel and Who cast it rows you set to Hide. **Only my Blizzard
-categories set to Show** shows just those categories. Either way each aura is shown once. A
-container that hides nothing shows everything as usual. The Categories and Overrides tabs carry a
-NOTE saying which units this applies to for that container, and pointing to that section.
+spell in some places. On your target or focus they work for buffs while you can help that unit (a
+friend, a party member) and for debuffs while you can't (an enemy, or a neutral mob); on your own
+and your pet's buffs they always work, and on your own and your pet's debuffs they never do. Where
+they don't, **Where spell lists don't apply**, at the top of the container's Categories tab, picks
+what shows instead: **Every aura, once** (the default) or **Only my Blizzard categories set to
+Show**. The Situations tab, last on Filters, narrows a container further. **Show in** has six
+checkboxes, all ticked to start with, for open world, dungeons, scenarios and delves, raids,
+battlegrounds and arenas, and **Which units** lets a target or focus container show only for NPCs or
+players, and only for friendly, neutral or hostile ones, following the target as you change it, in
+combat too. Unlocked or in test mode a container always shows, so you can find it. The FAQ below
+goes into each of these.
 
-The Situations tab has **Show in**: six checkboxes for open world, dungeons, scenarios and delves, raids,
-battlegrounds and arenas, all ticked to start with. Untick one and the container stays hidden in
-that kind of place. While it's unlocked or in test mode it still shows, so you can find it.
-
-First on that tab, **Which units** narrows a target or focus container to the units you want: **Unit
-type** picks All, NPCs or Players, and **Reaction** picks All, Friendly, Neutral or Hostile (how that
-unit stands toward you). Both start at All. A unit that doesn't match both stays empty, so a "Hostile
-NPCs" container shows nothing on a friendly player and comes back on the next enemy mob. It follows
-the target as you change it, in combat too. Your own and your pet's containers don't have it, since
-they always show you or your pet. Unlocked or in test mode, the container still shows.
+`/am skin` opens the skin picker, the small window that also offers the skins the first time you log
+in. Picking one of the nine skins in its list previews it on your containers: the picker turns test
+mode on while it is up, its eye button turns test mode off and on again, and closing it puts test
+mode back as it was. Nothing sticks until you press Apply; the close button or Escape puts back the
+skin you had. The same choices live on General → Skin, which can also follow EllesmereUI's look when
+that addon is loaded. The skin repaints the handles, the debug console and, once you turn off
+**Ignore settings panel** (it starts on), the settings pages. On your containers it sets the fonts
+and their shadows, the bar textures, the border styles and the font colors (a Text container's
+excepted), each unless you untick its **Use the skin's** box on a style tab to keep your own;
+**Ignore fonts** keeps every font as you picked it. Bar, background and border colors stay yours
+unless you tick their **Use the skin's color**. Some skins draw their font a little larger or
+smaller so text is as wide as in Ka0s Default; the size you set is kept, and text in your own font
+draws at it. The rest of the Skin tab is covered in the
+[settings panel guide](https://github.com/tusharsaxena/AuraMaster/blob/master/docs/settings-panel.md).
 
 If you change something mid-fight, it waits until combat ends (or until the encounter, key or match
 is over), and chat tells you which. `/am disable` hides every container at once and `/am enable`
-brings them back.
-
-Everything else is on the addon's page under Settings → AddOns, and `/am` on its own opens it.
-`/am help` (or `/auramaster help`) lists every command. `/am profile` lists your profiles, and
-`/am profile Raid` switches to the one called Raid. `/am redraw` repaints every container if one
-drew wrong.
+brings them back, `/am redraw` repaints them if one drew wrong, and `/am profile Raid` switches to
+the profile called Raid (`/am profile` on its own lists them). Everything else is on the addon's page
+under Settings → AddOns, which `/am` on its own opens, and `/am help` (or `/auramaster help`) lists
+every command.
 
 ## How the containers work
 
