@@ -72,11 +72,14 @@ picked it. Text on the skin's font is drawn a little larger or smaller in some s
 wide as in Ka0s Default; the size you set is kept, and text in your own font draws at it. Each
 font's **Font flags** start on *From skin*, which follows the Skin tab's **Font outline**: HUD text
 only (the default), all text, or off. Pick a flag to keep your own. Your colors and borders are never
-changed. Choosing another skin puts the Skin tab's Font and Texture back to that skin's default. The
-first time you log in, a small window offers the skins with a preview, which turns on test mode so
-you can see them on your containers; `/am skin` opens it again whenever you want it. That window has
-the Skin tab's Font, Texture, Font outline and Ignore rows as well. Changes there are only a preview
-until you press Apply. The font and texture lists show each entry in its own face or as a swatch.
+changed. Choosing another skin puts the Skin tab's Font and Texture back to that skin's default.
+
+`/am skin` opens the skin picker, the small window that also offers the skins the first time you log
+in. Picking a skin in its list previews it on your containers: the picker turns test mode on while
+it is up, its eye button turns test mode off and on again, and closing it puts test mode back as it
+was. That window has the Skin tab's Font, Texture, Font outline and Ignore rows as well. Changes
+there are only a preview until you press Apply, which keeps them; the close button or Escape puts
+back the skin you had. The font and texture lists show each entry in its own face or as a swatch.
 
 Spell categories and the Overrides lists don't work everywhere, because the game only filters by
 spell in some places. On your target or focus they work for buffs while you can help that unit
