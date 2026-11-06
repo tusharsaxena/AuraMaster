@@ -460,7 +460,7 @@ span bundle is `<date>-v<A>-v<B>/`, and the one untagged bundle is `docs/revendo
 |---|---|---|
 | `perf-analysis/README.md` | Present | The performance harness is wired (`core/PerfSetup.lua`) |
 | `slash-dispatch.md` | Present | 26 commands in `NS.COMMANDS`, over the eight-or-more threshold |
-| `midnight-quirks.md` | Present | Client-version workarounds of the addon's own: 12.1 aura secrecy and the aura container engine, and the taint notes that follow from them |
+| `midnight-quirks.md` | Present | Always (documentation-§3): the vendored `client-quirks` catalog block, then the addon's own client-version workarounds: 12.1 aura secrecy and the aura container engine, and the taint notes that follow from them |
 | `compat-layer.md` | Present | 26 shims in `core/Compat.lua`, over the three-or-more threshold |
 | `message-bus.md` | Not applicable | 4 messages in `NS.MSG`; the trigger is more than ten. The table lives in `## Message Bus` above |
 | `profiles.md` | Present | AceDB profiles are user-visible: the Profiles sub-page is a profile control in the options UI |
