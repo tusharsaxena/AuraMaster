@@ -1,0 +1,1 @@
+FU verify: OK. Fresh v1.91.0 extract matches tests/_kit exactly; libs/LibKa0s differs only by undeclared media/icons; provenance v1.91.0 with icons line next; bundle line 1 exact, 01/02/03/05 present; loaders read LibKa0s.xml; stat = payload + CLAUDE.md + bundle. Gate: luacheck 0/0 in 207 files; tests 2355 passed, 0 failed, 1 skipped (2356); tree clean.
