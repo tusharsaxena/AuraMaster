@@ -46,8 +46,8 @@ what each LibKa0s setup file publishes: `docs/module-map.md` → *Libraries*.
 ## Module Map
 
 Five source folders in the TOC's load order — `locales/` → `core/` → `defaults/` → `modules/` →
-`settings/` (layout-§1) — 62 authored Lua files under them: one locale, 18 core, 4 defaults, 24
-modules and 15 settings. The load-bearing positions are annotated at their TOC lines:
+`settings/` (layout-§1) — 64 authored Lua files under them as measured on 2026-11-06: one locale, 18 core, 4 defaults, 25
+modules and 16 settings. The load-bearing positions are annotated at their TOC lines:
 `core/MediaSetup.lua` before `core/Constants.lua` (the monospace face), `core/CoreSetup.lua` before
 anything that prints, `core/SkinSetup.lua` after it and before every frame builder (the skin owner registers at file load, skinning-§1), `core/PerfSetup.lua` before every module that takes `NS.Perf` as an upvalue,
 `defaults/Categories.lua` before `defaults/Profile.lua` (the template's category states) and
@@ -82,7 +82,7 @@ Every non-vendored file, its responsibility and the full load order: `docs/modul
 
 ## Settings Schema
 
-`NS.Schema` holds **318** rows across seven pages (General 26, Containers 5, Filters 57, Layout 41,
+`NS.Schema` holds **318** rows (as measured on 2026-11-06) across seven pages (General 26, Containers 5, Filters 57, Layout 41,
 Bars 89, Icons 50, Text 50), plus one runtime row per user category. It drives the panel,
 `/am list|get|set|reset` and the resets through one write seam, `NS.SetByPath`.
 
