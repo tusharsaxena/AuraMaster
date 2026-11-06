@@ -151,6 +151,7 @@ naming what resolves at load (toc-file-§5); the rest are conventional and free 
 | `tests/mock_menu.lua` | A headless `MenuUtil` stand-in, modeled on LibKa0s's repo-local one, so the launcher's right-click menu can be opened and clicked |
 | `tests/perf.lua` | The offline performance scenario runner (outside the green gate) — `docs/performance.md` |
 | `tests/filtercompiler_helpers.lua` | Not a suite: the plan readers (`setOf`, `hasWarning`, `categoryGroups`) that the FilterCompiler and FilterViews suites share |
+| `tests/own_look.lua` | Not a suite: one config with every "Use the skin's color / border / shadow" companion off, so a suite that pins what a stored swatch, border or shadow draws reads the stored value |
 | `tests/situations_owner_profile.lua` | Not a suite: the owner's real Default profile, trimmed to what `FC.Compile` reads, the shipped category definitions it compiles against (frozen at master 5b6c9f2), and master's compile of it (ids and blizzard views per group), recorded for `test_filterviews_situations` and `test_situations_settings` |
 | `tests/general_page_helpers.lua` | Not a suite: the General page readers (`general`, `spells`, the Spell categories list walkers `entry` / `entryHelp` / `entryTooltip`, the `marked` label builder, the `spyApply` / `spyPaths` spies) that `test_pages_general` and `test_pages_general_categories` share |
 | `tests/page_helpers.lua` | Not a suite: drives a settings page as a player does on a fresh environment (the widgets one render drew, finding a widget by its row's label, chat capture, tab moves, the rail (`P.drawnRail`, `P.rail`; `P.show("<Section>")` selects a Containers section first), and `P.suggestions()`, which reads the ID lists' suggestion dropdown), for the `test_pages_*` suites |
@@ -334,7 +335,7 @@ All vendored under `libs/`, loaded by the `# Libraries` block of `AuraMaster.toc
 | AceConfig-3.0, AceDBOptions-3.0 | The Profiles sub-page only (`settings/Profiles.lua`, options-ui-§3) |
 | LibSharedMedia-3.0 | Texture, border and font lookups through `LSM` (`modules/Style.lua:33`), and the lists behind the library's `Ka0sMedia_*` media pickers |
 | LibDataBroker-1.1, LibDBIcon-1.0 | The launcher's broker object and its minimap button (`core/LauncherSetup.lua`, launcher-§1). Both are OPTIONAL: `LibKa0s-Launcher-1.0` resolves them with `LibStub(…, true)` at Register time, so a client missing either degrades rather than raises |
-| LibKa0s v1.84.0 | Fifteen modules bound by name — table below |
+| LibKa0s (the release `CLAUDE.md`'s provenance line names) | Fifteen modules bound by name — table below |
 
 | LibKa0s module | Setup file | Publishes |
 |---|---|---|

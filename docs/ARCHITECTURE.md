@@ -46,8 +46,8 @@ what each LibKa0s setup file publishes: `docs/module-map.md` → *Libraries*.
 ## Module Map
 
 Five source folders in the TOC's load order — `locales/` → `core/` → `defaults/` → `modules/` →
-`settings/` (layout-§1) — 62 authored Lua files under them: one locale, 18 core, 4 defaults, 24
-modules and 15 settings. The load-bearing positions are annotated at their TOC lines:
+`settings/` (layout-§1) — 64 authored Lua files under them as measured on 2026-11-06: one locale, 18 core, 4 defaults, 25
+modules and 16 settings. The load-bearing positions are annotated at their TOC lines:
 `core/MediaSetup.lua` before `core/Constants.lua` (the monospace face), `core/CoreSetup.lua` before
 anything that prints, `core/SkinSetup.lua` after it and before every frame builder (the skin owner registers at file load, skinning-§1), `core/PerfSetup.lua` before every module that takes `NS.Perf` as an upvalue,
 `defaults/Categories.lua` before `defaults/Profile.lua` (the template's category states) and
@@ -82,7 +82,7 @@ Every non-vendored file, its responsibility and the full load order: `docs/modul
 
 ## Settings Schema
 
-`NS.Schema` holds **318** rows across seven pages (General 26, Containers 5, Filters 57, Layout 41,
+`NS.Schema` holds **318** rows (as measured on 2026-11-06) across seven pages (General 26, Containers 5, Filters 57, Layout 41,
 Bars 89, Icons 50, Text 50), plus one runtime row per user category. It drives the panel,
 `/am list|get|set|reset` and the resets through one write seam, `NS.SetByPath`.
 
@@ -460,7 +460,7 @@ span bundle is `<date>-v<A>-v<B>/`, and the one untagged bundle is `docs/revendo
 |---|---|---|
 | `perf-analysis/README.md` | Present | The performance harness is wired (`core/PerfSetup.lua`) |
 | `slash-dispatch.md` | Present | 26 commands in `NS.COMMANDS`, over the eight-or-more threshold |
-| `midnight-quirks.md` | Present | Client-version workarounds of the addon's own: 12.1 aura secrecy and the aura container engine, and the taint notes that follow from them |
+| `midnight-quirks.md` | Present | Always (documentation-§3): the vendored `client-quirks` catalog block, then the addon's own client-version workarounds: 12.1 aura secrecy and the aura container engine, and the taint notes that follow from them |
 | `compat-layer.md` | Present | 26 shims in `core/Compat.lua`, over the three-or-more threshold |
 | `message-bus.md` | Not applicable | 4 messages in `NS.MSG`; the trigger is more than ten. The table lives in `## Message Bus` above |
 | `profiles.md` | Present | AceDB profiles are user-visible: the Profiles sub-page is a profile control in the options UI |
@@ -492,6 +492,7 @@ span bundle is `<date>-v<A>-v<B>/`, and the one untagged bundle is `docs/revendo
 | `frame-layering-§3` | Two levels are counted from a sibling, not the parent. The mouse blocker sits `LAYERS.LEVEL.BLOCKER` under the engine's current level (`ContainerClass:ApplyBlocker`). Each text-glow twin sits `GLOW_GAP` under the main engine, and its holder `GLOW_HOLDER` under that (`modules/Container_Twins.lua`). With `L = 5` a holder sits below the anchor. | A later `layout.level` raises the anchor, but the engine does not follow it, so only the engine's own current level keeps the blocker under it. The twins must sit under the main's whole text-and-icon stack, which is a fixed gap below the main and not a band over the anchor. The holders carry glow copies only. | 2026-10-24, the owner accepted AUR-Z10 (the frame-layering run, item 030). The values are unchanged and named in `NS.Constants.LAYERS`. | The engine follows its anchor's level, or the glow stops using twin engines. |
 | `layout-§1` | `defaults/Categories.lua` stays in the 1000–1500 band (1344 lines). `Cat.HELPFUL` and `Cat.HARMFUL` are not split across files. | The file is data: hand-curated spell ids, 8 functions, max CCN 4. `tools/spell-research/logs.py` is the only writer of those lists and rewrites this one path, and `sid_db2.py` tells a buff list from a debuff list by where it sits around `Cat.HARMFUL =` in this one file. A split would change the tool chain, so it is not a pure move. Tracks anti-pattern #53. | 2026-10-31 (FX-AM-SIZE) | The file reaches 1400 lines, or the spell-research tools are reworked to read more than one file. |
 | `skinning-§1` (follow the skin by default) | Container defaults sit off the skin: `text.glowColorFromSkin` (SF-AM-1); a bar's background and border color, and Show border on (SF-AM-2); a bar's fill color, the Text font color, and the icon border color on icons, beside a bar and beside a text line (SF-AM-3). | The owner's smoke ruling of 2026-11-01: a black glow, a dark background and border on a bar, and the fill, Text font and icon border colors the player's own. Other fonts still follow. Schema v17 moves a stored container still holding the old default; a value already different stays. v16 wrote explicit values, so an old default and a player's pick of the same value read alike, and v17 moves both. | 2026-11-02 | The standard rules on a per-leaf follow default, or a skin gains a glow the owner wants followed |
+| `documentation-§6` (*Citing the repo's own code*, SHOULD, v2.102.x) | The live docs cite this repo's own code as `path:N[-M]` (164 citations, as measured on 2026-11-06), not `path` plus a symbol or heading | `tests/test_docs.lua` already enforces what the rule is for: every `path:N` citation in `docs/*.md`, `DEPENDENCIES.md` and `README.md` must resolve to an existing file and a code line inside it, and must sit within 3 lines of a name its own sentence gives in backticks, so a line that moves under a citation turns the suite red instead of rotting silently. Owner ruling, sync-docs pass of 2026-11-06 | 2026-11-06 | `tests/test_docs.lua`'s citation checks are retired or weakened, or a citation form appears that they cannot check |
 
 ### Files over the 1500-line cap
 
