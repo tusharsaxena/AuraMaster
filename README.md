@@ -6,7 +6,7 @@
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
 ![Tests](https://img.shields.io/badge/Tests-2355%2F2355_passing-green)
 
-Aura Master lets you build your own buff and debuff displays. Each one is a container. You pick
+Retail only for now; WoW Forever support is planned. Aura Master lets you build your own buff and debuff displays. Each one is a container. You pick
 whose auras it shows (yours, your target's, your focus's or your pet's), whether it shows buffs,
 debuffs or your weapon enchants, and whether they draw as timer bars, as icons or as lines of text.
 
