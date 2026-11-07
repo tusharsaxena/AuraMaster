@@ -70,7 +70,8 @@ end)
 -- guards on NS.Secrets. Two calls, each ignoring what the other carries, so a member the major gains
 -- later is ignored by neither and fails one of them until this host decides where it goes.
 local COMPAT_READERS = { "GetSpellInfo", "GetSpellName", "GetSpellTexture", "GetSpellCooldown",
-                         "GetSpecialization", "GetSpecializationInfo" }
+                         "GetSpecialization", "GetSpecializationInfo",
+                         "IsForever", "IsRetail", "ClientKey", "ForClient" }
 
 test("parity: the Compat arms carry every LibKa0s-Compat-1.0 member the addon wires", function()
     local NS2 = loadDegraded()
@@ -81,6 +82,8 @@ test("parity: the Compat arms carry every LibKa0s-Compat-1.0 member the addon wi
         -- spec apart from GetSpellInfo's name.
         "GetSpellName", "GetSpellTexture", "GetSpellCooldown", "GetSpecialization",
         "GetSpecializationInfo",
+        -- LibKa0s v1.92.0 (Compat minor 2) added these four client helpers. No caller here until the Forever port.
+        "IsForever", "IsRetail", "ClientKey", "ForClient",
     })
     T.assertSurfaceParity(NS2.Secrets, "LibKa0s-Compat-1.0", COMPAT_READERS)
 end)
