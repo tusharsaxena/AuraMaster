@@ -45,7 +45,7 @@ marked as such rather than listed as a requirement.
 
 | Tool | Version | Needed for | Evidence |
 |---|---|---|---|
-| `lua5.1` (+ `luac`) | **5.1 exactly** | the headless suite, `lua tests/run.lua`; the offline perf runner `lua tests/perf.lua`; the complexity suite's sighted shadow (`tests/_kit/lizard_sighted.lua`, run by the automated-test runner); one-file syntax checks `luac -p file.lua` | `tests/_kit/loader.lua:87` and `:91` call `setfenv`, `:89` calls `loadstring` |
+| `lua5.1` (+ `luac`) | **5.1 exactly** | the headless suite, `lua tests/run.lua`; the offline perf runner `lua tests/perf.lua`; the complexity suite's sighted shadow (`tests/_kit/lizard_sighted.lua`, run by the automated-test runner); one-file syntax checks `luac -p file.lua` | `tests/_kit/loader.lua:87` and `:106` call `setfenv`, `:104` calls `loadstring` |
 | `luacheck` | any recent | `~/.claude/dev-copilot/bin/ka0s-bounded luacheck .`, the other half of the green gate | `.luacheckrc` at the repo root |
 | `ka0s-bounded` | the dev-copilot plugin | `~/.claude/dev-copilot/bin/ka0s-bounded`, the bounded runner lint goes through, because `luacheck` loads no kit and cannot bound itself (testing-§15) | installed with the dev-copilot Claude Code plugin |
 | `lizard` | any recent | the `complexity` suite of `tests/_kit/run-automated-tests.sh` (automated-tests) | `tests/_kit/run-automated-tests.sh:168` probes `command -v lizard` |
