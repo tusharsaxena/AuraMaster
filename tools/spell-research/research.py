@@ -931,6 +931,14 @@ class ForeverFence:
     The class fence keeps a trained spell that only shares the name: druid Wrath 5176 stays, because
     the Wrath rune is the paladin's; hunter Lacerate 24118 stays, because the Lacerate rune is the
     druid's. Measured on 1.60.1.70938 no trained, non-talent spell shares a rune's name AND class.
+
+    Scope: the fence guards the pool (build_pool_forever) and `rank_closure`, NOT the trigger
+    closure. A hunter-masked Beast Training learn spell still triggers pet-line-only abilities into
+    the buckets through EffectTriggerSpell: on 1.60.1.70938 Web 1265843/1265878/1265880/1265881/
+    1265883 (ccRoot), Pinch 1264735-1264742 and Tendon Rip 1265038-1265042 (ccSnare), and
+    Intimidation 24394 (hardCC). Fencing the trigger closure wholesale would be wrong, because
+    Intimidation 24394 is a genuine hunter CC aura, so these reach AM-FP05 as candidates to rule
+    one by one.
     """
 
     def __init__(self, rune_classes: dict[str, set[str]], talent_ranks: set[int],
@@ -1016,8 +1024,13 @@ def family_class_of(pool: dict[int, set[str]], families: dict[int, int]) -> dict
 
     A family's class is the one that holds a strict majority of the family's classed pool spells
     (on 1.60.1.70938 each of the nine families is 99%+ one class: family 3 is all MAGE, family 4 is
-    132 WARRIOR and 1 PALADIN). Family 0 is no family and gives no class, which is what keeps the
-    NPC copies of a name (Polymorph 13323, 14621, ...) out of `rank_closure`.
+    132 WARRIOR and 1 PALADIN). Family 0 is no family and gives no class, which keeps SOME NPC
+    copies of a name (Polymorph 13323, 14621, ...) out of `rank_closure`. Only some: many NPC copies
+    carry the player class's family and so join as source 'rank' (on 1.60.1.70938 Blast Wave 15091,
+    17145, 22424, ...; Mind Flay 16568, 17165, ...; Frostbolt 13439; Intimidating Shout 19134,
+    29544; Charge 22911; Banish 457569, 465352). The closure still holds its contract (same name AND
+    same class), so the real ranks join (Polymorph 118 -> 12824/12825/12826), but a 'rank' candidate
+    is not proof of a player rank: AM-FP05 rejects the NPC copies while ruling.
     """
     votes: dict[int, dict[str, int]] = defaultdict(lambda: defaultdict(int))
     for spell, tokens in pool.items():
