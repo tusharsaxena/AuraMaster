@@ -2106,8 +2106,8 @@ the color pair is grayed out; tick it → they light up. The toggle's tooltip sa
 outline and shadow and the icon and the box get none. Result: pass (owner-marked 2026-10-16)
 
 **TEXT-31. The glow hugs each letter.** #4 *Player cooldowns* with a live aura, Font Outline on and
-Shadow ticked: tick Glow behind the text → a black glow about 4 px wide, at half strength and
-shifted 4 px to the left, hugs each letter, under the letters, with no box around the line; the
+Shadow ticked: tick Glow behind the text → a black glow about 2 px wide, at full strength and
+shifted 1 px right and 1 px down (the defaults since 2026-11-14), hugs each letter, under the letters, with no box around the line; the
 black outline and the shadow still draw on the letters.
 Font size 36 → the glow is even all the way round, the corners of each letter included. Icon position
 Left, then Right → the glow never draws over the icon's art. Dispel type → Backdrop on with a Magic
