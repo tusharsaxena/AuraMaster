@@ -492,11 +492,17 @@ SENTINELS_FOREVER = {
 # `SkillLine` rows Forever's pool never reads, whatever their ClassMask. The ids are the client's
 # and are kept as ids because the names are generic enough to recur.
 FOREVER_EXCLUDED_SKILL_LINES = {
-    2851: "Engraving: the rune abilities (owner ruling 3, 2026-11-14: no runes)",
-    2853: "Runes: the rune items' spells (owner ruling 3)",
+    2851: "Engraving: the 'Engrave <Slot> - <Rune>' learn spells (owner ruling 3, 2026-11-14: no runes)",
+    2853: "Runes: the '<Slot> Rune Ability' placeholders (owner ruling 3)",
     777: "Mounts: CategoryID 7 like a class line, and three paladin rows would class 216 mounts",
     778: "Companions: CategoryID 7, no class",
 }
+# The rune ABILITIES are not on either rune line: they sit on the class talent-tree lines (Living
+# Flame 401558 on Fire, Mutilate 399956 on Assassination), beside the trained spells. Only their
+# names tie them to the runes: each "Engrave <Slot> - <Rune>" spell on line 2851 names one, and its
+# ClassMask says which classes engrave it. ForeverFence drops a spell by that name and class.
+ENGRAVING_SKILL_LINE = 2851
+ENGRAVE_NAME = re.compile(r"^Engrave .+? - (.+)$")
 # Pet lines (`Pet - Imp`, `Pet - Generic`, ...) are left out by this name prefix, as on Retail,
 # where a pet line is never a class line. A pet's own spell is not an aura the player's class has.
 PET_SKILL_LINE_PREFIX = "Pet - "
@@ -903,6 +909,67 @@ def forever_line_excluded(line: int, names: dict[int, str]) -> bool:
     return line in FOREVER_EXCLUDED_SKILL_LINES or names.get(line, "").startswith(PET_SKILL_LINE_PREFIX)
 
 
+def read_talent_ranks(path: Path) -> list[tuple[dict, list[int]]]:
+    """`[(Talent row, [every non-zero SpellRank_0..8 id])]`, in file order."""
+    out = []
+    for row in iter_csv(path):
+        ranks = [as_int(row.get("SpellRank_%d" % rank)) for rank in range(9)]
+        out.append((row, [spell for spell in ranks if spell]))
+    return out
+
+
+class ForeverFence:
+    """The spells Forever's pool keeps out one by one, where a whole-line rule cannot reach them.
+
+    a. A RUNE ABILITY (owner ruling 3): a spell named like an "Engrave <Slot> - <Rune>" spell, for a
+       class that engraves that rune. The rune abilities sit on the class talent-tree lines, so no
+       line rule drops them. A talent rank is never one: several vanilla talents share a rune's name
+       (Soul Siphon 17804, Holy Specialization 14889), and a talent is the class's own.
+    b. A spell whose `SkillLineAbility` rows all sit on dropped lines (forever_line_excluded): a pet's
+       Claw or Bite. `rank_closure` reaches those by name through the hunter family otherwise.
+
+    The class fence keeps a trained spell that only shares the name: druid Wrath 5176 stays, because
+    the Wrath rune is the paladin's; hunter Lacerate 24118 stays, because the Lacerate rune is the
+    druid's. Measured on 1.60.1.70938 no trained, non-talent spell shares a rune's name AND class.
+    """
+
+    def __init__(self, rune_classes: dict[str, set[str]], talent_ranks: set[int],
+                 dropped_only: set[int]):
+        self.rune_classes = rune_classes
+        self.talent_ranks = talent_ranks
+        self.dropped_only = dropped_only
+
+    def blocks(self, spell: int, name: str, tokens: set[str]) -> bool:
+        """True when `spell` (called `name`, of the classes `tokens`) stays out of the pool."""
+        if spell in self.talent_ranks:
+            return False
+        return spell in self.dropped_only or bool(self.rune_classes.get(name, set()) & tokens)
+
+
+def load_forever_fence(tables: dict[str, Path], line_names: dict[int, str] | None = None) -> ForeverFence:
+    """Build the ForeverFence from SkillLine, SkillLineAbility, SpellName and Talent."""
+    if line_names is None:
+        line_names = {as_int(r.get("ID")): (r.get("DisplayName_lang") or "").strip()
+                      for r in iter_csv(tables["SkillLine"])}
+    names = read_names(tables["SpellName"])
+    rune_classes: dict[str, set[str]] = defaultdict(set)
+    kept_lines: dict[int, bool] = {}
+    for row in iter_csv(tables["SkillLineAbility"]):
+        spell, line = as_int(row.get("Spell")), as_int(row.get("SkillLine"))
+        if not spell:
+            continue
+        dropped = forever_line_excluded(line, line_names)
+        kept_lines[spell] = kept_lines.get(spell, False) or not dropped
+        engraved = ENGRAVE_NAME.match(names.get(spell, "")) if line == ENGRAVING_SKILL_LINE else None
+        if engraved:
+            # A mask of 0 names no class; read it as every class rather than lose the rune.
+            mask = as_int(row.get("ClassMask")) or -1
+            rune_classes[engraved.group(1).strip()] |= classes_from_mask(mask) & FOREVER_CLASS_TOKENS
+    talent_ranks = {spell for _row, ranks in read_talent_ranks(tables["Talent"]) for spell in ranks}
+    dropped_only = {spell for spell, kept in kept_lines.items() if not kept}
+    return ForeverFence(dict(rune_classes), talent_ranks, dropped_only)
+
+
 def build_pool_forever(tables: dict[str, Path]) -> dict[int, set[str]]:
     """Forever's player pool: `{spell_id: set(class tokens)}`.
 
@@ -911,6 +978,8 @@ def build_pool_forever(tables: dict[str, Path]) -> dict[int, set[str]]:
          minus every row on the rune lines 2851 and 2853, Mounts, Companions and the `Pet - ` lines.
       b. `Talent.SpellRank_0..8`, every rank a talent grants, classed by `Talent.ClassID` or, where
          that is 0 (every row measured on 1.60.1.70938), by `TalentTab.ClassMask` through `TabID`.
+
+    Then every rune ability is dropped (ForeverFence): those sit on the class lines, so (a) keeps them.
 
     The trigger closure, the family bridge and the rank closure run on top of this in `derive`.
     """
@@ -930,13 +999,15 @@ def build_pool_forever(tables: dict[str, Path]) -> dict[int, set[str]]:
             pool[spell].add(class_lines[line])
     tab_class = {as_int(r.get("ID")): classes_from_mask(as_int(r.get("ClassMask"))) & FOREVER_CLASS_TOKENS
                  for r in iter_csv(tables["TalentTab"])}
-    for row in iter_csv(tables["Talent"]):
+    for row, ranks in read_talent_ranks(tables["Talent"]):
         token = CLASS_BY_CLASS_ID.get(as_int(row.get("ClassID")))
         tokens = ({token} & FOREVER_CLASS_TOKENS) if token else tab_class.get(as_int(row.get("TabID")), set())
-        for rank in range(9):
-            spell = as_int(row.get("SpellRank_%d" % rank))
-            if spell:
-                pool[spell] |= tokens
+        for spell in ranks:
+            pool[spell] |= tokens
+    fence = load_forever_fence(tables, line_names)
+    names = read_names(tables["SpellName"])
+    for spell in [s for s, tokens in pool.items() if fence.blocks(s, names.get(s, ""), tokens)]:
+        del pool[spell]
     return pool
 
 
@@ -963,14 +1034,17 @@ def family_class_of(pool: dict[int, set[str]], families: dict[int, int]) -> dict
 
 
 def rank_closure(pool: dict[int, set[str]], names: dict[int, str],
-                 class_of: dict[int, set[str]]) -> dict[int, set[str]]:
+                 class_of: dict[int, set[str]],
+                 fence: ForeverFence | None = None) -> dict[int, set[str]]:
     """Add every spell with the same name and the same class as a pool spell. Returns `pool`.
 
     Forever keeps vanilla's ranks as separate ids (Polymorph 118, 12824, 12825, 12826) with
     `SkillLineAbility.SupercedesSpell` 0, so the only link between ranks is the name within a class.
     An aura filter matches one id, so every rank has to ship or a player who has not trained the top
     rank never matches. `class_of` (family_class_of) is the candidate's class; a candidate with no
-    class, or another class's, never joins. The pool is grown in place and returned.
+    class, or another class's, never joins. Nor does one the `fence` blocks: the hunter family
+    carries the pets' Claw and Bite, and a warlock talent's name may be a rune's. The pool is grown in
+    place and returned.
     """
     by_name: dict[str, list[int]] = defaultdict(list)
     for spell, name in names.items():
@@ -980,17 +1054,19 @@ def rank_closure(pool: dict[int, set[str]], names: dict[int, str],
         tokens = pool[spell]
         for candidate in by_name.get(names.get(spell, ""), ()):
             shared = class_of[candidate] & tokens
-            if shared and candidate not in pool:
+            if not shared or candidate in pool:
+                continue
+            if fence is None or not fence.blocks(candidate, names.get(candidate, ""), shared):
                 pool[candidate] = set(shared)
     return pool
 
 
 def apply_rank_closure(pool: set[int], classes: dict[int, set[str]], names: dict[int, str],
-                       families: dict[int, int]) -> set[int]:
+                       families: dict[int, int], fence: ForeverFence | None = None) -> set[int]:
     """`rank_closure` over derive()'s set-and-classes pool shape. Returns the ids it added."""
     view = {spell: set(classes.get(spell, ())) for spell in pool}
     before = set(view)
-    rank_closure(view, names, family_class_of(view, families))
+    rank_closure(view, names, family_class_of(view, families), fence)
     added = set(view) - before
     for spell in added:
         pool.add(spell)
@@ -1209,6 +1285,7 @@ def derive(cache: dict[str, Path], client: str = "retail") -> dict:
     """
     log("Building the player pool (%s) ..." % client)
     pool, classes = pool_for(cache, client)
+    fence = load_forever_fence(cache) if client == "forever" else None
     log("  %d spells from %s" % (len(pool), "skill lines and talents" if client == "forever"
                                     else "skill lines, specializations and traits"))
 
@@ -1264,7 +1341,7 @@ def derive(cache: dict[str, Path], client: str = "retail") -> dict:
         # because a higher rank may trigger its own aura id the lower one does not. It runs before
         # the bridge only so a CC rank is labelled "rank" rather than "bridge"; the fixed point is
         # the same set either way.
-        ranks = apply_rank_closure(pool, classes, names, families) if client == "forever" else set()
+        ranks = apply_rank_closure(pool, classes, names, families, fence) if fence else set()
         newly = bridge_spell_families(pool, classes, names, families, mechanics_of, cc_mechanics)
         added += grew
         bridged |= newly
@@ -1913,7 +1990,7 @@ def derive_cast_aura(cache: dict[str, Path], client: str = "retail") -> dict:
     pool, classes = pool_for(cache, client)
     if client == "forever":
         apply_rank_closure(pool, classes, read_names(cache["SpellName"]),
-                           read_spell_families(cache["SpellClassOptions"]))
+                           read_spell_families(cache["SpellClassOptions"]), load_forever_fence(cache))
     log("  %d player-castable spells" % len(pool))
 
     log("Reading SpellEffect for APPLY_AURA ...")

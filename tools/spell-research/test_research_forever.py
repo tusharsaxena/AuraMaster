@@ -76,7 +76,8 @@ class ForeverPoolTest(unittest.TestCase):
     def test_forever_pool_excludes_runes_and_pets(self):
         for spell in (6358,     # Pet - Succubus, ClassMask 0
                       900010,   # Pet - Generic, a hunter-masked row: the line drops it anyway
-                      900020,   # Engraving 2851, mage-masked: no runes (owner ruling 3)
+                      900020,   # a rune ability on the Frost line, named by "Engrave Gloves - ..."
+                      900022, 900024,  # the engrave spells themselves, on Engraving 2851
                       900021,   # Runes 2853
                       900030, 23214,  # Mounts, including the paladin-masked row
                       900031,   # Companions
@@ -85,6 +86,16 @@ class ForeverPoolTest(unittest.TestCase):
         self.assertEqual(self.pool[118], {"MAGE"})
         # A ClassMask-0 row on a class line takes the line's class (Arms 26 -> WARRIOR).
         self.assertEqual(self.pool[12282], {"WARRIOR"})
+
+    def test_forever_rune_fence(self):
+        # A talent rank keeps its name's rune at bay: a talent is the class's own (owner ruling 3).
+        self.assertEqual(self.pool[900060], {"MAGE"})
+        # The class fence: the rune "Fixture Rune" is the mage's, so a druid spell of that name stays.
+        self.assertEqual(self.pool[900026], {"DRUID"})
+        fence = research.load_forever_fence(forever_cache())
+        self.assertEqual(fence.rune_classes["Fixture Rune"], {"MAGE"})
+        self.assertIn(900090, fence.dropped_only)    # Claw, on a Pet - line only
+        self.assertNotIn(900091, fence.dropped_only)
 
     def test_forever_class_lines(self):
         lines = quiet(research.load_forever_class_lines, forever_cache())
@@ -120,6 +131,22 @@ class ForeverPoolTest(unittest.TestCase):
         self.assertNotIn(900070, out)   # a "Polymorph" in the warlock family: not the same class
         self.assertEqual(out[6213], {"WARLOCK"})  # Fear rank 2
 
+    def test_forever_rank_closure_respects_the_fence(self):
+        cache = forever_cache()
+        names = research.read_names(cache["SpellName"])
+        families = research.read_spell_families(cache["SpellClassOptions"])
+        class_of = research.family_class_of(self.pool, families)
+        self.assertEqual(class_of[900090], {"HUNTER"})
+        fence = research.load_forever_fence(cache)
+        out = research.rank_closure(dict(self.pool), names, class_of, fence)
+        self.assertNotIn(900090, out)   # the pet's Claw: same name and family as hunter Claw 900091
+        self.assertNotIn(900025, out)   # a mage-family "Fixture Mage Talent" that is a rune's name
+        self.assertNotIn(900023, out)   # the rune's own family copy
+        # Without the fence both would join: the fixture holds the shape the real export has.
+        bare = research.rank_closure(dict(self.pool), names, class_of)
+        self.assertIn(900090, bare)
+        self.assertIn(900025, bare)
+
 
 class ForeverDeriveTest(unittest.TestCase):
     def test_forever_derive_passes_the_forever_gate(self):
@@ -131,6 +158,11 @@ class ForeverDeriveTest(unittest.TestCase):
         self.assertEqual(hard[118]["source"], "pool")
         self.assertNotIn(13323, hard)
         self.assertEqual(result["rankClosureAdded"], 5)  # 12824-12826, Fear 6213, 900081
+        # No rune ability reaches a bucket: not the one on the class line, nor a same-name rank.
+        root = result["buckets"]["ccRoot"]
+        for spell in (900020, 900023, 900025):
+            self.assertNotIn(spell, root, spell)
+        self.assertIn(122, root)
 
     def test_the_forever_gate_matches_ids(self):
         result = quiet(research.derive, forever_cache(), "forever")
