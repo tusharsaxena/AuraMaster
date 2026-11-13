@@ -1,0 +1,11 @@
+id	milestone	repo	title	depends_on
+AM-FP00	M0	AuraMaster	Design, plan and run tooling	
+AM-FP01	M1	AuraMaster	Re-vendor LibKa0s v1.98.0 (newest tag), adopt nothing beyond the port	AM-FP00
+AM-FP02	M1	AuraMaster	Client seam in core/Compat.lua and the default skin per client	AM-FP01
+AM-FP03	M2	AuraMaster	research.py --client forever: wowf build, Forever table set, pool, rank closure, sentinels	AM-FP00
+AM-FP04	M2	AuraMaster	forever.py: name map + DB2 candidates, rulings file, emitters for Categories_Forever and CastToAura_Forever	AM-FP03
+AM-FP05	M3	AuraMaster	Run the Forever derivation, rule every candidate, freeze the bundle, emit the generated files	AM-FP04
+AM-FP06	M3	AuraMaster	Wire per-client seeds, CastToAura selection and the empty-category gate	AM-FP02 AM-FP05
+AM-FP07	M4	AuraMaster	Port surface: TOC two numbers, README, DEPENDENCIES, ARCHITECTURE table, gate docs, smoke, limitations, inventory	AM-FP06
+WS-FP01	M4	WowAddonStandards	Roster: Aura Master ships Retail · Forever	AM-FP07
+AM-FP08	M5	AuraMaster	Whole-branch review fixes and the automated-test record	AM-FP07
