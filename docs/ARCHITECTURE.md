@@ -9,7 +9,7 @@ Ka0s Aura Master draws player-built aura **containers**. A container is one unit
 `target`, `focus`, `pet` — `core/Constants.lua:39`), one aura type (`HELPFUL` or `HARMFUL` — `:45`;
 the player's temporary weapon enchants are the buff category `weaponEnchants`, schema v5) and one style (`bars`, `icons` or
 `text` — `:49`), plus its filters, placement and look. A profile holds any number of them; a fresh
-profile is seeded with four (`NS.STARTER_CONTAINERS`, `defaults/Profile.lua:342`).
+profile is seeded with four (`NS.STARTER_CONTAINERS`, `defaults/Profile.lua:343`).
 
 **The design is dictated by one client fact.** On Retail 12.1 an addon cannot read aura data while
 auras are secret — combat, encounters, Mythic+ and PvP (`core/Secrets.lua`, `docs/midnight-quirks.md`).
@@ -308,7 +308,9 @@ Every surface Aura Master draws paints through the `LibKa0s-Skin-1.0` facade wit
   `tests/test_skinsetup.lua` holds to the library's values. The choice is the profile's `skin` table,
   seven rows drawn by the library's Skin tab on General ([schema.md](schema.md),
   [settings-panel.md](settings-panel.md)). `NS.ApplySkinChoice` applies it right after `NS:InitDB`
-  and on every profile event.
+  and on every profile event. A new profile wears the client's default skin (skinning-§2),
+  `NS.DEFAULT_SKIN`: `Skin:DefaultSkin()` read once at file load, WoW Forever on the Forever client
+  and Ka0s Default on Retail and without the library.
 - **The HUD reads the skin at dress time.** The aura buttons are Blizzard's pooled engine buttons,
   whose geometry reads secret, so no recorded primitive ever touches them. `Style.SkinKey` resolves
   `hud.font` (every font block, through `Style.FontKey`) and `bar.texture` (the bar fill and
@@ -461,7 +463,7 @@ span bundle is `<date>-v<A>-v<B>/`, and the one untagged bundle is `docs/revendo
 | `perf-analysis/README.md` | Present | The performance harness is wired (`core/PerfSetup.lua`) |
 | `slash-dispatch.md` | Present | 26 commands in `NS.COMMANDS`, over the eight-or-more threshold |
 | `midnight-quirks.md` | Present | Always (documentation-§3): the vendored `client-quirks` catalog block, then the addon's own client-version workarounds: 12.1 aura secrecy and the aura container engine, and the taint notes that follow from them |
-| `compat-layer.md` | Present | 26 shims in `core/Compat.lua`, over the three-or-more threshold |
+| `compat-layer.md` | Present | 30 shims in `core/Compat.lua`, over the three-or-more threshold |
 | `message-bus.md` | Not applicable | 4 messages in `NS.MSG`; the trigger is more than ten. The table lives in `## Message Bus` above |
 | `profiles.md` | Present | AceDB profiles are user-visible: the Profiles sub-page is a profile control in the options UI |
 | `debug.md` | Present | `/am diagnostics` (or `/am debug diagnostics`), the diagnostic report `modules/Diagnostics.lua` writes to the console |

@@ -16,6 +16,9 @@ local general = H.general
 local fresh = dofile("tests/fresh_env.lua")
 
 local OWNER = "AuraMaster"
+-- The skin a new profile wears on the kit profile's client (skinning-§2): WoW Forever on forever, Ka0s
+-- Default on retail. Pinned from the profile, never read back from the addon.
+local CLIENT_SKIN = (os.getenv("KA0S_KIT_CLIENT") or "retail") == "forever" and "forever" or "ka0s"
 
 --- A fresh environment, its Skin major, and a counter of this owner's OnLooksChanged.
 local function skinEnv(opts)
@@ -49,7 +52,7 @@ test("Skin seam: the owner is the folder name, and NS.Skin is its facade", funct
     assertEqual(Skin:OwnerLabel(OWNER), "Ka0s Aura Master", "the copy confirmation names the addon by its brand")
 end)
 
-test("Skin seam: the read answers Ka0s Default before the profile store exists", function()
+test("Skin seam: the read answers the client's default skin before the profile store exists", function()
     -- RegisterOwner calls `get` at FILE LOAD, before NS:InitDB; a getter that raised there would be a
     -- visible Lua error on every login.
     local NS = skinEnv()
@@ -60,7 +63,7 @@ test("Skin seam: the read answers Ka0s Default before the profile store exists",
     NS.db = db
     assertTrue(ok, "NS.SkinChoice raised without a store: " .. tostring(source))
     assertEqual(source, "ka0s")
-    assertEqual(skin, "ka0s")
+    assertEqual(skin, CLIENT_SKIN)
     assertTrue(okO, "NS.SkinOverride raised without a store")
     assertEqual(font, false)
     assertEqual(texture, false)
@@ -208,13 +211,13 @@ end)
 
 -- ── the keys and the rows ────────────────────────────────────────────────────────────────────
 
-test("Skin seam: the skin keys default to Ka0s Default, as skip-render rows of General's Appearance group", function()
+test("Skin seam: the skin keys default to the client's skin, as skip-render rows of General's Appearance group", function()
     local NS = skinEnv()
     local d = NS.defaults.profile.skin
     -- red under: a default other than today's look, or the Scope's owner call (panel ignored, fonts
     -- skinned) moved; pickerSeen false on every profile (O3).
     assertEqual(d.source, "ka0s")
-    assertEqual(d.skin, "ka0s")
+    assertEqual(d.skin, CLIENT_SKIN, "the client's default skin (skinning-§2)")
     assertEqual(d.ignorePanel, true)
     assertEqual(d.ignoreFonts, false)
     assertEqual(d.font, "")
@@ -349,21 +352,22 @@ test("Skin seam: the profile's stored skin, exceptions and overrides are applied
 end)
 
 test("Skin seam: a profile switch, copy and reset each apply that profile's skin", function()
-    local NS, _, Skin, n = skinEnv()
+    -- every new or reset profile wears the client's default skin, so the build keeps it too
+    local NS, _, Skin, n = skinEnv({ clientSkin = true })
     local db = NS.db
     db:SetProfile("SkinProbe")
     NS.SetByPath("skin.skin", "glass")
     db:SetProfile("Default")
-    assertEqual(select(2, Skin:GetChoice(OWNER)), "ka0s", "back on Default, Default's skin")
+    assertEqual(select(2, Skin:GetChoice(OWNER)), CLIENT_SKIN, "back on Default, Default's skin")
     n.looks = 0
     db:SetProfile("SkinProbe")
     assertEqual(select(2, Skin:GetChoice(OWNER)), "glass", "the switch did not move the applied skin")
     assertEqual(n.looks, 1, "one switch, one repaint")
     db:ResetProfile()
-    assertEqual(select(2, Skin:GetChoice(OWNER)), "ka0s", "a reset goes back to Ka0s Default")
+    assertEqual(select(2, Skin:GetChoice(OWNER)), CLIENT_SKIN, "a reset goes back to the client's default")
     db:SetProfile("Default")
     db:CopyProfile("SkinProbe")
-    assertEqual(select(2, Skin:GetChoice(OWNER)), "ka0s", "a copy applies the copied skin")
+    assertEqual(select(2, Skin:GetChoice(OWNER)), CLIENT_SKIN, "a copy applies the copied skin")
 end)
 
 -- ── the owner, handed to the factories ───────────────────────────────────────────────────────

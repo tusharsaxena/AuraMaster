@@ -32,6 +32,8 @@ Loader.loadAll(ADDON_FILES, NS, mocks)
 NS.addon:OnInitialize()
 NS.addon:OnEnable()
 mocks.__fireTimers()
+-- The shared environment wears Ka0s Default on both kit profiles (tests/wear_ka0s.lua says why).
+dofile("tests/wear_ka0s.lua")(NS, mocks)
 
 -- The live halves the degradation stubs are compared against: INSTANCES, not library tables, so
 -- registered by name before Kit.expose would auto-wire the wrong thing.
@@ -111,6 +113,7 @@ Kit.run{
         "test_containermanager",
         "test_containermanager_queue",
         "test_compat",
+        "test_clients",
         "test_secrets",
         "test_bus",
         "test_state",

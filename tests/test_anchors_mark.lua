@@ -7,6 +7,7 @@
 local T = _G.AM_TEST
 local test, assertEqual, assertTrue, assertNil = T.test, T.assertEqual, T.assertTrue, T.assertNil
 local fresh = dofile("tests/fresh_env.lua")
+local wearKa0s = dofile("tests/wear_ka0s.lua")
 local BS = dofile("tests/border_strips.lua")
 local HR = dofile("tests/handle_recorder.lua")
 
@@ -297,6 +298,7 @@ local END_PATHS = {
     { "the dragged container destroyed", function(_, _, inst) inst:Destroy() end },
     { "a profile switch", function(NS, mocks)
         NS.db:SetProfile("Raid")
+        wearKa0s(NS, mocks)   -- a new profile wears the client's default skin
         mocks.__fireTimers()
         NS.Anchors.Snap.driver:__fire("OnUpdate", 0.05)
     end },

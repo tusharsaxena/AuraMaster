@@ -288,8 +288,10 @@ end)
 local function v12profile()
     local PROTO = "Ka0s Prototype"
     return {
-        -- The record seeded: v16 moves borders and colors, which tests/test_skin_flip.lua pins.
-        skin = { fullSkinReset = true },
+        -- The record seeded: v16 moves borders and colors, which tests/test_skin_flip.lua pins. Ka0s
+        -- Default named, so v15 measures the picks against its HUD face on either kit profile (with no
+        -- skin stored the forever profile's is WoW Forever's, tests/test_skin_glow_restore.lua's case).
+        skin = { skin = "ka0s", fullSkinReset = true },
         seeded = true, nextContainerId = 3, containerOrder = { 1, 2 },
         containers = {
             [1] = { name = "Bars", unit = "player", auraType = "HELPFUL", style = "bars",

@@ -12,8 +12,66 @@ local CompatLib = LibStub and LibStub("LibKa0s-Compat-1.0", true)
 -- an enum the engine publishes (compat). Feature modules call these wrappers, never the globals, so a
 -- renamed enum or a moved function is a one-file fix and a headless run degrades to plain answers.
 --
--- Retail only: these shim cross-PATCH differences, never game flavors. docs/compat-layer.md lists
--- each shim and why it exists.
+-- These shim cross-PATCH differences and feature-detect one API at a time; the one question about the
+-- game flavor is the client seam below, which only routes the library's answer (clients-§3).
+-- docs/compat-layer.md lists each shim and why it exists.
+
+-- ---------------------------------------------------------------------------
+-- The client (clients-§3)
+-- ---------------------------------------------------------------------------
+-- Which client this is, asked of LibKa0s-Compat-1.0 and nothing else: no file of this addon reads a
+-- WOW_PROJECT_* global or compares an interface number. Without the library the stand-in answers
+-- Retail, the one client the addon shipped on before the port, so a partial install keeps every
+-- Retail feature instead of gating them all off as an unknown client.
+
+local CLIENT_TOKENS = { retail = true, forever = true, both = true }
+
+local function unknownClient(token)
+    error('ForClient: unknown client "' .. tostring(token) .. '"', 3)
+end
+
+--- The stand-in ForClient: the library's rule over a client that is always Retail. An unknown token
+--- raises, as the library's does, before any match.
+local function forClientRetail(clients)
+    if clients == nil or clients == "both" then return true end
+    if type(clients) ~= "table" then unknownClient(clients) end
+    local hit = false
+    for _, token in ipairs(clients) do
+        if not CLIENT_TOKENS[token] then unknownClient(token) end
+        hit = hit or token == "both" or token == "retail"
+    end
+    return hit
+end
+
+--- Whether this is a WoW Forever client.
+--- @return boolean
+function Compat.IsForever()
+    if CompatLib then return CompatLib.IsForever() end
+    return false
+end
+
+--- Whether this is a Retail client (the mainline project and not Forever).
+--- @return boolean
+function Compat.IsRetail()
+    if CompatLib then return CompatLib.IsRetail() end
+    return true
+end
+
+--- The client's key: "retail", "forever", or nil when the library knows neither.
+--- @return string|nil
+function Compat.ClientKey()
+    if CompatLib then return CompatLib.ClientKey() end
+    return "retail"
+end
+
+--- Whether a `clients` declaration (nil, "both", or an array of "retail" / "forever" / "both")
+--- includes this client; nil serves both (clients-§4). An unknown token raises on every client.
+--- @param clients table|string|nil
+--- @return boolean
+function Compat.ForClient(clients)
+    if CompatLib then return CompatLib.ForClient(clients) end
+    return forClientRetail(clients)
+end
 
 -- ---------------------------------------------------------------------------
 -- The aura container engine (Blizzard_AuraContainer, 12.1)

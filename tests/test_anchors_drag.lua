@@ -13,6 +13,7 @@
 local T = _G.AM_TEST
 local test, assertEqual, assertTrue, assertFalse, assertNil =
     T.test, T.assertEqual, T.assertTrue, T.assertFalse, T.assertNil
+local wearKa0s = dofile("tests/wear_ka0s.lua")
 local BS = dofile("tests/border_strips.lua")
 local DH = dofile("tests/drag_helpers.lua")
 local plant, env, recordAnchor, recordOverlays = DH.plant, DH.env, DH.recordAnchor, DH.recordOverlays
@@ -608,6 +609,7 @@ local END_PATHS = {
     -- the switch queues has run (here it hides both strips, so the tick cancels the drag) and the driver ticks.
     { "a profile switch", function(NS, mocks)
         NS.db:SetProfile("Raid")
+        wearKa0s(NS, mocks)   -- a new profile wears the client's default skin
         mocks.__fireTimers()
         NS.Anchors.Snap.driver:__fire("OnUpdate", 0.05)
     end },

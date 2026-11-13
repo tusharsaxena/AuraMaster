@@ -18,6 +18,11 @@
 --
 -- `opts.before(mocks)` runs after the mock is built and before anything loads, for a case that needs
 -- a client without the aura engine, a locked-down one, or a pre-seeded SavedVariables file.
+--
+-- The build ends on Ka0s Default under either kit profile (tests/wear_ka0s.lua says why);
+-- `opts.clientSkin = true` keeps the client's own default skin, WoW Forever on the forever profile.
+local wearKa0s = dofile("tests/wear_ka0s.lua")
+
 return function(opts)
     opts = opts or {}
     local T          = assert(AM_TEST and AM_TEST.Loader and AM_TEST, "fresh_env: run through tests/run.lua")
@@ -30,5 +35,6 @@ return function(opts)
     NS.addon:OnInitialize()
     NS.addon:OnEnable()
     mocks.__fireTimers()
+    if not opts.clientSkin then wearKa0s(NS, mocks) end
     return NS, mocks
 end
