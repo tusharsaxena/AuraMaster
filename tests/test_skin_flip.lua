@@ -179,6 +179,7 @@ test("skin flip: a stored background, border and glow color lose to the skin's t
     local s = NS.Database.DeepCopy(NS.CONTAINER_TEMPLATE.text)
     s.glowColor = red
     s.glowColorFromSkin = true   -- off by default now (SF-AM-1): this test is the followed arm
+    s.glowIntensity = 0.5        -- under full intensity (the default since 2026-11-14) no scaling shows
     NS.Style.Text.GlowFont(fs, s, 1)
     assertEqual(rgba(unpack(fs:__last("SetTextColor"))), rgba(0, 0, 0, 0.5), "black, at the intensity")
     NS.ApplySkinChoice("ka0s", key)

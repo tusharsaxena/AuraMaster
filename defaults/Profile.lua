@@ -326,11 +326,12 @@ NS.CONTAINER_TEMPLATE = {
         -- The glow around the text (text glow, owner 2026-10-15; glyph glow addendum 2026-10-16): off, a
         -- black ring of copies hugging each letter when turned on. It adds to the font's outline and
         -- shadow and never replaces them. glowIntensity scales the color's alpha; glowThickness is the
-        -- ring's radius in px, glowX/glowY shift the whole ring (owner's defaults, 2026-10-16).
+        -- ring's radius in px, glowX/glowY shift the whole ring. Off, yet set to the look it should
+        -- have when turned on: full intensity, 2 px, down and to the right by 1 (owner, 2026-11-14).
         glow = false,
         glowColor = color(0, 0, 0, 1), glowColorFromSkin = false, useClassColorGlow = false,
-        glowIntensity = 0.5, glowThickness = 4,
-        glowX = -4, glowY = 0,
+        glowIntensity = 1, glowThickness = 2,
+        glowX = 1, glowY = -1,
     },
 }
 

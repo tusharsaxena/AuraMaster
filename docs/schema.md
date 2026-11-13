@@ -197,10 +197,11 @@ glow-colored copies of each letter, drawn live by `C.TEXT_GLOW_TWINS` twin engin
 the font's outline and shadow, never in place of them) — `glow` (false; on or off is part of the
 structure key, so it builds or retires the twins), `glowColor` (black, `{ 0, 0, 0, 1 }`),
 `glowColorFromSkin` (false since schema v17, SF-AM-1; on: the owner token `am.textGlow`, black under Ka0s
-Default and `glow.color` under every other skin), `useClassColorGlow` (false, the swatch's class-color companion), `glowIntensity` (0.5, 0.05 to 1:
-each copy's alpha is the color's alpha × it), `glowThickness` (4, 1 to 6 px: the ring's radius),
-`glowX` (-4) and `glowY` (0), -20 to 20 px, shifting the whole ring; the defaults are the owner's
-(2026-10-16).
+Default and `glow.color` under every other skin), `useClassColorGlow` (false, the swatch's class-color companion), `glowIntensity` (1, 0.05 to 1:
+each copy's alpha is the color's alpha × it), `glowThickness` (2, 1 to 6 px: the ring's radius),
+`glowX` (1) and `glowY` (-1), -20 to 20 px, shifting the whole ring; the defaults are the owner's
+(2026-11-14; 0.5, 4, -4 and 0 before), set to the look the glow should have when turned on although it
+ships off.
 An existing container gains the block, and these leaves, by the ordinary backfill; there is no
 schema-version bump.
 
@@ -225,7 +226,7 @@ rewritten, and with the companion off, or under Ignore fonts, it draws as stored
 
 ## The starter containers
 
-`NS.STARTER_CONTAINERS` (`defaults/Profile.lua:341`) seeds a brand-new profile once, each spec merged
+`NS.STARTER_CONTAINERS` (`defaults/Profile.lua:342`) seeds a brand-new profile once, each spec merged
 over the template:
 
 | Name | Unit | Type | Style | Differs from the template |

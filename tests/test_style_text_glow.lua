@@ -24,11 +24,11 @@ test("text glow: every leaf sits in the text template at its addendum default, t
     -- red under: any leaf missing from CONTAINER_TEMPLATE.text, or the glow on by default
     assertEqual(t.glow, false, "off by default (owner, 2026-10-15)")
     assertEqual(t.useClassColorGlow, false)
-    -- red under: any leaf off the owner's defaults (2026-10-16: 50%, 4 px, X -4, Y 0)
-    assertEqual(t.glowIntensity, 0.5)
-    assertEqual(t.glowThickness, 4)
-    assertEqual(t.glowX, -4)
-    assertEqual(t.glowY, 0)
+    -- red under: any leaf off the owner's defaults (2026-11-14: 100%, 2 px, X 1, Y -1)
+    assertEqual(t.glowIntensity, 1)
+    assertEqual(t.glowThickness, 2)
+    assertEqual(t.glowX, 1)
+    assertEqual(t.glowY, -1)
     local c = t.glowColor
     -- red under: a color without alpha (the swatch has no opacity to edit) or a color other than black
     assertTrue(type(c) == "table", "glowColor is a stored color")
