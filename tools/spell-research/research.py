@@ -1922,6 +1922,14 @@ DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 # A spell with none does not, whatever else it does.
 APPLY_AURA_EFFECT = 6
 
+# WoW Forever (AM-FP04): the AREA auras put an aura carrying the spell's own id on a unit too --
+# 35 APPLY_AREA_AURA_PARTY, 119 APPLY_AREA_AURA_PET, 128 APPLY_AREA_AURA_FRIEND (sid_db2's set).
+# Vanilla's paladin auras are effect 35 alone (Devotion Aura 465, measured on 1.60.1.70938), so
+# with effect 6 only every rank would read as "can never match" and the panel would rewrite or
+# offer a same-named NPC copy. Forever's cast table counts them; Retail's stays on effect 6, as
+# shipped.
+FOREVER_AURA_EFFECTS = frozenset({APPLY_AURA_EFFECT, 35, 119, 128})
+
 # How far to walk EffectTriggerSpell looking for something that applies an aura. Shallow on purpose:
 # these chains are a cast triggering its aura, not a graph to explore, and a long walk starts
 # collecting the unrelated. close_over_triggers above walks to a fixed point because it is growing a
@@ -1929,7 +1937,13 @@ APPLY_AURA_EFFECT = 6
 TRIGGER_DEPTH = 3
 
 
-def read_aura_appliers(path: Path) -> set[int]:
+def aura_effects_for(client: str) -> frozenset:
+    """The SpellEffect.Effect values that make a spell an aura for the cast table: Retail's 6 alone,
+    Forever's FOREVER_AURA_EFFECTS."""
+    return FOREVER_AURA_EFFECTS if client == "forever" else frozenset({APPLY_AURA_EFFECT})
+
+
+def read_aura_appliers(path: Path, effects: frozenset = frozenset({APPLY_AURA_EFFECT})) -> set[int]:
     """Every spell with an APPLY_AURA effect of its own, i.e. every id that can BE an aura.
 
     Its own streaming pass over SpellEffect rather than a third return from read_spell_effect,
@@ -1940,7 +1954,7 @@ def read_aura_appliers(path: Path) -> set[int]:
     for row in iter_csv(path):
         if not base_difficulty(row):
             continue
-        if as_int(row.get("Effect")) == APPLY_AURA_EFFECT:
+        if as_int(row.get("Effect")) in effects:
             spell = as_int(row.get("SpellID"))
             if spell:
                 out.add(spell)
@@ -2007,7 +2021,7 @@ def derive_cast_aura(cache: dict[str, Path], client: str = "retail") -> dict:
     log("  %d player-castable spells" % len(pool))
 
     log("Reading SpellEffect for APPLY_AURA ...")
-    appliers = read_aura_appliers(cache["SpellEffect"])
+    appliers = read_aura_appliers(cache["SpellEffect"], aura_effects_for(client))
     log("  %d spells apply an aura of their own id" % len(appliers))
 
     log("Reading SpellEffect for trigger edges ...")
@@ -2058,8 +2072,15 @@ def derive_cast_aura(cache: dict[str, Path], client: str = "retail") -> dict:
             "dead_no_candidate": dead_no_candidate}
 
 
-def format_cast_aura_lua(result: dict, build: str, date: str) -> str:
-    """`defaults/CastToAura.lua`, whole. Written by this tool and never edited by hand."""
+def format_cast_aura_lua(result: dict, build: str, date: str, table: str = "NS.CastToAura",
+                         path: str = "defaults/CastToAura.lua",
+                         how: str = "tools/spell-research/research.py --emit-cast-aura") -> str:
+    """`defaults/CastToAura.lua`, whole. Written by this tool and never edited by hand.
+
+    `table`, `path` and `how` name the published table, the file and the command in the header.
+    Their defaults are Retail's, byte for byte; forever.py passes `NS.CastToAuraForever` and
+    `defaults/CastToAura_Forever.lua` (AM-FP04) and appends its client selector.
+    """
     entries = result["entries"]
     unique = {s: e["unique"] for s, e in entries.items() if e["unique"]}
     choices = {s: e["auras"] for s, e in entries.items() if not e["unique"]}
@@ -2067,9 +2088,9 @@ def format_cast_aura_lua(result: dict, build: str, date: str) -> str:
     w = out.append
     w("local _, NS = ...")
     w("")
-    w("-- defaults/CastToAura.lua -- GENERATED. Do not edit by hand.")
+    w("-- %s -- GENERATED. Do not edit by hand." % path)
     w("--")
-    w("--   Build %s, derived %s by tools/spell-research/research.py --emit-cast-aura." % (build, date))
+    w("--   Build %s, derived %s by %s." % (build, date, how))
     w("--   Re-run the tool to refresh it; the bundle it came from is under docs/spell-research/.")
     w("--")
     w("-- WHAT THIS IS. Aura Master filters on the id an AURA carries, and many abilities are CAST as")
@@ -2088,16 +2109,16 @@ def format_cast_aura_lua(result: dict, build: str, date: str) -> str:
     w("-- own -- that second number is the game, not this pool, and is here only to say what the")
     w("-- membership test was run against.")
     w("")
-    w("NS.CastToAura = NS.CastToAura or {}")
+    w("%s = %s or {}" % (table, table))
     w("")
     w("-- [cast id] = the one aura it applies.")
-    w("NS.CastToAura.REWRITE = {")
+    w("%s.REWRITE = {" % table)
     for spell in sorted(unique):
         w("    [%d] = %d,%s" % (spell, unique[spell], _trail(entries[spell], unique[spell])))
     w("}")
     w("")
     w("-- [cast id] = { every aura id that could be the one }, ascending.")
-    w("NS.CastToAura.CHOICES = {")
+    w("%s.CHOICES = {" % table)
     for spell in sorted(choices):
         ids = ", ".join(str(i) for i in choices[spell])
         w("    [%d] = { %s },%s" % (spell, ids, _trail(entries[spell], None)))
