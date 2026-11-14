@@ -1,0 +1,10 @@
+id	milestone	repo	title	depends_on
+AM-PR00	M0	AuraMaster	Design, plan and run tooling	
+AM-PR01	M1	AuraMaster	Preset data and the placement builder	AM-PR00
+AM-PR02	M1	AuraMaster	Apply a preset through the registry writers	AM-PR01
+AM-PR03	M1	AuraMaster	Preview on the real screen with an exact restore	AM-PR02
+AM-PR04	M2	AuraMaster	New profiles start from Simple; schema v19	AM-PR02
+AM-PR05	M2	AuraMaster	First-run preset picker and /am preset	AM-PR03 AM-PR04
+AM-PR06	M2	AuraMaster	Presets tab on the Containers page	AM-PR03
+AM-PR07	M3	AuraMaster	Docs, smoke checks and inventory	AM-PR05 AM-PR06
+AM-PR08	M3	AuraMaster	Whole-branch review fixes and the automated-test record	AM-PR07
