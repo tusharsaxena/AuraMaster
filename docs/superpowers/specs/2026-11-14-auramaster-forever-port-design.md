@@ -86,8 +86,10 @@ library. `defaults/Profile.lua`'s `skin.skin` and every stand-in fallback name i
 - `weaponEnchants` (kind `enchant`) and both `uncategorized` rows serve both clients. Forever has temporary weapon
   enchants (oils, stones), as ConsumableMaster's port measured.
 - Profile data for a key absent on the running client (a profile copied from the other client by hand; saved
-  variables live per client folder) is tolerated, never read as a category and never a crash. The normalizer drop is
-  recorded in `docs/known-limitations.md`, the same shape as ConsumableMaster's.
+  variables live per client folder) is tolerated, never read as a category and never a crash. The stored state is
+  kept, not dropped: its Show/Hide state and spell edits stay in the profile and are never read as a category
+  (amended 2026-11-14 to match the implementation, `tests/test_categories_clients.lua` "a gated key in a stored
+  profile is inert"), and that is recorded in `docs/known-limitations.md`.
 
 ### 3.5 Forever derivation (tools/spell-research)
 
