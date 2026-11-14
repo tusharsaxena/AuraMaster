@@ -51,6 +51,16 @@ local function ownSetup(NS)
     return { key = key, head = head, member = member }
 end
 
+--- Every stored container has a live instance with an aura engine built (`what` names the moment).
+local function assertEngines(NS, what)
+    local containers = NS.Database.GetContainers()
+    assertTrue(#containers > 0, what .. ": containers")
+    for _, c in ipairs(containers) do
+        local inst = NS.ContainerManager.instances[c.id]
+        assertTrue(inst ~= nil and inst.engine ~= nil, what .. ": " .. c.name .. " has an engine")
+    end
+end
+
 local function names(NS)
     local out = {}
     for _, c in ipairs(NS.Database.GetContainers()) do out[#out + 1] = c.name end
@@ -257,6 +267,12 @@ test("preview: combat ends preview with restore", function()
     assertFalse(NS.Presets.IsPreviewing())
     assertFalse(NS.State.testMode)
     assertEqual(#lines, 1, "one line: " .. table.concat(lines, " / "))
+    -- Lockdown begins on the next frame, when the coalescing timer fires: the restore was applied
+    -- before it. red under: leaving the apply to the timer (held to combat's end, no engine at all)
+    mocks.__lockdown = true
+    mocks.__fireTimers()
+    assertEngines(NS, "in combat")
+    mocks.__lockdown = false
     NS.addon:OnCombatChanged("PLAYER_REGEN_ENABLED")
     assertEqual(#lines, 1, "combat ending adds nothing")
     -- Already locked down when the event is seen: test mode off now, the restore when combat ends.
@@ -271,6 +287,34 @@ test("preview: combat ends preview with restore", function()
     assertEqual(stored(NS), before)
     assertFalse(NS.Presets.IsPreviewing())
     assertEqual(#lines, 2, "one line per combat")
+    assertEngines(NS, "after combat")
+end)
+
+test("preview: combat under secrecy keeps the preview until combat ends", function()
+    local NS, mocks = fresh()
+    ownSetup(NS)
+    local before = stored(NS)
+    local lines = {}
+    NS.Printf = function(fmt, ...) lines[#lines + 1] = fmt:format(...) end
+    assertTrue(NS.Presets.BeginPreview("advanced", "bars"))
+    mocks.__fireTimers()   -- the frames before the pull: the preview is applied
+    local secret = true
+    NS.Compat.AurasAreSecret = function() return secret end
+    NS.addon:OnCombatChanged("PLAYER_REGEN_DISABLED")
+    -- red under: restoring while an apply must wait (anchors with no engine, and a line saying the
+    -- containers are back)
+    assertTrue(NS.Presets.IsPreviewing(), "held: the preview's containers keep showing real auras")
+    assertFalse(NS.State.testMode)
+    assertEqual(#lines, 1)
+    assertEqual(lines[1], NS.L["Preset preview ended: combat started, and your containers come back when it ends."])
+    mocks.__lockdown = true
+    mocks.__fireTimers()
+    assertEngines(NS, "the preview in combat")
+    mocks.__lockdown, secret = false, false
+    NS.addon:OnCombatChanged("PLAYER_REGEN_ENABLED")
+    assertEqual(stored(NS), before)
+    assertFalse(NS.Presets.IsPreviewing())
+    assertEngines(NS, "after combat")
 end)
 
 test("preview: categories the preview created are removed", function()

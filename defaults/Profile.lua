@@ -95,6 +95,11 @@ NS.defaults.profile = {
     containerOrder  = {},
     nextContainerId = 1,
     seeded          = false,
+
+    -- modules/Presets.lua's own key (presets spec section 9). `pickerSeen` records that this profile
+    -- has closed the first-run preset picker. `previewSnapshot` has no default: it is present only
+    -- while a preset preview is up, holding the registry and custom categories the preview replaced.
+    presets = { pickerSeen = false },
 }
 
 NS.defaults.global = {

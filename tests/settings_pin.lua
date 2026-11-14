@@ -6,6 +6,8 @@
 -- run moved it with LibKa0s v1.82.0: every Font flags row gains From skin ("@skin") as its default
 -- (ruling D-07, schema v14), and skin.outline is new (D-06). FS-AM-FLIP moved it again (schema v16):
 -- the color, border and shadow companions are new rows, and the picks start on the Ka0s picks.
+-- AM-PR03 (presets) adds the default profile.presets.pickerSeen, the preset picker's latch, a
+-- stored path with no row.
 --
 -- Not a suite (tests/run.lua does not list it): data the pin suite dofiles.
 return {
@@ -359,6 +361,7 @@ return {
     [[default profile.hideBlizzardDebuffs=false]],
     [[default profile.locked=true]],
     [[default profile.nextContainerId=1]],
+    [[default profile.presets.pickerSeen=false]],
     [[default profile.scale=1]],
     [[default profile.seeded=false]],
     [[default profile.skin.font=""]],

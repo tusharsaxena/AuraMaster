@@ -177,8 +177,9 @@ end
 -- EVERY OTHER END RESTORES. A profile switch restores the profile just left, by the table the
 -- preview was taken in, before anything rebuilds for the new one, so the snapshot never lands in the
 -- new profile; a profile arrived at with a snapshot in it was interrupted and is restored too. Combat ends a preview by restoring: the
--- PLAYER_REGEN_DISABLED edge comes before lockdown, and when the restore is refused anyway it is held
--- to PLAYER_REGEN_ENABLED, with test mode off at once either way.
+-- PLAYER_REGEN_DISABLED edge comes before lockdown, so the restore is applied in that handler; when
+-- an apply would have to wait anyway (lockdown already up, auras secret) it is held to
+-- PLAYER_REGEN_ENABLED, with test mode off at once either way.
 
 -- The preset on the screen in this session: { name, look, profile }, for an Add that keeps it and a
 -- profile event that must restore the profile it was taken in. Nil when no preview is up; a snapshot
@@ -187,8 +188,9 @@ local onScreen = nil
 -- A preview combat started that could not be restored under lockdown: restored at combat's end.
 local heldForCombat = false
 
---- The profile's `presets` table, this module's own key (spec section 9), made when first needed: it
---- has no default, because `previewSnapshot` is present only while a preview is up.
+--- The profile's `presets` table, this module's own key (spec section 9). defaults/Profile.lua gives
+--- it `pickerSeen` and no `previewSnapshot` (present only while a preview is up); the table is made
+--- here as well, so a profile AceDB has not backfilled yet still has somewhere to keep a snapshot.
 local function profilePresets()
     local p = NS.db and NS.db.profile
     if not p then return nil end
@@ -294,11 +296,18 @@ function Presets.RestoreStaleSnapshot()
     debug("restored the preview snapshot left in profile '%s'", tostring(NS.db:GetCurrentProfile()))
 end
 
---- Combat started (PLAYER_REGEN_DISABLED) with a preview up: restore now, or, under lockdown, at
---- combat's end. Test mode goes off at once either way. One line in chat.
+--- Combat started (PLAYER_REGEN_DISABLED) with a preview up: restore now, or, when an apply would
+--- have to wait, at combat's end. Test mode goes off at once either way. One line in chat.
+--- The restore is APPLIED here, in the same handler, not left to the coalescing timer: that timer
+--- fires on the next frame, when lockdown has begun and the apply is held to PLAYER_REGEN_ENABLED,
+--- so the restored containers would be anchors with no engine for the whole fight. When an apply
+--- must wait even now (lockdown already up, or auras secret), nothing is restored: the preview's
+--- containers keep showing real auras through the fight and the restore runs when it ends.
 function Presets.OnCombatStart()
     if not Presets.IsPreviewing() then return end
-    if Presets.EndPreview(false) then
+    local CM = NS.ContainerManager
+    if not CM.MustDefer() and Presets.EndPreview(false) then
+        CM.FlushPending()
         NS.Printf("%s", L["Preset preview ended: combat started, and your containers are back."])
         return
     end
@@ -307,7 +316,8 @@ function Presets.OnCombatStart()
     NS.Printf("%s", L["Preset preview ended: combat started, and your containers come back when it ends."])
 end
 
---- Combat ended (PLAYER_REGEN_ENABLED): a restore combat held runs now.
+--- Combat ended (PLAYER_REGEN_ENABLED): a restore combat held runs now. core/AuraMaster.lua calls
+--- this before its own regen flush, which applies what the restore queued.
 function Presets.OnCombatEnd()
     if not heldForCombat then return end
     heldForCombat = false

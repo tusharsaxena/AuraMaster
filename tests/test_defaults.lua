@@ -295,7 +295,10 @@ end)
 
 test("defaults: every profile default is a settings row, a spell set or the registry's own bookkeeping", function()
     -- skin.fullSkinReset has no row on purpose: a row would let a Defaults path walk the record.
-    local BOOKKEEPING = set({ "containers", "containerOrder", "nextContainerId", "seeded", "skin.fullSkinReset" })
+    -- presets.pickerSeen is the preset picker's latch, set by closing it (modules/Presets.lua), as
+    -- `seeded` is set by seeding: there is nothing for a player to edit.
+    local BOOKKEEPING = set({ "containers", "containerOrder", "nextContainerId", "seeded", "skin.fullSkinReset",
+        "presets.pickerSeen" })
     local orphans = {}
     for _, leaf in ipairs(leaves(NS.defaults.profile, "")) do
         local k = leaf[1]

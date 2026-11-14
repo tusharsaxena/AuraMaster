@@ -2610,7 +2610,7 @@ Total.
 - apply: refused in combat
 - apply: only the registry writers write
 
-### test_presets_preview.lua (13)
+### test_presets_preview.lua (14)
 
 - preview: snapshot and restore exact
 - preview: swap keeps the first snapshot
@@ -2623,6 +2623,7 @@ Total.
 - preview: profile change restores the old profile first
 - preview: a profile reached with a stale snapshot restores it
 - preview: combat ends preview with restore
+- preview: combat under secrecy keeps the preview until combat ends
 - preview: categories the preview created are removed
 - preview: RestoreSnapshot is the registry writer's, and the preset module writes no registry field
 
@@ -2676,7 +2677,7 @@ Total.
 
 - prose: no authored file carries a British spelling from localization-§5's published list
 - prose: the gate carries localization-§5's two lists whole, and nothing of its own
-- prose: the exclusions this repository declared suppressed 15 of 258 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (15): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, and 12 more (list bounded)
+- prose: the exclusions this repository declared suppressed 15 of 259 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (15): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, and 12 more (list bounded)
 - prose: no path this repository narrows the gate by is loaded by a TOC
 - prose: every path this repository narrows the gate by is one .pkgmeta keeps out of the zip
 - prose self-test: the carve-out suppresses the named generated folder, and only it
@@ -2932,7 +2933,7 @@ Total.
 | test_defaults.lua | 31 |
 | test_presets_data.lua | 14 |
 | test_presets_apply.lua | 11 |
-| test_presets_preview.lua | 13 |
+| test_presets_preview.lua | 14 |
 | test_perf.lua | 8 |
 | test_debuglogsetup.lua | 9 |
 | test_locale.lua | 10 |
@@ -2949,4 +2950,4 @@ Total.
 | test_skin_switch.lua | 34 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2415** |
+| **Total** | **2416** |
