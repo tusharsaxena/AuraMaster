@@ -22,3 +22,7 @@ Git is the only state.
   retail 2469/0/1, forever 2468/0/2, lint 0/0 (224 files), max CCN 15, 0 warnings, but perf fails 4 assertions because
   `tests/perf.lua` still expects the four old starters (AM-PR04 seeds Simple). Owed: the perf fixture fix and a re-run,
   the owner's PRESETS smoke, the owner rulings recorded in the plan, and the pushes.
+- 2026-11-14: Perf fixture fixed (080ab31: `tests/perf.lua` installs `tests/starters_fixture.lua`) and the in-play
+  category restore routed through the seam (aef646a). Automated-test bundle 20261114-184120 at aef646a is green:
+  retail 2470/0/1, forever 2469/0/2, lint 0/0 (224 files), perf pass (12 scenarios, matching 20261114-104251), max
+  CCN 15, 0 warnings. Owed: the owner's PRESETS smoke, the owner rulings recorded in the plan, and the pushes.

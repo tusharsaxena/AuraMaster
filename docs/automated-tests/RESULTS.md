@@ -32,6 +32,7 @@ archaeology, for the same reason a skip is never a pass (`automated-tests-§4`).
 
 | Run | Commit | Tree | Version | Lint w/e | Files | Tests | Perf | NLOC | Funcs | Avg NLOC | Avg CCN | Max CCN | CCN warn | Verdict |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| [`20261114-184120`](20261114-184120/) | `aef646a` | clean | 1.1.0 | 0/0 | 224 | 2470/1/2471 | pass | 61926 | 6548 | 8.3 | 2.4 | 15 | 0 | **green** |
 | [`20261114-183056`](20261114-183056/) | `73dabd9` | clean | 1.1.0 | 0/0 | 224 | 2469/1/2470 | fail | 61902 | 6546 | 8.3 | 2.4 | 15 | 0 | **amber** |
 | [`20261114-104251`](20261114-104251/) | `5ff012f` | clean | 1.1.0 | 0/0 | 213 | 2377/1/2378 | pass | 58589 | 6234 | 8.3 | 2.3 | 15 | 0 | **green** |
 | [`20261104-042114`](20261104-042114/) | `c9c3a97` | clean | 1.1.0 | 0/0 | 207 | 2355/1/2356 | pass | 56743 | 6195 | 8.2 | 2.3 | 15 | 0 | **green** |
@@ -59,11 +60,11 @@ archaeology, for the same reason a skip is never a pass (`automated-tests-§4`).
 
 ## Test suite
 
-**2470 cases** — 2469 passed, 0 failed, 1 skipped. The generated inventory
-[`20261114-183056/test-cases.md`](20261114-183056/test-cases.md) is the authority on which cases existed at this run;
+**2471 cases** — 2470 passed, 0 failed, 1 skipped. The generated inventory
+[`20261114-184120/test-cases.md`](20261114-184120/test-cases.md) is the authority on which cases existed at this run;
 `docs/test-cases.md` is that same list at HEAD.
 
-Moved **2378 → 2470** since the previous run.
+Moved **2470 → 2471** since the previous run.
 
 **1 case(s) reported a `skip`.** A skip is counted in the total and never in `passed`, and at
 the release gate it is NOT EVALUATED rather than passed (`automated-tests-§3`).
@@ -79,20 +80,22 @@ to whoever thinks to open `.luacheckrc`.
 
 ## Perf
 
-**10 scenarios** from `tests/perf.lua`; the measurements are in
-[`20261114-183056/perf.json`](20261114-183056/perf.json).
+**12 scenarios** from `tests/perf.lua`; the measurements are in
+[`20261114-184120/perf.json`](20261114-184120/perf.json).
 
 | `scenario` | `iters` | `ms/iter` | `api/iter` | `bytes/iter` |
 |---|---|---|---|---|
-| `compile` | 2000 | 0.00823 | 0.0 | 3864.0 |
-| `applyPass` | 200 | 0.52707 | 21.0 | 69329.6 |
-| `restyle` | 200 | 0.92926 | 0.0 | 39342.1 |
-| `visibilityPass` | 1000 | 0.02040 | 3.0 | 328.7 |
-| `unitSwap` | 1000 | 0.00131 | 0.0 | 0.0 |
-| `probeOverheadOff` | 1000 | 0.01658 | 3.0 | 328.7 |
-| `probeOverheadOn` | 1000 | 0.02307 | 3.0 | 329.2 |
-| `probeAbsent` | 1000 | 0.01641 | 3.0 | 328.7 |
-| `unitAuraFiltered` | 1000 | 0.00020 | 0.0 | 0.0 |
+| `compile` | 2000 | 0.00915 | 0.0 | 4136.0 |
+| `applyPass` | 200 | 1.48606 | 30.0 | 107062.5 |
+| `restyle` | 200 | 1.26451 | 0.0 | 50646.1 |
+| `restyleText` | 200 | 0.73958 | 0.0 | 32067.7 |
+| `restyleTextGlow` | 200 | 3.11874 | 0.0 | 144963.7 |
+| `visibilityPass` | 1000 | 0.02127 | 8.0 | 384.0 |
+| `unitSwap` | 1000 | 0.00318 | 1.0 | 0.0 |
+| `probeOverheadOff` | 1000 | 0.02170 | 9.0 | 384.0 |
+| `probeOverheadOn` | 1000 | 0.02450 | 9.0 | 384.5 |
+| `probeAbsent` | 1000 | 0.01792 | 9.0 | 384.0 |
+| `unitAuraFiltered` | 1000 | 0.00021 | 0.0 | 0.0 |
 | `emptyWatchAura` | 1000 | 0.00005 | 0.0 | 0.0 |
 
 `perf` never fails a run and never blocks a commit — it is recorded, read and compared, not
@@ -100,7 +103,7 @@ thresholded (`performance-§9`). It does gate the **tag** (`automated-tests-§3`
 
 ## Complexity watch list
 
-Current as of [`20261114-183056`](20261114-183056/) — **this run's measurement, not its diff.** Max CCN **15** across 6546
+Current as of [`20261114-184120`](20261114-184120/) — **this run's measurement, not its diff.** Max CCN **15** across 6548
 functions, **0** of them warned on; 9 file(s) in the 1000–1500 band and 0 over the 1500 cap
 (`layout-§1`).
 
@@ -120,7 +123,7 @@ None.
 
 | Band | File | LOC | Disposition |
 |---|---|---|---|
-| 1000–1500 (on notice) | `core/Database_Migrations.lua` | 1213 | Accepted — newly in the band at this run (935 → 1076, the skin steps through v15); 14 frozen `Database.MigrateV` step bodies with their private helpers, 50 functions, max CCN 15 (`Database.MigrateV15`, at the threshold, not over it). Steps are independent and frozen once shipped, so the size is ladder length, not tangle |
+| 1000–1500 (on notice) | `core/Database_Migrations.lua` | 1213 | Accepted — in the band since the skin steps through v15 (935 → 1076), now 1213 lines with the v19 step (AM-PR04); 16 frozen `Database.MigrateV` step bodies (v2–v15, v17, v19) with their private helpers, 56 functions, max CCN 15 (`Database.MigrateV15`, at the threshold, not over it). Steps are independent and frozen once shipped, so the size is ladder length, not tangle |
 | 1000–1500 (on notice) | `defaults/Categories.lua` | 1399 | Accepted as a tracked deviation: `docs/ARCHITECTURE.md` → `## Documented deviations`, the `layout-§1` row for this file (FX-AM-SIZE). Data, 10 functions, max CCN 5 at 20261114-104251 (the row still says 1344 lines, 8 functions, max CCN 4; the Forever port's `seeded` and `servedHere` helpers added the difference), and `tools/spell-research/` reads and rewrites this one path, so a split is not a pure move. At 1399 lines it is one line under the row's 1400-line re-check trigger |
 | 1000–1500 (on notice) | `modules/Anchors.lua` | 1078 | Accepted — newly in the band at this run (982 → 1068, the skin seam on the unlock furniture); 72 functions, max CCN 13 (`Anchors.FlowRoot`). One concern, where a container sits and its drag handle; the join and snap code are already peeled into `modules/Anchors_Attach.lua` and `modules/Anchors_Snap.lua` |
 | 1000–1500 (on notice) | `modules/Anchors_Snap.lua` | 1156 | Accepted — newly in the band at the 1.1.0 release run (a new file: the snap core for drag to attach, #22); 60 functions, max CCN 15 (`classify`, at the threshold, not over it). One concern, the pair pick and its geometry; `modules/Anchors_SnapRect.lua` already holds the rect reads, and the pick is the next seam if it grows |

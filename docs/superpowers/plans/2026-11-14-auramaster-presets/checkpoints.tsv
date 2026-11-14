@@ -3,3 +3,4 @@ date	milestone	evidence
 2026-11-14	M1	AM-PR01..03 at 02879ee; retail 2462/0/1, forever 2461/0/2, lint 0/0 (224 files); PR01/PR03 r2 fixes not re-reviewed, carried to AM-PR08
 2026-11-14	M2	AM-PR04..06 at 6ef396b; retail 2462/0/1, forever 2461/0/2, lint 0/0 (224 files); reviews approved
 2026-11-14	M3	AM-PR07 9b8ca5d,c17cf29,7e35d02 + AM-PR08 review fixes d065670,4eb3fb9,32284f4,d380ae1,f4b1104,3e10804,73dabd9 + automated-test bundle 20261114-183056 at 73dabd9 (amber: perf fails 4 assertions, tests/perf.lua still expects the four old starters); retail 2469/0/1, forever 2468/0/2, lint 0/0 (224 files), max CCN 15, 0 warnings
+2026-11-14	M3	AM-PR08 review fixes 080ab31 (perf fixture) + aef646a + automated-test bundle 20261114-184120 at aef646a (green on both profiles: perf back at pass, 12 scenarios, api/bytes per iter identical to 20261114-104251; resolves the amber 20261114-183056 Action 1); retail 2470/0/1, forever 2469/0/2, lint 0/0 (224 files), max CCN 15, 0 warnings
