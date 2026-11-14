@@ -1,2 +1,3 @@
 date	milestone	evidence
 2026-11-14	baseline	retail 2358/0/1, forever 2358/0/1, lint 0/0 (207 files), pytest 400 passed
+2026-11-14	M1+M2	AM-FP01 50097a7 + AM-FP02 ff352c3 + AM-FP03 86594dc,4093aba,4742a28 + AM-FP04 bf89570; 4 reviews approved (AM-FP03 after 2 fix rounds); retail 2366/0/1, forever 2366/0/1, lint 0/0 (210 files), pytest 439
