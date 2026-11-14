@@ -114,11 +114,14 @@ local SIDE_BASE = -740
 -- same right-edge point, so the two line up on every screen, and its base sits FOCUS_BASE down, high
 -- enough over the far stack (which keeps its base) that the two stay more than twice C.SNAP_RADIUS
 -- apart in test mode, locked or unlocked (53 at the closest, on a 768-tall screen unlocked), so a
--- drag near the far stack does not snap the focus stack back onto it; its top stays under Player
--- debuffs' bottom by more than one C.SNAP_RADIUS there (28; 172 at 1080). The corner group moved in with
--- it: Player debuffs' left edge 480 in from the right edge (475 in section 15), Player buffs keeping
--- its width and its 5 gap. On 16:9 the column shares 40 with the right stack's, which section 16
--- asks to keep smallest (docs/known-limitations.md, presets).
+-- drag near the far stack does not snap the focus stack back onto it. Other targets do sit within
+-- C.SNAP_RADIUS of it while unlocked: the target stack's containers, beside it in the strip the two
+-- columns share, and on a 768-tall screen Weapon enchants above it (3) and the call-outs; Bars at
+-- 1080 has none. A base further down brings the far stack into range at 768, one further up the
+-- target stack at 1440 (docs/known-limitations.md, presets). The corner group moved in with it:
+-- Player debuffs' left edge 480 in from the right edge (475 in section 15), Player buffs keeping its
+-- width and its 5 gap. On 16:9 the column shares 40 with the right stack's, which section 16 asks to
+-- keep smallest, so the move is the least that clears section 15's place (the same file).
 local FOCUS_BASE = -550
 P.STACKS = {
     cornerRight = { anchor = "TOPRIGHT", x = -260, y = -46,  width = 175, iconsGrowH = "left" },

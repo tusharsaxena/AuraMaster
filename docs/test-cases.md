@@ -2584,7 +2584,7 @@ Total.
 - defaults: userCategoryOrder is reconciled the way containerOrder is
 - defaults: the RAID-token row says it means castable OR dispellable, as Blizzard defines it
 
-### test_presets_data.lua (25)
+### test_presets_data.lua (26)
 
 - presets: counts
 - presets: advanced matches its source
@@ -2611,6 +2611,7 @@ Total.
 - presets data: no bars container is laid out horizontally after Apply
 - presets data: the focus stack stays clear of the far stack beyond twice the snap radius
 - presets data: Player debuffs' left edge lines up with Focus buffs' left edge
+- presets data: the focus stack's snap range holds only the recorded targets
 
 ### test_presets_apply.lua (11)
 
@@ -3020,7 +3021,7 @@ Total.
 | test_envsetup.lua | 4 |
 | test_poolsetup.lua | 4 |
 | test_defaults.lua | 31 |
-| test_presets_data.lua | 25 |
+| test_presets_data.lua | 26 |
 | test_presets_apply.lua | 11 |
 | test_presets_preview.lua | 20 |
 | test_presets_seed.lua | 7 |
@@ -3042,4 +3043,4 @@ Total.
 | test_skin_switch.lua | 34 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2496** |
+| **Total** | **2497** |

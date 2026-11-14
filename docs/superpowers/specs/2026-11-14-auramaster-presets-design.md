@@ -432,3 +432,25 @@ it with the same principles to the other tiers and to every Icons variant.
    is easier to find. It is removed from the Containers page. Everything the tab did stays the same: pick,
    preview, Apply with a confirm, Stop preview, and restore on leaving the tab or closing the panel. The
    picker footer string, the docs and the smoke checks name the new place.
+
+### 16.5 Notes from building and reviewing section 16 (AM-PR13, 2026-11-15)
+
+These record where the build departs from the letter of section 16, each left for the owner's call.
+
+1. **The retired glow leaves.** Point 1 lists `glowRadius = 6`, `glowFalloff = "soft"` and
+   `glowBlend = "BLEND"`. The glyph glow retired those three halo leaves (TG-09): the container
+   template has none of them, the schema refuses them (`tests/test_style_text_glow.lua`) and nothing
+   reads them. The call-outs store every glow leaf the template does have (glow, color, color from
+   skin, class color, intensity, thickness, x, y) and none of the three. In game the call-outs' glow
+   is defined by thickness 2 and the 1, -1 offsets alone; radius, falloff and blend have no effect.
+2. **Snap range (point 2).** The focus stack stays more than 2 x `C.SNAP_RADIUS` from the far stack on every
+   screen tested, locked or unlocked. It cannot stay that far from every other container: it shares
+   a strip with the target column (note 3), and on a 768-tall screen it sits close under Weapon
+   enchants. While unlocked, the target stack's containers, and at 768 Weapon enchants and the
+   call-outs, sit within one snap radius of a focus container on some screens; Bars at 1080 has none.
+   The pairs, by screen, are in docs/known-limitations.md (presets).
+3. **How far in the corner group moved (point 3).** It asks for both a corner group left of section 15's
+   place and the smallest shared strip with the target column. The build took the least move that
+   meets the first rule after rounding: Player debuffs' left edge 480 in from the right edge (475
+   before), about 5 pixels at 1080, so the preview looks unmoved. Moving it visibly, tens of units,
+   widens the shared strip by as many. The owner names the distance, or keeps the least move.

@@ -532,6 +532,42 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   clear of the far stack beyond twice the snap radius") pins each shared span at 1080. In play a full
   target stack can draw under the focus stack's left edge; the player can move either. Recorded
   2026-11-15 (AM-PR13) for the owner's call.
+- **The corner group moved in only 5 units in round 2.** The owner asked to bring the corner group
+  "in even further", to line Player debuffs (all)'s left edge up with Focus buffs (mine)'s. Presets
+  spec section 16.3 asks for both a corner group left of section 15's place (Player debuffs' left
+  edge more than 475 in from the right edge, in a 1080-tall reference space) and the smallest strip
+  the focus column shares with the target stack's. The two pull apart: the focus column hangs from
+  the corner's edge, so every unit the corner group moves left widens that strip by one. The presets
+  take the least move that clears 475 after rounding on every screen tested, 480 (about 5 pixels at
+  1080), which in a preview looks unmoved; 477 would also clear and share 37 rather than 40. A move
+  the owner can see, tens of units, costs as much more shared strip (on 16:9, 80 at 520 in, 120 at
+  560). Recorded 2026-11-15 (AM-PR13 review) for the owner's call: keep the least move, or name how
+  far in.
+- **Other containers sit within snap range of the focus stack while unlocked.** The focus stack
+  stays more than twice the snap radius (24) from the far stack on every screen tested, but with the
+  containers unlocked in test mode, as a drag happens, other targets sit within one snap radius of a
+  focus container, so a drop that barely moves can attach it to one of them:
+  - 1080 tall: none in Bars. In Icons, Advanced's Focus debuffs (mine) and Focus buffs (mine) sit 2
+    to 24 from Target cooldowns, players, Target cooldowns, NPCs, Target crowd control and Target
+    special (mine) (the target stack, in the shared strip), on every ratio but 21:9.
+  - 1440 tall: in Bars the focus head sits 8 above the target stack's second container (Target
+    buffs (mine) in Advanced, Target cooldowns in Intermediate, Dispellable by you on target in
+    Healer) on every ratio but 21:9. In Icons, Advanced's focus rows are 0 to 20 from the target
+    cooldown and special rows.
+  - 768 tall: in Bars Focus buffs (mine) and Dispellable by you on focus are 3 to 4 from Weapon
+    enchants above them (every ratio), and, on every ratio but 21:9, Focus debuffs (mine) 3 to 7 from
+    Target debuffs (mine) and Target crowd control and Focus buffs (mine) 21 from Target cooldowns,
+    players. In Icons the focus rows reach the call-outs (Offensive cooldowns or Raid cooldowns, 3 to
+    16) on 4:3 and 5:4, and the target stack's rows (0 to 23).
+
+  The target stack's pairs follow from the shared strip above; no base clears them, since Advanced
+  (Bars)'s target stack runs nearly to the top edge. Moving the base is a trade: further down brings
+  the far stack within twice the snap radius at 768, which section 16.2 rules out; further up brings
+  the 1440 target pairs nearer (14 at 545). `tests/test_presets_data.lua` ("presets data: the focus
+  stack's snap range holds only the recorded targets") fails on a target outside these stacks, or on
+  any in Bars at 1080. A container that snaps on goes back to the screen when dragged away from
+  every container, or with Attach to set back to Screen. Recorded
+  2026-11-15 (AM-PR13 review) for the owner's call.
 - **Advanced (Bars)'s target stack runs off the top of a 768-tall screen in test mode.** Since the
   owner's ruling on the round-1 conflicts the side stacks grow up from a base 740 down in a 1080-tall
   reference space, 340 above the bottom edge (presets spec section 15.1; 600, then 640, before it).

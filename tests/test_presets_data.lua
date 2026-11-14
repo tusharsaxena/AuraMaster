@@ -411,7 +411,7 @@ local function sampleSpans(env, mocks, name, look, W, H, unlocked)
     mocks.__fireTimers()
     local specs, p = env.PresetData.Build(name, look, W, H), env.db.profile
     assertEqual(#p.containerOrder, #specs, "one container per spec, in creation order")
-    local spanOf, out = {}, {}
+    local spanOf, out, each = {}, {}, {}
     for i, id in ipairs(p.containerOrder) do
         local c = p.containers[id]
         local extent = env.Preview.Extent({ Cfg = function() return c end, anchor = mocks.CreateFrame("Frame") })
@@ -427,12 +427,15 @@ local function sampleSpans(env, mocks, name, look, W, H, unlocked)
             env.Anchors.EffectiveLayout(c).growH)
         spanOf[id] = span
         local stack = specs[i].stack
-        if shown then out[stack] = union(out[stack], span) end
+        if shown then
+            out[stack] = union(out[stack], span)
+            each[#each + 1] = { role = specs[i].role, stack = stack, span = span }
+        end
     end
     env.Preview.SetTestMode(false)
     env.SetByPath("locked", true)
     mocks.__fireTimers()
-    return out
+    return out, each
 end
 
 --- Every corner stack ends above every side stack's base in test mode (`spans`, from sampleSpans;
@@ -1037,7 +1040,7 @@ end)
 -- The owner's own call-out glow (spec section 16.1): every glow leaf the template carries. The
 -- owner's list also names glowRadius = 6, glowFalloff = "soft" and glowBlend = "BLEND", the halo
 -- leaves the glyph glow retired (TG-09, tests/test_style_text_glow.lua): nothing reads them, so a
--- preset stores none of them.
+-- preset stores none of them (spec section 16.5, note 1).
 local OWNER_GLOW = {
     glow = true, glowColorFromSkin = false, useClassColorGlow = false,
     glowIntensity = 1, glowThickness = 2, glowX = 1, glowY = -1,
@@ -1274,11 +1277,85 @@ test("presets data: Player debuffs' left edge lines up with Focus buffs' left ed
             end
         end
     end
-    -- In test mode the two bar columns start on that one edge too.
-    local env, mocks = freshEnv()
-    env.Helpers.SkinPicker = function() return nil end
-    for _, name in ipairs(WITH_FOCUS) do
-        local spans = sampleSpans(env, mocks, name, "bars", 1920, 1080)
-        assertNear(spans.focus.left, spans.cornerLeft.left, 0.5, name .. "/bars: one left edge in test mode")
+    -- In test mode every focus bar container starts on that one edge too, Focus buffs (mine) and
+    -- Dispellable by you on focus among them, each measured by its own block, not the stack's. An
+    -- environment per screen: one that applies every preset on every screen grows by each Apply's
+    -- containers, and the last one built stays live after the file (the kit's leak gate).
+    for _, scr in ipairs(SCREENS) do
+        local W, H = scr[1], scr[2]
+        local env, mocks = freshEnv()
+        env.Helpers.SkinPicker = function() return nil end
+        for _, name in ipairs(WITH_FOCUS) do
+            local _, each = sampleSpans(env, mocks, name, "bars", W, H)
+            local own, left = {}, nil
+            for _, e in ipairs(each) do
+                own[e.role] = e.span
+                if e.role == "pdebuffs" then left = e.span.left end
+            end
+            local where = ("%s/bars at %dx%d"):format(name, W, H)
+            assertTrue(left ~= nil, where .. ": Player debuffs shows")
+            local seen = 0
+            for role in pairs(FOCUS_ROLES) do
+                if own[role] then
+                    seen = seen + 1
+                    -- red under: a member attached a few units off its head's left edge
+                    assertNear(own[role].left, left, 0.5, where .. ": " .. role .. "'s left edge is Player debuffs'")
+                end
+            end
+            assertTrue(seen > 0, where .. ": a focus container to measure")
+        end
     end
+end)
+
+-- THE FOCUS STACK IN SNAP RANGE (spec section 16.2, the owner's worry that a drag "may automatically
+-- anchor again"). Unlocked in test mode, as a drag happens, Snap.Nearest at C.SNAP_RADIUS, with each
+-- focus container as the dragged rect and every container of another stack as a target. The far stack
+-- is never in range ("the focus stack stays clear of the far stack"), nor is Player debuffs (all) above
+-- it, and Bars on a 1080-tall screen, the owner's preview, has nothing in range. What is left follows
+-- from section 16.3's shared strip, recorded in docs/known-limitations.md (presets): the target stack's
+-- containers, which run beside and above the focus stack in that strip, and on a 768-tall screen the
+-- corner group's Weapon enchants above it and the call-outs to its left. A target outside OPEN fails.
+local SNAP_OPEN = {
+    [768] = { right = true, cornerRight = true, middle = true },
+    [1080] = { right = true },
+    [1440] = { right = true },
+}
+
+--- Preset `name` in style `look` on a W x H parent, unlocked in test mode: the targets of other stacks
+--- a focus container would snap onto, each checked against SNAP_OPEN. Returns how many there were.
+local function checkFocusSnapRange(env, mocks, name, look, W, H)
+    local _, each = sampleSpans(env, mocks, name, look, W, H, true)
+    local radius, hits = env.Constants.SNAP_RADIUS, 0
+    for _, f in ipairs(each) do
+        if f.stack == "focus" then
+            for _, e in ipairs(each) do
+                local hit = (e.stack ~= "focus")
+                    and env.Anchors.Snap.Nearest(f.span, { { id = e.role, rect = e.span, growH = "left", growV = "up" } }, radius)
+                if hit then
+                    hits = hits + 1
+                    local where = ("%s/%s at %dx%d: %s is %d from %s (%s)"):format(name, look, W, H, f.role,
+                        hit.dist, e.role, e.stack)
+                    assertTrue(SNAP_OPEN[H][e.stack] == true, where .. ", a target outside the recorded ones")
+                    assertTrue(not (look == "bars" and H == 1080), where .. ": Bars at 1080 has none")
+                end
+            end
+        end
+    end
+    return hits
+end
+
+test("presets data: the focus stack's snap range holds only the recorded targets", function()
+    local hits = 0
+    for _, scr in ipairs(SCREENS) do
+        -- An environment per screen, as above (the kit's leak gate).
+        local env, mocks = freshEnv()
+        env.Helpers.SkinPicker = function() return nil end
+        for _, name in ipairs(WITH_FOCUS) do
+            for _, look in ipairs(env.PresetData.LOOKS) do
+                hits = hits + checkFocusSnapRange(env, mocks, name, look, scr[1], scr[2])
+            end
+        end
+    end
+    -- The case measures something: the shared strip does put targets in range somewhere.
+    assertTrue(hits > 0, "the case saw a target in range")
 end)
