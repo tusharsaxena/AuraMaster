@@ -2783,12 +2783,12 @@ to the one before it, below it in the corner and above it in a side or focus sta
 
 **PRESETS-1. A brand-new profile starts from Simple, at the real screen size. Client: Retail, then
 WoW Forever.** Profiles → type a new profile name → the three Simple containers appear, as bars:
-**Player buffs (all)** at the top-right corner, its right edge on the screen's right edge,
+**Player buffs (all)** near the top-right corner, its right edge about 300 in from the screen's right edge,
 **Weapon enchants** attached under it, and **Player debuffs (all)** in the column to its left. No
 container sits over the action bars or the unit frames. `/am test` → each fills with sample auras;
 the corner columns end well above the screen's middle. `/am test` off. Set **UI scale** off, then on
 at its smallest (Options → Graphics → UI Scale), each time making another new profile: the layout
-keeps its proportions and the corner column stays on the right edge. A profile already made keeps
+keeps its proportions and the corner columns keep the same distance in from the right edge. A profile already made keeps
 where its containers were placed. *The login seed:* with UI scale on at its smallest, exit the
 game, move `AuraMaster.lua` out of `WTF/Account/<account>/SavedVariables/` and log in, so the first
 profile is seeded as the addon loads rather than in session. Select **Player buffs (all)** on the

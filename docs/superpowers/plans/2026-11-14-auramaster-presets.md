@@ -4,7 +4,7 @@
 
 **Goal:** Ship four container presets (Simple, Intermediate, Advanced, Healer) in Bars and Icons, placed by screen size, previewed on the real screen in test mode, with a first-run picker and a Presets tab on the Containers page.
 
-**Architecture:** Presets are data (`defaults/Presets.lua`, `NS.PresetData`) that a pure builder turns into container overrides for a given screen size and style. One writer module (`modules/Presets.lua`, `NS.Presets`) applies them through the container registry writer (`NS.ContainerManager`) and the custom-category writer (`NS.Categories.CreateUserCategory`), and owns preview (snapshot in the profile, exact restore). Two UI surfaces call it: an Aura Master first-run window (`settings/PresetPicker.lua`) and a Presets tab (`settings/ContainersPresets.lua`).
+**Architecture:** Presets are data (`defaults/Presets.lua`, `NS.PresetData`) that a pure builder turns into container overrides for a given screen size and style. One writer module (`modules/Presets.lua`, `NS.Presets`) applies them through the container registry writer (`NS.ContainerManager`) and the custom-category writer (`NS.Categories.CreateUserCategory`), and owns preview (snapshot in the profile, exact restore). Two UI surfaces call it: an Aura Master first-run window (`settings/PresetPicker.lua`) and a Presets tab (`settings/GeneralPresets.lua` since AM-PR14, on the General page; first built as `settings/ContainersPresets.lua`).
 
 **Tech Stack:** Lua 5.1 (WoW), Ace3 (AceDB), LibKa0s v1.98.0 (vendored), the headless harness `tests/run.lua` with the kit under `tests/_kit/`.
 
