@@ -451,6 +451,10 @@ These record where the build departs from the letter of section 16, each left fo
    The pairs, by screen, are in docs/known-limitations.md (presets).
 3. **How far in the corner group moved (point 3).** It asks for both a corner group left of section 15's
    place and the smallest shared strip with the target column. The build took the least move that
-   meets the first rule after rounding: Player debuffs' left edge 480 in from the right edge (475
-   before), about 5 pixels at 1080, so the preview looks unmoved. Moving it visibly, tens of units,
-   widens the shared strip by as many. The owner names the distance, or keeps the least move.
+   meets the first rule after rounding (480), about 5 pixels at 1080, so the preview looked
+   unmoved. Its review took a move the owner can see instead, since the owner asked to bring the
+   group "in even further": Player debuffs' left edge 520 in from the right edge (475 before),
+   `cornerRight` at 300 in, keeping its width and its 5 gap. The cost is 40 more shared strip with
+   the target column (80 on 16:9, 176 on 16:10, 182 to 194 on 5:4 and 4:3 in Bars), and in Icons on
+   4:3 and 5:4 the call-outs come within one snap radius of the focus rows at 1080 and 1440
+   (docs/known-limitations.md, presets). The owner keeps 520 or names another distance.

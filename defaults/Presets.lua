@@ -116,16 +116,16 @@ local SIDE_BASE = -740
 -- apart in test mode, locked or unlocked (53 at the closest, on a 768-tall screen unlocked), so a
 -- drag near the far stack does not snap the focus stack back onto it. Other targets do sit within
 -- C.SNAP_RADIUS of it while unlocked: the target stack's containers, beside it in the strip the two
--- columns share, and on a 768-tall screen Weapon enchants above it (3) and the call-outs; Bars at
--- 1080 has none. A base further down brings the far stack into range at 768, one further up the
--- target stack at 1440 (docs/known-limitations.md, presets). The corner group moved in with it:
--- Player debuffs' left edge 480 in from the right edge (475 in section 15), Player buffs keeping its
--- width and its 5 gap. On 16:9 the column shares 40 with the right stack's, which section 16 asks to
--- keep smallest, so the move is the least that clears section 15's place (the same file).
+-- columns share, on a 768-tall screen Weapon enchants above it (3), and in Icons on 4:3 and 5:4 the
+-- call-outs; Bars at 1080 has none. A base further down brings the far stack into range at 768, one
+-- further up the target stack at 1440 (docs/known-limitations.md, presets). The corner group moved in
+-- with it, a move the owner can see ("bring them in even further"): Player debuffs' left edge 520 in
+-- from the right edge, 45 further in than section 15's 475, Player buffs keeping its width and its 5
+-- gap. On 16:9 the column then shares 80 with the right stack's, the cost of that move (the same file).
 local FOCUS_BASE = -550
 P.STACKS = {
-    cornerRight = { anchor = "TOPRIGHT", x = -260, y = -46,  width = 175, iconsGrowH = "left" },
-    cornerLeft  = { anchor = "TOPRIGHT", x = -480, y = -46,  width = 215, iconsGrowH = "left" },
+    cornerRight = { anchor = "TOPRIGHT", x = -300, y = -46,  width = 175, iconsGrowH = "left" },
+    cornerLeft  = { anchor = "TOPRIGHT", x = -520, y = -46,  width = 215, iconsGrowH = "left" },
     middle      = { anchor = "TOP",      x = -240,           width = 480, iconsGrowH = "right", center = true },
     left        = { anchor = "TOP",      x = -520, y = SIDE_BASE, width = 240, iconsGrowH = "right", up = true },
     right       = { anchor = "TOP",      x = 280,  y = SIDE_BASE, width = 240, iconsGrowH = "left", up = true },

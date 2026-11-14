@@ -634,8 +634,11 @@ test("presets data: the corner group sits left of and below its old place", func
     local S = P.STACKS
     -- Spec section 15 moved it 80 left and 40 down; section 16 moves it further in, Player debuffs'
     -- left edge on the focus column's ("Player debuffs' left edge lines up with Focus buffs'").
-    -- red under: section 15's place, Player debuffs' left edge 475 in from the right edge
+    -- red under: section 15's place, Player debuffs' left edge 475 in from the right edge, and under
+    -- a token move: the owner asked for one they can see ("bring them in even further"), so the
+    -- distance is pinned, 45 further in than section 15's (520 in from the right edge).
     assertTrue(S.cornerLeft.x < -395 - 80, "Player debuffs' column left of section 15's")
+    assertEqual(S.cornerLeft.x, -475 - 45, "and 45 further in, a move that shows")
     assertEqual(S.cornerLeft.width, 215, "Player debuffs keeps its width")
     assertEqual(S.cornerRight.width, 175, "Player buffs keeps its width")
     assertEqual(S.cornerRight.x - (S.cornerLeft.x + S.cornerLeft.width), 5, "and the gap between the two")
@@ -1191,21 +1194,21 @@ local function rectGap(a, b)
 end
 
 -- THE FOCUS COLUMN OVER THE RIGHT STACK'S (spec section 16.3). The focus column's left edge is Player
--- debuffs', more than 475 in from the right edge (480), and the right (target) column ends 520 right
--- of center, so on a 16:9 screen the two share 40 across, and in Advanced (Bars) the right stack runs
--- from its base nearly to the top edge, so their heights meet wherever the focus stack sits. Kept as
--- small as the corner rule allows (a round 480 stays left of 475 after rounding on every screen
--- tested), and recorded in docs/known-limitations.md (presets). On 16:10 and the narrow ratios the
--- right edge comes in nearer the center line and the two share more; on 21:9 they share nothing.
+-- debuffs', 520 in from the right edge (45 further in than section 15's 475, a move the owner can
+-- see), and the right (target) column ends 520 right of center, so on a 16:9 screen the two share 80
+-- across, and in Advanced (Bars) the right stack runs from its base nearly to the top edge, so their
+-- heights meet wherever the focus stack sits. Recorded in docs/known-limitations.md (presets). On
+-- 16:10 and the narrow ratios the right edge comes in nearer the center line and the two share more;
+-- on 21:9 they share nothing.
 -- An Icons row grows left from its column's right edge, so the right stack's reaches 31 further
 -- left (Advanced's heights meet; Intermediate's and Healer's do not). Each entry, by look and screen
 -- at 1080 tall, unlocked in test mode, is what Advanced shares, exactly, and the most any preset may;
 -- a screen not named shares nothing where the heights meet.
 local FOCUS_OVER_RIGHT = {
-    ["bars 1920x1080"] = 40, ["icons 1920x1080"] = 71,
-    ["bars 1728x1080"] = 136, ["icons 1728x1080"] = 167,
-    ["bars 1440x1080"] = 180, ["icons 1440x1080"] = 217,
-    ["bars 1350x1080"] = 169, ["icons 1350x1080"] = 209,
+    ["bars 1920x1080"] = 80, ["icons 1920x1080"] = 111,
+    ["bars 1728x1080"] = 176, ["icons 1728x1080"] = 207,
+    ["bars 1440x1080"] = 194, ["icons 1440x1080"] = 209,
+    ["bars 1350x1080"] = 182, ["icons 1350x1080"] = 200,
 }
 
 --- Preset `name` in style `look` on a W x 1080 parent, unlocked in test mode: where the focus and the
@@ -1313,12 +1316,13 @@ end)
 -- is never in range ("the focus stack stays clear of the far stack"), nor is Player debuffs (all) above
 -- it, and Bars on a 1080-tall screen, the owner's preview, has nothing in range. What is left follows
 -- from section 16.3's shared strip, recorded in docs/known-limitations.md (presets): the target stack's
--- containers, which run beside and above the focus stack in that strip, and on a 768-tall screen the
--- corner group's Weapon enchants above it and the call-outs to its left. A target outside OPEN fails.
+-- containers, which run beside and above the focus stack in that strip, on a 768-tall screen the
+-- corner group's Weapon enchants above it, and the call-outs to its left (at 768, and in Icons on 4:3
+-- and 5:4 at 1080 and 1440). A target outside OPEN fails.
 local SNAP_OPEN = {
     [768] = { right = true, cornerRight = true, middle = true },
-    [1080] = { right = true },
-    [1440] = { right = true },
+    [1080] = { right = true, middle = true },
+    [1440] = { right = true, middle = true },
 }
 
 --- Preset `name` in style `look` on a W x H parent, unlocked in test mode: the targets of other stacks

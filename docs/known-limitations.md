@@ -504,8 +504,9 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   down, both in a 1080-tall reference space (presets spec sections 15 and 15.1). With the corner group moved
   in, more columns share than the mockup's did: on 16:9 and 16:10 the right stack's column sits
   under the Player debuffs column and the far stack's under both corner columns; on 4:3 and 5:4 the
-  right stack's sits under Player debuffs and the far stack's under Player buffs; on 21:9 the far
-  stack's right edge reaches 5 units under Player debuffs. At the test-mode sample count every corner
+  right stack's sits under Player debuffs and reaches 17 to 18 under Player buffs, and the far
+  stack's sits under Player buffs; on 21:9 the far stack's right edge reaches 50 units under Player
+  debuffs. At the test-mode sample count every corner
   stack ends above the base of every side stack (`tests/test_presets_data.lua`, "presets:
   placement"), but the two now grow toward each other and bar height is not scaled. In play a heavy
   buff or debuff load grows a corner column down, and a full side stack grows up, so either can
@@ -518,47 +519,54 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   section 15 records the upward overlap for the owner's call.
 - **The focus column shares a strip with the target stack's.** Since the owner's round-2 feedback
   the focus containers are a stack of their own, its column lined up with Player debuffs (all)'s, its
-  left edge 480 in from the right edge in a 1080-tall reference space (presets spec section 16; 475
+  left edge 520 in from the right edge in a 1080-tall reference space (presets spec section 16; 475
   before). The target stack's column ends 520 right of the screen's center line, so on a 1920 x 1080
-  screen the two share 40 across, and Advanced (Bars)'s target stack runs from its base nearly to the
+  screen the two share 80 across, and Advanced (Bars)'s target stack runs from its base nearly to the
   top edge, so wherever the focus stack sits their heights meet. Section 16 asks for no shared span,
-  or the smallest: a corner group further right than 475 is what the owner asked to move. On 16:10
+  or the smallest, but also for a corner group the owner can see move in (next entry). On 16:10
   and the narrow ratios the screen's right edge comes nearer the center line and they share more
-  (136 on 16:10, 169 to 180 on 5:4 and 4:3, at 1080 tall); an Icons row grows left from its column's
-  right edge, so the target stack's Icons rows reach 31 further (71 on 16:9); on 21:9 they share
-  nothing. The focus stack's base sits 550 down, over the far stack's, so the two stay more than
+  (176 on 16:10, 182 to 194 on 5:4 and 4:3, at 1080 tall); an Icons row grows left from its column's
+  right edge, so the target stack's Icons rows reach 31 further (111 on 16:9, 200 to 209 on the
+  narrower ratios); on 21:9 they share nothing. Before AM-PR13 the focus containers sat in the far
+  stack and shared nothing with the target column, so the owner's own preview (Bars, 1920 x 1080)
+  now shows the focus stack's left 80 over the target stack's right edge. A narrower target column,
+  or one moved toward the center line, would shrink the strip; both change the owner's own layout. The focus stack's base sits 550 down, over the far stack's, so the two stay more than
   twice the snap radius apart in test mode, locked or unlocked, on every screen tested (53 at the
   closest, 768 tall unlocked). `tests/test_presets_data.lua` ("presets data: the focus stack stays
   clear of the far stack beyond twice the snap radius") pins each shared span at 1080. In play a full
   target stack can draw under the focus stack's left edge; the player can move either. Recorded
   2026-11-15 (AM-PR13) for the owner's call.
-- **The corner group moved in only 5 units in round 2.** The owner asked to bring the corner group
-  "in even further", to line Player debuffs (all)'s left edge up with Focus buffs (mine)'s. Presets
-  spec section 16.3 asks for both a corner group left of section 15's place (Player debuffs' left
-  edge more than 475 in from the right edge, in a 1080-tall reference space) and the smallest strip
-  the focus column shares with the target stack's. The two pull apart: the focus column hangs from
-  the corner's edge, so every unit the corner group moves left widens that strip by one. The presets
-  take the least move that clears 475 after rounding on every screen tested, 480 (about 5 pixels at
-  1080), which in a preview looks unmoved; 477 would also clear and share 37 rather than 40. A move
-  the owner can see, tens of units, costs as much more shared strip (on 16:9, 80 at 520 in, 120 at
-  560). Recorded 2026-11-15 (AM-PR13 review) for the owner's call: keep the least move, or name how
-  far in.
+- **The corner group's round-2 move widens the focus column's shared strip.** The owner asked to
+  bring the corner group "in even further", to line Player debuffs (all)'s left edge up with Focus
+  buffs (mine)'s. Presets spec section 16.3 asks for both a corner group left of section 15's place
+  (Player debuffs' left edge more than 475 in from the right edge, in a 1080-tall reference space)
+  and the smallest strip the focus column shares with the target stack's. The two pull apart: the
+  focus column hangs from the corner's edge, so every unit the corner group moves left widens that
+  strip by one. A first build took the least move (480, about 5 pixels at 1080), which in a preview
+  looked unmoved; the presets now take a move the owner can see, 520 in, 45 further than section 15
+  (Player buffs keeps its width and its 5 gap, so its left edge is 300 in), at a cost of 40 more
+  shared strip on 16:9 (80 rather than 40). `tests/test_presets_data.lua` ("presets data: the corner
+  group sits left of and below its old place") pins the 520. Recorded 2026-11-15 (AM-PR13 review)
+  for the owner's call: keep 520, or name another distance.
 - **Other containers sit within snap range of the focus stack while unlocked.** The focus stack
   stays more than twice the snap radius (24) from the far stack on every screen tested, but with the
   containers unlocked in test mode, as a drag happens, other targets sit within one snap radius of a
   focus container, so a drop that barely moves can attach it to one of them:
   - 1080 tall: none in Bars. In Icons, Advanced's Focus debuffs (mine) and Focus buffs (mine) sit 2
     to 24 from Target cooldowns, players, Target cooldowns, NPCs, Target crowd control and Target
-    special (mine) (the target stack, in the shared strip), on every ratio but 21:9.
+    special (mine) (the target stack, in the shared strip), on every ratio but 21:9, and on 4:3 and
+    5:4 the focus rows of Advanced and Healer sit 1 to 15 from the call-outs (Offensive cooldowns,
+    Raid cooldowns).
   - 1440 tall: in Bars the focus head sits 8 above the target stack's second container (Target
     buffs (mine) in Advanced, Target cooldowns in Intermediate, Dispellable by you on target in
     Healer) on every ratio but 21:9. In Icons, Advanced's focus rows are 0 to 20 from the target
-    cooldown and special rows.
+    cooldown and special rows, and on 5:4 Advanced's and Healer's 21 from the call-outs.
   - 768 tall: in Bars Focus buffs (mine) and Dispellable by you on focus are 3 to 4 from Weapon
     enchants above them (every ratio), and, on every ratio but 21:9, Focus debuffs (mine) 3 to 7 from
     Target debuffs (mine) and Target crowd control and Focus buffs (mine) 21 from Target cooldowns,
-    players. In Icons the focus rows reach the call-outs (Offensive cooldowns or Raid cooldowns, 3 to
-    16) on 4:3 and 5:4, and the target stack's rows (0 to 23).
+    players, and on 4:3 both 24 from Offensive cooldowns (Healer's Your heals on focus from Raid
+    cooldowns). In Icons the focus rows reach the call-outs (Offensive cooldowns or Raid cooldowns, 9
+    to 15) on 4:3 and 5:4, and the target stack's rows (0 to 23).
 
   The target stack's pairs follow from the shared strip above; no base clears them, since Advanced
   (Bars)'s target stack runs nearly to the top edge. Moving the base is a trade: further down brings
