@@ -1,3 +1,4 @@
 date	milestone	evidence
 2026-11-14	baseline	retail 2358/0/1, forever 2358/0/1, lint 0/0 (207 files), pytest 400 passed
 2026-11-14	M1+M2	AM-FP01 50097a7 + AM-FP02 ff352c3 + AM-FP03 86594dc,4093aba,4742a28 + AM-FP04 bf89570; 4 reviews approved (AM-FP03 after 2 fix rounds); retail 2366/0/1, forever 2366/0/1, lint 0/0 (210 files), pytest 439
+2026-11-14	M3+M4+M5	AM-FP05 d5238ab + AM-FP06 6d8f866,e20d4a7 + AM-FP07 669dca6,3d6b573 + WS-FP01 88185bb (WowAddonStandards) + AM-FP08 review fixes e03ec29,91303a9,40a6a4a,d4c0e7a,6c0416b,0087f37,0b3446b,94b5e65,5ff012f + automated-test bundle 20261114-104251 at 5ff012f (green); retail 2377/0/1, forever 2376/0/2, lint 0/0 (213 files), pytest 441, max CCN 15, 0 warnings

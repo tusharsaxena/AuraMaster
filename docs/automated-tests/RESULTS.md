@@ -32,6 +32,7 @@ archaeology, for the same reason a skip is never a pass (`automated-tests-§4`).
 
 | Run | Commit | Tree | Version | Lint w/e | Files | Tests | Perf | NLOC | Funcs | Avg NLOC | Avg CCN | Max CCN | CCN warn | Verdict |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| [`20261114-104251`](20261114-104251/) | `5ff012f` | clean | 1.1.0 | 0/0 | 213 | 2377/1/2378 | pass | 58589 | 6234 | 8.3 | 2.3 | 15 | 0 | **green** |
 | [`20261104-042114`](20261104-042114/) | `c9c3a97` | clean | 1.1.0 | 0/0 | 207 | 2355/1/2356 | pass | 56743 | 6195 | 8.2 | 2.3 | 15 | 0 | **green** |
 | [`20261102-004743`](20261102-004743/) | `7bd52a2` | clean | 1.1.0 | 0/0 | 206 | 2343/1/2344 | pass | 56543 | 6150 | 8.3 | 2.3 | 15 | 0 | **green** |
 | [`20261101-210026`](20261101-210026/) | `ce2e6cc` | clean | 1.1.0 | 0/0 | 205 | 2336/1/2337 | pass | 56414 | 6139 | 8.3 | 2.3 | 15 | 0 | **green** |
@@ -57,18 +58,18 @@ archaeology, for the same reason a skip is never a pass (`automated-tests-§4`).
 
 ## Test suite
 
-**2356 cases** — 2355 passed, 0 failed, 1 skipped. The generated inventory
-[`20261104-042114/test-cases.md`](20261104-042114/test-cases.md) is the authority on which cases existed at this run;
+**2378 cases** — 2377 passed, 0 failed, 1 skipped. The generated inventory
+[`20261114-104251/test-cases.md`](20261114-104251/test-cases.md) is the authority on which cases existed at this run;
 `docs/test-cases.md` is that same list at HEAD.
 
-Moved **2344 → 2356** since the previous run.
+Moved **2356 → 2378** since the previous run.
 
 **1 case(s) reported a `skip`.** A skip is counted in the total and never in `passed`, and at
 the release gate it is NOT EVALUATED rather than passed (`automated-tests-§3`).
 
 ## Lint
 
-**0 warnings / 0 errors over 207 files** (`luacheck .`).
+**0 warnings / 0 errors over 213 files** (`luacheck .`).
 
 Read that figure with its scope attached: `.luacheckrc` excludes 6 path(s) from it — `libs/`, `tests/_kit/`, `docs/audits/`, `docs/reviews/`, `docs/automated-tests/`, `_dev/` —
 so nothing under them is in the count above. A `0/0` that never moves is partly a statement about
@@ -78,29 +79,29 @@ to whoever thinks to open `.luacheckrc`.
 ## Perf
 
 **12 scenarios** from `tests/perf.lua`; the measurements are in
-[`20261104-042114/perf.json`](20261104-042114/perf.json).
+[`20261114-104251/perf.json`](20261114-104251/perf.json).
 
 | `scenario` | `iters` | `ms/iter` | `api/iter` | `bytes/iter` |
 |---|---|---|---|---|
-| `compile` | 2000 | 0.00963 | 0.0 | 4136.0 |
-| `applyPass` | 200 | 1.85261 | 30.0 | 107063.3 |
-| `restyle` | 200 | 1.61655 | 0.0 | 50646.4 |
-| `restyleText` | 200 | 0.88724 | 0.0 | 32068.1 |
-| `restyleTextGlow` | 200 | 3.85855 | 0.0 | 144964.1 |
-| `visibilityPass` | 1000 | 0.02272 | 8.0 | 384.0 |
-| `unitSwap` | 1000 | 0.00330 | 1.0 | 0.0 |
-| `probeOverheadOff` | 1000 | 0.02468 | 9.0 | 384.0 |
-| `probeOverheadOn` | 1000 | 0.03637 | 9.0 | 384.5 |
-| `probeAbsent` | 1000 | 0.02494 | 9.0 | 384.0 |
-| `unitAuraFiltered` | 1000 | 0.00029 | 0.0 | 0.0 |
-| `emptyWatchAura` | 1000 | 0.00007 | 0.0 | 0.0 |
+| `compile` | 2000 | 0.00872 | 0.0 | 4136.0 |
+| `applyPass` | 200 | 1.49005 | 30.0 | 107062.5 |
+| `restyle` | 200 | 1.29016 | 0.0 | 50646.1 |
+| `restyleText` | 200 | 0.71770 | 0.0 | 32067.7 |
+| `restyleTextGlow` | 200 | 3.05415 | 0.0 | 144963.7 |
+| `visibilityPass` | 1000 | 0.02211 | 8.0 | 384.0 |
+| `unitSwap` | 1000 | 0.00350 | 1.0 | 0.0 |
+| `probeOverheadOff` | 1000 | 0.02757 | 9.0 | 384.0 |
+| `probeOverheadOn` | 1000 | 0.02335 | 9.0 | 384.5 |
+| `probeAbsent` | 1000 | 0.02000 | 9.0 | 384.0 |
+| `unitAuraFiltered` | 1000 | 0.00022 | 0.0 | 0.0 |
+| `emptyWatchAura` | 1000 | 0.00010 | 0.0 | 0.0 |
 
 `perf` never fails a run and never blocks a commit — it is recorded, read and compared, not
 thresholded (`performance-§9`). It does gate the **tag** (`automated-tests-§3`).
 
 ## Complexity watch list
 
-Current as of [`20261104-042114`](20261104-042114/) — **this run's measurement, not its diff.** Max CCN **15** across 6195
+Current as of [`20261114-104251`](20261114-104251/) — **this run's measurement, not its diff.** Max CCN **15** across 6234
 functions, **0** of them warned on; 7 file(s) in the 1000–1500 band and 0 over the 1500 cap
 (`layout-§1`).
 
@@ -121,7 +122,7 @@ None.
 | Band | File | LOC | Disposition |
 |---|---|---|---|
 | 1000–1500 (on notice) | `core/Database_Migrations.lua` | 1200 | Accepted — newly in the band at this run (935 → 1076, the skin steps through v15); 14 frozen `Database.MigrateV` step bodies with their private helpers, 50 functions, max CCN 15 (`Database.MigrateV15`, at the threshold, not over it). Steps are independent and frozen once shipped, so the size is ladder length, not tangle |
-| 1000–1500 (on notice) | `defaults/Categories.lua` | 1344 | Accepted as a tracked deviation: `docs/ARCHITECTURE.md` → `## Documented deviations`, the `layout-§1` row for this file (FX-AM-SIZE). Data, 8 functions, max CCN 4, and `tools/spell-research/` reads and rewrites this one path, so a split is not a pure move |
+| 1000–1500 (on notice) | `defaults/Categories.lua` | 1399 | Accepted as a tracked deviation: `docs/ARCHITECTURE.md` → `## Documented deviations`, the `layout-§1` row for this file (FX-AM-SIZE). Data, 10 functions, max CCN 5 at 20261114-104251 (the row still says 1344 lines, 8 functions, max CCN 4; the Forever port's `seeded` and `servedHere` helpers added the difference), and `tools/spell-research/` reads and rewrites this one path, so a split is not a pure move. At 1399 lines it is one line under the row's 1400-line re-check trigger |
 | 1000–1500 (on notice) | `modules/Anchors.lua` | 1078 | Accepted — newly in the band at this run (982 → 1068, the skin seam on the unlock furniture); 72 functions, max CCN 13 (`Anchors.FlowRoot`). One concern, where a container sits and its drag handle; the join and snap code are already peeled into `modules/Anchors_Attach.lua` and `modules/Anchors_Snap.lua` |
 | 1000–1500 (on notice) | `modules/Anchors_Snap.lua` | 1156 | Accepted — newly in the band at the 1.1.0 release run (a new file: the snap core for drag to attach, #22); 60 functions, max CCN 15 (`classify`, at the threshold, not over it). One concern, the pair pick and its geometry; `modules/Anchors_SnapRect.lua` already holds the rect reads, and the pick is the next seam if it grows |
 | 1000–1500 (on notice) | `modules/Container.lua` | 1021 | Accepted — newly in the band at this run (928 → 1020), just inside it; 64 functions, max CCN 15 (`ContainerClass.ApplyHang`, at the threshold, not over it). One cohesive class, a live container's anchor, handle and engine lifecycle, with the twin engines already in `modules/Container_Twins.lua` |
