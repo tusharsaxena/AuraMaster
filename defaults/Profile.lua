@@ -99,6 +99,8 @@ NS.defaults.profile = {
     -- modules/Presets.lua's own key (presets spec section 9). `pickerSeen` records that this profile
     -- has closed the first-run preset picker. `previewSnapshot` has no default: it is present only
     -- while a preset preview is up, holding the registry and custom categories the preview replaced.
+    -- `seedPrint` has no default either: the fingerprint of what the seed wrote, present until the
+    -- picker is closed (modules/Presets.lua's SeedUntouched).
     presets = { pickerSeen = false },
 }
 

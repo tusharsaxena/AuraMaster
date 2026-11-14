@@ -18,7 +18,9 @@ local addonName, NS = ...
 --                              skin picker waits behind it, so the two never show at once.
 --   NS.ConfirmPreset(n, l, m)  apply preset `n` in style `l`, mode `m`, behind the confirm that names
 --                              the count it removes (Replace) or adds (Add): `/am preset <name>` now,
---                              the Containers page's Presets tab later.
+--                              the Containers page's Presets tab later. With the window up, it is
+--                              the player's close of it: latch set, skin picker offered once the
+--                              confirm is answered.
 --   NS.PresetPicker            { frame }: the window once built, for the suites.
 --
 -- WHEN. Once per profile, before the skin picker: addon:OnEnterWorld shows it at once (it does not
@@ -33,13 +35,17 @@ local addonName, NS = ...
 -- picked it keeps what is there. Not now, the close control and Escape restore (EndPreview(false)).
 -- Every close the player makes sets the latch, `presets.pickerSeen`, through NS.Presets.
 --
--- THE CONFIRM. Replace asks first, naming the count it removes, except on the first-run showing,
--- where the profile is brand new and nothing of the player's is lost (spec section 5).
+-- THE CONFIRM. Replace asks first, naming the count it removes, except on the first-run showing
+-- while the profile still holds exactly what its seed wrote (NS.Presets.SeedUntouched), where
+-- nothing of the player's is lost (spec section 5). A container made, deleted or edited since, in
+-- this session or before a /reload, and it asks.
 --
 -- BUILT FROM THE LIBRARY'S PIECES: the window's shell and close mark through core/CoreSetup.lua's
 -- seams (NS.ApplySkin, NS.MakeCloseButton), the dropdown is LibKa0s-Widgets-1.0's, and every
 -- button, tab and string is painted through this owner's skin facade (NS.Skin), each member guarded
--- so the degraded facade draws stock frames. DIALOG strata, as the skin picker (frame-layering-§1).
+-- so the degraded facade draws stock frames. DIALOG strata, as the skin picker (frame-layering-§1);
+-- toplevel, and on show it re-raises any shown StaticPopup, so it never buries a confirm
+-- (frame-layering-§4, through LibKa0s-Core-1.0's RaiseStaticPopups).
 
 local L = NS.L
 
@@ -47,6 +53,7 @@ NS.PresetPicker = NS.PresetPicker or {}
 local Picker = NS.PresetPicker
 
 local KW = LibStub and LibStub("LibKa0s-Widgets-1.0", true)
+local KC = LibStub and LibStub("LibKa0s-Core-1.0", true)
 
 local WINDOW = "AuraMasterPresetPicker"
 local POPUP = "AURAMASTER_APPLY_PRESET"
@@ -108,12 +115,23 @@ StaticPopupDialogs[POPUP] = {
     OnAccept     = function(_, data)
         if type(data) == "table" and type(data.run) == "function" then data.run() end
     end,
+    -- Every answer hides it (Apply, Cancel, Escape): what waits on the answer runs here, once.
+    OnHide       = function(self, data)
+        data = data or (self and self.data)
+        local after = type(data) == "table" and data.after or nil
+        if type(after) == "function" then data.after = nil; after() end
+    end,
 }
 
 --- Ask before `run` when the count is worth asking about: `count` containers the player would lose
---- (Replace) or the preset's count added (Add). `ask` false runs at once.
-local function confirmThen(name, mode, count, ask, run)
-    if not ask then return run() end
+--- (Replace) or the preset's count added (Add). `ask` false runs at once. `after`, when given, runs
+--- once the question is settled: after `run`, or when the confirm hides, whatever the answer.
+local function confirmThen(name, mode, count, ask, run, after)
+    if not ask then
+        local r = run()
+        if after then after() end
+        return r
+    end
     local dialog = StaticPopupDialogs[POPUP]
     local a1, a2 = count, LABELS[name]
     if mode == "add" then
@@ -123,7 +141,11 @@ local function confirmThen(name, mode, count, ask, run)
         dialog.text = L["Replace your %s containers with the %s preset? Your containers are deleted."]
     end
     local popup = StaticPopup_Show(POPUP, a1, a2)
-    if popup then popup.data = { run = run } end
+    if popup then
+        popup.data = { run = run, after = after }
+    elseif after then
+        after()
+    end
     return nil
 end
 
@@ -135,24 +157,30 @@ end
 
 --- Apply preset `name` in style `look`, `mode` "replace" or "add", behind the confirm: Replace asks
 --- when the player has containers to lose, Add always says what it adds. A preview up is ended (a
---- restore) first, so the write lands on the player's own containers. Refused in combat with
---- Apply's own line. Answers true when the write ran now, nil when it waits for the answer.
+--- restore) first, so the write lands on the player's own containers. With the window up this is the
+--- player's close of it: it goes down with its preview restored, the latch is set, and the skin
+--- picker gets its turn once the confirm is answered (not under it). Refused in combat with Apply's
+--- own line. Answers true when the write ran now, nil when it waits for the answer.
 function NS.ConfirmPreset(name, look, mode)
     if InCombatLockdown() then
         return sayGray(L["cannot apply a preset during combat — its containers would not be drawn or placed until combat ends"])
     end
     if name == "empty" and mode == "add" then return NS.Print(L["The Empty preset has no containers to add."]) end
+    local f = Picker.frame
+    local closesWindow = f ~= nil and f:IsShown() == true
     NS.HidePresetPicker()
+    if closesWindow then NS.Presets.MarkPickerSeen() end
     if NS.Presets.IsPreviewing() then NS.Presets.EndPreview(false) end
     local count = #NS.Database.GetContainers()
     local ask = mode == "add" or count > 0
+    local after = closesWindow and NS.MaybeShowSkinPicker or nil
     return confirmThen(name, mode, count, ask, function()
         local ok, msg, gray = NS.Presets.Apply(name, look, mode)
         if not ok then return say(msg, gray) end
         if NS.RefreshOptionsPanel then NS.RefreshOptionsPanel() end
         sayApplied(name, look, mode)
         return true
-    end)
+    end, after)
 end
 
 -- ── the window's controls ────────────────────────────────────────────────────────────────────
@@ -225,7 +253,9 @@ local function apply()
     if not state.picked then return finish() end
     local run, sel, look = keepRun(), state.sel, state.look
     local count = NS.Presets.OwnContainerCount()
-    confirmThen(sel, "replace", count, not state.firstRun and count > 0, function()
+    -- No confirm only on the first-run showing over the untouched seed (spec section 5).
+    local ask = count > 0 and not (state.firstRun and NS.Presets.SeedUntouched())
+    confirmThen(sel, "replace", count, ask, function()
         local ok, msg, gray = run()
         if not ok then return say(msg, gray) end
         state.owns = false
@@ -419,6 +449,8 @@ local function show(firstRun)
     f:Show()
     refresh()
     if f.Raise then f:Raise() end
+    -- A confirm shown before this window stays above it (frame-layering-§4).
+    if KC and type(KC.RaiseStaticPopups) == "function" then KC.RaiseStaticPopups() end
     return f
 end
 

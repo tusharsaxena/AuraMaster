@@ -175,12 +175,12 @@ test("picker: Escape restores like Not now", function()
 end)
 
 test("picker: apply keeps", function()
-    local NS, m = fresh()
+    local NS, m = fresh({ simple = true })
     local shown = popups(m)
     local f = NS.MaybeShowPresetPicker()
     f.dd.onSelect("advanced")
     f.apply:__fire("OnClick")
-    -- red under: a first-run Apply that asks (nothing of the player's is lost on a new profile)
+    -- red under: a first-run Apply that asks (nothing of the player's is lost on an untouched seed)
     assertEqual(#shown, 0, "the first-run picker does not ask")
     assertFalse(f:IsShown())
     assertFalse(NS.Presets.IsPreviewing(), "kept: the snapshot is dropped")
@@ -200,7 +200,7 @@ test("picker: Apply with nothing picked keeps what the profile holds", function(
 end)
 
 test("picker: empty applies no containers", function()
-    local NS = fresh()
+    local NS = fresh({ simple = true })
     local before = ids(NS)
     local f = NS.MaybeShowPresetPicker()
     f.dd.onSelect("simple")
@@ -273,4 +273,113 @@ test("picker: HidePresetPicker restores, unmarked", function()
     assertEqual(ids(NS), before)
     assertFalse(NS.Presets.PickerSeen(), "this addon's own hide writes no latch")
     assertFalse(anyLine(lines, "error"))
+end)
+
+-- ── the untouched seed (review fixes: the first-run Replace asks once the seed has changed) ───
+
+test("picker: a first-run Apply asks once the player has made a container", function()
+    local NS, m = fresh({ simple = true })
+    local shown = popups(m)
+    local f = NS.MaybeShowPresetPicker()
+    assertTrue(NS.Presets.SeedUntouched(), "the seed as written")
+    NS.Slash:OnSlash("new")
+    -- red under: the no-confirm path keyed on how the window opened, not on the profile
+    assertFalse(NS.Presets.SeedUntouched(), "a container made with the window up")
+    f.dd.onSelect("simple")
+    f.apply:__fire("OnClick")
+    assertEqual(#shown, 1, "Replace asks: the player's container would be lost")
+    assertEqual(shown[1].a1, NS.PresetData.Count("simple") + 1, "naming the player's own count")
+    assertTrue(f:IsShown(), "the window waits for the answer")
+end)
+
+test("picker: an edited seed asks too, and an untouched one survives a reload", function()
+    local NS = fresh({ simple = true })
+    local sv = NS.Database.DeepCopy(NS.db.sv)
+    local first = NS.Database.GetContainers()[1]
+    local name = first.name
+    first.name = "Renamed"
+    assertFalse(NS.Presets.SeedUntouched(), "an edited field moves the fingerprint")
+    first.name = name
+    assertTrue(NS.Presets.SeedUntouched(), "and putting it back restores it")
+    -- A /reload with the picker still due: the record is read back from the saved profile.
+    local NS2, m2 = fresh({ simple = true, savedVariables = sv })
+    local shown = popups(m2)
+    assertTrue(NS2.PresetPickerDue())
+    assertTrue(NS2.Presets.SeedUntouched(), "the seed reads back the same")
+    local f = NS2.MaybeShowPresetPicker()
+    f.dd.onSelect("healer")
+    f.apply:__fire("OnClick")
+    assertEqual(#shown, 0)
+    assertFalse(f:IsShown())
+end)
+
+test("picker: a profile with no seed record always asks", function()
+    local NS, m = fresh()   -- the harness's four: containers the seed never wrote
+    local shown = popups(m)
+    assertFalse(NS.Presets.SeedUntouched())
+    local f = NS.MaybeShowPresetPicker()
+    f.dd.onSelect("simple")
+    f.apply:__fire("OnClick")
+    assertEqual(#shown, 1)
+    assertEqual(shown[1].a1, 4)
+end)
+
+-- ── /am preset with the first-run window up (review fixes) ───────────────────────────────────
+
+test("picker: /am preset simple with the first-run window up is the player's close", function()
+    local NS, m, calls = fresh()
+    local shown = popups(m)
+    m.__fireEvent("PLAYER_ENTERING_WORLD")
+    local f = NS.PresetPicker.frame
+    assertTrue(f ~= nil and f:IsShown())
+    NS.Slash:OnSlash("preset simple")
+    assertFalse(f:IsShown(), "the window goes down")
+    -- red under: the slash taking it down through the profile-event hide (no latch, no skin picker)
+    assertTrue(NS.Presets.PickerSeen(), "the latch is set")
+    assertEqual(#shown, 1, "the player's four: Replace asks")
+    assertEqual(#calls, 0, "no skin picker over the confirm")
+    local dialog = m.StaticPopupDialogs.AURAMASTER_APPLY_PRESET
+    dialog.OnAccept(shown[1], shown[1].data)
+    dialog.OnHide(shown[1], shown[1].data)
+    assertEqual(#calls, 1, "the skin picker is offered once the confirm is answered")
+    dialog.OnHide(shown[1], shown[1].data)
+    assertEqual(#calls, 1, "once")
+    assertEqual(#NS.Database.GetContainers(), NS.PresetData.Count("simple"))
+end)
+
+test("picker: /am preset with the window up offers the skin picker on a Cancel too", function()
+    local NS, m, calls = fresh()
+    local shown = popups(m)
+    NS.MaybeShowPresetPicker()
+    NS.Slash:OnSlash("preset advanced")
+    assertTrue(NS.Presets.PickerSeen())
+    m.StaticPopupDialogs.AURAMASTER_APPLY_PRESET.OnHide(shown[1], shown[1].data)   -- Cancel
+    assertEqual(#calls, 1)
+    assertEqual(#NS.Database.GetContainers(), 4, "nothing written")
+end)
+
+test("picker: /am preset with the window down leaves the latch alone", function()
+    local NS, m, calls = fresh()
+    local shown = popups(m)
+    NS.Slash:OnSlash("preset simple")
+    m.StaticPopupDialogs.AURAMASTER_APPLY_PRESET.OnHide(shown[1], shown[1].data)
+    assertFalse(NS.Presets.PickerSeen(), "no window closed: the first-run picker is still owed")
+    assertEqual(#calls, 0)
+end)
+
+-- ── frame-layering-§4: a confirm shown first stays above the window ──────────────────────────
+
+test("picker: showing re-raises a shown StaticPopup", function()
+    local NS, m = fresh()
+    local raised = {}
+    local function popupFrame(name, isShown)
+        return { IsShown = function() return isShown end, Raise = function() raised[#raised + 1] = name end }
+    end
+    m.StaticPopup1 = popupFrame("StaticPopup1", true)
+    m.StaticPopup2 = popupFrame("StaticPopup2", false)
+    -- red under: show() raising its own window and nothing else
+    NS.ShowPresetPicker()
+    assertEqual(#raised, 1, "the shown popup, not the hidden one")
+    assertEqual(raised[1], "StaticPopup1")
+    m.StaticPopup1, m.StaticPopup2 = nil, nil
 end)

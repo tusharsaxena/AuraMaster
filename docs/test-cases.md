@@ -2645,7 +2645,7 @@ Total.
 - seed: fresh install not marked seen
 - seed: the v19 step is idempotent and keeps a stored false on an unseeded profile
 
-### test_presetpicker.lua (13)
+### test_presetpicker.lua (20)
 
 - picker: due on new profile only
 - picker: shows before skin picker
@@ -2660,6 +2660,13 @@ Total.
 - picker: on demand it asks before replacing the player's containers
 - picker: a profile event takes it down with a restore, then offers it to the new profile
 - picker: HidePresetPicker restores, unmarked
+- picker: a first-run Apply asks once the player has made a container
+- picker: an edited seed asks too, and an untouched one survives a reload
+- picker: a profile with no seed record always asks
+- picker: /am preset simple with the first-run window up is the player's close
+- picker: /am preset with the window up offers the skin picker on a Cancel too
+- picker: /am preset with the window down leaves the latch alone
+- picker: showing re-raises a shown StaticPopup
 
 ### test_perf.lua (8)
 
@@ -2711,7 +2718,7 @@ Total.
 
 - prose: no authored file carries a British spelling from localization-§5's published list
 - prose: the gate carries localization-§5's two lists whole, and nothing of its own
-- prose: the exclusions this repository declared suppressed 15 of 261 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (15): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, and 12 more (list bounded)
+- prose: the exclusions this repository declared suppressed 15 of 263 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (15): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, and 12 more (list bounded)
 - prose: no path this repository narrows the gate by is loaded by a TOC
 - prose: every path this repository narrows the gate by is one .pkgmeta keeps out of the zip
 - prose self-test: the carve-out suppresses the named generated folder, and only it
@@ -2969,7 +2976,7 @@ Total.
 | test_presets_apply.lua | 11 |
 | test_presets_preview.lua | 17 |
 | test_presets_seed.lua | 7 |
-| test_presetpicker.lua | 13 |
+| test_presetpicker.lua | 20 |
 | test_perf.lua | 8 |
 | test_debuglogsetup.lua | 9 |
 | test_locale.lua | 10 |
@@ -2986,4 +2993,4 @@ Total.
 | test_skin_switch.lua | 34 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2444** |
+| **Total** | **2451** |

@@ -276,6 +276,8 @@ function Database.PrepareProfile(p)
     if (p.nextContainerId or 1) <= maxId then p.nextContainerId = maxId + 1 end
     rebuildOrder(p)
     Database.FollowSkin(p)
+    -- The seed as written, for the first-run picker's no-confirm Replace (modules/Presets.lua).
+    if seeded > 0 and NS.Presets and NS.Presets.RecordSeed then NS.Presets.RecordSeed(p) end
     return seeded
 end
 

@@ -329,10 +329,80 @@ function Presets.PickerSeen()
     return type(p.presets) == "table" and p.presets.pickerSeen == true
 end
 
---- Record that the active profile has closed the first-run preset picker.
+--- Record that the active profile has closed the first-run preset picker. The seed's fingerprint
+--- goes with it: only a first-run showing reads it.
 function Presets.MarkPickerSeen()
     local store = profilePresets()
-    if store then store.pickerSeen = true end
+    if store then store.pickerSeen, store.seedPrint = true, nil end
+end
+
+-- ---------------------------------------------------------------------------
+-- The untouched seed (spec section 5)
+-- ---------------------------------------------------------------------------
+--
+-- The first-run picker skips the Replace confirm only while nothing of the player's would be lost:
+-- the profile still holds exactly what the seed wrote. core/Database.lua's PrepareProfile records a
+-- fingerprint of the seeded registry (`presets.seedPrint`, a number); SeedUntouched compares the
+-- player's own containers against it. Any change since (a new container, a deleted one, an edited
+-- field, a reorder) moves the fingerprint, and the picker asks. The record lives in the profile, so
+-- a /reload with the picker still due keeps asking over a profile the player has since changed. A
+-- profile with no record (seeded before v19, or holding containers before its seed ran) always asks.
+
+local KEY_RANK = { boolean = 1, number = 2, string = 3 }
+
+local function keyBefore(a, b)
+    local ta, tb = type(a), type(b)
+    if ta ~= tb then return (KEY_RANK[ta] or 9) < (KEY_RANK[tb] or 9) end
+    if ta == "number" or ta == "string" then return a < b end
+    return tostring(a) < tostring(b)
+end
+
+--- Append `v` to `out` as text, keys sorted. Numbers to three places, so a value read back from
+--- the saved file reads the same.
+local function serialize(v, out, depth)
+    local t = type(v)
+    if t == "number" then out[#out + 1] = string.format("%.3f", v); return end
+    if t ~= "table" then out[#out + 1] = t:sub(1, 1) .. tostring(v); return end
+    if depth > 16 then out[#out + 1] = "{?}"; return end
+    local keys = {}
+    for k in pairs(v) do keys[#keys + 1] = k end
+    table.sort(keys, keyBefore)
+    out[#out + 1] = "{"
+    for _, k in ipairs(keys) do
+        serialize(k, out, depth + 1)
+        out[#out + 1] = "="
+        serialize(v[k], out, depth + 1)
+        out[#out + 1] = ";"
+    end
+    out[#out + 1] = "}"
+end
+
+--- A 32-bit fingerprint of a registry's containers and their order.
+--- @return number
+function Presets.Fingerprint(containers, order)
+    local out = {}
+    serialize({ containers or {}, order or {} }, out, 0)
+    local s, h = table.concat(out), 5381
+    for i = 1, #s do h = (h * 33 + s:byte(i)) % 4294967296 end
+    return h
+end
+
+--- Record profile `p`'s registry as the untouched seed: core/Database.lua's PrepareProfile, after
+--- the seed and the backfill that follows it.
+function Presets.RecordSeed(p)
+    if type(p) ~= "table" then return end
+    if type(p.presets) ~= "table" then p.presets = {} end
+    p.presets.seedPrint = Presets.Fingerprint(p.containers, p.containerOrder)
+end
+
+--- Whether the player's own containers (the snapshot's while a preview is up) are still exactly
+--- what the seed wrote.
+--- @return boolean
+function Presets.SeedUntouched()
+    local store = NS.db and NS.db.profile and NS.db.profile.presets
+    if type(store) ~= "table" or type(store.seedPrint) ~= "number" then return false end
+    local own = store.previewSnapshot or NS.db.profile
+    return Presets.Fingerprint(own.containers, own.containerOrder) == store.seedPrint
 end
 
 --- How many containers are the player's own: the snapshot's while a preview is up (the preview's are

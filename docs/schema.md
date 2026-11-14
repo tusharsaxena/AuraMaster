@@ -6,7 +6,7 @@ Two SavedVariables globals (`AuraMasterDB`, `AuraMasterPerfDB`, `AuraMaster.toc:
 
 ## `AuraMasterDB` — the AceDB database
 
-Created by `NS.InitDB` (`core/Database.lua:289`) as `AceDB:New("AuraMasterDB", NS.defaults, true)`:
+Created by `NS.InitDB` (`core/Database.lua:291`) as `AceDB:New("AuraMasterDB", NS.defaults, true)`:
 the third argument puts every character on the shared `Default` profile until the player chooses
 otherwise (`docs/profiles.md`).
 
@@ -31,7 +31,7 @@ otherwise (`docs/profiles.md`).
 | `nextContainerId` | number | `1` | The next id to hand out |
 | `skin` | table | `{ source = "ka0s", skin = NS.DEFAULT_SKIN, ignorePanel = true, ignoreFonts = false, font = "", texture = "", outline = "hud", pickerSeen = false, fullSkinReset = false }` | The skin this addon wears (skinning-§2: per addon, per profile), drawn by General → Skin and written only through `NS.WriteSkinChoice` (`core/SkinSetup.lua`), which writes each half through `NS.SetByPath`. `source` is `ka0s` or `eui` (EllesmereUI); `skin` is a registered Ka0s skin key, starting on the client's default skin (`NS.DEFAULT_SKIN`, `Skin:DefaultSkin()` read once in `core/SkinSetup.lua`: `forever` on WoW Forever, `ka0s` on Retail and without the library); `ignorePanel` and `ignoreFonts` are the Scope's two exceptions; `font` and `texture` are LibSharedMedia keys over the skin's default (`""` keeps the skin's); `outline` is the Skin tab's Font outline, `all`, `hud` (the default since LibKa0s v1.83.0, D-10; a stored choice stays) or `off` (LibKa0s v1.82.0, ruling D-06), applied with `Skin:SetOutline` at load, on every profile event and on its row's write; `pickerSeen` is the first-run skin picker's memory; `fullSkinReset` is the record of schema v16's step, with no row. Eight skip-render rows of the General page's Appearance group, so `/am get\|set skin.*` reaches each |
 | `seeded` | bool | `false` | The first containers (the Simple preset, schema v19) have been created once; deleting them all does not bring them back |
-| `presets` | table | `{ pickerSeen = false }` | `modules/Presets.lua`'s own key. `pickerSeen`: this profile has closed the first-run preset picker (schema v19 sets it on every profile already `seeded`). `previewSnapshot` has no default: present only while a preset preview is up, it holds deep copies of `containers`, `containerOrder`, `nextContainerId`, `userCategories`, `userCategoryOrder` and `categorySpells` |
+| `presets` | table | `{ pickerSeen = false }` | `modules/Presets.lua`'s own key. `pickerSeen`: this profile has closed the first-run preset picker (schema v19 sets it on every profile already `seeded`). `seedPrint` has no default: a number, the fingerprint of the containers and order the Simple seed wrote (`Presets.RecordSeed`, from `Database.PrepareProfile`), cleared when the picker is closed; the first-run picker skips its Replace confirm only while the player's own containers still match it (`Presets.SeedUntouched`). `previewSnapshot` has no default: present only while a preset preview is up, it holds deep copies of `containers`, `containerOrder`, `nextContainerId`, `userCategories`, `userCategoryOrder` and `categorySpells` |
 
 ### `global` — account-wide
 
@@ -619,7 +619,7 @@ compare with the rest of the seam.
 
 ## Migration path
 
-The account-wide ladder is `SCHEMA_STEPS` in `core/Database.lua:356`: one `{ to = N, apply = fn }`
+The account-wide ladder is `SCHEMA_STEPS` in `core/Database.lua:358`: one `{ to = N, apply = fn }`
 row per stored-shape change, applied in order by `NS.RunMigrations` while
 `global.schemaVersion < to`, each logging one `[Migrate]` debug line. The ladder runs at
 `OnInitialize`, before logging can be on, so its summary lines go through the console's at-enable
