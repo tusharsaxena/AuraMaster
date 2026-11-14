@@ -2653,7 +2653,7 @@ Total.
 - seed: fresh install not marked seen
 - seed: the v19 step is idempotent and keeps a stored false on an unseeded profile
 
-### test_presetpicker.lua (34)
+### test_presetpicker.lua (38)
 
 - picker: due on new profile only
 - picker: the latch is a settings row, written through the seam
@@ -2689,6 +2689,10 @@ Total.
 - picker: not now, close and escape put the lock back and test mode off
 - picker: /am preset opens unlocked too
 - picker: a hide this addon makes puts the lock back and test mode off
+- picker: a profile switch puts the lock back in the profile it opened on
+- picker: a profile reset under the window keeps the reset's lock
+- picker: /am preset <name> with the window up puts the lock back and test mode off
+- picker: a container dragged under the preview keeps its drop on Apply
 
 ### test_pages_presets.lua (11)
 
@@ -3012,7 +3016,7 @@ Total.
 | test_presets_apply.lua | 11 |
 | test_presets_preview.lua | 20 |
 | test_presets_seed.lua | 7 |
-| test_presetpicker.lua | 34 |
+| test_presetpicker.lua | 38 |
 | test_pages_presets.lua | 11 |
 | test_perf.lua | 8 |
 | test_debuglogsetup.lua | 9 |
@@ -3030,4 +3034,4 @@ Total.
 | test_skin_switch.lua | 34 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2484** |
+| **Total** | **2488** |

@@ -262,8 +262,10 @@ local function prepareProfile()
     if NS.Presets and NS.Presets.RestoreStaleSnapshot then NS.Presets.RestoreStaleSnapshot() end
     -- THE PRESET PICKER DOWN, unmarked (settings/PresetPicker.lua): after the restore above, so the
     -- preview it showed has already gone back into the profile it was taken in; rebuildProfile
-    -- offers it again to a profile that has not closed it.
-    if NS.HidePresetPicker then NS.HidePresetPicker() end
+    -- offers it again to a profile that has not closed it. A switch took it down already, at
+    -- NS.OnProfileShutdown; what is left is a reset or a copy, which replaced the profile whole, so
+    -- the hide writes no lock over what the replacement holds.
+    if NS.HidePresetPicker then NS.HidePresetPicker(true) end
     -- THE SKIN PICKER DOWN FIRST, unmarked (core/SkinSetup.lua): its dismissal puts back the skin
     -- the OLD profile stored, so it must go before the new profile's skin is applied below, never
     -- after. rebuildProfile offers it again to a profile that has not closed it.
@@ -304,6 +306,14 @@ local function rebuildProfile()
     -- switched off shows nothing.
     if NS.MaybeShowPresetPicker then NS.MaybeShowPresetPicker() end
     if NS.MaybeShowSkinPicker then NS.MaybeShowSkinPicker() end
+end
+
+--- OnProfileShutdown: AceDB is about to switch away from the active profile. Not a fourth rebuild:
+--- the preset picker goes down while the profile it opened on is still the active one, so the lock
+--- it took off goes back through the seam into THAT profile (settings/PresetPicker.lua's settle), not
+--- the one switched to. The rebuild waits for OnProfileChanged.
+function NS.OnProfileShutdown()
+    if NS.HidePresetPicker then NS.HidePresetPicker() end
 end
 
 --- OnProfileChanged: a switch.

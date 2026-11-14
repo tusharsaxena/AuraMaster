@@ -27,8 +27,8 @@ entirely, performance-§5) and the session state (`debug`, the selected containe
 
 ## Switching, copying, resetting
 
-`NS.OnProfileChanged`, `NS.OnProfileReset` and `NS.OnProfileCopied` (`core/AuraMaster.lua:310`,
-`core/AuraMaster.lua:321`, `core/AuraMaster.lua:328`):
+`NS.OnProfileChanged`, `NS.OnProfileReset` and `NS.OnProfileCopied` (`core/AuraMaster.lua:320`,
+`core/AuraMaster.lua:331`, `core/AuraMaster.lua:338`):
 
 ```
 NS.OnProfileChanged() / OnProfileReset() / OnProfileCopied(source)
@@ -57,6 +57,11 @@ NS.OnProfileChanged() / OnProfileReset() / OnProfileCopied(source)
   cheaply snapshot the rows it is about to change. Reset all's bulk bracket wraps the profile reset
   and logs nothing of its own, and the session rows it writes first are muted, so a Reset all reads
   as that one line.
+- **Before a switch** AceDB fires `OnProfileShutdown` while the profile being left is still the
+  active one, and `NS.OnProfileShutdown` (`core/AuraMaster.lua:315`) takes the preset picker down
+  there, so the lock it took off goes back through the seam into that profile. It rebuilds nothing.
+  A reset or a copy has no such hook: the picker goes down in `prepareProfile` and writes no lock over
+  what the replacement holds.
 - The apply that follows is deferred like any other while auras are secret or combat lockdown is on.
 - **A switch, copy or reset in combat** from the page cannot be refused, since AceDB fires it (the
   `/am profile` verb refuses its own switch in combat, below). A container the new

@@ -333,6 +333,30 @@ return function()
     -- ── class colors (LibKa0s-Core's resolver reads RAID_CLASS_COLORS) ─────────────────────
     M.RAID_CLASS_COLORS = { MAGE = { r = 0.25, g = 0.78, b = 0.92 } }
 
+    -- ── AceDB's OnProfileShutdown ────────────────────────────────────────────────────────────
+    -- The kit's AceDB fake fires OnProfileChanged, OnProfileCopied and OnProfileReset, not the
+    -- OnProfileShutdown AceDB-3.0's SetProfile fires first (libs/AceDB-3.0/AceDB-3.0.lua, SetProfile),
+    -- while the profile being left is still the active one and before its defaults are stripped.
+    -- core/AuraMaster.lua's NS.OnProfileShutdown takes the preset picker down there, so it is modeled
+    -- here around the fake, in that order: nothing fires on a switch to the profile already active.
+    local AceDB = M.__libs["AceDB-3.0"]
+    local newDB = AceDB.New
+    AceDB.New = function(...)
+        local db = newDB(...)
+        local shutdown, register, setProfile = {}, db.RegisterCallback, db.SetProfile
+        db.RegisterCallback = function(target, event, fn)
+            if event == "OnProfileShutdown" then shutdown[#shutdown + 1] = fn; return end
+            return register(target, event, fn)
+        end
+        db.SetProfile = function(self, name)
+            if name ~= db.GetCurrentProfile() then
+                for _, fn in ipairs(shutdown) do fn("OnProfileShutdown", db) end
+            end
+            return setProfile(self, name)
+        end
+        return db
+    end
+
     -- AceGUI:Release, AceConsole's Printf and AceEvent's event half on an embed are the kit's
     -- (kit revision 16, tusharsaxena/LibKa0s#27, #29, #30); this file once shimmed all three.
 

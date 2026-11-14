@@ -356,7 +356,17 @@ section wins.
   stack's test-mode extent and above the bottom edge, and it never overlaps the skin picker's rectangle
   (LibKa0s places that by its CENTER, 75% of the way up UIParent). At 1920x1080, with the text stack in
   test mode, the three rectangles must not intersect. If they cannot all fit, the text stack moves up
-  before the font shrinks. Read UIParent's size when the picker shows.
+  before the font shrinks. Read UIParent's size when the picker shows. *(Not met for Advanced, open
+  for the owner since the AM-PR10 review: its three call-outs are 520 tall in test mode, unlocked,
+  even at 24, and the room under the skin picker at 1080 cannot hold that and the picker, so the
+  picker covers the block's lower lines in Bars and Icons at every 1080 ratio. Healer's single
+  call-out clears it. Meeting it needs one of: the block rising into the skin picker's room (the
+  skin picker never shows with this window, but the call-outs' head would then sit near the top of
+  the screen in play), fewer test-mode lines per call-out, a floor size under 24, the picker
+  beside the block instead of centered, or the picker placed by the selected preset's block (today it
+  takes the lowest block over every preset, so it opens at the bottom of a 1080 screen for Simple,
+  Intermediate and Healer too). `docs/known-limitations.md` and the 1080 case in
+  `tests/test_presetpicker.lua` record it until the owner rules.)*
 - *Lock and test mode in the picker.* When the picker shows, it records the lock state and unlocks the
   containers (the `locked` setting, through the write seam that `/am unlock` uses). Two buttons in the
   window show and flip the lock and test mode. Turning test mode off while a preview is up ends the

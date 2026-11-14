@@ -296,6 +296,8 @@ function NS.InitDB()
             -- hands OnProfileCopied the SOURCE profile's key.
             NS.db.RegisterCallback(NS, "OnProfileCopied", function(_, _, source) NS.OnProfileCopied(source) end)
             NS.db.RegisterCallback(NS, "OnProfileReset", function() NS.OnProfileReset() end)
+            -- Before a switch, while the profile being left is still the active one (no rebuild).
+            NS.db.RegisterCallback(NS, "OnProfileShutdown", function() NS.OnProfileShutdown() end)
         end
     end
     -- Soft fallback when AceDB is absent: a db-shaped table over the raw SavedVariables global, so

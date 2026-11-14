@@ -287,11 +287,13 @@ test("picker: a profile event takes it down with a restore, then offers it to th
     local f = NS.MaybeShowPresetPicker()
     f.dd.onSelect("advanced")
     NS.db:SetProfile("PickerProbe")
-    assertFalse(NS.db.sv.profiles.Default.presets.previewSnapshot ~= nil, "restored into the profile left")
+    -- AceDB strips what equals its defaults from the profile it leaves, the whole presets table too.
+    local left = NS.db.sv.profiles.Default.presets or {}
+    assertFalse(left.previewSnapshot ~= nil, "restored into the profile left")
     assertEqual(#NS.db.sv.profiles.Default.containerOrder, 4, "the old profile's own four")
     assertTrue(f:IsShown(), "the new profile has not seen it: shown again, fresh")
     assertFalse(NS.Presets.IsPreviewing())
-    assertFalse(NS.db.sv.profiles.Default.presets.pickerSeen, "a profile event is not the player's close")
+    assertFalse(left.pickerSeen, "a profile event is not the player's close")
 end)
 
 test("picker: HidePresetPicker restores, unmarked", function()
@@ -724,4 +726,81 @@ test("picker: a hide this addon makes puts the lock back and test mode off", fun
     assertTrue(NS.GetSetting("locked"), "the stand-down's hide puts the lock back")
     assertFalse(NS.State.testMode)
     assertFalse(f:IsShown())
+end)
+
+-- ── the review fixes: a profile event, `/am preset <name>` and a drag under the preview (AM-PR10) ──
+
+test("picker: a profile switch puts the lock back in the profile it opened on", function()
+    local NS = fresh()
+    local f = NS.MaybeShowPresetPicker()
+    local default = NS.db.profile
+    assertFalse(NS.GetSetting("locked"), "opened unlocked")
+    NS.db:SetProfile("LockProbe")
+    -- red under: the lock written only while the profile is still the active one, after the swap
+    -- AceDB strips a value equal to its default from the profile it leaves: nil reads locked.
+    assertTrue(default.locked ~= false, "the profile left is locked, as it was found")
+    assertTrue(f:IsShown(), "offered again to the new profile")
+    assertFalse(NS.GetSetting("locked"), "the new profile's own lock, taken off by its showing")
+    NS.db:SetProfile("Default")
+    assertTrue(NS.db.sv.profiles.LockProbe.locked ~= false, "the probe profile back to locked too")
+    assertTrue(f:IsShown(), "Default has not closed it: shown again")
+    f.notNow:__fire("OnClick")
+    assertTrue(NS.GetSetting("locked"), "Not now on Default: the lock it found there")
+    -- An unlocked profile stays unlocked through the same round trip.
+    NS.SetByPath("locked", false)
+    NS.ShowPresetPicker()
+    NS.db:SetProfile("LockProbe")
+    assertTrue(default.locked == false, "unlocked when found, unlocked when left")
+end)
+
+test("picker: a profile reset under the window keeps the reset's lock", function()
+    local NS = fresh()
+    NS.SetByPath("locked", false)
+    local f = NS.MaybeShowPresetPicker()
+    NS.db:ResetProfile()
+    -- red under: the hide writing the lock the window found over the reset's default
+    assertTrue(f:IsShown(), "a reset profile is offered it again")
+    f.notNow:__fire("OnClick")
+    assertTrue(NS.GetSetting("locked"), "the default lock, as the reset wrote it")
+end)
+
+test("picker: /am preset <name> with the window up puts the lock back and test mode off", function()
+    for _, lockedAtOpen in ipairs({ true, false }) do
+        local NS, m = fresh()
+        local shown = popups(m)
+        NS.SetByPath("locked", lockedAtOpen)
+        local f = NS.MaybeShowPresetPicker()
+        f.dd.onSelect("advanced")
+        assertTrue(NS.State.testMode)
+        NS.Slash:OnSlash("preset healer")
+        local where = lockedAtOpen and "opened locked" or "opened unlocked"
+        -- red under: the window going down with the containers left as it set them
+        assertFalse(f:IsShown(), where .. ": the window down")
+        assertEqual(NS.GetSetting("locked") == true, lockedAtOpen, where .. ": the lock it found")
+        assertFalse(NS.State.testMode, where .. ": test mode off")
+        accept(m, shown[1])
+        assertEqual(NS.GetSetting("locked") == true, lockedAtOpen, where .. ": the answer keeps it")
+        assertFalse(NS.State.testMode, where .. ": still off")
+        assertTrue(NS.Presets.PickerSeen(), where .. ": a close of the window")
+    end
+end)
+
+test("picker: a container dragged under the preview keeps its drop on Apply", function()
+    local NS = fresh({ simple = true })
+    local f = NS.MaybeShowPresetPicker()
+    f.dd.onSelect("advanced")
+    local id = NS.Database.GetContainers()[1].id
+    local drop = { point = "CENTER", relativePoint = "CENTER", x = 123.4, y = -56.7 }
+    -- What a drag stop stores (modules/Anchors.lua, SavePosition): the whole section, on this container.
+    assertTrue(NS.SetByPath("container.position", drop, id))
+    f.apply:__fire("OnClick")
+    -- red under: Apply rebuilding the preset from its data over the drop
+    assertFalse(f:IsShown())
+    assertFalse(NS.Presets.IsPreviewing())
+    local kept = NS.GetSetting("container.position", id)
+    assertEqual(kept.point, "CENTER")
+    assertEqual(kept.x, 123.4, "where it was dragged to")
+    assertEqual(kept.y, -56.7)
+    assertTrue(NS.GetSetting("locked"), "locked")
+    assertFalse(NS.State.testMode, "test mode off")
 end)

@@ -11,9 +11,11 @@ local addonName, NS = ...
 --                              PLAYER_REGEN_ENABLED (one target at most). Answers the window or nil.
 --   NS.ShowPresetPicker()      `/am preset`: the window on demand, whatever the latch says; refused
 --                              in combat with the combat line.
---   NS.HidePresetPicker()      takes the window down WITHOUT marking it seen, ending a preview it
+--   NS.HidePresetPicker(r)     takes the window down WITHOUT marking it seen, ending a preview it
 --                              started with a restore, drops a held start and takes down an open
 --                              preset confirm unanswered: the stand-down and every profile event.
+--                              `r` true when the active profile was just replaced (a reset or a
+--                              copy): the lock is then left as the replacement wrote it.
 --   NS.RefreshPresetPicker()   repaints the window from what is on the screen: NS.Presets calls it
 --                              whenever a preview ends, so one combat or another surface ended does
 --                              not leave the window claiming it is still up.
@@ -45,8 +47,10 @@ local addonName, NS = ...
 -- mode through NS.Preview.SetTestMode, as `/am test`); turning test mode off while a preview is up
 -- ends it with a restore, as Not now does. Apply locks and turns test mode off; Not now, the close
 -- control, Escape and this addon's own hides put back the lock the window found, and turn test mode
--- off. A profile event's hide writes no lock: the profile the window opened on is no longer the
--- active one, and the seam writes only the active one.
+-- off. A switch takes the window down at AceDB's OnProfileShutdown (core/AuraMaster.lua), while the
+-- profile it opened on is still the active one, so its lock goes back through the seam before the
+-- swap; a reset or a copy replaces the profile whole, and its hide writes no lock over what the
+-- replacement holds.
 --
 -- WHAT A PICK DOES. Nothing is previewed when the window opens: the profile already holds what it
 -- holds (Simple, on a new one). A pick of a preset or a style previews it on the real screen in
@@ -275,12 +279,13 @@ local function openUnlocked()
 end
 
 --- What every close and hide ends with: test mode off, then the lock set to `locked`, in the profile
---- the window opened on only (a profile event's hide leaves it).
-local function settle(locked)
+--- the window opened on only. `replaced` (a reset or a copy, the profile's contents swapped whole)
+--- writes no lock: the profile no longer holds the state the window found.
+local function settle(locked, replaced)
     testModeOff()
     local same = state.lockProfile ~= nil and NS.db and NS.db.profile == state.lockProfile
     state.lockProfile = nil
-    if same then setLock(locked) end
+    if same and not replaced then setLock(locked) end
 end
 
 local function toggleLock()
@@ -664,13 +669,13 @@ function NS.ShowPresetPicker()
     return show(false)
 end
 
-function NS.HidePresetPicker()
+function NS.HidePresetPicker(replaced)
     dropHold()
     dropConfirm()
     local f = Picker.frame
     if not (f and f:IsShown()) then return end
     if state.owns and NS.Presets.IsPreviewing() then NS.Presets.EndPreview(false) end
-    settle(state.lockedAtOpen)
+    settle(state.lockedAtOpen, replaced)
     state.picked, state.owns = false, false
     closing = true
     f:Hide()
