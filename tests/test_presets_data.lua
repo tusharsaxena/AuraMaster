@@ -1,7 +1,8 @@
 -- tests/test_presets_data.lua -- the preset data and the pure placement builder (AM-PR01; spec
 -- sections 3, 3.1, 3.2 and 4). Build reads nothing but its arguments and the category lists, so these
--- cases share the runner's environment, except the one that creates the player's own categories,
--- which builds its own (tests/fresh_env.lua). Every case runs under both kit profiles, so the
+-- cases share the runner's environment, except the one that creates the player's own categories
+-- and the placement check, which applies each preset to measure its stacks in test mode; each builds
+-- its own (tests/fresh_env.lua). Every case runs under both kit profiles, so the
 -- category check is the per-client one clients-§6 asks for.
 
 local freshEnv = dofile("tests/fresh_env.lua")
@@ -271,13 +272,10 @@ test("presets: every category key exists on this client", function()
 end)
 
 -- The screen sizes: three heights, each at the ratios spec section 11 names (16:9, 16:10, 21:9) and
--- the narrow ones (4:3, 5:4; 1024 x 768 is a UI-scale-off 4:3), `narrow` marking the latter. On a
--- narrow screen the column check is left out: the side stacks run under the corner columns there by
--- the spec 4 numbers, which await the owner's ruling (the plan's AM-PR01 owner rulings).
+-- the narrow ones (4:3, 5:4; 1024 x 768 is a UI-scale-off 4:3).
 local SCREENS = {}
 for _, h in ipairs({ 768, 1080, 1440 }) do
-    for _, ratio in ipairs({ 16 / 9, 16 / 10, 21 / 9 }) do SCREENS[#SCREENS + 1] = { h * ratio, h } end
-    for _, ratio in ipairs({ 4 / 3, 5 / 4 }) do SCREENS[#SCREENS + 1] = { h * ratio, h, narrow = true } end
+    for _, ratio in ipairs({ 16 / 9, 16 / 10, 21 / 9, 4 / 3, 5 / 4 }) do SCREENS[#SCREENS + 1] = { h * ratio, h } end
 end
 
 --- A head's span on a W x H parent, out of its stored position and size alone: [left, right] and top
@@ -303,20 +301,60 @@ local function headRect(spec, W, H)
     return x, x + w, pos.y
 end
 
--- The pairs of stacks the placement check lets share a column (see the check): a side stack under a
--- corner one. At 1080 the far stack runs 5 units under cornerRight and 210 under cornerLeft on 16:9,
--- 101 and 114 on 16:10, where the right stack also runs 51 under cornerLeft; on 21:9 nothing shares.
-local UNDER_CORNER = {}
-for _, pair in ipairs({ { "cornerRight", "far" }, { "cornerLeft", "far" }, { "cornerLeft", "right" } }) do
-    UNDER_CORNER[pair[1] .. ":" .. pair[2]] = true
-    UNDER_CORNER[pair[2] .. ":" .. pair[1]] = true
+-- A CORNER COLUMN MAY RUN OVER A SIDE COLUMN (spec sections 4 and 11, the plan's ruling on the AM-PR01
+-- review). By the spec 4 numbers the far stack sits under both corner columns on 16:9, the right
+-- stack under cornerLeft on 16:10 as well, and on 4:3 and 5:4 the right and far stacks run under the
+-- corners entirely. The corner stacks grow down from y = 6 and the side stacks' heads sit at y = 330,
+-- so such a pair shares a column only while the corner stack ends above the side stack's head. The
+-- check measures that at the test-mode sample count: every container of the preset applied, each as
+-- tall as Preview.Extent makes its placeholder block, each stack member hung below the one above by its
+-- gap. Every other pair of columns stays disjoint. In play a corner stack may grow further
+-- (docs/known-limitations.md, presets).
+local CORNER = { cornerRight = true, cornerLeft = true }
+local SIDE = { left = true, right = true, far = true }
+
+local function cornerOverSide(a, b)
+    return (CORNER[a] and SIDE[b]) or (CORNER[b] and SIDE[a]) or false
+end
+
+--- Each stack's bottom edge (a negative offset from the parent's top) with preset `name` in style
+--- `look` applied on a W x H parent in `env`, every container filled with its test-mode samples.
+local function sampleBottoms(env, mocks, name, look, W, H)
+    env.Presets.ParentSize = function() return W, H end
+    assertTrue(env.Presets.Apply(name, look, "replace"), name .. "/" .. look .. " applies")
+    local specs, p = env.PresetData.Build(name, look, W, H), env.db.profile
+    assertEqual(#p.containerOrder, #specs, "one container per spec, in creation order")
+    local bottomOf, out = {}, {}
+    for i, id in ipairs(p.containerOrder) do
+        local c = p.containers[id]
+        local extent = env.Preview.Extent({ Cfg = function() return c end, anchor = mocks.CreateFrame("Frame") })
+        local top = (c.attach.mode == "container") and (bottomOf[tonumber(c.attach.container)] + c.attach.y)
+            or c.position.y
+        bottomOf[id] = top - extent.height
+        local stack = specs[i].stack
+        out[stack] = math.min(out[stack] or 0, bottomOf[id])
+    end
+    return out
+end
+
+--- Heads `a` and `b` on one screen: disjoint columns, or a corner column over a side one whose stack
+--- ends above the side head in test mode (`bottoms`, a thunk: measured only when a pair shares).
+local function checkColumns(a, b, bottoms, what)
+    if not (a.l < b.r and b.l < a.r) then return end
+    assertTrue(cornerOverSide(a.stack, b.stack), what .. " (only a corner over a side column may share)")
+    local corner, side = a, b
+    if SIDE[a.stack] then corner, side = b, a end
+    local bottom = bottoms()[corner.stack]
+    local why = "%s: the corner stack must end above the side head (corner bottom %d, side head %d)"
+    assertTrue(bottom > side.top, why:format(what, bottom, side.top))
 end
 
 test("presets: placement at 768/1080/1440 x 16:9, 16:10, 21:9, 4:3, 5:4", function()
     local P = NS.PresetData
+    local env, mocks = freshEnv()
+    env.Helpers.SkinPicker = function() return nil end
     for _, scr in ipairs(SCREENS) do
         local W, H = scr[1], scr[2]
-        local k = P.Scale(H)
         for _, name in ipairs(NAMES) do
             for _, look in ipairs(P.LOOKS) do
                 local heads = {}
@@ -332,21 +370,16 @@ test("presets: placement at 768/1080/1440 x 16:9, 16:10, 21:9, 4:3, 5:4", functi
                         heads[#heads + 1] = { l = l, r = r, top = top, stack = spec.stack }
                     end
                 end
-                -- No two stacks share a column (spec 11's ratios only), with one exception the spec's reference numbers make
-                -- and the owner has yet to rule on (AM-PR01 review): on 16:9 and 16:10 a side stack
-                -- (from y = 330) sits under a corner column (from y = 6). Those pairs alone may share,
-                -- and only with that vertical room.
-                for i = 1, scr.narrow and 0 or #heads do
+                local measured
+                local function bottoms()
+                    measured = measured or sampleBottoms(env, mocks, name, look, W, H)
+                    return measured
+                end
+                for i = 1, #heads do
                     for j = i + 1, #heads do
                         local a, b = heads[i], heads[j]
-                        local overlap = a.l < b.r and b.l < a.r
-                        local what = ("%s/%s: %s and %s share a column at %dx%d"):format(name, look, a.stack,
-                            b.stack, W, H)
-                        if overlap and UNDER_CORNER[a.stack .. ":" .. b.stack] then
-                            assertTrue(math.abs(a.top - b.top) >= 300 * k, what)
-                        else
-                            assertTrue(not overlap, what)
-                        end
+                        checkColumns(a, b, bottoms, ("%s/%s: %s and %s share a column at %dx%d"):format(name, look,
+                            a.stack, b.stack, W, H))
                     end
                 end
             end

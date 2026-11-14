@@ -497,3 +497,15 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   movable. A shared first-run queue belongs to the FTUX that replaces this picker (issue #28); joining
   the library's queue now would need a LibKa0s internal or a library change, which the presets
   design's ruling 8 argues against (presets spec section 7, Claude's call).
+- **A heavy buff or debuff load can grow a corner stack into a side stack under it.** The presets
+  place the corner columns (Player buffs (all) with Weapon enchants under it, and Player debuffs
+  (all)) from the top edge, and the side stacks' heads at y = 330 in a 1080-tall reference space.
+  On 16:9 the far stack's column sits under both corner columns, on 16:10 the right stack's sits
+  under the Player debuffs column as well, and on 4:3 and 5:4 the right and far stacks run under the
+  corners entirely; on 21:9 nothing shares. At the test-mode sample count every corner stack ends
+  above the side heads under it (`tests/test_presets_data.lua`, "presets: placement"), but bar
+  height is not scaled, so in play a corner column of about 18 bars on a 1080-tall parent, or about
+  13 on a 768-tall one (UI scale off), reaches the side stack's head and draws over it. The player
+  can move either stack, or cap the corner container's auras. Ruled 2026-11-14 under the presets
+  plan's ruling on the AM-PR01 review, flagged to the owner: the approved mockup's layout stands
+  (presets spec section 4).

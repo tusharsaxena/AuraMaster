@@ -68,8 +68,8 @@ approved the mockup with them.)
   behavior field matches the source.
 - **Appearance is not carried.** Bars, icons, text and label settings come from `NS.CONTAINER_TEMPLATE` and the active
   skin, so a preset looks right in whichever skin the player picks next. The owner's personal media (Ka0s Prototype,
-  Ka0s Melli Dark) is never written. Exception: bar `width` is set from the stack's column width (§4), so a stack's
-  containers line up.
+  Ka0s Melli Dark) is never written. Exception: bar `width`, and an icon row's icon size, are set from the stack's
+  scaled column width (§4), so a stack's containers line up.
 - **Spell ids are not carried.** Whitelists and blacklists are empty (the owner's one whitelist id, Wither 445474, is
   Retail-only). Every category key a preset names exists on both clients today (`EMPTY` is empty); a key a future
   client gates is dropped at apply time through the existing gate, never stored.
@@ -116,9 +116,13 @@ variant is computed from the Bars definition, never stored twice.
   `kx = W / (2 × 800)` instead of `k` (never more than `k`), so the far column ends 10 units in from the edge; tops
   still scale by `k`. On 16:10 and wider `kx = k` and nothing changes. **(Claude's call,** AM-PR01 review: §1 asks for
   a sensible layout on any screen size.)
-- **Sizes are not scaled.** Bar height, icon size and fonts stay in UI units, so they keep honouring the player's own
-  UI scale setting. (With UI scale off, `UIParent:GetHeight()` reads 768 on every resolution, so `k` is about 0.71 and
-  the layout shrinks proportionally with Blizzard's own frames.) **(Claude's call,** builder check Q5.)
+- **Sizes are not scaled, except across the column.** Bar height and fonts stay in UI units, so they keep honoring
+  the player's own UI scale setting. Bar width and an icon row's icon size are derived from the scaled column width:
+  an icon row fits `floor(width / 28)` icons per line in reference units, and each icon is the scaled column width
+  over that count, less the spacing, so the row fills its column (about 29 units per icon on a 1080-tall parent, about 20 on a 768-tall one).
+  (With UI scale off, `UIParent:GetHeight()` reads 768 on every resolution, so `k` is about 0.71 and the layout
+  shrinks proportionally with Blizzard's own frames.) **(Claude's call,** builder check Q5; icon size amended
+  2026-11-14 under the plan's ruling on the AM-PR01 review.)
 - **Where the numbers live:** `defaults/Presets.lua`, as data per container: `{ stack, order }` plus a stack table
   (`{ anchor, x, y, width }`). The apply step turns a head into a `position` and a stack member into an `attach` to the
   container created just before it, through the existing position and attach code, so nothing downstream changes.
@@ -136,6 +140,13 @@ variant is computed from the Bars definition, never stored twice.
     growing call-out list never runs into them. At sample-aura heights (test mode) every stack ends above y = 640,
     clear of the bottom 40% where action bars and unit frames sit; in play a stack may grow further, as the owner's own
     stacks do.
+  - **A corner column may sit over a side column.** By these numbers the far stack runs under both corner columns on
+    16:9, the right stack under the Player debuffs column on 16:10 as well, and on 4:3 and 5:4 the right and far
+    stacks run under the corners entirely. The corner stacks grow down from y = 6 and the side heads sit at y = 330,
+    so at the test-mode sample count every corner stack ends above the side heads under it, on every ratio named in
+    §11. A heavy buff or debuff load in play can grow a corner stack down into a side stack under it
+    (`docs/known-limitations.md`). Every other pair of columns is disjoint. **(Claude's call,** amended 2026-11-14
+    under the plan's ruling on the AM-PR01 review: the owner approved the mockup's layout.)
 - **The fallback.** `UIParent:GetHeight()` is always readable once the UI is up, so the 1920 × 1080 fallback
   (`k` = 1080/1080 against a 1080-tall parent) is used only when the height reads 0 or nil (a test environment, a
   pre-login call). **(Claude's call;** ruling 4 allows it.)
@@ -146,7 +157,7 @@ variant is computed from the Bars definition, never stored twice.
   container registry's writer (create, delete) and the custom-category writer, which the standard's registry-writer
   rule (architecture-§5) requires. Its own state is one profile key, `presets` (below).
 - **Modes.** *Replace* deletes every container, then creates the preset's; *Add* creates the preset's after the
-  player's own, suffixing a name already in use with " 2", " 3". Empty in Replace mode deletes every container; Empty in
+  player's own, suffixing a name already in use with " (2)", " (3)". Empty in Replace mode deletes every container; Empty in
   Add mode is not offered.
 - **Confirm.** Replace asks first, naming the count it removes ("Replace your 20 containers…"). The first-run picker on
   a brand-new profile does not ask (nothing of the player's is lost).
@@ -232,8 +243,9 @@ variant is computed from the Bars definition, never stored twice.
   filter, layout and behavior, except the fields §3 changes on purpose (`attach`, `position`, `growV`).
 - Every category key in every preset exists on both clients; none is a custom key except the two Advanced creates
   and, as Hide, the player's own (§3); re-applying Advanced reuses them.
-- Placement: at heights 768, 1080 and 1440 and widths for 16:9, 16:10 and 21:9 (and, for the on-screen, height and
-  corner checks, 4:3 and 5:4), every stack head is inside the screen, no two stacks' columns overlap, every head is above 60% of the height, the corner stacks touch the right edge; every
+- Placement: at heights 768, 1080 and 1440 and widths for 16:9, 16:10, 21:9, 4:3 and 5:4, every stack head is inside the screen, no two stacks' columns overlap except a corner
+  column over a side column, whose stack ends above the side head at the test-mode sample count (§4), every head is
+  above 60% of the height, the corner stacks touch the right edge; every
   stack member attaches to the container created before it; nothing attaches to a frame name; the fallback triggers
   only at height 0/nil.
 - Icons variant: bars become icons with a horizontal layout; text and icon-only containers are unchanged.
