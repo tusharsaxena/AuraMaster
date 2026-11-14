@@ -239,7 +239,7 @@ Four messages, well under the more-than-ten trigger for a separate `message-bus.
 ## Slash Commands
 
 `/am` with `/auramaster` as the long alias, dispatched by `LibKa0s-Slash-1.0` over the addon's own
-ordered `NS.COMMANDS` (`settings/Slash.lua:39`). Twenty-six verbs; `options` is an alias of `config`.
+ordered `NS.COMMANDS` (`settings/Slash.lua:39`). Twenty-seven verbs; `options` is an alias of `config`.
 A bare `/am` runs `config`, opening the settings panel on its landing page (slash-commands-§4); `/am
 help` prints the list.
 `/am test` is the test mode's verb (preview-mode): unlocking no longer previews, so the placeholders
@@ -253,6 +253,7 @@ on-display marker is a MAY for a HUD display such as an aura container (WS-01).
 |---|---|
 | `/am help` | List available commands |
 | `/am config` | Open the settings panel (a bare `/am` does the same) |
+| `/am skin` | Choose a skin: open the skin picker |
 | `/am enable` | Turn Aura Master on (every enabled container shows again) |
 | `/am disable` | Turn Aura Master off (hides every container) |
 | `/am list` | List every setting and its current value (container settings read the selected container) |
