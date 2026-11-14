@@ -108,6 +108,28 @@ test("preview: swap keeps the first snapshot", function()
     assertEqual(stored(NS), before)
 end)
 
+test("preview: keep after swap carries only the kept preset's categories", function()
+    local NS = fresh()
+    local own = ownSetup(NS)
+    local p = NS.db.profile
+    local mine = serialize(p.userCategoryOrder)
+    assertTrue(NS.Presets.BeginPreview("advanced", "bars"))
+    assertEqual(#p.userCategoryOrder, 3, "the preview made Advanced's two")
+    assertTrue(NS.Presets.BeginPreview("simple", "bars"))
+    -- red under: a swap that keeps the first snapshot but leaves the previous preview's categories
+    assertEqual(serialize(p.userCategoryOrder), mine, "the swap starts from the player's own categories")
+    assertTrue(NS.Presets.EndPreview(true, "replace"))
+    assertEqual(serialize(p.userCategoryOrder), mine, "only the player's own category is left")
+    assertEqual(#NS.Database.GetContainers(), 3, "Simple is kept")
+    for _, c in ipairs(NS.Database.GetContainers()) do
+        for key in pairs(c.filter.categories or {}) do
+            if NS.Categories.IsUserKey(key) then
+                assertEqual(key, own.key, c.name .. " stores no category the player never asked for")
+            end
+        end
+    end
+end)
+
 test("preview: keep replace drops snapshot and test mode off", function()
     local NS = fresh()
     ownSetup(NS)
@@ -350,4 +372,34 @@ test("preview: RestoreSnapshot is the registry writer's, and the preset module w
         assertNil(src:find("%." .. field .. "%s*%[[^\n]*%]%s*=[^=]"), "no direct write to " .. field)
         assertNil(src:find("%." .. field .. "%s*=[^=]"), "no direct write to " .. field)
     end
+end)
+
+test("preview: the category half of a restore is the category registry's writer", function()
+    local NS = fresh()
+    assertEqual(type(NS.Categories.RestoreUserCategories), "function")
+    assertEqual(type(NS.Categories.SnapshotUserCategories), "function")
+    local f = assert(io.open("modules/ContainerManager.lua", "r"))
+    local src = f:read("*a")
+    f:close()
+    -- red under: ContainerManager writing the custom-category registry or the spell edits itself
+    for _, field in ipairs({ "userCategories", "userCategoryOrder", "categorySpells" }) do
+        assertNil(src:find("%." .. field .. "%s*%[[^\n]*%]%s*=[^=]"), "no direct write to " .. field)
+        assertNil(src:find("%." .. field .. "%s*=[^=]"), "no direct write to " .. field)
+        assertNil(src:find('"' .. field .. '"', 1, true), "no snapshot field list naming " .. field)
+    end
+end)
+
+test("preview: a category restore into a profile not in use writes it and syncs nothing", function()
+    local NS = fresh()
+    local Cat = NS.Categories
+    local other = { userCategories = {}, userCategoryOrder = {}, categorySpells = {} }
+    local live = serialize(Cat.HELPFUL)
+    local snap = { userCategories = { userabcdefghij = { key = "userabcdefghij", name = "Elsewhere", auraType = "HELPFUL" } },
+        userCategoryOrder = { "userabcdefghij" }, categorySpells = { userabcdefghij = { [5] = true } } }
+    Cat.RestoreUserCategories(snap, other, true)
+    assertEqual(other.userCategories.userabcdefghij.name, "Elsewhere")
+    assertEqual(other.userCategoryOrder[1], "userabcdefghij")
+    assertTrue(other.categorySpells.userabcdefghij[5])
+    assertTrue(other.userCategories ~= snap.userCategories, "a deep copy, so the snapshot stays the snapshot")
+    assertEqual(serialize(Cat.HELPFUL), live, "a quiet restore materializes nothing")
 end)

@@ -660,9 +660,10 @@ end
 -- preset preview (modules/Presets.lua) takes one before it writes and puts it back when the preview
 -- ends unkept, or at the next login after a /reload or a crash mid-preview. Restore is exact, ids
 -- included, because an attach.container names an id: a sequence of Creates would mint new ones. The
--- custom categories travel with the containers, so a category the preview created is gone again.
-local SNAPSHOT_FIELDS = { "containers", "containerOrder", "nextContainerId", "userCategories",
-    "userCategoryOrder", "categorySpells" }
+-- custom categories travel with the containers, so a category the preview created is gone again; that
+-- half is the category registry's own writer's (defaults/UserCategories.lua's
+-- Cat.SnapshotUserCategories and Cat.RestoreUserCategories), so each registry keeps one writer.
+local SNAPSHOT_FIELDS = { "containers", "containerOrder", "nextContainerId" }
 
 --- A deep copy of profile `p`'s registry and custom categories (the active profile by default), in
 --- the shape CM.RestoreSnapshot takes. Nil when there is no profile.
@@ -670,7 +671,7 @@ local SNAPSHOT_FIELDS = { "containers", "containerOrder", "nextContainerId", "us
 function CM.Snapshot(p)
     p = p or profile()
     if type(p) ~= "table" then return nil end
-    local snap = {}
+    local snap = NS.Categories.SnapshotUserCategories(p)
     for _, field in ipairs(SNAPSHOT_FIELDS) do snap[field] = NS.Database.DeepCopy(p[field]) end
     return snap
 end
@@ -689,10 +690,10 @@ function CM.RestoreSnapshot(snap, p, quiet)
     for _, field in ipairs(SNAPSHOT_FIELDS) do p[field] = NS.Database.DeepCopy(snap[field]) end
     if type(p.containers) ~= "table" then p.containers = {} end
     if type(p.containerOrder) ~= "table" then p.containerOrder = {} end
-    if type(p.categorySpells) ~= "table" then p.categorySpells = {} end
     NS.Debug("Containers", "restored a snapshot: %d container(s)", #p.containerOrder)
-    if p ~= active or quiet then return true end
-    NS.Categories.SyncUserCategories(p)
+    local still = p ~= active or quiet
+    NS.Categories.RestoreUserCategories(snap, p, still)
+    if still then return true end
     local selected = NS.State and NS.State.activeContainerId
     if selected and not p.containers[selected] then NS.State.SetActiveContainer(nil) end
     CM.Announce(true)

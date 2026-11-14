@@ -119,7 +119,7 @@ Declared in report order in `buckets` (`core/PerfSetup.lua:48`), each bracketed 
 `emptyPass`, outside the `unitSwap` bracket, whichever of the two swap handlers AceEvent calls first
 (it walks them in no set order). When EmptyWatch's runs first it moves the view itself, and
 `unitSwap` then finds the view already right. A view switch on a reaction change (`UNIT_FACTION` or `UNIT_FLAGS` for `target` or
-`focus`, `modules/ContainerManager.lua:834`, or for the player, on `CM.viewPlayerFrame`) runs **unbracketed**: its setter calls land in no bucket, and so does the Unit type gate's visibility pass the same events re-run (`CM.ApplyUnitGate`, filter situations S6),
+`focus`, `modules/ContainerManager.lua:835`, or for the player, on `CM.viewPlayerFrame`) runs **unbracketed**: its setter calls land in no bucket, and so does the Unit type gate's visibility pass the same events re-run (`CM.ApplyUnitGate`, filter situations S6),
 and only the `emptyPass` it triggers is recorded, at the root. **`styleElement` is declared at the root because its callers differ**, and it
 overlaps two other buckets without saying so: a restyle runs it inside `applyContainer`, and the
 preview runs it inside `visibilityPass` or `applyContainer`. Only the calls the engine makes from its

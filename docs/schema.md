@@ -305,10 +305,18 @@ it, and none can, since a row is a leaf.
 - **Registry writer:** `modules/ContainerManager.lua`. `ContainerManager.Create`, `.Delete` and
   `.Duplicate` (through `Create`) make every runtime membership change, and
   `Database.NewContainerData` mints the id and stamps `c.id` for it. `NewContainerData` has no
-  other caller, so it is part of the writer.
+  other caller, so it is part of the writer. `ContainerManager.RestoreSnapshot` is the writer's
+  fourth act: it puts back, ids included, the `containers`, `containerOrder` and `nextContainerId`
+  that `ContainerManager.Snapshot` copied before a preset preview (`modules/Presets.lua`), and hands
+  the snapshot's category half to that registry's own writer, `Cat.RestoreUserCategories`.
 - **Load pass:** `Database.PrepareProfile` (`core/Database.lua`), run from `NS.RunMigrations` at
   initialization and from `NS.OnProfileChanged` on AceDB's profile changed, copied and reset
-  callbacks, and from nowhere else. It runs `seedStarters`, `normalizeKeys`, `backfillContainers`
+  callbacks, and from nowhere else. Ahead of it in both paths, a preset preview a /reload, a crash or
+  a profile event interrupted is restored: `Presets.RestoreStaleSnapshots` at the top of
+  `NS.RunMigrations` (every stored profile, before the ladder), and `Presets.RestoreStaleSnapshot` at
+  the top of `core/AuraMaster.lua`'s `prepareProfile` (the profile just left and the one now active).
+  Both go through `ContainerManager.RestoreSnapshot`, quiet, so the pass that follows prepares what
+  came back. The pass itself runs `seedStarters`, `normalizeKeys`, `backfillContainers`
   (which also runs `normalizeAttach` on each container: a stored `attach.childPoint` or
   `attach.relPoint` that is not one of the nine WoW points is removed, so it reads as Automatic, with
   one `[Migrate]` debug line), the `nextContainerId` bump and `rebuildOrder`.
@@ -329,12 +337,19 @@ schema row addresses the registry itself; the row each member GETS is an ordinar
   `categorySpells[key]`, the same carve-out every other category's edits live in.
 - **Registry writer:** `defaults/UserCategories.lua`. `Cat.CreateUserCategory`, `Cat.RenameUserCategory`,
   `Cat.DeleteUserCategory` and `Cat.ForgetUnusableUserRecords` make every membership change, and
-  `Cat.NewUserKey` mints the key for `Create` and has no other caller. Nothing else writes a record,
+  `Cat.NewUserKey` mints the key for `Create` and has no other caller. `Cat.RestoreUserCategories`
+  puts back a preset preview's snapshot of `userCategories`, `userCategoryOrder` and `categorySpells`
+  whole (the copy `Cat.SnapshotUserCategories` took), called only by `ContainerManager.RestoreSnapshot`;
+  it writes `categorySpells` directly rather than through the carve-out, because a restore runs before
+  the schema exists at login and into a profile not in use after a switch. Nothing else writes a record,
   and **nothing anywhere writes `rec.auraType` but `Create`**, which is what makes a category's aura
   type immutable: it is the absence of an act rather than a refusal.
 - **Load pass:** `Cat.SyncUserCategories(profile)`, run from `NS.RunMigrations` after the whole schema
   ladder and before `Database.PrepareProfile`, from `core/AuraMaster.lua`'s `prepareProfile` (so a
-  profile switch, copy and reset all pass through it), and from each act above. It tears the previous
+  profile switch, copy and reset all pass through it), and from each act above. In both of the first
+  two paths it runs after the stale preview restore (`Presets.RestoreStaleSnapshots` before the
+  ladder, `Presets.RestoreStaleSnapshot` first in `prepareProfile`), whose quiet
+  `Cat.RestoreUserCategories` leaves the materializing to it. It tears the previous
   set down and builds the new one as ONE act over four mirrors — the two definition lists, the
   container template's `filter.categories`, and the schema rows — because a stale definition left
   behind makes `Cat.IsSpellCategory(deadKey)` true and quietly takes ids out of the complement
@@ -360,6 +375,7 @@ The surfaces this added, all read by name rather than duplicated:
 | `Cat.LabelOf(def)` | A category's name AS SHOWN — a shipped label routed through `NS.L`, a user label never. THE labeling rule; every drawing site asks it, and the panel's `(yours)` marker wraps it rather than copying it |
 | `Cat.IsUserCategory(defOrKey)` / `Cat.IsUserKey(key)` | Whether the player made it; whether a key sits in the reserved namespace (structural, not a guess at how the key was made) |
 | `Cat.CreateUserCategory` / `RenameUserCategory` / `DeleteUserCategory` | The three acts, each refusing anything without a stored record and anything outside the namespace |
+| `Cat.SnapshotUserCategories` / `Cat.RestoreUserCategories` | The category half of a preset preview's snapshot and its exact restore, asked for only by `ContainerManager.Snapshot` and `.RestoreSnapshot` |
 | `Cat.UnusableUserRecords` / `Cat.ForgetUnusableUserRecords` | The records the sync refuses, and the way to be rid of them |
 | `Cat.SanitizeUserName` / `Cat.CharCount` / `Cat.USER_NAME_MAX` | The stored form of a player-supplied name, capped in CHARACTERS — the same count `EditBox:SetMaxLetters` applies, so the box and the store cannot disagree |
 | `Cat.SyncUserCategories` / `Cat.UserCategoryOrder` / `Cat.HasUserRecord` / `Cat.UserKeysInUse` / `Cat.NewUserKey` / `Cat.UserCategoryNameTaken` | The load pass, the order reconcile, the record test `settings/Schema.lua` asks before a `categorySpells` write, and the key machinery |

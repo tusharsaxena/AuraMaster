@@ -2610,10 +2610,11 @@ Total.
 - apply: refused in combat
 - apply: only the registry writers write
 
-### test_presets_preview.lua (14)
+### test_presets_preview.lua (17)
 
 - preview: snapshot and restore exact
 - preview: swap keeps the first snapshot
+- preview: keep after swap carries only the kept preset's categories
 - preview: keep replace drops snapshot and test mode off
 - preview: keep add restores then adds
 - preview: an unknown preset is refused before a snapshot is taken
@@ -2626,6 +2627,8 @@ Total.
 - preview: combat under secrecy keeps the preview until combat ends
 - preview: categories the preview created are removed
 - preview: RestoreSnapshot is the registry writer's, and the preset module writes no registry field
+- preview: the category half of a restore is the category registry's writer
+- preview: a category restore into a profile not in use writes it and syncs nothing
 
 ### test_perf.lua (8)
 
@@ -2933,7 +2936,7 @@ Total.
 | test_defaults.lua | 31 |
 | test_presets_data.lua | 14 |
 | test_presets_apply.lua | 11 |
-| test_presets_preview.lua | 14 |
+| test_presets_preview.lua | 17 |
 | test_perf.lua | 8 |
 | test_debuglogsetup.lua | 9 |
 | test_locale.lua | 10 |
@@ -2950,4 +2953,4 @@ Total.
 | test_skin_switch.lua | 34 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2416** |
+| **Total** | **2419** |

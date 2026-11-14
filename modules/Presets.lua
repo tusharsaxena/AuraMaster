@@ -170,7 +170,8 @@ end
 -- /reload, a disconnect or a crash mid-preview still gives the player their containers back: the next
 -- login restores every snapshot it finds before the migration ladder runs, so a snapshot left in a
 -- profile nobody is logged into is migrated with its profile. Picking again swaps the preset and keeps
--- the first snapshot. Ending it unkept restores the snapshot exactly, ids included, through the
+-- the first snapshot, restoring it before the new preset is written, so each preview starts from the
+-- player's own containers and categories and a kept one carries nothing of the last. Ending it unkept restores the snapshot exactly, ids included, through the
 -- registry's own restore writer; keeping it in Replace drops the snapshot, and keeping it in Add
 -- restores the snapshot and then adds the preset on top.
 --
@@ -216,14 +217,20 @@ function Presets.IsPreviewing()
 end
 
 --- Show preset `name` in style `look` on the real screen, in test mode, snapshotting the player's own
---- containers first. A second call swaps the preset and keeps the first snapshot. Refused, with
+--- containers first. A second call restores that snapshot, keeps it, and writes the new preset. Refused, with
 --- nothing changed, on the same grounds as Apply; a preset that fails part-way is undone by restoring.
 --- @return boolean|nil ok, string|nil message, boolean|nil gray
 function Presets.BeginPreview(name, look)
     local why, gray = refusal(name, look, "replace")
     if why then return nil, why, gray end
     local store = profilePresets()
-    if store.previewSnapshot == nil then store.previewSnapshot = NS.ContainerManager.Snapshot() end
+    if store.previewSnapshot == nil then
+        store.previewSnapshot = NS.ContainerManager.Snapshot()
+    else
+        -- A swap starts from the player's own state, so a kept preset carries none of the previous
+        -- preview's custom categories. The snapshot is restored by copy and stays stored.
+        NS.ContainerManager.RestoreSnapshot(store.previewSnapshot, NS.db.profile)
+    end
     local ok, msg, mgray = Presets.Apply(name, look, "replace")
     if not ok then
         restoreInto(NS.db.profile, store)
