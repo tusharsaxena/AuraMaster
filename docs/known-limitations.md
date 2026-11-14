@@ -534,7 +534,10 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   twice the snap radius apart in test mode, locked or unlocked, on every screen tested (53 at the
   closest, 768 tall unlocked). `tests/test_presets_data.lua` ("presets data: the focus stack stays
   clear of the far stack beyond twice the snap radius") pins each shared span at 1080. In play a full
-  target stack can draw under the focus stack's left edge; the player can move either. Recorded
+  target stack can draw under the focus stack's left edge; the player can move either. The focus
+  stack also stands in Player debuffs (all)'s own column, lined up with it by design (spec section
+  16.3), so in play a heavy debuff load growing that column down meets the top of the focus stack
+  growing up, as the corner-and-side entry above describes for the side stacks. Recorded
   2026-11-15 (AM-PR13) for the owner's call.
 - **The corner group's round-2 move widens the focus column's shared strip.** The owner asked to
   bring the corner group "in even further", to line Player debuffs (all)'s left edge up with Focus

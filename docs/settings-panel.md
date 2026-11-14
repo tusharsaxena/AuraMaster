@@ -86,7 +86,7 @@ band holds **the picker itself** (options-ui-§14):
   picker and **New container** on one row: `Helpers.ContainerBanner` with the page's own tooltip and
   New container as the library's `PageBanner` `action` (feedback #2, 2026-09-19; the picker+create
   band, LibKa0s v1.56.0). The acts on the selected container (Name, Enable this container, Duplicate
-  container, Delete container…, Copy settings from) are the rail's General section, whose first tab options-ui-§14 names **General** (its second is **Presets**, below). The band is
+  container, Delete container…, Copy settings from) are the rail's General section, whose one tab options-ui-§14 names **General** (the Presets tab that was its second moved to the General page, presets spec section 16.4). The band is
   drawn on every render, so a Delete's two refreshes cannot lose it; the library releases the band's
   widgets of the render before once the new band exists, and refuses New container in combat as it
   refuses the picker's selection. **New container lands on General** (owner, 2026-09-26): once the

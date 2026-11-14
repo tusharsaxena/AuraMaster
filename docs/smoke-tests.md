@@ -32,7 +32,7 @@ check's number is not reused. Checks with no recorded pass, and checks new or co
 | SKIN-1 to SKIN-53 | Skins | The skinning rollout: the one-time HUD reset under Ka0s Default, Ka0s Default otherwise unchanged, the Skin tab, each skin on the HUD, the unlock furniture, the settings pages and the tool windows, other addons stock, the font and texture companions and overrides, combat, EllesmereUI on, off and back, the copy, profiles, tooltips and popups, the first-run skin picker; the library follow-ups (each skin's HUD face, Ignore fonts on the HUD, the picker's title, the strings newly in the skin's face); the skin fonts run (the Font outline, From skin flags, `/am skin`, width parity, the HUD size scale, the own faces and glow back, the strips' re-fit) |
 | DEGRADED-1 | Library-absent install | The launcher libraries missing |
 | LOC-1 to LOC-2 | Non-English client | Spell names from the client, adding a spell by its localized name |
-| PRESETS-1 to PRESETS-26 | Presets | Each client: a new profile's Simple seed at the real screen size, the first-run preset picker before the skin picker (Escape, Not now, Empty), each preset in each style, Apply in Replace and Add, Stop preview, leaving the tab, closing the panel, a `/reload`, a profile switch and combat mid-preview, `/am preset` and its confirm, another Ka0s addon's skin picker, the cost of a swap, an existing profile after schema v19; the owner's round 1: the side stacks growing up, the corner group's place, the call-outs' look and place, the picker on the skin picker's spot with the call-outs clear of it, the side stacks' lower base, opened unlocked, its lock and test buttons, Apply locking, Not now putting the lock back |
+| PRESETS-1 to PRESETS-30 | Presets | Each client: a new profile's Simple seed at the real screen size, the first-run preset picker before the skin picker (Escape, Not now, Empty), each preset in each style, Apply in Replace and Add, Stop preview, leaving the tab, closing the panel, a `/reload`, a profile switch and combat mid-preview, `/am preset` and its confirm, another Ka0s addon's skin picker, the cost of a swap, an existing profile after schema v19; the owner's round 1: the side stacks growing up, the corner group's place, the call-outs' look and place, the picker on the skin picker's spot with the call-outs clear of it, the side stacks' lower base, opened unlocked, its lock and test buttons, Apply locking, Not now putting the lock back; the owner's round 2: the call-outs' glow, the focus stack of its own and its clearance from the far stack, Player debuffs lined up with the focus column, the Presets tab on the General page |
 | FOREVER-1 to FOREVER-15 | WoW Forever | Each check names its client: the AddOns list and a clean load on Forever, the default skin per client, a rank-1 aura in a buff container, Forever's own spell lists, each Blizzard token and flag row measured on Forever, the gate on an empty category, hiding the Blizzard buff and debuff frames, weapon enchants, a typed cast id rewritten, and the Retail regression |
 
 ## Before you start
@@ -2769,16 +2769,17 @@ preview and its restores), `settings/PresetPicker.lua` (the first-run window and
 `settings/GeneralPresets.lua` (the Presets tab), `core/Database.lua` (the Simple seed, schema v19),
 `core/AuraMaster.lua` (login, profile events and combat).
 
-**What the presets place** (after the owner's round-1 feedback, presets spec section 15). A corner
-column of Player buffs (all) with Weapon enchants under it, near the top-right corner but a little
-in from it and down from the top edge, and Player debuffs (all) in a column to its left (all three in
-every preset), growing down; the cooldown call-outs as Text, each line centered on the screen's
-center line, in the owner's colors with a black glow (Advanced, and Healer's Raid cooldowns); and
-three side stacks that grow up from a base about 60% of the way down: the player's (left of
-center), the target's (right of center) and the far-right one (target icon rows, then focus). A
-corner stack's top container and a side stack's bottom one are placed on the screen; every other
-container in a stack is attached to the one before it, below it in the corner and above it in a side
-stack.
+**What the presets place** (after the owner's round-1 and round-2 feedback, presets spec sections
+15, 15.1 and 16). A corner column of Player buffs (all) with Weapon enchants under it, in from the
+top-right corner and down from the top edge, and Player debuffs (all) in a column to its left (all
+three in every preset), growing down; the cooldown call-outs as Text, each line centered on the
+screen's center line, in the owner's colors with a thin black glow (Advanced, and Healer's Raid
+cooldowns); three side stacks that grow up from a base about 70% of the way down: the player's (left
+of center), the target's (right of center) and the far-right one (the target's icon rows); and the
+focus stack (Intermediate, Advanced and Healer), a column of its own lined up under Player debuffs
+(all), growing up from a higher base about halfway down. A corner stack's top container and a side
+or focus stack's bottom one are placed on the screen; every other container in a stack is attached
+to the one before it, below it in the corner and above it in a side or focus stack.
 
 **PRESETS-1. A brand-new profile starts from Simple, at the real screen size. Client: Retail, then
 WoW Forever.** Profiles → type a new profile name → the three Simple containers appear, as bars:
@@ -2827,7 +2828,7 @@ again. Not now → your containers back. Result:
 **PRESETS-5. Intermediate in Bars and Icons. Client: Retail, then WoW Forever.** `/am preset`, pick
 **Intermediate** → Simple's three, plus Player buffs, short with Player cooldowns above it left of
 center, Target debuffs (mine) with Target cooldowns above it right of center, Focus debuffs (mine)
-far right, all filled with sample auras; the side stacks stand on a base about a third of the way up
+on its own under Player debuffs (all), about halfway down (PRESETS-28), all filled with sample auras; the side stacks stand on a base about a third of the way up
 the screen and grow up from it (PRESETS-20). Switch to **Icons** → every bar container becomes an
 icon row; the stack left of center grows right, and the stacks right of center grow left, away from
 the right edge. Each stack's members sit above the one before with a small gap and never overlap
@@ -2838,8 +2839,10 @@ it. Not now → your containers back. Result:
 player's stack left, from its base up (Player buffs, short; Player cooldowns; Player special (mine)),
 the target's stack right, from its base up (Target debuffs (mine), Target buffs (mine), Target crowd
 control, Target cooldowns, players, Target cooldowns, NPCs, Target special (mine), and Target
-stealable, which is off and shows nothing), and far right, from its base up, Target debuffs (all)
-and Target buffs (all) as icons, then Focus debuffs (mine) and Focus buffs (mine). Text stays Text
+stealable, which is off and shows nothing), far right, from its base up, Target debuffs (all) and
+Target buffs (all) as icons, and the focus stack under Player debuffs (all), growing up from its
+base about halfway down, Focus debuffs (mine) with Focus buffs (mine) above it, as bars one over the other
+(PRESETS-28). Text stays Text
 and the two icon rows stay icons in both styles; the call-outs grow down without reaching the side
 stacks beside them. Switch to **Icons** and back.
 Not now → your containers back, and General → Spell categories lists no *Special player buffs* or
@@ -2848,7 +2851,7 @@ Not now → your containers back, and General → Spell categories lists no *Spe
 **PRESETS-7. Healer in Bars and Icons. Client: Retail, then WoW Forever.** `/am preset`, pick
 **Healer** → Simple's three, plus Raid cooldowns as Text in the middle, Player cooldowns left of
 center, Your heals on target and Dispellable by you on target right of center, Your heals on focus
-and Dispellable by you on focus far right. Target a friendly player you have healed → Your heals on
+and Dispellable by you on focus in the focus stack under Player debuffs (all) (PRESETS-28). Target a friendly player you have healed → Your heals on
 target shows your heals on them. Switch to **Icons** and back. Not now → your containers back.
 Result:
 
@@ -2953,7 +2956,8 @@ window).
 **Advanced** (Bars) → the player's, target's and far-right stacks each stand on a base about 70% of
 the way down (340 above the bottom edge at 1080 tall), and grow up: the bottom container is the first
 of its stack (Player buffs, short; Target debuffs (mine); Target debuffs (all)), and each next one
-sits above the one before with a small gap. As a container's sample auras fill it, the stack above it
+sits above the one before with a small gap. The focus stack grows up the same way from its own base,
+higher up (Focus debuffs (mine) at the bottom, PRESETS-28). As a container's sample auras fill it, the stack above it
 moves up, never down into the unit frames. Switch to **Icons** → the same, as icon rows. Pick
 **Intermediate** and **Healer**, each in Bars and Icons → the same (Healer: Your heals on target
 with Dispellable by you on target above it, Your heals on focus with Dispellable by you on focus
@@ -2964,8 +2968,8 @@ your unit frames or action bars reach a stack's bottom container (both: `docs/kn
 Not now → your containers back. Result:
 
 **PRESETS-21. The corner group's place. Client: Retail, then WoW Forever.** On a new profile → the
-three Simple containers sit near the top-right corner, a little in from the right edge and down from
-the top edge (not flush with either), Player debuffs (all) to the left of Player buffs (all), Weapon
+three Simple containers sit near the top-right corner, in from the right edge and down from the
+top edge (not flush with either; how far in: PRESETS-29), Player debuffs (all) to the left of Player buffs (all), Weapon
 enchants under it, and all three grow down. `/am test` → the corner columns fill and end above the
 side stacks' bases at every ratio you can set (16:9, 16:10, 21:9, a 4:3 window). With Advanced
 previewed, record whether the top of any side stack reaches a corner column
@@ -2974,8 +2978,9 @@ previewed, record whether the top of any side stack reaches a corner column
 **PRESETS-22. The call-outs' look and place. Client: Retail, then WoW Forever.** `/am preset`, pick
 **Advanced** → Offensive, Defensive and Raid cooldowns show as Text, each sample line centered on
 the screen's center line (not left-aligned), in a larger font than the other containers' text,
-Offensive cooldowns green, Defensive cooldowns red and Raid cooldowns orange, each line with a dark
-glow behind it and no name label above it; the three stacked down from just under the window (where
+Offensive cooldowns green, Defensive cooldowns red and Raid cooldowns orange, each line with a thin
+black glow behind it, nudged a pixel right and down (its settings: PRESETS-27), and no name label
+above it; the three stacked down from just under the window (where
 the skin picker opens too, the upper middle of the screen), as close to the screen's middle as that
 allows, the last line near the bottom edge at 1080 tall. A skin change (`/am skin`) leaves those
 colors alone. Pick **Healer** → its Raid cooldowns line looks the same, in the owner's size (36),
@@ -3015,6 +3020,60 @@ with **Escape** → the same. With the window up, turn test mode on with its but
 close it → test mode off. With the containers locked, `/am preset`, pick **Healer**, then `/reload`
 with the window still up → after the reload your own containers are back, the window opens again,
 and **Not now** leaves the containers locked. Result:
+
+**PRESETS-27. The call-outs' glow. Client: Retail, then WoW Forever.** `/am preset`, pick
+**Advanced** (Bars), **Apply** on a spare profile. Each of Offensive cooldowns, Defensive cooldowns
+and Raid cooldowns: `/am test`, look at the sample lines → each letter has a thin black glow, offset
+about a pixel right and a pixel down, and the lines read cleanly, with no heavy black block around
+or between the letters (the round-2 complaint). Then select each on the Containers band, Text style
+→ Font → **Glow**: Glow behind the text ticked; Glow color black, its class-color box unticked and
+*Use the skin's color* unticked; Intensity 100%; Thickness (px) 2; X offset 1; Y offset -1. `/am skin`
+to another skin → the glow stays black. Apply **Healer** the same way → its Raid cooldowns shows the
+same glow and the same settings. Switch either to **Icons** and back before applying → the same.
+The owner's list named three more glow values that the glyph glow retired and the panel no longer
+shows, so there is nothing more to check (presets spec section 16.5). If the owner's own settings, from the screenshot that did not come through, differ
+from these, record which. `/am test` off. Result:
+
+**PRESETS-28. The focus stack stands on its own and grows up. Client: Retail, then WoW Forever.**
+`/am preset`, pick **Advanced** (Bars) → Focus debuffs (mine) and Focus buffs (mine) sit one over the
+other, Focus buffs (mine) above, in a column of their own under Player debuffs (all) and above
+Target debuffs (all) and Target buffs (all); with sample auras both fill as stacked bars, and neither
+spreads out sideways (the round-2 complaint). **Apply**, then on the Containers band select **Focus
+debuffs (mine)**, Layout → Position and growth → Attach to reads **Screen** (no container: the "None"
+of the owner's request), growth up; **Focus buffs (mine)** → attached to Focus debuffs (mine), above
+it. Neither is attached to Target buffs (all) or Target debuffs (all). Fill Focus debuffs (mine) (sample
+auras) → Focus buffs (mine) moves up with it. In every preset, as bars, every bar container lays its
+bars out one over the other, none side by side. Pick **Intermediate** (Focus debuffs (mine) alone)
+and **Healer** (Your heals on focus, Dispellable by you on focus above it) → the same, each in its own
+stack, Attach to **Screen** on its bottom container. Switch to **Icons** → the focus rows grow left
+from their column's right edge, the stack still up. *Its clearance:* with Advanced (Bars) applied,
+unlocked and `/am test` on, the focus stack's bottom edge stands clear above the far stack's top, a
+clear gap (about 50 or more pixels at 1080 tall). Start dragging Focus debuffs (mine) and drop it
+where it was, without moving toward the far stack → no snap highlight on Target buffs (all) or Target
+debuffs (all), and Attach to still reads **Screen**. Repeat at a 768-tall UI (UI scale off). Record
+any container that does highlight on such a small drag (the known pairs:
+`docs/known-limitations.md`, presets). `/am test` off, `/am lock`. Result:
+
+**PRESETS-29. Player debuffs lined up with the focus column. Client: Retail, then WoW Forever, at
+1920 x 1080 and at your own size.** `/am preset`, pick **Advanced** (Bars), `/am test` → the left
+edge of **Player debuffs (all)** lines up with the left edge of **Focus buffs (mine)** and **Focus
+debuffs (mine)** below it, on one vertical line. The corner group sits further in from the right
+edge than before round 2: at 1920 x 1080 with UI scale at 1, Player debuffs (all)'s left edge about
+520 pixels in from the right edge and Player buffs (all)'s about 300, with the same small gap between
+the two columns as before. Switch to **Icons** → the same line. Pick **Intermediate** and **Healer**
+→ Player debuffs (all) lines up with their focus column too. Record how far the focus stack's left
+edge reaches over the target stack's right edge where the two meet (about 80 pixels on 16:9 in Bars;
+known, `docs/known-limitations.md`, presets), and whether the owner wants another distance than 520.
+`/am test` off. Result:
+
+**PRESETS-30. The Presets tab is on the General page. Client: Retail.** Open the settings (`/am`) →
+the **General** page's tabs read Master controls, **Presets**, Blizzard frames, Spell categories,
+Dispel colors and Skin, in that order. Open the **Containers** page → its General section has one
+tab, General, and no Presets tab. On General → **Presets**, pick **Advanced** → it previews, the
+status line reads "Previewing …", **Stop preview** puts your containers back, and **Apply preset…**
+asks before it keeps (PRESETS-8 to PRESETS-12 run the rest from this tab). On a new profile the
+first-run picker's footer reads "Change it later on General > Presets. The skin picker opens next."
+Result:
 
 ## WoW Forever
 
@@ -3259,3 +3318,9 @@ Open from the owner's rulings on the round-1 conflicts (presets spec section 15.
 PRESETS-2, PRESETS-5, PRESETS-17, PRESETS-20, PRESETS-22 and PRESETS-23 now describe the picker on the
 skin picker's spot, the call-outs under it and the lower base. Their `Result:` lines stay empty
 until the owner runs them.
+
+Open from the owner's round-2 feedback on the presets (presets spec section 16, AM-PR13 to AM-PR15):
+PRESETS-27 to PRESETS-30 are new, PRESETS-5, PRESETS-6, PRESETS-7, PRESETS-20, PRESETS-21 and
+PRESETS-22 now describe the focus stack, the corner group's new place and the call-outs' glow, and
+PRESETS-2 and PRESETS-8 to PRESETS-12 name the tab's place on the General page. Their `Result:`
+lines are empty until the owner runs them.

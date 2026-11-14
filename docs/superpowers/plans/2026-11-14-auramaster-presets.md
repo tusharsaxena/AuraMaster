@@ -212,6 +212,6 @@ Each task keeps the Global Constraints, the gate and the commit rules above.
 
 ### Task AM-PR15: Docs, smoke checks, review and the automated-test record for round 2
 
-- [ ] Docs (ARCHITECTURE, settings-panel, module-map, known-limitations, smoke checks: the glow, the focus stack, the corner alignment, the tab's new place), test-cases.md and the README badge. Commit `AM-PR15: Docs and smoke checks for the owner's round-2 feedback`.
+- [x] Docs (ARCHITECTURE, settings-panel, module-map, known-limitations, smoke checks: the glow, the focus stack, the corner alignment, the tab's new place), test-cases.md and the README badge. Commit `AM-PR15: Docs and smoke checks for the owner's round-2 feedback`.
 - [ ] An independent review against §16; fixes as `AM-PR15: Review fixes: …`.
 - [ ] A fresh automated-test record, the M5 checkpoint row and the RESUME log line: `AM-PR15: Automated-test record after round-2 feedback`.

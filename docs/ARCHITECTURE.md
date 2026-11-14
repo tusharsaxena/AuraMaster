@@ -97,7 +97,7 @@ Five starting points for a profile's containers (spec
 
 | File | Role |
 |---|---|
-| `defaults/Presets.lua` | `NS.PresetData`: the data (the six stacks in a 1080-tall reference space, the containers by role, each preset's stacks) and the pure builder. `Build(name, look, W, H, picked)` answers the specs in creation order, a stack's head placed on `UIParent` and every member attached to the one before it; `Realize(specs, keys, create)` walks them through a writer, filling each member's `attach.container` with the id its parent took. `CalloutRect(name, look, W, H)` answers the call-out block's unlocked test-mode rectangle, and `ROOM` the room around it (the spot both pickers open on, 75% up, the skin picker's and the preset picker's sizes, the margin). Carries no spell ids and no appearance media but the call-outs' look (spec section 15) |
+| `defaults/Presets.lua` | `NS.PresetData`: the data (the seven stacks in a 1080-tall reference space, the containers by role, each preset's stacks) and the pure builder. `Build(name, look, W, H, picked)` answers the specs in creation order, a stack's head placed on `UIParent` and every member attached to the one before it; `Realize(specs, keys, create)` walks them through a writer, filling each member's `attach.container` with the id its parent took. `CalloutRect(name, look, W, H)` answers the call-out block's unlocked test-mode rectangle, and `ROOM` the room around it (the spot both pickers open on, 75% up, the skin picker's and the preset picker's sizes, the margin). Carries no spell ids and no appearance media but the call-outs' look (spec section 15) |
 | `modules/Presets.lua` | `NS.Presets`, the one writer: `Apply(name, look, mode)` through `ContainerManager.Create` / `.Delete` and `Categories.CreateUserCategory` (Advanced's two custom categories, reused by name on a re-apply, `ResolveCustom`); the preview (`BeginPreview`, `EndPreview`, `IsPreviewing`, `Previewed`, `RestoreStaleSnapshots`, `RestoreStaleSnapshot`, `OnCombatStart`, `OnCombatEnd`); the picker latch (`PickerSeen`, `MarkPickerSeen`); the untouched-seed record (`RecordSeed`, `SeedUntouched`, `Fingerprint`); `OwnContainerCount`, `ParentSize` |
 | `settings/PresetPicker.lua` | The first-run window (`NS.PresetPickerDue`, `NS.MaybeShowPresetPicker`, `NS.ShowPresetPicker`, `NS.HidePresetPicker`, `NS.PresetPickerHolding`, `NS.RefreshPresetPicker`; `NS.PresetPicker.Placement(W, H)`, where it opens), with its lock and test-mode buttons, and the preset confirm, one StaticPopup behind two entry points: `NS.ConfirmPreset(name, look, mode)` applies (`/am preset <name>`, the tab with no preview of its own), `NS.ConfirmPreview(name, look, mode)` keeps the preview on screen while it asks, then keeps it (the tab). An answer decides what it writes when it is given, and the confirm goes down unanswered with the window and with every `NS.HidePresetPicker` (a profile event, the stand-down) |
 | `settings/GeneralPresets.lua` | The General page's **Presets** tab, its second tab after Master controls: `NS.RenderPresetsTab`, and `NS.PresetsTabLeft`, its `onLeave` |
@@ -123,11 +123,14 @@ Five starting points for a profile's containers (spec
   `prepareProfile`, then `NS.HidePresetPicker`). Combat's `PLAYER_REGEN_DISABLED` edge, before
   lockdown, restores at once; when an apply would have to wait anyway, test mode goes off and the
   restore is held to `PLAYER_REGEN_ENABLED`. One chat line says which.
-- **The tab's leave hook.** A tab in a `NS.RegisterContainerSection` spec may carry `onLeave`.
-  `settings/OptionsSetup.lua` records the tab drawn with one (`ctx.__tabLeave`) and calls it once when
-  a later render draws another tab or another rail section, or when the panel hides (one `OnHide`
-  hook per page context); a redraw of the same tab is not a leave. The library has no leave
-  callback, so the host's own render is where a tab click lands.
+- **The tab's leave hook.** A host tab in a page spec (the General page's `PAGE_SPEC`, where the
+  Presets tab sits since spec section 16.4) or in a `NS.RegisterContainerSection` spec may carry
+  `onLeave`. `settings/OptionsSetup.lua` records the tab drawn with one (`ctx.__tabLeave`) and calls
+  it once when a later render draws another tab or another rail section, or when the panel hides
+  (one `OnHide` hook per page context); a redraw of the same tab is not a leave. The library has no
+  leave callback, so the page's `chrome`, which every render calls before a tab's content, a schema
+  tab the library draws itself included, is where a tab click lands (`pageChrome`); a host tab's
+  render and `Helpers.RenderContainerPage` check again.
 - **Before the skin picker.** `addon:OnEnterWorld` shows the preset picker at once while it is due
   and arms no skin start; `NS.MaybeShowSkinPicker` answers `nil, "held"` while
   `NS.PresetPickerHolding()`, and every close of the preset picker sets the latch and then offers the
@@ -139,12 +142,26 @@ Five starting points for a profile's containers (spec
   (BOTTOMRIGHT for a row growing left) on a base 740 down in the reference space (340 above the
   bottom at 1080 tall), with `layout.growV = "up"`, and each member joins the top of the one before
   it, so a tier's first role sits nearest the unit frames. The corner group still grows down from the
-  top-right corner, 80 further left and 40 further down than the mockup put it. The call-outs
+  top-right corner, 46 down; since the owner's round 2 (spec section 16.3) Player debuffs
+  (`cornerLeft`)'s left edge sits 520 in from the right edge (475 in section 15) and Player buffs
+  (`cornerRight`)'s 300, its width and its 5 gap kept. The call-outs
   (`middle`) hang by their TOP from the screen's center line, each line centered, colored like the
-  owner's three (from no skin), with a black glow and no label; the builder takes the largest font
+  owner's three (from no skin), with the owner's glow (black from no skin, intensity 1, thickness
+  2, offset 1, -1, every glow leaf the template has stored, spec section 16.1) and no label; the builder takes the largest font
   from 36 down to 24 whose unlocked test-mode block fits between a margin under the pickers' shared
   rectangle (`ROOM`) and the bottom edge, centered on the screen's middle as far as that room allows
   (moved down before the font shrinks). At 1080 tall that is 30 for Advanced and 36 for Healer.
+- **The focus stack** (spec section 16.2). The focus roles (Intermediate's `fdeb`, Advanced's `fdeb`
+  and `fbuff`, Healer's `healFocus` and `dispelFocus`) are a stack of their own, `focus`, no longer the
+  far stack's tail: a container attached to another flows by its chain's head
+  (`Anchors.EffectiveLayout`: axis and both growths), so under Target debuffs (all), an icon row,
+  Advanced's focus bars were laid out across. Its head is placed on the screen (`attach.mode =
+  "screen"`) and grows up like the side stacks; its column is `cornerLeft`'s, from the same
+  right-edge point, so Player debuffs and the focus containers share a left edge on every screen;
+  its base sits 550 down in the reference space (`FOCUS_BASE`), high enough over the far stack that
+  the two stay more than twice `C.SNAP_RADIUS` apart in test mode, locked or unlocked. It shares a
+  strip with the target stack's column, and other containers sit within one snap radius of it while
+  unlocked (`docs/known-limitations.md`).
 - **The picker opens where the skin picker does, unlocked.** `place` mirrors the LibKa0s skin
   picker's `place()`: its CENTER 75% of the way up from `UIParent`'s BOTTOM, centered across, on
   `UIParent`'s height read at each showing, and the bare `CENTER` when it cannot be read.
@@ -552,7 +569,9 @@ confirm them (#26), the token and flag categories are unmeasured until the smoke
 does not carry over from the other client. A preset's corner column can grow into a side column
 under it in play, and a tall side stack growing up can reach a corner column; Advanced (Bars)'s
 target stack runs off the top of a 768-tall screen in test mode, where Advanced's call-outs also
-rise over the preset picker; tall unit frames or action bars can reach the side stacks' base.
+rise over the preset picker; tall unit frames or action bars can reach the side stacks' base. The
+focus stack shares a strip with the target stack's column (80 across on 16:9), widened by the corner
+group's round-2 move, and while unlocked other containers sit within snap range of it.
 Another Ka0s addon's skin picker can show over the preset picker, on the same spot. Every
 limitation, its cause and any ruling: `docs/known-limitations.md`.
 
