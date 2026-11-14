@@ -102,6 +102,12 @@ variant is computed from the Bars definition, never stored twice.
 
 ## 4. Placement
 
+*Round 1 changed this section (§15, which wins where they differ): the side stacks grow up from a base
+640 down instead of down from 330, the corner group sits 80 further left and 40 further down, and the
+call-outs hang centered from the screen's center line, their font size and top worked out to clear the
+skin picker and the preset picker. A side stack's test-mode top may now reach a corner column (§15,
+`docs/known-limitations.md`).*
+
 - **Stacks.** A preset is a set of **stacks** (columns). Each stack's **head** is placed on the screen; every other
   container in the stack attaches to the one above it (`attach.mode = "container"`, its TOPLEFT to the BOTTOMLEFT of
   the one above, with a small gap) and grows down. So a container that fills pushes the rest of its stack down, the way
@@ -193,6 +199,11 @@ variant is computed from the Bars definition, never stored twice.
   creates. Custom categories the preview created and the player did not have are removed on restore.
 
 ## 7. The first-run picker
+
+*Round 1 changed the window (§15, which wins where they differ): it opens centered across, under the
+call-outs and clear of the skin picker's place, instead of on the left; it opens with the containers
+unlocked and carries a lock button and a test-mode button; Apply locks and turns test mode off, and
+Not now, the close control and Escape put back the lock it found.*
 
 - **When:** on a brand-new profile, once, before the skin picker. A profile that has closed it (`presets.pickerSeen`)
   never sees it again; `/am preset` reopens the window on demand. Existing profiles are marked seen by a schema
