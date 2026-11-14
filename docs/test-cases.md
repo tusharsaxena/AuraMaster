@@ -2579,14 +2579,15 @@ Total.
 - defaults: userCategoryOrder is reconciled the way containerOrder is
 - defaults: the RAID-token row says it means castable OR dispellable, as Blizzard defines it
 
-### test_presets_data.lua (13)
+### test_presets_data.lua (14)
 
 - presets: counts
 - presets: advanced matches its source
 - presets: every category key exists on this client
-- presets: placement at 768/1080/1440 x 16:9, 16:10, 21:9
+- presets: placement at 768/1080/1440 x 16:9, 16:10, 21:9, 4:3, 5:4
 - presets: members chain
 - presets: advanced stacks follow the mockup
+- presets: the layout narrows across only on a narrow screen
 - presets: scale fallback
 - presets: icons variant
 - presets: names follow the data
@@ -2899,7 +2900,7 @@ Total.
 | test_envsetup.lua | 4 |
 | test_poolsetup.lua | 4 |
 | test_defaults.lua | 31 |
-| test_presets_data.lua | 13 |
+| test_presets_data.lua | 14 |
 | test_perf.lua | 8 |
 | test_debuglogsetup.lua | 9 |
 | test_locale.lua | 10 |
@@ -2916,4 +2917,4 @@ Total.
 | test_skin_switch.lua | 34 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2390** |
+| **Total** | **2391** |

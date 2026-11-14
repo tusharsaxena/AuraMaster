@@ -270,10 +270,14 @@ test("presets: every category key exists on this client", function()
     assertEqual(NS.PresetData.CUSTOM.SPECIAL_TARGET.auraType, "HARMFUL")
 end)
 
--- The screen sizes spec section 11 names: three heights, each at 16:9, 16:10 and 21:9.
+-- The screen sizes: three heights, each at the ratios spec section 11 names (16:9, 16:10, 21:9) and
+-- the narrow ones (4:3, 5:4; 1024 x 768 is a UI-scale-off 4:3), `narrow` marking the latter. On a
+-- narrow screen the column check is left out: the side stacks run under the corner columns there by
+-- the spec 4 numbers, which await the owner's ruling (the plan's AM-PR01 owner rulings).
 local SCREENS = {}
 for _, h in ipairs({ 768, 1080, 1440 }) do
     for _, ratio in ipairs({ 16 / 9, 16 / 10, 21 / 9 }) do SCREENS[#SCREENS + 1] = { h * ratio, h } end
+    for _, ratio in ipairs({ 4 / 3, 5 / 4 }) do SCREENS[#SCREENS + 1] = { h * ratio, h, narrow = true } end
 end
 
 --- A head's span on a W x H parent, out of its stored position and size alone: [left, right] and top
@@ -291,7 +295,7 @@ local function headRect(spec, W, H)
         w = o.layout.perLine * (o.icons.width + o.layout.spacing)
     else
         w = o.text.width
-        assertNear(w, P.STACKS[spec.stack].width * P.Scale(H), 0.5, "a text head is its column wide")
+        assertNear(w, P.STACKS[spec.stack].width * P.ScaleX(W, H), 1, "a text head is its column wide")
     end
     local x = ax + pos.x
     if pos.point == "TOPRIGHT" then return x - w, x, pos.y end
@@ -308,7 +312,7 @@ for _, pair in ipairs({ { "cornerRight", "far" }, { "cornerLeft", "far" }, { "co
     UNDER_CORNER[pair[2] .. ":" .. pair[1]] = true
 end
 
-test("presets: placement at 768/1080/1440 x 16:9, 16:10, 21:9", function()
+test("presets: placement at 768/1080/1440 x 16:9, 16:10, 21:9, 4:3, 5:4", function()
     local P = NS.PresetData
     for _, scr in ipairs(SCREENS) do
         local W, H = scr[1], scr[2]
@@ -328,11 +332,11 @@ test("presets: placement at 768/1080/1440 x 16:9, 16:10, 21:9", function()
                         heads[#heads + 1] = { l = l, r = r, top = top, stack = spec.stack }
                     end
                 end
-                -- No two stacks share a column, with one exception the spec's reference numbers make
+                -- No two stacks share a column (spec 11's ratios only), with one exception the spec's reference numbers make
                 -- and the owner has yet to rule on (AM-PR01 review): on 16:9 and 16:10 a side stack
                 -- (from y = 330) sits under a corner column (from y = 6). Those pairs alone may share,
                 -- and only with that vertical room.
-                for i = 1, #heads do
+                for i = 1, scr.narrow and 0 or #heads do
                     for j = i + 1, #heads do
                         local a, b = heads[i], heads[j]
                         local overlap = a.l < b.r and b.l < a.r
@@ -385,6 +389,29 @@ test("presets: advanced stacks follow the mockup", function()
     local got = {}
     for i, spec in ipairs(NS.PresetData.Build("advanced", "bars", 1920, 1080)) do got[i] = spec.stack .. ":" .. spec.role end
     assertEqual(table.concat(got, ","), table.concat(want, ","))
+end)
+
+test("presets: the layout narrows across only on a narrow screen", function()
+    local P = NS.PresetData
+    -- 16:10 and wider: across follows the height alone.
+    for _, h in ipairs({ 768, 1080, 1440 }) do
+        for _, ratio in ipairs({ 16 / 10, 16 / 9, 21 / 9 }) do
+            assertEqual(P.ScaleX(h * ratio, h), P.Scale(h), ("%dx%d"):format(h * ratio, h))
+        end
+    end
+    -- 4:3 at 1080: the far column (570 + 220 right of center) ends 10 units in from the edge.
+    local kx = P.ScaleX(1440, 1080)
+    assertTrue(kx < 1, "4:3 narrows")
+    assertNear(720 + 790 * kx, 1440 - 10 * kx, 0.001, "the far column ends at the edge's margin")
+    assertEqual(P.ScaleX(nil, 1080), 1, "an unreadable width does not narrow")
+    assertEqual(P.ScaleX(0, nil), 1)
+    -- Down is never narrowed: the heads' tops are the same on 4:3 as on 16:9.
+    local narrow, wide = P.Build("advanced", "bars", 1440, 1080), P.Build("advanced", "bars", 1920, 1080)
+    for i, spec in ipairs(narrow) do
+        if spec.overrides.position then
+            assertEqual(spec.overrides.position.y, wide[i].overrides.position.y, spec.role .. " top")
+        end
+    end
 end)
 
 test("presets: scale fallback", function()

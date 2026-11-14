@@ -61,6 +61,19 @@
 - [ ] **Step 4:** Gate green (both profiles, luacheck).
 - [ ] **Step 5:** Commit `AM-PR01: Preset data and the placement builder`.
 
+**Owner rulings owed (AM-PR01 review, open):**
+1. *Corner over side columns.* Spec §4's reference numbers put the far stack under both corner columns on 16:9
+   (cornerLeft 1525..1740 against far 1530..1750 at 1920 × 1080) and the right stack under cornerLeft on 16:10; on 4:3
+   and 5:4 the right and far stacks run under the corners entirely. The corner stacks grow down from y = 6 and reach
+   the side stacks' tops (y = 330) at about 18 bars. Spec §11 says no two columns overlap. Until the owner rules
+   (move the columns so the spans are disjoint, or amend §4/§11 to allow corner-over-side sharing),
+   `tests/test_presets_data.lua` lets those pairs share with their heads 300 units apart and skips the column check
+   on 4:3 and 5:4.
+2. *Icon size.* Spec §4 says icon size stays in UI units; the builder sets an icon row's icon size from the scaled
+   column width (this plan's "the icon row is set from the stack width × k"), so icons are about 19 units at a
+   768-tall parent. Either keep icon size fixed and fit `perLine` to the column, or amend §4 to list icon size beside
+   bar width.
+
 ### Task AM-PR02: Applying a preset (the writer)
 
 **Files:**

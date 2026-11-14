@@ -1,7 +1,7 @@
 local _, NS = ...
 
 -- defaults/Presets.lua -- the container presets as data, and the pure builder that turns one into
--- container overrides for a given screen height and style (spec
+-- container overrides for a given screen size and style (spec
 -- docs/superpowers/specs/2026-11-14-auramaster-presets-design.md, sections 3 and 4).
 --
 -- WHAT A PRESET IS. A list of { stack, role } pairs in creation order (TIERS). A role (CONTAINERS) is
@@ -48,6 +48,23 @@ function P.Scale(parentH)
     return parentH / P.REF_H
 end
 
+-- How far the TOP-anchored columns reach either side of the center line, in reference units, and the
+-- room each kept clear of the screen edge. Set from STACKS below.
+local TOP_REACH, EDGE = 0, 10
+
+--- The horizontal scale on a `parentW` x `parentH` parent: Scale(parentH), shrunk on a screen too
+--- narrow for the TOP columns (below about 1.48:1, 4:3 and 5:4) until the outermost ends EDGE units
+--- in from the edge, so every head stays on the screen. Unchanged on 16:10 and wider, and when the
+--- width cannot be read.
+--- @param parentW number|nil
+--- @param parentH number|nil
+--- @return number
+function P.ScaleX(parentW, parentH)
+    local k = P.Scale(parentH)
+    if type(parentW) ~= "number" or parentW ~= parentW or parentW <= 0 then return k end
+    return math.min(k, parentW / (2 * (TOP_REACH + EDGE)))
+end
+
 -- The two custom categories Advanced creates (spec section 3): empty, for the player to fill. The
 -- writer resolves `nameKey` through NS.L and maps each key below to the category it created or reused.
 P.CUSTOM = {
@@ -83,6 +100,9 @@ P.STACKS = {
     right       = { anchor = "TOP",      x = 280,  y = -330, width = 240, iconsGrowH = "right" },
     far         = { anchor = "TOP",      x = 570,  y = -330, width = 220, iconsGrowH = "right" },
 }
+for _, stack in pairs(P.STACKS) do
+    if stack.anchor == "TOP" then TOP_REACH = math.max(TOP_REACH, -stack.x, stack.x + stack.width) end
+end
 
 -- The gap a stack member leaves below the container above it, in reference units, and the icon a
 -- bars role turned into an Icons row is sized near (a column fits floor(width / ICON_REF) of them).
@@ -397,13 +417,15 @@ end
 --- text line's stored width is the column too, which stands when Size to fit is off or cannot measure;
 --- with it on (the template's) a line is as wide as its content, from the column's left edge. The
 --- line stays left-justified: Center on a template of more than one piece stacks each field on a row
---- of its own (modules/Style_Text.lua, Text.Stacked), so the column is centered, not the lines.
-local function sizeTo(o, stack, k)
-    local w = stack.width * k
+--- of its own (modules/Style_Text.lua, Text.Stacked), so the column is centered, not the lines. The
+--- width runs between the column's two edges, each rounded as `place` rounds a head's offset, so a
+--- corner column ends on the screen's right edge at any scale.
+local function sizeTo(o, stack, kx)
+    local w = round((stack.x + stack.width) * kx) - round(stack.x * kx)
     if o.style == "bars" then
-        o.bars = { width = round(w) }
+        o.bars = { width = w }
     elseif o.style == "text" then
-        o.text = { width = round(w) }
+        o.text = { width = w }
     elseif o.style == "icons" then
         local perLine = (o.layout.perLine > 0) and o.layout.perLine or 1
         local px = math.max(1, math.floor(w / perLine) - o.layout.spacing)
@@ -411,14 +433,15 @@ local function sizeTo(o, stack, k)
     end
 end
 
---- A head's screen placement. A row growing left hangs by its top-right corner from the column's
---- right edge, so it fills toward the screen; every other head by its top-left from the left edge.
-local function place(o, stack, k)
+--- A head's screen placement, `kx` across and `k` down. A row growing left hangs by its top-right
+--- corner from the column's right edge, so it fills toward the screen; every other head by its
+--- top-left from the left edge.
+local function place(o, stack, kx, k)
     local left = o.layout.growH == "left"
     local x = left and (stack.x + stack.width) or stack.x
     o.position = {
         point = left and "TOPRIGHT" or "TOPLEFT", relativePoint = stack.anchor,
-        x = round(x * k), y = round(stack.y * k),
+        x = round(x * kx), y = round(stack.y * k),
     }
     o.attach = { mode = "screen", container = 0, frame = "" }
 end
@@ -434,34 +457,34 @@ local function memberAttach(k)
     }
 end
 
---- The containers preset `name` in style `look` creates on a parent `parentH` units tall, in creation
+--- The containers preset `name` in style `look` creates on a `parentW` x `parentH` parent, in creation
 --- order. Each spec is { role, stack, overrides, attachTo, customKeys }: `overrides` is a table for
 --- NS.ContainerManager.Create; `attachTo` the index of the spec this one attaches to (nil for a
 --- stack's head); `customKeys` the CUSTOM keys its states name (nil when the preset creates none).
---- The width is not read: heads hang from the parent's top edge and center line, so they follow any
---- width. An unknown name or look builds nothing.
+--- Heads hang from the parent's top edge and center line; the width only narrows the layout across
+--- (P.ScaleX) on a screen too narrow for it. An unknown name or look builds nothing.
 --- @param name string
 --- @param look string  "bars" | "icons"
---- @param _ number|nil  parentW (unused)
+--- @param parentW number|nil
 --- @param parentH number|nil
 --- @return table
-function P.Build(name, look, _, parentH)
+function P.Build(name, look, parentW, parentH)
     local tier = TIERS[name]
     if not (tier and IS_LOOK[look]) then return {} end
-    local k, withCustom = P.Scale(parentH), CREATES_CUSTOM[name] == true
+    local k, kx, withCustom = P.Scale(parentH), P.ScaleX(parentW, parentH), CREATES_CUSTOM[name] == true
     local specs, last = {}, {}
     for i, entry in ipairs(tier) do
         local stackKey, roleKey = entry[1], entry[2]
         local stack = P.STACKS[stackKey]
         local o = overridesFor(CONTAINERS[roleKey], withCustom)
         if look == "icons" then toIcons(o, stack) end
-        sizeTo(o, stack, k)
+        sizeTo(o, stack, kx)
         local spec = { role = roleKey, stack = stackKey, overrides = o }
         if last[stackKey] then
             spec.attachTo = last[stackKey]
             o.attach = memberAttach(k)
         else
-            place(o, stack, k)
+            place(o, stack, kx, k)
         end
         if withCustom then spec.customKeys = copy(CUSTOM_ORDER) end
         last[stackKey] = i
