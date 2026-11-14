@@ -158,23 +158,41 @@ end
 -- Published for core/Database_Migrations.lua: MigrateV2 normalizes the keys before it reads them.
 Database.NormalizeKeys = normalizeKeys
 
---- Seed the starter containers into a brand-new profile, once. An unseeded profile with no
---- containers gets every starter, numbered from its own counter; an unseeded profile is then marked
---- seeded either way, so deleting every container never brings the starters back.
+-- The preset a brand-new profile starts from (presets spec section 7): Simple, in Bars. The first-run
+-- picker (settings/PresetPicker.lua) offers the others; closing it without a choice keeps this one.
+local SEED_PRESET, SEED_LOOK = "simple", "bars"
+
+--- Seed a brand-new profile with the Simple preset, once. An unseeded profile with no containers gets
+--- the preset's containers, numbered from its own counter, its stack members attached to the ids
+--- their heads took; an unseeded profile is then marked seeded either way, so deleting every
+--- container never brings them back.
+---
+--- THE SAME WALK AS APPLYING THE PRESET. NS.PresetData.Build says what Simple creates on this screen
+--- and NS.PresetData.Realize resolves each member's attach, exactly as modules/Presets.lua's Apply
+--- does; only the writer differs. Apply's is NS.ContainerManager.Create, which is refused in combat,
+--- announces, and writes the ACTIVE profile; this one writes `p`, the profile being prepared, at load
+--- or on a profile event, before anything is built. With the profile empty, Create adds one thing of
+--- its own: a container stated without a position, a stack member, is offset down the screen by its
+--- id; seeded, it keeps the template's, which it never reads while it hangs from its head. Every
+--- other field is the same: each Simple role states its fill, and the three names are distinct.
+--- Peers are reached at call time (defaults/Presets.lua and modules/Presets.lua load after this file).
 --- @return number  containers seeded
 local function seedStarters(p)
     if p.seeded then return 0 end
     local seeded = 0
-    if next(p.containers) == nil then
-        for _, spec in ipairs(NS.STARTER_CONTAINERS or {}) do
+    local Data = NS.PresetData
+    if next(p.containers) == nil and Data then
+        local w, h
+        if NS.Presets and NS.Presets.ParentSize then w, h = NS.Presets.ParentSize() end
+        seeded = Data.Realize(Data.Build(SEED_PRESET, SEED_LOOK, w, h), nil, function(o)
             local id = p.nextContainerId or 1
             p.nextContainerId = id + 1
-            local c = merge(copy(NS.CONTAINER_TEMPLATE), spec)
+            local c = merge(copy(NS.CONTAINER_TEMPLATE), o)
             c.id = id
             p.containers[id] = c
             p.containerOrder[#p.containerOrder + 1] = id
-            seeded = seeded + 1
-        end
+            return id
+        end)
     end
     p.seeded = true
     return seeded
@@ -506,6 +524,18 @@ local SCHEMA_STEPS = {
             end
         end)
     end },
+    { to = 19, apply = function(db)
+        -- The first-run preset picker is for new profiles only (presets spec section 9): every profile
+        -- already seeded is marked as having seen it, and keeps its containers. Keyed on `seeded`, not
+        -- on the stamp, because a fresh install climbs the whole ladder before its first seeding and
+        -- must still see the picker: Database.MigrateV19.
+        eachProfile(db, function(p, name)
+            local n = Database.MigrateV19(p)
+            if n > 0 and NS.DebugLog then
+                NS.DebugLog.DebugAtEnable("Migrate", "v19 profile '%s': marked as having seen the preset picker", name)
+            end
+        end)
+    end },
 }
 
 --- Current schema version: the last step's `to`, or 0 (the defaults' "never migrated" stamp).
@@ -565,5 +595,5 @@ function NS.RunMigrations()
     -- own comment (defaults/Categories.lua) promises for a key added in a later version.
     NS.Categories.SyncUserCategories(NS.db.profile)
     local seeded = Database.PrepareProfile(NS.db.profile)
-    if seeded > 0 and NS.DebugLog then NS.DebugLog.DebugAtEnable("Migrate", "seeded %s starter container(s)", seeded) end
+    if seeded > 0 and NS.DebugLog then NS.DebugLog.DebugAtEnable("Migrate", "seeded %s container(s) from the Simple preset", seeded) end
 end

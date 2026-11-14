@@ -504,3 +504,38 @@ function P.Build(name, look, parentW, parentH, picked)
     end
     return specs
 end
+
+--- Store each CUSTOM placeholder state in `categories` under the key it resolved to (`keys`,
+--- [CUSTOM key] = live key).
+local function rekey(categories, keys)
+    for customKey, key in pairs(keys) do
+        local state = categories[customKey]
+        if state ~= nil then
+            categories[customKey] = nil
+            categories[key] = state
+        end
+    end
+end
+
+--- Hand every spec Build returned, in order, to `create(overrides) -> id | nil, message, gray`, with
+--- its placeholder states rekeyed through `keys` and a member's attach naming the id `create`
+--- returned for the spec above it. The one walk both writers share: modules/Presets.lua's Apply passes
+--- NS.ContainerManager.Create, and core/Database.lua's first-run seeding a writer of its own over the
+--- profile being prepared, so a seeded profile holds exactly what applying the preset writes. Stops at
+--- the first refusal and answers it.
+--- @param specs table  from P.Build
+--- @param keys table|nil  [CUSTOM key] = live key
+--- @param create function
+--- @return number|nil created, string|nil message, boolean|nil gray
+function P.Realize(specs, keys, create)
+    local ids = {}
+    for i, spec in ipairs(specs) do
+        local o = spec.overrides
+        rekey(o.filter.categories, keys or {})
+        if spec.attachTo then o.attach.container = ids[spec.attachTo] end
+        local id, msg, gray = create(o)
+        if not id then return nil, msg, gray end
+        ids[i] = id
+    end
+    return #ids
+end

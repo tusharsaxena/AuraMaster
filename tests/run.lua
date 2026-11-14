@@ -26,6 +26,11 @@ local ADDON_FILES = Loader.tocFiles("AuraMaster.toc")
 Loader.loadAll(LIB_FILES, NS, mocks)
 Loader.loadAll(ADDON_FILES, NS, mocks)
 
+-- The harness's container fixture, the pre-v19 starter set, written into the first profile prepared
+-- (tests/starters_fixture.lua says why).
+local Starters = dofile("tests/starters_fixture.lua")
+Starters.install(NS)
+
 -- Mirror the in-game lifecycle: OnInitialize (the database, the slash command), then OnEnable at
 -- PLAYER_LOGIN (the containers, Blizzard's frames, the settings panel), then the coalesced first
 -- apply the next frame would run.
@@ -56,6 +61,8 @@ AM_TEST = Kit.expose{
     -- compiled-chunk cache and the parsed mock stack instead of re-reading both (tests/fresh_env.lua
     -- says why). The builder hands back a fresh mock on every call (tests/_kit/mock_base.lua).
     Loader = Loader, buildMocks = buildMocks,
+    -- The fixture's four overrides (tests/starters_fixture.lua), and its installer for fresh_env.
+    STARTERS = Starters.list(NS), Starters = Starters,
 }
 
 -- The kit's diagnostics contract (debug-logging-§14), run against this addon's own dispatcher:
@@ -201,6 +208,7 @@ Kit.run{
         "test_presets_data",
         "test_presets_apply",
         "test_presets_preview",
+        "test_presets_seed",
         "test_perf",
         "test_debuglogsetup",
         "test_locale",

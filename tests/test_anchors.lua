@@ -194,7 +194,7 @@ test("anchors: a drag saves the dragged container's position, rounded, whatever 
     assertEqual(pos.relativePoint, "BOTTOMLEFT")
     assertEqual(pos.x, 12.3)
     assertEqual(pos.y, -56.8)
-    assertEqual(NS.Database.FindContainer(2).position.x, NS.STARTER_CONTAINERS[2].position.x)
+    assertEqual(NS.Database.FindContainer(2).position.x, AM_TEST.STARTERS[2].position.x)
 end)
 
 test("anchors: a drag saves the position in one write", function()
@@ -501,7 +501,7 @@ test("anchors: an anchor that reads back no point writes nothing", function()
     NS.Anchors.SavePosition(inst)
     -- red under: SavePosition without its no-point guard (a nil point would be stored)
     assertEqual(writes, 0)
-    assertEqual(NS.Database.FindContainer(1).position.point, NS.STARTER_CONTAINERS[1].position.point)
+    assertEqual(NS.Database.FindContainer(1).position.point, AM_TEST.STARTERS[1].position.point)
 end)
 
 -- ── inherited flow (L-6) ──────────────────────────────────────────────────────────────────────

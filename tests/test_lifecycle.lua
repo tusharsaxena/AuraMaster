@@ -193,7 +193,7 @@ test("lifecycle: a copied profile is prepared before its containers are built", 
     assertNil(NS.ContainerManager.instances[1], "the old profile's containers are gone")
 end)
 
-test("lifecycle: a reset profile gets its starters back, numbered from 1 again", function()
+test("lifecycle: a reset profile is seeded with the Simple preset again, numbered from 1", function()
     local NS, mocks = fresh()
     local CM = NS.ContainerManager
     CM.Create({})
@@ -203,10 +203,10 @@ test("lifecycle: a reset profile gets its starters back, numbered from 1 again",
     assertEqual(CM.Count(), 0)
     NS.db:ResetProfile()
     -- red under: OnProfileReset skipping prepareProfile (the reset profile would stay empty)
-    assertEqual(CM.Count(), #NS.STARTER_CONTAINERS)
-    assertEqual(NS.db.profile.nextContainerId, #NS.STARTER_CONTAINERS + 1)
+    assertEqual(CM.Count(), NS.PresetData.Count("simple"))
+    assertEqual(NS.db.profile.nextContainerId, NS.PresetData.Count("simple") + 1)
     mocks.__fireTimers()
-    local starters = #NS.STARTER_CONTAINERS
+    local starters = NS.PresetData.Count("simple")
     for id = 1, starters do
         local inst = CM.instances[id]
         assertTrue(inst ~= nil and inst.engine ~= nil, "container " .. id .. " built")

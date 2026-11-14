@@ -608,7 +608,7 @@ test("slash verbs: /am delete matches a name in any case and names what it delet
         assertEqual(dump(slash(NS2, lines, miss)), "{No such container — /am containers lists them}", miss)
     end
     -- red under: runDelete falling through to Delete(nil) on a miss
-    assertEqual(#NS2.Database.GetContainers(), #NS2.STARTER_CONTAINERS - 1)
+    assertEqual(#NS2.Database.GetContainers(), #AM_TEST.STARTERS - 1)
 end)
 
 -- ── a bare number: name first, a cross-match refused, '#N' always the id (AM-R-05) ───────────
@@ -621,7 +621,7 @@ test("slash verbs: /am delete 3 refuses when one container is named '3' and anot
     NS2.Database.FindContainer(1).name = "3"
     -- red under: findContainer reading a numeric arg as an id before any name match
     assertEqual(dump(slash(NS2, lines, "delete 3")), "{" .. AMBIGUOUS_3 .. "}")
-    assertEqual(#NS2.Database.GetContainers(), #NS2.STARTER_CONTAINERS, "nothing was deleted")
+    assertEqual(#NS2.Database.GetContainers(), #AM_TEST.STARTERS, "nothing was deleted")
     NS2.State.SetActiveContainer(2)
     assertEqual(dump(slash(NS2, lines, "select 3")), "{" .. AMBIGUOUS_3 .. "}")
     assertEqual(NS2.State.activeContainerId, 2, "the selection does not move")
@@ -660,7 +660,7 @@ test("slash verbs: a bare number no container is named resolves by id, and one c
     -- red under: the cross-match refusal firing when the name and the id are the same container
     assertEqual(dump(slash(NS2, lines, "delete 3")), "{Deleted '3'}")
     assertNil(NS2.Database.FindContainer(3))
-    assertEqual(#NS2.Database.GetContainers(), #NS2.STARTER_CONTAINERS - 1)
+    assertEqual(#NS2.Database.GetContainers(), #AM_TEST.STARTERS - 1)
 end)
 
 test("slash verbs: /am resetposition and /am forgettimed do their act and say so", function()

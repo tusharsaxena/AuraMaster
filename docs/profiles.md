@@ -16,7 +16,7 @@ entirely, performance-§5) and the session state (`debug`, the selected containe
 
 ## AceDB setup
 
-`NS.InitDB` (`core/Database.lua:268`), called from `OnInitialize`:
+`NS.InitDB` (`core/Database.lua:286`), called from `OnInitialize`:
 
 - `AceDB:New("AuraMasterDB", NS.defaults, true)` — `true` puts every character on the shared
   `Default` profile until the player picks a per-character, per-class or per-realm one.
@@ -33,7 +33,7 @@ entirely, performance-§5) and the session state (`debug`, the selected containe
 ```
 NS.OnProfileChanged() / OnProfileReset() / OnProfileCopied(source)
   ├─ Database.PrepareProfile(db.profile)    backfill every container, normalize the order,
-  │                                          seed the starters if this profile never had them
+  │                                          seed the Simple preset if this profile never had it
   ├─ State.SetActiveContainer(nil)           the old selection's id may not exist here
   ├─ the event's one trace line              switch: [Profile] changed -> X
   │                                          reset:  [Set] reset profile 'X' to defaults
@@ -44,11 +44,12 @@ NS.OnProfileChanged() / OnProfileReset() / OnProfileCopied(source)
   └─ NS.RefreshOptionsPanel()
 ```
 
-- **A new profile** starts empty, so `PrepareProfile` seeds the three starter containers into it.
+- **A new profile** starts empty, so `PrepareProfile` seeds the Simple preset's three containers into
+  it (schema v19; before it, four starter containers).
 - **A copy** brings the source's containers with their ids; `PrepareProfile` then makes the order and
   the id counter consistent.
-- **A reset** empties the profile. `seeded` goes back to `false` with it, so the starter containers
-  come back — a reset is "as installed", not "nothing".
+- **A reset** empties the profile. `seeded` goes back to `false` with it, so the Simple preset's
+  containers come back — a reset is "as installed", not "nothing".
 - **Logging (debug-logging-§10).** A reset or a copy is AceDB replacing the profile whole, not a write
   through the seam, so its handler logs it once. A reset's line carries no row count, which debug-logging-§10
   allows. A reset re-seeds the starter containers, so counting the rows not at default would
@@ -103,7 +104,7 @@ through the `profile` row in `NS.COMMANDS` and the descriptor's `profiles` field
   same.
 - **An existing profile only.** An unknown name prints `No profile named '<name>'.`, a
   `Did you mean '<name>'?` when exactly one profile matches ignoring case, and the list. It never
-  creates a profile: `SetProfile` would, and a new profile gets the starter containers seeded into it.
+  creates a profile: `SetProfile` would, and a new profile gets the Simple preset seeded into it.
   New profiles come from this page.
 - **The switch** is `NS.db:SetProfile(name)`, so it runs the same `OnProfileChanged` path as the
   page (above), with its one `[Profile] changed -> <name>` line; the library logs nothing of its own.

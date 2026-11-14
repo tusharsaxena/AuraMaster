@@ -156,7 +156,7 @@ end)
 test("database: a fresh profile seeds the Player cooldowns text container last, showing only two buff lists", function()
     local NS = fresh()
     local list = NS.Database.GetContainers()
-    local n = #NS.STARTER_CONTAINERS
+    local n = #AM_TEST.STARTERS
     assertEqual(#list, n)
     local c = list[n]
     -- red under: the starter list without its fourth entry, or seeded in another style

@@ -89,8 +89,8 @@ NS.defaults.profile = {
     -- The container registry. `containers` is keyed by id; `containerOrder` is display order (the
     -- settings picker, the CLI, and the order containers are built in). Both are written at runtime by
     -- modules/ContainerManager.lua, and on load by core/Database.lua's PrepareProfile (repair and
-    -- first-run seeding). `seeded` records that a fresh profile has had its starter containers
-    -- created, so deleting them all does not bring them back on the next login.
+    -- first-run seeding, from the Simple preset). `seeded` records that a fresh profile has had its
+    -- first containers created, so deleting them all does not bring them back on the next login.
     containers      = {},
     containerOrder  = {},
     nextContainerId = 1,
@@ -338,36 +338,5 @@ NS.CONTAINER_TEMPLATE = {
         glowColor = color(0, 0, 0, 1), glowColorFromSkin = false, useClassColorGlow = false,
         glowIntensity = 1, glowThickness = 2,
         glowX = 1, glowY = -1,
-    },
-}
-
--- The starter containers a fresh profile is seeded with (core/Database.lua): a player-buff bar
--- stack, a player-debuff icon row, a target-debuff icon row, and a text list of the player's
--- offensive and defensive cooldowns — enough to show what the addon does without the player having
--- to build anything first. New profiles only: a profile already `seeded` gets none of them again.
-NS.STARTER_CONTAINERS = {
-    {
-        name = "Player buffs", unit = "player", auraType = "HELPFUL", style = "bars",
-        filter = { castBy = "any" },
-        position = { point = "TOPRIGHT", relativePoint = "TOPRIGHT", x = -240, y = -220 },
-    },
-    {
-        name = "Player debuffs", unit = "player", auraType = "HARMFUL", style = "icons",
-        position = { point = "TOPRIGHT", relativePoint = "TOPRIGHT", x = -240, y = -160 },
-        layout = { axis = "horizontal", growH = "left", growV = "down" },
-    },
-    {
-        name = "Target debuffs (mine)", unit = "target", auraType = "HARMFUL", style = "icons",
-        filter = { castBy = "mine" },
-        position = { point = "CENTER", relativePoint = "CENTER", x = 0, y = -160 },
-        layout = { axis = "horizontal", growH = "right", growV = "down" },
-    },
-    {
-        -- Only the Offensive cooldowns and Defensive cooldowns lists draw: every other buff category is
-        -- Hidden, Uncategorized included (defaults/Categories.lua's StatesShowing).
-        name = "Player cooldowns", unit = "player", auraType = "HELPFUL", style = "text",
-        filter = { castBy = "any", categories = NS.Categories.StatesShowing({ "offensiveCDs", "defensives" }) },
-        position = { point = "CENTER", relativePoint = "CENTER", x = -260, y = -40 },
-        layout = { axis = "vertical", growH = "right", growV = "down" },
     },
 }

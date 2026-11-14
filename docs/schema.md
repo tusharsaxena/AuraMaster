@@ -6,7 +6,7 @@ Two SavedVariables globals (`AuraMasterDB`, `AuraMasterPerfDB`, `AuraMaster.toc:
 
 ## `AuraMasterDB` — the AceDB database
 
-Created by `NS.InitDB` (`core/Database.lua:271`) as `AceDB:New("AuraMasterDB", NS.defaults, true)`:
+Created by `NS.InitDB` (`core/Database.lua:289`) as `AceDB:New("AuraMasterDB", NS.defaults, true)`:
 the third argument puts every character on the shared `Default` profile until the player chooses
 otherwise (`docs/profiles.md`).
 
@@ -30,7 +30,8 @@ otherwise (`docs/profiles.md`).
 | `containerOrder` | array | `{}` | Container ids in display order |
 | `nextContainerId` | number | `1` | The next id to hand out |
 | `skin` | table | `{ source = "ka0s", skin = NS.DEFAULT_SKIN, ignorePanel = true, ignoreFonts = false, font = "", texture = "", outline = "hud", pickerSeen = false, fullSkinReset = false }` | The skin this addon wears (skinning-§2: per addon, per profile), drawn by General → Skin and written only through `NS.WriteSkinChoice` (`core/SkinSetup.lua`), which writes each half through `NS.SetByPath`. `source` is `ka0s` or `eui` (EllesmereUI); `skin` is a registered Ka0s skin key, starting on the client's default skin (`NS.DEFAULT_SKIN`, `Skin:DefaultSkin()` read once in `core/SkinSetup.lua`: `forever` on WoW Forever, `ka0s` on Retail and without the library); `ignorePanel` and `ignoreFonts` are the Scope's two exceptions; `font` and `texture` are LibSharedMedia keys over the skin's default (`""` keeps the skin's); `outline` is the Skin tab's Font outline, `all`, `hud` (the default since LibKa0s v1.83.0, D-10; a stored choice stays) or `off` (LibKa0s v1.82.0, ruling D-06), applied with `Skin:SetOutline` at load, on every profile event and on its row's write; `pickerSeen` is the first-run skin picker's memory; `fullSkinReset` is the record of schema v16's step, with no row. Eight skip-render rows of the General page's Appearance group, so `/am get\|set skin.*` reaches each |
-| `seeded` | bool | `false` | The starter containers have been created once; deleting them all does not bring them back |
+| `seeded` | bool | `false` | The first containers (the Simple preset, schema v19) have been created once; deleting them all does not bring them back |
+| `presets` | table | `{ pickerSeen = false }` | `modules/Presets.lua`'s own key. `pickerSeen`: this profile has closed the first-run preset picker (schema v19 sets it on every profile already `seeded`). `previewSnapshot` has no default: present only while a preset preview is up, it holds deep copies of `containers`, `containerOrder`, `nextContainerId`, `userCategories`, `userCategoryOrder` and `categorySpells` |
 
 ### `global` — account-wide
 
@@ -224,17 +225,25 @@ first. Sizes take no companion (cause L11). While
 HUD size over Ka0s Default's (D-09), so it is as wide in every skin; the stored `fontSize` is never
 rewritten, and with the companion off, or under Ignore fonts, it draws as stored.
 
-## The starter containers
+## The first containers
 
-`NS.STARTER_CONTAINERS` (`defaults/Profile.lua:348`) seeds a brand-new profile once, each spec merged
-over the template:
+A brand-new profile is seeded once with the **Simple** preset in **Bars** (schema v19, presets spec
+section 7): `seedStarters` in `core/Database.lua` builds it with `NS.PresetData.Build("simple", "bars",
+w, h)` on UIParent's size and hands the specs to `NS.PresetData.Realize`, the same walk
+`Presets.Apply` makes, so a stack member attaches to the id its head took. Only the writer differs:
+the seed writes the profile being prepared, merging each spec over the template, where Apply goes
+through `ContainerManager.Create`.
 
-| Name | Unit | Type | Style | Differs from the template |
+| Name | Unit | Type | Style | Where |
 |---|---|---|---|---|
-| Player buffs | player | HELPFUL | bars | `TOPRIGHT` −240, −220; enchants draw by the `weaponEnchants` category's default (Show) |
-| Player debuffs | player | HARMFUL | icons | `TOPRIGHT` −240, −160; horizontal, grows left |
-| Target debuffs (mine) | target | HARMFUL | icons | `castBy = "mine"`; `CENTER` 0, −160; horizontal, grows right |
-| Player cooldowns | player | HELPFUL | text | `CENTER` −260, −40; vertical, grows right and down; `filter.categories` from `Cat.StatesShowing({ "offensiveCDs", "defensives" })`: every other buff category Hidden, Uncategorized included |
+| Player buffs (all) | player | HELPFUL | bars | The top-right corner column's head; every buff but the weapon enchants |
+| Weapon enchants | player | HELPFUL | bars | Attached under Player buffs (all); only the `weaponEnchants` category |
+| Player debuffs (all) | player | HARMFUL | bars | The column left of it; every debuff |
+
+Before v19 a new profile got four starter containers instead (Player buffs, Player debuffs, Target
+debuffs (mine), Player cooldowns); a profile seeded with them keeps them. The headless harness still
+hands that set to the first profile each test environment prepares, as a fixture
+(`tests/starters_fixture.lua`).
 
 ## Session state (not persisted)
 
@@ -610,7 +619,7 @@ compare with the rest of the seam.
 
 ## Migration path
 
-The account-wide ladder is `SCHEMA_STEPS` in `core/Database.lua:338`: one `{ to = N, apply = fn }`
+The account-wide ladder is `SCHEMA_STEPS` in `core/Database.lua:356`: one `{ to = N, apply = fn }`
 row per stored-shape change, applied in order by `NS.RunMigrations` while
 `global.schemaVersion < to`, each logging one `[Migrate]` debug line. The ladder runs at
 `OnInitialize`, before logging can be on, so its summary lines go through the console's at-enable
@@ -907,6 +916,13 @@ The stamp follows savedvariables-§1 as ruled at WowAddonStandards v2.65.0:
   `Ka0s Ubuntu` (R3-L6), so every stored string naming the deleted face, at any depth (a container's
   face, the skin override), becomes `Ka0s Ubuntu`. Blizzard's own `Friz Quadrata TT`, the template's,
   stays (`tests/test_migrations.lua`).
+- **Schema v19** (`Database.MigrateV19`, `core/Database_Migrations.lua`, presets spec section 9) runs over
+  **every** stored profile and logs one `[Migrate] v19 profile '<name>'` line for a profile it marked.
+  A profile already `seeded` gets `presets.pickerSeen = true`, so no current player is shown the
+  first-run preset picker, and keeps its containers (the old four-container starter set included).
+  The step keys on `seeded`, not on the stamp: a fresh install climbs the whole ladder before its
+  first seeding, so its profile is still unseeded at v19 and sees the picker
+  (`tests/test_presets_seed.lua`).
 - **Migration lesson (batch 10 F7): a step already pushed is never extended again.** A step's
   version stamp is written once per account, so a half added to a step after any build carrying it
   has been pushed never reaches an install that already ran that build: the owner's v9 install
@@ -914,11 +930,11 @@ The stamp follows savedvariables-§1 as ruled at WowAddonStandards v2.65.0:
   While a step exists only in local, unpushed commits it may still grow; once the branch carrying it
   has been pushed, a new stored-shape change takes a new step with the next version, even when the
   earlier step is unreleased.
-- **An additive change needs no step.** `Database.PrepareProfile` (`core/Database.lua:250`) runs after
+- **An additive change needs no step.** `Database.PrepareProfile` (`core/Database.lua:268`) runs after
   the ladder on every `InitDB` and on every profile change: it backfills every stored container from
   the template with `== nil` tests (a stored `false` survives, savedvariables-§5), normalizes string
   ids to numbers, rebuilds `containerOrder` to exactly the ids that exist, raises `nextContainerId`
-  past the highest id, and seeds the starter containers on a profile whose `seeded` flag is unset.
+  past the highest id, and seeds the Simple preset on a profile whose `seeded` flag is unset.
   A container key that is neither a number nor a numeric string (a hand-edited file) is dropped,
   with one `[Migrate] dropped container key` debug line each, so the profile still loads. So is a
   numeric string whose id is already stored as a number: the numeric key is the form the addon

@@ -106,37 +106,19 @@ local function deleteAll()
     return #ids
 end
 
---- Store each placeholder state in `categories` under the key it resolved to.
-local function rekey(categories, keys)
-    for customKey, key in pairs(keys) do
-        local state = categories[customKey]
-        if state ~= nil then
-            categories[customKey] = nil
-            categories[key] = state
-        end
-    end
-end
-
---- The parent's size, as the builder reads it: nil when UIParent cannot be read.
-local function parentSize()
+--- The parent's size, as the builder reads it: nil when UIParent cannot be read. Published for
+--- core/Database.lua's first-run seeding, which builds the Simple preset on the same parent.
+--- @return number|nil width, number|nil height
+function Presets.ParentSize()
     local parent = _G.UIParent
     if not (parent and parent.GetWidth and parent.GetHeight) then return nil, nil end
     return parent:GetWidth(), parent:GetHeight()
 end
 
---- Create every spec in order. A member's attach names the id Create returned for the spec above it.
+--- Create every spec in order through the registry writer (NS.PresetData.Realize walks them).
 --- @return number|nil created, string|nil message
 local function createAll(specs, keys)
-    local ids = {}
-    for i, spec in ipairs(specs) do
-        local o = spec.overrides
-        rekey(o.filter.categories, keys)
-        if spec.attachTo then o.attach.container = ids[spec.attachTo] end
-        local id, msg = NS.ContainerManager.Create(o)
-        if not id then return nil, msg end
-        ids[i] = id
-    end
-    return #ids
+    return NS.PresetData.Realize(specs, keys, NS.ContainerManager.Create)
 end
 
 --- Apply preset `name` in style `look`: `mode` "replace" deletes every container first, "add" keeps
@@ -152,7 +134,7 @@ function Presets.Apply(name, look, mode)
     local keys, reason = resolveAll(name)
     if not keys then return nil, reason end
     local deleted = (mode == "replace") and deleteAll() or 0
-    local w, h = parentSize()
+    local w, h = Presets.ParentSize()
     local specs = NS.PresetData.Build(name, look, w, h, keys)
     local created, msg = createAll(specs, keys)
     if not created then return nil, msg end

@@ -156,4 +156,4 @@ These are not declined; the game forbids them, and a request for one is answered
   already correct for it. The keys live in a reserved `user` namespace nothing shipped may take, and
   a stored record outside that namespace is refused rather than materialized over a shipped category.
 - **Reset all settings is a profile reset** (options-ui-§12): every container goes with the profile,
-  and the starter containers come back.
+  and the starter containers (the Simple preset, schema v19) come back.

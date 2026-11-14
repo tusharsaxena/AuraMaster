@@ -68,7 +68,7 @@ test("slash: /am new creates the described container and selects it", function()
     assertEqual(c.unit, "target")
     assertEqual(c.auraType, "HARMFUL")
     assertEqual(c.style, "icons")
-    assertEqual(#NS2.Database.GetContainers(), #NS2.STARTER_CONTAINERS + 1)
+    assertEqual(#NS2.Database.GetContainers(), #AM_TEST.STARTERS + 1)
 end)
 
 test("slash: /am new text creates a text-style container", function()
@@ -79,7 +79,7 @@ test("slash: /am new text creates a text-style container", function()
     -- red under: NEW_WORDS without "text" (the verb refuses the word and creates nothing)
     assertEqual(c.style, "text")
     assertEqual(c.auraType, "HELPFUL")
-    assertEqual(#NS2.Database.GetContainers(), #NS2.STARTER_CONTAINERS + 1)
+    assertEqual(#NS2.Database.GetContainers(), #AM_TEST.STARTERS + 1)
 end)
 
 test("slash: /am new gives the new container the Fill its style suits (B5)", function()
@@ -96,7 +96,7 @@ test("slash: /am new with a word it does not know creates nothing and says why",
     local NS2, mocks = fresh()
     local lines = capture(mocks)
     NS2.Slash:OnSlash("new target sparkles")
-    assertEqual(#NS2.Database.GetContainers(), #NS2.STARTER_CONTAINERS)
+    assertEqual(#NS2.Database.GetContainers(), #AM_TEST.STARTERS)
     assertTrue(said(lines, "sparkles"))
 end)
 
@@ -311,7 +311,7 @@ test("slash: /am delete removes a container by id", function()
     local NS2 = fresh()
     NS2.Slash:OnSlash("delete 3")
     assertNil(NS2.Database.FindContainer(3))
-    assertEqual(#NS2.Database.GetContainers(), #NS2.STARTER_CONTAINERS - 1)
+    assertEqual(#NS2.Database.GetContainers(), #AM_TEST.STARTERS - 1)
 end)
 
 test("slash: a name two containers share is refused, not guessed", function()
@@ -323,7 +323,7 @@ test("slash: a name two containers share is refused, not guessed", function()
     local lines = capture(mocks)
     NS2.Slash:OnSlash("delete dup")
     -- red under: findContainer returning the first match
-    assertEqual(#NS2.Database.GetContainers(), #NS2.STARTER_CONTAINERS, "both containers remain")
+    assertEqual(#NS2.Database.GetContainers(), #AM_TEST.STARTERS, "both containers remain")
     assertTrue(said(lines, "More than one container is called 'dup'"), lastLine(lines))
     NS2.Slash:OnSlash("select DUP")
     assertEqual(NS2.State.activeContainerId, 3, "the selection does not move")
@@ -337,7 +337,7 @@ test("slash: /am delete in combat refuses in gray and keeps the container", func
     NS2.Slash:OnSlash("delete 3")
     -- red under: runDelete without its InCombatLockdown gate
     assertTrue(NS2.Database.FindContainer(3) ~= nil, "the container survives")
-    assertEqual(#NS2.Database.GetContainers(), #NS2.STARTER_CONTAINERS)
+    assertEqual(#NS2.Database.GetContainers(), #AM_TEST.STARTERS)
     assertTrue(grayLine(lines, "cannot delete a container during combat"), lastLine(lines))
 end)
 
@@ -375,7 +375,7 @@ local function resetsUnderLockdown(surface)
     assertEqual(resets[1], 1, "db:ResetProfile(), once: the same act as Reset Profile")
     assertFalse(grayLine(lines, "during combat"), "no refusal: " .. lastLine(lines))
     assertTrue(said(lines, "All settings reset to defaults."), lastLine(lines))
-    assertEqual(#NS2.Database.GetContainers(), #NS2.STARTER_CONTAINERS, "the shipped set is back")
+    assertEqual(#NS2.Database.GetContainers(), NS2.PresetData.Count("simple"), "the shipped set, the Simple preset, is back")
     -- red under: CM.Sync destroying instead of parking under MustDefer
     assertEqual(hides[1], 0)
     assertEqual(clears[1], 0)
@@ -402,7 +402,7 @@ test("slash: /am new in combat refuses in gray and creates nothing", function()
     local lines = capture(mocks)
     mocks.__lockdown = true
     NS2.Slash:OnSlash("new target debuffs icons")
-    assertEqual(#NS2.Database.GetContainers(), #NS2.STARTER_CONTAINERS)
+    assertEqual(#NS2.Database.GetContainers(), #AM_TEST.STARTERS)
     -- red under: runNew printing a refused err through the plain printer
     assertTrue(grayLine(lines,
         "cannot create a container during combat — it would not be drawn or placed until combat ends"),

@@ -6,11 +6,12 @@ local test, assertEqual, assertTrue, assertFalse, assertNil =
     T.test, T.assertEqual, T.assertTrue, T.assertFalse, T.assertNil
 local fresh = dofile("tests/fresh_env.lua")
 
-test("database: a fresh profile is seeded with the three starter containers, once", function()
-    local NS = fresh()
+test("database: a fresh profile is seeded with the Simple preset's three containers, once", function()
+    -- The real seed, not the harness's fixture (tests/starters_fixture.lua).
+    local NS = fresh({ simple = true })
     local list = NS.Database.GetContainers()
-    assertEqual(#list, #NS.STARTER_CONTAINERS)
-    assertEqual(list[1].name, "Player buffs")
+    assertEqual(#list, NS.PresetData.Count("simple"))
+    assertEqual(list[1].name, "Player buffs (all)")
     assertTrue(NS.db.profile.seeded)
     -- Deleting every container must not bring the starters back on the next preparation.
     for _, c in ipairs(list) do NS.ContainerManager.Delete(c.id) end
@@ -200,7 +201,7 @@ end)
 
 test("database: PrepareProfile seeds an empty profile from its own counter, in declaration order", function()
     local NS = fresh()
-    local n = #NS.STARTER_CONTAINERS
+    local n = NS.PresetData.Count("simple")
     local p = { nextContainerId = 10 }
     assertEqual(NS.Database.PrepareProfile(p), n, "returns how many it seeded")
     local want = {}
@@ -210,7 +211,7 @@ test("database: PrepareProfile seeds an empty profile from its own counter, in d
     assertEqual(table.concat(p.containerOrder, ","), table.concat(want, ","))
     assertEqual(p.nextContainerId, 10 + n)
     assertEqual(p.containers[10].id, 10)
-    assertEqual(p.containers[10].name, NS.STARTER_CONTAINERS[1].name)
+    assertEqual(p.containers[10].name, "Player buffs (all)", "the Simple preset, in its order")
     assertTrue(p.seeded)
     assertEqual(NS.Database.PrepareProfile(p), 0, "a second call seeds nothing")
 end)
@@ -253,7 +254,7 @@ test("database: without AceDB the addon runs on the raw SavedVariables, keeping 
     assertTrue(NS.db.profile == _G.AuraMasterDB.profile, "writes land in the SavedVariables table")
     assertEqual(NS.db.profile.scale, 1.5, "a stored value survives the backfill")
     assertEqual(NS.db.profile.enabled, NS.defaults.profile.enabled, "a missing one is filled")
-    assertEqual(#NS.Database.GetContainers(), #NS.STARTER_CONTAINERS, "and the starters are seeded")
+    assertEqual(#NS.Database.GetContainers(), #AM_TEST.STARTERS, "and the starters are seeded")
     assertEqual(NS.db.global.schemaVersion, NS.Database.CurrentSchemaVersion())
 end)
 
@@ -557,8 +558,9 @@ test("database v2: RunMigrations logs one [Migrate] line per profile, and a seco
     end
     -- red under: logging once for the whole step, or not at all per profile. 2 profiles x the 14
     -- steps a v1 profile now climbs (v2 to v16), less v16's on the active one, which the load already
-    -- put on the skin: that step logs a profile only when it ran.
-    assertEqual(perProfile, 29, table.concat(lines, " | "))
+    -- put on the skin: that step logs a profile only when it ran. Plus v19's on the active one, the
+    -- only seeded profile of the two (v17, v18 and v19 log a profile only when they changed it).
+    assertEqual(perProfile, 30, table.concat(lines, " | "))
     assertEqual(NS.db.sv.profiles.Other.containers[1].layout.strata, "HIGH")
     local before = #lines
     NS.db.sv.profiles.Other.containers[1].layout.strata = "MEDIUM"
@@ -860,9 +862,10 @@ test("v12: the v12 step is on the ladder, below v13's skin reset, v14's Font fla
     -- back off the skin (ruling D-15, tests/test_skin_glow_restore.lua), v16 everything else onto
     -- the skin (the owner's rulings of 2026-11-01, tests/test_skin_flip.lua), v17 the defaults moved
     -- back off it (SF-AM-1..3, tests/test_defaults_v17.lua), v18 a stored Ka0s Friz Quadrata TT
-    -- to Ka0s Ubuntu (R3-FRIZ)
-    assertEqual(NS.Database.CurrentSchemaVersion(), 18)
-    assertEqual(NS.db.global.schemaVersion, 18)
+    -- to Ka0s Ubuntu (R3-FRIZ), v19 every seeded profile marked as having seen the preset picker
+    -- (AM-PR04, tests/test_presets_seed.lua)
+    assertEqual(NS.Database.CurrentSchemaVersion(), 19)
+    assertEqual(NS.db.global.schemaVersion, 19)
 end)
 
 test("v3: RunMigrations migrates every stored profile, the inactive one included", function()

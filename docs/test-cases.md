@@ -78,7 +78,7 @@ Total.
 
 ### test_database.lua (56)
 
-- database: a fresh profile is seeded with the three starter containers, once
+- database: a fresh profile is seeded with the Simple preset's three containers, once
 - database: PrepareProfile is idempotent
 - database: string ids, dangling order entries and orphans are repaired
 - database: the backfill fills a missing leaf and keeps a stored false
@@ -785,7 +785,7 @@ Total.
 - lifecycle: a profile switch out of combat rebuilds every container for the new profile at once
 - lifecycle: every profile event clears the container selection and re-renders the panel once
 - lifecycle: a copied profile is prepared before its containers are built
-- lifecycle: a reset profile gets its starters back, numbered from 1 again
+- lifecycle: a reset profile is seeded with the Simple preset again, numbered from 1
 - lifecycle: a profile switch applies the new profile's Blizzard-frame settings
 - lifecycle: the degraded latch stands up and down only on an edge
 - lifecycle: one bad event name leaves the other eleven registered and is recorded
@@ -2630,6 +2630,16 @@ Total.
 - preview: the category half of a restore is the category registry's writer
 - preview: a category restore into a profile not in use writes it and syncs nothing
 
+### test_presets_seed.lua (7)
+
+- seed: new profile gets simple
+- seed: the seeded containers are what applying Simple (Bars) writes
+- seed: PrepareProfile seeds Simple from the profile's own counter
+- seed: the retired starter set is gone
+- seed: migrated profile marked seen
+- seed: fresh install not marked seen
+- seed: the v19 step is idempotent and keeps a stored false on an unseeded profile
+
 ### test_perf.lua (8)
 
 - perf: every declared bucket is reached by a real bracket
@@ -2937,6 +2947,7 @@ Total.
 | test_presets_data.lua | 14 |
 | test_presets_apply.lua | 11 |
 | test_presets_preview.lua | 17 |
+| test_presets_seed.lua | 7 |
 | test_perf.lua | 8 |
 | test_debuglogsetup.lua | 9 |
 | test_locale.lua | 10 |
@@ -2953,4 +2964,4 @@ Total.
 | test_skin_switch.lua | 34 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2419** |
+| **Total** | **2426** |

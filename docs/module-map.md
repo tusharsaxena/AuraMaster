@@ -86,7 +86,7 @@ naming what resolves at load (toc-file-§5); the rest are conventional and free 
 | `defaults/Categories.lua` | The 19 buff and 21 debuff categories (kinds `token`, `flag`, `dispel`, `spells`, `enchant` for `weaponEnchants`, and `uncategorized` for `uncategorized` and `uncategorizedDebuffs`), the starter spell lists — fifteen `spells`-kind categories, eleven buff and four debuff (`hardCC` from issue #11, and `ccRoot` and `ccSnare` from schema v12's split of its `softCC`, all derived by `tools/spell-research/research.py` against build 12.1.0.69875, and `racialDebuffs` from schema v7) — and `For`/`Find`/`IsSpellCategory`/`AuraTypeOf`/`DefaultStates`/`StatesShowing`/`EnchantOnlyStates` |
 | `defaults/UserCategories.lua` | The user-category registry (issue #10), extending `NS.Categories`: the records' load pass `SyncUserCategories` (four phases: teardown, insertion anchors, materialize, register rows), the acts `CreateUserCategory`/`RenameUserCategory`/`DeleteUserCategory`/`ForgetUnusableUserRecords`, the key machinery `NewUserKey`/`IsUserKey`/`UserKeysInUse`/`UserCategoryOrder`/`HasUserRecord`/`UnusableUserRecords`, `LabelOf` (THE labeling rule: a shipped label routed through `NS.L`, a player's own name never) and the name rules `SanitizeUserName`/`CharCount`/`USER_NAME_MAX` |
 | `defaults/CastToAura.lua` | **Generated** by `tools/spell-research/research.py --emit-cast-aura` against build 12.1.0.69875, never hand-edited: `NS.CastToAura.REWRITE`, the 58 cast ids whose aura the DB2 data names outright, and `NS.CastToAura.CHOICES`, the 590 whose candidates are only name matches and are never resolved for the player. Ids the panel can say nothing useful about are left out |
-| `defaults/Profile.lua` | `NS.defaults` (profile and global), `NS.CONTAINER_TEMPLATE`, `NS.STARTER_CONTAINERS` — the one place a default is hardcoded |
+| `defaults/Profile.lua` | `NS.defaults` (profile and global) and `NS.CONTAINER_TEMPLATE` — the one place a default is hardcoded (a new profile's first containers are the Simple preset, `defaults/Presets.lua`) |
 
 ## `modules/` (TOC order)
 
@@ -330,7 +330,7 @@ All vendored under `libs/`, loaded by the `# Libraries` block of `AuraMaster.toc
 | AceEvent-3.0 | Lifecycle events and the message bus (`core/Bus.lua`) |
 | AceTimer-3.0 | The color picker's drag throttle, via the options descriptor's `scheduleTimer` |
 | AceConsole-3.0 | `/am` and `/auramaster` registration (`settings/Slash.lua:655-656`) |
-| AceDB-3.0 | `AuraMasterDB` and its profiles (`core/Database.lua:271`) |
+| AceDB-3.0 | `AuraMasterDB` and its profiles (`core/Database.lua:289`) |
 | AceGUI-3.0 | The settings panel body |
 | AceConfig-3.0, AceDBOptions-3.0 | The Profiles sub-page only (`settings/Profiles.lua`, options-ui-§3) |
 | LibSharedMedia-3.0 | Texture, border and font lookups through `LSM` (`modules/Style.lua:33`), and the lists behind the library's `Ka0sMedia_*` media pickers |

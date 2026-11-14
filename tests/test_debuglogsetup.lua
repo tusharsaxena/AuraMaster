@@ -37,14 +37,15 @@ test("debuglog: enabling logging writes the [Init] summary — name, version, sc
     -- The newest [Init] line: the first enable flushes the at-enable queue after it (DebugLogGates 1).
     -- red under: initSummary dropping a field, or NS.SafeToString of a missing field answering "nil"
     assertEqual(unstamped(NS2.DebugLog:FindLine("[Init]")),
-        "[Init] AuraMaster v" .. NS2.Version() .. ", schema v" .. NS2.Database.CurrentSchemaVersion() .. ", profile 'Default', " .. #NS2.STARTER_CONTAINERS .. " container(s)")
+        "[Init] AuraMaster v" .. NS2.Version() .. ", schema v" .. NS2.Database.CurrentSchemaVersion() .. ", profile 'Default', " .. #AM_TEST.STARTERS .. " container(s)")
     NS2.DebugLog:SetEnabled(false)
+    -- A new profile is seeded with the Simple preset (the fixture is the first profile's alone).
     NS2.db:SetProfile("Raid")
     NS2.ContainerManager.Create({})
     NS2.DebugLog:SetEnabled(true)
     -- red under: the summary built once at load rather than read at each enable
     assertEqual(unstamped(NS2.DebugLog:FindLine("[Init]")),
-        "[Init] AuraMaster v" .. NS2.Version() .. ", schema v" .. NS2.Database.CurrentSchemaVersion() .. ", profile 'Raid', " .. #NS2.STARTER_CONTAINERS + 1 .. " container(s)")
+        "[Init] AuraMaster v" .. NS2.Version() .. ", schema v" .. NS2.Database.CurrentSchemaVersion() .. ", profile 'Raid', " .. NS2.PresetData.Count("simple") + 1 .. " container(s)")
     NS2.DebugLog:SetEnabled(false)
 end)
 
