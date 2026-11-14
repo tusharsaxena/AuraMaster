@@ -195,3 +195,23 @@ Each task keeps the Global Constraints, the gate and the commit rules above.
 - [ ] Failing tests first: `picker: opens where the skin picker does` (CENTER, 75% up, x 0, at 1080 and 768); `picker: the call-out block clears the picker at 1080 for every preset` (no exception for Advanced, `OVERLAPS_AT_1080` gone); `presets data: side stacks sit on the lower base`; the unlocked/locked top-edge checks tightened to what the lower base now achieves (state any remaining overshoot and record it).
 - [ ] Implement per §15.1, gate green, commit `AM-PR12: The picker takes the skin picker's spot, the side stacks start lower`.
 - [ ] Review, fixes as `AM-PR12: Review fixes: …`, then a fresh automated-test record and the M4 checkpoint row: `AM-PR12: Automated-test record after the round-1 rulings`.
+
+## Round 3: owner feedback, round 2 (spec §16)
+
+### Task AM-PR13: Call-out glow, a focus stack of its own, the corner group aligned with it
+
+**Files:** `defaults/Presets.lua`, `tests/test_presets_data.lua` and any preset suite whose expectations move, docs/known-limitations.md if an overlap remains.
+- [ ] Failing tests first: `presets data: the call-outs carry the owner's glow exactly` (every field in §16.1); `presets data: focus roles form their own screen-placed stack` (every tier, both looks; head attach.mode screen, members attached within the focus stack only, nothing attached to a far-column container); `presets data: no bars container is laid out horizontally after Apply` (the effective layout, every tier and look); `presets data: the focus stack stays clear of the far stack beyond twice the snap radius` (test mode, locked and unlocked, all tested screens); `presets data: Player debuffs' left edge lines up with Focus buffs' left edge` (screen space, all tested ratios, and left of the §15 position).
+- [ ] Implement per §16.1–3, gate green, commit `AM-PR13: The call-outs' glow, a focus stack of its own, the corner group aligned with it`.
+
+### Task AM-PR14: The Presets tab moves to the General page
+
+**Files:** `settings/ContainersPresets.lua` (or a renamed file), `settings/General.lua`, `settings/Containers.lua`, `AuraMaster.toc` if the file moves or is renamed, `locales/enUS.lua` (the picker footer string), the presets tab tests.
+- [ ] Failing tests first: the tab is listed on the General page and not on the Containers page; every existing presets-tab case passes on its new page (pick previews, apply replace confirms and keeps, add keeps, leaving the tab restores, panel hide restores, no Empty); the footer names the General page.
+- [ ] Implement per §16.4, gate green, commit `AM-PR14: The Presets tab moves to the General page`.
+
+### Task AM-PR15: Docs, smoke checks, review and the automated-test record for round 2
+
+- [ ] Docs (ARCHITECTURE, settings-panel, module-map, known-limitations, smoke checks: the glow, the focus stack, the corner alignment, the tab's new place), test-cases.md and the README badge. Commit `AM-PR15: Docs and smoke checks for the owner's round-2 feedback`.
+- [ ] An independent review against §16; fixes as `AM-PR15: Review fixes: …`.
+- [ ] A fresh automated-test record, the M5 checkpoint row and the RESUME log line: `AM-PR15: Automated-test record after round-2 feedback`.

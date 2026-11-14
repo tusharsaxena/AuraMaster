@@ -399,3 +399,36 @@ section wins.
    (y = -740 from the top at 1080 tall, scaled by k), to give tall upward stacks (Advanced's target
    stack) room under the top edge. Tall unit-frame or action-bar setups may now meet the base; that goes
    in docs/known-limitations.md.
+
+## 16. Owner feedback, round 2 (2026-11-15)
+
+The owner previewed Advanced (Bars) again. Where this conflicts with §15/§15.1, this section wins. Apply
+it with the same principles to the other tiers and to every Icons variant.
+
+1. **The call-outs' glow looks wrong.** The builder set `glowThickness = 6`, a heavy black outline. The
+   owner's own three call-outs use `glow = true`, `glowColor = (0, 0, 0)`, `glowColorFromSkin = false`,
+   `glowRadius = 6`, `glowThickness = 2`, `glowIntensity = 1`, `glowFalloff = "soft"`,
+   `glowBlend = "BLEND"`, `glowX = 1`, `glowY = -1`, `useClassColorGlow = false`. Use exactly these, and
+   list every glow field explicitly so a template or skin default cannot leak in. (The owner referred to
+   a screenshot of settings that did not come through. If it differs, the owner will send it and these
+   values change.)
+2. **Focus debuffs (mine) and Focus buffs (mine) grow horizontally**, because Focus debuffs (mine) is
+   attached to Target buffs (all), a horizontal icon row. Fix by removing that attachment: the focus
+   containers become their **own stack**, a new `focus` column, in every tier that has focus roles
+   (Intermediate `fdeb`; Advanced `fdeb`, `fbuff`; Healer `healFocus`, `dispelFocus`). The stack's head is
+   placed on the screen (`attach.mode = "screen"`, "None" in the panel) with a position of its own. It
+   grows up like the other side stacks, and its members attach above it. Its rectangle, in test mode and
+   unlocked, stays further than **2 x `C.SNAP_RADIUS`** from the `far` stack's (Target debuffs (all) /
+   Target buffs (all)), so dragging it near cannot snap it back. Find the root cause of the horizontal
+   growth too: no **bars** container in any preset may end up laid out horizontally after Apply.
+3. **The corner group is still too far right.** Move it further in, so the **left edge of Player debuffs
+   (all)** (`cornerLeft`) lines up with the **left edge of Focus buffs (mine)**, the `focus` column. The
+   corner group must end up left of where §15 put it (`cornerLeft` left edge at more than 475 reference
+   units from the right edge). Choose the `focus` column's place to meet both rules. It must not sit in
+   the `right` (target) column's horizontal span where their test-mode vertical extents meet at 1080; if
+   that cannot be fully met, keep the overlap smallest and record it in docs/known-limitations.md.
+   `cornerRight` keeps its width and its gap to `cornerLeft`.
+4. **The Presets tab moves to the General page** (settings/General.lua, the addon's General page), so it
+   is easier to find. It is removed from the Containers page. Everything the tab did stays the same: pick,
+   preview, Apply with a confirm, Stop preview, and restore on leaving the tab or closing the panel. The
+   picker footer string, the docs and the smoke checks name the new place.
