@@ -14,10 +14,12 @@ local NS = T.NS
 
 local NAMES = { "empty", "simple", "intermediate", "advanced", "healer" }
 local CUSTOM = { SPECIAL_PLAYER = true, SPECIAL_TARGET = true }
+-- The side stacks, which grow up from their base (spec section 15).
+local UP = { left = true, right = true, far = true }
 
 -- The 20 containers of docs/superpowers/specs/2026-11-14-presets/advanced-source.md, transcribed:
 -- per role, the categories the source hides, then its filter (without the spell lists), its layout
--- (without growV, which spec section 3 turns to "down") and its behavior.
+-- (without growV, which spec sections 3 and 15 turn away from the stack's head) and its behavior.
 local SOURCE = {
     pbuffs = {
         unit = "player", auraType = "HELPFUL", style = "bars", enabled = true,
@@ -240,7 +242,7 @@ test("presets: advanced matches its source", function()
         local layout = {}
         for k, v in pairs(o.layout) do if k ~= "growV" then layout[k] = v end end
         deepEqual(layout, want.layout, role .. ".layout")
-        assertEqual(o.layout.growV, "down", role .. " grows away from its head")
+        assertEqual(o.layout.growV, UP[spec.stack] and "up" or "down", role .. " grows away from its head")
         deepEqual(o.behavior, want.behavior, role .. ".behavior")
     end
     assertEqual(n, 20)
@@ -278,9 +280,10 @@ for _, h in ipairs({ 768, 1080, 1440 }) do
     for _, ratio in ipairs({ 16 / 9, 16 / 10, 21 / 9, 4 / 3, 5 / 4 }) do SCREENS[#SCREENS + 1] = { h * ratio, h } end
 end
 
---- A head's span on a W x H parent, out of its stored position and size alone: [left, right] and top
---- (a negative offset from the parent's top edge). A text head's is its stored width, the column: its
---- lines size to fit from the column's left edge (defaults/Presets.lua, sizeTo).
+--- A head's span on a W x H parent, out of its stored position and size alone: [left, right] and the
+--- y it is placed at (a negative offset from the parent's top edge): its top, or for an up stack's head
+--- its bottom, the column's base. A text head's is its stored width, the column, centered on the
+--- center line it hangs from by its TOP (defaults/Presets.lua, sizeTo and place).
 local function headRect(spec, W, H)
     local o, P = spec.overrides, NS.PresetData
     local pos = o.position
@@ -296,20 +299,22 @@ local function headRect(spec, W, H)
         assertNear(w, P.STACKS[spec.stack].width * P.ScaleX(W, H), 1, "a text head is its column wide")
     end
     local x = ax + pos.x
-    if pos.point == "TOPRIGHT" then return x - w, x, pos.y end
-    assertEqual(pos.point, "TOPLEFT", "a head is placed by a top corner")
+    if pos.point == "TOP" then return x - w / 2, x + w / 2, pos.y end
+    if pos.point:find("RIGHT$") then return x - w, x, pos.y end
+    assertTrue(pos.point == "TOPLEFT" or pos.point == "BOTTOMLEFT", "a head is placed by a corner")
     return x, x + w, pos.y
 end
 
--- A CORNER COLUMN MAY RUN OVER A SIDE COLUMN (spec sections 4 and 11, the plan's ruling on the AM-PR01
--- review). By the spec 4 numbers the far stack sits under both corner columns on 16:9, the right
--- stack under cornerLeft on 16:10 as well, and on 4:3 and 5:4 the right and far stacks run under the
--- corners entirely. The corner stacks grow down from y = 6 and the side stacks' heads sit at y = 330,
--- so such a pair shares a column only while the corner stack ends above the side stack's head. The
--- check measures that at the test-mode sample count: every container of the preset applied, each as
--- tall as Preview.Extent makes its placeholder block, each stack member hung below the one above by its
--- gap. Every other pair of columns stays disjoint. In play a corner stack may grow further
--- (docs/known-limitations.md, presets).
+-- A CORNER COLUMN MAY RUN OVER A SIDE COLUMN (spec sections 4, 11 and 15, the plan's ruling on the
+-- AM-PR01 review). By the spec 4 numbers the far stack sits under both corner columns on 16:9, the
+-- right stack under cornerLeft on 16:10 as well, and on 4:3 and 5:4 the right and far stacks run under
+-- the corners entirely. The corner stacks grow down from y = 46 and the side stacks grow up from
+-- their base at y = 600, so every corner stack must end above every side stack's base. The check
+-- measures that at the test-mode sample count: every container of the preset applied, each as tall as
+-- Preview.Extent makes its placeholder block, each stack member hung from the one before by its gap,
+-- below it growing down and above it growing up. Every other pair of columns stays disjoint. A tall
+-- side stack (Advanced's target stack) may reach up into a corner column, and in play a corner stack
+-- may grow further down (docs/known-limitations.md, presets).
 local CORNER = { cornerRight = true, cornerLeft = true }
 local SIDE = { left = true, right = true, far = true }
 
@@ -317,36 +322,61 @@ local function cornerOverSide(a, b)
     return (CORNER[a] and SIDE[b]) or (CORNER[b] and SIDE[a]) or false
 end
 
---- Each stack's bottom edge (a negative offset from the parent's top) with preset `name` in style
---- `look` applied on a W x H parent in `env`, every container filled with its test-mode samples.
-local function sampleBottoms(env, mocks, name, look, W, H)
+--- Each stack's test-mode span with preset `name` in style `look` applied on a W x H parent in `env`,
+--- every container filled with its test-mode samples: [stack] = { top, bottom }, offsets from the
+--- parent's top (negative is down). A head placed by a BOTTOM point starts at its base and grows up;
+--- a member hangs below the one before it growing down, above it growing up, by its gap.
+local function sampleSpans(env, mocks, name, look, W, H)
     env.Presets.ParentSize = function() return W, H end
     assertTrue(env.Presets.Apply(name, look, "replace"), name .. "/" .. look .. " applies")
     local specs, p = env.PresetData.Build(name, look, W, H), env.db.profile
     assertEqual(#p.containerOrder, #specs, "one container per spec, in creation order")
-    local bottomOf, out = {}, {}
+    local spanOf, out = {}, {}
     for i, id in ipairs(p.containerOrder) do
         local c = p.containers[id]
         local extent = env.Preview.Extent({ Cfg = function() return c end, anchor = mocks.CreateFrame("Frame") })
-        local top = (c.attach.mode == "container") and (bottomOf[tonumber(c.attach.container)] + c.attach.y)
-            or c.position.y
-        bottomOf[id] = top - extent.height
+        local top, bottom
+        local parent = (c.attach.mode == "container") and spanOf[tonumber(c.attach.container)]
+        if parent and c.layout.growV == "up" then
+            bottom = parent.top + c.attach.y
+            top = bottom + extent.height
+        elseif parent then
+            top = parent.bottom + c.attach.y
+            bottom = top - extent.height
+        elseif c.position.point:find("^BOTTOM") then
+            bottom = c.position.y
+            top = bottom + extent.height
+        else
+            top = c.position.y
+            bottom = top - extent.height
+        end
+        spanOf[id] = { top = top, bottom = bottom }
         local stack = specs[i].stack
-        out[stack] = math.min(out[stack] or 0, bottomOf[id])
+        local span = out[stack] or { top = top, bottom = bottom }
+        span.top, span.bottom = math.max(span.top, top), math.min(span.bottom, bottom)
+        out[stack] = span
     end
     return out
 end
 
---- Heads `a` and `b` on one screen: disjoint columns, or a corner column over a side one whose stack
---- ends above the side head in test mode (`bottoms`, a thunk: measured only when a pair shares).
-local function checkColumns(a, b, bottoms, what)
+--- Every corner stack ends above every side stack's base in test mode (`spans`, from sampleSpans;
+--- `heads`, each head's placed y by stack).
+local function checkCornersAboveBases(spans, heads, what)
+    for corner in pairs(CORNER) do
+        for side in pairs(SIDE) do
+            if spans[corner] and heads[side] then
+                local why = "%s: %s must end above %s's base (corner bottom %d, side base %d)"
+                assertTrue(spans[corner].bottom > heads[side], why:format(what, corner, side,
+                    spans[corner].bottom, heads[side]))
+            end
+        end
+    end
+end
+
+--- Heads `a` and `b` on one screen: disjoint columns, or a corner column over a side one.
+local function checkColumns(a, b, what)
     if not (a.l < b.r and b.l < a.r) then return end
     assertTrue(cornerOverSide(a.stack, b.stack), what .. " (only a corner over a side column may share)")
-    local corner, side = a, b
-    if SIDE[a.stack] then corner, side = b, a end
-    local bottom = bottoms()[corner.stack]
-    local why = "%s: the corner stack must end above the side head (corner bottom %d, side head %d)"
-    assertTrue(bottom > side.top, why:format(what, bottom, side.top))
 end
 
 test("presets: placement at 768/1080/1440 x 16:9, 16:10, 21:9, 4:3, 5:4", function()
@@ -357,33 +387,253 @@ test("presets: placement at 768/1080/1440 x 16:9, 16:10, 21:9, 4:3, 5:4", functi
         local W, H = scr[1], scr[2]
         for _, name in ipairs(NAMES) do
             for _, look in ipairs(P.LOOKS) do
-                local heads = {}
+                local heads, placedY = {}, {}
                 for _, spec in ipairs(P.Build(name, look, W, H)) do
                     if not spec.attachTo then
                         local where = ("%s/%s %s at %dx%d"):format(name, look, spec.stack, W, H)
                         assertEqual(spec.overrides.attach.mode, "screen", where)
-                        local l, r, top = headRect(spec, W, H)
+                        local l, r, y = headRect(spec, W, H)
                         assertTrue(l >= 0, where .. ": left edge on screen (" .. l .. ")")
                         assertTrue(r <= W + 0.001, where .. ": right edge on screen (" .. r .. ")")
-                        assertTrue(top >= -0.6 * H, where .. ": above 60% of the height")
-                        if spec.stack == "cornerRight" then assertNear(r, W, 1, where .. " hugs the right edge") end
-                        heads[#heads + 1] = { l = l, r = r, top = top, stack = spec.stack }
+                        assertTrue(y <= 0, where .. ": head or base below the top edge")
+                        assertTrue(y >= -0.6 * H, where .. ": above 60% of the height")
+                        if spec.stack == "cornerRight" then
+                            assertNear(r, W - 80 * P.ScaleX(W, H), 1, where .. " sits 80 in from the right edge")
+                        end
+                        heads[#heads + 1] = { l = l, r = r, stack = spec.stack }
+                        placedY[spec.stack] = y
                     end
-                end
-                local measured
-                local function bottoms()
-                    measured = measured or sampleBottoms(env, mocks, name, look, W, H)
-                    return measured
                 end
                 for i = 1, #heads do
                     for j = i + 1, #heads do
                         local a, b = heads[i], heads[j]
-                        checkColumns(a, b, bottoms, ("%s/%s: %s and %s share a column at %dx%d"):format(name, look,
+                        checkColumns(a, b, ("%s/%s: %s and %s share a column at %dx%d"):format(name, look,
                             a.stack, b.stack, W, H))
+                    end
+                end
+                if placedY.cornerRight and (placedY.left or placedY.right or placedY.far) then
+                    checkCornersAboveBases(sampleSpans(env, mocks, name, look, W, H), placedY,
+                        ("%s/%s at %dx%d"):format(name, look, W, H))
+                end
+            end
+        end
+    end
+end)
+
+-- SPEC SECTION 15, the owner's round-1 feedback: the side stacks grow up from their base, the corner
+-- group sits further in, the call-outs are centered and colored like the owner's.
+
+--- Each container of preset `name` in style `look`, applied on a 1920 x 1080 parent in `env`, with
+--- its spec: { cfg, spec } in creation order.
+local function applied(env, name, look)
+    env.Presets.ParentSize = function() return 1920, 1080 end
+    assertTrue(env.Presets.Apply(name, look, "replace"), name .. "/" .. look .. " applies")
+    local specs, p, out = env.PresetData.Build(name, look, 1920, 1080), env.db.profile, {}
+    for i, id in ipairs(p.containerOrder) do out[i] = { cfg = p.containers[id], spec = specs[i] } end
+    return out
+end
+
+test("presets data: side stacks grow up from their base", function()
+    local env = freshEnv()
+    env.Helpers.SkinPicker = function() return nil end
+    local P = env.PresetData
+    for _, H in ipairs({ 768, 1080, 1440 }) do
+        for _, name in ipairs(NAMES) do
+            for _, look in ipairs(P.LOOKS) do
+                for _, spec in ipairs(P.Build(name, look, H * 16 / 9, H)) do
+                    local o, where = spec.overrides, ("%s/%s %s at %d"):format(name, look, spec.role, H)
+                    if UP[spec.stack] then
+                        assertEqual(o.layout.growV, "up", where .. " grows up")
+                        if spec.attachTo then
+                            assertTrue(o.attach.y > 0, where .. ": its gap is above the one before")
+                        else
+                            assertTrue(o.position.point:find("^BOTTOM") ~= nil, where .. " is placed by a BOTTOM point")
+                            assertEqual(o.position.relativePoint, "TOP", where)
+                            assertEqual(o.position.y, math.floor(-600 * P.Scale(H) + 0.5), where .. " sits on the base")
+                        end
+                    else
+                        assertEqual(o.layout.growV, "down", where .. " grows down")
                     end
                 end
             end
         end
+    end
+    -- Applied, each member joins the top of the one before it, from the side its stack's lines start.
+    for _, name in ipairs({ "intermediate", "advanced", "healer" }) do
+        for _, look in ipairs(P.LOOKS) do
+            for _, e in ipairs(applied(env, name, look)) do
+                if UP[e.spec.stack] and e.spec.attachTo then
+                    local point, rel = env.Anchors.AttachPoints(e.cfg)
+                    -- A member flows as its stack's head does (Anchors.EffectiveLayout).
+                    local h = (env.Anchors.EffectiveLayout(e.cfg).growH == "left") and "RIGHT" or "LEFT"
+                    local where = name .. "/" .. look .. " " .. e.spec.role
+                    assertEqual(point, "BOTTOM" .. h, where .. ": its bottom corner")
+                    assertEqual(rel, "TOP" .. h, where .. ": to the top corner of the one before")
+                end
+            end
+        end
+    end
+    -- The tier's first role sits nearest the base: Advanced's player stack starts with its short buffs.
+    local adv = byRole(P.Build("advanced", "bars", 1920, 1080))
+    assertNil(adv.pshort.attachTo, "Player buffs, short is the player stack's base")
+    assertEqual(adv.pcd.attachTo, adv.pshort.index, "Player cooldowns sits on it")
+end)
+
+test("presets data: the corner group sits left of and below its old place", function()
+    local P = NS.PresetData
+    local S = P.STACKS
+    assertEqual(S.cornerRight.x, -175 - 80, "Player buffs' column 80 further left")
+    assertEqual(S.cornerLeft.x, -395 - 80, "Player debuffs' column 80 further left")
+    assertEqual(S.cornerRight.y, -6 - 40, "40 further down")
+    assertEqual(S.cornerLeft.y, -6 - 40, "40 further down")
+    local simple = byRole(P.Build("simple", "bars", 1920, 1080))
+    local pos = simple.pbuffs.overrides.position
+    assertEqual(pos.relativePoint, "TOPRIGHT")
+    assertEqual(pos.point, "TOPLEFT")
+    assertEqual(pos.x, -255)
+    assertEqual(pos.y, -46)
+    assertEqual(simple.pdebuffs.overrides.position.x, -475)
+    -- Still a corner group: it grows down, and the members hang below their heads.
+    assertEqual(simple.wpn.overrides.layout.growV, "down")
+    assertTrue(simple.wpn.overrides.attach.y < 0, "Weapon enchants hangs below Player buffs")
+end)
+
+local CALLOUT_COLORS = {
+    txtOff = { 0.1, 1, 0.1 }, txtDef = { 1, 0.125, 0.125 }, txtRaid = { 1, 0.486, 0.04 },
+}
+
+test("presets data: the call-outs are centered and colored like the owner's", function()
+    local P = NS.PresetData
+    for _, name in ipairs({ "advanced", "healer" }) do
+        for _, look in ipairs(P.LOOKS) do
+            local first
+            for _, spec in ipairs(P.Build(name, look, 1920, 1080)) do
+                if spec.stack == "middle" then
+                    local t, where = spec.overrides.text, name .. "/" .. look .. " " .. spec.role
+                    local want = CALLOUT_COLORS[spec.role]
+                    assertTrue(want ~= nil, where .. " is a call-out")
+                    assertEqual(t.justifyH, "CENTER", where .. " centered")
+                    assertEqual(t.template, "$spellname$", where .. ": the name alone")
+                    assertEqual(t.font.fontColorFromSkin, false, where .. ": its own color")
+                    assertEqual(t.font.useClassColorFont, false, where)
+                    assertNear(t.font.fontColor.r, want[1], 0.0001, where .. " red")
+                    assertNear(t.font.fontColor.g, want[2], 0.0001, where .. " green")
+                    assertNear(t.font.fontColor.b, want[3], 0.0001, where .. " blue")
+                    assertEqual(t.glow, true, where .. " glows")
+                    assertEqual(t.glowColor.r + t.glowColor.g + t.glowColor.b, 0, where .. ": a black glow")
+                    assertEqual(t.glowColorFromSkin, false, where)
+                    assertEqual(t.glowThickness, 6, where .. ": radius 6")
+                    assertEqual(t.glowX, 1, where)
+                    assertEqual(t.glowY, -1, where)
+                    assertEqual(spec.overrides.label.show, false, where .. ": no label")
+                    assertTrue(t.font.fontSize >= 24 and t.font.fontSize <= 36, where .. ": 24 to 36")
+                    if first then
+                        assertEqual(t.font.fontSize, first.overrides.text.font.fontSize, where .. ": one size")
+                    else
+                        first = spec
+                        local pos = spec.overrides.position
+                        assertEqual(pos.point, "TOP", where .. " hangs by its top")
+                        assertEqual(pos.relativePoint, "TOP", where)
+                        assertEqual(pos.x, 0, where .. ": on the center line")
+                    end
+                end
+            end
+            assertTrue(first ~= nil, name .. " has call-outs")
+        end
+    end
+    -- Nothing else carries a look of its own.
+    for _, spec in ipairs(P.Build("advanced", "bars", 1920, 1080)) do
+        if spec.stack ~= "middle" then
+            assertNil(spec.overrides.text, spec.role .. ": no text look")
+            assertNil(spec.overrides.label, spec.role .. ": no label look")
+        end
+    end
+    -- Applied, the look is stored, and each call-out joins the one above it at its center.
+    local env = freshEnv()
+    env.Helpers.SkinPicker = function() return nil end
+    local seen = 0
+    for _, e in ipairs(applied(env, "advanced", "bars")) do
+        if e.spec.stack == "middle" then
+            seen = seen + 1
+            local t = e.cfg.text
+            assertEqual(t.justifyH, "CENTER", e.spec.role .. " stored centered")
+            assertNear(t.font.fontColor.r, CALLOUT_COLORS[e.spec.role][1], 0.0001, e.spec.role .. " stored color")
+            assertEqual(e.cfg.label.show, false)
+            if e.spec.attachTo then
+                local point, rel = env.Anchors.AttachPoints(e.cfg)
+                assertEqual(point, "TOP", e.spec.role .. " joins by its top center")
+                assertEqual(rel, "BOTTOM", e.spec.role .. " to the bottom center of the one above")
+            end
+        end
+    end
+    assertEqual(seen, 3, "three call-outs")
+end)
+
+--- The room the call-out block may take on a `H` tall parent (spec section 15): from below the skin
+--- picker down to above the preset picker's room, as offsets from the top edge.
+local function calloutRoom(P, H)
+    local R = P.ROOM
+    return H * (1 - R.skinShare) + R.skinHeight / 2 + R.margin, H - 2 * R.margin - R.pickerHeight
+end
+
+test("presets data: the call-out block takes the largest font that fits, centered as far as it can", function()
+    -- Its own environment: the case narrows the size range to probe the next size up.
+    local P = freshEnv().PresetData
+    assertEqual(P.CALLOUT_SIZE_MAX, 36, "the owner's size")
+    assertEqual(P.CALLOUT_SIZE_MIN, 24)
+    assertNil(P.CalloutRect("simple", "bars", 1920, 1080), "Simple has no call-outs")
+    assertNil(P.CalloutRect("intermediate", "icons", 1920, 1080), "nor Intermediate")
+    local max, min = P.CALLOUT_SIZE_MAX, P.CALLOUT_SIZE_MIN
+    for _, H in ipairs({ 768, 1080, 1440 }) do
+        for _, name in ipairs({ "advanced", "healer" }) do
+            local W, where = H * 16 / 9, ("%s at %d"):format(name, H)
+            local r = P.CalloutRect(name, "bars", W, H)
+            local lo, hi = calloutRoom(P, H)
+            local top, bottom = H - r.top, H - r.bottom
+            assertNear(r.height, bottom - top, 0.001, where .. ": the rect is the block")
+            assertNear((r.left + r.right) / 2, W / 2, 0.001, where .. ": centered across")
+            assertTrue(top >= 0 and bottom <= H, where .. ": on the screen")
+            -- The size above the one chosen does not fit (falsifiable: the room decides the size).
+            if r.fontSize < max then
+                P.CALLOUT_SIZE_MAX, P.CALLOUT_SIZE_MIN = r.fontSize + 1, r.fontSize + 1
+                local bigger = P.CalloutRect(name, "bars", W, H)
+                P.CALLOUT_SIZE_MAX, P.CALLOUT_SIZE_MIN = max, min
+                assertTrue(bigger.height > hi - lo, where .. ": one size larger would not fit")
+            end
+            if r.height <= hi - lo then
+                assertTrue(top >= lo - 0.5, where .. ": below the skin picker")
+                assertTrue(bottom <= hi + 0.5, where .. ": above the picker's room")
+                local want = math.min(math.max(H / 2 - r.height / 2, lo), hi - r.height)
+                assertNear(top, want, 0.5, where .. ": as near the middle as the room allows")
+            else
+                assertEqual(r.fontSize, min, where .. ": nothing fits, so the smallest")
+            end
+        end
+    end
+    -- Healer's one call-out fits at the owner's size on a 1080-tall screen, centered on its middle.
+    local heal = P.CalloutRect("healer", "bars", 1920, 1080)
+    assertEqual(heal.fontSize, 36)
+    -- A build in either look places the block the same.
+    local bars, icons = P.CalloutRect("advanced", "bars", 1920, 1080), P.CalloutRect("advanced", "icons", 1920, 1080)
+    assertEqual(bars.top, icons.top)
+    assertEqual(bars.fontSize, icons.fontSize)
+    -- The fallback places at 1920 x 1080.
+    local fb = P.CalloutRect("healer", "bars", nil, nil)
+    assertEqual(fb.top, heal.top)
+    assertEqual(fb.left, heal.left)
+end)
+
+test("presets data: the call-out rect is what the applied containers fill in test mode", function()
+    local env, mocks = freshEnv()
+    env.Helpers.SkinPicker = function() return nil end
+    local P = env.PresetData
+    for _, name in ipairs({ "advanced", "healer" }) do
+        local r = P.CalloutRect(name, "bars", 1920, 1080)
+        local span = sampleSpans(env, mocks, name, "bars", 1920, 1080).middle
+        -- sampleSpans hangs each member by its stored gap; the seam adds the layout's own spacing.
+        local seams = (P.Count(name) == 20) and 2 * 2 or 0
+        assertNear(r.top, 1080 + span.top, 0.5, name .. ": the block's top")
+        assertNear(r.bottom, 1080 + span.bottom - seams, 0.5, name .. ": the block's bottom")
     end
 end)
 
@@ -400,7 +650,11 @@ test("presets: members chain", function()
                     assertEqual(spec.attachTo, last[spec.stack], name .. " #" .. i .. " attaches to the one above")
                     assertEqual(a.mode, "container")
                     assertNil(spec.overrides.position, name .. " #" .. i .. ": a member is not placed")
-                    assertTrue(a.y < 0, "a small gap below the one above")
+                    if UP[spec.stack] then
+                        assertTrue(a.y > 0, "a small gap above the one before")
+                    else
+                        assertTrue(a.y < 0, "a small gap below the one above")
+                    end
                 else
                     assertNil(spec.attachTo, name .. " #" .. i .. " heads its stack")
                     assertTrue(spec.overrides.position ~= nil, "a head is placed")
@@ -476,7 +730,8 @@ test("presets: icons variant", function()
             local wantH = rightOfCenter[b.stack] and "left" or "right"
             assertEqual(i.overrides.layout.growH, wantH, role .. " grows away from the edge it sits nearest")
             if not b.attachTo and wantH == "left" then
-                assertEqual(i.overrides.position.point, "TOPRIGHT", role .. " hangs from its column's right edge")
+                assertEqual(i.overrides.position.point, UP[b.stack] and "BOTTOMRIGHT" or "TOPRIGHT",
+                    role .. " hangs from its column's right edge")
             end
             deepEqual(i.overrides.filter, b.overrides.filter, role .. " keeps its filter")
         end

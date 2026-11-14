@@ -12,19 +12,22 @@ local _, NS = ...
 --
 -- WHAT IT IS NOT. No appearance media and no spell ids (spec section 3): bars, icons, text and label
 -- settings come from NS.CONTAINER_TEMPLATE and the skin, except the column width (a bar's width, an
--- icon row's icon size), so a stack's containers line up. Whitelists and blacklists are empty.
+-- icon row's icon size), so a stack's containers line up, and the call-outs' look, which copies the
+-- owner's own (spec section 15). Whitelists and blacklists are empty.
 --
 -- THE SOURCE. Advanced is the owner's Retail Default profile, container by container, transcribed from
 -- docs/superpowers/specs/2026-11-14-presets/advanced-source.md with the section 3 changes: plain
--- names, growV "down", no attach or position (placed here instead), empty spell lists, and the two
--- personal custom categories renamed SPECIAL_PLAYER and SPECIAL_TARGET. tests/test_presets_data.lua
+-- names, growV away from the head ("up" in a side stack, spec section 15), no attach or position
+-- (placed here instead), empty spell lists, and the two personal custom categories renamed
+-- SPECIAL_PLAYER and SPECIAL_TARGET. tests/test_presets_data.lua
 -- holds every role to that document field by field.
 --
 -- PURE. Build reads its arguments and, for a role that shows only some categories, the live category
 -- lists (NS.Categories, at call time): the player's own custom categories are hidden there too, since
--- a key a container does not hold reads as Show (modules/FilterCompiler.lua, splitCategories). It
--- writes nothing: applying a preset is modules/Presets.lua's, through the registry writers
--- (architecture-§5).
+-- a key a container does not hold reads as Show (modules/FilterCompiler.lua, splitCategories). For a
+-- preset with call-outs it also measures their test-mode block (NS.Preview.BlockSize over the
+-- template and the live skin's sizes) to pick their font size and place them. It writes nothing:
+-- applying a preset is modules/Presets.lua's, through the registry writers (architecture-§5).
 
 local L = NS.L
 
@@ -88,27 +91,44 @@ function P.CustomKeyOf(def)
     return nil
 end
 
--- The columns, in reference units (spec section 4, the mockup's layout). `anchor` is the UIParent
--- point the head hangs from; `x` is the column's LEFT edge from that point (from the right edge for
--- TOPRIGHT, from the center line for TOP) and `y` its top; `iconsGrowH` is the way an Icons row grows,
--- away from the screen edge the column sits nearest (spec section 3.2): the columns right of center
--- grow left, the rest right (the middle one straddles the center line and grows right).
+-- The columns, in reference units (spec sections 4 and 15, the mockup's layout as the owner moved it).
+-- `anchor` is the UIParent point the head hangs from; `x` is the column's LEFT edge from that point
+-- (from the right edge for TOPRIGHT, from the center line for TOP); `iconsGrowH` is the way an Icons
+-- row grows, away from the screen edge the column sits nearest (spec section 3.2): the columns right
+-- of center grow left, the rest right (the middle one straddles the center line and grows right).
+-- A stack grows down from a head placed by its top at `y`, but for an `up` stack (the side stacks,
+-- spec section 15): that grows up from a head placed by its BOTTOM at `y`, the column's base, so the
+-- tier's first role sits nearest the unit frames, as in the owner's own profile. The `center` stack
+-- (the call-outs) hangs by its top from the center line and has no stored `y`: calloutLayout below
+-- centers its test-mode block on the screen's middle, as far as the preset picker under it allows.
 P.STACKS = {
-    cornerRight = { anchor = "TOPRIGHT", x = -175, y = -6,   width = 175, iconsGrowH = "left" },
-    cornerLeft  = { anchor = "TOPRIGHT", x = -395, y = -6,   width = 215, iconsGrowH = "left" },
-    middle      = { anchor = "TOP",      x = -240, y = -200, width = 480, iconsGrowH = "right" },
-    left        = { anchor = "TOP",      x = -520, y = -330, width = 240, iconsGrowH = "right" },
-    right       = { anchor = "TOP",      x = 280,  y = -330, width = 240, iconsGrowH = "left" },
-    far         = { anchor = "TOP",      x = 570,  y = -330, width = 220, iconsGrowH = "left" },
+    cornerRight = { anchor = "TOPRIGHT", x = -255, y = -46,  width = 175, iconsGrowH = "left" },
+    cornerLeft  = { anchor = "TOPRIGHT", x = -475, y = -46,  width = 215, iconsGrowH = "left" },
+    middle      = { anchor = "TOP",      x = -240,           width = 480, iconsGrowH = "right", center = true },
+    left        = { anchor = "TOP",      x = -520, y = -600, width = 240, iconsGrowH = "right", up = true },
+    right       = { anchor = "TOP",      x = 280,  y = -600, width = 240, iconsGrowH = "left", up = true },
+    far         = { anchor = "TOP",      x = 570,  y = -600, width = 220, iconsGrowH = "left", up = true },
 }
 for _, stack in pairs(P.STACKS) do
     if stack.anchor == "TOP" then TOP_REACH = math.max(TOP_REACH, -stack.x, stack.x + stack.width) end
 end
 
--- The gap a stack member leaves below the container above it, in reference units, and the icon a
+-- The gap a stack member leaves from the container before it, in reference units, and the icon a
 -- bars role turned into an Icons row is sized near (a column fits floor(width / ICON_REF) of them).
 local GAP = 6
 local ICON_REF = 28
+
+-- THE ROOM AROUND THE CALL-OUTS (spec section 15), in UIParent units: the windows are not scaled with
+-- the layout, so neither is this. The LibKa0s skin picker is centered `skinShare` of the way up
+-- UIParent (libs/LibKa0s/OptionsSkinPicker.lua, HEIGHT_SHARE and place()) and about `skinHeight`
+-- tall with its media, outline and scope rows (BASE_H and OptionsSkinPickerRows.lua's
+-- acquireControls); the preset picker (settings/PresetPicker.lua) opens centered below the call-out
+-- block and is given `pickerHeight` (it is about 280 today, and gains a row of lock and test buttons);
+-- `margin` is kept between any two of them and from the screen's bottom edge.
+P.ROOM = { skinShare = 0.75, skinHeight = 334, skinWidth = 308, pickerHeight = 360, pickerWidth = 340,
+    margin = 8 }
+-- The call-outs' font sizes, largest first: the owner's is 36 (spec section 15).
+P.CALLOUT_SIZE_MAX, P.CALLOUT_SIZE_MIN = 36, 24
 
 -- ---------------------------------------------------------------------------
 -- The shared base every role starts from (the source's common values)
@@ -171,6 +191,28 @@ end
 
 local HIDE_ENCHANTS = { "weaponEnchants" }
 
+local function rgb(r, g, b) return { r = r, g = g, b = b, a = 1 } end
+
+--- A call-out's look, the owner's (spec section 15): its line centered, in `color` from no skin, a
+--- black glow 6 out, nudged 1 right and 1 down, the spell's name alone (a template of more than one
+--- piece under Center stacks each field on a row of its own, modules/Style_Text.lua Text.Stacked), and
+--- no name label. The font size is calloutLayout's, set at build time.
+local function calloutLook(color)
+    return {
+        text = {
+            justifyH = "CENTER", template = "$spellname$",
+            font = { fontColor = color, fontColorFromSkin = false, useClassColorFont = false },
+            glow = true, glowColor = rgb(0, 0, 0), glowColorFromSkin = false, useClassColorGlow = false,
+            glowIntensity = 1, glowThickness = 6, glowX = 1, glowY = -1,
+        },
+        label = { show = false },
+    }
+end
+-- The owner's three call-out colors.
+local LOOK_OFF = calloutLook(rgb(0.1, 1, 0.1))
+local LOOK_DEF = calloutLook(rgb(1, 0.125, 0.125))
+local LOOK_RAID = calloutLook(rgb(1, 0.486, 0.04))
+
 -- ---------------------------------------------------------------------------
 -- The roles
 -- ---------------------------------------------------------------------------
@@ -178,7 +220,8 @@ local HIDE_ENCHANTS = { "weaponEnchants" }
 -- the source hides (every other key shows); `showOnly` instead hides every live category of the aura
 -- type but those; `onlyNamed` (implied by showOnly) marks a role that shows only some categories, so
 -- it also hides every custom category of its aura type the player already has, as the source hid the
--- owner's in each of them; `filter` and `layout` the fields that differ from the base above.
+-- owner's in each of them; `filter` and `layout` the fields that differ from the base above; `look`
+-- the appearance a call-out carries (calloutLook).
 
 local CONTAINERS = {
     -- Simple's three (Advanced 1 to 3): the corner, where Blizzard puts buffs.
@@ -191,13 +234,13 @@ local CONTAINERS = {
 
     -- The screen-middle call-outs.
     txtOff = { onlyNamed = true, name = L["Offensive cooldowns"], unit = "player", auraType = "HELPFUL", style = "text",
-        hide = except({ ALL_BUFFS }, { "offensiveCDs" }),
+        hide = except({ ALL_BUFFS }, { "offensiveCDs" }), look = LOOK_OFF,
         filter = { sortDirection = "normal" }, layout = { spacing = 2 } },
     txtDef = { onlyNamed = true, name = L["Defensive cooldowns"], unit = "player", auraType = "HELPFUL", style = "text",
-        hide = except({ ALL_BUFFS }, { "defensives" }),
+        hide = except({ ALL_BUFFS }, { "defensives" }), look = LOOK_DEF,
         filter = { sortDirection = "normal" }, layout = { spacing = 2 } },
     txtRaid = { onlyNamed = true, name = L["Raid cooldowns"], unit = "player", auraType = "HELPFUL", style = "text",
-        hide = except({ ALL_BUFFS }, { "raidCDs" }),
+        hide = except({ ALL_BUFFS }, { "raidCDs" }), look = LOOK_RAID,
         filter = { sortDirection = "normal" }, layout = { spacing = 2 } },
 
     -- The player stack.
@@ -410,7 +453,16 @@ local function overridesFor(role, withCustom, picked)
         behavior = copy(BEHAVIOR),
     }
     o.filter.categories = categoriesFor(role, withCustom, picked)
+    if role.look then
+        o.text = copy(role.look.text)
+        o.label = copy(role.look.label)
+    end
     return o
+end
+
+--- A role's overrides in `stack`: an up stack's containers grow up from its base.
+local function growthIn(o, stack)
+    if stack.up then o.layout.growV = "up" end
 end
 
 --- The Icons variant of a bars role (spec section 3.2): an icon row growing away from the nearest
@@ -426,16 +478,16 @@ end
 --- The column width, scaled: a bar's width, or an icon row's icon size (its line fills the column). A
 --- text line's stored width is the column too, which stands when Size to fit is off or cannot measure;
 --- with it on (the template's) a line is as wide as its content, from the column's left edge. The
---- line stays left-justified: Center on a template of more than one piece stacks each field on a row
---- of its own (modules/Style_Text.lua, Text.Stacked), so the column is centered, not the lines. The
---- width runs between the column's two edges, each rounded as `place` rounds a head's offset, so a
+--- call-out's line is centered and its template one piece (calloutLook), so its block centers on the
+--- column's center line, where its head hangs (place). The width runs between the column's two edges, each rounded as `place` rounds a head's offset, so a
 --- corner column ends on the screen's right edge at any scale.
 local function sizeTo(o, stack, kx)
     local w = round((stack.x + stack.width) * kx) - round(stack.x * kx)
     if o.style == "bars" then
         o.bars = { width = w }
     elseif o.style == "text" then
-        o.text = { width = w }
+        o.text = o.text or {}
+        o.text.width = w
     elseif o.style == "icons" then
         local perLine = (o.layout.perLine > 0) and o.layout.perLine or 1
         local px = math.max(1, math.floor(w / perLine) - o.layout.spacing)
@@ -443,34 +495,122 @@ local function sizeTo(o, stack, kx)
     end
 end
 
---- A head's screen placement, `kx` across and `k` down. A row growing left hangs by its top-right
---- corner from the column's right edge, so it fills toward the screen; every other head by its
---- top-left from the left edge.
-local function place(o, stack, kx, k)
+--- A head's screen placement, `kx` across and `k` down. A row growing left hangs by its right corner
+--- from the column's right edge, so it fills toward the screen; every other head by its left corner
+--- from the left edge. That is the top corner, but for an up stack's head, which sits on the column's
+--- base by its bottom corner. The center stack's head hangs by its TOP from the center line, `top`
+--- units down (calloutLayout).
+local function place(o, stack, kx, k, top)
+    o.attach = { mode = "screen", container = 0, frame = "" }
+    if stack.center then
+        o.position = { point = "TOP", relativePoint = stack.anchor, x = 0, y = -top }
+        return
+    end
     local left = o.layout.growH == "left"
     local x = left and (stack.x + stack.width) or stack.x
     o.position = {
-        point = left and "TOPRIGHT" or "TOPLEFT", relativePoint = stack.anchor,
+        point = (stack.up and "BOTTOM" or "TOP") .. (left and "RIGHT" or "LEFT"), relativePoint = stack.anchor,
         x = round(x * kx), y = round(stack.y * k),
     }
-    o.attach = { mode = "screen", container = 0, frame = "" }
 end
 
---- A stack member's attachment to the container above it. Its join points are left Automatic
---- (modules/Anchors_Attach.lua): below the parent, from the side its lines start, which is top-left to
---- bottom-left under the stack's growth. `container` is the writer's to fill with the new id.
-local function memberAttach(k)
-    return {
-        mode = "container", container = 0, frame = "",
-        point = "TOPLEFT", relativePoint = "BOTTOMLEFT",
-        x = 0, y = -math.max(1, round(GAP * k)),
-    }
+--- A stack member's attachment to the container before it. Its join points are left Automatic
+--- (modules/Anchors_Attach.lua), so they follow the stack's growth: below the parent growing down,
+--- above it growing up (bottom-left to top-left, bottom-right to top-right for a row growing left),
+--- from the side its lines start; a centered call-out joins its parent's center. The gap is away from
+--- the parent, along the growth. `container` is the writer's to fill with the new id.
+local function memberAttach(k, up)
+    local gap = math.max(1, round(GAP * k))
+    if up then
+        return { mode = "container", container = 0, frame = "",
+            point = "BOTTOMLEFT", relativePoint = "TOPLEFT", x = 0, y = gap }
+    end
+    return { mode = "container", container = 0, frame = "",
+        point = "TOPLEFT", relativePoint = "BOTTOMLEFT", x = 0, y = -gap }
+end
+
+-- ---------------------------------------------------------------------------
+-- The call-out block in test mode (spec section 15)
+-- ---------------------------------------------------------------------------
+
+--- Set call-out data `o` (overrides or the full stored data) to font size `size`, its stored line
+--- height to what Size to fit draws that size at (modules/Style_Text.lua, fitHeight: the size and a
+--- pad above and below), so the block measures the same where a line cannot be measured (the
+--- headless harness) and the height stands in for it if it ever cannot be in game.
+local function setSize(o, size)
+    o.text.font.fontSize = size
+    o.text.height = size + 2 * NS.Constants.TEXT_AUTOSIZE_PAD
+end
+
+--- The block the center stack's specs (`specs`, in order) fill in test mode at font size `size`:
+--- its width (its widest container) and height (each container as tall as Preview.BlockSize makes its
+--- placeholder block, the next hung below it across the seam: its stored gap and the seam's own,
+--- Anchors.SeamOffset). The full stored data is the template plus the overrides, as
+--- NS.Database.NewContainerData builds it. Read at call time: modules/ load after this file.
+local function measureCallouts(specs, size)
+    local width, height = 0, 0
+    for i, spec in ipairs(specs) do
+        local cfg = merge(copy(NS.CONTAINER_TEMPLATE), spec.overrides)
+        setSize(cfg, size)
+        local w, h = NS.Preview.BlockSize(cfg)
+        if i > 1 then
+            local _, seam = NS.Anchors.SeamOffset(cfg.layout, "after")
+            height = height + math.abs(cfg.attach.y or 0) + math.abs(seam)
+        end
+        width, height = math.max(width, w), height + h
+    end
+    return width, height
+end
+
+--- Where the call-out block may sit on a `parentH` tall parent, as offsets down from its top edge:
+--- below the skin picker's rectangle, and above the room the preset picker takes under it.
+local function calloutRoom(parentH)
+    local R = P.ROOM
+    local skinBottom = parentH * (1 - R.skinShare) + R.skinHeight / 2
+    return skinBottom + R.margin, parentH - R.margin - R.pickerHeight - R.margin
+end
+
+--- The call-outs' font size and the block's top (down from the parent's top edge) for the center
+--- stack's specs on a `parentH` tall parent, and the block's width and height in test mode. The
+--- largest size from CALLOUT_SIZE_MAX down to CALLOUT_SIZE_MIN whose block fits the room
+--- (calloutRoom), the block centered on the screen's middle as far as the room allows: moved up
+--- before the font shrinks. When none fits, the smallest, just under the skin picker, and no lower
+--- than keeps it on the screen.
+--- @return number size, number top, number width, number height
+local function calloutLayout(specs, parentH)
+    local lo, hi = calloutRoom(parentH)
+    local w, h
+    for size = P.CALLOUT_SIZE_MAX, P.CALLOUT_SIZE_MIN, -1 do
+        w, h = measureCallouts(specs, size)
+        if h <= hi - lo then
+            local top = math.min(math.max(parentH / 2 - h / 2, lo), hi - h)
+            return size, round(top), w, h
+        end
+    end
+    local top = math.max(P.ROOM.margin, math.min(lo, parentH - P.ROOM.margin - h))
+    return P.CALLOUT_SIZE_MIN, round(top), w, h
+end
+
+--- `parentH`, or the reference height when it cannot be read (P.Scale's fallback).
+local function heightOr(parentH)
+    return (P.Scale(parentH) == 1) and P.REF_H or parentH
+end
+
+--- Size and place the center stack's specs (`callouts`, in order) on a `parentH` tall parent (1080
+--- when it cannot be read): every line at calloutLayout's font size, the head's top where it puts
+--- the block. The head's spec keeps the block's test-mode size and top as `calloutBlock`.
+local function placeCallouts(callouts, parentH)
+    local size, top, w, h = calloutLayout(callouts, heightOr(parentH))
+    for _, spec in ipairs(callouts) do setSize(spec.overrides, size) end
+    callouts[1].overrides.position.y = -top
+    callouts[1].calloutBlock = { width = w, height = h, top = top, fontSize = size }
 end
 
 --- The containers preset `name` in style `look` creates on a `parentW` x `parentH` parent, in creation
---- order. Each spec is { role, stack, overrides, attachTo, customKeys }: `overrides` is a table for
---- NS.ContainerManager.Create; `attachTo` the index of the spec this one attaches to (nil for a
---- stack's head); `customKeys` the CUSTOM keys its states name (nil when the preset creates none).
+--- order. Each spec is { role, stack, overrides, attachTo, customKeys, calloutBlock }: `overrides`
+--- is a table for NS.ContainerManager.Create; `attachTo` the index of the spec this one attaches to (nil for a
+--- stack's head); `customKeys` the CUSTOM keys its states name (nil when the preset creates none);
+--- `calloutBlock`, on the call-outs' head alone, their block in test mode (placeCallouts).
 --- Heads hang from the parent's top edge and center line; the width only narrows the layout across
 --- (P.ScaleX) on a screen too narrow for it. `picked` ([CUSTOM key] = live key, the writer's
 --- resolution) narrows the reuse to those keys: without it every name match is taken as reused. An
@@ -485,25 +625,49 @@ function P.Build(name, look, parentW, parentH, picked)
     local tier = TIERS[name]
     if not (tier and IS_LOOK[look]) then return {} end
     local k, kx, withCustom = P.Scale(parentH), P.ScaleX(parentW, parentH), CREATES_CUSTOM[name] == true
-    local specs, last = {}, {}
+    local specs, last, callouts = {}, {}, {}
     for i, entry in ipairs(tier) do
         local stackKey, roleKey = entry[1], entry[2]
         local stack = P.STACKS[stackKey]
         local o = overridesFor(CONTAINERS[roleKey], withCustom, picked)
         if look == "icons" then toIcons(o, stack) end
+        growthIn(o, stack)
         sizeTo(o, stack, kx)
         local spec = { role = roleKey, stack = stackKey, overrides = o }
         if last[stackKey] then
             spec.attachTo = last[stackKey]
-            o.attach = memberAttach(k)
+            o.attach = memberAttach(k, stack.up)
         else
-            place(o, stack, kx, k)
+            place(o, stack, kx, k, 0)
         end
+        if stack.center then callouts[#callouts + 1] = spec end
         if withCustom then spec.customKeys = copy(CUSTOM_ORDER) end
         last[stackKey] = i
         specs[i] = spec
     end
+    if callouts[1] then placeCallouts(callouts, parentH) end
     return specs
+end
+
+--- The center stack's test-mode rectangle for preset `name` in style `look` on a `parentW` x
+--- `parentH` parent (1920 x 1080 when either cannot be read), in UIParent's own coordinates (from its
+--- bottom-left corner, as Frame:GetRect reads): { left, right, top, bottom, width, height, fontSize }.
+--- nil for a preset with no call-outs. What the preset picker places itself under (spec section 15).
+--- @return table|nil
+function P.CalloutRect(name, look, parentW, parentH)
+    local W = (type(parentW) == "number" and parentW > 0) and parentW or 1920
+    local H = heightOr(parentH)
+    for _, spec in ipairs(P.Build(name, look, W, H)) do
+        local b = spec.calloutBlock
+        if b then
+            return {
+                left = W / 2 - b.width / 2, right = W / 2 + b.width / 2,
+                top = H - b.top, bottom = H - b.top - b.height,
+                width = b.width, height = b.height, fontSize = b.fontSize,
+            }
+        end
+    end
+    return nil
 end
 
 --- Store each CUSTOM placeholder state in `categories` under the key it resolved to (`keys`,
