@@ -2783,7 +2783,7 @@ to the one before it, below it in the corner and above it in a side or focus sta
 
 **PRESETS-1. A brand-new profile starts from Simple, at the real screen size. Client: Retail, then
 WoW Forever.** Profiles → type a new profile name → the three Simple containers appear, as bars:
-**Player buffs (all)** near the top-right corner, its right edge about 300 in from the screen's right edge,
+**Player buffs (all)** near the top-right corner, its right edge about 125 in from the screen's right edge,
 **Weapon enchants** attached under it, and **Player debuffs (all)** in the column to its left. No
 container sits over the action bars or the unit frames. `/am test` → each fills with sample auras;
 the corner columns end well above the screen's middle. `/am test` off. Set **UI scale** off, then on
