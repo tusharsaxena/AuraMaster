@@ -32,6 +32,7 @@ archaeology, for the same reason a skip is never a pass (`automated-tests-§4`).
 
 | Run | Commit | Tree | Version | Lint w/e | Files | Tests | Perf | NLOC | Funcs | Avg NLOC | Avg CCN | Max CCN | CCN warn | Verdict |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| [`20261115-024639`](20261115-024639/) | `9c6bfd2` | clean | 1.1.0 | 0/0 | 224 | 2491/1/2492 | pass | 62743 | 6635 | 8.3 | 2.4 | 15 | 0 | **green** |
 | [`20261115-021129`](20261115-021129/) | `01f7833` | clean | 1.1.0 | 0/0 | 224 | 2490/1/2491 | pass | 62714 | 6633 | 8.3 | 2.4 | 15 | 0 | **green** |
 | [`20261114-184120`](20261114-184120/) | `aef646a` | clean | 1.1.0 | 0/0 | 224 | 2470/1/2471 | pass | 61926 | 6548 | 8.3 | 2.4 | 15 | 0 | **green** |
 | [`20261114-183056`](20261114-183056/) | `73dabd9` | clean | 1.1.0 | 0/0 | 224 | 2469/1/2470 | fail | 61902 | 6546 | 8.3 | 2.4 | 15 | 0 | **amber** |
@@ -61,11 +62,11 @@ archaeology, for the same reason a skip is never a pass (`automated-tests-§4`).
 
 ## Test suite
 
-**2491 cases** — 2490 passed, 0 failed, 1 skipped. The generated inventory
-[`20261115-021129/test-cases.md`](20261115-021129/test-cases.md) is the authority on which cases existed at this run;
+**2492 cases** — 2491 passed, 0 failed, 1 skipped. The generated inventory
+[`20261115-024639/test-cases.md`](20261115-024639/test-cases.md) is the authority on which cases existed at this run;
 `docs/test-cases.md` is that same list at HEAD.
 
-Moved **2471 → 2491** since the previous run.
+Moved **2491 → 2492** since the previous run.
 
 **1 case(s) reported a `skip`.** A skip is counted in the total and never in `passed`, and at
 the release gate it is NOT EVALUATED rather than passed (`automated-tests-§3`).
@@ -82,29 +83,29 @@ to whoever thinks to open `.luacheckrc`.
 ## Perf
 
 **12 scenarios** from `tests/perf.lua`; the measurements are in
-[`20261115-021129/perf.json`](20261115-021129/perf.json).
+[`20261115-024639/perf.json`](20261115-024639/perf.json).
 
 | `scenario` | `iters` | `ms/iter` | `api/iter` | `bytes/iter` |
 |---|---|---|---|---|
-| `compile` | 2000 | 0.01217 | 0.0 | 4136.0 |
-| `applyPass` | 200 | 1.81939 | 30.0 | 107062.5 |
-| `restyle` | 200 | 1.50168 | 0.0 | 50646.1 |
-| `restyleText` | 200 | 0.89418 | 0.0 | 32067.7 |
-| `restyleTextGlow` | 200 | 4.01755 | 0.0 | 144963.7 |
-| `visibilityPass` | 1000 | 0.02726 | 8.0 | 384.0 |
-| `unitSwap` | 1000 | 0.00381 | 1.0 | 0.0 |
-| `probeOverheadOff` | 1000 | 0.02673 | 9.0 | 384.0 |
-| `probeOverheadOn` | 1000 | 0.02851 | 9.0 | 384.5 |
-| `probeAbsent` | 1000 | 0.02300 | 9.0 | 384.0 |
-| `unitAuraFiltered` | 1000 | 0.00020 | 0.0 | 0.0 |
-| `emptyWatchAura` | 1000 | 0.00005 | 0.0 | 0.0 |
+| `compile` | 2000 | 0.01254 | 0.0 | 4136.0 |
+| `applyPass` | 200 | 2.12335 | 30.0 | 107062.5 |
+| `restyle` | 200 | 1.71648 | 0.0 | 50646.1 |
+| `restyleText` | 200 | 0.94025 | 0.0 | 32067.7 |
+| `restyleTextGlow` | 200 | 4.24581 | 0.0 | 144963.7 |
+| `visibilityPass` | 1000 | 0.03054 | 8.0 | 384.0 |
+| `unitSwap` | 1000 | 0.00518 | 1.0 | 0.0 |
+| `probeOverheadOff` | 1000 | 0.03035 | 9.0 | 384.0 |
+| `probeOverheadOn` | 1000 | 0.03190 | 9.0 | 384.5 |
+| `probeAbsent` | 1000 | 0.02615 | 9.0 | 384.0 |
+| `unitAuraFiltered` | 1000 | 0.00028 | 0.0 | 0.0 |
+| `emptyWatchAura` | 1000 | 0.00008 | 0.0 | 0.0 |
 
 `perf` never fails a run and never blocks a commit — it is recorded, read and compared, not
 thresholded (`performance-§9`). It does gate the **tag** (`automated-tests-§3`).
 
 ## Complexity watch list
 
-Current as of [`20261115-021129`](20261115-021129/) — **this run's measurement, not its diff.** Max CCN **15** across 6633
+Current as of [`20261115-024639`](20261115-024639/) — **this run's measurement, not its diff.** Max CCN **15** across 6635
 functions, **0** of them warned on; 9 file(s) in the 1000–1500 band and 0 over the 1500 cap
 (`layout-§1`).
 

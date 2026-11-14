@@ -31,3 +31,8 @@ Git is the only state.
   bundle 20261115-021129 at 01f7833 is green: retail 2490/0/1, forever 2489/0/2, lint 0/0 (224 files), perf pass
   (12 scenarios, matching 20261114-184120), max CCN 15, 0 warnings. Owed: the owner's PRESETS smoke (round-1 checks
   included), the owner rulings recorded in the plan, and the pushes.
+- 2026-11-15: The owner's round-1 rulings landed (spec 15.1, AM-PR12: the picker takes the skin picker's spot,
+  the side stacks start lower; docs and smoke checks). Automated-test bundle 20261115-024639 at 9c6bfd2 is green:
+  retail 2491/0/1, forever 2490/0/2, lint 0/0 (224 files), perf pass (12 scenarios, matching 20261115-021129), max
+  CCN 15, 0 warnings. Owed: the owner's PRESETS smoke (round-1 and 15.1 checks included), the owner rulings
+  recorded in the plan, and the pushes.
