@@ -2,13 +2,14 @@ local _, NS = ...
 
 -- settings/General.lua — the addon-wide page.
 --
---     [ Master controls ][ Blizzard frames ][ Spell categories ][ Dispel colors ]
+--     [ Master controls ][ Presets ][ Blizzard frames ][ Spell categories ][ Dispel colors ][ Skin ]
 --
 --     Master controls  [Enable Aura Master]  [General visibility]
 --                      [Master scale]        [Master opacity]
 --                      [Lock frame]          [Debug console]
 --                      [Minimap button]      [Test mode]
 --                      [Reset position]      [Reset all settings]     <- afterGroup button pair
+--     Presets          settings/GeneralPresets.lua: a ready-made set of containers, previewed first
 --     Blizzard frames  [Hide Blizzard buffs]  [Hide Blizzard debuffs]   <- no heading: the tab names it
 --     Spell categories settings/GeneralSpells.lua: one spell category's list, profile-wide
 --     Dispel colors    settings/GeneralDispel.lua: one color per dispel type, profile-wide
@@ -287,14 +288,23 @@ local APPEARANCE_TAB = H.AppearanceTab({
     owner = NS.Skin and NS.Skin.owner, get = NS.SkinChoice, set = NS.WriteSkinChoice,
 })
 
--- The page's tabs: its schema groups, with Spell categories (settings/GeneralSpells.lua), Dispel
--- colors (settings/GeneralDispel.lua) and Skin as its bespoke ones. `addonWide`: every tab is drawn
--- whether or not a container exists.
+-- The Presets tab (settings/GeneralPresets.lua, presets spec sections 8 and 16.4): second, after
+-- Master controls, where it is easy to find (the owner moved it off the Containers page, AM-PR14).
+-- Told when the page moves off it, so the preview it put on the screen is restored.
+local PRESETS_TAB = {
+    key = "Presets", label = L["Presets"], before = L["Blizzard frames"],
+    tooltip = L["Replace or add to every container in this profile with a ready-made set, previewed on your screen first."],
+    render = NS.RenderPresetsTab, onLeave = NS.PresetsTabLeft,
+}
+
+-- The page's tabs: its schema groups, with Presets (above), Spell categories
+-- (settings/GeneralSpells.lua), Dispel colors (settings/GeneralDispel.lua) and Skin as its bespoke
+-- ones. `addonWide`: every tab is drawn whether or not a container exists.
 local PAGE_SPEC = {
     addonWide  = true,
     -- The group name IS the hook key, read off the instance rather than spelled again.
     afterGroup = { [H.MASTER_GROUP] = masterTail },
-    tabs       = { GS.TABS[1], GD.TAB, APPEARANCE_TAB },
+    tabs       = { PRESETS_TAB, GS.TABS[1], GD.TAB, APPEARANCE_TAB },
 }
 
 local function build(mainCategory)

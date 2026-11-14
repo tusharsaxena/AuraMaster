@@ -124,6 +124,22 @@ test("picker: shows before skin picker", function()
     assertFalse(f:IsShown(), "a second loading screen shows nothing")
 end)
 
+test("picker: the footer names the General page's Presets tab", function()
+    local NS, m = fresh()
+    -- The paint recorder, so the window's font strings keep their text (tests/_kit/mock_paint.lua).
+    local restore = dofile("tests/_kit/mock_paint.lua")(m)
+    m.__fireEvent("PLAYER_ENTERING_WORLD")
+    local f = NS.PresetPicker.frame
+    -- red under: the footer still sending the player to Containers > General > Presets (spec 16.4)
+    assertEqual(f.footer:GetText(), NS.L["Change it later on General > Presets. The skin picker opens next."])
+    f.notNow:__fire("OnClick")
+    NS.SkinPickerDue = function() return false end
+    NS.ShowPresetPicker()
+    assertEqual(f.footer:GetText(), NS.L["Change it later on General > Presets."], "with the skin picker no longer due")
+    NS.HidePresetPicker()
+    restore()
+end)
+
 test("picker: a profile that has seen it arms the skin picker's start as before", function()
     local NS, m, calls = fresh()
     NS.Presets.MarkPickerSeen()

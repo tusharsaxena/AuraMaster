@@ -2766,7 +2766,7 @@ a spare profile, never on your own: Replace deletes every container in the profi
 
 **Code:** `defaults/Presets.lua` (the data and the placement builder), `modules/Presets.lua` (apply,
 preview and its restores), `settings/PresetPicker.lua` (the first-run window and the confirm),
-`settings/ContainersPresets.lua` (the Presets tab), `core/Database.lua` (the Simple seed, schema v19),
+`settings/GeneralPresets.lua` (the Presets tab), `core/Database.lua` (the Simple seed, schema v19),
 `core/AuraMaster.lua` (login, profile events and combat).
 
 **What the presets place** (after the owner's round-1 feedback, presets spec section 15). A corner
@@ -2802,8 +2802,8 @@ are unlocked (PRESETS-24).
 It shows Ka0s Aura Master under the title, a dropdown (Empty - no containers, Simple - 3 containers,
 Intermediate - 8 containers, Advanced - 20 containers, Healer - 9 containers) with Simple selected, a
 Bars / Icons switch, one line describing the pick, the buttons **Containers: unlocked** and **Test
-mode: off**, **Apply** and **Not now**, and the footer "Change it later on Containers >
-General > Presets. The skin picker opens next." Opening it previews nothing: test mode stays off and Simple is
+mode: off**, **Apply** and **Not now**, and the footer "Change it later on General >
+Presets. The skin picker opens next." Opening it previews nothing: test mode stays off and Simple is
 on screen. The skin picker does not show while this window is up. Drag the window → it moves and
 stays on screen. Pick **Intermediate** → its containers replace Simple, test mode turns on, and the
 line "On your screen now, filled with sample auras. Nothing is saved until Apply." appears. Pick
@@ -2860,13 +2860,13 @@ Now make a container (`/am new`), `/am preset`, pick **Simple**, then **Apply** 
 window and the preview stay up and nothing is kept; **Apply** again and accept → Simple's three
 stay and the window closes. On another new profile, make a container first, then pick Simple in its
 first-run picker and **Apply** → it asks too (the seed is no longer untouched). On a third, pick
-**Empty** and **Apply** → no confirm, and the profile holds no container. On Containers →
-General → **Presets**, pick **Healer**, keep *Replace all my containers*, **Apply preset…** → the
+**Empty** and **Apply** → no confirm, and the profile holds no container. On General →
+**Presets**, pick **Healer**, keep *Replace all my containers*, **Apply preset…** → the
 same confirm, naming 3; Apply → Healer's nine stay, the status line no longer says Previewing.
 Result:
 
 **PRESETS-9. Apply in Add mode. Client: Retail.** On a profile holding Simple's three, open
-Containers → General → Presets, pick **Simple**, set *When applied* to **Add next to my
+General → Presets, pick **Simple**, set *When applied* to **Add next to my
 containers**, **Apply preset…** → a confirm reads "Add the Simple preset's 3 containers next to your
 own?"; Apply → six containers: your three, plus **Player buffs (all) (2)**, **Weapon enchants (2)**
 and **Player debuffs (all) (2)** over them. Layout → Position and growth on Weapon enchants (2) →
@@ -2876,16 +2876,16 @@ buffs* with one spell (General → Spell categories), then apply Advanced again 
 player buffs* and one *Special target debuffs*, the spell still listed, and Player special (mine)
 shows it. Result:
 
-**PRESETS-10. Stop preview. Client: Retail.** Containers → General → Presets, pick **Advanced** →
+**PRESETS-10. Stop preview. Client: Retail.** General → Presets, pick **Advanced** →
 the status line reads "Previewing Advanced (Bars) on your screen in test mode. …" and the panel stays
 open over the preview; move it aside to look. **Stop preview** → your containers back, test mode
 off, the status line back to "Pick a preset or a style to see it on your screen." Changing *When
 applied* alone previews nothing. Result:
 
 **PRESETS-11. Leaving the tab restores. Client: Retail.** On the Presets tab, pick **Healer** →
-previewing. Click the **General** tab → your containers back and test mode off. Back on Presets,
-pick Healer again, then click **Filters** in the rail → the same. Picking another container in the
-band while previewing keeps the preview (the tab is still shown). Result:
+previewing. Click the **Master controls** tab → your containers back and test mode off. Back on
+Presets, pick Healer again, then click the **Spell categories** tab → the same. Pick Healer once more,
+then open the **Containers** page in the settings list → the same. Result:
 
 **PRESETS-12. Closing the panel restores. Client: Retail.** On the Presets tab, pick
 **Intermediate** → previewing. Close the settings window with its close button → your containers

@@ -28,7 +28,7 @@ local addonName, NS = ...
 --                              is the player's close of it: latch set, skin picker offered once the
 --                              confirm is answered.
 --   NS.ConfirmPreview(n, l, m) the same confirm over a preview that stays up while it is open, then
---                              kept: the Containers page's Presets tab (settings/ContainersPresets.lua).
+--                              kept: the General page's Presets tab (settings/GeneralPresets.lua).
 --   NS.PresetPicker            { frame, Placement }: the window once built, for the suites, and
 --                              Placement(w, h), where it opens on a w x h UIParent (below).
 --
@@ -230,7 +230,7 @@ function NS.ConfirmPreset(name, look, mode)
 end
 
 --- Keep the preview of preset `name` in style `look`, `mode` "replace" or "add", behind the same
---- confirm: the Containers page's Presets tab. The preview stays on screen while the question is
+--- confirm: the General page's Presets tab. The preview stays on screen while the question is
 --- open; the count a Replace names is the player's own (the snapshot's). Answered, the preview is
 --- kept (EndPreview(true, mode)) when it is still the one asked about; one ended or swapped since
 --- (the tab left, combat) is restored and the preset applied afresh, so the answer always writes what
@@ -572,8 +572,8 @@ function refresh()
     f.status:SetShown(not empty and state.owns and NS.Presets.IsPreviewing())
     paintToggles(f)
     f.footer:SetText(NS.SkinPickerDue and NS.SkinPickerDue()
-        and L["Change it later on Containers > General > Presets. The skin picker opens next."]
-        or L["Change it later on Containers > General > Presets."])
+        and L["Change it later on General > Presets. The skin picker opens next."]
+        or L["Change it later on General > Presets."])
     layout(f)
 end
 

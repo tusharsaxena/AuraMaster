@@ -68,8 +68,8 @@ before `modules/Anchors_Snap.lua`,
 `modules/Anchors_Snap.lua` after all three (it binds `NS.AnchorsAttach`'s pair table and
 `NS.AnchorsSnapRect` at file load and extends `Anchors` as `Anchors.Snap`),
 `settings/OptionsSetup.lua` before every page file (the composers run at file load),
-`settings/ContainersPresets.lua` after it and before `settings/Containers.lua` (which binds
-`NS.RenderPresetsTab` and `NS.PresetsTabLeft` into its section spec at file load), and
+`settings/GeneralPresets.lua` after it and before `settings/General.lua` (which binds
+`NS.RenderPresetsTab` and `NS.PresetsTabLeft` into its page spec at file load), and
 `settings/GeneralUserCategories.lua` (read by `settings/GeneralSpells.lua` at file load), then
 `settings/GeneralSpells.lua`, then `settings/GeneralDispel.lua` (which reads its bullet constants), all
 before `settings/General.lua`, which registers their rows after its own.
@@ -100,7 +100,7 @@ Five starting points for a profile's containers (spec
 | `defaults/Presets.lua` | `NS.PresetData`: the data (the six stacks in a 1080-tall reference space, the containers by role, each preset's stacks) and the pure builder. `Build(name, look, W, H, picked)` answers the specs in creation order, a stack's head placed on `UIParent` and every member attached to the one before it; `Realize(specs, keys, create)` walks them through a writer, filling each member's `attach.container` with the id its parent took. `CalloutRect(name, look, W, H)` answers the call-out block's unlocked test-mode rectangle, and `ROOM` the room around it (the spot both pickers open on, 75% up, the skin picker's and the preset picker's sizes, the margin). Carries no spell ids and no appearance media but the call-outs' look (spec section 15) |
 | `modules/Presets.lua` | `NS.Presets`, the one writer: `Apply(name, look, mode)` through `ContainerManager.Create` / `.Delete` and `Categories.CreateUserCategory` (Advanced's two custom categories, reused by name on a re-apply, `ResolveCustom`); the preview (`BeginPreview`, `EndPreview`, `IsPreviewing`, `Previewed`, `RestoreStaleSnapshots`, `RestoreStaleSnapshot`, `OnCombatStart`, `OnCombatEnd`); the picker latch (`PickerSeen`, `MarkPickerSeen`); the untouched-seed record (`RecordSeed`, `SeedUntouched`, `Fingerprint`); `OwnContainerCount`, `ParentSize` |
 | `settings/PresetPicker.lua` | The first-run window (`NS.PresetPickerDue`, `NS.MaybeShowPresetPicker`, `NS.ShowPresetPicker`, `NS.HidePresetPicker`, `NS.PresetPickerHolding`, `NS.RefreshPresetPicker`; `NS.PresetPicker.Placement(W, H)`, where it opens), with its lock and test-mode buttons, and the preset confirm, one StaticPopup behind two entry points: `NS.ConfirmPreset(name, look, mode)` applies (`/am preset <name>`, the tab with no preview of its own), `NS.ConfirmPreview(name, look, mode)` keeps the preview on screen while it asks, then keeps it (the tab). An answer decides what it writes when it is given, and the confirm goes down unanswered with the window and with every `NS.HidePresetPicker` (a profile event, the stand-down) |
-| `settings/ContainersPresets.lua` | The Containers page's **Presets** tab, the General section's second tab: `NS.RenderPresetsTab`, and `NS.PresetsTabLeft`, its `onLeave` |
+| `settings/GeneralPresets.lua` | The General page's **Presets** tab, its second tab after Master controls: `NS.RenderPresetsTab`, and `NS.PresetsTabLeft`, its `onLeave` |
 
 - **Its own profile key**, `presets` (`docs/schema.md`): `pickerSeen` (default false, a skipRender
   settings row written through the seam; schema v19 sets it on every profile already `seeded`), `seedPrint` (no default: the fingerprint of what the Simple

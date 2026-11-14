@@ -207,8 +207,8 @@ Each task keeps the Global Constraints, the gate and the commit rules above.
 ### Task AM-PR14: The Presets tab moves to the General page
 
 **Files:** `settings/ContainersPresets.lua` (or a renamed file), `settings/General.lua`, `settings/Containers.lua`, `AuraMaster.toc` if the file moves or is renamed, `locales/enUS.lua` (the picker footer string), the presets tab tests.
-- [ ] Failing tests first: the tab is listed on the General page and not on the Containers page; every existing presets-tab case passes on its new page (pick previews, apply replace confirms and keeps, add keeps, leaving the tab restores, panel hide restores, no Empty); the footer names the General page.
-- [ ] Implement per §16.4, gate green, commit `AM-PR14: The Presets tab moves to the General page`.
+- [x] Failing tests first: the tab is listed on the General page and not on the Containers page; every existing presets-tab case passes on its new page (pick previews, apply replace confirms and keeps, add keeps, leaving the tab restores, panel hide restores, no Empty); the footer names the General page.
+- [x] Implement per §16.4, gate green, commit `AM-PR14: The Presets tab moves to the General page`.
 
 ### Task AM-PR15: Docs, smoke checks, review and the automated-test record for round 2
 

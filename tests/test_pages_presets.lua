@@ -1,11 +1,12 @@
--- tests/test_pages_presets.lua -- settings/ContainersPresets.lua: the Containers page's Presets tab
--- (AM-PR06; spec docs/superpowers/specs/2026-11-14-auramaster-presets-design.md, sections 6 and 8).
--- That the tab sits after General, that a pick of a preset or a style previews it on the real screen,
--- that Apply preset... confirms with the count it replaces or adds and keeps the preview, that Stop
--- preview, leaving the tab (a tab click or a rail click) and closing the panel each restore the
--- player's own containers, and that Empty is not offered. Every case writes the profile, so each
--- builds its own environment (tests/fresh_env.lua); a fresh profile holds the harness's four
--- starter containers.
+-- tests/test_pages_presets.lua -- settings/GeneralPresets.lua: the General page's Presets tab
+-- (AM-PR06, moved off the Containers page by AM-PR14; spec
+-- docs/superpowers/specs/2026-11-14-auramaster-presets-design.md, sections 6, 8 and 16.4).
+-- That the tab sits on the General page after Master controls and no longer on the Containers page,
+-- that a pick of a preset or a style previews it on the real screen, that Apply preset... confirms
+-- with the count it replaces or adds and keeps the preview, that Stop preview, leaving the tab (a
+-- click on a schema tab or on another bespoke tab) and closing the panel each restore the player's
+-- own containers, and that Empty is not offered. Every case writes the profile, so each builds its
+-- own environment (tests/fresh_env.lua); a fresh profile holds the harness's four starter containers.
 
 local T = _G.AM_TEST
 local test, assertEqual, assertTrue, assertFalse, assertNil =
@@ -33,13 +34,13 @@ local function popups(m)
     return shown
 end
 
---- A fresh environment with the Containers page drawn and its Presets tab clicked: the widgets that
+--- A fresh environment with the General page drawn and its Presets tab clicked: the widgets that
 --- tab drew, and the page's helpers.
 local function presetsTab(opts)
     local NS, m = fresh(opts)
     local P = pages(NS, m)
-    P.show("Containers")
-    local ws = P.tab("containers", "Presets")
+    P.show("General")
+    local ws = P.tab("general", "Presets")
     return NS, m, P, ws
 end
 
@@ -49,23 +50,33 @@ local function control(NS, P, ws, label)
     return w
 end
 
-test("presets tab: listed after General", function()
+test("presets tab: listed on the General page after Master controls", function()
+    local NS, m = fresh()
+    local P = pages(NS, m)
+    P.show("General")
+    -- red under: the tab left on the Containers page (spec 16.4), or not second on General
+    assertEqual(table.concat(P.tabKeys("general"), ","),
+        "Master controls,Presets,Blizzard frames,Spell categories,Dispel colors,Appearance")
+    local tabs = P.drawnTabs(NS.Helpers.__pageCtx.general)
+    assertEqual(tabs[2].label, NS.L["Presets"])
+    assertEqual(NS.Helpers.__pageCtx.general.activeTab, "Master controls", "the page opens on Master controls")
+    assertFalse(NS.Presets.IsPreviewing(), "opening the page previews nothing")
+end)
+
+test("presets tab: gone from the Containers page", function()
     local NS, m = fresh()
     local P = pages(NS, m)
     P.show("Containers")
-    -- red under: a Presets tab missing from the General section, or drawn ahead of General
-    assertEqual(table.concat(P.tabKeys("containers"), ","), NS.L["General"] .. ",Presets")
-    local tabs = P.drawnTabs(NS.Helpers.__pageCtx.containers)
-    assertEqual(tabs[2].label, NS.L["Presets"])
-    assertFalse(NS.Presets.IsPreviewing(), "opening the page previews nothing")
+    -- red under: a second Presets tab left behind on the Containers page's General section
+    assertEqual(table.concat(P.tabKeys("containers"), ","), NS.L["General"])
 end)
 
 test("presets tab: drawn with no containers too", function()
     local NS, m = fresh()
     for _, c in ipairs(NS.Database.GetContainers()) do NS.ContainerManager.Delete(c.id) end
     local P = pages(NS, m)
-    P.show("Containers")
-    local ws = P.tab("containers", "Presets")
+    P.show("General")
+    local ws = P.tab("general", "Presets")
     -- red under: the tab hidden or empty while the profile has no container to edit
     assertTrue(P.find(ws, "Dropdown", NS.L["Preset"]) ~= nil, "the preset choice is drawn")
     assertTrue(P.find(ws, "Button", NS.L["Apply preset…"]) ~= nil, "and Apply preset…")
@@ -97,7 +108,7 @@ test("presets tab: pick previews", function()
     assertEqual(NS.Database.GetContainers()[1].style, "icons")
     -- The redraw the pick asked for: the status line and the list name the preview.
     m.__fireTimers()
-    local again = P.show("Containers")
+    local again = P.show("General")
     assertTrue(P.hasText(again, NS.L["Player buffs, short"]), "the list names what the preset creates")
     assertTrue(P.hasText(again, "Nothing is saved until Apply"), "the status line says a preview is up")
     P.find(again, "Button", NS.L["Stop preview"]):__fire("OnClick")
@@ -160,24 +171,24 @@ test("presets tab: leaving the tab restores", function()
     local before = ids(NS)
     control(NS, P, ws, "Preset"):__fire("OnValueChanged", "advanced")
     assertTrue(NS.Presets.IsPreviewing())
-    P.tab("containers", NS.L["General"])
-    -- red under: a preview left on screen (and in the profile) after the player moved on
-    assertFalse(NS.Presets.IsPreviewing(), "a tab click away restores")
+    P.tab("general", "Master controls")
+    -- red under: a preview left on screen (and in the profile) after a click on a schema tab, which
+    -- the library draws without calling any of this addon's tab renders
+    assertFalse(NS.Presets.IsPreviewing(), "a click on a schema tab restores")
     assertFalse(NS.State.testMode)
     assertEqual(ids(NS), before)
-    -- And a rail click away, from a fresh preview.
-    ws = P.tab("containers", "Presets")
+    -- And a click on another bespoke tab, from a fresh preview.
+    ws = P.tab("general", "Presets")
     control(NS, P, ws, "Preset"):__fire("OnValueChanged", "healer")
     assertTrue(NS.Presets.IsPreviewing())
-    P.rail("filters")
-    assertFalse(NS.Presets.IsPreviewing(), "a rail click away restores")
+    P.tab("general", NS.L["Spell categories"])
+    assertFalse(NS.Presets.IsPreviewing(), "a click on a bespoke tab restores")
     assertEqual(ids(NS), before)
     -- A redraw of the tab itself (the pick's own refresh) keeps the preview.
-    -- Back on General, the section keeps the tab it was left on: Presets.
-    ws = P.rail("containers")
-    assertEqual(NS.Helpers.__pageCtx.containers.activeTab, "Presets")
+    ws = P.tab("general", "Presets")
     control(NS, P, ws, "Preset"):__fire("OnValueChanged", "simple")
-    P.rerender("Containers")
+    P.rerender("General")
+    assertEqual(NS.Helpers.__pageCtx.general.activeTab, "Presets")
     assertTrue(NS.Presets.IsPreviewing(), "redrawing the Presets tab is not leaving it")
 end)
 
@@ -186,7 +197,7 @@ test("presets tab: panel hide restores", function()
     local before = ids(NS)
     control(NS, P, ws, "Preset"):__fire("OnValueChanged", "intermediate")
     assertTrue(NS.Presets.IsPreviewing())
-    NS.Helpers.__pageCtx.containers.panel:__fire("OnHide")
+    NS.Helpers.__pageCtx.general.panel:__fire("OnHide")
     -- red under: closing the settings window with the preview still written into the profile
     assertFalse(NS.Presets.IsPreviewing(), "closing the panel restores")
     assertFalse(NS.State.testMode)
@@ -196,7 +207,7 @@ end)
 test("presets tab: a preview the tab did not start is not its to end", function()
     local NS, _, P, ws = presetsTab()
     NS.Presets.BeginPreview("healer", "bars")   -- the first-run picker's, say
-    P.tab("containers", NS.L["General"])
+    P.tab("general", "Master controls")
     -- red under: leaving the tab ending a preview another surface owns
     assertTrue(NS.Presets.IsPreviewing(), "the tab ends only its own preview")
     assertTrue(ws ~= nil)

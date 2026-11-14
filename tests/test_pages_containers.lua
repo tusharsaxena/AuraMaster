@@ -39,12 +39,13 @@ local function inScroll(NS, w)
     return walk(NS.Helpers.EnsureScroll(NS.Helpers.__pageCtx.containers))
 end
 
-test("containers: registers its own top-level Blizzard category, with General first, then Presets (N-1, options-ui-§14)", function()
+test("containers: registers its own top-level Blizzard category, its General section one General tab (N-1, options-ui-§14)", function()
     local NS, m, P = containers()
     local keys = P.tabKeys("containers")
     -- red under: the acts tab not named General or not first (options-ui-§14 names the tab holding a
-    -- page's acts, under a band carrying its picker), or the Presets tab (AM-PR06) missing
-    assertEqual(table.concat(keys, ","), NS.L["General"] .. ",Presets")
+    -- page's acts, under a band carrying its picker), or the Presets tab left here after AM-PR14
+    -- moved it to the General page (spec 16.4)
+    assertEqual(table.concat(keys, ","), NS.L["General"])
     assertTrue(m.__subcategories.Containers ~= nil, "the page registers its own category")
     for _, path in ipairs({ "container.name", "container.enabled", "container.unit", "container.auraType", "container.style" }) do
         local row = NS.FindSchemaRow(path)

@@ -512,13 +512,15 @@ end
 -- The tabbed page: this addon's page spec, mapped onto the library's
 -- ---------------------------------------------------------------------------
 
--- LEAVING A TAB. A tab whose spec carries `onLeave` (the Containers page's Presets tab, whose preview
--- must end when the player moves on, spec 2026-11-14-auramaster-presets section 6) is told once when
--- the page stops showing it: a later render that draws another tab or another section, or the
--- panel's own OnHide. The library has no leave callback; a tab click is its alone (it re-renders the
--- strip and the body without calling back), so the host tab's render below is where a click lands,
--- and Helpers.RenderContainerPage checks before it draws a section. A redraw of the same tab is not a
--- leave. The record is the ctx's `__tabLeave` (this file already keeps the section state there).
+-- LEAVING A TAB. A tab whose spec carries `onLeave` (the General page's Presets tab, whose preview
+-- must end when the player moves on, spec 2026-11-14-auramaster-presets sections 6 and 16.4) is told
+-- once when the page stops showing it: a later render that draws another tab or another section, or
+-- the panel's own OnHide. The library has no leave callback; a tab click is its alone (it re-renders
+-- the strip and the body without calling back). Every render calls the page's `chrome` before the
+-- tab's content, a schema tab the library draws itself included, so the chrome below is where any
+-- click lands; a host tab's render checks again, and Helpers.RenderContainerPage checks before it
+-- draws a section. A redraw of the same tab is not a leave. The record is the ctx's `__tabLeave`
+-- (this file already keeps the section state there); `__tabLeft` marks a render a leave started.
 
 --- Tell the tab `ctx` last drew with an `onLeave` that it was left, once.
 local function fireLeave(ctx)
@@ -541,7 +543,7 @@ end
 --- Host tab `key` is being drawn on `ctx`: a tab held for a leave that is not this one is told first.
 --- Answers whether it was (the registry may have changed under the render that is starting).
 local function tabDrawn(ctx, key, onLeave)
-    local held, left = ctx.__tabLeave, false
+    local held, left = ctx.__tabLeave, ctx.__tabLeft or false
     if held and held.key ~= key then
         fireLeave(ctx)
         left = true
@@ -575,12 +577,25 @@ local function hostTabs(spec, cfg)
     return out
 end
 
+--- The render's chrome, ahead of every tab's content: a tab held for a leave that this render does
+--- not draw is told first (a schema tab's click reaches no host render), then the spec's `intro`,
+--- handed the container as the leave left it.
+local function pageChrome(intro, cfg)
+    return function(c)
+        local held = c.__tabLeave
+        c.__tabLeft = nil
+        if held and held.key ~= c.activeTab then
+            fireLeave(c)
+            c.__tabLeft = true
+        end
+        local now = c.__tabLeft and NS.ActiveContainer() or cfg
+        if intro and now then intro(c, now) end
+    end
+end
+
 --- The library's `opts` for one render of a page with a container (or an addon-wide page).
 local function pageOpts(spec, cfg)
-    local intro = spec.intro
-    local opts = { tabs = hostTabs(spec, cfg), cfg = cfg }
-    if intro and cfg then opts.chrome = function(c) intro(c, cfg) end end
-    return opts
+    return { tabs = hostTabs(spec, cfg), cfg = cfg, chrome = pageChrome(spec.intro, cfg) }
 end
 
 --- Render one tabbed page through the library's O.RenderTabbedSchema: the optional `banner(ctx)`

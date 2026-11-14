@@ -2015,7 +2015,7 @@ Total.
 - general: the Reset-all popup carries options-ui-§12's wording and cannot be clicked through
 - general: Defaults restores the General rows of the profile and no container setting, now that Containers is its own page
 - general: the page's Defaults tooltip no longer mentions a container's identity (N-1: Containers is its own page)
-- general: the tab strip reads Master controls, Blizzard frames, Spell categories, Dispel colors, Skin — Containers is gone from it
+- general: the tab strip reads Master controls, Presets, Blizzard frames, Spell categories, Dispel colors, Skin — Containers is gone from it
 - general → spell categories: the list is ordered by name, case-insensitively, ids the client cannot name last (owner 2026-09-20)
 - general → spell categories: the list draws two columns, filled row-major, in the by-name order (owner 2026-09-20)
 - general → spell categories: a dropdown of the fifteen spell categories plus Weapon enchants, opening on the first
@@ -2265,7 +2265,7 @@ Total.
 
 ### test_pages_containers.lua (35)
 
-- containers: registers its own top-level Blizzard category, with General first, then Presets (N-1, options-ui-§14)
+- containers: registers its own top-level Blizzard category, its General section one General tab (N-1, options-ui-§14)
 - containers: Unit, Aura type and Style sit under their own subsection; Name and Enabled do not
 - containers: the subsection heading is drawn between Enabled and Unit, not anywhere else
 - containers: NS.OpenOptionsPage('containers') opens its own category, not the main one (N-3)
@@ -2506,7 +2506,7 @@ Total.
 - sections: each style section's gate is derived from its style, on both builds (Diagnostics' inert split)
 - rail: Containers draws General, Filters, Layout and the selected container's own style, in that order
 - rail: every section draws a tooltip on its entry
-- rail: the page opens on General, its General tab first (then Presets) under the band, beside a 120px rail
+- rail: the page opens on General, its one General tab under the band, beside a 120px rail
 - rail: the draw order is PageBanner, NavRail, TabStrip
 - rail: a rail click draws that section's strip and rows under the same band
 - rail: each section keeps its own tab: Filters, Categories, Layout, back to Filters lands on Categories (smoke PANEL-12)
@@ -2660,11 +2660,12 @@ Total.
 - seed: fresh install not marked seen
 - seed: the v19 step is idempotent and keeps a stored false on an unseeded profile
 
-### test_presetpicker.lua (40)
+### test_presetpicker.lua (41)
 
 - picker: due on new profile only
 - picker: the latch is a settings row, written through the seam
 - picker: shows before skin picker
+- picker: the footer names the General page's Presets tab
 - picker: a profile that has seen it arms the skin picker's start as before
 - picker: the window is a movable, clamped DIALOG, closed by Escape
 - picker: pick previews, close restores, latch set
@@ -2703,9 +2704,10 @@ Total.
 - picker: a logout with the window up writes back the lock it found
 - picker: after a /reload with the window up, Not now leaves the containers locked
 
-### test_pages_presets.lua (11)
+### test_pages_presets.lua (12)
 
-- presets tab: listed after General
+- presets tab: listed on the General page after Master controls
+- presets tab: gone from the Containers page
 - presets tab: drawn with no containers too
 - presets tab: no empty option
 - presets tab: pick previews
@@ -3025,8 +3027,8 @@ Total.
 | test_presets_apply.lua | 11 |
 | test_presets_preview.lua | 20 |
 | test_presets_seed.lua | 7 |
-| test_presetpicker.lua | 40 |
-| test_pages_presets.lua | 11 |
+| test_presetpicker.lua | 41 |
+| test_pages_presets.lua | 12 |
 | test_perf.lua | 8 |
 | test_debuglogsetup.lua | 9 |
 | test_locale.lua | 10 |
@@ -3043,4 +3045,4 @@ Total.
 | test_skin_switch.lua | 34 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2497** |
+| **Total** | **2499** |

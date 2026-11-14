@@ -1,17 +1,17 @@
 local _, NS = ...
 
--- settings/ContainersPresets.lua -- the Containers page's Presets tab (spec
--- docs/superpowers/specs/2026-11-14-auramaster-presets-design.md, sections 6 and 8).
+-- settings/GeneralPresets.lua -- the General page's Presets tab (spec
+-- docs/superpowers/specs/2026-11-14-auramaster-presets-design.md, sections 6, 8 and 16.4: the tab
+-- lived on the Containers page's General section until the owner moved it here, AM-PR14).
 --
---     band      [Container v picker ][ New container ]
---     rail      | General |  [ General ][ Presets ]                <- the General section's second tab
---                            A preset is a ready-made set of containers ...
---                            [Preset v               ] [Style v ]
---                            Previewing ... / Pick a preset ...     <- the status line
---                            -- What it creates --
---                            Player buffs (all), Weapon enchants, ...
---                            -- When applied --  [Replace all my containers v]
---                            [Apply preset...] [Stop preview]
+--     [ Master controls ][ Presets ][ Blizzard frames ] ...            <- the General page's second tab
+--     A preset is a ready-made set of containers ...
+--     [Preset v               ] [Style v ]
+--     Previewing ... / Pick a preset ...                               <- the status line
+--     -- What it creates --
+--     Player buffs (all), Weapon enchants, ...
+--     -- When applied --  [Replace all my containers v]
+--     [Apply preset...] [Stop preview]
 --
 -- WHAT A PICK DOES. Choosing a preset or a style previews it on the real screen in test mode
 -- (NS.Presets.BeginPreview); choosing the mode previews nothing. Apply preset... asks through the
@@ -19,7 +19,7 @@ local _, NS = ...
 -- or an Add adds, and keeps the preview in that mode; with no preview of this tab's up it applies
 -- the selection behind the same confirm (NS.ConfirmPreset). Stop preview restores.
 --
--- LEAVING RESTORES. A tab click or a rail click away, and the panel's OnHide, call this tab's
+-- LEAVING RESTORES. A click on any other tab of the page, and the panel's OnHide, call this tab's
 -- `onLeave` (settings/OptionsSetup.lua's leave record), which ends the preview with a restore. A
 -- profile change restores through modules/Presets.lua's own profile-event path. The tab ends only
 -- a preview it started: it keeps the token NS.Presets.Previewed answered when it began, so a
@@ -28,8 +28,8 @@ local _, NS = ...
 -- Empty is not offered here (spec section 8): Replace with Empty deletes every container, which the
 -- band already does one at a time, and a one-click wipe stays off the panel.
 --
--- Loads after settings/OptionsSetup.lua (the composers) and before settings/Containers.lua, which
--- binds NS.RenderPresetsTab and NS.PresetsTabLeft into its section spec at file load.
+-- Loads after settings/OptionsSetup.lua (the composers) and before settings/General.lua, which
+-- binds NS.RenderPresetsTab and NS.PresetsTabLeft into its page spec at file load.
 
 local L = NS.L
 local H = NS.Helpers
@@ -179,7 +179,7 @@ end
 --- profile with none gets some.
 function NS.RenderPresetsTab(ctx)
     owns()   -- a preview ended elsewhere (combat, a profile change) is no longer this tab's
-    H.TextRow(ctx, L["A preset is a ready-made set of containers, placed for your screen size. Applying one changes every container in this profile, not just the one in the band above. Skin, fonts and General settings are left alone."])
+    H.TextRow(ctx, L["A preset is a ready-made set of containers, placed for your screen size. Applying one changes every container in this profile. Skin, fonts and the other General settings are left alone."])
     H.RenderGrid(ctx, {
         { make = dropdownCell(L["Preset"], CHOICES, presetLabels(), state.sel, pickPreset,
             L["Picking a preset shows it on your screen in test mode, in place of your containers."]) },

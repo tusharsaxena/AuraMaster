@@ -892,8 +892,8 @@ L["Containers: locked"] = "Containers: locked"
 L["Containers: unlocked"] = "Containers: unlocked"
 L["Test mode: on"] = "Test mode: on"
 L["Test mode: off"] = "Test mode: off"
-L["Change it later on Containers > General > Presets. The skin picker opens next."] = "Change it later on Containers > General > Presets. The skin picker opens next."
-L["Change it later on Containers > General > Presets."] = "Change it later on Containers > General > Presets."
+L["Change it later on General > Presets. The skin picker opens next."] = "Change it later on General > Presets. The skin picker opens next."
+L["Change it later on General > Presets."] = "Change it later on General > Presets."
 L["Replace your %s containers with the %s preset? Your containers are deleted."] = "Replace your %s containers with the %s preset? Your containers are deleted."
 L["Add the %s preset's %s containers next to your own?"] = "Add the %s preset's %s containers next to your own?"
 L["Applied the %s preset (%s)."] = "Applied the %s preset (%s)."
@@ -902,10 +902,10 @@ L["cannot open the preset picker during combat — previewing a preset rebuilds 
 L["Choose a container preset: open the preset picker, or apply one — /am preset [name] [icons] [add]"] = "Choose a container preset: open the preset picker, or apply one — /am preset [name] [icons] [add]"
 L["Usage: /am preset [simple|intermediate|advanced|healer|empty] [bars|icons] [add]"] = "Usage: /am preset [simple|intermediate|advanced|healer|empty] [bars|icons] [add]"
 
--- The Containers page's Presets tab (settings/ContainersPresets.lua).
+-- The General page's Presets tab (settings/GeneralPresets.lua).
 L["Presets"] = "Presets"
 L["Replace or add to every container in this profile with a ready-made set, previewed on your screen first."] = "Replace or add to every container in this profile with a ready-made set, previewed on your screen first."
-L["A preset is a ready-made set of containers, placed for your screen size. Applying one changes every container in this profile, not just the one in the band above. Skin, fonts and General settings are left alone."] = "A preset is a ready-made set of containers, placed for your screen size. Applying one changes every container in this profile, not just the one in the band above. Skin, fonts and General settings are left alone."
+L["A preset is a ready-made set of containers, placed for your screen size. Applying one changes every container in this profile. Skin, fonts and the other General settings are left alone."] = "A preset is a ready-made set of containers, placed for your screen size. Applying one changes every container in this profile. Skin, fonts and the other General settings are left alone."
 L["Picking a preset shows it on your screen in test mode, in place of your containers."] = "Picking a preset shows it on your screen in test mode, in place of your containers."
 L["Bars or icons for the preset's containers. Text containers stay text."] = "Bars or icons for the preset's containers. Text containers stay text."
 L["Previewing %s (%s) on your screen in test mode. Move this panel aside to look. Nothing is saved until Apply; leaving this tab or closing the panel puts your containers back."] = "Previewing %s (%s) on your screen in test mode. Move this panel aside to look. Nothing is saved until Apply; leaving this tab or closing the panel puts your containers back."
