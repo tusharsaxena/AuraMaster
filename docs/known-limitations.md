@@ -516,6 +516,22 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   columns. The player can move either stack, or cap a container's auras. Ruled 2026-11-14 under the
   presets plan's ruling on the AM-PR01 review, flagged to the owner (presets spec section 4);
   section 15 records the upward overlap for the owner's call.
+- **The focus column shares a strip with the target stack's.** Since the owner's round-2 feedback
+  the focus containers are a stack of their own, its column lined up with Player debuffs (all)'s, its
+  left edge 480 in from the right edge in a 1080-tall reference space (presets spec section 16; 475
+  before). The target stack's column ends 520 right of the screen's center line, so on a 1920 x 1080
+  screen the two share 40 across, and Advanced (Bars)'s target stack runs from its base nearly to the
+  top edge, so wherever the focus stack sits their heights meet. Section 16 asks for no shared span,
+  or the smallest: a corner group further right than 475 is what the owner asked to move. On 16:10
+  and the narrow ratios the screen's right edge comes nearer the center line and they share more
+  (136 on 16:10, 169 to 180 on 5:4 and 4:3, at 1080 tall); an Icons row grows left from its column's
+  right edge, so the target stack's Icons rows reach 31 further (71 on 16:9); on 21:9 they share
+  nothing. The focus stack's base sits 550 down, over the far stack's, so the two stay more than
+  twice the snap radius apart in test mode, locked or unlocked, on every screen tested (53 at the
+  closest, 768 tall unlocked). `tests/test_presets_data.lua` ("presets data: the focus stack stays
+  clear of the far stack beyond twice the snap radius") pins each shared span at 1080. In play a full
+  target stack can draw under the focus stack's left edge; the player can move either. Recorded
+  2026-11-15 (AM-PR13) for the owner's call.
 - **Advanced (Bars)'s target stack runs off the top of a 768-tall screen in test mode.** Since the
   owner's ruling on the round-1 conflicts the side stacks grow up from a base 740 down in a 1080-tall
   reference space, 340 above the bottom edge (presets spec section 15.1; 600, then 640, before it).

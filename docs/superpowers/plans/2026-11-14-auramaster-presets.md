@@ -201,8 +201,8 @@ Each task keeps the Global Constraints, the gate and the commit rules above.
 ### Task AM-PR13: Call-out glow, a focus stack of its own, the corner group aligned with it
 
 **Files:** `defaults/Presets.lua`, `tests/test_presets_data.lua` and any preset suite whose expectations move, docs/known-limitations.md if an overlap remains.
-- [ ] Failing tests first: `presets data: the call-outs carry the owner's glow exactly` (every field in §16.1); `presets data: focus roles form their own screen-placed stack` (every tier, both looks; head attach.mode screen, members attached within the focus stack only, nothing attached to a far-column container); `presets data: no bars container is laid out horizontally after Apply` (the effective layout, every tier and look); `presets data: the focus stack stays clear of the far stack beyond twice the snap radius` (test mode, locked and unlocked, all tested screens); `presets data: Player debuffs' left edge lines up with Focus buffs' left edge` (screen space, all tested ratios, and left of the §15 position).
-- [ ] Implement per §16.1–3, gate green, commit `AM-PR13: The call-outs' glow, a focus stack of its own, the corner group aligned with it`.
+- [x] Failing tests first: `presets data: the call-outs carry the owner's glow exactly` (every field in §16.1); `presets data: focus roles form their own screen-placed stack` (every tier, both looks; head attach.mode screen, members attached within the focus stack only, nothing attached to a far-column container); `presets data: no bars container is laid out horizontally after Apply` (the effective layout, every tier and look); `presets data: the focus stack stays clear of the far stack beyond twice the snap radius` (test mode, locked and unlocked, all tested screens); `presets data: Player debuffs' left edge lines up with Focus buffs' left edge` (screen space, all tested ratios, and left of the §15 position).
+- [x] Implement per §16.1–3, gate green, commit `AM-PR13: The call-outs' glow, a focus stack of its own, the corner group aligned with it`.
 
 ### Task AM-PR14: The Presets tab moves to the General page
 

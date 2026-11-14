@@ -107,14 +107,29 @@ end
 -- locked and unlocked; on a 768-tall one it still runs off the top (docs/known-limitations.md,
 -- presets). Tall unit frames or action bars may now reach the base (the same file).
 local SIDE_BASE = -740
+-- THE FOCUS STACK (spec section 16): the focus roles in a stack of their own, placed on the screen.
+-- In the far stack they followed its head, Target debuffs (all), an icon row, and a container
+-- attached to another flows by its chain's head (Anchors.EffectiveLayout: axis and both growths), so
+-- Advanced's focus bars were laid out across. Its column is Player debuffs' (cornerLeft's), from the
+-- same right-edge point, so the two line up on every screen, and its base sits FOCUS_BASE down, high
+-- enough over the far stack (which keeps its base) that the two stay more than twice C.SNAP_RADIUS
+-- apart in test mode, locked or unlocked (53 at the closest, on a 768-tall screen unlocked), so a
+-- drag near the far stack does not snap the focus stack back onto it; its top stays under Player
+-- debuffs' bottom by more than one C.SNAP_RADIUS there (28; 172 at 1080). The corner group moved in with
+-- it: Player debuffs' left edge 480 in from the right edge (475 in section 15), Player buffs keeping
+-- its width and its 5 gap. On 16:9 the column shares 40 with the right stack's, which section 16
+-- asks to keep smallest (docs/known-limitations.md, presets).
+local FOCUS_BASE = -550
 P.STACKS = {
-    cornerRight = { anchor = "TOPRIGHT", x = -255, y = -46,  width = 175, iconsGrowH = "left" },
-    cornerLeft  = { anchor = "TOPRIGHT", x = -475, y = -46,  width = 215, iconsGrowH = "left" },
+    cornerRight = { anchor = "TOPRIGHT", x = -260, y = -46,  width = 175, iconsGrowH = "left" },
+    cornerLeft  = { anchor = "TOPRIGHT", x = -480, y = -46,  width = 215, iconsGrowH = "left" },
     middle      = { anchor = "TOP",      x = -240,           width = 480, iconsGrowH = "right", center = true },
     left        = { anchor = "TOP",      x = -520, y = SIDE_BASE, width = 240, iconsGrowH = "right", up = true },
     right       = { anchor = "TOP",      x = 280,  y = SIDE_BASE, width = 240, iconsGrowH = "left", up = true },
     far         = { anchor = "TOP",      x = 570,  y = SIDE_BASE, width = 220, iconsGrowH = "left", up = true },
 }
+P.STACKS.focus = { anchor = "TOPRIGHT", x = P.STACKS.cornerLeft.x, y = FOCUS_BASE, width = P.STACKS.cornerLeft.width,
+    iconsGrowH = "left", up = true }
 for _, stack in pairs(P.STACKS) do
     if stack.anchor == "TOP" then TOP_REACH = math.max(TOP_REACH, -stack.x, stack.x + stack.width) end
 end
@@ -200,17 +215,20 @@ local HIDE_ENCHANTS = { "weaponEnchants" }
 
 local function rgb(r, g, b) return { r = r, g = g, b = b, a = 1 } end
 
---- A call-out's look, the owner's (spec section 15): its line centered, in `color` from no skin, a
---- black glow 6 out, nudged 1 right and 1 down, the spell's name alone (a template of more than one
---- piece under Center stacks each field on a row of its own, modules/Style_Text.lua Text.Stacked), and
---- no name label. The font size is calloutLayout's, set at build time.
+--- A call-out's look, the owner's (spec sections 15 and 16): its line centered, in `color` from no
+--- skin, the owner's glow exactly (black from no skin, full intensity, 2 px, nudged 1 right and 1
+--- down; every glow leaf the template has, so none comes from it), the spell's name alone (a template
+--- of more than one piece under Center stacks each field on a row of its own, modules/Style_Text.lua
+--- Text.Stacked), and no name label. The owner's list also names a radius, a falloff and a blend,
+--- the halo leaves the glyph glow retired, which nothing reads, so none is stored. The font size is
+--- calloutLayout's, set at build time.
 local function calloutLook(color)
     return {
         text = {
             justifyH = "CENTER", template = "$spellname$",
             font = { fontColor = color, fontColorFromSkin = false, useClassColorFont = false },
             glow = true, glowColor = rgb(0, 0, 0), glowColorFromSkin = false, useClassColorGlow = false,
-            glowIntensity = 1, glowThickness = 6, glowX = 1, glowY = -1,
+            glowIntensity = 1, glowThickness = 2, glowX = 1, glowY = -1,
         },
         label = { show = false },
     }
@@ -287,7 +305,7 @@ local CONTAINERS = {
         hide = except({ ALL_BUFFS }, { "stealable" }),
         filter = { durationMode = "timed", unitFilter = { kind = "npc", reaction = "hostile" }, zones = NO_PVP } },
 
-    -- The far stack: the target's icon rows, then focus.
+    -- The far stack: the target's icon rows. Then the focus stack (spec section 16).
     ticoD = { name = L["Target debuffs (all)"], unit = "target", auraType = "HARMFUL", style = "icons",
         filter = { maxAuras = 16, sortDirection = "normal", zones = { raid = false } },
         layout = { axis = "horizontal", lineSpacing = 0, perLine = 8 } },
@@ -354,20 +372,21 @@ local TIERS = {
     intermediate = simplePlus({
         { "left", "pshort" }, { "left", "pcd" },
         { "right", "tdeb" }, { "right", "tcd" },
-        { "far", "fdeb" },
+        { "focus", "fdeb" },
     }),
     advanced = simplePlus({
         { "middle", "txtOff" }, { "middle", "txtDef" }, { "middle", "txtRaid" },
         { "left", "pshort" }, { "left", "pcd" }, { "left", "pspec" },
         { "right", "tdeb" }, { "right", "tbuff" }, { "right", "tcc" }, { "right", "tcdp" },
         { "right", "tcdn" }, { "right", "tspec" }, { "right", "tsteal" },
-        { "far", "ticoD" }, { "far", "ticoB" }, { "far", "fdeb" }, { "far", "fbuff" },
+        { "far", "ticoD" }, { "far", "ticoB" },
+        { "focus", "fdeb" }, { "focus", "fbuff" },
     }),
     healer = simplePlus({
         { "middle", "txtRaid" },
         { "left", "pcdHealer" },
         { "right", "healTarget" }, { "right", "dispelTarget" },
-        { "far", "healFocus" }, { "far", "dispelFocus" },
+        { "focus", "healFocus" }, { "focus", "dispelFocus" },
     }),
 }
 
