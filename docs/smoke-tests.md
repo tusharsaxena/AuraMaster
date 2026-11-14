@@ -2818,8 +2818,8 @@ again. Not now → your containers back. Result:
 **Intermediate** → Simple's three, plus Player buffs, short and Player cooldowns left of center,
 Target debuffs (mine) and Target cooldowns right of center, Focus debuffs (mine) far right, all
 filled with sample auras; the side stacks start beside the screen's middle, above the action bars
-and unit frames. Switch to **Icons** → every bar container becomes an icon row; the side stacks'
-rows grow right. Each stack's members sit under the one above with a small gap and never overlap
+and unit frames. Switch to **Icons** → every bar container becomes an icon row; the stack left of
+center grows right, and the stacks right of center grow left, away from the right edge. Each stack's members sit under the one above with a small gap and never overlap
 it. Not now → your containers back. Result:
 
 **PRESETS-6. Advanced in Bars and Icons. Client: Retail, then WoW Forever.** `/am preset`, pick

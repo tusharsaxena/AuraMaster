@@ -470,8 +470,14 @@ test("presets: icons variant", function()
             assertEqual(i.overrides.style, "icons", role)
             assertEqual(i.overrides.layout.axis, "horizontal", role)
             assertTrue(i.overrides.layout.perLine >= 1, role .. " fills its column")
-            local wantH = (b.stack == "cornerRight" or b.stack == "cornerLeft") and "left" or "right"
+            -- Right of center grows left, the rest right (spec section 3.2). red under: the right
+            -- and far stacks growing toward the right edge they sit nearest
+            local rightOfCenter = { cornerRight = true, cornerLeft = true, right = true, far = true }
+            local wantH = rightOfCenter[b.stack] and "left" or "right"
             assertEqual(i.overrides.layout.growH, wantH, role .. " grows away from the edge it sits nearest")
+            if not b.attachTo and wantH == "left" then
+                assertEqual(i.overrides.position.point, "TOPRIGHT", role .. " hangs from its column's right edge")
+            end
             deepEqual(i.overrides.filter, b.overrides.filter, role .. " keeps its filter")
         end
     end

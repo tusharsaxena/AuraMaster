@@ -91,14 +91,15 @@ end
 -- The columns, in reference units (spec section 4, the mockup's layout). `anchor` is the UIParent
 -- point the head hangs from; `x` is the column's LEFT edge from that point (from the right edge for
 -- TOPRIGHT, from the center line for TOP) and `y` its top; `iconsGrowH` is the way an Icons row grows,
--- away from the screen edge the column sits nearest.
+-- away from the screen edge the column sits nearest (spec section 3.2): the columns right of center
+-- grow left, the rest right (the middle one straddles the center line and grows right).
 P.STACKS = {
     cornerRight = { anchor = "TOPRIGHT", x = -175, y = -6,   width = 175, iconsGrowH = "left" },
     cornerLeft  = { anchor = "TOPRIGHT", x = -395, y = -6,   width = 215, iconsGrowH = "left" },
     middle      = { anchor = "TOP",      x = -240, y = -200, width = 480, iconsGrowH = "right" },
     left        = { anchor = "TOP",      x = -520, y = -330, width = 240, iconsGrowH = "right" },
-    right       = { anchor = "TOP",      x = 280,  y = -330, width = 240, iconsGrowH = "right" },
-    far         = { anchor = "TOP",      x = 570,  y = -330, width = 220, iconsGrowH = "right" },
+    right       = { anchor = "TOP",      x = 280,  y = -330, width = 240, iconsGrowH = "left" },
+    far         = { anchor = "TOP",      x = 570,  y = -330, width = 220, iconsGrowH = "left" },
 }
 for _, stack in pairs(P.STACKS) do
     if stack.anchor == "TOP" then TOP_REACH = math.max(TOP_REACH, -stack.x, stack.x + stack.width) end
