@@ -804,3 +804,47 @@ test("picker: a container dragged under the preview keeps its drop on Apply", fu
     assertTrue(NS.GetSetting("locked"), "locked")
     assertFalse(NS.State.testMode, "test mode off")
 end)
+
+-- ── the review fixes: a /reload or a logout with the window up (AM-PR11) ───────────────────────
+
+--- A deep copy of `t`, so a second environment reads what the first one saved, not its live tables.
+local function copy(t)
+    if type(t) ~= "table" then return t end
+    local out = {}
+    for k, v in pairs(t) do out[k] = copy(v) end
+    return out
+end
+
+test("picker: a logout with the window up writes back the lock it found", function()
+    for _, lockedAtOpen in ipairs({ true, false }) do
+        local NS, m = fresh()
+        local where = lockedAtOpen and "opened locked" or "opened unlocked"
+        NS.SetByPath("locked", lockedAtOpen)
+        local f = NS.MaybeShowPresetPicker()
+        f.dd.onSelect("advanced")
+        assertFalse(NS.GetSetting("locked"), where .. ": the window unlocked them")
+        m.__logout()
+        -- red under: the window's lock lived only in the session, so locked=false was what got saved
+        assertEqual(NS.GetSetting("locked") == true, lockedAtOpen, where .. ": the lock it found, saved")
+        assertFalse(NS.State.testMode, where .. ": test mode off")
+        assertFalse(NS.Presets.IsPreviewing(), where .. ": the preview restored")
+        assertNil(NS.db.profile.presets.previewSnapshot, where .. ": no snapshot left to save")
+        assertFalse(f:IsShown(), where .. ": down")
+        assertFalse(NS.Presets.PickerSeen(), where .. ": a logout is not the player's close")
+    end
+end)
+
+test("picker: after a /reload with the window up, Not now leaves the containers locked", function()
+    local NS, m = fresh()
+    NS.SetByPath("locked", true)
+    NS.MaybeShowPresetPicker()
+    m.__logout()
+    local saved = copy(NS.db.sv)
+    local again = fresh({ savedVariables = saved })
+    local f = again.MaybeShowPresetPicker()
+    assertTrue(f and f:IsShown(), "not closed before the reload: offered again")
+    assertFalse(again.GetSetting("locked"), "opened unlocked")
+    f.notNow:__fire("OnClick")
+    -- red under: the reload's window finding locked=false, and Not now putting that back
+    assertTrue(again.GetSetting("locked"), "locked, as before the reload")
+end)

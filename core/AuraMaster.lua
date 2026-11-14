@@ -316,6 +316,14 @@ function NS.OnProfileShutdown()
     if NS.HidePresetPicker then NS.HidePresetPicker() end
 end
 
+--- OnDatabaseShutdown: PLAYER_LOGOUT (a /reload too), before AceDB strips the defaults and the
+--- client writes SavedVariables. The preset picker goes down unmarked, so the lock it took off is
+--- written back now (the lock it found lives only in the session) and the window is offered again
+--- at the next login. Nothing is rebuilt.
+function NS.OnDatabaseShutdown()
+    if NS.HidePresetPicker then NS.HidePresetPicker() end
+end
+
 --- OnProfileChanged: a switch.
 function NS.OnProfileChanged()
     prepareProfile()

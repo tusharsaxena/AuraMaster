@@ -13,7 +13,8 @@ local addonName, NS = ...
 --                              in combat with the combat line.
 --   NS.HidePresetPicker(r)     takes the window down WITHOUT marking it seen, ending a preview it
 --                              started with a restore, drops a held start and takes down an open
---                              preset confirm unanswered: the stand-down and every profile event.
+--                              preset confirm unanswered: the stand-down, every profile event and
+--                              the logout.
 --                              `r` true when the active profile was just replaced (a reset or a
 --                              copy): the lock is then left as the replacement wrote it.
 --   NS.RefreshPresetPicker()   repaints the window from what is on the screen: NS.Presets calls it
@@ -50,7 +51,8 @@ local addonName, NS = ...
 -- off. A switch takes the window down at AceDB's OnProfileShutdown (core/AuraMaster.lua), while the
 -- profile it opened on is still the active one, so its lock goes back through the seam before the
 -- swap; a reset or a copy replaces the profile whole, and its hide writes no lock over what the
--- replacement holds.
+-- replacement holds. A logout or a /reload takes it down at AceDB's OnDatabaseShutdown, before
+-- SavedVariables are written, so the lock it found (held only in `state`) is what is saved.
 --
 -- WHAT A PICK DOES. Nothing is previewed when the window opens: the profile already holds what it
 -- holds (Simple, on a new one). A pick of a preset or a style previews it on the real screen in

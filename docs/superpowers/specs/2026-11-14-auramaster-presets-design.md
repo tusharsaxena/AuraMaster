@@ -372,7 +372,9 @@ section wins.
   window show and flip the lock and test mode. Turning test mode off while a preview is up ends the
   preview the way Not now does. **Apply** keeps the preset, then sets `locked = true` and test mode off.
   **Not now**, the close control and Escape restore the preview as before, then put the lock state back
-  to what it was when the window opened, and test mode is off. A container dragged while the preview is
+  to what it was when the window opened, and test mode is off. *(A logout or a `/reload` with the
+  window up takes it down the same way before SavedVariables are written, unmarked, so the lock it
+  found is what is saved: the AM-PR11 review.)* A container dragged while the preview is
   unlocked is part of the preview: Apply keeps where it was dragged to. `/am preset` opens the window the
   same way. The Presets tab is unchanged.
 - §11's placement checks become: every head and base is on screen at every tested ratio; upward stacks

@@ -522,9 +522,9 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   and with their test-mode samples it is about 610 tall: it ends 16 under the top edge on a
   1080-tall parent, but about 160 above it on a 768-tall one (UI scale off), and with the containers
   unlocked, as the preset picker opens them, each member's drag strip adds 20, so it also runs about
-  85 above the top edge at 1080. Every other stack, in either style, stays on screen locked
-  (`tests/test_presets_data.lua`, "presets: placement", which names this one as its only
-  exception). Lowering the base far enough would put it over the unit frames and action bars;
+  85 above the top edge at 1080 (about 260 at 768). Every other stack, in either style, stays on
+  screen, locked or unlocked (`tests/test_presets_data.lua`, "presets: placement", which names this
+  one as its only exception, and caps how far over it may run each way, so it cannot grow unnoticed). Lowering the base far enough would put it over the unit frames and action bars;
   splitting the stack changes the owner's own layout. Recorded 2026-11-15 for the owner's call.
 - **At 1080 tall, the preset picker covers the lower lines of Advanced's call-outs.** The picker
   opens centered across, just under the lowest call-out block any preset draws, and the builder keeps

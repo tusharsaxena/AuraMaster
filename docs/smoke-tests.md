@@ -3005,12 +3005,14 @@ the confirm if one shows) → the window closes, the containers are locked (no h
 is off. `/am unlock`, then `/am preset`, pick nothing, **Apply** → the same: locked, test mode off.
 Result:
 
-**PRESETS-26. Not now, the close mark and Escape put the lock back. Client: Retail.** With the
+**PRESETS-26. Not now, the close mark, Escape and a `/reload` put the lock back. Client: Retail.** With the
 containers locked, `/am preset`, pick **Healer**, then **Not now** → your containers back, test mode
 off, and the containers locked again. `/am unlock`, then `/am preset`, pick **Healer**, then
 **Not now** → test mode off and the containers still unlocked. Repeat both with the close mark and
 with **Escape** → the same. With the window up, turn test mode on with its button (no pick) and
-close it → test mode off. Result:
+close it → test mode off. With the containers locked, `/am preset`, pick **Healer**, then `/reload`
+with the window still up → after the reload your own containers are back, the window opens again,
+and **Not now** leaves the containers locked. Result:
 
 ## WoW Forever
 

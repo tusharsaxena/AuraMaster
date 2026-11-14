@@ -298,6 +298,8 @@ function NS.InitDB()
             NS.db.RegisterCallback(NS, "OnProfileReset", function() NS.OnProfileReset() end)
             -- Before a switch, while the profile being left is still the active one (no rebuild).
             NS.db.RegisterCallback(NS, "OnProfileShutdown", function() NS.OnProfileShutdown() end)
+            -- At PLAYER_LOGOUT (a /reload too), before SavedVariables are written.
+            NS.db.RegisterCallback(NS, "OnDatabaseShutdown", function() NS.OnDatabaseShutdown() end)
         end
     end
     -- Soft fallback when AceDB is absent: a db-shaped table over the raw SavedVariables global, so

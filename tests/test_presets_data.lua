@@ -409,14 +409,25 @@ end
 -- tsteal, is stored off), cannot fit a 768-tall screen above any base the unit frames leave free. The case also fails while that stack
 -- fits, so the record cannot outlive the limit.
 local OFF_TOP = { ["advanced/bars right 768"] = true }
+-- The same, unlocked, as the preset picker opens the containers (spec section 15): each drag strip
+-- adds its room, and Advanced's Bars target stack runs off the top at 1080 tall too, about 84 over
+-- (the AM-PR11 review; docs/known-limitations.md). Each entry is the most it may run over, so the
+-- overshoot cannot grow unnoticed, and it fails too once the stack fits.
+local OFF_TOP_UNLOCKED = { ["advanced/bars right 768"] = 265, ["advanced/bars right 1080"] = 90 }
 
---- Every stack in `spans` (sampleSpans, locked) ends at or under the top edge, but OFF_TOP's.
-local function checkTopEdge(spans, name, look, W, H)
+--- Every stack in `spans` (sampleSpans; `unlocked` as it was measured) ends at or under the top edge,
+--- but those its OFF_TOP table names.
+local function checkTopEdge(spans, name, look, W, H, unlocked)
+    local off = unlocked and OFF_TOP_UNLOCKED or OFF_TOP
     for stack, span in pairs(spans) do
-        local key, where = ("%s/%s %s %d"):format(name, look, stack, H), ("%s/%s %s at %dx%d"):format(name,
-            look, stack, W, H)
-        if OFF_TOP[key] then
+        local key, where = ("%s/%s %s %d"):format(name, look, stack, H), ("%s/%s %s at %dx%d%s"):format(name,
+            look, stack, W, H, unlocked and ", unlocked" or "")
+        if off[key] then
             assertTrue(span.top > 0, where .. " now fits under the top edge: drop it from OFF_TOP and the limitation")
+            if type(off[key]) == "number" then
+                assertTrue(span.top <= off[key], ("%s runs %d over the top edge, past its recorded %d"):format(where,
+                    span.top, off[key]))
+            end
         else
             assertTrue(span.top <= 0, where .. ": its test-mode top is on screen (" .. span.top .. ")")
         end
@@ -464,6 +475,7 @@ test("presets: placement at 768/1080/1440 x 16:9, 16:10, 21:9, 4:3, 5:4", functi
                 if #heads > 0 then
                     local spans = sampleSpans(env, mocks, name, look, W, H)
                     checkTopEdge(spans, name, look, W, H)
+                    checkTopEdge(sampleSpans(env, mocks, name, look, W, H, true), name, look, W, H, true)
                     if placedY.cornerRight and (placedY.left or placedY.right or placedY.far) then
                         checkCornersAboveBases(spans, placedY, ("%s/%s at %dx%d"):format(name, look, W, H))
                     end

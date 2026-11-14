@@ -355,6 +355,7 @@ optional. The full table and the reasons:
 | `PLAYER_REGEN_DISABLED`, `PLAYER_REGEN_ENABLED`, `ADDON_RESTRICTION_STATE_CHANGED` | `modules/TimedSpells.lua` (AceEvent, on its own target) — while a container uses "without a duration" and the addon is not suspended | `syncAuraListen`: `PLAYER_REGEN_DISABLED` closes the readable gate by itself (it fires before combat lockdown begins); the other two re-check it, dropping or restoring `UNIT_AURA`; reopening schedules one scan |
 | AceDB `OnProfileChanged` / `OnProfileCopied` / `OnProfileReset` | `core/Database.lua:294-298` | `NS.OnProfileChanged` / `NS.OnProfileCopied` / `NS.OnProfileReset` → re-prepare the registry, trace the event once in its own words (a switch `[Profile] changed -> X`; a copy or a reset one `[Set]` line, debug-logging-§10), rebuild, re-render |
 | AceDB `OnProfileShutdown` | `core/Database.lua:300` | `NS.OnProfileShutdown` → `NS.HidePresetPicker`, before a switch, while the profile being left is still the active one: the picker's lock goes back into that profile through the seam. No rebuild |
+| AceDB `OnDatabaseShutdown` (`PLAYER_LOGOUT`, a `/reload` too) | `core/Database.lua:302` | `NS.OnDatabaseShutdown` → `NS.HidePresetPicker`, before the defaults are stripped and SavedVariables written: the lock the picker found (held only in the session) is saved, the window unmarked. No rebuild |
 
 Each container's own `UNIT_AURA` belongs to its engine, and to each twin engine of a glowing Text
 container, which takes the same `SetUnit` (`modules/Container.lua:444`); none of it is addon code.

@@ -484,10 +484,10 @@ end
 
 --- The column width, scaled: a bar's width, or an icon row's icon size (its line fills the column). A
 --- text line's stored width is the column too, which stands when Size to fit is off or cannot measure;
---- with it on (the template's) a line is as wide as its content, from the column's left edge. The
---- call-out's line is centered and its template one piece (calloutLook), so its block centers on the
---- column's center line, where its head hangs (place). The width runs between the column's two edges, each rounded as `place` rounds a head's offset, so a
---- corner column ends on the screen's right edge at any scale.
+--- with it on (the template's) a call-out line is as wide as its content, centered on the center
+--- line its head hangs from (place): the line is justified CENTER and its template one piece
+--- (calloutLook). The width runs between the column's two edges, each rounded as `place` rounds a
+--- head's offset, so a corner column ends on the screen's right edge at any scale.
 local function sizeTo(o, stack, kx)
     local w = round((stack.x + stack.width) * kx) - round(stack.x * kx)
     if o.style == "bars" then

@@ -339,13 +339,20 @@ return function()
     -- while the profile being left is still the active one and before its defaults are stripped.
     -- core/AuraMaster.lua's NS.OnProfileShutdown takes the preset picker down there, so it is modeled
     -- here around the fake, in that order: nothing fires on a switch to the profile already active.
+    -- The same for OnDatabaseShutdown, which AceDB-3.0 fires at PLAYER_LOGOUT (a /reload too) for
+    -- every db, before it strips the defaults: `M.__logout()` fires it, as the logout would.
     local AceDB = M.__libs["AceDB-3.0"]
     local newDB = AceDB.New
+    local dbShutdown = {}
+    M.__logout = function()
+        for _, entry in ipairs(dbShutdown) do entry.fn("OnDatabaseShutdown", entry.db) end
+    end
     AceDB.New = function(...)
         local db = newDB(...)
         local shutdown, register, setProfile = {}, db.RegisterCallback, db.SetProfile
         db.RegisterCallback = function(target, event, fn)
             if event == "OnProfileShutdown" then shutdown[#shutdown + 1] = fn; return end
+            if event == "OnDatabaseShutdown" then dbShutdown[#dbShutdown + 1] = { fn = fn, db = db }; return end
             return register(target, event, fn)
         end
         db.SetProfile = function(self, name)
