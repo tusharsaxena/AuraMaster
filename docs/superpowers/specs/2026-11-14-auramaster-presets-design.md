@@ -174,6 +174,15 @@ variant is computed from the Bars definition, never stored twice.
 - **Ending a preview.** Apply keeps it (in the chosen mode; Add re-applies the preset on top of the snapshot) and turns
   test mode off. Not now, the close control, Escape, leaving the Presets tab, closing the settings panel, a profile
   change and entering combat all restore the snapshot and turn test mode off.
+- **Combat when a restore cannot be applied yet.** Entering combat restores at the `PLAYER_REGEN_DISABLED` edge, which
+  comes before lockdown. When an apply must wait even then (lockdown already up, or auras secret at the pull, which on
+  Retail covers encounters, Mythic+ and PvP), the restore is held to `PLAYER_REGEN_ENABLED`: test mode goes off at once,
+  the previewed containers show real auras through the fight, and the player's own come back when it ends. A restore
+  applied under that wait would leave every container an anchor with no aura engine for the whole fight. One chat line
+  says which happened. **(Builder's call,** AM-PR03 review, amended 2026-11-14 on the AM-PR08 review; owner to
+  confirm.)
+- **An apply settles a preview first.** Applying a preset while a preview is up (from any surface) restores the
+  snapshot, then writes, so no snapshot outlives a confirmed preset. **(Builder's call,** AM-PR08 review.)
 - **Crash safety.** The snapshot is stored in the profile (`presets.previewSnapshot`) while a preview is up, so a
   `/reload`, disconnect or crash mid-preview restores the player's containers at the next login, before anything is
   built. **(Claude's call;** the anti-goal in §1.)
@@ -221,8 +230,12 @@ variant is computed from the Bars definition, never stored twice.
 
 ## 9. Stored data
 
-- `profile.presets = { pickerSeen = false, previewSnapshot = nil }`. `previewSnapshot` holds deep copies of
-  `containers`, `containerOrder`, `nextContainerId`, `userCategories`, `userCategoryOrder` and `categorySpells`.
+- `profile.presets = { pickerSeen = false, seedPrint = nil, previewSnapshot = nil }`. `previewSnapshot` holds deep
+  copies of `containers`, `containerOrder`, `nextContainerId`, `userCategories`, `userCategoryOrder` and
+  `categorySpells`. `seedPrint` is a number, the fingerprint of the containers and order the Simple seed wrote; the
+  first-run picker skips its Replace confirm only while the player's own containers still match it (§5), and closing
+  the picker clears it. **(Builder's call,** AM-PR05 review.) `pickerSeen` is a skipRender settings row, as
+  `skin.pickerSeen` is, so `/am get|set|reset` reach it. **(Builder's call,** AM-PR08 review.)
 - Schema step v18 → v19: every existing profile that is already `seeded` gets `presets.pickerSeen = true`; a profile
   seeded with the old starter set keeps it. The step keys on `seeded`, because a fresh install climbs the whole
   migration ladder before its first seeding and must still see the picker.

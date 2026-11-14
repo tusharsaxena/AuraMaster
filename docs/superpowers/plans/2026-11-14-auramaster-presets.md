@@ -24,7 +24,7 @@
 
 1. **A `/reload` or crash mid-preview** must give the player their own containers back at the next login, with the same ids and attachments: AM-PR03 adds `test_presets_preview.lua` "stale snapshot restores at login".
 2. **A profile switch mid-preview** must restore the snapshot into the profile it came from, never the new one: AM-PR03 "profile change restores the old profile first".
-3. **Combat starting mid-preview** turns test mode off and must end the preview by restoring, never by keeping a half-applied preset: AM-PR03 "combat ends preview with restore".
+3. **Combat starting mid-preview** turns test mode off and must end the preview by restoring, never by keeping a half-applied preset: AM-PR03 "combat ends preview with restore". *Amended on the AM-PR08 review:* when an apply must wait at the pull (lockdown already up, or auras secret), the restore is held to `PLAYER_REGEN_ENABLED` and the preview's containers stay live through the fight (spec §6; AM-PR03 "combat under secrecy keeps the preview until combat ends"). The owner has not ruled on it yet.
 4. **Add mode over containers with the same names** gets unique names, and each new stack member attaches to the new container above it, never to a player's container with the old id: AM-PR02 "add mode chains to new ids".
 5. **Applying Advanced twice** must not create a second pair of special categories, and the spell list the player filled stays attached: AM-PR02 "advanced re-apply reuses categories".
 
