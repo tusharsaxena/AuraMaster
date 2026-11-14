@@ -126,6 +126,8 @@ local function standDown()
     -- preview put back), so it comes back on the next login the addon stands up for
     -- (core/SkinSetup.lua).
     if NS.HideSkinPicker then NS.HideSkinPicker() end
+    -- The first-run preset picker likewise, its preview restored (settings/PresetPicker.lua).
+    if NS.HidePresetPicker then NS.HidePresetPicker() end
     if not applySecure() then
         holdPending()
         traceEdge("stand-down: hiding held until combat ends")

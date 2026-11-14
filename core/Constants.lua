@@ -208,7 +208,9 @@ C.STRATA_LABELS = { BACKGROUND = "Background", LOW = "Low", MEDIUM = "Medium", H
 --   T2 edit chrome       the container's        unlocked outline L+30, drag handle L+50 (+HOP over
 --                                               an attach parent's strip)
 --   T6 modal             DIALOG (library)       LibKa0s debug console and perf panel; Blizzard's
---                                               StaticPopups (reset all, delete, attach flow, ...)
+--                                               StaticPopups (reset all, delete, attach flow, ...);
+--                                               the first-run preset picker (STRATA.MODAL), the
+--                                               skin picker's layer
 --   T7 child             FULLSCREEN (library)   the debug console's copy window
 --   T8 popup             FULLSCREEN_DIALOG      the drag-time snap highlight (STRATA.POPUP); the
 --                                               library's menus, autocomplete and ID suggestions;
@@ -239,6 +241,7 @@ C.STRATA_LABELS = { BACKGROUND = "Background", LOW = "Low", MEDIUM = "Medium", H
 C.LAYERS = {
     STRATA = {
         HUD    = "MEDIUM",              -- T1: the default of every container's layout.strata
+        MODAL  = "DIALOG",              -- T6: the first-run preset picker, as the skin picker
         POPUP  = "FULLSCREEN_DIALOG",   -- T8: the snap highlight, over every strata a player can pick
         CURSOR = "TOOLTIP",             -- T9: the frame picker's overlay
     },

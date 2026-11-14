@@ -115,9 +115,28 @@ local function traceEvent(event, fmt, ...)
         NS.Compat.AurasAreSecret(), InCombatLockdown() and true or false, queued, ...)
 end
 
--- Whether this session has lit the skin picker's login timer (addon:OnEnterWorld): PLAYER_ENTERING_WORLD
--- fires on every loading screen, and the picker is offered once.
+-- Whether this session has offered the first-run pickers (addon:OnEnterWorld): PLAYER_ENTERING_WORLD
+-- fires on every loading screen, and each picker is offered once.
 local skinPickerOffered = false
+local presetPickerOffered = false
+
+--- The first-run pickers at the world entry. The PRESET PICKER FIRST, at once (settings/PresetPicker.lua,
+--- presets spec section 7): while it is due no skin start is armed, because its close shows the skin
+--- picker. Otherwise the skin picker (core/SkinSetup.lua), two seconds in, off the login spike, on a
+--- profile that has not closed it. This event is registered only while the addon stands up, and each
+--- picker re-reads its latch when it shows, so a stand-down in between shows nothing; in combat each
+--- holds for PLAYER_REGEN_ENABLED.
+local function offerPickers()
+    if not presetPickerOffered and NS.PresetPickerDue and NS.PresetPickerDue() then
+        presetPickerOffered, skinPickerOffered = true, true
+        NS.MaybeShowPresetPicker()
+        return
+    end
+    if not skinPickerOffered and NS.SkinPickerDue and NS.SkinPickerDue() then
+        skinPickerOffered = true
+        C_Timer.After(2, function() if NS.MaybeShowSkinPicker then NS.MaybeShowSkinPicker() end end)
+    end
+end
 
 function addon:OnEnterWorld(event, isLogin, isReload)
     traceEvent(event, " login=%s reload=%s", isLogin and true or false, isReload and true or false)
@@ -125,15 +144,8 @@ function addon:OnEnterWorld(event, isLogin, isReload)
     if NS.ContainerManager then NS.ContainerManager.FlushPending() end
     -- The loading screen is still up here; the primer notes the time (issue #24, FP-06).
     if NS.FontPrimer then NS.FontPrimer.OnEnterWorld() end
-    -- The first-run skin picker (core/SkinSetup.lua), once per session, on a profile that has not
-    -- closed it: two seconds in, off the login spike. A profile that has closed it arms nothing.
-    -- This event is registered only while the addon stands up, and the picker re-reads the latch
-    -- and the key when the timer fires, so a stand-down in between shows nothing. The stored skin
-    -- was applied in OnInitialize; in combat it holds for PLAYER_REGEN_ENABLED.
-    if not skinPickerOffered and NS.SkinPickerDue and NS.SkinPickerDue() then
-        skinPickerOffered = true
-        C_Timer.After(2, function() if NS.MaybeShowSkinPicker then NS.MaybeShowSkinPicker() end end)
-    end
+    -- The first-run pickers, preset then skin; the stored skin was applied in OnInitialize.
+    offerPickers()
 end
 
 -- The player may now be in another kind of place: re-run the visibility pass, which reads it
@@ -248,6 +260,10 @@ local function prepareProfile()
     -- preview another session never ended) is restored here, so the sync, the prepare and the
     -- rebuild below see the player's own containers.
     if NS.Presets and NS.Presets.RestoreStaleSnapshot then NS.Presets.RestoreStaleSnapshot() end
+    -- THE PRESET PICKER DOWN, unmarked (settings/PresetPicker.lua): after the restore above, so the
+    -- preview it showed has already gone back into the profile it was taken in; rebuildProfile
+    -- offers it again to a profile that has not closed it.
+    if NS.HidePresetPicker then NS.HidePresetPicker() end
     -- THE SKIN PICKER DOWN FIRST, unmarked (core/SkinSetup.lua): its dismissal puts back the skin
     -- the OLD profile stored, so it must go before the new profile's skin is applied below, never
     -- after. rebuildProfile offers it again to a profile that has not closed it.
@@ -281,10 +297,12 @@ local function rebuildProfile()
     if NS.ContainerManager and NS.ContainerManager.Announce then NS.ContainerManager.Announce(true) end
     if NS.BlizzardFrames and NS.BlizzardFrames.Apply then NS.BlizzardFrames.Apply() end
     if NS.RefreshOptionsPanel then NS.RefreshOptionsPanel() end
-    -- The first-run skin picker (core/SkinSetup.lua): a new or reset profile starts from the
-    -- defaults, `skin.pickerSeen` false, so it shows, a fresh showing over the new profile's skin;
-    -- one that has seen it stays down. After the latch (prepareProfile's NS.SyncEnabled), so a
-    -- profile with the addon switched off shows nothing.
+    -- The first-run pickers: a new or reset profile starts from the defaults, `presets.pickerSeen`
+    -- and `skin.pickerSeen` false. The preset picker first (settings/PresetPicker.lua); while it is
+    -- up the skin picker holds (core/SkinSetup.lua) and its close shows it. One that has seen both
+    -- stays down. After the latch (prepareProfile's NS.SyncEnabled), so a profile with the addon
+    -- switched off shows nothing.
+    if NS.MaybeShowPresetPicker then NS.MaybeShowPresetPicker() end
     if NS.MaybeShowSkinPicker then NS.MaybeShowSkinPicker() end
 end
 

@@ -68,6 +68,9 @@ test("loadorder: the load-bearing pairs are in order, and the TOC says why", fun
         -- The preset writer binds NS.L at file load and reaches its peers at call time (AM-PR02), so its
         -- place after ContainerManager is the TOC's Conventional note.
         { "locales/enUS.lua", "modules/Presets.lua" },
+        -- The preset picker binds NS.L at file load (its labels and blurbs) and reaches its peers at
+        -- call time (AM-PR05), so its place after Slash is the TOC's Conventional note.
+        { "locales/enUS.lua", "settings/PresetPicker.lua" },
         { "modules/Style.lua", "modules/Style_Border.lua" },
         { "modules/Style.lua", "modules/Style_Bars.lua" },
         { "modules/Style.lua", "modules/Style_Text.lua" },

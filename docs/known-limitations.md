@@ -490,3 +490,10 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   rune's aura or an NPC's copy (Flash of Light offers the rune id 412020, for one). The
   panel never picks for the player, so a wrong choice is one the player made; the seed lists
   themselves hold no rune or NPC id.
+- **Another Ka0s addon's skin picker can show while the preset picker is up.** On a fresh character
+  Aura Master shows its preset picker first and holds its own skin picker until that closes
+  (`settings/PresetPicker.lua`), but the other Ka0s addons' skin pickers queue among themselves in
+  LibKa0s and know nothing of this window, so one of theirs can appear beside it. Both windows are
+  movable. A shared first-run queue belongs to the FTUX that replaces this picker (issue #28); joining
+  the library's queue now would need a LibKa0s internal or a library change, which the presets
+  design's ruling 8 argues against (presets spec section 7, Claude's call).

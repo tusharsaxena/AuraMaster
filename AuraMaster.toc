@@ -167,6 +167,9 @@ settings\Schema.lua
 settings\Schema_Validate.lua
 # Conventional: its handlers reach the schema and pages at call time.
 settings\Slash.lua
+# Conventional: the first-run preset picker and the preset confirm (NS.PresetPicker); it binds NS.L
+# at load and reaches Presets, PresetData, the skin seams and the skin picker at call time.
+settings\PresetPicker.lua
 # LOAD-BEARING: before every page file, which calls the composers at file load.
 settings\OptionsSetup.lua
 # Conventional: the page files, each registering its rows and page at load.

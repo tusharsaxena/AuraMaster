@@ -312,3 +312,35 @@ function Presets.OnCombatEnd()
     heldForCombat = false
     if Presets.IsPreviewing() then Presets.EndPreview(false) end
 end
+
+-- ---------------------------------------------------------------------------
+-- The first-run picker's latch (spec sections 7 and 9)
+-- ---------------------------------------------------------------------------
+--
+-- `presets.pickerSeen` is this module's key like the snapshot, so settings/PresetPicker.lua reads and
+-- writes it here rather than reaching into the profile itself.
+
+--- Whether the active profile has closed the first-run preset picker. True with no profile loaded,
+--- so nothing offers a picker before the store exists.
+--- @return boolean
+function Presets.PickerSeen()
+    local p = NS.db and NS.db.profile
+    if not p then return true end
+    return type(p.presets) == "table" and p.presets.pickerSeen == true
+end
+
+--- Record that the active profile has closed the first-run preset picker.
+function Presets.MarkPickerSeen()
+    local store = profilePresets()
+    if store then store.pickerSeen = true end
+end
+
+--- How many containers are the player's own: the snapshot's while a preview is up (the preview's are
+--- not theirs), else the profile's. What a Replace confirm names.
+--- @return number
+function Presets.OwnContainerCount()
+    local store = NS.db and NS.db.profile and NS.db.profile.presets
+    local snap = type(store) == "table" and store.previewSnapshot or nil
+    if snap then return #(snap.containerOrder or {}) end
+    return #NS.Database.GetContainers()
+end

@@ -34,7 +34,7 @@ Sl.__stubDisabledLineFormat = STUB_DISABLED_LINE_FORMAT
 local cli
 
 local runEnabled, runResetAll, runContainers, runSelect, runNew, runDelete, runLock, runPick
-local runResetPosition, runForgetTimed, runRedraw, runDebug, runPerf, runTest
+local runResetPosition, runForgetTimed, runRedraw, runDebug, runPerf, runTest, runPreset
 
 NS.COMMANDS = {
     {"help",          L["List available commands"],
@@ -73,6 +73,9 @@ NS.COMMANDS = {
         function(rest) runNew(rest) end},
     {"delete",        L["Delete a container — /am delete id or name"],
         function(rest) runDelete(rest) end},
+    -- A feature verb (presets spec section 5): refused while disabled, as it is not in liveVerbs.
+    {"preset",        L["Choose a container preset: open the preset picker, or apply one — /am preset [name] [icons] [add]"],
+        function(rest) runPreset(rest) end},
     {"lock",          L["Lock every container in place"],
         function() runLock(true) end},
     {"unlock",        L["Unlock containers so they can be dragged"],
@@ -339,6 +342,38 @@ function runDelete(rest)
     if not ok then return print(err) end
     afterRegistryChange()
     printf(L["Deleted '%s'"], name)
+end
+
+-- `/am preset` opens the picker (settings/PresetPicker.lua); `/am preset <name> [bars|icons]
+-- [add|replace]` applies one behind the same confirm the Presets tab uses (NS.ConfirmPreset), Bars
+-- and Replace when unsaid. A word it cannot read prints the usage line and writes nothing.
+local PRESET_WORDS = {
+    bars = { look = "bars" }, icons = { look = "icons" },
+    add = { mode = "add" }, replace = { mode = "replace" },
+}
+
+--- The preset `rest` names and its style and mode, or nil when a word is not one /am preset reads.
+local function readPreset(words)
+    local name = words[1]
+    local known = false
+    for _, n in ipairs(NS.PresetData.NAMES) do known = known or n == name end
+    if not known then return nil end
+    local look, mode = "bars", "replace"
+    for i = 2, #words do
+        local w = PRESET_WORDS[words[i]]
+        if not w then return nil end
+        look, mode = w.look or look, w.mode or mode
+    end
+    return name, look, mode
+end
+
+function runPreset(rest)
+    local words = {}
+    for word in (rest or ""):gmatch("%S+") do words[#words + 1] = word:lower() end
+    if #words == 0 then return NS.ShowPresetPicker() end
+    local name, look, mode = readPreset(words)
+    if not name then return print(L["Usage: /am preset [simple|intermediate|advanced|healer|empty] [bars|icons] [add]"]) end
+    NS.ConfirmPreset(name, look, mode)
 end
 
 function runLock(locked)

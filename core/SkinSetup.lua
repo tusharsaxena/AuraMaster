@@ -480,8 +480,12 @@ function NS.MaybeShowSkinNotice()
     return frame, why
 end
 
+-- THE PRESET PICKER GOES FIRST (settings/PresetPicker.lua; presets spec section 7): while its window
+-- is up, or its start is held for combat, the skin picker and the notice wait, answering nil, "held";
+-- the preset picker's close asks again. Read at call time: that file loads long after this one.
 local pickerFirstRun = NS.MaybeShowSkinPicker
 function NS.MaybeShowSkinPicker()
+    if NS.PresetPickerHolding and NS.PresetPickerHolding() then return nil, "held" end
     local frame, why = NS.MaybeShowSkinNotice()
     if frame or why == "queued" then return frame, why end
     return pickerFirstRun()

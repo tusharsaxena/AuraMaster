@@ -41,19 +41,22 @@ test("slash: the reserved verbs are all present", function()
     end
 end)
 
-test("slash: NS.COMMANDS carries 26 verbs, skin right after config, profile right after resetall, redraw right after forgettimed, diagnostics right after debug, and no diag verb", function()
+test("slash: NS.COMMANDS carries 27 verbs, skin right after config, profile right after resetall, preset right after delete, redraw right after forgettimed, diagnostics right after debug, and no diag verb", function()
     local n = #NS.COMMANDS
     -- red under: the count claims in docs/ARCHITECTURE.md, docs/slash-dispatch.md and
     -- docs/module-map.md left behind a verb added or removed (owner, 2026-09-25: 22 -> 23;
     -- 2026-09-29: 23 -> 24, the profile verb; 2026-09-30: 24 -> 25, the redraw verb; 2026-10-30:
-    -- 25 -> 26, the reserved skin verb, LibKa0s v1.82.0's O.SkinVerb, ruling D-16)
-    assertEqual(n, 26)
+    -- 25 -> 26, the reserved skin verb, LibKa0s v1.82.0's O.SkinVerb, ruling D-16; 2026-11-14:
+    -- 26 -> 27, the preset verb, presets spec section 5)
+    assertEqual(n, 27)
     local at = {}
     for i, e in ipairs(NS.COMMANDS) do at[e[1]] = i end
     -- red under: the skin verb anywhere but right after config (the standard's reserved order)
     assertEqual(at.skin, at.config + 1, "skin follows config")
     -- red under: the profile verb moved away from the settings verbs it sits beside
     assertEqual(at.profile, at.resetall + 1, "profile follows resetall")
+    -- red under: the preset verb moved away from the container verbs it sits beside
+    assertEqual(at.preset, at.delete + 1, "preset follows delete")
     -- red under: the redraw verb moved away from the maintenance verbs it sits beside
     assertEqual(at.redraw, at.forgettimed + 1, "redraw follows forgettimed")
     assertEqual(at.diagnostics, at.debug + 1, "diagnostics follows debug")

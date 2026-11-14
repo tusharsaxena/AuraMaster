@@ -1744,7 +1744,7 @@ Total.
 
 - slash: every command is a positional {name, desc, fn} triple
 - slash: the reserved verbs are all present
-- slash: NS.COMMANDS carries 26 verbs, skin right after config, profile right after resetall, redraw right after forgettimed, diagnostics right after debug, and no diag verb
+- slash: NS.COMMANDS carries 27 verbs, skin right after config, profile right after resetall, preset right after delete, redraw right after forgettimed, diagnostics right after debug, and no diag verb
 - slash: /am new creates the described container and selects it
 - slash: /am new text creates a text-style container
 - slash: /am new gives the new container the Fill its style suits (B5)
@@ -1778,7 +1778,7 @@ Total.
 - slash: /am profile in combat refuses and switches nothing
 - slash: /am profile answers while disabled, and the switch re-reads the new profile's enabled flag
 
-### test_slash_verbs.lua (55)
+### test_slash_verbs.lua (60)
 
 - slash verbs: /am help prints the alias header, then one row per NS.COMMANDS verb in order
 - slash verbs: the landing page's rows are /am help's rows without the chat indent
@@ -1835,6 +1835,11 @@ Total.
 - slash verbs: while disabled the live set still answers — settings stay readable and repairable
 - slash verbs: the disabled gate is ONE decision over the whole verb table, not a per-verb guard
 - slash verbs: /am new enchants makes a player buff container showing only Weapon enchants (feedback #6)
+- slash verbs: /am preset opens the preset picker, whatever the latch says
+- slash verbs: /am preset simple icons add applies after the confirm
+- slash verbs: /am preset advanced replaces after naming the count
+- slash verbs: /am preset with an unknown name prints the usage line
+- slash verbs: /am preset in combat is refused with the combat line
 
 ### test_diagnostics.lua (50)
 
@@ -2640,6 +2645,22 @@ Total.
 - seed: fresh install not marked seen
 - seed: the v19 step is idempotent and keeps a stored false on an unseeded profile
 
+### test_presetpicker.lua (13)
+
+- picker: due on new profile only
+- picker: shows before skin picker
+- picker: a profile that has seen it arms the skin picker's start as before
+- picker: the window is a movable, clamped DIALOG on the left, closed by Escape
+- picker: pick previews, close restores, latch set
+- picker: Escape restores like Not now
+- picker: apply keeps
+- picker: Apply with nothing picked keeps what the profile holds
+- picker: empty applies no containers
+- picker: refused in combat holds
+- picker: on demand it asks before replacing the player's containers
+- picker: a profile event takes it down with a restore, then offers it to the new profile
+- picker: HidePresetPicker restores, unmarked
+
 ### test_perf.lua (8)
 
 - perf: every declared bucket is reached by a real bracket
@@ -2690,7 +2711,7 @@ Total.
 
 - prose: no authored file carries a British spelling from localization-§5's published list
 - prose: the gate carries localization-§5's two lists whole, and nothing of its own
-- prose: the exclusions this repository declared suppressed 15 of 259 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (15): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, and 12 more (list bounded)
+- prose: the exclusions this repository declared suppressed 15 of 261 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (15): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, and 12 more (list bounded)
 - prose: no path this repository narrows the gate by is loaded by a TOC
 - prose: every path this repository narrows the gate by is one .pkgmeta keeps out of the zip
 - prose self-test: the carve-out suppresses the named generated folder, and only it
@@ -2906,7 +2927,7 @@ Total.
 | test_layers.lua | 8 |
 | test_disabled.lua | 18 |
 | test_slash.lua | 35 |
-| test_slash_verbs.lua | 55 |
+| test_slash_verbs.lua | 60 |
 | test_diagnostics.lua | 50 |
 | test_diagnostics_situations.lua | 4 |
 | test_bulklog.lua | 20 |
@@ -2948,6 +2969,7 @@ Total.
 | test_presets_apply.lua | 11 |
 | test_presets_preview.lua | 17 |
 | test_presets_seed.lua | 7 |
+| test_presetpicker.lua | 13 |
 | test_perf.lua | 8 |
 | test_debuglogsetup.lua | 9 |
 | test_locale.lua | 10 |
@@ -2964,4 +2986,4 @@ Total.
 | test_skin_switch.lua | 34 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2426** |
+| **Total** | **2444** |

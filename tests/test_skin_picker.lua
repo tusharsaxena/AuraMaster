@@ -86,8 +86,10 @@ end)
 
 test("Skin picker: the first world entry arms one two-second start; later entries arm none", function()
     -- red under: no call from addon:OnEnterWorld, a start on every loading screen, or one lit for a
-    -- profile that has already closed the picker.
-    local _, m, calls = spied()
+    -- profile that has already closed the picker. The profile has closed the preset picker, which
+    -- otherwise shows first and arms no skin start (tests/test_presetpicker.lua).
+    local NS, m, calls = spied()
+    NS.Presets.MarkPickerSeen()
     assertEqual(#timersAt(m, 2), 0, "nothing armed before the world")
     m.__fireEvent("PLAYER_ENTERING_WORLD")
     local armed = timersAt(m, 2)
@@ -141,15 +143,21 @@ end)
 
 test("Skin picker: a new profile and a reset profile show it again; a seen one does not", function()
     -- Both start from the defaults, skin.pickerSeen false (O3). red under: no call on the profile
-    -- path, or one before the latch re-reads the new profile's switch.
+    -- path, or one before the latch re-reads the new profile's switch. A new or reset profile shows
+    -- the preset picker first and the skin picker when that closes (AM-PR05).
     local NS, m, calls = spied()
     local db = NS.db
     NS.SetByPath(PATH, true)
+    NS.Presets.MarkPickerSeen()
     quietly(m, function()
         db:SetProfile("PickerProbe")
+        local held = #calls
+        NS.PresetPicker.frame.notNow:__fire("OnClick")
+        assertEqual(held, 0, "the skin picker waits behind the preset picker")
         assertEqual(#calls, 1, "a new profile shows the picker")
         NS.SetByPath(PATH, true)
         db:ResetProfile()
+        NS.PresetPicker.frame.notNow:__fire("OnClick")
         assertEqual(#calls, 2, "a reset profile shows it again")
         NS.SetByPath(PATH, true)
         db:SetProfile("Default")

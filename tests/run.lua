@@ -209,6 +209,7 @@ Kit.run{
         "test_presets_apply",
         "test_presets_preview",
         "test_presets_seed",
+        "test_presetpicker",
         "test_perf",
         "test_debuglogsetup",
         "test_locale",

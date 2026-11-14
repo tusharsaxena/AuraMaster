@@ -215,6 +215,7 @@ on-display marker is a MAY for a HUD display such as an aura container (WS-01).
 | `/am select id-or-name` | Choose the container settings apply to |
 | `/am new [unit] [type] [style]` | Create a container (`player`/`target`/`focus`/`pet`, `buffs`/`debuffs`/`enchants`, `bars`/`icons`/`text`) |
 | `/am delete id-or-name` | Delete a container |
+| `/am preset [name] [bars\|icons] [add]` | Open the preset picker, or apply a preset behind its confirm |
 | `/am lock` | Lock every container in place |
 | `/am unlock` | Unlock containers so they can be dragged |
 | `/am test [on\|off]` | Toggle test mode: placeholder auras on every container; refused in combat |
@@ -227,7 +228,7 @@ on-display marker is a MAY for a HUD display such as an aura container (WS-01).
 | `/am perf …` | Measure performance — bare `/am perf` opens the workflow |
 | `/am version` | Print the addon version |
 
-**While the addon is disabled** the nine verbs that drive its features — `new`, `delete`, `lock`,
+**While the addon is disabled** the ten verbs that drive its features — `new`, `delete`, `preset`, `lock`,
 `unlock`, `test`, `pick`, `resetposition`, `forgettimed`, `redraw` — answer on one tagged line naming `/am enable` and
 do nothing else (slash-commands-§2). Everything else keeps working, the bare `/am` included: it
 opens the settings panel, which is the surface a player switches the addon back on from by hand. The
@@ -498,7 +499,7 @@ span bundle is `<date>-v<A>-v<B>/`, and the one untagged bundle is `docs/revendo
 | Doc | Status | Trigger |
 |---|---|---|
 | `perf-analysis/README.md` | Present | The performance harness is wired (`core/PerfSetup.lua`) |
-| `slash-dispatch.md` | Present | 26 commands in `NS.COMMANDS`, over the eight-or-more threshold |
+| `slash-dispatch.md` | Present | 27 commands in `NS.COMMANDS`, over the eight-or-more threshold |
 | `midnight-quirks.md` | Present | Always (documentation-§3): the vendored `client-quirks` catalog block, then the addon's own client-version workarounds: 12.1 aura secrecy and the aura container engine, and the taint notes that follow from them |
 | `compat-layer.md` | Present | 30 shims in `core/Compat.lua`, over the three-or-more threshold |
 | `message-bus.md` | Not applicable | 4 messages in `NS.MSG`; the trigger is more than ten. The table lives in `## Message Bus` above |
