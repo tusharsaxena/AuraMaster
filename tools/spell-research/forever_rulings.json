@@ -2136,7 +2136,7 @@
     "ruling": "accept"
   },
   "offensiveCDs:16166": {
-    "reason": "Lightning Mastery 16166 (vanilla Elemental Mastery under Forever's name), SHAMAN Elemental talent, next-spell crit and free-cast aura on self, 3 min recast; ranks 16579-16582 are the passive talent",
+    "reason": "Lightning Mastery 16166, SHAMAN Elemental talent, 3 min self aura: Lightning Bolt cast time reduced and no Chain Lightning cooldown (A107/A108 on caster); ranks 16579-16582 are the passive talent",
     "ruling": "accept"
   },
   "offensiveCDs:1719": {

@@ -273,7 +273,7 @@ HAND_CANDIDATES = (
     ("offensiveCDs", 13877, "ROGUE", "2 min melee haste talent, aura 319 not in the offensive rule"),
     ("offensiveCDs", 14177, "ROGUE", "3 min next-strike crit talent, aura 107 not in the offensive rule"),
     ("offensiveCDs", 12043, "MAGE", "3 min instant-cast talent, a negative 108 the rule skips"),
-    ("offensiveCDs", 16166, "SHAMAN", "3 min next-spell crit talent (vanilla Elemental Mastery)"),
+    ("offensiveCDs", 16166, "SHAMAN", "3 min Lightning Bolt cast-time cut, no Chain Lightning cooldown"),
     # The paladin blessings and the single-target priest buffs: the vanilla group buffs. Their
     # single-target ranks land on one ally (target 21) and the Greater ones on a class (153), which
     # the groupBuffs GROUP fence does not hold; Power Word: Fortitude reaches the list by name.

@@ -100,7 +100,7 @@ Written by `tools/spell-research/forever.py emit` from `candidates.json` (build 
 | 14177 | Cold Blood |  | ROGUE | hand |  | accept | Cold Blood, ROGUE Assassination talent (Talent + SkillLineAbility), next-ability crit aura (A107) on self, 3 min recast |
 | 1259812 | Eureka! |  | ROGUE | db2-effect |  | reject | Eureka! is the Gnome racial (Racial - Gnome skill line, race mask 64): belongs in Racials |
 | 1259823 | Eureka! |  | PRIEST | db2-effect |  | reject | Eureka! is the Gnome racial (Racial - Gnome skill line, race mask 64): belongs in Racials |
-| 16166 | Lightning Mastery |  | SHAMAN | hand |  | accept | Lightning Mastery 16166 (vanilla Elemental Mastery under Forever's name), SHAMAN Elemental talent, next-spell crit and free-cast aura on self, 3 min recast; ranks 16579-16582 are the passive talent |
+| 16166 | Lightning Mastery |  | SHAMAN | hand |  | accept | Lightning Mastery 16166, SHAMAN Elemental talent, 3 min self aura: Lightning Bolt cast time reduced and no Chain Lightning cooldown (A107/A108 on caster); ranks 16579-16582 are the passive talent |
 | 12042 | Arcane Power |  | MAGE | db2-effect |  | accept | Arcane Power, MAGE Arcane talent (Talent + SkillLineAbility), +30% spell damage aura on self, 3 min recast |
 | 11129 | Combustion |  | MAGE | name-map | 190319 | accept | Combustion, MAGE Fire talent (Talent + SkillLineAbility), the charge-holding Combustion buff on self, 3 min recast |
 | 28682 | Combustion |  | MAGE | name-map | 190319 | accept | Combustion crit-stack aura on self, triggered by the MAGE Fire talent 11129 (EffectTriggerSpell), shows beside the cast's buff |

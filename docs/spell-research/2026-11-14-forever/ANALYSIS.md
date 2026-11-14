@@ -135,8 +135,10 @@ Checked and **not** added, with the reason:
 - **Sacrifice 7812/19438–19443 (Voidwalker) and Seduction 6358 (Succubus).** These sit on pet skill
   lines, which are fenced out of the pool (spec §3.5). Retail records the same gap for Seduction.
 - **Mend Pet.** A heal over time on the pet. The Retail Healing list holds no pet heals.
-- **Blessing of Salvation, Light and Sanctuary.** Forever has no player-reachable id for any of them;
-  the only "Blessing of Light" is the NPC id 26650.
+- **Blessing of Salvation, Light and Sanctuary.** The paladin SkillLineAbility rows exist (1038, 19977,
+  19979, 25890, 20911, 25895, 25899), but none of those ids has a SpellName, Spell or SpellEffect row in
+  the 1.60.1.70938 export, so there is no aura to ship. The only "Blessing of Light" with spell rows is
+  the NPC id 26650. Absent from the client data is not proven unreachable on the server; #26 checks.
 - **Black Arrow 3674/14296.** It is a −70% snare (A33) on the target, in the HUNTER pool through a
   Marksmanship SkillLineAbility row (ClassMask 4, AcquireMethod 0). But it has Mechanic 0, so the CC
   derivation does not bucket it, and no spell teaches or triggers it. It reads like vanilla's unused
@@ -204,3 +206,6 @@ No HAND_CANDIDATES entry fell out on this build: all of them are auras here.
 6. **The cast table's name-only choices.** `CastToAura_Forever.lua` CHOICES offers same-named ids,
    some of them rune or NPC ids (for example Flash of Light → 412020, Charge → its NPC copies). These
    are suggestions only, never rewrites, but the logs can confirm the real aura for each cast.
+7. **Spells with a SkillLineAbility row but no spell rows.** Blessing of Salvation, Light and
+   Sanctuary, and Frenzied Regeneration ranks 2 and 3 (22895, 22896). 1127 class-line ids are in this
+   state in the export. If the logs show any of them, add it to its category.
