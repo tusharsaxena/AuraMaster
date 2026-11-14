@@ -102,10 +102,11 @@ variant is computed from the Bars definition, never stored twice.
 
 ## 4. Placement
 
-*Round 1 changed this section (§15, which wins where they differ): the side stacks grow up from a base
-640 down instead of down from 330, the corner group sits 80 further left and 40 further down, and the
-call-outs hang centered from the screen's center line, their font size and top worked out to clear the
-skin picker and the preset picker. A side stack's test-mode top may now reach a corner column (§15,
+*Round 1 changed this section (§15 and its rulings in §15.1, which win where they differ): the side
+stacks grow up from a base 740 down (§15.1; §15 had 640) instead of down from 330, the corner group
+sits 80 further left and 40 further down, and the call-outs hang centered from the screen's center
+line, their font size and top worked out to clear the preset picker, which opens on the skin
+picker's spot (§15.1). A side stack's test-mode top may now reach a corner column (§15,
 `docs/known-limitations.md`).*
 
 - **Stacks.** A preset is a set of **stacks** (columns). Each stack's **head** is placed on the screen; every other
@@ -200,10 +201,10 @@ skin picker and the preset picker. A side stack's test-mode top may now reach a 
 
 ## 7. The first-run picker
 
-*Round 1 changed the window (§15, which wins where they differ): it opens centered across, under the
-call-outs and clear of the skin picker's place, instead of on the left; it opens with the containers
-unlocked and carries a lock button and a test-mode button; Apply locks and turns test mode off, and
-Not now, the close control and Escape put back the lock it found.*
+*Round 1 changed the window (§15 and §15.1, which win where they differ): it opens where the skin
+picker does, centered across with its center 75% of the way up (§15.1), instead of on the left; it
+opens with the containers unlocked and carries a lock button and a test-mode button; Apply locks and
+turns test mode off, and Not now, the close control and Escape put back the lock it found.*
 
 - **When:** on a brand-new profile, once, before the skin picker. A profile that has closed it (`presets.pickerSeen`)
   never sees it again; `/am preset` reopens the window on demand. Existing profiles are marked seen by a schema
@@ -336,7 +337,7 @@ section wins.
   y = -640, 440 above the bottom at 1080, on the AM-PR09 review: at -600 Advanced's Bars target stack
   ran about 24 off the top of a 1080-tall screen in test mode. It still runs off a 768-tall one, and
   off a 1080-tall one while unlocked, which `docs/known-limitations.md` records for the owner's call:
-  a lower base or a split stack.)*
+  a lower base or a split stack. The owner chose the lower base, y = -740, in §15.1.)*
 - *Corner group.* It still grows down from the top-right corner, moved about 80 reference units left
   and 40 down from §4's values. It must stay on screen at every ratio §11 tests.
 - *Center text stack.* The head is placed by its TOP at the screen's horizontal center (x = 0) and grows
@@ -352,7 +353,8 @@ section wins.
   middle as far as the picker allows. The extent is the **unlocked** one, as the picker opens the
   containers (the head's drag strip above it and each member's strip row in its seam), so the picker
   placed under it clears the block locked or unlocked (`PresetData.CalloutRect`, AM-PR09 review).
-- *Picker position.* Horizontally centered. Vertically, the picker sits **below** the center text
+- *Picker position.* *(Replaced by §15.1, ruling 1: the picker opens on the skin picker's spot and
+  the call-outs clear it. Kept for the record.)* Horizontally centered. Vertically, the picker sits **below** the center text
   stack's test-mode extent and above the bottom edge, and it never overlaps the skin picker's rectangle
   (LibKa0s places that by its CENTER, 75% of the way up UIParent). At 1920x1080, with the text stack in
   test mode, the three rectangles must not intersect. If they cannot all fit, the text stack moves up

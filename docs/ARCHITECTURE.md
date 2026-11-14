@@ -97,7 +97,7 @@ Five starting points for a profile's containers (spec
 
 | File | Role |
 |---|---|
-| `defaults/Presets.lua` | `NS.PresetData`: the data (the six stacks in a 1080-tall reference space, the containers by role, each preset's stacks) and the pure builder. `Build(name, look, W, H, picked)` answers the specs in creation order, a stack's head placed on `UIParent` and every member attached to the one before it; `Realize(specs, keys, create)` walks them through a writer, filling each member's `attach.container` with the id its parent took. `CalloutRect(name, look, W, H)` answers the call-out block's unlocked test-mode rectangle, and `ROOM` the room around it (the skin picker's place, the preset picker's height, the margin). Carries no spell ids and no appearance media but the call-outs' look (spec section 15) |
+| `defaults/Presets.lua` | `NS.PresetData`: the data (the six stacks in a 1080-tall reference space, the containers by role, each preset's stacks) and the pure builder. `Build(name, look, W, H, picked)` answers the specs in creation order, a stack's head placed on `UIParent` and every member attached to the one before it; `Realize(specs, keys, create)` walks them through a writer, filling each member's `attach.container` with the id its parent took. `CalloutRect(name, look, W, H)` answers the call-out block's unlocked test-mode rectangle, and `ROOM` the room around it (the spot both pickers open on, 75% up, the skin picker's and the preset picker's sizes, the margin). Carries no spell ids and no appearance media but the call-outs' look (spec section 15) |
 | `modules/Presets.lua` | `NS.Presets`, the one writer: `Apply(name, look, mode)` through `ContainerManager.Create` / `.Delete` and `Categories.CreateUserCategory` (Advanced's two custom categories, reused by name on a re-apply, `ResolveCustom`); the preview (`BeginPreview`, `EndPreview`, `IsPreviewing`, `Previewed`, `RestoreStaleSnapshots`, `RestoreStaleSnapshot`, `OnCombatStart`, `OnCombatEnd`); the picker latch (`PickerSeen`, `MarkPickerSeen`); the untouched-seed record (`RecordSeed`, `SeedUntouched`, `Fingerprint`); `OwnContainerCount`, `ParentSize` |
 | `settings/PresetPicker.lua` | The first-run window (`NS.PresetPickerDue`, `NS.MaybeShowPresetPicker`, `NS.ShowPresetPicker`, `NS.HidePresetPicker`, `NS.PresetPickerHolding`, `NS.RefreshPresetPicker`; `NS.PresetPicker.Placement(W, H)`, where it opens), with its lock and test-mode buttons, and the preset confirm, one StaticPopup behind two entry points: `NS.ConfirmPreset(name, look, mode)` applies (`/am preset <name>`, the tab with no preview of its own), `NS.ConfirmPreview(name, look, mode)` keeps the preview on screen while it asks, then keeps it (the tab). An answer decides what it writes when it is given, and the confirm goes down unanswered with the window and with every `NS.HidePresetPicker` (a profile event, the stand-down) |
 | `settings/ContainersPresets.lua` | The Containers page's **Presets** tab, the General section's second tab: `NS.RenderPresetsTab`, and `NS.PresetsTabLeft`, its `onLeave` |
@@ -132,27 +132,30 @@ Five starting points for a profile's containers (spec
   and arms no skin start; `NS.MaybeShowSkinPicker` answers `nil, "held"` while
   `NS.PresetPickerHolding()`, and every close of the preset picker sets the latch and then offers the
   skin picker. `rebuildProfile` offers the preset picker, then the skin picker, to a new, reset or
-  copied profile. Another Ka0s addon's skin picker can still show beside it
+  copied profile. Another Ka0s addon's skin picker can still show over it, on the same spot
   (`docs/known-limitations.md`).
-- **The placement after the owner's round 1** (spec section 15). The side stacks (`left`, `right`,
-  `far`) grow up: each head is the stack's bottom container, placed by its BOTTOMLEFT (BOTTOMRIGHT for
-  a row growing left) on a base 640 down in the reference space, with `layout.growV = "up"`, and each
-  member joins the top of the one before it, so a tier's first role sits nearest the unit frames. The
-  corner group still grows down from the top-right corner, 80 further left and 40 further down than
-  the mockup put it. The call-outs (`middle`) hang by their TOP from the screen's center line, each
-  line centered, colored like the owner's three (from no skin), with a black glow and no label; the
-  builder takes the largest font from 36 down to 24 whose unlocked test-mode block fits between the
-  skin picker's place and the preset picker's room, centered on the screen's middle as far as that
-  room allows (moved up before the font shrinks).
-- **The picker opens centered and unlocked.** `Placement` centers it across, its top a margin under
-  the lowest call-out block any preset draws in either style, and no lower than keeps its room above
-  the bottom edge, on `UIParent`'s size read at each showing (1920 x 1080 when it cannot be read).
+- **The placement after the owner's round 1** (spec sections 15 and 15.1). The side stacks (`left`,
+  `right`, `far`) grow up: each head is the stack's bottom container, placed by its BOTTOMLEFT
+  (BOTTOMRIGHT for a row growing left) on a base 740 down in the reference space (340 above the
+  bottom at 1080 tall), with `layout.growV = "up"`, and each member joins the top of the one before
+  it, so a tier's first role sits nearest the unit frames. The corner group still grows down from the
+  top-right corner, 80 further left and 40 further down than the mockup put it. The call-outs
+  (`middle`) hang by their TOP from the screen's center line, each line centered, colored like the
+  owner's three (from no skin), with a black glow and no label; the builder takes the largest font
+  from 36 down to 24 whose unlocked test-mode block fits between a margin under the pickers' shared
+  rectangle (`ROOM`) and the bottom edge, centered on the screen's middle as far as that room allows
+  (moved down before the font shrinks). At 1080 tall that is 30 for Advanced and 36 for Healer.
+- **The picker opens where the skin picker does, unlocked.** `place` mirrors the LibKa0s skin
+  picker's `place()`: its CENTER 75% of the way up from `UIParent`'s BOTTOM, centered across, on
+  `UIParent`'s height read at each showing, and the bare `CENTER` when it cannot be read.
+  `Placement(W, H)` answers that rectangle, as tall as `ROOM.pickerHeight`, and reads no preset's
+  call-outs: the two pickers never show at once, so the call-out block clears the one spot.
   Opening records the lock and unlocks through the seam `/am unlock` writes (`NS.SetByPath`
   `"locked"`); its two buttons show and flip the lock and test mode, and turning test mode off with
   a preview up ends it with a restore. Apply locks and turns test mode off; Not now, the close
   control, Escape and this addon's own hides put back the lock the window found and turn test mode
-  off. At 1080 tall Advanced's call-outs and the picker cannot both fit under the skin picker's
-  place, so the picker covers the block's lower lines (`docs/known-limitations.md`).
+  off. On a 768-tall screen Advanced's call-outs cannot fit under the picker, so they rise over its
+  lower part (`docs/known-limitations.md`).
 
 ### Per-client features
 
@@ -548,9 +551,9 @@ On WoW Forever the spell lists are derived offline from the game's data until co
 confirm them (#26), the token and flag categories are unmeasured until the smoke run, and a profile
 does not carry over from the other client. A preset's corner column can grow into a side column
 under it in play, and a tall side stack growing up can reach a corner column; Advanced (Bars)'s
-target stack runs off the top of a short screen in test mode, and at 1080 tall the preset picker
-covers the lower lines of Advanced's call-outs. Another Ka0s addon's skin picker can show beside the
-preset picker. Every
+target stack runs off the top of a 768-tall screen in test mode, where Advanced's call-outs also
+rise over the preset picker; tall unit frames or action bars can reach the side stacks' base.
+Another Ka0s addon's skin picker can show over the preset picker, on the same spot. Every
 limitation, its cause and any ruling: `docs/known-limitations.md`.
 
 ## Documentation map

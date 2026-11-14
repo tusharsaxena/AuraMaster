@@ -2584,12 +2584,13 @@ Total.
 - defaults: userCategoryOrder is reconciled the way containerOrder is
 - defaults: the RAID-token row says it means castable OR dispellable, as Blizzard defines it
 
-### test_presets_data.lua (19)
+### test_presets_data.lua (20)
 
 - presets: counts
 - presets: advanced matches its source
 - presets: every category key exists on this client
 - presets: placement at 768/1080/1440 x 16:9, 16:10, 21:9, 4:3, 5:4
+- presets data: side stacks sit on the lower base
 - presets data: side stacks grow up from their base
 - presets data: the corner group sits left of and below its old place
 - presets data: the call-outs are centered and colored like the owner's
@@ -2680,8 +2681,8 @@ Total.
 - picker: combat under the confirm restores, and the answer still applies
 - picker: Not now under the confirm takes the confirm down with it
 - picker: a profile event takes an open preset confirm down unanswered
-- picker: opens centered below the call-outs
-- presets data: the call-out block, the picker and the skin picker do not intersect at 1080
+- picker: opens where the skin picker does
+- picker: the call-out block clears the picker at 1080 for every preset
 - picker: opening unlocks and remembers the lock
 - picker: the lock button flips the lock
 - picker: the test button flips test mode, and turning it off ends a preview
@@ -3014,7 +3015,7 @@ Total.
 | test_envsetup.lua | 4 |
 | test_poolsetup.lua | 4 |
 | test_defaults.lua | 31 |
-| test_presets_data.lua | 19 |
+| test_presets_data.lua | 20 |
 | test_presets_apply.lua | 11 |
 | test_presets_preview.lua | 20 |
 | test_presets_seed.lua | 7 |
@@ -3036,4 +3037,4 @@ Total.
 | test_skin_switch.lua | 34 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2490** |
+| **Total** | **2491** |

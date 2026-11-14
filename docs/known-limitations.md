@@ -493,14 +493,15 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
 - **Another Ka0s addon's skin picker can show while the preset picker is up.** On a fresh character
   Aura Master shows its preset picker first and holds its own skin picker until that closes
   (`settings/PresetPicker.lua`), but the other Ka0s addons' skin pickers queue among themselves in
-  LibKa0s and know nothing of this window, so one of theirs can appear beside it. Both windows are
-  movable. A shared first-run queue belongs to the FTUX that replaces this picker (issue #28); joining
+  LibKa0s and know nothing of this window, so one of theirs can appear over it: since the owner's
+  ruling the preset picker opens on the skin pickers' own spot (presets spec section 15.1). Both
+  windows are movable. A shared first-run queue belongs to the FTUX that replaces this picker (issue #28); joining
   the library's queue now would need a LibKa0s internal or a library change, which the presets
   design's ruling 8 argues against (presets spec section 7, Claude's call).
 - **A corner stack and a side stack under it can meet.** The presets place the corner columns
   (Player buffs (all) with Weapon enchants under it, and Player debuffs (all)) 46 down from the top
-  edge, growing down, and since the owner's round-1 feedback the side stacks grow up from a base 640
-  down, both in a 1080-tall reference space (presets spec section 15). With the corner group moved
+  edge, growing down, and since the owner's round-1 feedback the side stacks grow up from a base 740
+  down, both in a 1080-tall reference space (presets spec sections 15 and 15.1). With the corner group moved
   in, more columns share than the mockup's did: on 16:9 and 16:10 the right stack's column sits
   under the Player debuffs column and the far stack's under both corner columns; on 4:3 and 5:4 the
   right stack's sits under Player debuffs and the far stack's under Player buffs; on 21:9 the far
@@ -509,31 +510,41 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   placement"), but the two now grow toward each other and bar height is not scaled. In play a heavy
   buff or debuff load grows a corner column down, and a full side stack grows up, so either can
   draw over the other. A tall side stack reaches the corner group's height even in test mode:
-  Advanced (Bars)'s target stack ends 16 under the top edge at 1080 (below), above where the
-  Player debuffs column starts, and on 16:9 its column sits under that one's left edge. The
+  Advanced (Bars)'s target stack ends 16 under the top edge at 1080 unlocked (116 locked; below),
+  above where the Player debuffs column starts, and on 16:9 its column sits under that one's left edge. The
   placement case checks every stack's top against the screen's edge, not against the corner
   columns. The player can move either stack, or cap a container's auras. Ruled 2026-11-14 under the
   presets plan's ruling on the AM-PR01 review, flagged to the owner (presets spec section 4);
   section 15 records the upward overlap for the owner's call.
-- **Advanced (Bars)'s target stack runs off the top of a short screen in test mode.** Since the
-  owner's round-1 feedback the side stacks grow up from a base 640 down in a 1080-tall reference
-  space (presets spec section 15, tuned from 600 on the AM-PR09 review). The Bars target stack is
-  seven containers, six of them shown (Spell stealable is stored off, as in the owner's profile),
-  and with their test-mode samples it is about 610 tall: it ends 16 under the top edge on a
-  1080-tall parent, but about 160 above it on a 768-tall one (UI scale off), and with the containers
-  unlocked, as the preset picker opens them, each member's drag strip adds 20, so it also runs about
-  85 above the top edge at 1080 (about 260 at 768). Every other stack, in either style, stays on
-  screen, locked or unlocked (`tests/test_presets_data.lua`, "presets: placement", which names this
-  one as its only exception, and caps how far over it may run each way, so it cannot grow unnoticed). Lowering the base far enough would put it over the unit frames and action bars;
-  splitting the stack changes the owner's own layout. Recorded 2026-11-15 for the owner's call.
-- **At 1080 tall, the preset picker covers the lower lines of Advanced's call-outs.** The picker
-  opens centered across, just under the lowest call-out block any preset draws, and the builder keeps
-  that block under the skin picker's rectangle (presets spec section 15). Advanced's three call-outs
-  in test mode, unlocked, are 520 tall even at the smallest size the builder uses (24), and the room
-  under the skin picker at 1080 (about 635) cannot hold that, the picker's 360 and the margins. So
-  the picker sits on the bottom edge, over the block's last lines, at every ratio tested; Healer's
-  single call-out clears it. `tests/test_presetpicker.lua` ("presets data: the call-out block, the
-  picker and the skin picker do not intersect at 1080") names Advanced as its one exception and
-  checks the overlap is forced. Fewer test-mode lines per call-out, a smaller floor size, or letting
-  the block rise into the skin picker's room (this addon's skin picker never shows with the preset
-  picker) would each clear it. Recorded 2026-11-15 for the owner's call.
+- **Advanced (Bars)'s target stack runs off the top of a 768-tall screen in test mode.** Since the
+  owner's ruling on the round-1 conflicts the side stacks grow up from a base 740 down in a 1080-tall
+  reference space, 340 above the bottom edge (presets spec section 15.1; 600, then 640, before it).
+  The Bars target stack is seven containers, six of them shown (Spell stealable is stored off, as in
+  the owner's profile), and with their test-mode samples it is about 620 tall. On a 1080-tall parent
+  it now ends 116 under the top edge locked, and 16 under it unlocked, as the preset picker opens it
+  (each drag strip adds 20). On a 768-tall one (UI scale off) the base scales down with the screen
+  but the bars do not, so it runs 88 above the top edge locked and 188 unlocked. Every other stack,
+  in either style, stays on screen, locked or unlocked, on every screen tested
+  (`tests/test_presets_data.lua`, "presets: placement", which names this one as its only exception
+  and caps how far over it may run each way at those measured values, so it cannot grow unnoticed).
+  A lower base still would meet more unit frames and action bars (below); splitting the stack
+  changes the owner's own layout. Recorded 2026-11-15, re-measured on AM-PR12, for the owner's call.
+- **Tall unit frames or action bars can meet the side stacks' base.** The owner's ruling put the
+  base 340 above the bottom edge at 1080 tall (presets spec section 15.1), lower than round 1's 440,
+  to give the tall upward stacks room under the top edge. A setup whose player, target or focus frame
+  or whose action bars stand higher than that, beside the center of the screen, now sits where a side
+  stack's bottom container is; the stacks grow up, away from them, so only that first container
+  shares the space. The call-out block can reach low too: it hangs below the pickers' spot and takes
+  the largest font that fits above the bottom edge, so in test mode Advanced's three call-outs (at
+  30 on a 1080-tall screen) end 12 above it, where the bottom action bars usually sit; in play only
+  the cooldowns that are up show, from the top line down. The player can move any container, or
+  `/am preset` again after moving their frames. Recorded 2026-11-15 (AM-PR12) for the owner's call.
+- **On a 768-tall screen, Advanced's call-outs rise over the preset picker.** The preset picker
+  opens where the skin picker does, its center 75% of the way up (presets spec section 15.1), and the
+  builder places every preset's call-out block, unlocked and in test mode, a margin under it. At 1080
+  tall and above every preset clears it, at every ratio tested. At 768 (UI scale off) the room under
+  it is 380, which Healer's single call-out fits, but Advanced's three are 516 tall even at the
+  smallest size the builder uses (24), so the block starts higher and its top lines run under the
+  picker's lower part. `tests/test_presetpicker.lua` ("picker: the call-out block clears the picker
+  at 1080 for every preset") checks the clearance at 1080 and 1440 and pins the 768 overlap as forced.
+  The window is movable. Recorded 2026-11-15 (AM-PR12) for the owner's call.
