@@ -164,6 +164,20 @@ test("apply: advanced re-apply reuses categories", function()
     assertEqual(#userCategories(NS), 2, "adding over it reuses them too")
 end)
 
+test("apply: advanced hides a second category of the same name where it hides the others", function()
+    local NS = fresh()
+    local Cat = NS.Categories
+    local a = assert(Cat.CreateUserCategory("Special player buffs", "HELPFUL"))
+    local b = assert(Cat.CreateUserCategory("Special player buffs", "HELPFUL"))
+    assertTrue(NS.Presets.Apply("advanced", "bars", "replace"))
+    assertEqual(#userCategories(NS), 3, "the first match is reused; a target one is created")
+    local wpn = byName(NS, "Weapon enchants").filter.categories
+    assertEqual(wpn[a], "hide")
+    -- red under: hideLive exempting every name match, so the one not reused falls back to Show
+    assertEqual(wpn[b], "hide", "the category not reused is hidden like any other custom one")
+    assertEqual(byName(NS, "Player special (mine)").filter.categories[a], "show")
+end)
+
 test("apply: ResolveCustom reuses only a category of the same aura type, by name in any case", function()
     local NS = fresh()
     local Cat = NS.Categories

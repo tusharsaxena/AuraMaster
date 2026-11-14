@@ -18,7 +18,9 @@ local _, NS = ...
 -- CUSTOM CATEGORIES ARE REUSED. The builder states Advanced's two custom categories under the
 -- placeholder keys SPECIAL_PLAYER and SPECIAL_TARGET; ResolveCustom maps each to a custom category of
 -- the same name and aura type the profile already has, or creates it, and the writer stores the real
--- key. Re-applying Advanced keeps the categories and the spell lists the player filled.
+-- key. Re-applying Advanced keeps the categories and the spell lists the player filled. The builder is
+-- handed the keys chosen, so a second category of the same name is hidden like any other custom one
+-- in a container that shows only some categories.
 --
 -- Refused in combat before anything is written: a Replace that deleted first and then met Create's own
 -- refusal would leave the profile half-changed. Peers are reached at call time.
@@ -150,7 +152,8 @@ function Presets.Apply(name, look, mode)
     local keys, reason = resolveAll(name)
     if not keys then return nil, reason end
     local deleted = (mode == "replace") and deleteAll() or 0
-    local specs = NS.PresetData.Build(name, look, parentSize())
+    local w, h = parentSize()
+    local specs = NS.PresetData.Build(name, look, w, h, keys)
     local created, msg = createAll(specs, keys)
     if not created then return nil, msg end
     debug("applied %s (%s, %s): %d deleted, %d created", name, look, mode, deleted, created)

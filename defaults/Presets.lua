@@ -355,18 +355,27 @@ end
 
 local function round(v) return math.floor(v + 0.5) end
 
+--- Whether live custom category `def` is the one a preset that creates the custom categories reuses
+--- for a CUSTOM key. A name match (P.CustomKeyOf) is; with `picked` ([CUSTOM key] = the key the writer
+--- chose), only the chosen one is, so a second category of the same name is hidden like any other
+--- custom category (spec section 3).
+local function isReused(def, withCustom, picked)
+    local customKey = withCustom and P.CustomKeyOf(def)
+    if not customKey then return false end
+    return picked == nil or picked[customKey] == nil or picked[customKey] == def.key
+end
+
 --- State, in `out`, the live categories of `role`'s aura type for a role that shows only some: for a
 --- `showOnly` role every shipped one (Show for the keys it names, Hide for the rest), and for it or an
 --- `onlyNamed` role every custom one as Hide. With `withCustom`, a live category the preset reuses
---- (P.CustomKeyOf) is left to its CUSTOM key, which the role's own list states.
-local function hideLive(out, role, withCustom)
+--- (isReused) is left to its CUSTOM key, which the role's own list states.
+local function hideLive(out, role, withCustom, picked)
     if not (role.showOnly or role.onlyNamed) then return end
     local shown = {}
     for _, key in ipairs(role.showOnly or {}) do shown[key] = true end
     for _, def in ipairs(NS.Categories.For(role.auraType)) do
-        local reused = withCustom and P.CustomKeyOf(def)
         if def.userCategory then
-            if not reused then out[def.key] = "hide" end
+            if not isReused(def, withCustom, picked) then out[def.key] = "hide" end
         elseif role.showOnly then
             out[def.key] = shown[def.key] and "show" or "hide"
         end
@@ -376,9 +385,9 @@ end
 --- A role's category states. Hidden keys read "hide". A preset that creates the custom categories
 --- states both in every container, so the writer's order of creation cannot change what shows; any
 --- other preset names neither. A role showing only some categories hides the player's own as well.
-local function categoriesFor(role, withCustom)
+local function categoriesFor(role, withCustom, picked)
     local out = {}
-    hideLive(out, role, withCustom)
+    hideLive(out, role, withCustom, picked)
     for _, key in ipairs(role.hide or {}) do
         if withCustom or not P.CUSTOM[key] then out[key] = "hide" end
     end
@@ -391,7 +400,7 @@ local function categoriesFor(role, withCustom)
 end
 
 --- A role's overrides before placement: a fresh copy, never shared with the data.
-local function overridesFor(role, withCustom)
+local function overridesFor(role, withCustom, picked)
     local o = {
         name = role.name, unit = role.unit, auraType = role.auraType, style = role.style,
         enabled = role.enabled ~= false,
@@ -399,7 +408,7 @@ local function overridesFor(role, withCustom)
         layout = merge(copy(LAYOUT), role.layout),
         behavior = copy(BEHAVIOR),
     }
-    o.filter.categories = categoriesFor(role, withCustom)
+    o.filter.categories = categoriesFor(role, withCustom, picked)
     return o
 end
 
@@ -462,13 +471,16 @@ end
 --- NS.ContainerManager.Create; `attachTo` the index of the spec this one attaches to (nil for a
 --- stack's head); `customKeys` the CUSTOM keys its states name (nil when the preset creates none).
 --- Heads hang from the parent's top edge and center line; the width only narrows the layout across
---- (P.ScaleX) on a screen too narrow for it. An unknown name or look builds nothing.
+--- (P.ScaleX) on a screen too narrow for it. `picked` ([CUSTOM key] = live key, the writer's
+--- resolution) narrows the reuse to those keys: without it every name match is taken as reused. An
+--- unknown name or look builds nothing.
 --- @param name string
 --- @param look string  "bars" | "icons"
 --- @param parentW number|nil
 --- @param parentH number|nil
+--- @param picked table|nil
 --- @return table
-function P.Build(name, look, parentW, parentH)
+function P.Build(name, look, parentW, parentH, picked)
     local tier = TIERS[name]
     if not (tier and IS_LOOK[look]) then return {} end
     local k, kx, withCustom = P.Scale(parentH), P.ScaleX(parentW, parentH), CREATES_CUSTOM[name] == true
@@ -476,7 +488,7 @@ function P.Build(name, look, parentW, parentH)
     for i, entry in ipairs(tier) do
         local stackKey, roleKey = entry[1], entry[2]
         local stack = P.STACKS[stackKey]
-        local o = overridesFor(CONTAINERS[roleKey], withCustom)
+        local o = overridesFor(CONTAINERS[roleKey], withCustom, picked)
         if look == "icons" then toIcons(o, stack) end
         sizeTo(o, stack, kx)
         local spec = { role = roleKey, stack = stackKey, overrides = o }

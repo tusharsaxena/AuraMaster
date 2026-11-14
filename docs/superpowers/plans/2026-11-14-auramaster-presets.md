@@ -84,7 +84,7 @@
 **Interfaces:**
 - Consumes: `NS.PresetData.Build`, `NS.ContainerManager.Create(overrides) -> id | nil, msg, gray`, `NS.ContainerManager.Delete(id)`, `NS.Database.GetContainers()`, `NS.Categories.CreateUserCategory(name, auraType)`, `UIParent:GetWidth()/GetHeight()`.
 - Produces `NS.Presets` with:
-  - `Apply(name, look, mode) -> true | nil, message` — `mode` is `"replace"` or `"add"`; refuses in combat (`InCombatLockdown()`) with the locale line used by `ContainerManager.Create`; `"empty"` + `"replace"` deletes every container; `"empty"` + `"add"` is refused.
+  - `Apply(name, look, mode) -> true | nil, message` — `mode` is `"replace"` or `"add"`; refuses in combat (`InCombatLockdown()`) before anything is written, answering gray as `ContainerManager.Create` does, with a line of its own (`L["cannot apply a preset during combat — its containers would not be drawn or placed until combat ends"]`: Create's line names creating a container, and a Replace also deletes); `"empty"` + `"replace"` deletes every container; `"empty"` + `"add"` is refused.
   - `ResolveCustom(customKey) -> userKey` — finds a custom category with the localized name and aura type, else creates it (spec §3: reuse).
   - Replace deletes every existing container via `ContainerManager.Delete`, then creates the specs in order; each member's `overrides.attach.container` is the id the writer got for `specs[attachTo]`. Custom placeholder keys in `filter.categories` are rewritten to the resolved user keys before `Create`. Add mode lets `ContainerManager.UniqueName` suffix names.
   - Debug lines through `NS.Debug("Presets", …)`.
