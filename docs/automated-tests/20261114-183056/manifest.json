@@ -1,0 +1,19 @@
+{
+  "schema": 1,
+  "addon": "AuraMaster",
+  "addonVersion": "1.1.0",
+  "run": "20261114-183056",
+  "startedAt": "2026-11-14T18:30:56+05:30",
+  "durationMs": 27693,
+  "label": null,
+  "release": null,
+  "git": { "sha": "73dabd94984b9855b438943b84042bbd2174ccd5", "branch": "feat/2026-11-14-presets", "dirty": false },
+  "host": { "lua": "Lua 5.1.5  Copyright (C) 1994-2012 Lua.org, PUC-Rio", "luacheck": "Luacheck: 1.2.0", "lizard": "1.24.0", "timingSource": "date +%s%3N" },
+  "suites": {
+    "lint": { "status": "pass", "durationMs": 2649, "warnings": 0, "errors": 0, "files": 224, "gating": true, "gates": { "commit": true, "release": true } },
+    "tests": { "status": "pass", "durationMs": 18116, "passed": 2469, "failed": 0, "skipped": 1, "total": 2470, "gating": true, "gates": { "commit": true, "release": true } },
+    "perf": { "status": "fail", "durationMs": 919, "scenarios": 10, "gating": false, "gates": { "commit": false, "release": true } },
+    "complexity": { "status": "pass", "durationMs": 4729, "warnings": 0, "maxCcn": 15, "nloc": 61902, "functions": 6546, "avgCcn": 2.4, "avgNloc": 8.3, "avgToken": 76.0, "warnFunRatio": 0.00, "warnNlocRatio": 0.00, "bandFiles": 9, "overCapFiles": 0, "blindFiles": 0, "crashedFiles": 0, "gating": false, "gates": { "commit": false, "release": true } }
+  },
+  "verdict": "amber"
+}

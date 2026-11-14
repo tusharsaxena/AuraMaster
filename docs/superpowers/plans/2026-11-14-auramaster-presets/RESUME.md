@@ -18,3 +18,7 @@ Git is the only state.
 
 - 2026-11-14: Design approved by the owner (spec, with the builder check folded in). Baseline: retail 2377/0/1,
   forever 2376/0/2, lint 0/0.
+- 2026-11-14: M3 landed (AM-PR07, AM-PR08 review fixes). Automated-test bundle 20261114-183056 at 73dabd9 is amber:
+  retail 2469/0/1, forever 2468/0/2, lint 0/0 (224 files), max CCN 15, 0 warnings, but perf fails 4 assertions because
+  `tests/perf.lua` still expects the four old starters (AM-PR04 seeds Simple). Owed: the perf fixture fix and a re-run,
+  the owner's PRESETS smoke, the owner rulings recorded in the plan, and the pushes.
