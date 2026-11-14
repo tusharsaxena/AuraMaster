@@ -26,3 +26,8 @@ Git is the only state.
   category restore routed through the seam (aef646a). Automated-test bundle 20261114-184120 at aef646a is green:
   retail 2470/0/1, forever 2469/0/2, lint 0/0 (224 files), perf pass (12 scenarios, matching 20261114-104251), max
   CCN 15, 0 warnings. Owed: the owner's PRESETS smoke, the owner rulings recorded in the plan, and the pushes.
+- 2026-11-15: Round-1 owner feedback landed (AM-PR09 side stacks, corner group and call-outs; AM-PR10 picker
+  centered and unlocked with lock and test-mode buttons; AM-PR11 docs, smoke checks and review fixes). Automated-test
+  bundle 20261115-021129 at 01f7833 is green: retail 2490/0/1, forever 2489/0/2, lint 0/0 (224 files), perf pass
+  (12 scenarios, matching 20261114-184120), max CCN 15, 0 warnings. Owed: the owner's PRESETS smoke (round-1 checks
+  included), the owner rulings recorded in the plan, and the pushes.
