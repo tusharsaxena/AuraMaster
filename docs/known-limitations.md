@@ -468,6 +468,13 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   whether one ever matches anything on Forever can be seen only in game. They stay on both clients,
   each with a FOREVER smoke check (`docs/smoke-tests.md`). One the owner finds never matches is gated
   to Retail as a follow-up, with that smoke result as its evidence (design §3.4, under owner ruling 4).
+- **Without LibKa0s, a WoW Forever client is treated as Retail.** The client is asked only through
+  `LibKa0s-Compat-1.0` (clients-§3 keeps every `WOW_PROJECT_*` read in the library), and
+  `core/Compat.lua`'s stand-in answers Retail when `libs/LibKa0s` is missing. On such an install a
+  Forever client gets Retail's seed lists (Death Knight, Monk, Demon Hunter and Evoker ids included),
+  Retail's cast-to-aura table and the Ka0s Default skin, so the per-client lists of clients-§5 are not
+  served there. Restoring the library folder restores them (`tests/test_clients.lua`, "without
+  LibKa0s either client gets Retail's seed lists and Retail's cast table").
 - **A profile does not carry over between Retail and WoW Forever.** Saved variables live per client
   folder, so a profile reaches the other client only when a player copies the file by hand. A copied
   profile loads: a key the running client gates off keeps its stored Show/Hide state and spell edits

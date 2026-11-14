@@ -725,7 +725,7 @@ Total.
 - compat: UnitReactionKind bands UnitReaction(unit, "player") into friendly, neutral and hostile
 - compat: UnitReactionKind is nil whenever the answer is not knowable
 
-### test_clients.lua (8)
+### test_clients.lua (9)
 
 - clients: ClientKey names the kit profile's client
 - clients: IsForever and IsRetail answer the kit profile's client, exactly one true
@@ -735,6 +735,7 @@ Total.
 - clients: a fresh profile wears the default skin, from the Ka0s source
 - clients: before the profile store exists the read answers the client's default skin
 - clients: without LibKa0s the default skin stays Ka0s Default
+- clients: without LibKa0s either client gets Retail's seed lists and Retail's cast table
 
 ### test_categories_clients.lua (10)
 
@@ -2797,7 +2798,7 @@ Total.
 | test_containermanager.lua | 41 |
 | test_containermanager_queue.lua | 13 |
 | test_compat.lua | 37 |
-| test_clients.lua | 8 |
+| test_clients.lua | 9 |
 | test_categories_clients.lua | 10 |
 | test_secrets.lua | 6 |
 | test_bus.lua | 8 |
@@ -2898,4 +2899,4 @@ Total.
 | test_skin_switch.lua | 34 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2376** |
+| **Total** | **2377** |

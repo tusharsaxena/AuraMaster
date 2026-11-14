@@ -96,3 +96,13 @@ test("clients: without LibKa0s the default skin stays Ka0s Default", function()
     assertEqual(source, "ka0s")
     assertEqual(skin, "ka0s")
 end)
+
+test("clients: without LibKa0s either client gets Retail's seed lists and Retail's cast table", function()
+    local NS2 = dofile("tests/degraded_env.lua")()
+    -- The documented trade-off (docs/known-limitations.md): the stand-in answers Retail, so a Forever
+    -- client missing libs/LibKa0s loads Retail's lists. red under: a stand-in that reads WOW_PROJECT_*
+    -- (clients-§3) or a defaults/ file that asks the client some other way.
+    local defensives = NS2.Categories.Find("HELPFUL", "defensives")
+    assertTrue(defensives ~= nil and defensives.spells[118038] ~= nil, "Retail's Die by the Sword (118038)")
+    assertTrue(NS2.CastToAura ~= NS2.CastToAuraForever, "Retail's cast table stays selected")
+end)
