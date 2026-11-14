@@ -41,7 +41,7 @@ marked as such rather than listed as a requirement.
 - **No other optional integration.** Apart from the skin provider above, nothing in the addon checks
   whether another addon is loaded before using it. `Compat.EnsureAuraContainer`
   (`core/Compat.lua:92`) asks only about Blizzard's `Blizzard_AuraContainer`. The frame anchor
-  re-resolves on every `ADDON_LOADED` (`addon:OnAddonLoaded`, `core/AuraMaster.lua:219`) whatever
+  re-resolves on every `ADDON_LOADED` (`addon:OnAddonLoaded`, `core/AuraMaster.lua:231`) whatever
   the addon is.
 
 ## Development — the contributor toolchain
