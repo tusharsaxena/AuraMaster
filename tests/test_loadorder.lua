@@ -65,6 +65,9 @@ test("loadorder: the load-bearing pairs are in order, and the TOC says why", fun
         -- category lists only at Build time, so its place after UserCategories and Profile is the
         -- TOC's Conventional note and no load-time pair.
         { "locales/enUS.lua", "defaults/Presets.lua" },
+        -- The preset writer binds NS.L at file load and reaches its peers at call time (AM-PR02), so its
+        -- place after ContainerManager is the TOC's Conventional note.
+        { "locales/enUS.lua", "modules/Presets.lua" },
         { "modules/Style.lua", "modules/Style_Border.lua" },
         { "modules/Style.lua", "modules/Style_Bars.lua" },
         { "modules/Style.lua", "modules/Style_Text.lua" },

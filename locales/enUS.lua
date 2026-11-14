@@ -856,3 +856,9 @@ L["Dispellable by you on focus"] = "Dispellable by you on focus"
 L["Target cooldowns"] = "Target cooldowns"
 L["Special player buffs"] = "Special player buffs"
 L["Special target debuffs"] = "Special target debuffs"
+
+-- Applying a preset (modules/Presets.lua): its refusals.
+L["cannot apply a preset during combat — its containers would not be drawn or placed until combat ends"] = "cannot apply a preset during combat — its containers would not be drawn or placed until combat ends"
+L["No such preset."] = "No such preset."
+L["A preset either replaces your containers or adds to them."] = "A preset either replaces your containers or adds to them."
+L["The Empty preset has no containers to add."] = "The Empty preset has no containers to add."

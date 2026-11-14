@@ -152,6 +152,9 @@ modules\Container.lua
 modules\Container_Twins.lua
 # Conventional: peers resolved at call time; it binds only NS.Perf and NS.L at load.
 modules\ContainerManager.lua
+# Conventional: applying a preset (NS.Presets) through the registry writers above; it binds only
+# NS.L at load and reaches PresetData, ContainerManager and Categories at call time.
+modules\Presets.lua
 # Conventional: the font primer (issue #24); reaches Style, Database and ContainerManager at call time.
 modules\FontPrimer.lua
 # Conventional: `/am diagnostics` and `/am debug diagnostics`; reads every module above at call time.

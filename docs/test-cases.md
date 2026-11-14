@@ -2596,6 +2596,19 @@ Total.
 - presets: a build is a fresh copy
 - presets: a role that shows only some categories hides the player's own
 
+### test_presets_apply.lua (10)
+
+- apply: replace simple
+- apply: replace empty
+- apply: add empty refused
+- apply: an unknown preset, style or mode is refused and changes nothing
+- apply: add mode chains to new ids
+- apply: advanced creates two categories
+- apply: advanced re-apply reuses categories
+- apply: ResolveCustom reuses only a category of the same aura type, by name in any case
+- apply: refused in combat
+- apply: only the registry writers write
+
 ### test_perf.lua (8)
 
 - perf: every declared bucket is reached by a real bracket
@@ -2901,6 +2914,7 @@ Total.
 | test_poolsetup.lua | 4 |
 | test_defaults.lua | 31 |
 | test_presets_data.lua | 14 |
+| test_presets_apply.lua | 10 |
 | test_perf.lua | 8 |
 | test_debuglogsetup.lua | 9 |
 | test_locale.lua | 10 |
@@ -2917,4 +2931,4 @@ Total.
 | test_skin_switch.lua | 34 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2391** |
+| **Total** | **2401** |
