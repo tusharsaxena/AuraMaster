@@ -61,7 +61,11 @@
 - [ ] **Step 4:** Gate green (both profiles, luacheck).
 - [ ] **Step 5:** Commit `AM-PR01: Preset data and the placement builder`.
 
-**Owner rulings owed (AM-PR01 review, open):**
+**Rulings on the AM-PR01 review (settled 2026-11-14 by Claude under the run's "use your best judgement" rule; flagged to the owner in the M2 report, who can overturn them):**
+- *Ruling on 1:* keep the approved mockup layout and amend spec §4/§11 to allow a corner column over a side column. The strict non-overlap rule is replaced by a growth check: at the test-mode sample count, a corner stack's bottom stays above the side stacks' heads at 16:9 and 16:10. Where that cannot hold (heavy buff loads, 4:3 and 5:4), record it in docs/known-limitations.md. Done in AM-PR07.
+- *Ruling on 2:* amend spec §4 so icon size is derived from the scaled column width, as bar width is. The code stays as it is. Done in AM-PR07.
+
+**The questions as the review raised them:**
 1. *Corner over side columns.* Spec §4's reference numbers put the far stack under both corner columns on 16:9
    (cornerLeft 1525..1740 against far 1530..1750 at 1920 × 1080) and the right stack under cornerLeft on 16:10; on 4:3
    and 5:4 the right and far stacks run under the corners entirely. The corner stacks grow down from y = 6 and reach

@@ -1,2 +1,4 @@
 date	milestone	evidence
 2026-11-14	baseline	retail 2377/0/1, forever 2376/0/2, lint 0/0 (213 files)
+2026-11-14	M1	AM-PR01..03 at 02879ee; retail 2462/0/1, forever 2461/0/2, lint 0/0 (224 files); PR01/PR03 r2 fixes not re-reviewed, carried to AM-PR08
+2026-11-14	M2	AM-PR04..06 at 6ef396b; retail 2462/0/1, forever 2461/0/2, lint 0/0 (224 files); reviews approved
