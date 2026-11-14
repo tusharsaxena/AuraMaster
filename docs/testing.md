@@ -10,7 +10,7 @@ All three must pass before **every** commit (testing-§4):
 | Check | Command | Expected |
 |---|---|---|
 | Headless suite | `lua tests/run.lua` | every suite green; exits non-zero on any failure |
-| Headless suite, as WoW Forever | `KA0S_KIT_CLIENT=forever lua tests/run.lua` | the same, under the kit's `forever` profile. The addon serves Retail and WoW Forever, so both runs gate (clients-§6). Cases that pin one client's seed lists run as that client under both profiles (`tests/test_categories_clients.lua`), and the kit's `test_client_globals` suite checks the tracked source against both clients' API sets |
+| Headless suite, as WoW Forever | `KA0S_KIT_CLIENT=forever lua tests/run.lua` | the same, under the kit's `forever` profile. The addon serves Retail and WoW Forever, so both runs gate (clients-§6). Cases that pin a client's seed lists assert against the active profile, so each profile's run checks its own client's lists (`tests/test_categories_clients.lua`, `tests/test_defaults.lua`, `tests/test_database_categories.lua`), and the kit's `test_client_globals` suite checks the tracked source against both clients' API sets |
 | Lint | `~/.claude/dev-copilot/bin/ka0s-bounded luacheck .` | `0 warnings / 0 errors` |
 | Syntax-check one file | `luac -p path/to/file.lua` | no output |
 
