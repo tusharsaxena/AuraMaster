@@ -121,16 +121,9 @@ local function createAll(specs, keys)
     return NS.PresetData.Realize(specs, keys, NS.ContainerManager.Create)
 end
 
---- Apply preset `name` in style `look`: `mode` "replace" deletes every container first, "add" keeps
---- them. Returns true, or nil, a player-facing message and (for the combat refusal) true, the gray
---- flag ContainerManager.Create answers with. A refusal changes nothing.
---- @param name string  one of NS.PresetData.NAMES
---- @param look string  "bars" | "icons"
---- @param mode string  "replace" | "add"
---- @return boolean|nil ok, string|nil message, boolean|nil gray
-function Presets.Apply(name, look, mode)
-    local why, gray = refusal(name, look, mode)
-    if why then return nil, why, gray end
+--- Write preset `name` over the registry as it stands, a preview's containers included: Apply's
+--- body, and what BeginPreview writes once its snapshot is taken. Refusals are the caller's.
+local function write(name, look, mode)
     local keys, reason = resolveAll(name)
     if not keys then return nil, reason end
     local deleted = (mode == "replace") and deleteAll() or 0
@@ -140,6 +133,29 @@ function Presets.Apply(name, look, mode)
     if not created then return nil, msg end
     debug("applied %s (%s, %s): %d deleted, %d created", name, look, mode, deleted, created)
     return true
+end
+
+--- Apply preset `name` in style `look`: `mode` "replace" deletes every container first, "add" keeps
+--- them. Returns true, or nil, a player-facing message and (for the combat refusal) true, the gray
+--- flag ContainerManager.Create answers with. A refusal changes nothing.
+---
+--- A PREVIEW UP IS SETTLED FIRST, by a restore (EndPreview(false)), so the write lands on the
+--- player's own containers and no snapshot outlives it: one left stored would put the player's old
+--- containers back over this preset at the preview's next end (a surface's leave, a profile event, the
+--- next login). Every caller gets this, whatever it checked when it asked.
+--- @param name string  one of NS.PresetData.NAMES
+--- @param look string  "bars" | "icons"
+--- @param mode string  "replace" | "add"
+--- @return boolean|nil ok, string|nil message, boolean|nil gray
+function Presets.Apply(name, look, mode)
+    local why, gray = refusal(name, look, mode)
+    if why then return nil, why, gray end
+    if Presets.IsPreviewing() then
+        local ok, msg, mgray = Presets.EndPreview(false)
+        if not ok then return nil, msg, mgray end
+        debug("apply %s ended the preview up first", tostring(name))
+    end
+    return write(name, look, mode)
 end
 
 -- ---------------------------------------------------------------------------
@@ -222,7 +238,7 @@ function Presets.BeginPreview(name, look)
         -- preview's custom categories. The snapshot is restored by copy and stays stored.
         NS.ContainerManager.RestoreSnapshot(store.previewSnapshot, NS.db.profile)
     end
-    local ok, msg, mgray = Presets.Apply(name, look, "replace")
+    local ok, msg, mgray = write(name, look, "replace")
     if not ok then
         restoreInto(NS.db.profile, store)
         onScreen = nil

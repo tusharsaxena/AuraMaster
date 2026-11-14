@@ -157,6 +157,42 @@ test("preview: keep add restores then adds", function()
     assertFalse(NS.State.testMode)
 end)
 
+-- AM-PR08 review fixes: an Apply over a live preview settles it first, so no snapshot outlives the
+-- preset the player confirmed.
+test("preview: an apply over a preview ends it first, and the applied preset survives", function()
+    local NS = fresh()
+    local own = #NS.Database.GetContainers()
+    assertTrue(NS.Presets.BeginPreview("advanced", "bars"))
+    -- red under: Apply writing over the preview and leaving the snapshot stored
+    assertTrue(NS.Presets.Apply("empty", "bars", "replace"))
+    assertFalse(NS.Presets.IsPreviewing(), "the preview is settled")
+    assertFalse(NS.State.testMode, "test mode off")
+    assertEqual(#NS.Database.GetContainers(), 0, "Empty applied")
+    assertNil(NS.Presets.EndPreview(false), "nothing left for a surface's leave to restore")
+    assertEqual(#NS.Database.GetContainers(), 0, "and the confirmed preset stays")
+    assertTrue(own > 0)
+    -- Add over a preview lands next to the player's own containers, not the preview's.
+    local NS2 = fresh()
+    local own2 = #NS2.Database.GetContainers()
+    assertTrue(NS2.Presets.BeginPreview("healer", "bars"))
+    assertTrue(NS2.Presets.Apply("simple", "bars", "add"))
+    assertEqual(#NS2.Database.GetContainers(), own2 + NS2.PresetData.Count("simple"))
+    -- A /reload or a crash after: the next login has no snapshot to put back over it.
+    local NS3 = fresh({ savedVariables = NS2.Database.DeepCopy(_G.AuraMasterDB) })
+    assertEqual(#NS3.Database.GetContainers(), own2 + NS3.PresetData.Count("simple"), "the login keeps it")
+end)
+
+test("preview: an apply over a preview is refused whole in combat", function()
+    local NS, m = fresh()
+    assertTrue(NS.Presets.BeginPreview("simple", "bars"))
+    m.__lockdown = true
+    local ok, _, gray = NS.Presets.Apply("healer", "bars", "replace")
+    assertNil(ok)
+    assertTrue(gray, "the combat line, gray")
+    assertTrue(NS.Presets.IsPreviewing(), "nothing changed: the preview is still up")
+    m.__lockdown = false
+end)
+
 test("preview: an unknown preset is refused before a snapshot is taken", function()
     local NS = fresh()
     local before = stored(NS)
