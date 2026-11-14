@@ -475,8 +475,8 @@ function refresh()
     f.blurb:SetText(BLURBS[state.sel])
     f.status:SetShown(not empty and state.owns and NS.Presets.IsPreviewing())
     f.footer:SetText(NS.SkinPickerDue and NS.SkinPickerDue()
-        and L["Change it later on Containers > Presets. The skin picker opens next."]
-        or L["Change it later on Containers > Presets."])
+        and L["Change it later on Containers > General > Presets. The skin picker opens next."]
+        or L["Change it later on Containers > General > Presets."])
     layout(f)
 end
 

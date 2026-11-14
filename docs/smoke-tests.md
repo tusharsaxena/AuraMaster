@@ -2785,7 +2785,12 @@ container sits over the action bars or the unit frames. `/am test` → each fill
 the corner columns end well above the screen's middle. `/am test` off. Set **UI scale** off, then on
 at its smallest (Options → Graphics → UI Scale), each time making another new profile: the layout
 keeps its proportions and the corner column stays on the right edge. A profile already made keeps
-where its containers were placed. Result:
+where its containers were placed. *The login seed:* with UI scale on at its smallest, exit the
+game, move `AuraMaster.lua` out of `WTF/Account/<account>/SavedVariables/` and log in, so the first
+profile is seeded as the addon loads rather than in session. Select **Player buffs (all)** on the
+Containers band and note `/am get container.bars.width`, then `/am preset simple` → Apply → the
+width and the corner placement are the same (a different width means the UI scale was not yet
+applied when the addon loaded). Put the file back. Result:
 
 **PRESETS-2. The picker on a new profile, before the skin picker. Client: Retail, then WoW Forever.**
 On that new profile (PRESETS-1) → the **Choose a preset** window shows at once, on the left of the
@@ -2793,7 +2798,7 @@ screen and vertically centered, clear of the containers. It shows Ka0s Aura Mast
 title, a dropdown (Empty - no containers, Simple - 3 containers, Intermediate - 8 containers,
 Advanced - 20 containers, Healer - 9 containers) with Simple selected, a Bars / Icons switch, one
 line describing the pick, **Apply** and **Not now**, and the footer "Change it later on Containers >
-Presets. The skin picker opens next." Opening it previews nothing: test mode stays off and Simple is
+General > Presets. The skin picker opens next." Opening it previews nothing: test mode stays off and Simple is
 on screen. The skin picker does not show while this window is up. Drag the window → it moves and
 stays on screen. Pick **Intermediate** → its containers replace Simple, test mode turns on, and the
 line "On your screen now, filled with sample auras. Nothing is saved until Apply." appears. Pick
