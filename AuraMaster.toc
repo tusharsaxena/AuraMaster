@@ -37,7 +37,8 @@ locales\enUS.lua
 # Core — dependency-correct order (layout-§1)
 # LOAD-BEARING: publishes NS.name, NS.version and NS.PREFIX, which every seam below reads.
 core\Namespace.lua
-# Conventional: its shims are reached at call time.
+# LOAD-BEARING: the client seam before defaults\ (Categories, CastToAura_Forever), which read
+# NS.Compat.ClientKey and NS.Compat.ForClient at file load (clients-§5); its shims are reached at call time.
 core\Compat.lua
 # LOAD-BEARING: before Constants, deliberately. Constants.FONT_MONO is resolved from the
 # NS.MediaFont seam this file publishes, so a Constants that loaded first would take the fallback.
@@ -53,7 +54,7 @@ core\CoreSetup.lua
 # LOAD-BEARING: the LibKa0s-Skin-1.0 seam. Registers the skin owner at FILE LOAD (skinning-§1), so
 # the EllesmereUI provider offers it before EllesmereUI dispatches; after CoreSetup (NS.Print) and
 # before every module that builds a frame and settings/General.lua, which read NS.Skin and
-# NS.SKIN_OPTIONS at load.
+# NS.SKIN_OPTIONS at load, and before defaults/Profile.lua, which reads NS.DEFAULT_SKIN at load.
 core\SkinSetup.lua
 # LOAD-BEARING: publishes NS.bus and NS.MSG, read at load by settings/OptionsSetup.lua.
 core\Bus.lua
