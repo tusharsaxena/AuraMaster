@@ -2594,7 +2594,7 @@ Total.
 - presets data: the corner group sits left of and below its old place
 - presets data: the call-outs are centered and colored like the owner's
 - presets data: the call-out block takes the largest font that fits, centered as far as it can
-- presets data: the call-out rect is what the applied containers fill in test mode
+- presets data: the call-out rect is what the applied containers fill in test mode, unlocked
 - presets: members chain
 - presets: advanced stacks follow the mockup
 - presets: the layout narrows across only on a narrow screen

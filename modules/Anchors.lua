@@ -478,6 +478,9 @@ local LEVEL = C.LAYERS.LEVEL
 -- own figures stand in when it is missing.
 local STRIP_H   = DRAG and DRAG.HEIGHT or 18
 local STRIP_GAP = DRAG and DRAG.GAP or 2
+-- One furniture row along a chain, the strip's or the label's (furnitureRoom below): what a caller
+-- with no container yet sizes an unlocked chain by (defaults/Presets.lua, the call-out block).
+Anchors.STRIP_ROW = STRIP_H + STRIP_GAP
 
 -- The strip's own edge as the widget paints it once, at build (LibKa0s-Widgets' dhBuildChrome calls
 -- the painter we hand it, `edge = NS.Style.DrawEdge` in BuildHandle, with the owner's `handle.edge`,

@@ -101,13 +101,20 @@ end
 -- tier's first role sits nearest the unit frames, as in the owner's own profile. The `center` stack
 -- (the call-outs) hangs by its top from the center line and has no stored `y`: calloutLayout below
 -- centers its test-mode block on the screen's middle, as far as the preset picker under it allows.
+-- THE BASE, 640 down (440 above the bottom at 1080 tall): spec section 15 starts it at 600 and lets
+-- the builder tune it. At 600 Advanced's Bars target stack, six shown containers about 610 tall
+-- with their test-mode samples, ran 24 off the top of a 1080-tall screen; at 640 it ends 16 under
+-- the top edge there and further under on every taller screen. On a 768-tall screen it still cannot
+-- fit, nor at 1080 unlocked with its drag strips (docs/known-limitations.md, presets; the owner's
+-- call).
+local SIDE_BASE = -640
 P.STACKS = {
     cornerRight = { anchor = "TOPRIGHT", x = -255, y = -46,  width = 175, iconsGrowH = "left" },
     cornerLeft  = { anchor = "TOPRIGHT", x = -475, y = -46,  width = 215, iconsGrowH = "left" },
     middle      = { anchor = "TOP",      x = -240,           width = 480, iconsGrowH = "right", center = true },
-    left        = { anchor = "TOP",      x = -520, y = -600, width = 240, iconsGrowH = "right", up = true },
-    right       = { anchor = "TOP",      x = 280,  y = -600, width = 240, iconsGrowH = "left", up = true },
-    far         = { anchor = "TOP",      x = 570,  y = -600, width = 220, iconsGrowH = "left", up = true },
+    left        = { anchor = "TOP",      x = -520, y = SIDE_BASE, width = 240, iconsGrowH = "right", up = true },
+    right       = { anchor = "TOP",      x = 280,  y = SIDE_BASE, width = 240, iconsGrowH = "left", up = true },
+    far         = { anchor = "TOP",      x = 570,  y = SIDE_BASE, width = 220, iconsGrowH = "left", up = true },
 }
 for _, stack in pairs(P.STACKS) do
     if stack.anchor == "TOP" then TOP_REACH = math.max(TOP_REACH, -stack.x, stack.x + stack.width) end
@@ -542,24 +549,30 @@ local function setSize(o, size)
     o.text.height = size + 2 * NS.Constants.TEXT_AUTOSIZE_PAD
 end
 
---- The block the center stack's specs (`specs`, in order) fill in test mode at font size `size`:
---- its width (its widest container) and height (each container as tall as Preview.BlockSize makes its
---- placeholder block, the next hung below it across the seam: its stored gap and the seam's own,
---- Anchors.SeamOffset). The full stored data is the template plus the overrides, as
---- NS.Database.NewContainerData builds it. Read at call time: modules/ load after this file.
+--- The block the center stack's specs (`specs`, in order) fill in test mode at font size `size`,
+--- UNLOCKED, as the preset picker opens them (spec section 15): its width (its widest container) and
+--- height (each container as tall as Preview.BlockSize makes its placeholder block, the next hung
+--- below it across the seam: its stored gap, the seam's own, Anchors.SeamOffset, and the room its
+--- drag strip takes, one Anchors.STRIP_ROW, modules/Anchors_Attach.lua seamRoom), with the head's
+--- own strip row above it all. That row is `strip`, how far the head's block starts below the
+--- block's top. A call-out shows no name label (calloutLook), so no label row. The full stored data
+--- is the template plus the overrides, as NS.Database.NewContainerData builds it. Read at call time:
+--- modules/ load after this file.
+--- @return number width, number height, number strip
 local function measureCallouts(specs, size)
-    local width, height = 0, 0
+    local strip = NS.Anchors.STRIP_ROW
+    local width, height = 0, strip
     for i, spec in ipairs(specs) do
         local cfg = merge(copy(NS.CONTAINER_TEMPLATE), spec.overrides)
         setSize(cfg, size)
         local w, h = NS.Preview.BlockSize(cfg)
         if i > 1 then
             local _, seam = NS.Anchors.SeamOffset(cfg.layout, "after")
-            height = height + math.abs(cfg.attach.y or 0) + math.abs(seam)
+            height = height + math.abs(cfg.attach.y or 0) + math.abs(seam) + strip
         end
         width, height = math.max(width, w), height + h
     end
-    return width, height
+    return width, height, strip
 end
 
 --- Where the call-out block may sit on a `parentH` tall parent, as offsets down from its top edge:
@@ -575,20 +588,21 @@ end
 --- largest size from CALLOUT_SIZE_MAX down to CALLOUT_SIZE_MIN whose block fits the room
 --- (calloutRoom), the block centered on the screen's middle as far as the room allows: moved up
 --- before the font shrinks. When none fits, the smallest, just under the skin picker, and no lower
---- than keeps it on the screen.
---- @return number size, number top, number width, number height
+--- than keeps it on the screen. `strip` is measureCallouts': the head's block starts that far below
+--- the block's top.
+--- @return number size, number top, number width, number height, number strip
 local function calloutLayout(specs, parentH)
     local lo, hi = calloutRoom(parentH)
-    local w, h
+    local w, h, strip
     for size = P.CALLOUT_SIZE_MAX, P.CALLOUT_SIZE_MIN, -1 do
-        w, h = measureCallouts(specs, size)
+        w, h, strip = measureCallouts(specs, size)
         if h <= hi - lo then
             local top = math.min(math.max(parentH / 2 - h / 2, lo), hi - h)
-            return size, round(top), w, h
+            return size, round(top), w, h, strip
         end
     end
     local top = math.max(P.ROOM.margin, math.min(lo, parentH - P.ROOM.margin - h))
-    return P.CALLOUT_SIZE_MIN, round(top), w, h
+    return P.CALLOUT_SIZE_MIN, round(top), w, h, strip
 end
 
 --- `parentH`, or the reference height when it cannot be read (P.Scale's fallback).
@@ -598,11 +612,12 @@ end
 
 --- Size and place the center stack's specs (`callouts`, in order) on a `parentH` tall parent (1080
 --- when it cannot be read): every line at calloutLayout's font size, the head's top where it puts
---- the block. The head's spec keeps the block's test-mode size and top as `calloutBlock`.
+--- the block, one strip row below the block's top (its own strip sits there while unlocked). The
+--- head's spec keeps the block's unlocked test-mode size and top as `calloutBlock`.
 local function placeCallouts(callouts, parentH)
-    local size, top, w, h = calloutLayout(callouts, heightOr(parentH))
+    local size, top, w, h, strip = calloutLayout(callouts, heightOr(parentH))
     for _, spec in ipairs(callouts) do setSize(spec.overrides, size) end
-    callouts[1].overrides.position.y = -top
+    callouts[1].overrides.position.y = -(top + strip)
     callouts[1].calloutBlock = { width = w, height = h, top = top, fontSize = size }
 end
 
@@ -652,7 +667,9 @@ end
 --- The center stack's test-mode rectangle for preset `name` in style `look` on a `parentW` x
 --- `parentH` parent (1920 x 1080 when either cannot be read), in UIParent's own coordinates (from its
 --- bottom-left corner, as Frame:GetRect reads): { left, right, top, bottom, width, height, fontSize }.
---- nil for a preset with no call-outs. What the preset picker places itself under (spec section 15).
+--- It is the UNLOCKED block, drag strips included (measureCallouts), as the preset picker opens it; a
+--- locked block is the same less its strip rows, so it fits inside. nil for a preset with no
+--- call-outs. What the preset picker places itself under (spec section 15).
 --- @return table|nil
 function P.CalloutRect(name, look, parentW, parentH)
     local W = (type(parentW) == "number" and parentW > 0) and parentW or 1920

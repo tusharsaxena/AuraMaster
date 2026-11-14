@@ -321,7 +321,11 @@ section wins.
   TOPLEFT, a gap of 6 reference units). The tier's order is kept, so its first role sits nearest the
   base, which is the owner's own pattern (the most important container is nearest the unit frames). The
   base sits above where unit frames and action bars usually are: a starting value of y = -600 reference
-  units from the top (480 above the bottom at 1080 tall), and the builder may tune it.
+  units from the top (480 above the bottom at 1080 tall), and the builder may tune it. *(Tuned to
+  y = -640, 440 above the bottom at 1080, on the AM-PR09 review: at -600 Advanced's Bars target stack
+  ran about 24 off the top of a 1080-tall screen in test mode. It still runs off a 768-tall one, and
+  off a 1080-tall one while unlocked, which `docs/known-limitations.md` records for the owner's call:
+  a lower base or a split stack.)*
 - *Corner group.* It still grows down from the top-right corner, moved about 80 reference units left
   and 40 down from §4's values. It must stay on screen at every ratio §11 tests.
 - *Center text stack.* The head is placed by its TOP at the screen's horizontal center (x = 0) and grows
@@ -334,7 +338,9 @@ section wins.
   Bar and icon sizes are unchanged. This is the one place a preset carries appearance (§3 said none
   except bar width), by the owner's explicit request.
 - *Vertical placement of the text stack.* Its test-mode extent is centered on the screen's vertical
-  middle as far as the picker allows.
+  middle as far as the picker allows. The extent is the **unlocked** one, as the picker opens the
+  containers (the head's drag strip above it and each member's strip row in its seam), so the picker
+  placed under it clears the block locked or unlocked (`PresetData.CalloutRect`, AM-PR09 review).
 - *Picker position.* Horizontally centered. Vertically, the picker sits **below** the center text
   stack's test-mode extent and above the bottom edge, and it never overlaps the skin picker's rectangle
   (LibKa0s places that by its CENTER, 75% of the way up UIParent). At 1920x1080, with the text stack in

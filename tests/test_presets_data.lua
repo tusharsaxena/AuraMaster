@@ -309,7 +309,7 @@ end
 -- AM-PR01 review). By the spec 4 numbers the far stack sits under both corner columns on 16:9, the
 -- right stack under cornerLeft on 16:10 as well, and on 4:3 and 5:4 the right and far stacks run under
 -- the corners entirely. The corner stacks grow down from y = 46 and the side stacks grow up from
--- their base at y = 600, so every corner stack must end above every side stack's base. The check
+-- their base at y = 640, so every corner stack must end above every side stack's base. The check
 -- measures that at the test-mode sample count: every container of the preset applied, each as tall as
 -- Preview.Extent makes its placeholder block, each stack member hung from the one before by its gap,
 -- below it growing down and above it growing up. Every other pair of columns stays disjoint. A tall
@@ -322,40 +322,70 @@ local function cornerOverSide(a, b)
     return (CORNER[a] and SIDE[b]) or (CORNER[b] and SIDE[a]) or false
 end
 
+--- The y offset container `id`'s anchor is placed at from what it hangs from, read off the live
+--- placement (Anchors.Place): the stored gap plus the seam and, while unlocked, the drag strip's room
+--- (modules/Anchors_Attach.lua seamRoom).
+local function placedOffset(env, id)
+    local inst = env.ContainerManager.instances[id]
+    local rec = {}
+    rawset(inst.anchor, "SetPoint", function(_, ...) rec[#rec + 1] = { ... } end)
+    env.Anchors.Place(inst)
+    rawset(inst.anchor, "SetPoint", nil)
+    return rec[#rec][5], inst
+end
+
+--- One container's span from what it hangs from (`parent`, nil for a head), its stored data `c`, its
+--- placed y offset `dy` and its test-mode block's height `h`; while `unlocked`, `room` is its own
+--- strip row, which sits on the side its auras start from (Anchors.StripPoints). A head's room is
+--- added to the span (a member's is already in its offset, between it and its parent).
+local function spanFrom(parent, c, dy, h, room)
+    local up = c.layout.growV == "up"
+    local edge
+    if parent then
+        edge, room = up and parent.top + dy or parent.bottom + dy, 0
+    else
+        edge = c.position.y
+    end
+    if up then return { top = edge + h, bottom = edge - room } end
+    return { top = edge + room, bottom = edge - h }
+end
+
 --- Each stack's test-mode span with preset `name` in style `look` applied on a W x H parent in `env`,
 --- every container filled with its test-mode samples: [stack] = { top, bottom }, offsets from the
 --- parent's top (negative is down). A head placed by a BOTTOM point starts at its base and grows up;
---- a member hangs below the one before it growing down, above it growing up, by its gap.
-local function sampleSpans(env, mocks, name, look, W, H)
+--- a member hangs below the one before it growing down, above it growing up, at its live placement's
+--- offset. `unlocked` measures with the containers unlocked, their drag strips shown, as the preset
+--- picker opens them (spec section 15); otherwise locked.
+local function sampleSpans(env, mocks, name, look, W, H, unlocked)
     env.Presets.ParentSize = function() return W, H end
     assertTrue(env.Presets.Apply(name, look, "replace"), name .. "/" .. look .. " applies")
+    env.SetByPath("locked", not unlocked)
+    env.Preview.SetTestMode(true)
+    mocks.__fireTimers()
     local specs, p = env.PresetData.Build(name, look, W, H), env.db.profile
     assertEqual(#p.containerOrder, #specs, "one container per spec, in creation order")
     local spanOf, out = {}, {}
     for i, id in ipairs(p.containerOrder) do
         local c = p.containers[id]
         local extent = env.Preview.Extent({ Cfg = function() return c end, anchor = mocks.CreateFrame("Frame") })
-        local top, bottom
         local parent = (c.attach.mode == "container") and spanOf[tonumber(c.attach.container)]
-        if parent and c.layout.growV == "up" then
-            bottom = parent.top + c.attach.y
-            top = bottom + extent.height
-        elseif parent then
-            top = parent.bottom + c.attach.y
-            bottom = top - extent.height
-        elseif c.position.point:find("^BOTTOM") then
-            bottom = c.position.y
-            top = bottom + extent.height
-        else
-            top = c.position.y
-            bottom = top - extent.height
-        end
-        spanOf[id] = { top = top, bottom = bottom }
+        local dy, inst = placedOffset(env, id)
+        -- A disabled container (Advanced's tsteal, as the source stores it) shows nothing, test mode
+        -- or not (ShouldShow): no height, and no part of its stack's span.
+        local shown = c.enabled ~= false
+        assertEqual(inst.stripShown == true, shown and unlocked == true, "the strip shows while unlocked")
+        local span = spanFrom(parent, c, dy, shown and extent.height or 0, env.AnchorsAttach.furnitureRoom(inst))
+        spanOf[id] = span
         local stack = specs[i].stack
-        local span = out[stack] or { top = top, bottom = bottom }
-        span.top, span.bottom = math.max(span.top, top), math.min(span.bottom, bottom)
-        out[stack] = span
+        local whole = out[stack] or (shown and { top = span.top, bottom = span.bottom })
+        if shown then
+            whole.top, whole.bottom = math.max(whole.top, span.top), math.min(whole.bottom, span.bottom)
+        end
+        out[stack] = whole
     end
+    env.Preview.SetTestMode(false)
+    env.SetByPath("locked", true)
+    mocks.__fireTimers()
     return out
 end
 
@@ -369,6 +399,26 @@ local function checkCornersAboveBases(spans, heads, what)
                 assertTrue(spans[corner].bottom > heads[side], why:format(what, corner, side,
                     spans[corner].bottom, heads[side]))
             end
+        end
+    end
+end
+
+-- THE TOP EDGE (the AM-PR09 review). Every stack's test-mode span, locked, stays on the screen: at or
+-- under its top edge. But one, recorded in docs/known-limitations.md (presets) for the owner's call:
+-- Advanced's Bars target stack, six shown containers about 610 tall with their samples (the seventh,
+-- tsteal, is stored off), cannot fit a 768-tall screen above any base the unit frames leave free. The case also fails while that stack
+-- fits, so the record cannot outlive the limit.
+local OFF_TOP = { ["advanced/bars right 768"] = true }
+
+--- Every stack in `spans` (sampleSpans, locked) ends at or under the top edge, but OFF_TOP's.
+local function checkTopEdge(spans, name, look, W, H)
+    for stack, span in pairs(spans) do
+        local key, where = ("%s/%s %s %d"):format(name, look, stack, H), ("%s/%s %s at %dx%d"):format(name,
+            look, stack, W, H)
+        if OFF_TOP[key] then
+            assertTrue(span.top > 0, where .. " now fits under the top edge: drop it from OFF_TOP and the limitation")
+        else
+            assertTrue(span.top <= 0, where .. ": its test-mode top is on screen (" .. span.top .. ")")
         end
     end
 end
@@ -411,9 +461,12 @@ test("presets: placement at 768/1080/1440 x 16:9, 16:10, 21:9, 4:3, 5:4", functi
                             a.stack, b.stack, W, H))
                     end
                 end
-                if placedY.cornerRight and (placedY.left or placedY.right or placedY.far) then
-                    checkCornersAboveBases(sampleSpans(env, mocks, name, look, W, H), placedY,
-                        ("%s/%s at %dx%d"):format(name, look, W, H))
+                if #heads > 0 then
+                    local spans = sampleSpans(env, mocks, name, look, W, H)
+                    checkTopEdge(spans, name, look, W, H)
+                    if placedY.cornerRight and (placedY.left or placedY.right or placedY.far) then
+                        checkCornersAboveBases(spans, placedY, ("%s/%s at %dx%d"):format(name, look, W, H))
+                    end
                 end
             end
         end
@@ -449,7 +502,7 @@ test("presets data: side stacks grow up from their base", function()
                         else
                             assertTrue(o.position.point:find("^BOTTOM") ~= nil, where .. " is placed by a BOTTOM point")
                             assertEqual(o.position.relativePoint, "TOP", where)
-                            assertEqual(o.position.y, math.floor(-600 * P.Scale(H) + 0.5), where .. " sits on the base")
+                            assertEqual(o.position.y, math.floor(-640 * P.Scale(H) + 0.5), where .. " sits on the base")
                         end
                     else
                         assertEqual(o.layout.growV, "down", where .. " grows down")
@@ -623,17 +676,27 @@ test("presets data: the call-out block takes the largest font that fits, centere
     assertEqual(fb.left, heal.left)
 end)
 
-test("presets data: the call-out rect is what the applied containers fill in test mode", function()
+-- The rect is the block the preset picker opens on: unlocked, each drag strip shown (the AM-PR09
+-- review: a locked measure left out a strip row above the head and one per member, 60 at 1080 for
+-- Advanced). Measured off the live placement, so a seam or a strip the builder misses shows here.
+test("presets data: the call-out rect is what the applied containers fill in test mode, unlocked", function()
     local env, mocks = freshEnv()
     env.Helpers.SkinPicker = function() return nil end
     local P = env.PresetData
-    for _, name in ipairs({ "advanced", "healer" }) do
-        local r = P.CalloutRect(name, "bars", 1920, 1080)
-        local span = sampleSpans(env, mocks, name, "bars", 1920, 1080).middle
-        -- sampleSpans hangs each member by its stored gap; the seam adds the layout's own spacing.
-        local seams = (P.Count(name) == 20) and 2 * 2 or 0
-        assertNear(r.top, 1080 + span.top, 0.5, name .. ": the block's top")
-        assertNear(r.bottom, 1080 + span.bottom - seams, 0.5, name .. ": the block's bottom")
+    for _, H in ipairs({ 768, 1080, 1440 }) do
+        for _, name in ipairs({ "advanced", "healer" }) do
+            local W, where = H * 16 / 9, ("%s at %d"):format(name, H)
+            local r = P.CalloutRect(name, "bars", W, H)
+            local open = sampleSpans(env, mocks, name, "bars", W, H, true).middle
+            assertNear(r.top, H + open.top, 0.5, where .. ": the block's top, the head's strip")
+            assertNear(r.bottom, H + open.bottom, 0.5, where .. ": the block's bottom")
+            -- red under: the strip rows left out (the rect 20 short above and 20 per member below)
+            local shut = sampleSpans(env, mocks, name, "bars", W, H).middle
+            local rows = (P.Count(name) == 20) and 3 or 1
+            assertNear(open.top - shut.top, env.Anchors.STRIP_ROW, 0.5, where .. ": one strip row above")
+            assertNear((open.top - open.bottom) - (shut.top - shut.bottom), rows * env.Anchors.STRIP_ROW, 0.5,
+                where .. ": a strip row per container")
+        end
     end
 end)
 

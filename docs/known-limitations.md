@@ -509,3 +509,14 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   can move either stack, or cap the corner container's auras. Ruled 2026-11-14 under the presets
   plan's ruling on the AM-PR01 review, flagged to the owner: the approved mockup's layout stands
   (presets spec section 4).
+- **Advanced (Bars)'s target stack runs off the top of a short screen in test mode.** Since the
+  owner's round-1 feedback the side stacks grow up from a base 640 down in a 1080-tall reference
+  space (presets spec section 15, tuned from 600 on the AM-PR09 review). The Bars target stack is
+  seven containers, six of them shown (Spell stealable is stored off, as in the owner's profile),
+  and with their test-mode samples it is about 610 tall: it ends 16 under the top edge on a
+  1080-tall parent, but about 160 above it on a 768-tall one (UI scale off), and with the containers
+  unlocked, as the preset picker opens them, each member's drag strip adds 20, so it also runs about
+  85 above the top edge at 1080. Every other stack, in either style, stays on screen locked
+  (`tests/test_presets_data.lua`, "presets: placement", which names this one as its only
+  exception). Lowering the base far enough would put it over the unit frames and action bars;
+  splitting the stack changes the owner's own layout. Recorded 2026-11-15 for the owner's call.
