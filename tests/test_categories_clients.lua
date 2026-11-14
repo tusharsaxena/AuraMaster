@@ -232,7 +232,7 @@ test("categories clients: empty forever category absent everywhere on forever, p
             assertEqual(templ, "show", key .. " container template")
         end
     end
-    -- the neighbours stay, in order
+    -- the neighbors stay (presence only; list order is not asserted here)
     assertTrue(Cat.Find("HELPFUL", "utility") ~= nil and Cat.Find("HELPFUL", "racials") ~= nil)
     assertEqual(NS.ValidateSchema(), 0, "the schema stays valid")
 end)
