@@ -1,7 +1,10 @@
 -- tests/test_presets_data.lua -- the preset data and the pure placement builder (AM-PR01; spec
 -- sections 3, 3.1, 3.2 and 4). Build reads nothing but its arguments and the category lists, so these
--- cases share the runner's environment. Every case runs under both kit profiles, so the category
--- check is the per-client one clients-§6 asks for.
+-- cases share the runner's environment, except the one that creates the player's own categories,
+-- which builds its own (tests/fresh_env.lua). Every case runs under both kit profiles, so the
+-- category check is the per-client one clients-§6 asks for.
+
+local freshEnv = dofile("tests/fresh_env.lua")
 
 local T = _G.AM_TEST
 local test, assertEqual, assertTrue, assertNil, assertNear =
@@ -274,7 +277,8 @@ for _, h in ipairs({ 768, 1080, 1440 }) do
 end
 
 --- A head's span on a W x H parent, out of its stored position and size alone: [left, right] and top
---- (a negative offset from the parent's top edge). A text head's width is its stack's column.
+--- (a negative offset from the parent's top edge). A text head's is its stored width, the column: its
+--- lines size to fit from the column's left edge (defaults/Presets.lua, sizeTo).
 local function headRect(spec, W, H)
     local o, P = spec.overrides, NS.PresetData
     local pos = o.position
@@ -286,12 +290,22 @@ local function headRect(spec, W, H)
     elseif o.style == "icons" then
         w = o.layout.perLine * (o.icons.width + o.layout.spacing)
     else
-        w = P.STACKS[spec.stack].width * P.Scale(H)
+        w = o.text.width
+        assertNear(w, P.STACKS[spec.stack].width * P.Scale(H), 0.5, "a text head is its column wide")
     end
     local x = ax + pos.x
     if pos.point == "TOPRIGHT" then return x - w, x, pos.y end
     assertEqual(pos.point, "TOPLEFT", "a head is placed by a top corner")
     return x, x + w, pos.y
+end
+
+-- The pairs of stacks the placement check lets share a column (see the check): a side stack under a
+-- corner one. At 1080 the far stack runs 5 units under cornerRight and 210 under cornerLeft on 16:9,
+-- 101 and 114 on 16:10, where the right stack also runs 51 under cornerLeft; on 21:9 nothing shares.
+local UNDER_CORNER = {}
+for _, pair in ipairs({ { "cornerRight", "far" }, { "cornerLeft", "far" }, { "cornerLeft", "right" } }) do
+    UNDER_CORNER[pair[1] .. ":" .. pair[2]] = true
+    UNDER_CORNER[pair[2] .. ":" .. pair[1]] = true
 end
 
 test("presets: placement at 768/1080/1440 x 16:9, 16:10, 21:9", function()
@@ -314,15 +328,20 @@ test("presets: placement at 768/1080/1440 x 16:9, 16:10, 21:9", function()
                         heads[#heads + 1] = { l = l, r = r, top = top, stack = spec.stack }
                     end
                 end
-                -- Two stacks side by side never share a column. A stack may sit under another one's
-                -- column (the far stack under the corner ones) only with room for the upper one to grow.
+                -- No two stacks share a column, with one exception the spec's reference numbers make
+                -- and the owner has yet to rule on (AM-PR01 review): on 16:9 and 16:10 a side stack
+                -- (from y = 330) sits under a corner column (from y = 6). Those pairs alone may share,
+                -- and only with that vertical room.
                 for i = 1, #heads do
                     for j = i + 1, #heads do
                         local a, b = heads[i], heads[j]
                         local overlap = a.l < b.r and b.l < a.r
-                        if overlap then
-                            assertTrue(math.abs(a.top - b.top) >= 300 * k,
-                                ("%s/%s: %s and %s share a column at %dx%d"):format(name, look, a.stack, b.stack, W, H))
+                        local what = ("%s/%s: %s and %s share a column at %dx%d"):format(name, look, a.stack,
+                            b.stack, W, H)
+                        if overlap and UNDER_CORNER[a.stack .. ":" .. b.stack] then
+                            assertTrue(math.abs(a.top - b.top) >= 300 * k, what)
+                        else
+                            assertTrue(not overlap, what)
                         end
                     end
                 end
@@ -481,4 +500,54 @@ test("presets: a build is a fresh copy", function()
     local b = P.Build("simple", "bars", 1920, 1080)
     assertEqual(b[1].overrides.filter.castBy, "any")
     assertEqual(b[1].overrides.filter.categories.weaponEnchants, "hide")
+end)
+
+-- A key a container does not hold reads as Show (modules/FilterCompiler.lua, splitCategories), so a
+-- role that shows only some categories must hide the player's own as well, as the source hid the
+-- owner's. A leftover Special player buffs (an earlier Advanced) is the player's own to every other
+-- preset; Advanced reuses it and leaves it to SPECIAL_PLAYER.
+test("presets: a role that shows only some categories hides the player's own", function()
+    local E = freshEnv()
+    local procs = E.Categories.CreateUserCategory("My procs", "HELPFUL")
+    local marks = E.Categories.CreateUserCategory("My marks", "HARMFUL")
+    local special = E.Categories.CreateUserCategory("Special player buffs", "HELPFUL")
+    assertTrue(procs and marks and special, "three custom categories")
+    local P = E.PresetData
+    for _, look in ipairs(P.LOOKS) do
+        local adv = byRole(P.Build("advanced", look, 1920, 1080))
+        local function state(role, key) return adv[role].overrides.filter.categories[key] end
+        for _, role in ipairs({ "wpn", "txtOff", "txtDef", "txtRaid", "pcd", "pspec", "tcdp", "tcdn", "tsteal" }) do
+            assertEqual(state(role, procs), "hide", look .. " " .. role .. " hides My procs")
+            assertNil(state(role, special), look .. " " .. role .. ": the reused category is SPECIAL_PLAYER's")
+        end
+        for _, role in ipairs({ "tcc", "tspec" }) do
+            assertEqual(state(role, marks), "hide", look .. " " .. role .. " hides My marks")
+        end
+        for _, role in ipairs({ "pbuffs", "pshort", "tbuff", "ticoB", "fbuff" }) do
+            assertTrue(state(role, procs) ~= "hide", look .. " " .. role .. " shows My procs")
+        end
+        for _, role in ipairs({ "pdebuffs", "tdeb", "ticoD", "fdeb" }) do
+            assertTrue(state(role, marks) ~= "hide", look .. " " .. role .. " shows My marks")
+        end
+        assertEqual(state("pspec", "SPECIAL_PLAYER"), "show", look .. ": Player special shows its own")
+        assertEqual(state("wpn", "SPECIAL_PLAYER"), "hide", look .. ": Weapon enchants hides it")
+        assertEqual(P.CustomKeyOf(E.Categories.Find("HELPFUL", special)), "SPECIAL_PLAYER")
+        assertNil(P.CustomKeyOf(E.Categories.Find("HELPFUL", procs)), "My procs is the player's")
+
+        local simple = byRole(P.Build("simple", look, 1920, 1080))
+        assertEqual(simple.wpn.overrides.filter.categories[special], "hide",
+            look .. ": a leftover Special player buffs hides in Simple's Weapon enchants")
+        assertTrue(simple.pbuffs.overrides.filter.categories[special] ~= "hide", look .. ": and shows in its buffs")
+        assertEqual(byRole(P.Build("intermediate", look, 1920, 1080)).tcd.overrides.filter.categories[procs],
+            "hide", look .. ": Intermediate's Target cooldowns hides My procs")
+
+        local heal = byRole(P.Build("healer", look, 1920, 1080))
+        for _, role in ipairs({ "dispelTarget", "dispelFocus" }) do
+            local cats = heal[role].overrides.filter.categories
+            assertEqual(cats[marks], "hide", look .. " " .. role .. " hides My marks")
+            assertEqual(cats.raid, "show", look .. " " .. role .. " shows raid")
+        end
+        assertEqual(heal.pcdHealer.overrides.filter.categories[special], "hide", look .. ": healer cooldowns")
+        assertTrue(heal.healTarget.overrides.filter.categories[procs] ~= "hide", look .. ": heals show every category")
+    end
 end)

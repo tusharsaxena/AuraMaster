@@ -61,6 +61,10 @@ test("loadorder: the load-bearing pairs are in order, and the TOC says why", fun
         { "defaults/CastToAura.lua", "defaults/CastToAura_Forever.lua" },
         { "core/SkinSetup.lua", "defaults/Profile.lua" },
         { "defaults/Categories.lua", "defaults/UserCategories.lua" },
+        -- Presets resolves its container names through NS.L at file load (AM-PR01). It reads the
+        -- category lists only at Build time, so its place after UserCategories and Profile is the
+        -- TOC's Conventional note and no load-time pair.
+        { "locales/enUS.lua", "defaults/Presets.lua" },
         { "modules/Style.lua", "modules/Style_Border.lua" },
         { "modules/Style.lua", "modules/Style_Bars.lua" },
         { "modules/Style.lua", "modules/Style_Text.lua" },

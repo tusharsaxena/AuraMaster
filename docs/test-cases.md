@@ -2579,7 +2579,7 @@ Total.
 - defaults: userCategoryOrder is reconciled the way containerOrder is
 - defaults: the RAID-token row says it means castable OR dispellable, as Blizzard defines it
 
-### test_presets_data.lua (12)
+### test_presets_data.lua (13)
 
 - presets: counts
 - presets: advanced matches its source
@@ -2593,6 +2593,7 @@ Total.
 - presets: intermediate's target cooldowns merge Advanced's two
 - presets: healer's category states (spec 3.1)
 - presets: a build is a fresh copy
+- presets: a role that shows only some categories hides the player's own
 
 ### test_perf.lua (8)
 
@@ -2644,7 +2645,7 @@ Total.
 
 - prose: no authored file carries a British spelling from localization-§5's published list
 - prose: the gate carries localization-§5's two lists whole, and nothing of its own
-- prose: the exclusions this repository declared suppressed 15 of 254 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (15): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, and 12 more (list bounded)
+- prose: the exclusions this repository declared suppressed 15 of 256 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (15): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, and 12 more (list bounded)
 - prose: no path this repository narrows the gate by is loaded by a TOC
 - prose: every path this repository narrows the gate by is one .pkgmeta keeps out of the zip
 - prose self-test: the carve-out suppresses the named generated folder, and only it
@@ -2898,7 +2899,7 @@ Total.
 | test_envsetup.lua | 4 |
 | test_poolsetup.lua | 4 |
 | test_defaults.lua | 31 |
-| test_presets_data.lua | 12 |
+| test_presets_data.lua | 13 |
 | test_perf.lua | 8 |
 | test_debuglogsetup.lua | 9 |
 | test_locale.lua | 10 |
@@ -2915,4 +2916,4 @@ Total.
 | test_skin_switch.lua | 34 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2389** |
+| **Total** | **2390** |

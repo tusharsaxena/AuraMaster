@@ -80,6 +80,11 @@ approved the mockup with them.)
   the categories two of them would show nothing, and the owner's spell ids are class-specific.)
   **Re-applying reuses them:** a custom category with the same name and aura type that already exists is used as is,
   spell list kept, and is never created twice. **(Claude's call,** builder check Q3.)
+- **The player's own custom categories.** A key a container does not hold reads as Show, so a container that shows
+  only some categories (Weapon enchants, the call-outs, the cooldowns, the specials, Target stealable, Target crowd
+  control, Healer's dispels) also states every custom category of its aura type the player already has as Hide, as
+  the source hid the owner's. A container that shows every category shows them. A custom category Advanced reuses is
+  stated through its Special key instead. **(Builder's call,** AM-PR01 review.)
 
 ### 3.1 Healer's category states (Claude's call)
 
@@ -115,7 +120,10 @@ variant is computed from the Bars definition, never stored twice.
 - **The reference layout** (1920 × 1080, from the mockup):
   - corner: Player buffs and Weapon enchants in a 175-wide column 175 in from the right edge, top 6; Player debuffs in
     a 215-wide column 395 in from the right.
-  - middle: the three text call-outs, 480 wide, centered, from y = 200 down.
+  - middle: the three text call-outs in a 480-wide column centered on the screen, from y = 200 down. The column is
+    centered, not the lines: each line is left-justified and sizes to fit from the column's left edge, since Center on
+    a template of more than one piece stacks each field on a row of its own (`modules/Style_Text.lua`,
+    `Text.Stacked`). The stored text width is the column's. **(Builder's call,** AM-PR01 review.)
   - left stack (player): 240 wide, its left edge 520 left of center, from y = 330.
   - right stack (target): 240 wide, 280 right of center, from y = 330.
   - far-right stack (target icons, then focus): 220 wide, 570 right of center, from y = 330.
@@ -217,8 +225,8 @@ variant is computed from the Bars definition, never stored twice.
 
 - Each preset's container count, names and units; Advanced has 20 and matches `advanced-source.md` field by field for
   filter, layout and behavior, except the fields §3 changes on purpose (`attach`, `position`, `growV`).
-- Every category key in every preset exists on both clients; none is a custom key except the two Advanced creates;
-  re-applying Advanced reuses them.
+- Every category key in every preset exists on both clients; none is a custom key except the two Advanced creates
+  and, as Hide, the player's own (§3); re-applying Advanced reuses them.
 - Placement: at heights 768, 1080 and 1440 and widths for 16:9, 16:10 and 21:9, every stack head is inside the screen,
   no two stacks' columns overlap, every head is above 60% of the height, the corner stacks touch the right edge; every
   stack member attaches to the container created before it; nothing attaches to a frame name; the fallback triggers

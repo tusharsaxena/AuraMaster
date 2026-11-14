@@ -21,8 +21,10 @@ local _, NS = ...
 -- holds every role to that document field by field.
 --
 -- PURE. Build reads its arguments and, for a role that shows only some categories, the live category
--- lists (NS.Categories, at call time). It writes nothing: applying a preset is modules/Presets.lua's,
--- through the registry writers (architecture-§5).
+-- lists (NS.Categories, at call time): the player's own custom categories are hidden there too, since
+-- a key a container does not hold reads as Show (modules/FilterCompiler.lua, splitCategories). It
+-- writes nothing: applying a preset is modules/Presets.lua's, through the registry writers
+-- (architecture-§5).
 
 local L = NS.L
 
@@ -55,6 +57,19 @@ P.CUSTOM = {
 local CUSTOM_ORDER = { "SPECIAL_PLAYER", "SPECIAL_TARGET" }
 -- The presets that create them. Every other preset drops a custom key from its states.
 local CREATES_CUSTOM = { advanced = true }
+
+--- The CUSTOM key a live category stands for: a custom category of the same name (any case) and aura
+--- type, which the writer reuses rather than creating a second (spec section 3); nil for any other.
+--- @param def table  a definition from NS.Categories.For
+--- @return string|nil
+function P.CustomKeyOf(def)
+    if type(def) ~= "table" or not def.userCategory or type(def.label) ~= "string" then return nil end
+    for _, key in ipairs(CUSTOM_ORDER) do
+        local c = P.CUSTOM[key]
+        if c.auraType == def.auraType and L[c.nameKey]:lower() == def.label:lower() then return key end
+    end
+    return nil
+end
 
 -- The columns, in reference units (spec section 4, the mockup's layout). `anchor` is the UIParent
 -- point the head hangs from; `x` is the column's LEFT edge from that point (from the right edge for
@@ -140,37 +155,39 @@ local HIDE_ENCHANTS = { "weaponEnchants" }
 -- ---------------------------------------------------------------------------
 -- name, unit, auraType, style; `enabled` false only where the source stores it off; `hide` the keys
 -- the source hides (every other key shows); `showOnly` instead hides every live category of the aura
--- type but those; `filter` and `layout` the fields that differ from the base above.
+-- type but those; `onlyNamed` (implied by showOnly) marks a role that shows only some categories, so
+-- it also hides every custom category of its aura type the player already has, as the source hid the
+-- owner's in each of them; `filter` and `layout` the fields that differ from the base above.
 
 local CONTAINERS = {
     -- Simple's three (Advanced 1 to 3): the corner, where Blizzard puts buffs.
     pbuffs = { name = L["Player buffs (all)"], unit = "player", auraType = "HELPFUL", style = "bars",
         hide = HIDE_ENCHANTS },
-    wpn = { name = L["Weapon enchants"], unit = "player", auraType = "HELPFUL", style = "bars",
+    wpn = { onlyNamed = true, name = L["Weapon enchants"], unit = "player", auraType = "HELPFUL", style = "bars",
         hide = except({ ALL_BUFFS }, { "weaponEnchants" }) },
     pdebuffs = { name = L["Player debuffs (all)"], unit = "player", auraType = "HARMFUL", style = "bars",
         hide = HIDE_ENCHANTS },
 
     -- The screen-middle call-outs.
-    txtOff = { name = L["Offensive cooldowns"], unit = "player", auraType = "HELPFUL", style = "text",
+    txtOff = { onlyNamed = true, name = L["Offensive cooldowns"], unit = "player", auraType = "HELPFUL", style = "text",
         hide = except({ ALL_BUFFS }, { "offensiveCDs" }),
         filter = { sortDirection = "normal" }, layout = { spacing = 2 } },
-    txtDef = { name = L["Defensive cooldowns"], unit = "player", auraType = "HELPFUL", style = "text",
+    txtDef = { onlyNamed = true, name = L["Defensive cooldowns"], unit = "player", auraType = "HELPFUL", style = "text",
         hide = except({ ALL_BUFFS }, { "defensives" }),
         filter = { sortDirection = "normal" }, layout = { spacing = 2 } },
-    txtRaid = { name = L["Raid cooldowns"], unit = "player", auraType = "HELPFUL", style = "text",
+    txtRaid = { onlyNamed = true, name = L["Raid cooldowns"], unit = "player", auraType = "HELPFUL", style = "text",
         hide = except({ ALL_BUFFS }, { "raidCDs" }),
         filter = { sortDirection = "normal" }, layout = { spacing = 2 } },
 
     -- The player stack.
     pshort = { name = L["Player buffs, short"], unit = "player", auraType = "HELPFUL", style = "bars",
         hide = HIDE_ENCHANTS, filter = MINE_SHORT },
-    pcd = { name = L["Player cooldowns"], unit = "player", auraType = "HELPFUL", style = "bars",
+    pcd = { onlyNamed = true, name = L["Player cooldowns"], unit = "player", auraType = "HELPFUL", style = "bars",
         hide = { "SPECIAL_PLAYER", "bigDefensive", "cancelable", "castable", "externals", "groupBuffs",
             "healing", "important", "racials", "stances", "stealable", "support", "uncategorized",
             "weaponEnchants" },
         filter = TIMED_30 },
-    pspec = { name = L["Player special (mine)"], unit = "player", auraType = "HELPFUL", style = "bars",
+    pspec = { onlyNamed = true, name = L["Player special (mine)"], unit = "player", auraType = "HELPFUL", style = "bars",
         hide = except({ ALL_BUFFS }, { "SPECIAL_PLAYER", "stances", "utility" }),
         filter = { castBy = "mine" } },
 
@@ -179,22 +196,22 @@ local CONTAINERS = {
         hide = HIDE_ENCHANTS, filter = MINE_SHORT },
     tbuff = { name = L["Target buffs (mine)"], unit = "target", auraType = "HELPFUL", style = "bars",
         hide = HIDE_ENCHANTS, filter = MINE_SHORT },
-    tcc = { name = L["Target crowd control"], unit = "target", auraType = "HARMFUL", style = "bars",
+    tcc = { onlyNamed = true, name = L["Target crowd control"], unit = "target", auraType = "HARMFUL", style = "bars",
         hide = except({ ALL_DEBUFFS, HIDE_ENCHANTS }, { "hardCC", "ccRoot" }),
         filter = { durationMode = "timed", maxDuration = 30, zones = NO_PVP } },
-    tcdp = { name = L["Target cooldowns, players"], unit = "target", auraType = "HELPFUL", style = "bars",
+    tcdp = { onlyNamed = true, name = L["Target cooldowns, players"], unit = "target", auraType = "HELPFUL", style = "bars",
         hide = { "SPECIAL_PLAYER", "bigDefensive", "cancelable", "castable", "externals", "groupBuffs",
             "healing", "important", "racials", "stances", "stealable", "uncategorized", "weaponEnchants" },
         filter = { durationMode = "timed", maxDuration = 30, unitFilter = { kind = "player" }, zones = NO_PVP } },
-    tcdn = { name = L["Target cooldowns, NPCs"], unit = "target", auraType = "HELPFUL", style = "bars",
+    tcdn = { onlyNamed = true, name = L["Target cooldowns, NPCs"], unit = "target", auraType = "HELPFUL", style = "bars",
         hide = { "SPECIAL_PLAYER", "activeMitigation", "defensives", "groupBuffs", "healing", "movement",
             "offensiveCDs", "racials", "raidCDs", "stances", "support", "uncategorized", "utility",
             "weaponEnchants" },
         filter = { durationMode = "timed", unitFilter = { kind = "npc" }, zones = NO_PVP } },
-    tspec = { name = L["Target special (mine)"], unit = "target", auraType = "HARMFUL", style = "bars",
+    tspec = { onlyNamed = true, name = L["Target special (mine)"], unit = "target", auraType = "HARMFUL", style = "bars",
         hide = except({ ALL_BUFFS, ALL_DEBUFFS }, { "SPECIAL_TARGET" }),
         filter = { castBy = "mine" } },
-    tsteal = { name = L["Target stealable"], unit = "target", auraType = "HELPFUL", style = "bars",
+    tsteal = { onlyNamed = true, name = L["Target stealable"], unit = "target", auraType = "HELPFUL", style = "bars",
         enabled = false,
         hide = except({ ALL_BUFFS }, { "stealable" }),
         filter = { durationMode = "timed", unitFilter = { kind = "npc", reaction = "hostile" }, zones = NO_PVP } },
@@ -236,14 +253,14 @@ end
 -- zone, the union of what the two show (so the keys both hide), and no duration cap (the NPC one has
 -- none; the union keeps the wider of the two).
 CONTAINERS.tcd = {
-    name = L["Target cooldowns"], unit = "target", auraType = "HELPFUL", style = "bars",
+    name = L["Target cooldowns"], unit = "target", auraType = "HELPFUL", style = "bars", onlyNamed = true,
     hide = intersect(CONTAINERS.tcdp.hide, CONTAINERS.tcdn.hide),
     filter = { durationMode = "timed" },
 }
 
 -- Healer's Player cooldowns: Advanced's, with Healing and Raid cooldowns shown as well (spec 3.1).
 CONTAINERS.pcdHealer = {
-    name = CONTAINERS.pcd.name, unit = "player", auraType = "HELPFUL", style = "bars",
+    name = CONTAINERS.pcd.name, unit = "player", auraType = "HELPFUL", style = "bars", onlyNamed = true,
     hide = except({ CONTAINERS.pcd.hide }, { "healing", "raidCDs" }),
     filter = TIMED_30,
 }
@@ -318,19 +335,30 @@ end
 
 local function round(v) return math.floor(v + 0.5) end
 
---- A role's category states. Hidden keys read "hide". A preset that creates the custom categories
---- states both in every container, so the writer's order of creation cannot change what shows; any
---- other preset names neither.
-local function categoriesFor(role, withCustom)
-    local out = {}
-    if role.showOnly then
-        for _, def in ipairs(NS.Categories.For(role.auraType)) do
-            if not def.userCategory then out[def.key] = "hide" end
-        end
-        for _, key in ipairs(role.showOnly) do
-            if out[key] then out[key] = "show" end
+--- State, in `out`, the live categories of `role`'s aura type for a role that shows only some: for a
+--- `showOnly` role every shipped one (Show for the keys it names, Hide for the rest), and for it or an
+--- `onlyNamed` role every custom one as Hide. With `withCustom`, a live category the preset reuses
+--- (P.CustomKeyOf) is left to its CUSTOM key, which the role's own list states.
+local function hideLive(out, role, withCustom)
+    if not (role.showOnly or role.onlyNamed) then return end
+    local shown = {}
+    for _, key in ipairs(role.showOnly or {}) do shown[key] = true end
+    for _, def in ipairs(NS.Categories.For(role.auraType)) do
+        local reused = withCustom and P.CustomKeyOf(def)
+        if def.userCategory then
+            if not reused then out[def.key] = "hide" end
+        elseif role.showOnly then
+            out[def.key] = shown[def.key] and "show" or "hide"
         end
     end
+end
+
+--- A role's category states. Hidden keys read "hide". A preset that creates the custom categories
+--- states both in every container, so the writer's order of creation cannot change what shows; any
+--- other preset names neither. A role showing only some categories hides the player's own as well.
+local function categoriesFor(role, withCustom)
+    local out = {}
+    hideLive(out, role, withCustom)
     for _, key in ipairs(role.hide or {}) do
         if withCustom or not P.CUSTOM[key] then out[key] = "hide" end
     end
@@ -365,11 +393,17 @@ local function toIcons(o, stack)
     o.layout.perLine = math.max(1, math.floor(stack.width / ICON_REF))
 end
 
---- The column width, scaled: a bar's width, or an icon row's icon size (its line fills the column).
+--- The column width, scaled: a bar's width, or an icon row's icon size (its line fills the column). A
+--- text line's stored width is the column too, which stands when Size to fit is off or cannot measure;
+--- with it on (the template's) a line is as wide as its content, from the column's left edge. The
+--- line stays left-justified: Center on a template of more than one piece stacks each field on a row
+--- of its own (modules/Style_Text.lua, Text.Stacked), so the column is centered, not the lines.
 local function sizeTo(o, stack, k)
     local w = stack.width * k
     if o.style == "bars" then
         o.bars = { width = round(w) }
+    elseif o.style == "text" then
+        o.text = { width = round(w) }
     elseif o.style == "icons" then
         local perLine = (o.layout.perLine > 0) and o.layout.perLine or 1
         local px = math.max(1, math.floor(w / perLine) - o.layout.spacing)
