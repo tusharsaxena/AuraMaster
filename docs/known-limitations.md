@@ -450,3 +450,36 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   it cannot read) stays on the refused set for the session: the primer cannot load it, and text in it
   draws however the client draws a font it refused. `/am diagnostics` names it after `refused=`
   (`docs/debug.md`, *Bar names that do not show*).
+- **On WoW Forever the spell categories are derived offline, from the game's data alone.** Retail's
+  lists have been checked against the owner's combat logs; Forever's have not, because no Forever log
+  exists yet. Each Forever list (`defaults/Categories_Forever.lua`, 452 ids across the 15 `spells`
+  categories, build 1.60.1.70938) was derived by `tools/spell-research/forever.py` from Forever's DB2
+  tables: the CC lists by mechanic, the rest by mapping each Retail entry's spell name to the same
+  class's Forever spells (every rank) plus aura-effect candidates, every candidate ruled with a
+  reason (owner rulings 1 and 2, 2026-11-14). So a proc, a talented override or a hand-added aura can
+  carry an id the client does not report, and a spell no source proposed is missing. Issue #26
+  (https://github.com/tusharsaxena/AuraMaster/issues/26) re-runs `logs.py` from Forever combat logs
+  after max-level dungeons and raids; the bundle's `ANALYSIS.md`
+  (`docs/spell-research/2026-11-14-forever/`) lists what that run should re-check.
+- **On WoW Forever the token and flag categories are unmeasured.** Big defensives, External
+  defensives, Important, Crowd control, Boss debuffs, Role debuffs, Priority and the other Blizzard
+  rows ask the aura engine for a filter token or an aura field. The engine and its documentation are
+  the same on both clients, but the tokens are engine strings the documentation does not list, so
+  whether one ever matches anything on Forever can be seen only in game. They stay on both clients,
+  each with a FOREVER smoke check (`docs/smoke-tests.md`). One the owner finds never matches is gated
+  to Retail as a follow-up, with that smoke result as its evidence (design §3.4, under owner ruling 4).
+- **A profile does not carry over between Retail and WoW Forever.** Saved variables live per client
+  folder, so a profile reaches the other client only when a player copies the file by hand. A copied
+  profile loads: a key the running client gates off keeps its stored Show/Hide state and spell edits
+  but is never read as a category, drawn as a row or compiled (`tests/test_categories_clients.lua`,
+  "a gated key in a stored profile is inert"). The spell edits name the other client's ids as
+  written, so an id added on Retail stays added on Forever, and a Retail id removed from a list that
+  Forever's list never held removes nothing.
+- **On WoW Forever an add box's choices can list a rune's or an NPC's spell of the same name.** When
+  a typed cast id lands no aura of its own and no trigger names the one it lands, the add box lists
+  the aura-applying spells of the same name and lets the player pick (`CHOICES` in
+  `defaults/CastToAura_Forever.lua`, `modules/CastAura.lua`). That table is generated over the whole
+  Forever build, and it is not fenced the way the seed lists are, so a suggestion can be an Engraving
+  rune's aura or an NPC's copy (Flash of Light offers the rune id 412020, for one). The
+  panel never picks for the player, so a wrong choice is one the player made; the seed lists
+  themselves hold no rune or NPC id.

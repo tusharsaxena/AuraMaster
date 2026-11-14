@@ -725,6 +725,30 @@ Total.
 - compat: UnitReactionKind bands UnitReaction(unit, "player") into friendly, neutral and hostile
 - compat: UnitReactionKind is nil whenever the answer is not knowable
 
+### test_clients.lua (8)
+
+- clients: ClientKey names the kit profile's client
+- clients: IsForever and IsRetail answer the kit profile's client, exactly one true
+- clients: ForClient serves a Retail-only declaration on retail only, and nil on both
+- clients: without LibKa0s the stand-in answers Retail on either profile
+- clients: the default skin is the client's, WoW Forever on forever and Ka0s Default on retail
+- clients: a fresh profile wears the default skin, from the Ka0s source
+- clients: before the profile store exists the read answers the client's default skin
+- clients: without LibKa0s the default skin stays Ka0s Default
+
+### test_categories_clients.lua (10)
+
+- categories clients: retail categories unchanged, the same keys in the same order with the same ids
+- categories clients: forever seeds picked, every spells category's ids are the client's own list
+- categories clients: the Forever data covers every shipped spells category exactly once
+- categories clients: hardCC holds every Polymorph rank on forever
+- categories clients: no Retail-only class key on forever
+- categories clients: empty forever category absent everywhere on forever, present on retail
+- categories clients: a gated key leaves no ghost in the Player cooldowns starter
+- categories clients: a gated key in a stored profile is inert
+- categories clients: CastToAura selects per client
+- categories clients: user categories still materialize on forever
+
 ### test_secrets.lua (6)
 
 - secrets: without the client's secrets system nothing is secret and every value is readable
@@ -2010,14 +2034,14 @@ Total.
 ### test_skinsetup.lua (19)
 
 - Skin seam: the owner is the folder name, and NS.Skin is its facade
-- Skin seam: the read answers Ka0s Default before the profile store exists
+- Skin seam: the read answers the client's default skin before the profile store exists
 - Skin seam: every owner token draws today's color on Ka0s Default, and follows a library role
 - Skin seam: the owner tokens draw on Ka0s Default the pixels the surfaces drew before AM-02
 - Skin seam: SkinEscape rounds a token back to the byte the markup wrote
 - Skin seam: PanelEscape is the skin's escape, and Ka0s Default's while the settings panel is ignored
 - Skin seam: every settings page colors its markup through PanelEscape, never the skin's escape
 - Skin seam: the cast-id suggestion tag follows the settings panel's Ignore, not the skin alone
-- Skin seam: the skin keys default to Ka0s Default, as skip-render rows of General's Appearance group
+- Skin seam: the skin keys default to the client's skin, as skip-render rows of General's Appearance group
 - Skin seam: the skin row's values are every registered skin, in the library's order
 - Skin seam: /am set refuses a skin that is not registered and applies one that is
 - Skin seam: /am set reaches an exception and an override, each only its own half
@@ -2604,7 +2628,7 @@ Total.
 
 - prose: no authored file carries a British spelling from localization-§5's published list
 - prose: the gate carries localization-§5's two lists whole, and nothing of its own
-- prose: the exclusions this repository declared suppressed 11 of 244 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (11): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, docs/spell-research/2026-09-24-logs/CORRECTIONS.md, docs/spell-research/2026-09-24-logs/CURRENT_CATEGORIES.md, docs/spell-research/2026-09-24-logs/DECISIONS.md, docs/spell-research/2026-09-24-logs/FLAGS.md, docs/spell-research/2026-09-24-logs/PROPOSED_ADDITIONS.md, docs/spell-research/2026-09-24-logs/REVIEW.md, docs/spell-research/2026-09-24-logs/SOURCES.md, docs/spell-research/2026-09-24-logs/dictionary/AURAS.md
+- prose: the exclusions this repository declared suppressed 15 of 254 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (15): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, and 12 more (list bounded)
 - prose: no path this repository narrows the gate by is loaded by a TOC
 - prose: every path this repository narrows the gate by is one .pkgmeta keeps out of the zip
 - prose self-test: the carve-out suppresses the named generated folder, and only it
@@ -2736,6 +2760,12 @@ Total.
 - skin switch: the Filters section's link changes
 - skin switch: a settings tooltip's line changes
 
+### test_client_globals.lua (3)
+
+- client globals: no call of a global a client lacks
+- client globals: every allowlist row has a reason and a finding to excuse
+- client globals: the check is falsifiable, a planted bare call is flagged for both clients
+
 ## Totals
 
 | Suite | Cases |
@@ -2767,6 +2797,8 @@ Total.
 | test_containermanager.lua | 41 |
 | test_containermanager_queue.lua | 13 |
 | test_compat.lua | 37 |
+| test_clients.lua | 8 |
+| test_categories_clients.lua | 10 |
 | test_secrets.lua | 6 |
 | test_bus.lua | 8 |
 | test_state.lua | 2 |
@@ -2864,5 +2896,6 @@ Total.
 | test_lizard_sighted.lua | 8 |
 | test_skin_values.lua | 3 |
 | test_skin_switch.lua | 34 |
+| test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2355** |
+| **Total** | **2376** |

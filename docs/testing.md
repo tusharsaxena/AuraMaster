@@ -5,16 +5,19 @@ page is how to run it. Every command runs from the repo root.
 
 ## The green commit gate
 
-Both must pass before **every** commit (testing-§4):
+All three must pass before **every** commit (testing-§4):
 
 | Check | Command | Expected |
 |---|---|---|
 | Headless suite | `lua tests/run.lua` | every suite green; exits non-zero on any failure |
+| Headless suite, as WoW Forever | `KA0S_KIT_CLIENT=forever lua tests/run.lua` | the same, under the kit's `forever` profile. The addon serves Retail and WoW Forever, so both runs gate (clients-§6). Cases that pin one client's seed lists run as that client under both profiles (`tests/test_categories_clients.lua`), and the kit's `test_client_globals` suite checks the tracked source against both clients' API sets |
 | Lint | `~/.claude/dev-copilot/bin/ka0s-bounded luacheck .` | `0 warnings / 0 errors` |
 | Syntax-check one file | `luac -p path/to/file.lua` | no output |
 
-`tests/_kit/run-automated-tests.sh --suite lint --suite tests --no-bundle` runs exactly that pair and
-writes nothing, so it may stand in for the two commands.
+`tests/_kit/run-automated-tests.sh --suite lint --suite tests --no-bundle` runs lint and the Retail
+suite and writes nothing; `KA0S_KIT_CLIENT=forever tests/_kit/run-automated-tests.sh --suite tests --no-bundle`
+runs the suite as WoW Forever. The runner passes the environment through, so `KA0S_KIT_CLIENT` picks
+the kit profile for its `tests` suite. Together they may stand in for the three commands.
 
 `lua tests/run.lua` is **sharded by default** (`jobs = "auto"` in `tests/run.lua`, testing-§14):
 contiguous slices of the suite list run in parallel workers and their output is relayed in suite
@@ -33,7 +36,7 @@ answer differs between them (automated-tests-§3):
 | Suite | Command | Run + commit | Release tag |
 |---|---|---|---|
 | `lint` | `~/.claude/dev-copilot/bin/ka0s-bounded luacheck .` | **gates** | **gates** |
-| `tests` | `lua tests/run.lua` | **gates** | **gates** |
+| `tests` | `lua tests/run.lua`, then `KA0S_KIT_CLIENT=forever lua tests/run.lua` | **gates**, both profiles | **gates**, both profiles |
 | `perf` | `lua tests/perf.lua` | does not gate — recorded | **gates** — must be `pass` |
 | `complexity` | `bash tests/_kit/run-automated-tests.sh --suite complexity` (lizard over the kit's sighted shadow) | does not gate — recorded | **gates** — `pass` with zero functions above CCN 15 |
 
@@ -147,5 +150,5 @@ folded into either figure. This page quotes no count, so there is nothing here t
 ## In-game
 
 `docs/smoke-tests.md` is the in-game suite, run before a release, after an `## Interface:` bump and
-after a re-vendor. It covers what only a live client can: the engine drawing real auras, secrecy and
+after a re-vendor, on each client the TOC declares (its FOREVER theme is the WoW Forever pass). It covers what only a live client can: the engine drawing real auras, secrecy and
 the deferral path, taint, dragging, the frame picker and the settings panel.

@@ -9,22 +9,25 @@ marked as such rather than listed as a requirement.
 
 | Group | Who needs it | Short answer |
 |---|---|---|
-| Runtime (in-game) | Players | World of Warcraft (Retail), patch 12.1 or later. Nothing else. |
+| Runtime (in-game) | Players | World of Warcraft, Retail (patch 12.1 or later) or WoW Forever. Nothing else. |
 | Development | Contributors | Lua **5.1** (+ `luac`), `luacheck`, `lizard`, `git`, `bash`, `~/.claude/dev-copilot/bin/ka0s-bounded` (the dev-copilot plugin), and a POSIX shell with `ls` and `grep` (`nproc` optional, for `-j auto`). |
-| Release / assets | Whoever regenerates a committed asset | Python **3.8+** (the spell-research generator, `tools/spell-research/research.py`, which regenerates `defaults/CastToAura.lua`, and the combat-log tool `tools/spell-research/logs.py`) and a working internet connection for its non-`--replay` runs; Pillow (the 128 icon TGA). Not needed to build, run or test. |
+| Release / assets | Whoever regenerates a committed asset | Python **3.8+** (the spell-research generator, `tools/spell-research/research.py`, which regenerates `defaults/CastToAura.lua`, its WoW Forever half `tools/spell-research/forever.py`, which regenerates `defaults/Categories_Forever.lua` and `defaults/CastToAura_Forever.lua`, and the combat-log tool `tools/spell-research/logs.py`) and a working internet connection for its non-`--replay` runs; Pillow (the 128 icon TGA). Not needed to build, run or test. |
 
 ## Runtime (in-game) — what a player needs
 
-- **World of Warcraft (Retail).** Single `## Interface: 120105` line in `AuraMaster.toc:1` — Retail
-  only. The addon needs the 12.1 aura container engine: `CM.Init` asks
+- **World of Warcraft, Retail or WoW Forever.** The TOC declares the interface for each client:
+  `## Interface: 120105, 16001` in `AuraMaster.toc:1`, Retail's number first and Forever's second
+  (toc-file-§3). One codebase serves both clients, and the client is asked only through `NS.Compat`
+  (clients-§3). WoW Forever ships the same `Blizzard_AuraContainer`. The addon needs the 12.1 aura
+  container engine: `CM.Init` asks
   `Compat.EnsureAuraContainer` (`core/Compat.lua:92`), which loads Blizzard's on-demand aura
   container and then checks for it (`Compat.HasAuraContainer`, `core/Compat.lua:83`). On a client
   without it, `CM.Init` prints a one-line notice (`modules/ContainerManager.lua:931`) and draws
   nothing.
 - **No deprecated API fallback.** `NS.Meta` (`core/EnvSetup.lua:24`) reads the TOC through
   `LibKa0s-Env-1.0`, or through `C_AddOns.GetAddOnMetadata` when the library is absent. It never
-  falls back to the deprecated global `GetAddOnMetadata`; the TOC is Retail-only, where `C_AddOns`
-  always exists.
+  falls back to the deprecated global `GetAddOnMetadata`; both clients the TOC declares have
+  `C_AddOns`, which the kit's `test_client_globals` suite checks against each client's API set.
 - **Nothing else.** The TOC declares no `## Dependencies`. Every library it loads — LibStub,
   CallbackHandler-1.0, the Ace3 modules, LibDataBroker-1.1, LibDBIcon-1.0, LibKa0s and
   LibSharedMedia-3.0 — is vendored under `libs/` and listed in
@@ -127,6 +130,7 @@ required to build, run or test the addon.**
 |---|---|---|---|
 | `python3` | **3.8** or newer | the spell-research generator, `tools/spell-research/research.py` — the offline half of issue #11's Part C, which derives the CC Loss of Control / CC Root / CC Snare spell lists from Blizzard's DB2 exports. Not part of the green gate, and not needed to build, run or test the addon | `tools/spell-research/research.py:1` is `#!/usr/bin/env python3`, and it imports `argparse`, `csv`, `gzip`, `json`, `urllib` and friends and **nothing outside the standard library** — so there is no `pip install` step and no virtualenv. 3.8 is the floor because the file's `from __future__ import annotations` is what lets it write `dict[int, str]` and `str \| None` annotations on an older interpreter |
 | a working internet connection | — | the same generator, on any run that is not `--replay`: it fetches the DB2 CSV exports over HTTPS and caches them in `tools/spell-research/.cache/` (~75 MB a build, git-ignored). A frozen bundle can be re-derived offline (`--replay docs/spell-research/<date>`) | `tools/spell-research/research.py` imports `urllib.request` and `urllib.error`; `tools/spell-research/.gitignore:1-2` describes the cache as "~75 MB a build, re-downloadable at any time" |
+| `python3` (same install) | **3.8** or newer | the WoW Forever seed generator, `tools/spell-research/forever.py`, which derives every non-CC spell category's Forever list from WoW Forever's DB2 exports (wago.tools product `wowf`) and emits `defaults/Categories_Forever.lua` and `defaults/CastToAura_Forever.lua`. Not part of the green gate. Network access only on a run that is not `--replay`, as above | `tools/spell-research/forever.py:1` is `#!/usr/bin/env python3`; it imports only the standard library plus `research.py` and `sid_db2.py` as modules. Its tests are `unittest` cases, run by the same `python3 -m unittest discover -s tools/spell-research -p 'test_*.py'` as `logs.py`'s |
 | `python3` (same install) | **3.8** or newer | the combat-log evidence tool, `tools/spell-research/logs.py` and its `sid_*.py` modules, which mine the owner's combat logs for the aura ids each spec applies and drive the `/aura-spells-review` command. Not part of the green gate | `tools/spell-research/logs.py:1` is `#!/usr/bin/env python3`; it and the `sid_*.py` modules import only the standard library (`argparse`, `csv`, `dataclasses`, `hashlib`, `json`, `statistics`, `pathlib`, …) plus `research.py` as a module. Its tests are `python3 -m unittest discover -s tools/spell-research -p 'test_*.py'` |
 | a folder of combat logs (optional) | — | `logs.py scan`'s input: the `WoWCombatLog-*.txt` files the client writes with advanced combat logging on. Default `/mnt/g/Games/Blizzard/World of Warcraft/_retail_/Logs/RaiderIOLogsArchive`, any other folder with `--logs`. Only the owner's review needs it; nothing else reads it. Its per-log cache and salt live outside the repo, in `~/.cache/auramaster-spell-research/` | `tools/spell-research/logs.py` (`DEFAULT_LOGS`), `tools/spell-research/sid_cache.py` (`DEFAULT_CACHE_DIR`) |
 | Pillow (`python3-pil`) | any recent | regenerating the 128 icon TGA (below) | the recipe below does `from PIL import Image` |

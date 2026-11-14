@@ -1,12 +1,12 @@
 # Aura Master
 
-![WoW](https://img.shields.io/badge/WoW-Midnight_12.1.5-purple)
+![WoW](https://img.shields.io/badge/WoW-Midnight_12.1.5_and_Forever_1.60.1-purple)
 ![CurseForge Version](https://img.shields.io/curseforge/v/1698345)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-2355%2F2355_passing-green)
+![Tests](https://img.shields.io/badge/Tests-2376%2F2376_passing-green)
 
-Retail only for now; WoW Forever support is planned. Aura Master lets you build your own buff and debuff displays. Each one is a container. You pick
+Supports Retail and WoW Forever. Aura Master lets you build your own buff and debuff displays. Each one is a container. You pick
 whose auras it shows (yours, your target's, your focus's or your pet's), whether it shows buffs,
 debuffs or your weapon enchants, and whether they draw as timer bars, as icons or as lines of text.
 
@@ -127,6 +127,7 @@ affected.
 | Question | Answer |
 |----------|--------|
 | Do I need to install anything else? | No. Everything the addon needs comes inside it. |
+| Does it work on WoW Forever? | Yes, from the same download. On WoW Forever the spell categories hold WoW Forever's own spells, every rank of each, worked out from the game's data. A category with nothing to offer there doesn't appear at all. Profiles don't carry over between the two games, because each keeps its own saved settings. |
 | Why doesn't my change show up in the middle of a fight? | The game locks its aura display whenever aura details are hidden from addons: in combat, during boss encounters, in Mythic+ keys and in PvP matches. Aura Master holds the change and says so in chat. If the lock outlasts combat because an encounter, key or match is still going, it says so once more. The change goes in as soon as the lock lifts. |
 | Can I track my party or raid? | Not yet. Player, target, focus and pet work today. Party members are planned, and there's a GitHub issue tracking them. |
 | Can I put a container on my unit frame? | Yes. On Layout → Position and growth use **Pick a frame…** and click it, or set **Attach to** to *Named frame* and type the frame's name. If the frame belongs to an addon that hasn't loaded yet, the container waits at its screen position and moves over once the frame exists. |
@@ -155,7 +156,7 @@ affected.
 | Blizzard's buff frame is still showing after I hid it | Blizzard's frames can't be moved during combat. The change goes through as soon as combat ends. |
 | My weapon enchants don't show | Enchants appear in a player buff container whose **Weapon enchants** row on Filters → Categories is set to Show (the default). `/am new enchants` makes a container that shows nothing else. You choose which weapon slots count under General → Spell categories → Weapon enchants. Enchants that never expire are skipped while **Hide enchants without a duration** is on. |
 | A bar lost its name or its text looks wrong | Type `/am redraw`. `/am redraw light` repaints every container straight away, even in combat. `/am redraw full` also reloads the fonts and re-applies each container's styling; in combat or during an encounter, key or match that part waits, and chat says so. A bare `/am redraw` does the full one when it can and the light one when it can't. |
-| Chat says the client has no aura container API | Aura Master needs Retail patch 12.1 or later. |
+| Chat says the client has no aura container API | Aura Master needs Retail patch 12.1 or later, or WoW Forever. |
 | A container vanished after I clicked the X on its handle | The X turns the container off. Tick its **Enable this container** box on the Containers page to bring it back. Its settings were kept. |
 | Something looks wrong and I want to report it | Follow [Reporting a bug](#reporting-a-bug) below. |
 

@@ -2,7 +2,7 @@
 
 These are the in-client checks the headless suite (`docs/testing.md`) cannot make: what the client
 draws, what it refuses, and what it does in combat. Run them on a live Retail client at the
-`## Interface` the TOC names, after a `/reload` on a clean session, with Lua errors on; turn the
+`## Interface` the TOC names (the [WoW Forever](#wow-forever) checks name their own client), after a `/reload` on a clean session, with Lua errors on; turn the
 debug console on only where a step says so. Checks are grouped by theme and each stands alone once
 [Before you start](#before-you-start) is done. Record each run on the check's `Result:` line as
 `PASS` or `FAIL`, who ran it and the date, plus a note on anything that failed. Every check has an
@@ -32,9 +32,13 @@ check's number is not reused. Checks with no recorded pass, and checks new or co
 | SKIN-1 to SKIN-53 | Skins | The skinning rollout: the one-time HUD reset under Ka0s Default, Ka0s Default otherwise unchanged, the Skin tab, each skin on the HUD, the unlock furniture, the settings pages and the tool windows, other addons stock, the font and texture companions and overrides, combat, EllesmereUI on, off and back, the copy, profiles, tooltips and popups, the first-run skin picker; the library follow-ups (each skin's HUD face, Ignore fonts on the HUD, the picker's title, the strings newly in the skin's face); the skin fonts run (the Font outline, From skin flags, `/am skin`, width parity, the HUD size scale, the own faces and glow back, the strips' re-fit) |
 | DEGRADED-1 | Library-absent install | The launcher libraries missing |
 | LOC-1 to LOC-2 | Non-English client | Spell names from the client, adding a spell by its localized name |
+| FOREVER-1 to FOREVER-15 | WoW Forever | Each check names its client: the AddOns list and a clean load on Forever, the default skin per client, a rank-1 aura in a buff container, Forever's own spell lists, each Blizzard token and flag row measured on Forever, the gate on an empty category, hiding the Blizzard buff and debuff frames, weapon enchants, a typed cast id rewritten, and the Retail regression |
 
 ## Before you start
 
+- **Clients (clients-§6).** The addon serves Retail and WoW Forever. Every check outside the
+  [WoW Forever](#wow-forever) section runs on **Retail**, where its recorded result was taken; that
+  section names the client for each of its checks.
 - **Client.** Live Retail at the TOC's `## Interface` (120100 when this was written). `/console
   scriptErrors 1`, or BugSack, for the whole run: every check expects no Lua error and no
   `ADDON_ACTION_BLOCKED` or taint warning unless it says otherwise. Chat lines carry the cyan `[AM]`
@@ -2746,6 +2750,125 @@ starts. Fail: the picker opening over a hidden HUD with test mode off, an eye th
 close that leaves test mode other than it was before the picker, or the checkbox disagreeing with the
 HUD. Result:
 
+## WoW Forever
+
+Every check here names its client. Most run on a live **WoW Forever** client (1.60.1, interface
+16001), where the client keeps its own `WTF` and draws its own frames; FOREVER-15 runs on **Retail**,
+to show the port changed nothing there. Every rule of [Before you start](#before-you-start) holds:
+no Lua error and no taint warning. Design of record:
+`docs/superpowers/specs/2026-11-14-auramaster-forever-port-design.md`; what serves which client:
+`docs/ARCHITECTURE.md` → *Per-client features*.
+
+**Code:** `AuraMaster.toc` (the two-number `## Interface:` line and the Forever files' load order),
+`core/Compat.lua` (`ClientKey`, `ForClient`), `core/SkinSetup.lua` (`NS.DEFAULT_SKIN`),
+`defaults/Categories.lua` (`seeded`, the gate), `defaults/Categories_Forever.lua`,
+`defaults/CastToAura_Forever.lua`.
+
+**Setup.** Link the checkout into the Forever client once, from an elevated Windows prompt, then fully
+restart the client:
+`mklink /d "G:\Games\Blizzard\World of Warcraft\_forever_\Interface\AddOns\AuraMaster" "D:\Profile\Users\Tushar\Documents\GIT\AuraMaster"`.
+Forever's SavedVariables are `_forever_/WTF/Account/ACCOUNT/SavedVariables/AuraMaster.lua`. Props: a
+character of each class you can reach (a warrior, a mage, a paladin and a priest cover most checks), a
+training dummy, a dungeon with a boss for FOREVER-9, and an oil or a sharpening stone for FOREVER-13.
+The token and flag checks (FOREVER-6 to FOREVER-10) are measurements: record what drew, matched or
+not, because whether a Blizzard token ever matches on Forever cannot be seen offline. A token that
+never matches is gated to Retail as a follow-up, with that `Result:` line as its evidence.
+
+**FOREVER-1. The AddOns list. Client: WoW Forever.** At character select → **Ka0s Aura Master** is
+listed with its logo and is **not** marked *Out of date*, and "Load out of date AddOns" does not need
+to be ticked for it to load. Result:
+
+**FOREVER-2. A fresh install loads clean. Client: WoW Forever.** With no `AuraMaster.lua` in
+Forever's SavedVariables, log in → no Lua error, and the four starters appear as INSTALL-2 describes.
+`/am debug on` → the console's `[Init]` line reads `schema v12` and names no error. `/am`,
+`/am help` and `/am diagnostics` answer, and the settings panel draws General, Containers and Profiles
+with no error. `/reload` → the same. Result:
+
+**FOREVER-3. The default skin on a fresh profile. Client: WoW Forever, then Retail.** On Forever,
+create a profile on the Profiles page → `/am get skin.skin` reads `forever`, and General → Skin shows
+**WoW Forever** selected; the bars, the strips and the settings pages wear it. Pick Ka0s Default, then
+WoW Forever again → the HUD and the panel repaint each time, with no error. On Retail, a fresh profile
+reads `ka0s` (Ka0s Default), as before. Result:
+
+**FOREVER-4. A rank-1 spell's aura shows in a buff container. Client: WoW Forever.** Make a player
+buff container (`/am new`), and on its Filters → Categories set only **Group buffs** to Show. Have
+rank 1 of Power Word: Fortitude (1243), Mark of the Wild (1126) or Arcane Intellect (1459) put on you
+(a low-level caster, or rank 1 from the spellbook) → the container draws it with its icon and timer.
+Then the highest rank you can get → it draws as well, because every rank ships. General → Spell
+categories → *Group buffs* lists the ranks by name and id. Result:
+
+**FOREVER-5. The spell categories hold Forever's spells. Client: WoW Forever.** General → Spell
+categories → *Defensive cooldowns* lists only spells this client has (Shield Wall, Divine Shield, Ice
+Block, Evasion, Barkskin and the rest), with no Death Knight, Monk, Demon Hunter or Evoker group and
+no Retail-only spell such as Die by the Sword. On a warrior, Shield Wall → a player buff container with
+**Defensive cooldowns** on Show draws it. Polymorph the dummy (any rank) on a mage → a target debuff
+container with **CC Loss of Control** on Show draws it; Frost Nova it → **CC Root** draws it;
+Hamstring it on a warrior → **CC Snare** draws it. Result:
+
+**FOREVER-6. Big defensives and External defensives. Client: WoW Forever.** On a player buff
+container set only **Big defensives (Blizzard)** to Show. On a warrior pop Shield Wall; on a paladin
+Divine Shield; on a mage Ice Block → record for each whether it draws. Set only **External defensives
+(Blizzard)** to Show and have a paladin cast Blessing of Protection or Blessing of Sacrifice on you →
+record whether it draws. Result:
+
+**FOREVER-7. Important. Client: WoW Forever.** On a player buff container and a target debuff
+container, set only **Important (Blizzard)** to Show, and play through a few pulls and a dungeon
+boss → record every aura it ever drew, or that it drew none. Result:
+
+**FOREVER-8. Crowd control. Client: WoW Forever.** On a target debuff container set only **Crowd
+control** (the Blizzard token row, not the CC spell categories) to Show. Polymorph a mob on a mage,
+Hammer of Justice it on a paladin, Fear it on a warlock → record for each whether it draws. Then the
+same with **CC Loss of Control** alone on Show, for comparison. Result:
+
+**FOREVER-9. Boss, Role and Priority debuffs. Client: WoW Forever.** In a dungeon with a boss that
+debuffs the party, on a player debuff container set only **Boss debuffs** to Show, then only **Role
+debuffs**, then only **Priority** → record for each whether anything drew during the boss fight and
+what. Result:
+
+**FOREVER-10. The dispel, raid and source rows. Client: WoW Forever.** On a player debuff container,
+grouped with a healer, have a dispellable debuff put on you (a magic debuff from a caster mob, a
+poison or a curse) → record which of **Raid (you can dispel)**, **Raid in combat**, **Dispellable by
+your group**, **Dispellable by anyone** and **Has a dispel type** draw it, each set alone to Show.
+On a target buff container on a mob with a buff, record **Stealable / purgeable** and **Castable/
+Dispellable by you** (a priest's Dispel Magic or a shaman's Purge as the class to test with). On a
+player buff container, record **Cancelable** on any self buff, and **From players** against **From
+non-players** on a buff someone else cast on you. Result:
+
+**FOREVER-11. A gated category is absent. Client: WoW Forever.** Build 1.60.1.70938's data gates no
+category: `NS.CategorySeedsForever.EMPTY` is empty, so this check confirms the full set and is the
+one to re-run when a re-derive gates a key. Filters → Categories → the spell-category grid lists all
+eleven buff categories on a buff container and CC Loss of Control, CC Root, CC Snare and Racials on a
+debuff container, and General → Spell categories lists the same, each with its spells, and no empty
+row and no row named by a raw key. `/am select` a buff container, `/am get
+container.filter.categories.stances` → it answers a state. Once a key is gated: the same grid and
+list do not show it, `/am get container.filter.categories.<key>` answers "Setting not found", and a
+profile copied from Retail that set it loads with no error. Result:
+
+**FOREVER-12. Hiding the Blizzard buff and debuff frames. Client: WoW Forever.** General → Blizzard
+frames → **Hide Blizzard buffs** → Forever's default buff frame goes, with its weapon enchants;
+**Hide Blizzard debuffs** → its default debuff frame goes. Untick → both return. In combat, `/am set
+hideBlizzardBuffs true` → chat prints the "will apply when combat ends" line once and it applies when
+combat ends (PANEL-20). `/reload` with both ticked → both stay hidden. Result:
+
+**FOREVER-13. Weapon enchants. Client: WoW Forever.** Apply an oil or a sharpening stone to your
+weapon → a player buff container with **Weapon enchants** on Show draws it with the weapon's name and
+a timer (FILT-40). `/am new enchants` → a container that draws only the enchant. Right-click it →
+the enchant is canceled. Result:
+
+**FOREVER-14. A typed Forever cast id is rewritten to its aura. Client: WoW Forever.** On a warrior,
+General → Spell categories → pick a buff category → **Add a spell**, type `2687` (Bloodrage) → the
+entry appears as **29131**, and chat says Bloodrage (2687) is cast but the aura it applies is
+29131, "added 29131 instead". Then type `19750` (Flash of Light) → it is stored as typed, and chat
+lists the same-named auras to choose from (412020 among them, a rune's id) and picks none. Remove
+both. Result:
+
+**FOREVER-15. Retail regression: the categories and lists are unchanged. Client: Retail.** On Retail,
+with the build that carries the port → no Lua error at login. Filters → Categories shows the same
+rows in the same order as before the port, and General → Spell categories → *Defensive cooldowns*
+still holds Retail's spells, Die by the Sword and the Death Knight, Monk, Demon Hunter and Evoker
+groups included. FILT-20's Corruption still becomes 146739. A fresh profile wears Ka0s Default
+(FOREVER-3). Result:
+
 ## Library-absent install
 
 **DEGRADED-1. Without the launcher libraries.** Rename `libs/LibDBIcon-1.0` aside, `/reload` → one
@@ -2845,3 +2968,8 @@ SKIN-49 to SKIN-51 are new, and SKIN-47's band is darker than it said.
 Open from the owner's sixth smoke round (Ka0sAddonsCommonTasks `docs/2026-11-03-SMOKE_ROUND6/`, R6-RV):
 SKIN-52 is new, and SKIN-53 from R6-PV. SKIN-19's eye now toggles test mode, and the picker turns
 it on as it opens (SKIN-53); SKIN-19 keeps its recorded pass for the rest of its steps. PANEL-28 is new from R6-RV2.
+
+Open from the WoW Forever port (`docs/superpowers/plans/2026-11-14-auramaster-forever-port.md`, AM-FP07):
+FOREVER-1 to FOREVER-15 are new. FOREVER-1 to FOREVER-14 run on a live WoW Forever client, FOREVER-15
+on Retail. **Fully exit and restart the client**: the port's generated files are new, and `/reload`
+does not see them.
