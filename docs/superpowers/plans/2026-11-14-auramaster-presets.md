@@ -166,3 +166,25 @@
 
 - [ ] A whole-branch review against the spec, plan and standard; fix each real finding in commits `AM-PR08: Review fixes: …`.
 - [ ] Run the automated-test battery for both kit profiles per the AUTOMATED_TESTS.md playbook (`docs/automated-tests/<YYYYMMDD-HHMMSS>/`, `RESULTS.md`, `ANALYSIS.md`), append the checkpoint row and the RESUME log line, commit `AM-PR08: Automated-test record for presets`.
+
+## Round 2: owner feedback (spec §15)
+
+Each task keeps the Global Constraints, the gate and the commit rules above.
+
+### Task AM-PR09: Upward side stacks, the corner group moved, the center call-outs styled
+
+**Files:** `defaults/Presets.lua`, `tests/test_presets_data.lua` (and any preset suite whose expectations move: apply, seed, preview), `locales/enUS.lua` only if a string changes.
+- [ ] Failing tests first: `presets data: side stacks grow up from their base` (every left/right/far head is placed by a BOTTOM point, `growV == "up"`, and members attach BOTTOMLEFT to TOPLEFT above the one before, in Bars and Icons, for every tier); `presets data: the corner group sits left of and below its old place`; `presets data: the call-outs are centered and colored like the owner's` (justifyH CENTER, the three colors, glow, font size 24..36, head TOP at x 0); `presets data: the call-out block, the picker and the skin picker do not intersect at 1080` (rectangles computed from the builder and the picker's placement function); the placement case at all 15 screens updated per §15.
+- [ ] Implement per §15. Keep the seed path working (a new profile's Simple seed). Gate green, commit `AM-PR09: Side stacks grow up, the corner group moves in, the call-outs centered and colored`.
+
+### Task AM-PR10: The picker opens centered and unlocked, with lock and test-mode buttons
+
+**Files:** `settings/PresetPicker.lua`, `locales/enUS.lua`, `tests/test_presets_picker.lua` (or the picker suite that exists).
+- [ ] Failing tests first: `picker: opens centered below the call-outs`; `picker: opening unlocks and remembers the lock`; `picker: the lock button flips the lock`; `picker: the test button flips test mode, and turning it off ends a preview`; `picker: apply leaves containers locked and test mode off`; `picker: not now, close and escape put the lock back and test mode off`; `picker: /am preset opens unlocked too`.
+- [ ] Implement per §15 (the lock write goes through the same seam `/am lock` uses; buttons use the window's existing widget style; frame layering unchanged). Gate green, commit `AM-PR10: The preset picker opens centered and unlocked, with lock and test-mode buttons`.
+
+### Task AM-PR11: Docs, smoke, whole-branch review and the automated-test record
+
+- [ ] Update the docs (ARCHITECTURE Presets section, settings-panel if touched, known-limitations, smoke checks PRESETS-* for the new behavior: upward stacks, corner group, call-out look, picker position, lock and test buttons, Apply locks and turns test off), the spec §4/§7 cross-references, test-cases.md and the README badge. Commit `AM-PR11: Docs and smoke checks for the owner's round-1 feedback`.
+- [ ] An independent review of AM-PR09..11 against spec §15; fix findings as `AM-PR11: Review fixes: …`.
+- [ ] A fresh automated-test record for both kit profiles (AUTOMATED_TESTS.md playbook), the M4 checkpoint row and the RESUME log line. Commit `AM-PR11: Automated-test record after round-1 feedback`.

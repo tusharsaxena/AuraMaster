@@ -295,3 +295,62 @@ The exact Healer category states beyond §3.1 where a key's meaning is unclear (
 height and icon size so §4's stacks fit; how the Presets tab reuses the band and tab helpers in
 `settings/OptionsSetup.lua`, and how it detects the player leaving the tab (the library has no leave callback; the
 host's re-render is one route); the picker's exact widget set from LibKa0s.
+
+## 15. Owner feedback, round 1 (2026-11-15)
+
+The owner previewed Advanced (Bars) in game and gave this feedback. It applies with the same principles
+to Simple, Intermediate and Healer, and to every Icons variant. Where it conflicts with §3–§8, this
+section wins.
+
+**Owner's words, in summary:**
+1. The player, target and focus stacks (the `left`, `right` and `far` columns) **grow upward**.
+2. The corner group (Player buffs / Player debuffs / Weapon enchants) moves **a bit left and down**,
+   "not so far top and right".
+3. The cooldown call-outs (the `middle` text stack): **text centered horizontally**, a **larger font**,
+   **colors like the owner's default profile**, and the stack **in the center of the screen**.
+4. The first-run picker opens **centered horizontally**, and vertically so it overlaps **neither the
+   skin picker nor the center text stack**. It opens with the containers **unlocked**, has buttons that
+   **toggle lock** and **toggle test mode**, and after **Apply** the containers are **locked and test
+   mode is off**.
+
+**How it is built (Claude's calls, under the run's "use your best judgement" rule):**
+- *Upward stacks.* As in the owner's own profile (advanced-source.md: Buffs Short and Target buffs use
+  `growV=up` and are attached bottom-to-top), a side stack's head is its **bottom** container: it is
+  placed by its BOTTOMLEFT (BOTTOMRIGHT for a row growing left) at the column's **base**, with
+  `layout.growV = "up"`. Each member attaches **above** the one before it (member BOTTOMLEFT to parent
+  TOPLEFT, a gap of 6 reference units). The tier's order is kept, so its first role sits nearest the
+  base, which is the owner's own pattern (the most important container is nearest the unit frames). The
+  base sits above where unit frames and action bars usually are: a starting value of y = -600 reference
+  units from the top (480 above the bottom at 1080 tall), and the builder may tune it.
+- *Corner group.* It still grows down from the top-right corner, moved about 80 reference units left
+  and 40 down from §4's values. It must stay on screen at every ratio §11 tests.
+- *Center text stack.* The head is placed by its TOP at the screen's horizontal center (x = 0) and grows
+  down. Lines use `justifyH = "CENTER"`, and the line width is the column. The look copies the owner's
+  three call-outs: font colors Offensive (0.1, 1, 0.1), Defensive (1, 0.125, 0.125) and Raid
+  (1, 0.486, 0.04) (Healer's Raid cooldowns the same), `fontColorFromSkin = false`, a black glow
+  (`glow = true`, color (0, 0, 0), radius 6, offsets 1/-1), no label, and the template `$spellname$`
+  unless the current one is wanted. The font size is bigger than today's: the owner uses 36, so the
+  builder uses the largest size from 24 to 36 that keeps the test-mode block clear of the picker (below).
+  Bar and icon sizes are unchanged. This is the one place a preset carries appearance (§3 said none
+  except bar width), by the owner's explicit request.
+- *Vertical placement of the text stack.* Its test-mode extent is centered on the screen's vertical
+  middle as far as the picker allows.
+- *Picker position.* Horizontally centered. Vertically, the picker sits **below** the center text
+  stack's test-mode extent and above the bottom edge, and it never overlaps the skin picker's rectangle
+  (LibKa0s places that by its CENTER, 75% of the way up UIParent). At 1920x1080, with the text stack in
+  test mode, the three rectangles must not intersect. If they cannot all fit, the text stack moves up
+  before the font shrinks. Read UIParent's size when the picker shows.
+- *Lock and test mode in the picker.* When the picker shows, it records the lock state and unlocks the
+  containers (the `locked` setting, through the write seam that `/am unlock` uses). Two buttons in the
+  window show and flip the lock and test mode. Turning test mode off while a preview is up ends the
+  preview the way Not now does. **Apply** keeps the preset, then sets `locked = true` and test mode off.
+  **Not now**, the close control and Escape restore the preview as before, then put the lock state back
+  to what it was when the window opened, and test mode is off. A container dragged while the preview is
+  unlocked is part of the preview: Apply keeps where it was dragged to. `/am preset` opens the window the
+  same way. The Presets tab is unchanged.
+- §11's placement checks become: every head and base is on screen at every tested ratio; upward stacks
+  grow up (their heads are placed by a BOTTOM point at the column's base); the corner group's
+  test-mode bottom stays above the side stacks' bases; at 1080 tall, in test mode, the picker, the
+  skin-picker rectangle and the text stack do not intersect. A side stack's test-mode top may reach a
+  corner column on tall stacks (Advanced's target stack); that overlap is recorded in
+  docs/known-limitations.md, as §4's corner-over-side sharing already is.
