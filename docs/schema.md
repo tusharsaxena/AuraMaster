@@ -349,8 +349,10 @@ schema row addresses the registry itself; the row each member GETS is an ordinar
   `Cat.NewUserKey` mints the key for `Create` and has no other caller. `Cat.RestoreUserCategories`
   puts back a preset preview's snapshot of `userCategories`, `userCategoryOrder` and `categorySpells`
   whole (the copy `Cat.SnapshotUserCategories` took), called only by `ContainerManager.RestoreSnapshot`;
-  it writes `categorySpells` directly rather than through the carve-out, because a restore runs before
-  the schema exists at login and into a profile not in use after a switch. Nothing else writes a record,
+  in play, on the active profile, the spell edits go back through `NS.SetByPath("categorySpells", ...)`
+  after the records are stored and synced; a quiet restore (the login, a profile event, a profile not in
+  use after a switch) writes `categorySpells` directly, because the carve-out's normalizer reads the
+  active profile's records, which are not in place at those moments. Nothing else writes a record,
   and **nothing anywhere writes `rec.auraType` but `Create`**, which is what makes a category's aura
   type immutable: it is the absence of an act rather than a refusal.
 - **Load pass:** `Cat.SyncUserCategories(profile)`, run from `NS.RunMigrations` after the whole schema

@@ -425,6 +425,24 @@ test("preview: the category half of a restore is the category registry's writer"
     end
 end)
 
+test("preview: an in-play restore puts the spell edits back through the seam, exactly", function()
+    local NS = fresh()
+    local own = ownSetup(NS)
+    local before = stored(NS)
+    assertTrue(NS.Presets.BeginPreview("advanced", "bars"))
+    local seen = {}
+    local real = NS.SetByPath
+    NS.SetByPath = function(path, ...) seen[#seen + 1] = path; return real(path, ...) end
+    NS.Presets.EndPreview(false)
+    NS.SetByPath = real
+    -- red under: Cat.RestoreUserCategories assigning profile.categorySpells itself on the active profile
+    local via = false
+    for _, path in ipairs(seen) do if path == "categorySpells" then via = true end end
+    assertTrue(via, "the spell edits go through NS.SetByPath's categorySpells carve-out")
+    assertEqual(stored(NS), before, "the restore is still exact")
+    assertTrue(NS.db.profile.categorySpells[own.key][11111], "the custom category keeps its spell")
+end)
+
 test("preview: a category restore into a profile not in use writes it and syncs nothing", function()
     local NS = fresh()
     local Cat = NS.Categories

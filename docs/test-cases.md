@@ -2615,7 +2615,7 @@ Total.
 - apply: refused in combat
 - apply: only the registry writers write
 
-### test_presets_preview.lua (19)
+### test_presets_preview.lua (20)
 
 - preview: snapshot and restore exact
 - preview: swap keeps the first snapshot
@@ -2635,6 +2635,7 @@ Total.
 - preview: categories the preview created are removed
 - preview: RestoreSnapshot is the registry writer's, and the preset module writes no registry field
 - preview: the category half of a restore is the category registry's writer
+- preview: an in-play restore puts the spell edits back through the seam, exactly
 - preview: a category restore into a profile not in use writes it and syncs nothing
 
 ### test_presets_seed.lua (7)
@@ -2995,7 +2996,7 @@ Total.
 | test_defaults.lua | 31 |
 | test_presets_data.lua | 14 |
 | test_presets_apply.lua | 11 |
-| test_presets_preview.lua | 19 |
+| test_presets_preview.lua | 20 |
 | test_presets_seed.lua | 7 |
 | test_presetpicker.lua | 25 |
 | test_pages_presets.lua | 11 |
@@ -3015,4 +3016,4 @@ Total.
 | test_skin_switch.lua | 34 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2469** |
+| **Total** | **2470** |
