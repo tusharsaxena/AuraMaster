@@ -2780,7 +2780,8 @@ to be ticked for it to load. Result:
 
 **FOREVER-2. A fresh install loads clean. Client: WoW Forever.** With no `AuraMaster.lua` in
 Forever's SavedVariables, log in → no Lua error, and the four starters appear as INSTALL-2 describes.
-`/am debug on` → the console's `[Init]` line reads `schema v12` and names no error. `/am`,
+`/am debug on` → the console's `[Init]` line reads the current schema, `schema v<N>` with N the
+last step in `core/Database.lua`'s `SCHEMA_STEPS` (`NS.SCHEMA_VERSION`), and names no error. `/am`,
 `/am help` and `/am diagnostics` answer, and the settings panel draws General, Containers and Profiles
 with no error. `/reload` → the same. Result:
 
@@ -2799,8 +2800,10 @@ categories → *Group buffs* lists the ranks by name and id. Result:
 
 **FOREVER-5. The spell categories hold Forever's spells. Client: WoW Forever.** General → Spell
 categories → *Defensive cooldowns* lists only spells this client has (Shield Wall, Divine Shield, Ice
-Block, Evasion, Barkskin and the rest), with no Death Knight, Monk, Demon Hunter or Evoker group and
-no Retail-only spell such as Die by the Sword. On a warrior, Shield Wall → a player buff container with
+Block, Evasion, Barkskin and the rest). No list under Spell categories names a Retail-only spell such
+as Die by the Sword, Icebound Fortitude, Fortifying Brew, Blur or Obsidian Scales (the editor draws
+one list per category sorted by name, with no class groups; the class keys are pinned by
+`tests/test_categories_clients.lua`). On a warrior, Shield Wall → a player buff container with
 **Defensive cooldowns** on Show draws it. Polymorph the dummy (any rank) on a mage → a target debuff
 container with **CC Loss of Control** on Show draws it; Frost Nova it → **CC Root** draws it;
 Hamstring it on a warrior → **CC Snare** draws it. Result:
@@ -2866,8 +2869,8 @@ both. Result:
 **FOREVER-15. Retail regression: the categories and lists are unchanged. Client: Retail.** On Retail,
 with the build that carries the port → no Lua error at login. Filters → Categories shows the same
 rows in the same order as before the port, and General → Spell categories → *Defensive cooldowns*
-still holds Retail's spells, Die by the Sword and the Death Knight, Monk, Demon Hunter and Evoker
-groups included. FILT-20's Corruption still becomes 146739. A fresh profile wears Ka0s Default
+still holds Retail's spells, Retail-only names such as Die by the Sword, Icebound Fortitude,
+Fortifying Brew, Blur and Obsidian Scales included. FILT-20's Corruption still becomes 146739. A fresh profile wears Ka0s Default
 (FOREVER-3). Result:
 
 ## Library-absent install
