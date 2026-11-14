@@ -97,6 +97,9 @@ defaults\CastToAura.lua
 defaults\CastToAura_Forever.lua
 # Conventional: the profile defaults; the category lists it builds from load above (the Categories note).
 defaults\Profile.lua
+# Conventional: the container presets and their pure placement builder (NS.PresetData); the
+# category lists are read at Build time, and nothing above reads this file.
+defaults\Presets.lua
 
 # Modules
 # Conventional: a lookup over defaults/CastToAura.lua, read at add time by the two add boxes.

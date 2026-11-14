@@ -198,6 +198,7 @@ Kit.run{
         "test_envsetup",
         "test_poolsetup",
         "test_defaults",
+        "test_presets_data",
         "test_perf",
         "test_debuglogsetup",
         "test_locale",
