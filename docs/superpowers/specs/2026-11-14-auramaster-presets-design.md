@@ -383,3 +383,17 @@ section wins.
   skin-picker rectangle and the text stack do not intersect. A side stack's test-mode top may reach a
   corner column on tall stacks (Advanced's target stack); that overlap is recorded in
   docs/known-limitations.md, as §4's corner-over-side sharing already is.
+
+### 15.1 Owner rulings on the round-1 conflicts (2026-11-15)
+
+1. **Picker spot.** The preset picker opens where the skin picker does: centered horizontally, its
+   CENTER 75% of the way up UIParent (the LibKa0s skin picker's `place()`). The two never show at once
+   (the skin picker is hidden while the preset picker is up and opens after it closes), so they no longer
+   need separate room. The call-out block is then sized and placed to clear the **preset picker's**
+   rectangle (which is also the skin picker's), centered on the screen's middle as far as that allows,
+   with the largest font from 24 to 36 that fits. The picker's position no longer depends on any
+   preset's call-outs. This replaces §15's "Picker position" bullet.
+2. **Lower base.** The side stacks' base moves down to about 340 reference units above the bottom edge
+   (y = -740 from the top at 1080 tall, scaled by k), to give tall upward stacks (Advanced's target
+   stack) room under the top edge. Tall unit-frame or action-bar setups may now meet the base; that goes
+   in docs/known-limitations.md.

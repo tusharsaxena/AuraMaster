@@ -11,3 +11,4 @@ AM-PR08	M3	AuraMaster	Whole-branch review fixes and the automated-test record	AM
 AM-PR09	M4	AuraMaster	Upward side stacks, corner group moved, call-outs styled	AM-PR08
 AM-PR10	M4	AuraMaster	Picker centered and unlocked, lock and test buttons	AM-PR08
 AM-PR11	M4	AuraMaster	Docs, smoke, review and automated-test record for round 1	AM-PR09 AM-PR10
+AM-PR12	M4	AuraMaster	Owner rulings on round-1 conflicts: picker spot, lower base	AM-PR11

@@ -188,3 +188,10 @@ Each task keeps the Global Constraints, the gate and the commit rules above.
 - [ ] Update the docs (ARCHITECTURE Presets section, settings-panel if touched, known-limitations, smoke checks PRESETS-* for the new behavior: upward stacks, corner group, call-out look, picker position, lock and test buttons, Apply locks and turns test off), the spec §4/§7 cross-references, test-cases.md and the README badge. Commit `AM-PR11: Docs and smoke checks for the owner's round-1 feedback`.
 - [ ] An independent review of AM-PR09..11 against spec §15; fix findings as `AM-PR11: Review fixes: …`.
 - [ ] A fresh automated-test record for both kit profiles (AUTOMATED_TESTS.md playbook), the M4 checkpoint row and the RESUME log line. Commit `AM-PR11: Automated-test record after round-1 feedback`.
+
+### Task AM-PR12: The owner's rulings on the round-1 conflicts (spec §15.1)
+
+**Files:** `settings/PresetPicker.lua`, `defaults/Presets.lua` (`ROOM`, the base, `CalloutRect`), `tests/test_presetpicker.lua`, `tests/test_presets_data.lua`, docs (ARCHITECTURE, known-limitations, smoke-tests PRESETS-20/23 and others that name the old spot or base, spec cross-refs), test-cases.md, README badge.
+- [ ] Failing tests first: `picker: opens where the skin picker does` (CENTER, 75% up, x 0, at 1080 and 768); `picker: the call-out block clears the picker at 1080 for every preset` (no exception for Advanced, `OVERLAPS_AT_1080` gone); `presets data: side stacks sit on the lower base`; the unlocked/locked top-edge checks tightened to what the lower base now achieves (state any remaining overshoot and record it).
+- [ ] Implement per §15.1, gate green, commit `AM-PR12: The picker takes the skin picker's spot, the side stacks start lower`.
+- [ ] Review, fixes as `AM-PR12: Review fixes: …`, then a fresh automated-test record and the M4 checkpoint row: `AM-PR12: Automated-test record after the round-1 rulings`.
