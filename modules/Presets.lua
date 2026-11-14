@@ -31,6 +31,7 @@ local Presets = NS.Presets
 local L = NS.L
 
 local MODES = { replace = true, add = true }
+local PICKER_PATH = "presets.pickerSeen"
 
 local function debug(fmt, ...)
     if NS.Debug then NS.Debug("Presets", fmt, ...) end
@@ -346,8 +347,9 @@ end
 -- The first-run picker's latch (spec sections 7 and 9)
 -- ---------------------------------------------------------------------------
 --
--- `presets.pickerSeen` is this module's key like the snapshot, so settings/PresetPicker.lua reads and
--- writes it here rather than reaching into the profile itself.
+-- `presets.pickerSeen` is a settings row (settings/General.lua, skipRender, the twin of
+-- skin.pickerSeen), so a write goes through the seam and `/am get|set|reset` reaches it;
+-- settings/PresetPicker.lua reads and writes it here rather than naming the path itself.
 
 --- Whether the active profile has closed the first-run preset picker. True with no profile loaded,
 --- so nothing offers a picker before the store exists.
@@ -358,11 +360,13 @@ function Presets.PickerSeen()
     return type(p.presets) == "table" and p.presets.pickerSeen == true
 end
 
---- Record that the active profile has closed the first-run preset picker. The seed's fingerprint
---- goes with it: only a first-run showing reads it.
+--- Record that the active profile has closed the first-run preset picker, through the write seam.
+--- The seed's fingerprint goes with it: only a first-run showing reads it.
 function Presets.MarkPickerSeen()
     local store = profilePresets()
-    if store then store.pickerSeen, store.seedPrint = true, nil end
+    if not store then return end
+    store.seedPrint = nil
+    NS.SetByPath(PICKER_PATH, true)
 end
 
 -- ---------------------------------------------------------------------------

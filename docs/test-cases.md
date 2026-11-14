@@ -2647,9 +2647,10 @@ Total.
 - seed: fresh install not marked seen
 - seed: the v19 step is idempotent and keeps a stored false on an unseeded profile
 
-### test_presetpicker.lua (24)
+### test_presetpicker.lua (25)
 
 - picker: due on new profile only
+- picker: the latch is a settings row, written through the seam
 - picker: shows before skin picker
 - picker: a profile that has seen it arms the skin picker's start as before
 - picker: the window is a movable, clamped DIALOG on the left, closed by Escape
@@ -2996,7 +2997,7 @@ Total.
 | test_presets_apply.lua | 11 |
 | test_presets_preview.lua | 19 |
 | test_presets_seed.lua | 7 |
-| test_presetpicker.lua | 24 |
+| test_presetpicker.lua | 25 |
 | test_pages_presets.lua | 11 |
 | test_perf.lua | 8 |
 | test_debuglogsetup.lua | 9 |
@@ -3014,4 +3015,4 @@ Total.
 | test_skin_switch.lua | 34 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2468** |
+| **Total** | **2469** |

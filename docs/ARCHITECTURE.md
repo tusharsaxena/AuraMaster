@@ -102,8 +102,8 @@ Five starting points for a profile's containers (spec
 | `settings/PresetPicker.lua` | The first-run window (`NS.PresetPickerDue`, `NS.MaybeShowPresetPicker`, `NS.ShowPresetPicker`, `NS.HidePresetPicker`, `NS.PresetPickerHolding`, `NS.RefreshPresetPicker`) and the preset confirm, one StaticPopup behind two entry points: `NS.ConfirmPreset(name, look, mode)` applies (`/am preset <name>`, the tab with no preview of its own), `NS.ConfirmPreview(name, look, mode)` keeps the preview on screen while it asks, then keeps it (the tab). An answer decides what it writes when it is given, and the confirm goes down unanswered with the window and with every `NS.HidePresetPicker` (a profile event, the stand-down) |
 | `settings/ContainersPresets.lua` | The Containers page's **Presets** tab, the General section's second tab: `NS.RenderPresetsTab`, and `NS.PresetsTabLeft`, its `onLeave` |
 
-- **Its own profile key**, `presets` (`docs/schema.md`): `pickerSeen` (default false; schema v19 sets
-  it on every profile already `seeded`), `seedPrint` (no default: the fingerprint of what the Simple
+- **Its own profile key**, `presets` (`docs/schema.md`): `pickerSeen` (default false, a skipRender
+  settings row written through the seam; schema v19 sets it on every profile already `seeded`), `seedPrint` (no default: the fingerprint of what the Simple
   seed wrote, so the first-run picker skips its Replace confirm only over an untouched seed) and
   `previewSnapshot` (no default: present only while a preview is up). Nothing records which preset
   was applied.

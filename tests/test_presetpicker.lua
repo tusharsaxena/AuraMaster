@@ -89,6 +89,22 @@ test("picker: due on new profile only", function()
     assertNil(NS3.MaybeShowPresetPicker())
 end)
 
+test("picker: the latch is a settings row, written through the seam", function()
+    local NS = fresh()
+    local row = NS.FindSchemaRow("presets.pickerSeen")
+    -- red under: a latch with no row (`/am get|set|reset` cannot reach it), or written beside the seam
+    assertTrue(row ~= nil, "a schema row, as skin.pickerSeen has")
+    assertTrue(row.skipRender == true and row.effect == "none", "drawn by nothing, re-applies nothing")
+    local writes, real = {}, NS.SetByPath
+    NS.SetByPath = function(path, ...) writes[#writes + 1] = path; return real(path, ...) end
+    NS.Presets.MarkPickerSeen()
+    NS.SetByPath = real
+    assertEqual(writes[1], "presets.pickerSeen", "MarkPickerSeen writes through the seam")
+    assertTrue(NS.GetSetting("presets.pickerSeen"))
+    NS.Slash:OnSlash("reset presets.pickerSeen")
+    assertTrue(NS.PresetPickerDue(), "a reset of the row offers the picker again")
+end)
+
 test("picker: shows before skin picker", function()
     local NS, m, calls = fresh()
     m.__fireEvent("PLAYER_ENTERING_WORLD")

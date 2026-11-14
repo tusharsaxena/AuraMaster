@@ -240,6 +240,20 @@ NS.RegisterSchemaRows({
     },
 })
 
+-- The first-run preset picker's memory (modules/Presets.lua, presets spec section 9), the twin of
+-- skin.pickerSeen: set when the picker closes, so it shows once per profile, and written through the
+-- seam by NS.Presets.MarkPickerSeen. Drawn by nothing (skipRender in the Master controls group, which
+-- the flow engine draws without it); a reset puts it back to false, and `/am get|set|reset
+-- presets.pickerSeen` reaches it.
+NS.RegisterSchemaRows({
+    {
+        path = "presets.pickerSeen", page = "general", group = H.MASTER_GROUP, type = "bool",
+        skipRender = true, effect = "none",
+        label = L["Preset picker seen"],
+        desc  = L["Whether the first-run preset picker was closed on this profile."],
+    },
+})
+
 -- Reset all settings: options-ui-§12's one wording, verbatim, and the same act as Profiles →
 -- Reset Profile.
 StaticPopupDialogs["AURAMASTER_RESET_ALL"] = {

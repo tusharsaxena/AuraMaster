@@ -830,7 +830,9 @@ L["Texture"] = "Texture"
 L["The font this addon's text uses, over the skin's own. Empty keeps the skin's."] = "The font this addon's text uses, over the skin's own. Empty keeps the skin's."
 L["The texture this addon's bars use, over the skin's own. Empty keeps the skin's."] = "The texture this addon's bars use, over the skin's own. Empty keeps the skin's."
 L["Skin picker seen"] = "Skin picker seen"
+L["Preset picker seen"] = "Preset picker seen"
 L["Whether the first-run skin picker was closed on this profile."] = "Whether the first-run skin picker was closed on this profile."
+L["Whether the first-run preset picker was closed on this profile."] = "Whether the first-run preset picker was closed on this profile."
 
 -- The container presets (defaults/Presets.lua): container names and the two custom categories Advanced creates.
 L["Player buffs (all)"] = "Player buffs (all)"
