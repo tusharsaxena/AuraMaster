@@ -139,7 +139,7 @@ end)
 
 -- ── the window ───────────────────────────────────────────────────────────────────────────────
 
-test("picker: the window is a movable, clamped DIALOG on the left, closed by Escape", function()
+test("picker: the window is a movable, clamped DIALOG, closed by Escape", function()
     local NS, m = fresh()
     -- The window's build, recorded: the kit's frames answer these setters with no record.
     local rec, real = {}, m.CreateFrame
@@ -163,8 +163,6 @@ test("picker: the window is a movable, clamped DIALOG on the left, closed by Esc
     assertTrue(f ~= nil and f:IsShown())
     assertEqual(rec.strata, "DIALOG", "frame-layering: the skin picker's layer")
     assertTrue(rec.movable and rec.clamped and rec.toplevel, "movable, clamped and toplevel")
-    assertEqual(rec.anchor[1], "LEFT")
-    assertEqual(rec.anchor[4], 24, "24 in from the left edge")
     local listed = false
     for _, n in ipairs(m.UISpecialFrames) do listed = listed or n == WINDOW end
     assertTrue(listed, "Escape closes it (UISpecialFrames)")
@@ -483,4 +481,247 @@ test("picker: a profile event takes an open preset confirm down unanswered", fun
     assertEqual(#NS.Database.GetContainers(), held, "nothing written into the new profile")
     assertEqual(#NS.db.sv.profiles.Default.containerOrder, 4, "nor the old one")
     assertEqual(#calls, 0, "a hide this addon makes offers no skin picker")
+end)
+
+-- ── placed centered, opened unlocked, lock and test mode on the window (AM-PR10; spec section 15) ──
+
+--- Record the window's own anchor on UIParent (`rec.anchor`) and the heights its layout sets
+--- (`rec.heights`), as the shape case records its setters.
+local function recordWindow(m)
+    local rec, real = { heights = {} }, m.CreateFrame
+    m.CreateFrame = function(kind, name, parent, template)
+        local f = real(kind, name, parent, template)
+        if name == WINDOW then
+            rawset(f, "SetPoint", function(self, ...)
+                if select(2, ...) == m.UIParent then rec.anchor = { ... } end
+                return self
+            end)
+            rawset(f, "SetHeight", function(self, v) rec.heights[#rec.heights + 1] = v; return self end)
+        end
+        return f
+    end
+    return rec
+end
+
+--- Whether two { left, right, top, bottom } rectangles share any area.
+local function intersects(a, b)
+    return a.left < b.right and b.left < a.right and a.bottom < b.top and b.bottom < a.top
+end
+
+--- The LibKa0s skin picker's rectangle on a W x H parent: centered across, its center `skinShare` of
+--- the way up (libs/LibKa0s/OptionsSkinPicker.lua's place()), the size PresetData.ROOM gives it.
+local function skinRect(R, W, H)
+    local cy = H * R.skinShare
+    return { left = W / 2 - R.skinWidth / 2, right = W / 2 + R.skinWidth / 2,
+        top = cy + R.skinHeight / 2, bottom = cy - R.skinHeight / 2 }
+end
+
+--- Record what the lock and test-mode buttons say (the kit's font strings are the frame itself and
+--- keep no text), then repaint the window so both say it now: `label(btn)` reads the last one.
+local function recordLabels(NS, f)
+    for _, btn in ipairs({ f.lockToggle, f.testToggle }) do
+        rawset(btn.text, "SetText", function(self, v) rawset(self, "__label", v); return self end)
+    end
+    NS.RefreshPresetPicker()
+end
+
+local function label(btn) return rawget(btn.text, "__label") end
+
+test("picker: opens centered below the call-outs", function()
+    local NS, m = fresh()
+    local rec = recordWindow(m)
+    local R = NS.PresetData.ROOM
+    NS.Presets.ParentSize = function() return 2560, 1440 end
+    local f = NS.MaybeShowPresetPicker()
+    local place = NS.PresetPicker.Placement(2560, 1440)
+    -- red under: the window on the left edge, vertically centered (LEFT, 24, 0), over the call-outs
+    assertEqual(rec.anchor[1], "TOP", "placed by its top")
+    assertEqual(rec.anchor[3], "BOTTOM", "on UIParent's bottom edge")
+    assertEqual(rec.anchor[4], 0, "centered across")
+    assertEqual(rec.anchor[5], place.top, "at the placement's top")
+    assertEqual((place.left + place.right) / 2, 1280, "the placement is centered across")
+    for _, name in ipairs({ "advanced", "healer" }) do
+        for _, look in ipairs(NS.PresetData.LOOKS) do
+            local block = NS.PresetData.CalloutRect(name, look, 2560, 1440)
+            assertTrue(place.top <= block.bottom - R.margin, name .. "/" .. look .. ": under the call-out block")
+        end
+    end
+    assertTrue(place.bottom >= R.margin, "above the bottom edge")
+    -- The window's laid-out height fits the room the call-outs leave it, in every state it shows.
+    f.dd.onSelect("advanced")
+    for _, h in ipairs(rec.heights) do assertTrue(h <= R.pickerHeight, "laid out within its room: " .. h) end
+    f.notNow:__fire("OnClick")
+    -- UIParent unreadable: placed for 1920 x 1080.
+    NS.Presets.ParentSize = function() return 0, 0 end
+    NS.ShowPresetPicker()
+    assertEqual(rec.anchor[5], NS.PresetPicker.Placement(1920, 1080).top, "the fallback")
+end)
+
+-- Advanced's three call-outs do not fit between the skin picker and the picker at 1080: at the
+-- smallest size (24) the unlocked test-mode block is 520 tall, and the room under the skin picker
+-- holds less than that plus the picker's. The picker then sits at the bottom edge, over the block's
+-- lower lines; docs/known-limitations.md records it for the owner's call (AM-PR10).
+local OVERLAPS_AT_1080 = { advanced = true }
+
+test("presets data: the call-out block, the picker and the skin picker do not intersect at 1080", function()
+    local NS = fresh()
+    local D, R = NS.PresetData, NS.PresetData.ROOM
+    -- 16:9, 16:10, 21:9, 4:3 and 5:4 at 1080 tall.
+    for _, W in ipairs({ 1920, 1728, 2520, 1440, 1350 }) do
+        local place, skin = NS.PresetPicker.Placement(W, 1080), skinRect(R, W, 1080)
+        assertFalse(intersects(place, skin), W .. ": the picker clear of the skin picker")
+        assertTrue(place.bottom >= R.margin and place.left >= 0 and place.right <= W, W .. ": the picker on the screen")
+        for _, name in ipairs({ "advanced", "healer" }) do
+            for _, look in ipairs(D.LOOKS) do
+                local block, where = D.CalloutRect(name, look, W, 1080), ("%s/%s at %d"):format(name, look, W)
+                assertFalse(intersects(block, skin), where .. ": the call-outs clear of the skin picker")
+                if OVERLAPS_AT_1080[name] then
+                    -- The exception is forced, not chosen: the smallest block and the picker's room
+                    -- do not fit under the skin picker together.
+                    assertEqual(block.fontSize, D.CALLOUT_SIZE_MIN, where .. ": already the smallest size")
+                    assertTrue(block.height + R.pickerHeight + 3 * R.margin > skin.bottom, where .. ": no room for both")
+                    assertEqual(place.bottom, R.margin, where .. ": the picker as low as it goes")
+                else
+                    -- red under: a placement that ignores the call-outs (the screen's middle, centered)
+                    assertFalse(intersects(block, place), where .. ": the call-outs clear of the picker")
+                end
+            end
+        end
+    end
+end)
+
+test("picker: opening unlocks and remembers the lock", function()
+    local NS = fresh()
+    assertTrue(NS.GetSetting("locked"), "a new profile is locked")
+    local writes, real = {}, NS.SetByPath
+    NS.SetByPath = function(path, ...) writes[#writes + 1] = path; return real(path, ...) end
+    local f = NS.MaybeShowPresetPicker()
+    NS.SetByPath = real
+    -- red under: a window that opens over locked containers
+    assertFalse(NS.GetSetting("locked"), "opening unlocks")
+    assertEqual(writes[1], "locked", "through the seam /am unlock writes")
+    NS.ShowPresetPicker()
+    f.notNow:__fire("OnClick")
+    assertTrue(NS.GetSetting("locked"), "the lock it found, back")
+    -- Opened over unlocked containers, it leaves them unlocked.
+    NS.SetByPath("locked", false)
+    f = NS.ShowPresetPicker()
+    assertFalse(NS.GetSetting("locked"))
+    f.notNow:__fire("OnClick")
+    assertFalse(NS.GetSetting("locked"), "unlocked at the open, unlocked after")
+end)
+
+test("picker: the lock button flips the lock", function()
+    local NS = fresh()
+    local f = NS.MaybeShowPresetPicker()
+    assertTrue(f.lockToggle ~= nil, "a lock button")
+    recordLabels(NS, f)
+    assertEqual(label(f.lockToggle), NS.L["Containers: unlocked"], "it says the lock")
+    f.lockToggle:__fire("OnClick")
+    -- red under: a button that writes nothing, or a label that keeps the old state
+    assertTrue(NS.GetSetting("locked"), "locked")
+    assertEqual(label(f.lockToggle), NS.L["Containers: locked"])
+    f.lockToggle:__fire("OnClick")
+    assertFalse(NS.GetSetting("locked"), "unlocked again")
+    -- /am lock while the window is up repaints it.
+    NS.Slash:OnSlash("lock")
+    assertEqual(label(f.lockToggle), NS.L["Containers: locked"], "a lock made elsewhere shows")
+end)
+
+test("picker: the test button flips test mode, and turning it off ends a preview", function()
+    local NS = fresh()
+    local before = ids(NS)
+    local f = NS.MaybeShowPresetPicker()
+    assertTrue(f.testToggle ~= nil, "a test-mode button")
+    recordLabels(NS, f)
+    assertEqual(label(f.testToggle), NS.L["Test mode: off"])
+    f.testToggle:__fire("OnClick")
+    assertTrue(NS.State.testMode, "on")
+    assertEqual(label(f.testToggle), NS.L["Test mode: on"])
+    assertFalse(NS.Presets.IsPreviewing(), "test mode alone previews nothing")
+    f.testToggle:__fire("OnClick")
+    assertFalse(NS.State.testMode, "off")
+    f.dd.onSelect("advanced")
+    assertTrue(NS.Presets.IsPreviewing() and NS.State.testMode)
+    assertEqual(label(f.testToggle), NS.L["Test mode: on"], "a pick's test mode shows")
+    f.testToggle:__fire("OnClick")
+    -- red under: test mode off with the preset's containers left in the profile
+    assertFalse(NS.State.testMode)
+    assertFalse(NS.Presets.IsPreviewing(), "the preview ends, as Not now ends it")
+    assertEqual(ids(NS), before, "the player's own containers back")
+    assertFalse(f.status:IsShown(), "the window no longer claims a preview")
+    assertTrue(f:IsShown(), "and stays up")
+end)
+
+test("picker: apply leaves containers locked and test mode off", function()
+    local NS = fresh({ simple = true })
+    NS.SetByPath("locked", false)
+    local f = NS.MaybeShowPresetPicker()
+    f.dd.onSelect("advanced")
+    f.apply:__fire("OnClick")
+    -- red under: Apply putting back the unlocked state the window found
+    assertFalse(f:IsShown())
+    assertEqual(#NS.Database.GetContainers(), 20)
+    assertTrue(NS.GetSetting("locked"), "locked")
+    assertFalse(NS.State.testMode, "test mode off")
+    -- Nothing picked, test mode on by the button: Apply still locks and turns it off.
+    f = NS.ShowPresetPicker()
+    f.testToggle:__fire("OnClick")
+    assertTrue(NS.State.testMode)
+    f.apply:__fire("OnClick")
+    assertTrue(NS.GetSetting("locked"))
+    assertFalse(NS.State.testMode)
+end)
+
+test("picker: not now, close and escape put the lock back and test mode off", function()
+    local routes = {
+        ["not now"] = function(f) f.notNow:__fire("OnClick") end,
+        close = function(f) f.close:__fire("OnClick") end,
+        escape = function(f) f:Hide(); f:__fire("OnHide") end,
+    }
+    for route, close in pairs(routes) do
+        for _, lockedAtOpen in ipairs({ true, false }) do
+            local NS = fresh()
+            NS.SetByPath("locked", lockedAtOpen)
+            local before = ids(NS)
+            local f = NS.MaybeShowPresetPicker()
+            f.dd.onSelect("healer")
+            f.lockToggle:__fire("OnClick")
+            f.lockToggle:__fire("OnClick")
+            f.lockToggle:__fire("OnClick")   -- left locked, whatever it opened on
+            close(f)
+            local where = ("%s, opened %s"):format(route, lockedAtOpen and "locked" or "unlocked")
+            assertEqual(NS.GetSetting("locked") == true, lockedAtOpen, where .. ": the lock it found")
+            assertFalse(NS.State.testMode, where .. ": test mode off")
+            assertEqual(ids(NS), before, where .. ": restored as before")
+        end
+    end
+    -- Test mode the button turned on, with nothing picked, goes off too.
+    local NS = fresh()
+    local f = NS.MaybeShowPresetPicker()
+    f.testToggle:__fire("OnClick")
+    f.notNow:__fire("OnClick")
+    assertFalse(NS.State.testMode)
+    assertTrue(NS.GetSetting("locked"))
+end)
+
+test("picker: /am preset opens unlocked too", function()
+    local NS = fresh()
+    NS.Presets.MarkPickerSeen()
+    NS.Slash:OnSlash("preset")
+    local f = NS.PresetPicker.frame
+    assertTrue(f ~= nil and f:IsShown())
+    assertFalse(NS.GetSetting("locked"), "unlocked")
+    f.close:__fire("OnClick")
+    assertTrue(NS.GetSetting("locked"))
+end)
+
+test("picker: a hide this addon makes puts the lock back and test mode off", function()
+    local NS = fresh()
+    local f = NS.MaybeShowPresetPicker()
+    f.testToggle:__fire("OnClick")
+    NS.HidePresetPicker()
+    assertTrue(NS.GetSetting("locked"), "the stand-down's hide puts the lock back")
+    assertFalse(NS.State.testMode)
+    assertFalse(f:IsShown())
 end)

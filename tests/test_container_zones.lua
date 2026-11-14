@@ -114,6 +114,9 @@ end)
 
 test("zones: ZONE_CHANGED_NEW_AREA and PLAYER_ENTERING_WORLD each re-run the visibility pass", function()
     local NS, mocks = fresh()
+    -- The preset picker held down: it unlocks the containers it opens over (settings/PresetPicker.lua),
+    -- which is not this case's subject.
+    NS.PresetPickerDue = function() return false end
     local inst = NS.ContainerManager.instances[1]
     untick(NS, mocks, 1, "party")
     place(mocks, "party")

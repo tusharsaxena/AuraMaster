@@ -127,6 +127,9 @@ end)
 
 test("bulklog: a profile reset and a profile copy are one [Set] line each; a switch keeps its trace", function()
     local NS2 = fresh()
+    -- The preset picker held down: it unlocks the containers it opens over (settings/PresetPicker.lua),
+    -- which is not this case's subject.
+    NS2.PresetPickerDue = function() return false end
     local lines = capture(NS2)
     NS2.db:SetProfile("Raid")
     assertEqual(#lines, 1, dump(lines))

@@ -26,12 +26,27 @@ local addonName, NS = ...
 --                              confirm is answered.
 --   NS.ConfirmPreview(n, l, m) the same confirm over a preview that stays up while it is open, then
 --                              kept: the Containers page's Presets tab (settings/ContainersPresets.lua).
---   NS.PresetPicker            { frame }: the window once built, for the suites.
+--   NS.PresetPicker            { frame, Placement }: the window once built, for the suites, and
+--                              Placement(w, h), where it opens on a w x h UIParent (below).
 --
 -- WHEN. Once per profile, before the skin picker: addon:OnEnterWorld shows it at once (it does not
 -- wait the skin picker's two seconds) and arms no skin start while it is due; every close calls
 -- NS.MaybeShowSkinPicker, which shows the skin picker only now. A new, reset or copied profile is
 -- offered it again after the profile event (core/AuraMaster.lua's rebuildProfile).
+--
+-- WHERE IT OPENS (spec section 15). Centered across, its top just under the lowest call-out block
+-- any preset draws (NS.PresetData.CalloutRect, unlocked, in test mode), so whichever preset the player
+-- picks, its call-outs and the window do not meet; the builder keeps those blocks under the LibKa0s
+-- skin picker and leaves this window `PresetData.ROOM.pickerHeight` below them. UIParent's size is
+-- read each time it opens, 1920 x 1080 when it cannot be read.
+--
+-- THE LOCK AND TEST MODE. Opening records the lock and unlocks the containers, through the seam
+-- `/am unlock` writes (NS.SetByPath "locked"). Two buttons show and flip the lock and test mode (test
+-- mode through NS.Preview.SetTestMode, as `/am test`); turning test mode off while a preview is up
+-- ends it with a restore, as Not now does. Apply locks and turns test mode off; Not now, the close
+-- control, Escape and this addon's own hides put back the lock the window found, and turn test mode
+-- off. A profile event's hide writes no lock: the profile the window opened on is no longer the
+-- active one, and the seam writes only the active one.
 --
 -- WHAT A PICK DOES. Nothing is previewed when the window opens: the profile already holds what it
 -- holds (Simple, on a new one). A pick of a preset or a style previews it on the real screen in
@@ -66,8 +81,8 @@ local KC = LibStub and LibStub("LibKa0s-Core-1.0", true)
 
 local WINDOW = "AuraMasterPresetPicker"
 local POPUP = "AURAMASTER_APPLY_PRESET"
-local WIDTH, PAD, ROW_H, GAP = 260, 14, 22, 8
-local LEFT_X = 24   -- in from the screen's left edge, clear of the preset stacks (spec section 7)
+local WIDTH, PAD, ROW_H, GAP = 300, 14, 22, 8
+local FALLBACK_W, FALLBACK_H = 1920, 1080   -- UIParent's size when it cannot be read
 
 -- The dropdown's order (spec section 7): Empty first, then the four presets.
 local CHOICES = { "empty", "simple", "intermediate", "advanced", "healer" }
@@ -86,8 +101,10 @@ local LOOK_LABELS = { bars = L["Bars"], icons = L["Icons"] }
 
 -- The window's session state. `sel` and `look` are what the controls show; `picked` is whether the
 -- player chose anything since it opened; `firstRun` whether this showing is the first-run one (no
--- confirm); `owns` whether the preview up is the one this window started.
-local state = { sel = "simple", look = "bars", picked = false, firstRun = false, owns = false }
+-- confirm); `owns` whether the preview up is the one this window started; `lockedAtOpen` the lock
+-- it found, and `lockProfile` the profile it found it in (nil while the window is down).
+local state = { sel = "simple", look = "bars", picked = false, firstRun = false, owns = false,
+    lockedAtOpen = true, lockProfile = nil }
 local closing = false   -- true while this file hides the window itself, so OnHide is not a close
 local holdTarget        -- the one-shot PLAYER_REGEN_ENABLED target, while a start is held
 local pending           -- the open confirm's data ({ run, after }), nil while none is up
@@ -234,9 +251,59 @@ function NS.ConfirmPreview(name, look, mode)
     end)
 end
 
--- ── the window's controls ────────────────────────────────────────────────────────────────────
+-- ── the lock and test mode ───────────────────────────────────────────────────────────────────
 
 local refresh   -- below: repaints the controls from `state`
+local paintToggles   -- below: the lock and test-mode buttons' labels
+
+--- Write the lock through the seam `/am lock` and `/am unlock` write (settings/Slash.lua's runLock).
+local function setLock(locked)
+    local ok, err = NS.SetByPath("locked", locked)
+    if not ok then say(err) end
+end
+
+--- Turn test mode off, when it is on.
+local function testModeOff()
+    if NS.State.testMode then NS.Preview.SetTestMode(false, "preset picker") end
+end
+
+--- Record the lock the window opens on, then unlock (spec section 15).
+local function openUnlocked()
+    state.lockedAtOpen = NS.GetSetting("locked") and true or false
+    state.lockProfile = NS.db and NS.db.profile
+    setLock(false)
+end
+
+--- What every close and hide ends with: test mode off, then the lock set to `locked`, in the profile
+--- the window opened on only (a profile event's hide leaves it).
+local function settle(locked)
+    testModeOff()
+    local same = state.lockProfile ~= nil and NS.db and NS.db.profile == state.lockProfile
+    state.lockProfile = nil
+    if same then setLock(locked) end
+end
+
+local function toggleLock()
+    setLock(not NS.GetSetting("locked"))
+    refresh()
+end
+
+--- The test-mode button: on, or off. Off with a preview up ends it with a restore, as Not now does.
+local function toggleTest()
+    local P = NS.Presets
+    if not NS.State.testMode then
+        NS.Preview.SetTestMode(true, "preset picker")
+    elseif P.IsPreviewing() then
+        local ok, msg, gray = P.EndPreview(false)
+        if not ok then say(msg, gray) end
+    else
+        testModeOff()
+    end
+    if not P.IsPreviewing() then state.owns = false end
+    refresh()
+end
+
+-- ── the window's controls ────────────────────────────────────────────────────────────────────
 
 --- Preview the selection: a preset in its style, or, for Empty, the player's own containers back.
 local function preview()
@@ -267,11 +334,12 @@ local function pickLook(look)
     preview()
 end
 
---- The player's close of any kind: the window down, its confirm with it, the latch set, then the
---- skin picker's turn.
-local function finish()
+--- The player's close of any kind: the window down, its confirm with it, test mode off and the lock
+--- set to `locked`, the latch set, then the skin picker's turn.
+local function finish(locked)
     local f = Picker.frame
     dropConfirm()
+    settle(locked)
     closing = true
     if f then f:Hide() end
     closing = false
@@ -284,7 +352,7 @@ end
 local function dismiss()
     local P = NS.Presets
     if state.owns and P.IsPreviewing() then P.EndPreview(false) end
-    finish()
+    finish(state.lockedAtOpen)
 end
 
 --- What Apply keeps, decided when the player answers: the preview this window started, while it is
@@ -303,7 +371,7 @@ local function apply()
     if InCombatLockdown() then
         return sayGray(L["cannot apply a preset during combat — its containers would not be drawn or placed until combat ends"])
     end
-    if not state.picked then return finish() end
+    if not state.picked then return finish(true) end
     local sel, look = state.sel, state.look
     local count = NS.Presets.OwnContainerCount()
     -- No confirm only on the first-run showing over the untouched seed (spec section 5).
@@ -314,7 +382,7 @@ local function apply()
         state.owns = false
         if NS.RefreshOptionsPanel then NS.RefreshOptionsPanel() end
         sayApplied(sel, look, "replace")
-        finish()
+        finish(true)
         return true
     end)
 end
@@ -403,6 +471,8 @@ local function buildBody(f)
     f.status.text = fontString(f.status, "GameFontNormalSmall", "accent")
     f.status.text:SetAllPoints(f.status)
     f.status.text:SetText(L["On your screen now, filled with sample auras. Nothing is saved until Apply."])
+    f.lockToggle = textButton(f, "", function() toggleLock() end)
+    f.testToggle = textButton(f, "", function() toggleTest() end)
     f.apply = textButton(f, L["Apply"], function() apply() end, { primary = true })
     f.notNow = textButton(f, L["Not now"], function() dismiss() end)
     f.footer = fontString(f, "GameFontDisableSmall", "disabled")
@@ -432,6 +502,16 @@ local function build()
     buildBody(f)
     local specials = _G.UISpecialFrames
     if type(specials) == "table" then table.insert(specials, WINDOW) end
+    -- A lock or test mode switched elsewhere (`/am lock`, `/am test`, the launcher, combat) repaints
+    -- the two buttons while the window is up.
+    local ev = NS.NewBusTarget and NS.NewBusTarget()
+    if ev then
+        local function repaint() if f:IsShown() then paintToggles(f) end end
+        ev:RegisterMessage(NS.MSG.CONFIG_CHANGED, function(_, payload)
+            if type(payload) == "table" and payload.path == "locked" then repaint() end
+        end)
+        ev:RegisterMessage(NS.MSG.VISIBILITY_CHANGED, repaint)
+    end
     return f
 end
 
@@ -456,11 +536,19 @@ local function layout(f)
     end
     y = stack(f, y, f.blurb, 44)
     if f.status:IsShown() then y = stack(f, y, f.status, 28) end
+    stack(f, y, f.lockToggle, ROW_H, PAD, half - 3)
+    y = stack(f, y, f.testToggle, ROW_H, PAD + half + 3, half - 3)
     local applyW = WIDTH - 2 * PAD - 90 - 6
     stack(f, y, f.apply, ROW_H, PAD, applyW)
     y = stack(f, y, f.notNow, ROW_H, PAD + applyW + 6, 90)
     y = stack(f, y, f.footer, 28)
     f:SetHeight(y + PAD - GAP)
+end
+
+--- The lock and test-mode buttons say what is so now.
+function paintToggles(f)
+    f.lockToggle.text:SetText(NS.GetSetting("locked") and L["Containers: locked"] or L["Containers: unlocked"])
+    f.testToggle.text:SetText(NS.State.testMode and L["Test mode: on"] or L["Test mode: off"])
 end
 
 function refresh()
@@ -474,6 +562,7 @@ function refresh()
     paint("SetTabSelection", f.styleIcons, state.look == "icons")
     f.blurb:SetText(BLURBS[state.sel])
     f.status:SetShown(not empty and state.owns and NS.Presets.IsPreviewing())
+    paintToggles(f)
     f.footer:SetText(NS.SkinPickerDue and NS.SkinPickerDue()
         and L["Change it later on Containers > General > Presets. The skin picker opens next."]
         or L["Change it later on Containers > General > Presets."])
@@ -486,15 +575,50 @@ local function dropHold()
     if holdTarget then holdTarget:UnregisterAllEvents(); holdTarget = nil end
 end
 
---- Show the window, fresh: Simple in Bars selected, nothing picked, nothing previewed. The skin
---- picker goes down first, unmarked, so the two never show at once; it comes back after the close.
+local function readable(v) return type(v) == "number" and v == v and v > 0 end
+
+--- Where the window opens on a `parentW` x `parentH` UIParent (1920 x 1080 when either cannot be
+--- read), in UIParent's own coordinates (from its bottom-left corner, as Frame:GetRect reads):
+--- { left, right, top, bottom, width, height }. Centered across; its top a margin under the lowest
+--- call-out block any preset draws in either style, and no lower than keeps the room it is given
+--- (PresetData.ROOM.pickerHeight, what its layout fits in) above the bottom edge. Pure.
+--- @return table
+function Picker.Placement(parentW, parentH)
+    local D = NS.PresetData
+    local R = D.ROOM
+    local W = readable(parentW) and parentW or FALLBACK_W
+    local H = readable(parentH) and parentH or FALLBACK_H
+    local h, under = R.pickerHeight, nil
+    for _, name in ipairs(D.NAMES) do
+        for _, look in ipairs(D.LOOKS) do
+            local block = D.CalloutRect(name, look, W, H)
+            if block and (under == nil or block.bottom < under) then under = block.bottom end
+        end
+    end
+    local top = under and (under - R.margin) or (H / 2 + h / 2)
+    top = math.min(math.max(top, R.margin + h), H - R.margin)
+    return { left = W / 2 - WIDTH / 2, right = W / 2 + WIDTH / 2, top = top, bottom = top - h,
+        width = WIDTH, height = h }
+end
+
+--- Place the window per Placement, on UIParent's size as it reads now.
+local function place(f)
+    local w, h = NS.Presets.ParentSize()
+    if not (readable(w) and readable(h)) then w, h = FALLBACK_W, FALLBACK_H end
+    f:ClearAllPoints()
+    f:SetPoint("TOP", UIParent, "BOTTOM", 0, Picker.Placement(w, h).top)
+end
+
+--- Show the window, fresh: Simple in Bars selected, nothing picked, nothing previewed, placed and
+--- the containers unlocked. The skin picker goes down first, unmarked, so the two never show at
+--- once; it comes back after the close.
 local function show(firstRun)
     local f = Picker.frame or build()
     if not f:IsShown() then
         state.sel, state.look, state.picked, state.owns = "simple", "bars", false, false
         state.firstRun = firstRun
-        f:ClearAllPoints()
-        f:SetPoint("LEFT", UIParent, "LEFT", LEFT_X, 0)
+        place(f)
+        openUnlocked()
     else
         state.firstRun = state.firstRun or firstRun
     end
@@ -546,6 +670,7 @@ function NS.HidePresetPicker()
     local f = Picker.frame
     if not (f and f:IsShown()) then return end
     if state.owns and NS.Presets.IsPreviewing() then NS.Presets.EndPreview(false) end
+    settle(state.lockedAtOpen)
     state.picked, state.owns = false, false
     closing = true
     f:Hide()

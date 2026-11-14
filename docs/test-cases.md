@@ -2653,13 +2653,13 @@ Total.
 - seed: fresh install not marked seen
 - seed: the v19 step is idempotent and keeps a stored false on an unseeded profile
 
-### test_presetpicker.lua (25)
+### test_presetpicker.lua (34)
 
 - picker: due on new profile only
 - picker: the latch is a settings row, written through the seam
 - picker: shows before skin picker
 - picker: a profile that has seen it arms the skin picker's start as before
-- picker: the window is a movable, clamped DIALOG on the left, closed by Escape
+- picker: the window is a movable, clamped DIALOG, closed by Escape
 - picker: pick previews, close restores, latch set
 - picker: Escape restores like Not now
 - picker: apply keeps
@@ -2680,6 +2680,15 @@ Total.
 - picker: combat under the confirm restores, and the answer still applies
 - picker: Not now under the confirm takes the confirm down with it
 - picker: a profile event takes an open preset confirm down unanswered
+- picker: opens centered below the call-outs
+- presets data: the call-out block, the picker and the skin picker do not intersect at 1080
+- picker: opening unlocks and remembers the lock
+- picker: the lock button flips the lock
+- picker: the test button flips test mode, and turning it off ends a preview
+- picker: apply leaves containers locked and test mode off
+- picker: not now, close and escape put the lock back and test mode off
+- picker: /am preset opens unlocked too
+- picker: a hide this addon makes puts the lock back and test mode off
 
 ### test_pages_presets.lua (11)
 
@@ -3003,7 +3012,7 @@ Total.
 | test_presets_apply.lua | 11 |
 | test_presets_preview.lua | 20 |
 | test_presets_seed.lua | 7 |
-| test_presetpicker.lua | 25 |
+| test_presetpicker.lua | 34 |
 | test_pages_presets.lua | 11 |
 | test_perf.lua | 8 |
 | test_debuglogsetup.lua | 9 |
@@ -3021,4 +3030,4 @@ Total.
 | test_skin_switch.lua | 34 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2475** |
+| **Total** | **2484** |

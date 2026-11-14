@@ -30,6 +30,9 @@ end
 --- profile shows it: a drag starts from a visible strip, and one whose strip hides is canceled.
 local function env(n)
     local NS, mocks = fresh()
+    -- The preset picker held down: it unlocks the containers it opens over (settings/PresetPicker.lua),
+    -- which is not these suites' subject.
+    NS.PresetPickerDue = function() return false end
     while #NS.Database.GetContainers() < (n or 2) do NS.ContainerManager.Create({}) end
     mocks.__fireTimers()
     for _, c in ipairs(NS.Database.GetContainers()) do

@@ -520,3 +520,14 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   (`tests/test_presets_data.lua`, "presets: placement", which names this one as its only
   exception). Lowering the base far enough would put it over the unit frames and action bars;
   splitting the stack changes the owner's own layout. Recorded 2026-11-15 for the owner's call.
+- **At 1080 tall, the preset picker covers the lower lines of Advanced's call-outs.** The picker
+  opens centered across, just under the lowest call-out block any preset draws, and the builder keeps
+  that block under the skin picker's rectangle (presets spec section 15). Advanced's three call-outs
+  in test mode, unlocked, are 520 tall even at the smallest size the builder uses (24), and the room
+  under the skin picker at 1080 (about 635) cannot hold that, the picker's 360 and the margins. So
+  the picker sits on the bottom edge, over the block's last lines, at every ratio tested; Healer's
+  single call-out clears it. `tests/test_presetpicker.lua` ("presets data: the call-out block, the
+  picker and the skin picker do not intersect at 1080") names Advanced as its one exception and
+  checks the overlap is forced. Fewer test-mode lines per call-out, a smaller floor size, or letting
+  the block rise into the skin picker's room (this addon's skin picker never shows with the preset
+  picker) would each clear it. Recorded 2026-11-15 for the owner's call.
