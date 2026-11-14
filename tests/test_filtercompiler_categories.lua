@@ -184,6 +184,18 @@ end)
 local OWNER_IDS = { 124682, 115151, 115175 }   -- the report's list, its Renewing Mist a CAST id
 local RENEWING_MIST_AURA = 119611              -- what the shipped monk healing list carries instead
 
+--- An aura id the shipped Healing list carries on the kit profile's client: Renewing Mist's on
+--- Retail, and the lowest id of WoW Forever's own seed there (defaults/Categories.lua picks it).
+local function shippedHealingId(E)
+    local healing = E.Categories.Find("HELPFUL", "healing").spells
+    if healing[RENEWING_MIST_AURA] then return RENEWING_MIST_AURA end
+    local lowest
+    for id in pairs(healing) do
+        if not lowest or id < lowest then lowest = id end
+    end
+    return lowest
+end
+
 --- A player BUFF container with `key` Show and every other category of the aura type Hide --
 --- Uncategorized included, which is what suppresses the catch-all and leaves the shown groups as
 --- the whole plan.
@@ -249,7 +261,7 @@ test("categories: an empty user category shown does not take Uncategorized's cat
     -- draws an uncategorized buff on a container whose only other Show holds no ids.
     assertEqual(#plan.groups, 1)
     assertEqual(plan.groups[1].label, "Uncategorized")
-    assertTrue(plan.groups[1].candidateFilters.excludeSpellIDs[RENEWING_MIST_AURA],
+    assertTrue(plan.groups[1].candidateFilters.excludeSpellIDs[shippedHealingId(E)],
         "the categorized union is what it draws around")
 end)
 
@@ -273,7 +285,8 @@ end)
 test("categories: a user category shown beside a shipped one gets its own group, after it and minus its ids", function()
     local E = freshEnv()
     local key = E.Categories.CreateUserCategory("Mine", "HELPFUL")
-    E.SetByPath("categorySpells", { [key] = { [RENEWING_MIST_AURA] = true, [987654] = true } })
+    local healingId = shippedHealingId(E)
+    E.SetByPath("categorySpells", { [key] = { [healingId] = true, [987654] = true } })
     local con = userContainer(E, "player", "HELPFUL")
     for _, def in ipairs(E.Categories.For("HELPFUL")) do
         con.filter.categories[def.key] = (def.key == key or def.key == "healing") and "show" or "hide"
@@ -285,11 +298,11 @@ test("categories: a user category shown beside a shipped one gets its own group,
     -- shipped row (Cat.SyncUserCategories' userInsertIndex), so the shipped group comes first.
     assertEqual(plan.groups[1].label, "Healing")
     assertEqual(plan.groups[2].label, "Mine")
-    assertTrue(plan.groups[1].candidateFilters.includeSpellIDs[RENEWING_MIST_AURA],
+    assertTrue(plan.groups[1].candidateFilters.includeSpellIDs[healingId],
         "the shipped list claims the aura id")
     -- R-4's dedup runs on a user category like any other: an aura in both is drawn under the FIRST
     -- shown category, so the later group subtracts the earlier one's ids.
-    assertTrue(plan.groups[2].candidateFilters.excludeSpellIDs[RENEWING_MIST_AURA],
+    assertTrue(plan.groups[2].candidateFilters.excludeSpellIDs[healingId],
         "and the user group excludes what the earlier shown group already draws")
     assertTrue(plan.groups[2].candidateFilters.includeSpellIDs[987654], "its own id still includes")
 end)

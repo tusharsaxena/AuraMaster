@@ -80,6 +80,9 @@ core\Database.lua
 core\Database_Migrations.lua
 
 # Defaults
+# LOAD-BEARING: the generated WoW Forever seed lists before Categories, which picks them on Forever
+# (NS.CategorySeedsForever, with its EMPTY set) once at file load (clients-§5).
+defaults\Categories_Forever.lua
 # LOAD-BEARING: Categories before Profile — the container template's category states are built
 # from the category lists.
 defaults\Categories.lua
@@ -88,6 +91,10 @@ defaults\Categories.lua
 defaults\UserCategories.lua
 # Conventional: a generated lookup, read at add time by settings/GeneralSpells.lua.
 defaults\CastToAura.lua
+# LOAD-BEARING: after CastToAura -- its selector replaces Retail's NS.CastToAura on WoW Forever, once
+# at file load (clients-§5).
+defaults\CastToAura_Forever.lua
+# Conventional: the profile defaults; the category lists it builds from load above (the Categories note).
 defaults\Profile.lua
 
 # Modules

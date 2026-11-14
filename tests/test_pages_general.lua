@@ -262,21 +262,33 @@ end)
 
 -- ── the Spell categories tab (G-2) ────────────────────────────────────────────────────────────
 
+--- The three lowest ids of the shipped Defensive cooldowns list, ascending: the kit profile's
+--- client's own list (clients-§6), so the by-name cases read whichever seed defaults/Categories.lua
+--- picked.
+local function threeDefensives(NS)
+    local ids = {}
+    for id in pairs(NS.Categories.Find("HELPFUL", "defensives").spells) do ids[#ids + 1] = id end
+    table.sort(ids)
+    return ids[1], ids[2], ids[3]
+end
+
 -- Owner, 2026-09-20: the list came out in id order, so it read Frost Nova (122), Entangling Roots
 -- (339), Hamstring (1715) -- no order at all to someone looking for a spell by name.
 test("general → spell categories: the list is ordered by name, case-insensitively, ids the client cannot name last (owner 2026-09-20)", function()
     local NS, m, P = spells()
     -- Names chosen so that name order and id order disagree on every pair, and so that a
     -- case-sensitive compare would put both capitalized names ahead of "alpha".
-    m.__spells[871]    = { name = "zeta", iconID = 1 }
-    m.__spells[12975]  = { name = "alpha", iconID = 1 }
-    m.__spells[118038] = { name = "Mid", iconID = 1 }
+    local lo, mid, hi = threeDefensives(NS)
+    m.__spells[lo]     = { name = "zeta", iconID = 1 }
+    m.__spells[mid]    = { name = "alpha", iconID = 1 }
+    m.__spells[hi]     = { name = "Mid", iconID = 1 }
     m.__spells[424242] = { name = "Beta", iconID = 1 }
     NS.SetByPath("categorySpells", { defensives = { [424242] = true } })
     local order = listedIds(P.rerender("General"))
-    -- red under: the old numeric sort (871, 12975, 118038, ...), a case-sensitive compare (Beta,
+    -- red under: the old numeric sort (lo, mid, hi, ...), a case-sensitive compare (Beta,
     -- Mid, alpha, zeta), or the added spell parked below the starters instead of in the alphabet
-    assertEqual(table.concat({ order[1], order[2], order[3], order[4] }, ","), "12975,424242,118038,871")
+    assertEqual(table.concat({ order[1], order[2], order[3], order[4] }, ","),
+        table.concat({ mid, 424242, hi, lo }, ","))
     -- Every remaining defensive is one this client cannot name, and those go LAST, ascending by id:
     -- the library draws them "Unknown spell <id>", so there is no name for a reader to look for.
     local drawn = #order
@@ -298,9 +310,10 @@ test("general → spell categories: the list draws two columns, filled row-major
     local NS, m, P = spells()
     -- Four names whose alphabet disagrees with their ids, so a list that fell back to id order
     -- could not pass by luck.
-    m.__spells[871]    = { name = "delta", iconID = 1 }
-    m.__spells[12975]  = { name = "charlie", iconID = 1 }
-    m.__spells[118038] = { name = "bravo", iconID = 1 }
+    local lo, mid, hi = threeDefensives(NS)
+    m.__spells[lo]     = { name = "delta", iconID = 1 }
+    m.__spells[mid]    = { name = "charlie", iconID = 1 }
+    m.__spells[hi]     = { name = "bravo", iconID = 1 }
     m.__spells[424242] = { name = "alpha", iconID = 1 }
     NS.SetByPath("categorySpells", { defensives = { [424242] = true } })
     -- SAY WHAT CANVAS THIS PACKS INTO. From LibKa0s v1.50.0 `columns` is a maximum, fitted to
@@ -313,7 +326,7 @@ test("general → spell categories: the list draws two columns, filled row-major
     assertTrue(#drawn >= 4, "the four named defensives are drawn")
     -- The by-name order first: alpha, bravo, charlie, delta.
     assertEqual(table.concat({ drawn[1].id, drawn[2].id, drawn[3].id, drawn[4].id }, ","),
-        "424242,118038,12975,871")
+        table.concat({ 424242, hi, mid, lo }, ","))
     -- Then WHERE each one landed. red under column-major (alpha and charlie sharing a row), and
     -- red under a silent return to one entry per row (every col == 1).
     assertEqual(drawn[1].row, drawn[2].row, "entries 1 and 2 share the first row")

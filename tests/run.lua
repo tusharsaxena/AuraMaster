@@ -114,6 +114,7 @@ Kit.run{
         "test_containermanager_queue",
         "test_compat",
         "test_clients",
+        "test_categories_clients",
         "test_secrets",
         "test_bus",
         "test_state",

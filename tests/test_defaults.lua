@@ -7,6 +7,9 @@ local T = _G.AM_TEST
 local test, assertEqual, assertTrue, assertFalse = T.test, T.assertEqual, T.assertTrue, T.assertFalse
 local NS = T.NS
 local C, Cat = NS.Constants, NS.Categories
+-- The kit profile (clients-§6): the shipped spell lists are the client's own (defaults/Categories.lua
+-- picks WoW Forever's generated seeds on forever), so a case pinned to Retail's ids says so.
+local IS_FOREVER = os.getenv("KA0S_KIT_CLIENT") == "forever"
 
 local function set(list)
     local s = {}
@@ -215,6 +218,16 @@ test("defaults: CC Loss of Control, CC Root and CC Snare ship as non-empty HARMF
     -- Canonical members, one per bucket, from the ids the research run reached directly: a list
     -- rewritten down to a stub would still satisfy every shape check above.
     local hard = shippedSpells("HARMFUL", "hardCC")
+    if IS_FOREVER then
+        -- WoW Forever's own seeds (docs/spell-research/2026-11-14-forever/), every rank an id of its own.
+        assertEqual(hard[853], "PALADIN", "Hammer of Justice (Rank 1)")
+        assertEqual(hard[118], "MAGE", "Polymorph (Rank 1)")
+        assertEqual(hard[3355], "HUNTER", "Freezing Trap (Rank 1), the aura id")
+        assertEqual(shippedSpells("HARMFUL", "ccRoot")[339], "DRUID", "Entangling Roots (Rank 1)")
+        assertEqual(shippedSpells("HARMFUL", "ccRoot")[122], "MAGE", "Frost Nova (Rank 1)")
+        assertEqual(shippedSpells("HARMFUL", "ccSnare")[1715], "WARRIOR", "Hamstring (Rank 1)")
+        return
+    end
     assertEqual(hard[853], "PALADIN", "Hammer of Justice")
     assertEqual(hard[118], "MAGE", "Polymorph")
     assertEqual(hard[3355], "HUNTER", "Freezing Trap — the bridged aura id, not the cast id")
@@ -353,6 +366,11 @@ test("defaults: one Healing category holds both retired healing lists, where Cor
     assertTrue(def ~= nil and def.kind == "spells", "a healing spell category")
     assertEqual(def.label, "Healing")
     assertEqual(def.desc, "Heal-over-time effects, shields and beacons.")
+    -- red under: appending healing at the end (the editor's category order would move)
+    assertEqual(Cat.HELPFUL[6].key, "offensiveCDs")
+    assertTrue(Cat.HELPFUL[7] == def, "after Offensive cooldowns, where Core healing buffs sat")
+    -- The ids below are Retail's list; WoW Forever's is its own seed (tests/test_categories_clients.lua).
+    if IS_FOREVER then return end
     -- What the owner's review of the 2026-09-24 combat-log bundle added since (SID, 2026-09-25).
     local FROM_LOGS = { 1227806, 1246768, 77489, 1253593, 383648, 382024, 1260617, 443113, 406220,
         1260681, 367364, 373862, 355941, 1291636, 376788, 409895, 409678, 363534, 373267, 1245369,
@@ -364,9 +382,6 @@ test("defaults: one Healing category holds both retired healing lists, where Cor
     assertEqual(n, #HEALING + #FROM_LOGS, "the union and the reviewed additions, nothing more")
     assertEqual(Cat.Find("HELPFUL", "coreHealing"), nil)
     assertEqual(Cat.Find("HELPFUL", "lesserHealing"), nil)
-    -- red under: appending healing at the end (the editor's category order would move)
-    assertEqual(Cat.HELPFUL[6].key, "offensiveCDs")
-    assertTrue(Cat.HELPFUL[7] == def, "after Offensive cooldowns, where Core healing buffs sat")
 end)
 
 test("defaults: a container draws in the Medium strata, the default UI's own layer (X-3)", function()
