@@ -100,14 +100,13 @@ end
 -- spec section 15): that grows up from a head placed by its BOTTOM at `y`, the column's base, so the
 -- tier's first role sits nearest the unit frames, as in the owner's own profile. The `center` stack
 -- (the call-outs) hangs by its top from the center line and has no stored `y`: calloutLayout below
--- centers its test-mode block on the screen's middle, as far as the preset picker under it allows.
--- THE BASE, 640 down (440 above the bottom at 1080 tall): spec section 15 starts it at 600 and lets
--- the builder tune it. At 600 Advanced's Bars target stack, six shown containers about 610 tall
--- with their test-mode samples, ran 24 off the top of a 1080-tall screen; at 640 it ends 16 under
--- the top edge there and further under on every taller screen. On a 768-tall screen it still cannot
--- fit, nor at 1080 unlocked with its drag strips (docs/known-limitations.md, presets; the owner's
--- call).
-local SIDE_BASE = -640
+-- centers its test-mode block on the screen's middle, as far as the preset picker above it allows.
+-- THE BASE, 740 down (340 above the bottom at 1080 tall), the owner's ruling (spec section 15.1)
+-- after 600 and then 640 left Advanced's Bars target stack, six shown containers about 620 tall with
+-- their test-mode samples, too little room under the top edge. At 740 it fits a 1080-tall screen
+-- locked and unlocked; on a 768-tall one it still runs off the top (docs/known-limitations.md,
+-- presets). Tall unit frames or action bars may now reach the base (the same file).
+local SIDE_BASE = -740
 P.STACKS = {
     cornerRight = { anchor = "TOPRIGHT", x = -255, y = -46,  width = 175, iconsGrowH = "left" },
     cornerLeft  = { anchor = "TOPRIGHT", x = -475, y = -46,  width = 215, iconsGrowH = "left" },
@@ -125,13 +124,14 @@ end
 local GAP = 6
 local ICON_REF = 28
 
--- THE ROOM AROUND THE CALL-OUTS (spec section 15), in UIParent units: the windows are not scaled with
--- the layout, so neither is this. The LibKa0s skin picker is centered `skinShare` of the way up
--- UIParent (libs/LibKa0s/OptionsSkinPicker.lua, HEIGHT_SHARE and place()) and about `skinHeight`
--- tall with its media, outline and scope rows (BASE_H and OptionsSkinPickerRows.lua's
--- acquireControls); the preset picker (settings/PresetPicker.lua) opens centered below the call-out
--- block and is given `pickerHeight` (it is about 280 today, and gains a row of lock and test buttons);
--- `margin` is kept between any two of them and from the screen's bottom edge.
+-- THE ROOM AROUND THE CALL-OUTS (spec sections 15 and 15.1), in UIParent units: the windows are not
+-- scaled with the layout, so neither is this. The LibKa0s skin picker is centered `skinShare` of the
+-- way up UIParent (libs/LibKa0s/OptionsSkinPicker.lua, HEIGHT_SHARE and place()) and about
+-- `skinHeight` tall with its media, outline and scope rows (BASE_H and OptionsSkinPickerRows.lua's
+-- acquireControls). The preset picker (settings/PresetPicker.lua) opens on the same spot and is
+-- given `pickerHeight` (its laid-out height, lock and test buttons included, stays within it). The
+-- two never show at once, so the call-out block clears one rectangle there, as tall as the taller of
+-- the two; `margin` is kept under it and from the screen's bottom edge.
 P.ROOM = { skinShare = 0.75, skinHeight = 334, skinWidth = 308, pickerHeight = 360, pickerWidth = 340,
     margin = 8 }
 -- The call-outs' font sizes, largest first: the owner's is 36 (spec section 15).
@@ -576,18 +576,18 @@ local function measureCallouts(specs, size)
 end
 
 --- Where the call-out block may sit on a `parentH` tall parent, as offsets down from its top edge:
---- below the skin picker's rectangle, and above the room the preset picker takes under it.
+--- below the pickers' shared rectangle (spec section 15.1), and above the screen's bottom edge.
 local function calloutRoom(parentH)
     local R = P.ROOM
-    local skinBottom = parentH * (1 - R.skinShare) + R.skinHeight / 2
-    return skinBottom + R.margin, parentH - R.margin - R.pickerHeight - R.margin
+    local pickersBottom = parentH * (1 - R.skinShare) + math.max(R.skinHeight, R.pickerHeight) / 2
+    return pickersBottom + R.margin, parentH - R.margin
 end
 
 --- The call-outs' font size and the block's top (down from the parent's top edge) for the center
 --- stack's specs on a `parentH` tall parent, and the block's width and height in test mode. The
 --- largest size from CALLOUT_SIZE_MAX down to CALLOUT_SIZE_MIN whose block fits the room
---- (calloutRoom), the block centered on the screen's middle as far as the room allows: moved up
---- before the font shrinks. When none fits, the smallest, just under the skin picker, and no lower
+--- (calloutRoom), the block centered on the screen's middle as far as the room allows: moved down
+--- before the font shrinks. When none fits, the smallest, just under the pickers, and no lower
 --- than keeps it on the screen. `strip` is measureCallouts': the head's block starts that far below
 --- the block's top.
 --- @return number size, number top, number width, number height, number strip
@@ -669,7 +669,7 @@ end
 --- bottom-left corner, as Frame:GetRect reads): { left, right, top, bottom, width, height, fontSize }.
 --- It is the UNLOCKED block, drag strips included (measureCallouts), as the preset picker opens it; a
 --- locked block is the same less its strip rows, so it fits inside. nil for a preset with no
---- call-outs. What the preset picker places itself under (spec section 15).
+--- call-outs. What clears the preset picker's rectangle (spec section 15.1).
 --- @return table|nil
 function P.CalloutRect(name, look, parentW, parentH)
     local W = (type(parentW) == "number" and parentW > 0) and parentW or 1920

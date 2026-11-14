@@ -37,11 +37,12 @@ local addonName, NS = ...
 -- NS.MaybeShowSkinPicker, which shows the skin picker only now. A new, reset or copied profile is
 -- offered it again after the profile event (core/AuraMaster.lua's rebuildProfile).
 --
--- WHERE IT OPENS (spec section 15). Centered across, its top just under the lowest call-out block
--- any preset draws (NS.PresetData.CalloutRect, unlocked, in test mode), so whichever preset the player
--- picks, its call-outs and the window do not meet; the builder keeps those blocks under the LibKa0s
--- skin picker and leaves this window `PresetData.ROOM.pickerHeight` below them. UIParent's size is
--- read each time it opens, 1920 x 1080 when it cannot be read.
+-- WHERE IT OPENS (spec section 15.1). Where the LibKa0s skin picker does: centered across, its CENTER
+-- 75% of the way up UIParent (libs/LibKa0s/OptionsSkinPicker.lua place()), the bare CENTER when
+-- UIParent's height cannot be read. The two never show at once (the skin picker is hidden while this
+-- window is up), so they share the spot. UIParent is read each time it opens. The spot depends on no
+-- preset: the builder places every preset's call-out block clear of it
+-- (NS.PresetData.CalloutRect, unlocked, in test mode, under PresetData.ROOM).
 --
 -- THE LOCK AND TEST MODE. Opening records the lock and unlocks the containers, through the seam
 -- `/am unlock` writes (NS.SetByPath "locked"). Two buttons show and flip the lock and test mode (test
@@ -586,34 +587,29 @@ local function readable(v) return type(v) == "number" and v == v and v > 0 end
 
 --- Where the window opens on a `parentW` x `parentH` UIParent (1920 x 1080 when either cannot be
 --- read), in UIParent's own coordinates (from its bottom-left corner, as Frame:GetRect reads):
---- { left, right, top, bottom, width, height }. Centered across; its top a margin under the lowest
---- call-out block any preset draws in either style, and no lower than keeps the room it is given
---- (PresetData.ROOM.pickerHeight, what its layout fits in) above the bottom edge. Pure.
+--- { left, right, top, bottom, width, height }. Centered across, its center the skin picker's share
+--- (PresetData.ROOM.skinShare) of the way up, as tall as the room it is given
+--- (PresetData.ROOM.pickerHeight, what its layout fits in). Pure.
 --- @return table
 function Picker.Placement(parentW, parentH)
-    local D = NS.PresetData
-    local R = D.ROOM
+    local R = NS.PresetData.ROOM
     local W = readable(parentW) and parentW or FALLBACK_W
     local H = readable(parentH) and parentH or FALLBACK_H
-    local h, under = R.pickerHeight, nil
-    for _, name in ipairs(D.NAMES) do
-        for _, look in ipairs(D.LOOKS) do
-            local block = D.CalloutRect(name, look, W, H)
-            if block and (under == nil or block.bottom < under) then under = block.bottom end
-        end
-    end
-    local top = under and (under - R.margin) or (H / 2 + h / 2)
-    top = math.min(math.max(top, R.margin + h), H - R.margin)
-    return { left = W / 2 - WIDTH / 2, right = W / 2 + WIDTH / 2, top = top, bottom = top - h,
+    local h, cy = R.pickerHeight, H * R.skinShare
+    return { left = W / 2 - WIDTH / 2, right = W / 2 + WIDTH / 2, top = cy + h / 2, bottom = cy - h / 2,
         width = WIDTH, height = h }
 end
 
---- Place the window per Placement, on UIParent's size as it reads now.
+--- Place the window as the skin picker's place() does, on UIParent's height as it reads now: its
+--- CENTER the share of the way up from UIParent's BOTTOM, or the bare CENTER when it cannot be read.
 local function place(f)
-    local w, h = NS.Presets.ParentSize()
-    if not (readable(w) and readable(h)) then w, h = FALLBACK_W, FALLBACK_H end
+    local _, h = NS.Presets.ParentSize()
     f:ClearAllPoints()
-    f:SetPoint("TOP", UIParent, "BOTTOM", 0, Picker.Placement(w, h).top)
+    if readable(h) then
+        f:SetPoint("CENTER", UIParent, "BOTTOM", 0, h * NS.PresetData.ROOM.skinShare)
+    else
+        f:SetPoint("CENTER")
+    end
 end
 
 --- Show the window, fresh: Simple in Bars selected, nothing picked, nothing previewed, placed and

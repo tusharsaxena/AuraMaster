@@ -8,8 +8,8 @@
 local freshEnv = dofile("tests/fresh_env.lua")
 
 local T = _G.AM_TEST
-local test, assertEqual, assertTrue, assertFalse, assertNil =
-    T.test, T.assertEqual, T.assertTrue, T.assertFalse, T.assertNil
+local test, assertEqual, assertTrue, assertFalse, assertNil, assertNear =
+    T.test, T.assertEqual, T.assertTrue, T.assertFalse, T.assertNil, T.assertNear
 
 --- A fresh environment whose skin picker is a recorder (`calls`, one spec per showing), with chat
 --- captured in `lines`.
@@ -485,17 +485,19 @@ test("picker: a profile event takes an open preset confirm down unanswered", fun
     assertEqual(#calls, 0, "a hide this addon makes offers no skin picker")
 end)
 
--- ── placed centered, opened unlocked, lock and test mode on the window (AM-PR10; spec section 15) ──
+-- ── placed where the skin picker is, opened unlocked, lock and test mode on the window ──
+-- (AM-PR10 and AM-PR12; spec sections 15 and 15.1)
 
---- Record the window's own anchor on UIParent (`rec.anchor`) and the heights its layout sets
---- (`rec.heights`), as the shape case records its setters.
+--- Record the window's own anchor (`rec.anchor`, its last SetPoint on UIParent, or a bare one-point
+--- SetPoint, the CENTER fallback; the kit's child regions are the frame itself and anchor to it) and
+--- the heights its layout sets (`rec.heights`), as the shape case records its setters.
 local function recordWindow(m)
     local rec, real = { heights = {} }, m.CreateFrame
     m.CreateFrame = function(kind, name, parent, template)
         local f = real(kind, name, parent, template)
         if name == WINDOW then
             rawset(f, "SetPoint", function(self, ...)
-                if select(2, ...) == m.UIParent then rec.anchor = { ... } end
+                if select("#", ...) == 1 or select(2, ...) == m.UIParent then rec.anchor = { ... } end
                 return self
             end)
             rawset(f, "SetHeight", function(self, v) rec.heights[#rec.heights + 1] = v; return self end)
@@ -529,65 +531,82 @@ end
 
 local function label(btn) return rawget(btn.text, "__label") end
 
-test("picker: opens centered below the call-outs", function()
+test("picker: opens where the skin picker does", function()
     local NS, m = fresh()
     local rec = recordWindow(m)
     local R = NS.PresetData.ROOM
-    NS.Presets.ParentSize = function() return 2560, 1440 end
-    local f = NS.MaybeShowPresetPicker()
-    local place = NS.PresetPicker.Placement(2560, 1440)
-    -- red under: the window on the left edge, vertically centered (LEFT, 24, 0), over the call-outs
-    assertEqual(rec.anchor[1], "TOP", "placed by its top")
-    assertEqual(rec.anchor[3], "BOTTOM", "on UIParent's bottom edge")
-    assertEqual(rec.anchor[4], 0, "centered across")
-    assertEqual(rec.anchor[5], place.top, "at the placement's top")
-    assertEqual((place.left + place.right) / 2, 1280, "the placement is centered across")
-    for _, name in ipairs({ "advanced", "healer" }) do
-        for _, look in ipairs(NS.PresetData.LOOKS) do
-            local block = NS.PresetData.CalloutRect(name, look, 2560, 1440)
-            assertTrue(place.top <= block.bottom - R.margin, name .. "/" .. look .. ": under the call-out block")
-        end
+    for _, H in ipairs({ 1080, 768, 1440 }) do
+        local W = H * 16 / 9
+        NS.Presets.ParentSize = function() return W, H end
+        local f = NS.MaybeShowPresetPicker() or NS.ShowPresetPicker()
+        local place = NS.PresetPicker.Placement(W, H)
+        -- red under: the window placed by its TOP under the lowest call-out block (AM-PR10)
+        assertEqual(rec.anchor[1], "CENTER", H .. ": placed by its center, as the skin picker")
+        assertTrue(rec.anchor[2] == m.UIParent, H .. ": on UIParent")
+        assertEqual(rec.anchor[3], "BOTTOM", H .. ": from UIParent's bottom edge")
+        assertEqual(rec.anchor[4], 0, H .. ": centered across")
+        assertNear(rec.anchor[5], H * 0.75, 0.001, H .. ": 75% of the way up")
+        assertEqual(R.skinShare, 0.75, "the skin picker's share (libs/LibKa0s/OptionsSkinPicker.lua HEIGHT_SHARE)")
+        assertNear((place.top + place.bottom) / 2, H * 0.75, 0.001, H .. ": the placement's center")
+        assertNear((place.left + place.right) / 2, W / 2, 0.001, H .. ": the placement is centered across")
+        assertEqual(place.top - place.bottom, R.pickerHeight, H .. ": the room it is given")
+        assertTrue(place.top <= H and place.bottom >= 0, H .. ": on the screen")
+        -- The placement no longer reads any preset's call-outs (spec section 15.1).
+        local real = NS.PresetData.CalloutRect
+        NS.PresetData.CalloutRect = function() error("the picker placement read a call-out block") end
+        local again = NS.PresetPicker.Placement(W, H)
+        NS.PresetData.CalloutRect = real
+        assertEqual(again.top, place.top, H .. ": the same without the call-outs")
+        -- The window's laid-out height fits the room it is given, in every state it shows.
+        f.dd.onSelect("advanced")
+        for _, h in ipairs(rec.heights) do assertTrue(h <= R.pickerHeight, "laid out within its room: " .. h) end
+        f.notNow:__fire("OnClick")
     end
-    assertTrue(place.bottom >= R.margin, "above the bottom edge")
-    -- The window's laid-out height fits the room the call-outs leave it, in every state it shows.
-    f.dd.onSelect("advanced")
-    for _, h in ipairs(rec.heights) do assertTrue(h <= R.pickerHeight, "laid out within its room: " .. h) end
-    f.notNow:__fire("OnClick")
-    -- UIParent unreadable: placed for 1920 x 1080.
+    -- UIParent unreadable: the bare CENTER, as the skin picker's place() falls back.
     NS.Presets.ParentSize = function() return 0, 0 end
     NS.ShowPresetPicker()
-    assertEqual(rec.anchor[5], NS.PresetPicker.Placement(1920, 1080).top, "the fallback")
+    assertEqual(#rec.anchor, 1, "the fallback has no parent or offset")
+    assertEqual(rec.anchor[1], "CENTER", "the fallback")
+    local fb = NS.PresetPicker.Placement(nil, nil)
+    assertNear((fb.top + fb.bottom) / 2, 1080 * 0.75, 0.001, "the pure fallback is 1920 x 1080")
 end)
 
--- Advanced's three call-outs do not fit between the skin picker and the picker at 1080: at the
--- smallest size (24) the unlocked test-mode block is 520 tall, and the room under the skin picker
--- holds less than that plus the picker's. The picker then sits at the bottom edge, over the block's
--- lower lines; docs/known-limitations.md records it for the owner's call (AM-PR10).
-local OVERLAPS_AT_1080 = { advanced = true }
-
-test("presets data: the call-out block, the picker and the skin picker do not intersect at 1080", function()
+test("picker: the call-out block clears the picker at 1080 for every preset", function()
     local NS = fresh()
     local D, R = NS.PresetData, NS.PresetData.ROOM
-    -- 16:9, 16:10, 21:9, 4:3 and 5:4 at 1080 tall.
-    for _, W in ipairs({ 1920, 1728, 2520, 1440, 1350 }) do
-        local place, skin = NS.PresetPicker.Placement(W, 1080), skinRect(R, W, 1080)
-        assertFalse(intersects(place, skin), W .. ": the picker clear of the skin picker")
+    -- 16:9, 16:10, 21:9, 4:3 and 5:4 at 1080 tall, and 1440 tall at 16:9.
+    for _, scr in ipairs({ { 1920, 1080 }, { 1728, 1080 }, { 2520, 1080 }, { 1440, 1080 }, { 1350, 1080 },
+        { 2560, 1440 } }) do
+        local W, H = scr[1], scr[2]
+        local place, skin = NS.PresetPicker.Placement(W, H), skinRect(R, W, H)
         assertTrue(place.bottom >= R.margin and place.left >= 0 and place.right <= W, W .. ": the picker on the screen")
-        for _, name in ipairs({ "advanced", "healer" }) do
+        -- The two pickers share one spot and never show at once.
+        assertTrue(intersects(place, skin), W .. ": the picker is where the skin picker is")
+        for _, name in ipairs(D.NAMES) do
             for _, look in ipairs(D.LOOKS) do
-                local block, where = D.CalloutRect(name, look, W, 1080), ("%s/%s at %d"):format(name, look, W)
-                assertFalse(intersects(block, skin), where .. ": the call-outs clear of the skin picker")
-                if OVERLAPS_AT_1080[name] then
-                    -- The exception is forced, not chosen: the smallest block and the picker's room
-                    -- do not fit under the skin picker together.
-                    assertEqual(block.fontSize, D.CALLOUT_SIZE_MIN, where .. ": already the smallest size")
-                    assertTrue(block.height + R.pickerHeight + 3 * R.margin > skin.bottom, where .. ": no room for both")
-                    assertEqual(place.bottom, R.margin, where .. ": the picker as low as it goes")
-                else
-                    -- red under: a placement that ignores the call-outs (the screen's middle, centered)
+                local block, where = D.CalloutRect(name, look, W, H), ("%s/%s at %dx%d"):format(name, look, W, H)
+                if block then
+                    -- red under: Advanced's block under the skin picker's room, the old picker over its lower lines
                     assertFalse(intersects(block, place), where .. ": the call-outs clear of the picker")
+                    assertFalse(intersects(block, skin), where .. ": and of the skin picker")
+                    assertTrue(block.top <= place.bottom - R.margin, where .. ": a margin under the picker")
+                    assertTrue(block.bottom >= R.margin - 0.5, where .. ": above the bottom edge")
                 end
             end
+        end
+    end
+    -- 768 tall (UI scale off): the room under the pickers is 380, which Healer's one call-out fits but
+    -- Advanced's three cannot, 516 tall unlocked even at 24, so they rise over the picker's lower part
+    -- (docs/known-limitations.md, presets). Forced, not chosen: pinned so it cannot spread.
+    for _, W in ipairs({ 1365, 1229, 1792, 1024, 960 }) do
+        local place = NS.PresetPicker.Placement(W, 768)
+        for _, look in ipairs(D.LOOKS) do
+            local heal, adv = D.CalloutRect("healer", look, W, 768), D.CalloutRect("advanced", look, W, 768)
+            assertFalse(intersects(heal, place), ("healer/%s at %dx768: clear of the picker"):format(look, W))
+            local where = ("advanced/%s at %dx768"):format(look, W)
+            assertEqual(adv.fontSize, D.CALLOUT_SIZE_MIN, where .. ": already the smallest size")
+            assertTrue(adv.height > (768 - R.margin) - (768 - place.bottom + R.margin), where .. ": no room under it")
+            assertTrue(adv.bottom >= R.margin - 0.5, where .. ": on the screen")
         end
     end
 end)

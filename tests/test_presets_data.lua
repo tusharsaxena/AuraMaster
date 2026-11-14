@@ -309,8 +309,9 @@ end
 -- AM-PR01 review). By the spec 4 numbers the far stack sits under both corner columns on 16:9, the
 -- right stack under cornerLeft on 16:10 as well, and on 4:3 and 5:4 the right and far stacks run under
 -- the corners entirely. The corner stacks grow down from y = 46 and the side stacks grow up from
--- their base at y = 640, so every corner stack must end above every side stack's base. The check
--- measures that at the test-mode sample count: every container of the preset applied, each as tall as
+-- their base at y = 740 (spec section 15.1), so every corner stack must end above every side
+-- stack's base. The check measures that at the test-mode sample count: every container of the preset
+-- applied, each as tall as
 -- Preview.Extent makes its placeholder block, each stack member hung from the one before by its gap,
 -- below it growing down and above it growing up. Every other pair of columns stays disjoint. A tall
 -- side stack (Advanced's target stack) may reach up into a corner column, and in play a corner stack
@@ -403,17 +404,16 @@ local function checkCornersAboveBases(spans, heads, what)
     end
 end
 
--- THE TOP EDGE (the AM-PR09 review). Every stack's test-mode span, locked, stays on the screen: at or
--- under its top edge. But one, recorded in docs/known-limitations.md (presets) for the owner's call:
--- Advanced's Bars target stack, six shown containers about 610 tall with their samples (the seventh,
--- tsteal, is stored off), cannot fit a 768-tall screen above any base the unit frames leave free. The case also fails while that stack
--- fits, so the record cannot outlive the limit.
-local OFF_TOP = { ["advanced/bars right 768"] = true }
--- The same, unlocked, as the preset picker opens the containers (spec section 15): each drag strip
--- adds its room, and Advanced's Bars target stack runs off the top at 1080 tall too, about 84 over
--- (the AM-PR11 review; docs/known-limitations.md). Each entry is the most it may run over, so the
--- overshoot cannot grow unnoticed, and it fails too once the stack fits.
-local OFF_TOP_UNLOCKED = { ["advanced/bars right 768"] = 265, ["advanced/bars right 1080"] = 90 }
+-- THE TOP EDGE (the AM-PR09 review, tightened on AM-PR12 to the lower base of spec section 15.1).
+-- Every stack's test-mode span, locked and unlocked (as the preset picker opens the containers, each
+-- drag strip adding its room), stays on the screen: at or under its top edge. At 1080 tall that now
+-- holds for every stack, Advanced's Bars target stack (six shown containers about 620 tall with their
+-- samples; the seventh, tsteal, is stored off) included: 16 under the top edge unlocked. But one,
+-- recorded in docs/known-limitations.md (presets) for the owner's call: that stack cannot fit a
+-- 768-tall screen above the base, 88 over its top locked and 188 unlocked. Each entry is the most it
+-- may run over, so the overshoot cannot grow unnoticed, and the case fails too once the stack fits.
+local OFF_TOP = { ["advanced/bars right 768"] = 88 }
+local OFF_TOP_UNLOCKED = { ["advanced/bars right 768"] = 188 }
 
 --- Every stack in `spans` (sampleSpans; `unlocked` as it was measured) ends at or under the top edge,
 --- but those its OFF_TOP table names.
@@ -424,10 +424,8 @@ local function checkTopEdge(spans, name, look, W, H, unlocked)
             look, stack, W, H, unlocked and ", unlocked" or "")
         if off[key] then
             assertTrue(span.top > 0, where .. " now fits under the top edge: drop it from OFF_TOP and the limitation")
-            if type(off[key]) == "number" then
-                assertTrue(span.top <= off[key], ("%s runs %d over the top edge, past its recorded %d"):format(where,
-                    span.top, off[key]))
-            end
+            assertTrue(span.top <= off[key], ("%s runs %d over the top edge, past its recorded %d"):format(where,
+                span.top, off[key]))
         else
             assertTrue(span.top <= 0, where .. ": its test-mode top is on screen (" .. span.top .. ")")
         end
@@ -457,7 +455,7 @@ test("presets: placement at 768/1080/1440 x 16:9, 16:10, 21:9, 4:3, 5:4", functi
                         assertTrue(l >= 0, where .. ": left edge on screen (" .. l .. ")")
                         assertTrue(r <= W + 0.001, where .. ": right edge on screen (" .. r .. ")")
                         assertTrue(y <= 0, where .. ": head or base below the top edge")
-                        assertTrue(y >= -0.6 * H, where .. ": above 60% of the height")
+                        assertTrue(y >= -0.7 * H, where .. ": above 70% of the height")
                         if spec.stack == "cornerRight" then
                             assertNear(r, W - 80 * P.ScaleX(W, H), 1, where .. " sits 80 in from the right edge")
                         end
@@ -498,6 +496,29 @@ local function applied(env, name, look)
     return out
 end
 
+-- The base (spec section 15.1): about 340 reference units above the bottom edge, y = -740 from the top
+-- at 1080 tall, scaled by k.
+local SIDE_BASE = -740
+
+test("presets data: side stacks sit on the lower base", function()
+    local P = NS.PresetData
+    for _, H in ipairs({ 768, 1080, 1440 }) do
+        local k = P.Scale(H)
+        for _, name in ipairs(NAMES) do
+            for _, look in ipairs(P.LOOKS) do
+                for _, spec in ipairs(P.Build(name, look, H * 16 / 9, H)) do
+                    if UP[spec.stack] and not spec.attachTo then
+                        local where = ("%s/%s %s at %d"):format(name, look, spec.role, H)
+                        -- red under: the AM-PR09 base, 640 down
+                        assertEqual(spec.overrides.position.y, math.floor(SIDE_BASE * k + 0.5), where .. " on the base")
+                        assertNear(H + spec.overrides.position.y, 340 * k, 1, where .. ": 340 above the bottom")
+                    end
+                end
+            end
+        end
+    end
+end)
+
 test("presets data: side stacks grow up from their base", function()
     local env = freshEnv()
     env.Helpers.SkinPicker = function() return nil end
@@ -514,7 +535,7 @@ test("presets data: side stacks grow up from their base", function()
                         else
                             assertTrue(o.position.point:find("^BOTTOM") ~= nil, where .. " is placed by a BOTTOM point")
                             assertEqual(o.position.relativePoint, "TOP", where)
-                            assertEqual(o.position.y, math.floor(-640 * P.Scale(H) + 0.5), where .. " sits on the base")
+                            assertEqual(o.position.y, math.floor(SIDE_BASE * P.Scale(H) + 0.5), where .. " sits on the base")
                         end
                     else
                         assertEqual(o.layout.growV, "down", where .. " grows down")
@@ -634,11 +655,12 @@ test("presets data: the call-outs are centered and colored like the owner's", fu
     assertEqual(seen, 3, "three call-outs")
 end)
 
---- The room the call-out block may take on a `H` tall parent (spec section 15): from below the skin
---- picker down to above the preset picker's room, as offsets from the top edge.
+--- The room the call-out block may take on a `H` tall parent (spec section 15.1): from a margin below
+--- the pickers' shared rectangle (centered `skinShare` of the way up, as tall as the taller of the
+--- two) down to a margin above the bottom edge, as offsets from the top edge.
 local function calloutRoom(P, H)
     local R = P.ROOM
-    return H * (1 - R.skinShare) + R.skinHeight / 2 + R.margin, H - 2 * R.margin - R.pickerHeight
+    return H * (1 - R.skinShare) + math.max(R.skinHeight, R.pickerHeight) / 2 + R.margin, H - R.margin
 end
 
 test("presets data: the call-out block takes the largest font that fits, centered as far as it can", function()
@@ -666,8 +688,8 @@ test("presets data: the call-out block takes the largest font that fits, centere
                 assertTrue(bigger.height > hi - lo, where .. ": one size larger would not fit")
             end
             if r.height <= hi - lo then
-                assertTrue(top >= lo - 0.5, where .. ": below the skin picker")
-                assertTrue(bottom <= hi + 0.5, where .. ": above the picker's room")
+                assertTrue(top >= lo - 0.5, where .. ": below the pickers")
+                assertTrue(bottom <= hi + 0.5, where .. ": above the bottom edge")
                 local want = math.min(math.max(H / 2 - r.height / 2, lo), hi - r.height)
                 assertNear(top, want, 0.5, where .. ": as near the middle as the room allows")
             else
