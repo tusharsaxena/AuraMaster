@@ -269,8 +269,12 @@ function Presets.EndPreview(keep, mode)
     onScreen, heldForCombat = nil, false
     stopTestMode("preset preview ended")
     debug("preview ended (%s)", keep and mode or "restored")
-    if keep and mode == "add" then return Presets.Apply(shown.name, shown.look, "add") end
-    return true
+    local ok, msg, gray = true, nil, nil
+    if keep and mode == "add" then ok, msg, gray = Presets.Apply(shown.name, shown.look, "add") end
+    -- The first-run picker repaints from the screen: a preview combat or another surface ended is
+    -- not left claiming to be up (settings/PresetPicker.lua). Reached at call time.
+    if NS.RefreshPresetPicker then NS.RefreshPresetPicker() end
+    return ok, msg, gray
 end
 
 --- Login: restore every snapshot a profile still holds, a preview a /reload or a crash interrupted.

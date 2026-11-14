@@ -2647,7 +2647,7 @@ Total.
 - seed: fresh install not marked seen
 - seed: the v19 step is idempotent and keeps a stored false on an unseeded profile
 
-### test_presetpicker.lua (20)
+### test_presetpicker.lua (24)
 
 - picker: due on new profile only
 - picker: shows before skin picker
@@ -2669,6 +2669,10 @@ Total.
 - picker: /am preset with the window up offers the skin picker on a Cancel too
 - picker: /am preset with the window down leaves the latch alone
 - picker: showing re-raises a shown StaticPopup
+- picker: a pick made under the confirm still applies what the confirm named
+- picker: combat under the confirm restores, and the answer still applies
+- picker: Not now under the confirm takes the confirm down with it
+- picker: a profile event takes an open preset confirm down unanswered
 
 ### test_pages_presets.lua (11)
 
@@ -2992,7 +2996,7 @@ Total.
 | test_presets_apply.lua | 11 |
 | test_presets_preview.lua | 19 |
 | test_presets_seed.lua | 7 |
-| test_presetpicker.lua | 20 |
+| test_presetpicker.lua | 24 |
 | test_pages_presets.lua | 11 |
 | test_perf.lua | 8 |
 | test_debuglogsetup.lua | 9 |
@@ -3010,4 +3014,4 @@ Total.
 | test_skin_switch.lua | 34 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2464** |
+| **Total** | **2468** |

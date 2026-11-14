@@ -25,7 +25,8 @@ local function fresh(opts)
     return NS, m, calls, lines
 end
 
---- Record StaticPopup_Show calls; each popup a table, as the client's is.
+--- Record StaticPopup_Show calls; each popup a table, as the client's is. StaticPopup_Hide hides
+--- each shown one of that kind, running its OnHide once, as the client's does.
 local function popups(m)
     local shown = {}
     m.StaticPopup_Show = function(which, a1, a2)
@@ -33,7 +34,23 @@ local function popups(m)
         shown[#shown + 1] = popup
         return popup
     end
+    m.StaticPopup_Hide = function(which)
+        for _, popup in ipairs(shown) do
+            if popup.which == which and not popup.hidden then
+                popup.hidden = true
+                m.StaticPopupDialogs[which].OnHide(popup, popup.data)
+            end
+        end
+    end
     return shown
+end
+
+--- The player's Apply on popup `popup`: OnAccept, then the hide every answer makes.
+local function accept(m, popup)
+    local dialog = m.StaticPopupDialogs.AURAMASTER_APPLY_PRESET
+    if popup.hidden then return end
+    dialog.OnAccept(popup, popup.data)
+    if not popup.hidden then popup.hidden = true; dialog.OnHide(popup, popup.data) end
 end
 
 --- The ids of the profile's containers, in order, as text.
@@ -382,4 +399,72 @@ test("picker: showing re-raises a shown StaticPopup", function()
     assertEqual(#raised, 1, "the shown popup, not the hidden one")
     assertEqual(raised[1], "StaticPopup1")
     m.StaticPopup1, m.StaticPopup2 = nil, nil
+end)
+
+-- ── the confirm is answered as things stand when it is answered (AM-PR08 review fixes) ───────
+
+test("picker: a pick made under the confirm still applies what the confirm named", function()
+    local NS, m, _, lines = fresh()
+    NS.Presets.MarkPickerSeen()
+    local shown = popups(m)
+    local f = NS.ShowPresetPicker()
+    f.dd.onSelect("advanced")
+    f.apply:__fire("OnClick")
+    assertEqual(shown[1].a2, "Advanced")
+    f.dd.onSelect("simple")   -- the window stays usable under the confirm
+    accept(m, shown[1])
+    -- red under: the keep decided at the click (Simple's preview kept, Advanced announced)
+    assertEqual(#NS.Database.GetContainers(), NS.PresetData.Count("advanced"), "what the confirm named")
+    assertTrue(anyLine(lines, "Applied the Advanced preset"))
+    assertFalse(NS.Presets.IsPreviewing(), "no snapshot left behind")
+    assertFalse(f:IsShown())
+end)
+
+test("picker: combat under the confirm restores, and the answer still applies", function()
+    local NS, m, _, lines = fresh()
+    NS.Presets.MarkPickerSeen()
+    local shown = popups(m)
+    local f = NS.ShowPresetPicker()
+    f.dd.onSelect("simple")
+    f.apply:__fire("OnClick")
+    NS.addon:OnCombatChanged("PLAYER_REGEN_DISABLED")
+    assertFalse(NS.Presets.IsPreviewing(), "combat restored the preview")
+    -- red under: a window repainted only by its own clicks (the preview line left showing)
+    assertFalse(f.status:IsShown(), "the window no longer claims a preview")
+    NS.addon:OnCombatChanged("PLAYER_REGEN_ENABLED")
+    accept(m, shown[1])
+    -- red under: EndPreview(true) on no preview ("No preset is being previewed.", nothing written)
+    assertFalse(anyLine(lines, "No preset is being previewed."))
+    assertEqual(#NS.Database.GetContainers(), NS.PresetData.Count("simple"))
+    assertFalse(f:IsShown())
+end)
+
+test("picker: Not now under the confirm takes the confirm down with it", function()
+    local NS, m = fresh()
+    NS.Presets.MarkPickerSeen()
+    local shown = popups(m)
+    local before = ids(NS)
+    local f = NS.ShowPresetPicker()
+    f.dd.onSelect("healer")
+    f.apply:__fire("OnClick")
+    f.notNow:__fire("OnClick")
+    -- red under: a confirm that outlives the window that raised it
+    assertTrue(shown[1].hidden, "the confirm goes down with the window")
+    m.StaticPopupDialogs.AURAMASTER_APPLY_PRESET.OnAccept(shown[1], shown[1].data)
+    assertEqual(ids(NS), before, "a late answer writes nothing")
+end)
+
+test("picker: a profile event takes an open preset confirm down unanswered", function()
+    local NS, m, calls = fresh()
+    local shown = popups(m)
+    NS.Slash:OnSlash("preset healer")
+    assertEqual(shown[1].a1, 4)
+    NS.db:SetProfile("ConfirmProbe")
+    -- red under: the confirm left up, its Replace then run on a profile it never counted
+    assertTrue(shown[1].hidden, "the profile event hides it")
+    local held = #NS.Database.GetContainers()
+    m.StaticPopupDialogs.AURAMASTER_APPLY_PRESET.OnAccept(shown[1], shown[1].data)
+    assertEqual(#NS.Database.GetContainers(), held, "nothing written into the new profile")
+    assertEqual(#NS.db.sv.profiles.Default.containerOrder, 4, "nor the old one")
+    assertEqual(#calls, 0, "a hide this addon makes offers no skin picker")
 end)

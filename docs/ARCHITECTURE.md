@@ -99,7 +99,7 @@ Five starting points for a profile's containers (spec
 |---|---|
 | `defaults/Presets.lua` | `NS.PresetData`: the data (the six stacks in a 1080-tall reference space, the containers by role, each preset's stacks) and the pure builder. `Build(name, look, W, H, picked)` answers the specs in creation order, a stack's head placed on `UIParent` and every member attached to the container above it; `Realize(specs, keys, create)` walks them through a writer, filling each member's `attach.container` with the id its parent took. Carries no appearance media and no spell ids |
 | `modules/Presets.lua` | `NS.Presets`, the one writer: `Apply(name, look, mode)` through `ContainerManager.Create` / `.Delete` and `Categories.CreateUserCategory` (Advanced's two custom categories, reused by name on a re-apply, `ResolveCustom`); the preview (`BeginPreview`, `EndPreview`, `IsPreviewing`, `Previewed`, `RestoreStaleSnapshots`, `RestoreStaleSnapshot`, `OnCombatStart`, `OnCombatEnd`); the picker latch (`PickerSeen`, `MarkPickerSeen`); the untouched-seed record (`RecordSeed`, `SeedUntouched`, `Fingerprint`); `OwnContainerCount`, `ParentSize` |
-| `settings/PresetPicker.lua` | The first-run window (`NS.PresetPickerDue`, `NS.MaybeShowPresetPicker`, `NS.ShowPresetPicker`, `NS.HidePresetPicker`, `NS.PresetPickerHolding`) and the preset confirm, one StaticPopup behind two entry points: `NS.ConfirmPreset(name, look, mode)` applies (`/am preset <name>`, the tab with no preview of its own), `NS.ConfirmPreview(name, look, mode)` keeps the preview on screen while it asks, then keeps it (the tab) |
+| `settings/PresetPicker.lua` | The first-run window (`NS.PresetPickerDue`, `NS.MaybeShowPresetPicker`, `NS.ShowPresetPicker`, `NS.HidePresetPicker`, `NS.PresetPickerHolding`, `NS.RefreshPresetPicker`) and the preset confirm, one StaticPopup behind two entry points: `NS.ConfirmPreset(name, look, mode)` applies (`/am preset <name>`, the tab with no preview of its own), `NS.ConfirmPreview(name, look, mode)` keeps the preview on screen while it asks, then keeps it (the tab). An answer decides what it writes when it is given, and the confirm goes down unanswered with the window and with every `NS.HidePresetPicker` (a profile event, the stand-down) |
 | `settings/ContainersPresets.lua` | The Containers page's **Presets** tab, the General section's second tab: `NS.RenderPresetsTab`, and `NS.PresetsTabLeft`, its `onLeave` |
 
 - **Its own profile key**, `presets` (`docs/schema.md`): `pickerSeen` (default false; schema v19 sets
@@ -113,7 +113,9 @@ Five starting points for a profile's containers (spec
   kept. Ending unkept restores it exactly, ids included (`ContainerManager.RestoreSnapshot`, the
   registry writer's restore act); keeping it in Replace drops it; keeping it in Add restores it, then
   applies the preset on top. `NS.Presets.Previewed()` answers the preset, its style and a token naming
-  that one preview, so the picker and the tab each end only a preview they started.
+  that one preview, so the picker and the tab each end only a preview they started. `Presets.Apply`
+  itself settles a preview that is up (a restore, then the write), so no caller can leave a snapshot
+  behind a confirmed preset; every end repaints the picker (`NS.RefreshPresetPicker`).
 - **Every other end restores.** A `/reload` or a crash leaves the snapshot stored, and the next login
   restores it in every profile before the migration ladder (`Presets.RestoreStaleSnapshots`, first in
   `NS.RunMigrations`). A profile event restores the profile the preview was taken in, never the new

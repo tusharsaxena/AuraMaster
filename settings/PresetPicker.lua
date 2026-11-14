@@ -12,8 +12,11 @@ local addonName, NS = ...
 --   NS.ShowPresetPicker()      `/am preset`: the window on demand, whatever the latch says; refused
 --                              in combat with the combat line.
 --   NS.HidePresetPicker()      takes the window down WITHOUT marking it seen, ending a preview it
---                              started with a restore, and drops a held start: the stand-down and
---                              every profile event.
+--                              started with a restore, drops a held start and takes down an open
+--                              preset confirm unanswered: the stand-down and every profile event.
+--   NS.RefreshPresetPicker()   repaints the window from what is on the screen: NS.Presets calls it
+--                              whenever a preview ends, so one combat or another surface ended does
+--                              not leave the window claiming it is still up.
 --   NS.PresetPickerHolding()   true while the window is up or a start is held: core/SkinSetup.lua's
 --                              skin picker waits behind it, so the two never show at once.
 --   NS.ConfirmPreset(n, l, m)  apply preset `n` in style `l`, mode `m`, behind the confirm that names
@@ -40,7 +43,11 @@ local addonName, NS = ...
 -- THE CONFIRM. Replace asks first, naming the count it removes, except on the first-run showing
 -- while the profile still holds exactly what its seed wrote (NS.Presets.SeedUntouched), where
 -- nothing of the player's is lost (spec section 5). A container made, deleted or edited since, in
--- this session or before a /reload, and it asks.
+-- this session or before a /reload, and it asks. What an answer writes is decided when it is given,
+-- not when the confirm was raised: the window stays usable under it, so the preview may have been
+-- swapped, restored by combat or ended since, and the answer still writes the preset the confirm
+-- named. A confirm never outlives what raised it: the window's close and every hide this addon
+-- makes take it down (a profile event would otherwise let it write into a profile it never counted).
 --
 -- BUILT FROM THE LIBRARY'S PIECES: the window's shell and close mark through core/CoreSetup.lua's
 -- seams (NS.ApplySkin, NS.MakeCloseButton), the dropdown is LibKa0s-Widgets-1.0's, and every
@@ -83,6 +90,7 @@ local LOOK_LABELS = { bars = L["Bars"], icons = L["Icons"] }
 local state = { sel = "simple", look = "bars", picked = false, firstRun = false, owns = false }
 local closing = false   -- true while this file hides the window itself, so OnHide is not a close
 local holdTarget        -- the one-shot PLAYER_REGEN_ENABLED target, while a start is held
+local pending           -- the open confirm's data ({ run, after }), nil while none is up
 
 local function sayGray(msg) NS.Printf("|cff808080%s|r", msg) end
 
@@ -120,6 +128,7 @@ StaticPopupDialogs[POPUP] = {
     -- Every answer hides it (Apply, Cancel, Escape): what waits on the answer runs here, once.
     OnHide       = function(self, data)
         data = data or (self and self.data)
+        if data == pending then pending = nil end
         local after = type(data) == "table" and data.after or nil
         if type(after) == "function" then data.after = nil; after() end
     end,
@@ -144,11 +153,22 @@ local function confirmThen(name, mode, count, ask, run, after)
     end
     local popup = StaticPopup_Show(POPUP, a1, a2)
     if popup then
-        popup.data = { run = run, after = after }
+        pending = { run = run, after = after }
+        popup.data = pending
     elseif after then
         after()
     end
     return nil
+end
+
+--- Take an open preset confirm down unanswered: what it would have run never runs, and what waits on
+--- its answer is dropped too (the hide is this addon's, not the player's).
+local function dropConfirm()
+    local data = pending
+    if not data then return end
+    pending = nil
+    data.run, data.after = function() end, nil
+    if StaticPopup_Hide then StaticPopup_Hide(POPUP) end
 end
 
 --- The line a kept preset earns.
@@ -247,9 +267,11 @@ local function pickLook(look)
     preview()
 end
 
---- The player's close of any kind: the window down, the latch set, then the skin picker's turn.
+--- The player's close of any kind: the window down, its confirm with it, the latch set, then the
+--- skin picker's turn.
 local function finish()
     local f = Picker.frame
+    dropConfirm()
     closing = true
     if f then f:Hide() end
     closing = false
@@ -265,16 +287,16 @@ local function dismiss()
     finish()
 end
 
---- What Apply keeps: the preview up, else the selection written now (a preview combat ended, or Empty).
-local function keepRun()
-    local P, sel, look = NS.Presets, state.sel, state.look
-    if sel ~= "empty" and state.owns and P.IsPreviewing() then
-        return function() return P.EndPreview(true, "replace") end
+--- What Apply keeps, decided when the player answers: the preview this window started, while it is
+--- still preset `sel` in style `look`; else `sel` applied afresh (a preview combat ended or another
+--- pick swapped, or Empty), Apply settling any preview still up first.
+local function keep(sel, look)
+    local P = NS.Presets
+    local n, l = P.Previewed()
+    if sel ~= "empty" and state.owns and n == sel and l == look then
+        return P.EndPreview(true, "replace")
     end
-    return function()
-        if state.owns and P.IsPreviewing() then P.EndPreview(false) end
-        return P.Apply(sel, look, "replace")
-    end
+    return P.Apply(sel, look, "replace")
 end
 
 local function apply()
@@ -282,12 +304,12 @@ local function apply()
         return sayGray(L["cannot apply a preset during combat — its containers would not be drawn or placed until combat ends"])
     end
     if not state.picked then return finish() end
-    local run, sel, look = keepRun(), state.sel, state.look
+    local sel, look = state.sel, state.look
     local count = NS.Presets.OwnContainerCount()
     -- No confirm only on the first-run showing over the untouched seed (spec section 5).
     local ask = count > 0 and not (state.firstRun and NS.Presets.SeedUntouched())
     confirmThen(sel, "replace", count, ask, function()
-        local ok, msg, gray = run()
+        local ok, msg, gray = keep(sel, look)
         if not ok then return say(msg, gray) end
         state.owns = false
         if NS.RefreshOptionsPanel then NS.RefreshOptionsPanel() end
@@ -520,6 +542,7 @@ end
 
 function NS.HidePresetPicker()
     dropHold()
+    dropConfirm()
     local f = Picker.frame
     if not (f and f:IsShown()) then return end
     if state.owns and NS.Presets.IsPreviewing() then NS.Presets.EndPreview(false) end
@@ -527,4 +550,11 @@ function NS.HidePresetPicker()
     closing = true
     f:Hide()
     closing = false
+end
+
+function NS.RefreshPresetPicker()
+    local f = Picker.frame
+    if not (f and f:IsShown()) then return end
+    if not NS.Presets.IsPreviewing() then state.owns = false end
+    refresh()
 end
