@@ -862,3 +862,9 @@ L["cannot apply a preset during combat — its containers would not be drawn or 
 L["No such preset."] = "No such preset."
 L["A preset either replaces your containers or adds to them."] = "A preset either replaces your containers or adds to them."
 L["The Empty preset has no containers to add."] = "The Empty preset has no containers to add."
+
+-- Previewing a preset on the real screen (modules/Presets.lua): its refusals and the combat line.
+L["No preset is being previewed."] = "No preset is being previewed."
+L["cannot end a preset preview during combat — your containers would not be rebuilt until combat ends"] = "cannot end a preset preview during combat — your containers would not be rebuilt until combat ends"
+L["Preset preview ended: combat started, and your containers are back."] = "Preset preview ended: combat started, and your containers are back."
+L["Preset preview ended: combat started, and your containers come back when it ends."] = "Preset preview ended: combat started, and your containers come back when it ends."

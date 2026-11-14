@@ -156,11 +156,19 @@ function addon:OnItemDataLoaded(_, itemID, success)
     if NS.ContainerManager then NS.ContainerManager.OnWeaponItemData(itemID, success) end
 end
 
+--- A preset preview meets combat: its start restores (or holds the restore), its end runs a held one.
+local function presetsOnCombat(event)
+    if event == "PLAYER_REGEN_DISABLED" then NS.Presets.OnCombatStart() else NS.Presets.OnCombatEnd() end
+end
+
 function addon:OnCombatChanged(event)
     traceEvent(event)
     -- First, so the visibility pass below predicts nothing at the pull: PLAYER_REGEN_DISABLED fires
     -- before lockdown, the last moment every follower can still move onto its engine (batch 9 HG-1).
     if NS.EmptyWatch then NS.EmptyWatch.SetCombat(event == "PLAYER_REGEN_DISABLED") end
+    -- A preset preview ends by restoring the player's containers (modules/Presets.lua), first, so
+    -- the test-mode line below finds it already off; combat's end runs a restore lockdown held.
+    if NS.Presets then presetsOnCombat(event) end
     -- Test mode ends when combat starts, while secure writes are still allowed (preview-mode): no
     -- placeholder covers real auras in a fight.
     if event == "PLAYER_REGEN_DISABLED" and NS.State.testMode then NS.Preview.SetTestMode(false, "combat started") end
@@ -235,6 +243,11 @@ end
 
 --- Before the trace, so the trace follows the registry the new profile will run with.
 local function prepareProfile()
+    -- A PRESET PREVIEW ENDS FIRST (modules/Presets.lua): one this session showed is restored into
+    -- the profile it was taken in, never this one, and a snapshot this profile arrived holding (a
+    -- preview another session never ended) is restored here, so the sync, the prepare and the
+    -- rebuild below see the player's own containers.
+    if NS.Presets and NS.Presets.RestoreStaleSnapshot then NS.Presets.RestoreStaleSnapshot() end
     -- THE SKIN PICKER DOWN FIRST, unmarked (core/SkinSetup.lua): its dismissal puts back the skin
     -- the OLD profile stored, so it must go before the new profile's skin is applied below, never
     -- after. rebuildProfile offers it again to a profile that has not closed it.

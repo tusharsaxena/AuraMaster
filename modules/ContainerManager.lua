@@ -2,7 +2,7 @@ local _, NS = ...
 
 -- modules/ContainerManager.lua — the container registry and every live container instance.
 --
--- THE REGISTRY WRITER (architecture-§5): create, delete and duplicate, with core/Database.lua's
+-- THE REGISTRY WRITER (architecture-§5): create, delete, duplicate, restore; core/Database.lua's
 -- NewContainerData minting the id. Only its load pass, Database.PrepareProfile, also writes it.
 -- Renaming and copying between containers live here too, as settings writes through the seam
 -- (settings/Schema.lua). This file is the only sender of CONTAINERS_CHANGED (architecture-§4).
@@ -653,6 +653,49 @@ function CM.Delete(id)
     if NS.State and NS.State.activeContainerId == id then NS.State.SetActiveContainer(nil) end
     NS.Debug("Containers", "deleted %s", id)
     CM.Announce()
+    return true
+end
+
+-- A SNAPSHOT IS THE REGISTRY WHOLE, AND RESTORING ONE IS A WRITER OF ITS OWN (architecture-§5). A
+-- preset preview (modules/Presets.lua) takes one before it writes and puts it back when the preview
+-- ends unkept, or at the next login after a /reload or a crash mid-preview. Restore is exact, ids
+-- included, because an attach.container names an id: a sequence of Creates would mint new ones. The
+-- custom categories travel with the containers, so a category the preview created is gone again.
+local SNAPSHOT_FIELDS = { "containers", "containerOrder", "nextContainerId", "userCategories",
+    "userCategoryOrder", "categorySpells" }
+
+--- A deep copy of profile `p`'s registry and custom categories (the active profile by default), in
+--- the shape CM.RestoreSnapshot takes. Nil when there is no profile.
+--- @return table|nil
+function CM.Snapshot(p)
+    p = p or profile()
+    if type(p) ~= "table" then return nil end
+    local snap = {}
+    for _, field in ipairs(SNAPSHOT_FIELDS) do snap[field] = NS.Database.DeepCopy(p[field]) end
+    return snap
+end
+
+--- Put snapshot `snap` back into profile `p` (the active profile by default): containers, order, id
+--- counter and custom categories replaced by deep copies, ids kept. Restoring the ACTIVE profile also
+--- re-materializes its custom categories and rebuilds every container, as a profile change does,
+--- unless `quiet`: the login path (nothing is built yet, and NS.RunMigrations syncs and prepares
+--- after it) and a profile event (core/AuraMaster.lua's prepareProfile syncs, prepares and rebuilds
+--- after it). A profile not in use (the one a switch just left) is written and nothing more.
+--- @return boolean  whether anything was restored
+function CM.RestoreSnapshot(snap, p, quiet)
+    local active = profile()
+    p = p or active
+    if type(snap) ~= "table" or type(p) ~= "table" then return false end
+    for _, field in ipairs(SNAPSHOT_FIELDS) do p[field] = NS.Database.DeepCopy(snap[field]) end
+    if type(p.containers) ~= "table" then p.containers = {} end
+    if type(p.containerOrder) ~= "table" then p.containerOrder = {} end
+    if type(p.categorySpells) ~= "table" then p.categorySpells = {} end
+    NS.Debug("Containers", "restored a snapshot: %d container(s)", #p.containerOrder)
+    if p ~= active or quiet then return true end
+    NS.Categories.SyncUserCategories(p)
+    local selected = NS.State and NS.State.activeContainerId
+    if selected and not p.containers[selected] then NS.State.SetActiveContainer(nil) end
+    CM.Announce(true)
     return true
 end
 

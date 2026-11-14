@@ -159,3 +159,157 @@ function Presets.Apply(name, look, mode)
     debug("applied %s (%s, %s): %d deleted, %d created", name, look, mode, deleted, created)
     return true
 end
+
+-- ---------------------------------------------------------------------------
+-- Preview on the real screen (spec section 6)
+-- ---------------------------------------------------------------------------
+--
+-- WRITE AND SNAPSHOT. A preview is a Replace written into the profile, with test mode on so every
+-- container fills with sample auras. Before the first one the registry and the custom categories are
+-- snapshotted (ContainerManager.Snapshot) into the profile's own `presets.previewSnapshot`, so a
+-- /reload, a disconnect or a crash mid-preview still gives the player their containers back: the next
+-- login restores every snapshot it finds before the migration ladder runs, so a snapshot left in a
+-- profile nobody is logged into is migrated with its profile. Picking again swaps the preset and keeps
+-- the first snapshot. Ending it unkept restores the snapshot exactly, ids included, through the
+-- registry's own restore writer; keeping it in Replace drops the snapshot, and keeping it in Add
+-- restores the snapshot and then adds the preset on top.
+--
+-- EVERY OTHER END RESTORES. A profile switch restores the profile just left, by the table the
+-- preview was taken in, before anything rebuilds for the new one, so the snapshot never lands in the
+-- new profile; a profile arrived at with a snapshot in it was interrupted and is restored too. Combat ends a preview by restoring: the
+-- PLAYER_REGEN_DISABLED edge comes before lockdown, and when the restore is refused anyway it is held
+-- to PLAYER_REGEN_ENABLED, with test mode off at once either way.
+
+-- The preset on the screen in this session: { name, look, profile }, for an Add that keeps it and a
+-- profile event that must restore the profile it was taken in. Nil when no preview is up; a snapshot
+-- from an earlier session is restored at login, so the two agree.
+local onScreen = nil
+-- A preview combat started that could not be restored under lockdown: restored at combat's end.
+local heldForCombat = false
+
+--- The profile's `presets` table, this module's own key (spec section 9), made when first needed: it
+--- has no default, because `previewSnapshot` is present only while a preview is up.
+local function profilePresets()
+    local p = NS.db and NS.db.profile
+    if not p then return nil end
+    if type(p.presets) ~= "table" then p.presets = {} end
+    return p.presets
+end
+
+local function stopTestMode(why)
+    if NS.State and NS.State.testMode then NS.Preview.SetTestMode(false, why) end
+end
+
+--- Restore `store`'s snapshot into profile `p` and forget it. `quiet` as ContainerManager.RestoreSnapshot.
+local function restoreInto(p, store, quiet)
+    NS.ContainerManager.RestoreSnapshot(store.previewSnapshot, p, quiet)
+    store.previewSnapshot = nil
+end
+
+--- Whether a preset is being previewed: the active profile holds a snapshot.
+--- @return boolean
+function Presets.IsPreviewing()
+    local store = NS.db and NS.db.profile and NS.db.profile.presets
+    return type(store) == "table" and store.previewSnapshot ~= nil
+end
+
+--- Show preset `name` in style `look` on the real screen, in test mode, snapshotting the player's own
+--- containers first. A second call swaps the preset and keeps the first snapshot. Refused, with
+--- nothing changed, on the same grounds as Apply; a preset that fails part-way is undone by restoring.
+--- @return boolean|nil ok, string|nil message, boolean|nil gray
+function Presets.BeginPreview(name, look)
+    local why, gray = refusal(name, look, "replace")
+    if why then return nil, why, gray end
+    local store = profilePresets()
+    if store.previewSnapshot == nil then store.previewSnapshot = NS.ContainerManager.Snapshot() end
+    local ok, msg, mgray = Presets.Apply(name, look, "replace")
+    if not ok then
+        restoreInto(NS.db.profile, store)
+        onScreen = nil
+        stopTestMode("preset preview failed")
+        return nil, msg, mgray
+    end
+    onScreen = { name = name, look = look, profile = NS.db.profile }
+    NS.Preview.SetTestMode(true, "preset preview")
+    debug("previewing %s (%s)", name, look)
+    return true
+end
+
+--- End the preview. `keep` with `mode` "replace" keeps the preset as previewed; with "add" the
+--- player's containers come back and the preset is added after them; not `keep` restores. Every
+--- branch turns test mode off and clears the snapshot. Refused in combat (the restore and the add
+--- rebuild frames), and with nothing previewed.
+--- @return boolean|nil ok, string|nil message, boolean|nil gray
+function Presets.EndPreview(keep, mode)
+    if not Presets.IsPreviewing() then return nil, L["No preset is being previewed."] end
+    if InCombatLockdown() then
+        debug("end preview refused (in combat)")
+        return nil, L["cannot end a preset preview during combat — your containers would not be rebuilt until combat ends"], true
+    end
+    if keep and not MODES[mode] then return nil, L["A preset either replaces your containers or adds to them."] end
+    local shown, store = onScreen, profilePresets()
+    if keep and mode == "add" and not shown then return nil, L["No preset is being previewed."] end
+    if keep and mode == "replace" then store.previewSnapshot = nil else restoreInto(NS.db.profile, store) end
+    onScreen, heldForCombat = nil, false
+    stopTestMode("preset preview ended")
+    debug("preview ended (%s)", keep and mode or "restored")
+    if keep and mode == "add" then return Presets.Apply(shown.name, shown.look, "add") end
+    return true
+end
+
+--- Login: restore every snapshot a profile still holds, a preview a /reload or a crash interrupted.
+--- Called by NS.RunMigrations before the ladder (core/Database.lua), so a snapshot taken under an
+--- older schema is migrated with its profile, and before any container is built. Quiet: the sync
+--- and the prepare that follow the ladder materialize and backfill what came back.
+function Presets.RestoreStaleSnapshots()
+    if not NS.db then return end
+    NS.Database.EachProfile(NS.db, function(p, profileName)
+        if type(p.presets) == "table" and p.presets.previewSnapshot ~= nil then
+            restoreInto(p, p.presets, true)
+            debug("restored the preview snapshot left in profile '%s'", tostring(profileName))
+        end
+    end)
+end
+
+--- A profile event (a switch, a copy or a reset), before anything rebuilds for the profile now
+--- active. A preview this session showed is restored into the profile it was taken in: after a
+--- switch that is the profile just left (AceDB keeps its table), so the snapshot never lands in the
+--- new one; after a reset or a copy the snapshot went with the old contents and there is nothing to
+--- put back. Then a snapshot the active profile arrived holding (a preview another session never
+--- ended) is restored too. Quiet: core/AuraMaster.lua's prepareProfile syncs, prepares and rebuilds
+--- after it.
+function Presets.RestoreStaleSnapshot()
+    local shown = onScreen
+    onScreen, heldForCombat = nil, false
+    if shown then
+        stopTestMode("profile changed")
+        local left = shown.profile
+        if left ~= NS.db.profile and type(left.presets) == "table" and left.presets.previewSnapshot ~= nil then
+            restoreInto(left, left.presets, true)
+            debug("preview restored into the profile it was taken in")
+        end
+    end
+    if not Presets.IsPreviewing() then return end
+    restoreInto(NS.db.profile, NS.db.profile.presets, true)
+    debug("restored the preview snapshot left in profile '%s'", tostring(NS.db:GetCurrentProfile()))
+end
+
+--- Combat started (PLAYER_REGEN_DISABLED) with a preview up: restore now, or, under lockdown, at
+--- combat's end. Test mode goes off at once either way. One line in chat.
+function Presets.OnCombatStart()
+    if not Presets.IsPreviewing() then return end
+    if Presets.EndPreview(false) then
+        NS.Printf("%s", L["Preset preview ended: combat started, and your containers are back."])
+        return
+    end
+    heldForCombat = true
+    stopTestMode("combat started")
+    NS.Printf("%s", L["Preset preview ended: combat started, and your containers come back when it ends."])
+end
+
+--- Combat ended (PLAYER_REGEN_ENABLED): a restore combat held runs now.
+function Presets.OnCombatEnd()
+    if not heldForCombat then return end
+    heldForCombat = false
+    if Presets.IsPreviewing() then Presets.EndPreview(false) end
+end

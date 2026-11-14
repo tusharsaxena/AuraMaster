@@ -543,6 +543,10 @@ end
 function NS.RunMigrations()
     local g = NS.db and NS.db.global
     if not g then return end
+    -- A preset preview a /reload or a crash interrupted (modules/Presets.lua): every profile's
+    -- snapshot is put back BEFORE the ladder, so a snapshot taken under an older schema is migrated
+    -- with its profile, and before anything is built.
+    if NS.Presets and NS.Presets.RestoreStaleSnapshots then NS.Presets.RestoreStaleSnapshots() end
     -- A failed step leaves the stamp alone, and the rest of the load still runs below, so the addon
     -- loads on whatever the completed steps left.
     climbLadder(g)
