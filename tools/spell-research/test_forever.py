@@ -150,6 +150,31 @@ class DeriveTest(unittest.TestCase):
         self.assertIn("also proposed for stances", self.by_key["movement:783"].notes)
         self.assertIn("also proposed for utility", self.by_key["stances:1784"].notes)
 
+    def test_hand_candidates_join_and_miss(self):
+        # War Stomp is in the fixture: the hand entry lands it in hardCC under ALL, beside the
+        # racialDebuffs db2 candidate. The hand ids the fixture lacks go to unmapped, never a crash.
+        stomp = self.by_key["hardCC:20549"]
+        self.assertEqual((stomp.source, stomp.klass), ("hand", "ALL"))
+        self.assertTrue(any(n.startswith("hand: ") for n in stomp.notes))
+        self.assertIn("hand", forever.SOURCES)
+        self.assertTrue(any(m["why"] == "hand id 3600 is not an aura on this build" for m in self.doc["unmapped"]))
+        unmapped = []
+        db = forever.ForeverDB(fixture_tables())
+        self.assertEqual(forever.hand_candidates(db, unmapped, (("stances", 465, "PALADIN", "fixture"),))[0].key,
+                         "stances:465")
+        self.assertEqual(unmapped, [])
+        with self.assertRaises(SystemExit):
+            forever.hand_candidates(db, [], (("stances", 465, "MONK", "fixture"),))
+        with self.assertRaises(SystemExit):
+            forever.hand_candidates(db, [], (("nope", 465, "PALADIN", "fixture"),))
+
+    def test_raid_area_auras_count(self):
+        # Fire Resistance Aura 19891 is effect 65 (APPLY_AREA_AURA_RAID) alone on 1.60.1.70938.
+        self.assertIn(65, research.FOREVER_AURA_EFFECTS)
+        row = forever.EffectRow(65, 22, 30.0, 4, frozenset({1}))
+        self.assertTrue(any(r.matches(row) for r in forever.DB2_RULES["stances"].effects))
+        self.assertNotIn(65, sid_db2.APPLY_AURA_EFFECTS)
+
 
 class RulingsTest(unittest.TestCase):
     def test_precedence_follows_the_retail_order(self):

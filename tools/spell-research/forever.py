@@ -8,7 +8,7 @@ WHAT THIS IS
     those categories. This tool builds Forever's version of each in three steps, and never edits
     defaults/Categories.lua:
 
-    1. CANDIDATES (`derive`). Three sources, each candidate labelled with where it came from:
+    1. CANDIDATES (`derive`). Four sources, each candidate labelled with where it came from:
          name-map    a Retail entry's spell NAME, matched to the same class's Forever spells, every
                      rank. Forever keeps vanilla's ranks as separate ids (Battle Shout 6673, 5242,
                      ...), so a name maps to several. A cast that applies no aura of its own is
@@ -20,6 +20,8 @@ WHAT THIS IS
                      vanilla-only spells no Retail entry names.
          cc-mechanic research.derive's hardCC / ccRoot / ccSnare buckets, unchanged (`bridge` for
                      the family-bridged ones).
+         hand        HAND_CANDIDATES below: the ids no table edge reaches (a totem's aura, an
+                     item's or an enchant's proc, a scripted racial), each with its reason.
     2. RULINGS (`rule`). Every candidate is accepted or rejected, with a one-line reason, into
        forever_rulings.json. `rule` is the only writer of that file. A name match is a candidate,
        never a conclusion: NPC copies share a player spell's name and family.
@@ -115,7 +117,7 @@ RETAIL_ONLY_CLASSES = frozenset(("DEATHKNIGHT", "MONK", "DEMONHUNTER", "EVOKER")
 CLASS_KEYS = research.FOREVER_CLASS_TOKENS | {"ALL"}
 CLASS_ORDER = tuple(token for token in research.CLASS_EMIT_ORDER if token in CLASS_KEYS)
 
-SOURCES = ("name-map", "db2-effect", "cc-mechanic", "bridge")
+SOURCES = ("name-map", "db2-effect", "cc-mechanic", "bridge", "hand")
 SOURCE_RANK = {source: index for index, source in enumerate(SOURCES)}
 
 # The tables this tool reads beyond research.py's Forever set. Fetched into the bundle's raw/ on
@@ -239,9 +241,10 @@ DB2_RULES = {
     # 144 SAFE_FALL.
     "utility": CategoryRule((_rule({16, 18, 66, 82, 104, 144}, 0, FRIENDLY),), None, "class",
                             "stealth, invisibility, feign death, water breathing or walking, slow fall"),
-    # 36 MOD_SHAPESHIFT on yourself (Battle Stance 2457, Cat Form 768), and an area party aura cast
-    # on yourself (effect 35: Devotion Aura 465), the paladin auras Retail's Stances also holds.
-    "stances": CategoryRule((_rule({36}, 0, SELF), _rule(ANY_AURA, 0, SELF, effects=frozenset({35}))),
+    # 36 MOD_SHAPESHIFT on yourself (Battle Stance 2457, Cat Form 768), and an area party or raid
+    # aura cast on yourself (effect 35: Devotion Aura 465; effect 65: Fire Resistance Aura 19891),
+    # the paladin auras Retail's Stances also holds.
+    "stances": CategoryRule((_rule({36}, 0, SELF), _rule(ANY_AURA, 0, SELF, effects=frozenset({35, 65}))),
                             None, "class", "a shapeshift or stance, or a paladin-style party aura"),
     # The racial skill lines ("Racial - Human", "Dwarven Racial"), split by who the aura lands on.
     "racials": CategoryRule((_rule(ANY_AURA, 0, FRIENDLY),), None, "racial",
@@ -249,6 +252,43 @@ DB2_RULES = {
     "racialDebuffs": CategoryRule((_rule(ANY_AURA, 0, ENEMY),), None, "racial",
                                   "a racial skill line's aura on an enemy"),
 }
+
+# THE HAND CANDIDATES (AM-FP05): ids no source above can reach, each with the reason it is
+# proposed. They are candidates like any other and still need a ruling; a hand entry that is not
+# an aura on this build (no SpellName row, or no aura effect of its own) is listed with the
+# unmapped entries instead, so a re-run on a later build shows what fell out. Each is a
+# shape the DB2 tables cannot cross: an aura applied through a summoned object (the totems), an
+# item or a weapon enchant (Soulstone, Frostbrand), a script (Cannibalize), a racial the
+# class-only CC derivation never sees (War Stomp), or a category the rules above do not propose
+# (Retail's own owner precedent, or the vanilla analogue of what a Retail list holds).
+# (category, id, class key, why). Evidence for each: the bundle's ANALYSIS.md.
+HAND_CANDIDATES = (
+    # Blessing of Protection: an external like Blessing of Sacrifice 6940, which Retail's owner
+    # put in Defensives "not in Support"; the support rule proposes it, so it is added here too.
+    ("defensives", 1022, "PALADIN", "external immunity, Retail owner places externals in Defensives"),
+    ("defensives", 5599, "PALADIN", "external immunity, Retail owner places externals in Defensives"),
+    ("defensives", 10278, "PALADIN", "external immunity, Retail owner places externals in Defensives"),
+    ("defensives", 22842, "DRUID", "bear 3 min self heal-over-time, aura 23 not in the defensives rule"),
+    ("offensiveCDs", 3045, "HUNTER", "5 min ranged haste, aura 140 not in the offensive rule"),
+    ("offensiveCDs", 13877, "ROGUE", "2 min melee haste talent, aura 319 not in the offensive rule"),
+    ("offensiveCDs", 14177, "ROGUE", "3 min next-strike crit talent, aura 107 not in the offensive rule"),
+    ("offensiveCDs", 12043, "MAGE", "3 min instant-cast talent, a negative 108 the rule skips"),
+    ("offensiveCDs", 16166, "SHAMAN", "3 min next-spell crit talent (vanilla Elemental Mastery)"),
+    # The paladin blessings and the single-target priest buffs: the vanilla group buffs. Their
+    # single-target ranks land on one ally (target 21) and the Greater ones on a class (153), which
+    # the groupBuffs GROUP fence does not hold; Power Word: Fortitude reaches the list by name.
+) + tuple(("groupBuffs", spell, "PALADIN", "paladin blessing, the vanilla group buff")
+          for spell in (19740, 19834, 19835, 19836, 19837, 19838, 25291, 25782, 25916,
+                        19742, 19850, 19852, 19853, 19854, 25290, 25894, 25918, 20217, 25898)) + tuple(
+    ("groupBuffs", spell, "PRIEST", "single-target twin of an accepted Prayer buff")
+    for spell in (976, 10957, 10958, 14752, 14818, 14819, 27841)) + tuple(
+    ("utility", spell, "WARLOCK", "Soulstone aura (Retail lists 20707), cast by the soulstone item")
+    for spell in (20707, 20762, 20763, 20764, 20765)) + (
+    ("racials", 20578, "ALL", "Cannibalize's regen aura; the racial cast 20577 is a dummy effect"),
+    ("hardCC", 20549, "ALL", "War Stomp: Retail ships it in hardCC under ALL as well as Racials"),
+    ("ccSnare", 3600, "SHAMAN", "Earthbind, Earthbind Totem 2484's aura (Retail ships it by hand)"),
+) + tuple(("ccSnare", spell, "SHAMAN", "Frostbrand Attack, the Frostbrand Weapon enchant's snare proc")
+          for spell in (8034, 8037, 10458, 16352, 16353))
 
 # Forever's racial lines are named both ways: "Racial - Human" and "Dwarven Racial".
 RACIAL_PREFIX = sid_db2.RACIAL_LINE_PREFIX
@@ -533,6 +573,23 @@ def cc_candidates(cc_result: dict, forever_tables) -> list[Candidate]:
     return out
 
 
+def hand_candidates(forever_tables, unmapped: list, entries=HAND_CANDIDATES) -> list[Candidate]:
+    """HAND_CANDIDATES as `hand` candidates. An unknown category or a non-Forever class key is an
+    authoring error (SystemExit); an id that is not an aura on this build joins `unmapped`."""
+    db = as_db(forever_tables)
+    out: list[Candidate] = []
+    for category, spell, klass, why in entries:
+        if category not in AURA_TYPE or klass not in CLASS_KEYS:
+            raise SystemExit("hand candidate %s:%d [%s] has an unknown category or class" % (category, spell, klass))
+        name = db.names.get(spell, "")
+        if not name or spell not in db.appliers:
+            unmapped.append(_miss(category, klass, spell, name, "hand id %d is not an aura on this build" % spell))
+            continue
+        out.append(Candidate(spell, category, klass, "hand", None, name, db.rank(spell), None,
+                             db.notes(spell) + ["hand: " + why]))
+    return out
+
+
 def annotate_overlaps(candidates: list[Candidate]) -> None:
     """Note on each candidate the other categories of its aura type that also propose its id."""
     where: dict[tuple[str, int], list[str]] = defaultdict(list)
@@ -546,12 +603,13 @@ def annotate_overlaps(candidates: list[Candidate]) -> None:
 
 def gather_candidates(db: ForeverDB, retail_cats: list[dict], retail_names: dict[int, str],
                       cc_result: dict, unmapped: list) -> list[Candidate]:
-    """Every candidate, one per (category, id): CC first, then name-map, then db2-effect."""
+    """Every candidate, one per (category, id): CC first, then name-map, then db2-effect, then hand."""
     pool = forever_pool(db)
     merged: dict[str, Candidate] = {}
     found = cc_candidates(cc_result, db) + map_retail_entries(retail_cats, retail_names, db, pool, unmapped)
     for key in CATEGORY_KEYS:
         found += db2_candidates(key, db, pool)
+    found += hand_candidates(db, unmapped)
     for cand in found:
         held = merged.get(cand.key)
         if held is None:

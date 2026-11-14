@@ -1,1 +1,2842 @@
-{}
+{
+  "activeMitigation:12298": {
+    "reason": "Shield Specialization is a passive WARRIOR talent (+block), never a visible aura",
+    "ruling": "reject"
+  },
+  "activeMitigation:1239570": {
+    "reason": "rank 4 of Holy Shield (Forever-added rank), PALADIN Protection SkillLineAbility, 10 s block-chance aura on self",
+    "ruling": "accept"
+  },
+  "activeMitigation:13163": {
+    "reason": "Aspect of the Monkey is a persistent hunter aspect (one-aspect stance-like buff, no duration/recast), not short refreshed tank mitigation",
+    "ruling": "reject"
+  },
+  "activeMitigation:13712": {
+    "reason": "Lightning Reflexes is a passive ROGUE talent (+dodge), never a visible aura",
+    "ruling": "reject"
+  },
+  "activeMitigation:13713": {
+    "reason": "Deflection is a passive ROGUE talent (+parry), never a visible aura",
+    "ruling": "reject"
+  },
+  "activeMitigation:14278": {
+    "reason": "Ghostly Strike's 7 s dodge is a side effect of a rogue damage strike; rogues are not tanks on Forever outside runes, so not tank mitigation",
+    "ruling": "reject"
+  },
+  "activeMitigation:15087": {
+    "reason": "NPC copy of Evasion (no SkillLineAbility/Talent/grant edge); the player's Evasion 5277 is a personal defensive anyway",
+    "ruling": "reject"
+  },
+  "activeMitigation:16253": {
+    "reason": "rank 1 of Shield Specialization, passive SHAMAN talent (+block), never a visible aura",
+    "ruling": "reject"
+  },
+  "activeMitigation:16254": {
+    "reason": "Anticipation is a passive SHAMAN talent (+dodge), never a visible aura",
+    "ruling": "reject"
+  },
+  "activeMitigation:16298": {
+    "reason": "rank 2 of Shield Specialization, passive SHAMAN talent (+block), never a visible aura",
+    "ruling": "reject"
+  },
+  "activeMitigation:16299": {
+    "reason": "rank 3 of Shield Specialization, passive SHAMAN talent (+block), never a visible aura",
+    "ruling": "reject"
+  },
+  "activeMitigation:16300": {
+    "reason": "rank 4 of Shield Specialization, passive SHAMAN talent (+block), never a visible aura",
+    "ruling": "reject"
+  },
+  "activeMitigation:16301": {
+    "reason": "rank 5 of Shield Specialization, passive SHAMAN talent (+block), never a visible aura",
+    "ruling": "reject"
+  },
+  "activeMitigation:16462": {
+    "reason": "Deflection is a passive WARRIOR talent (+parry), never a visible aura",
+    "ruling": "reject"
+  },
+  "activeMitigation:17002": {
+    "reason": "Feral Swiftness is a passive DRUID talent (+dodge/speed in cat form), never a visible aura",
+    "ruling": "reject"
+  },
+  "activeMitigation:19295": {
+    "reason": "Deflection is a passive HUNTER talent (+parry), never a visible aura",
+    "ruling": "reject"
+  },
+  "activeMitigation:20060": {
+    "reason": "Deflection is a passive PALADIN talent (+parry), never a visible aura",
+    "ruling": "reject"
+  },
+  "activeMitigation:20925": {
+    "reason": "rank 1 of Holy Shield, PALADIN Protection talent (Talent + SkillLineAbility), 10 s block-chance aura on self: frequently refreshed tank mitigation",
+    "ruling": "accept"
+  },
+  "activeMitigation:20927": {
+    "reason": "rank 2 of Holy Shield, PALADIN Protection SkillLineAbility, 10 s block-chance aura on self",
+    "ruling": "accept"
+  },
+  "activeMitigation:20928": {
+    "reason": "rank 3 of Holy Shield, PALADIN Protection SkillLineAbility, 10 s block-chance aura on self",
+    "ruling": "accept"
+  },
+  "activeMitigation:2565": {
+    "reason": "Shield Block, WARRIOR Protection SkillLineAbility, short block-chance aura on self, 5 s recast: the Retail Shield Block analogue",
+    "ruling": "accept"
+  },
+  "ccRoot:10230": {
+    "reason": "rank 4 of Frost Nova, MAGE Frost SkillLineAbility (ClassMask 128), AoE APPLY_AURA ROOT mechanic 7 on enemies (freeze)",
+    "ruling": "accept"
+  },
+  "ccRoot:1062": {
+    "reason": "rank 2 of Entangling Roots, DRUID Balance SkillLineAbility (ClassMask 1024), APPLY_AURA ROOT mechanic 7 on enemy target",
+    "ruling": "accept"
+  },
+  "ccRoot:122": {
+    "reason": "rank 1 of Frost Nova, MAGE Frost SkillLineAbility (ClassMask 128), AoE APPLY_AURA ROOT mechanic 7 on enemies (freeze)",
+    "ruling": "accept"
+  },
+  "ccRoot:1242634": {
+    "reason": "rank 2 of Counterattack, HUNTER Survival SkillLineAbility (ClassMask 4), APPLY_AURA ROOT mechanic 7 on enemy target",
+    "ruling": "accept"
+  },
+  "ccRoot:12494": {
+    "reason": "Frostbite freeze aura, triggered by MAGE Frost talent 11071 (Talent tab 61), ROOT mechanic 7 on enemy target",
+    "ruling": "accept"
+  },
+  "ccRoot:1265843": {
+    "reason": "rank 1 of hunter pet Web (Pet - Spider, taught by Beast Training learn spell, ClassMask 4), ROOT+DoT aura on the hunter target, visible on target frame",
+    "ruling": "accept"
+  },
+  "ccRoot:1265878": {
+    "reason": "rank 2 of hunter pet Web (Pet - Spider, taught by Beast Training learn spell, ClassMask 4), ROOT+DoT aura on the hunter target, visible on target frame",
+    "ruling": "accept"
+  },
+  "ccRoot:1265880": {
+    "reason": "rank 3 of hunter pet Web (Pet - Spider, taught by Beast Training learn spell, ClassMask 4), ROOT+DoT aura on the hunter target, visible on target frame",
+    "ruling": "accept"
+  },
+  "ccRoot:1265881": {
+    "reason": "rank 4 of hunter pet Web (Pet - Spider, taught by Beast Training learn spell, ClassMask 4), ROOT+DoT aura on the hunter target, visible on target frame",
+    "ruling": "accept"
+  },
+  "ccRoot:1265883": {
+    "reason": "rank 5 of hunter pet Web (Pet - Spider, taught by Beast Training learn spell, ClassMask 4), ROOT+DoT aura on the hunter target, visible on target frame",
+    "ruling": "accept"
+  },
+  "ccRoot:1277331": {
+    "reason": "rank 1 of Chastise, PRIEST Holy SkillLineAbility (ClassMask 16, Dwarf race mask), APPLY_AURA ROOT mechanic 7 on enemy target",
+    "ruling": "accept"
+  },
+  "ccRoot:1277332": {
+    "reason": "rank 2 of Chastise, PRIEST Holy SkillLineAbility (ClassMask 16, Dwarf race mask), APPLY_AURA ROOT mechanic 7 on enemy target",
+    "ruling": "accept"
+  },
+  "ccRoot:1277333": {
+    "reason": "rank 3 of Chastise, PRIEST Holy SkillLineAbility (ClassMask 16, Dwarf race mask), APPLY_AURA ROOT mechanic 7 on enemy target",
+    "ruling": "accept"
+  },
+  "ccRoot:1277334": {
+    "reason": "rank 4 of Chastise, PRIEST Holy SkillLineAbility (ClassMask 16, Dwarf race mask), APPLY_AURA ROOT mechanic 7 on enemy target",
+    "ruling": "accept"
+  },
+  "ccRoot:1277335": {
+    "reason": "rank 5 of Chastise, PRIEST Holy SkillLineAbility (ClassMask 16, Dwarf race mask), APPLY_AURA ROOT mechanic 7 on enemy target",
+    "ruling": "accept"
+  },
+  "ccRoot:19185": {
+    "reason": "Entrapment root aura of HUNTER Survival talent 19184 (Talent tab 362), in Survival SkillLineAbility, ROOT on trapped enemies",
+    "ruling": "accept"
+  },
+  "ccRoot:19229": {
+    "reason": "Improved Wing Clip root aura, triggered by HUNTER Survival talent 19228 (Talent tab 362), ROOT on enemy target",
+    "ruling": "accept"
+  },
+  "ccRoot:19306": {
+    "reason": "rank 1 of Counterattack, HUNTER Survival SkillLineAbility (ClassMask 4), APPLY_AURA ROOT mechanic 7 on enemy target",
+    "ruling": "accept"
+  },
+  "ccRoot:19675": {
+    "reason": "Feral Charge immobilize aura, triggered by DRUID Feral Charge 16979/1238122 (Feral Combat talent), ROOT mechanic 7 on enemy target",
+    "ruling": "accept"
+  },
+  "ccRoot:19970": {
+    "reason": "Entangling Roots rank 6 aura of Nature's Grasp 17329 (DRUID Balance talent/SkillLineAbility), ROOT mechanic 7 on the attacker",
+    "ruling": "accept"
+  },
+  "ccRoot:19971": {
+    "reason": "Entangling Roots rank 5 aura of Nature's Grasp 16813 (DRUID Balance talent/SkillLineAbility), ROOT mechanic 7 on the attacker",
+    "ruling": "accept"
+  },
+  "ccRoot:19972": {
+    "reason": "Entangling Roots rank 4 aura of Nature's Grasp 16812 (DRUID Balance talent/SkillLineAbility), ROOT mechanic 7 on the attacker",
+    "ruling": "accept"
+  },
+  "ccRoot:19973": {
+    "reason": "Entangling Roots rank 3 aura of Nature's Grasp 16811 (DRUID Balance talent/SkillLineAbility), ROOT mechanic 7 on the attacker",
+    "ruling": "accept"
+  },
+  "ccRoot:19974": {
+    "reason": "Entangling Roots rank 2 aura of Nature's Grasp 16810 (DRUID Balance talent/SkillLineAbility), ROOT mechanic 7 on the attacker",
+    "ruling": "accept"
+  },
+  "ccRoot:19975": {
+    "reason": "Entangling Roots rank 1 aura of Nature's Grasp 16689 (DRUID Balance talent/SkillLineAbility), ROOT mechanic 7 on the attacker",
+    "ruling": "accept"
+  },
+  "ccRoot:20909": {
+    "reason": "rank 3 of Counterattack, HUNTER Survival SkillLineAbility (ClassMask 4), APPLY_AURA ROOT mechanic 7 on enemy target",
+    "ruling": "accept"
+  },
+  "ccRoot:20910": {
+    "reason": "rank 4 of Counterattack, HUNTER Survival SkillLineAbility (ClassMask 4), APPLY_AURA ROOT mechanic 7 on enemy target",
+    "ruling": "accept"
+  },
+  "ccRoot:23694": {
+    "reason": "Improved Hamstring proc aura, triggered by WARRIOR Arms talent 12289 (Talent tab 161), APPLY_AURA ROOT on enemy target",
+    "ruling": "accept"
+  },
+  "ccRoot:25999": {
+    "reason": "Boar Charge immobilize aura, triggered by hunter pet Charge 7371+ (taught via Beast Training 7370, ClassMask 4), ROOT aura on the hunter target",
+    "ruling": "accept"
+  },
+  "ccRoot:339": {
+    "reason": "rank 1 of Entangling Roots, DRUID Balance SkillLineAbility (ClassMask 1024), APPLY_AURA ROOT mechanic 7 on enemy target",
+    "ruling": "accept"
+  },
+  "ccRoot:5195": {
+    "reason": "rank 3 of Entangling Roots, DRUID Balance SkillLineAbility (ClassMask 1024), APPLY_AURA ROOT mechanic 7 on enemy target",
+    "ruling": "accept"
+  },
+  "ccRoot:5196": {
+    "reason": "rank 4 of Entangling Roots, DRUID Balance SkillLineAbility (ClassMask 1024), APPLY_AURA ROOT mechanic 7 on enemy target",
+    "ruling": "accept"
+  },
+  "ccRoot:6131": {
+    "reason": "rank 3 of Frost Nova, MAGE Frost SkillLineAbility (ClassMask 128), AoE APPLY_AURA ROOT mechanic 7 on enemies (freeze)",
+    "ruling": "accept"
+  },
+  "ccRoot:865": {
+    "reason": "rank 2 of Frost Nova, MAGE Frost SkillLineAbility (ClassMask 128), AoE APPLY_AURA ROOT mechanic 7 on enemies (freeze)",
+    "ruling": "accept"
+  },
+  "ccRoot:9852": {
+    "reason": "rank 5 of Entangling Roots, DRUID Balance SkillLineAbility (ClassMask 1024), APPLY_AURA ROOT mechanic 7 on enemy target",
+    "ruling": "accept"
+  },
+  "ccRoot:9853": {
+    "reason": "rank 6 of Entangling Roots, DRUID Balance SkillLineAbility (ClassMask 1024), APPLY_AURA ROOT mechanic 7 on enemy target",
+    "ruling": "accept"
+  },
+  "ccSnare:10159": {
+    "reason": "rank 3 of Cone of Cold, MAGE Frost SkillLineAbility (ClassMask 128), cone MOD_DECREASE_SPEED mechanic 11 on enemies",
+    "ruling": "accept"
+  },
+  "ccSnare:10160": {
+    "reason": "rank 4 of Cone of Cold, MAGE Frost SkillLineAbility (ClassMask 128), cone MOD_DECREASE_SPEED mechanic 11 on enemies",
+    "ruling": "accept"
+  },
+  "ccSnare:10161": {
+    "reason": "rank 5 of Cone of Cold, MAGE Frost SkillLineAbility (ClassMask 128), cone MOD_DECREASE_SPEED mechanic 11 on enemies",
+    "ruling": "accept"
+  },
+  "ccSnare:10179": {
+    "reason": "rank 8 of Frostbolt, MAGE Frost SkillLineAbility (ClassMask 128), MOD_DECREASE_SPEED mechanic 11 on enemy target",
+    "ruling": "accept"
+  },
+  "ccSnare:10180": {
+    "reason": "rank 9 of Frostbolt, MAGE Frost SkillLineAbility (ClassMask 128), MOD_DECREASE_SPEED mechanic 11 on enemy target",
+    "ruling": "accept"
+  },
+  "ccSnare:10181": {
+    "reason": "rank 10 of Frostbolt, MAGE Frost SkillLineAbility (ClassMask 128), MOD_DECREASE_SPEED mechanic 11 on enemy target",
+    "ruling": "accept"
+  },
+  "ccSnare:10458": {
+    "reason": "rank 3 of Frostbrand Attack, the SHAMAN Frostbrand Weapon enchant's proc: -speed aura (A33) on the shaman's target",
+    "ruling": "accept"
+  },
+  "ccSnare:10472": {
+    "reason": "rank 3 of Frost Shock, SHAMAN Elemental Combat SkillLineAbility (ClassMask 64), MOD_DECREASE_SPEED mechanic 11 on enemy target",
+    "ruling": "accept"
+  },
+  "ccSnare:10473": {
+    "reason": "rank 4 of Frost Shock, SHAMAN Elemental Combat SkillLineAbility (ClassMask 64), MOD_DECREASE_SPEED mechanic 11 on enemy target",
+    "ruling": "accept"
+  },
+  "ccSnare:11113": {
+    "reason": "rank 1 of Blast Wave, MAGE Fire talent/SkillLineAbility (ClassMask 128), AoE Dazed MOD_DECREASE_SPEED on enemies",
+    "ruling": "accept"
+  },
+  "ccSnare:11201": {
+    "reason": "Crippling Poison II debuff (rank 2 of the ROGUE poison), MOD_DECREASE_SPEED mechanic 11 on enemy target",
+    "ruling": "accept"
+  },
+  "ccSnare:116": {
+    "reason": "rank 1 of Frostbolt, MAGE Frost SkillLineAbility (ClassMask 128), MOD_DECREASE_SPEED mechanic 11 on enemy target",
+    "ruling": "accept"
+  },
+  "ccSnare:120": {
+    "reason": "rank 1 of Cone of Cold, MAGE Frost SkillLineAbility (ClassMask 128), cone MOD_DECREASE_SPEED mechanic 11 on enemies",
+    "ruling": "accept"
+  },
+  "ccSnare:1215740": {
+    "reason": "NPC copy of Mind Flay (rank closure via priest family): unranked, not in SkillLineAbility or Talent, no player trigger",
+    "ruling": "reject"
+  },
+  "ccSnare:12323": {
+    "reason": "Piercing Howl, WARRIOR Fury talent (Talent tab 256 SkillLineAbility), AoE MOD_DECREASE_SPEED mechanic 11 on enemies",
+    "ruling": "accept"
+  },
+  "ccSnare:1236177": {
+    "reason": "NPC copy of Hamstring (duration 28 differs from player ranks): not in SkillLineAbility or Talent, no player trigger",
+    "ruling": "reject"
+  },
+  "ccSnare:12484": {
+    "reason": "Chilled aura of MAGE Frost talent Improved Blizzard 11185 (Frost SkillLineAbility ClassMask 128), MOD_DECREASE_SPEED on enemies in Blizzard; 12485/12486 have no effects",
+    "ruling": "accept"
+  },
+  "ccSnare:1264735": {
+    "reason": "rank 1 of hunter pet Pinch (Pet - Crab, taught by Beast Training learn spell, ClassMask 4), MOD_DECREASE_SPEED on the hunter target, visible on target frame",
+    "ruling": "accept"
+  },
+  "ccSnare:1264736": {
+    "reason": "rank 2 of hunter pet Pinch (Pet - Crab, taught by Beast Training learn spell, ClassMask 4), MOD_DECREASE_SPEED on the hunter target, visible on target frame",
+    "ruling": "accept"
+  },
+  "ccSnare:1264739": {
+    "reason": "rank 3 of hunter pet Pinch (Pet - Crab, taught by Beast Training learn spell, ClassMask 4), MOD_DECREASE_SPEED on the hunter target, visible on target frame",
+    "ruling": "accept"
+  },
+  "ccSnare:1264741": {
+    "reason": "rank 4 of hunter pet Pinch (Pet - Crab, taught by Beast Training learn spell, ClassMask 4), MOD_DECREASE_SPEED on the hunter target, visible on target frame",
+    "ruling": "accept"
+  },
+  "ccSnare:1264742": {
+    "reason": "rank 5 of hunter pet Pinch (Pet - Crab, taught by Beast Training learn spell, ClassMask 4), MOD_DECREASE_SPEED on the hunter target, visible on target frame",
+    "ruling": "accept"
+  },
+  "ccSnare:1265038": {
+    "reason": "rank 1 of hunter pet Tendon Rip (Pet - Hyena, taught by Beast Training learn spell, ClassMask 4), snare+bleed aura on the hunter target",
+    "ruling": "accept"
+  },
+  "ccSnare:1265039": {
+    "reason": "rank 2 of hunter pet Tendon Rip (Pet - Hyena, taught by Beast Training learn spell, ClassMask 4), snare+bleed aura on the hunter target",
+    "ruling": "accept"
+  },
+  "ccSnare:1265040": {
+    "reason": "rank 3 of hunter pet Tendon Rip (Pet - Hyena, taught by Beast Training learn spell, ClassMask 4), snare+bleed aura on the hunter target",
+    "ruling": "accept"
+  },
+  "ccSnare:1265041": {
+    "reason": "rank 4 of hunter pet Tendon Rip (Pet - Hyena, taught by Beast Training learn spell, ClassMask 4), snare+bleed aura on the hunter target",
+    "ruling": "accept"
+  },
+  "ccSnare:1265042": {
+    "reason": "rank 5 of hunter pet Tendon Rip (Pet - Hyena, taught by Beast Training learn spell, ClassMask 4), snare+bleed aura on the hunter target",
+    "ruling": "accept"
+  },
+  "ccSnare:12705": {
+    "reason": "Long Daze is triggered only by Improved Pummel 12288/12707/12708, which is in no Talent row on Forever (unused talent), so no player can apply it",
+    "ruling": "reject"
+  },
+  "ccSnare:1293790": {
+    "reason": "NPC/proc copy of Frostbolt: unranked, not in SkillLineAbility or Talent, triggered by no player spell",
+    "ruling": "reject"
+  },
+  "ccSnare:1298416": {
+    "reason": "NPC/proc copy of Frostbolt: unranked, not in SkillLineAbility or Talent, triggered by no player spell",
+    "ruling": "reject"
+  },
+  "ccSnare:13018": {
+    "reason": "rank 2 of Blast Wave, MAGE Fire talent/SkillLineAbility (ClassMask 128), AoE Dazed MOD_DECREASE_SPEED on enemies",
+    "ruling": "accept"
+  },
+  "ccSnare:13019": {
+    "reason": "rank 3 of Blast Wave, MAGE Fire talent/SkillLineAbility (ClassMask 128), AoE Dazed MOD_DECREASE_SPEED on enemies",
+    "ruling": "accept"
+  },
+  "ccSnare:13020": {
+    "reason": "rank 4 of Blast Wave, MAGE Fire talent/SkillLineAbility (ClassMask 128), AoE Dazed MOD_DECREASE_SPEED on enemies",
+    "ruling": "accept"
+  },
+  "ccSnare:13021": {
+    "reason": "rank 5 of Blast Wave, MAGE Fire talent/SkillLineAbility (ClassMask 128), AoE Dazed MOD_DECREASE_SPEED on enemies",
+    "ruling": "accept"
+  },
+  "ccSnare:1310180": {
+    "reason": "unranked Wing Clip copy: not in SkillLineAbility or Talent, no player trigger",
+    "ruling": "reject"
+  },
+  "ccSnare:13439": {
+    "reason": "NPC/proc copy of Frostbolt: unranked, not in SkillLineAbility or Talent, triggered by no player spell",
+    "ruling": "reject"
+  },
+  "ccSnare:13810": {
+    "reason": "Frost Trap Aura, the slow applied to enemies by the ice slick that HUNTER Frost Trap 13809 (Survival, ClassMask 4) summons; persistent area MOD_DECREASE_SPEED",
+    "ruling": "accept"
+  },
+  "ccSnare:14267": {
+    "reason": "rank 2 of Wing Clip, HUNTER Survival SkillLineAbility (ClassMask 4), MOD_DECREASE_SPEED mechanic 11 on enemy target",
+    "ruling": "accept"
+  },
+  "ccSnare:14268": {
+    "reason": "rank 3 of Wing Clip, HUNTER Survival SkillLineAbility (ClassMask 4), MOD_DECREASE_SPEED mechanic 11 on enemy target",
+    "ruling": "accept"
+  },
+  "ccSnare:15407": {
+    "reason": "rank 1 of Mind Flay, PRIEST Shadow talent (Shadow Magic SkillLineAbility, ClassMask 16), channel DoT+MOD_DECREASE_SPEED on enemy target",
+    "ruling": "accept"
+  },
+  "ccSnare:16352": {
+    "reason": "rank 4 of Frostbrand Attack, the SHAMAN Frostbrand Weapon enchant's proc: -speed aura (A33) on the shaman's target",
+    "ruling": "accept"
+  },
+  "ccSnare:16353": {
+    "reason": "rank 5 of Frostbrand Attack, the SHAMAN Frostbrand Weapon enchant's proc: -speed aura (A33) on the shaman's target",
+    "ruling": "accept"
+  },
+  "ccSnare:16568": {
+    "reason": "NPC copy of Mind Flay (rank closure via priest family): unranked, not in SkillLineAbility or Talent, no player trigger",
+    "ruling": "reject"
+  },
+  "ccSnare:16927": {
+    "reason": "NPC copy of Chilled: not in SkillLineAbility or Talent and triggered by no player spell (player armor procs are 6136/7321)",
+    "ruling": "reject"
+  },
+  "ccSnare:1715": {
+    "reason": "rank 1 of Hamstring, WARRIOR Arms SkillLineAbility (ClassMask 1), MOD_DECREASE_SPEED mechanic 11 on enemy target",
+    "ruling": "accept"
+  },
+  "ccSnare:17165": {
+    "reason": "NPC copy of Mind Flay (rank closure via priest family): unranked, not in SkillLineAbility or Talent, no player trigger",
+    "ruling": "reject"
+  },
+  "ccSnare:17311": {
+    "reason": "rank 2 of Mind Flay, PRIEST Shadow Magic SkillLineAbility (ClassMask 16), DoT+MOD_DECREASE_SPEED mechanic 11 on enemy target",
+    "ruling": "accept"
+  },
+  "ccSnare:17312": {
+    "reason": "rank 3 of Mind Flay, PRIEST Shadow Magic SkillLineAbility (ClassMask 16), DoT+MOD_DECREASE_SPEED mechanic 11 on enemy target",
+    "ruling": "accept"
+  },
+  "ccSnare:17313": {
+    "reason": "rank 4 of Mind Flay, PRIEST Shadow Magic SkillLineAbility (ClassMask 16), DoT+MOD_DECREASE_SPEED mechanic 11 on enemy target",
+    "ruling": "accept"
+  },
+  "ccSnare:17314": {
+    "reason": "rank 5 of Mind Flay, PRIEST Shadow Magic SkillLineAbility (ClassMask 16), DoT+MOD_DECREASE_SPEED mechanic 11 on enemy target",
+    "ruling": "accept"
+  },
+  "ccSnare:18118": {
+    "reason": "Aftermath slow aura, triggered by WARLOCK Destruction talent 18119 (Talent tab 301) on Conflagrate, MOD_DECREASE_SPEED on enemy target",
+    "ruling": "accept"
+  },
+  "ccSnare:18223": {
+    "reason": "Curse of Exhaustion, WARLOCK Affliction talent/SkillLineAbility, MOD_DECREASE_SPEED mechanic 11 on enemy target",
+    "ruling": "accept"
+  },
+  "ccSnare:18807": {
+    "reason": "rank 6 of Mind Flay, PRIEST Shadow Magic SkillLineAbility (ClassMask 16), DoT+MOD_DECREASE_SPEED mechanic 11 on enemy target",
+    "ruling": "accept"
+  },
+  "ccSnare:205": {
+    "reason": "rank 2 of Frostbolt, MAGE Frost SkillLineAbility (ClassMask 128), MOD_DECREASE_SPEED mechanic 11 on enemy target",
+    "ruling": "accept"
+  },
+  "ccSnare:22919": {
+    "reason": "NPC copy of Mind Flay (rank closure via priest family): unranked, not in SkillLineAbility or Talent, no player trigger",
+    "ruling": "reject"
+  },
+  "ccSnare:23600": {
+    "reason": "NPC copy of Piercing Howl (\"near the warrior\" text): not in SkillLineAbility or Talent, no player trigger",
+    "ruling": "reject"
+  },
+  "ccSnare:23953": {
+    "reason": "NPC copy of Mind Flay (rank closure via priest family): unranked, not in SkillLineAbility or Talent, no player trigger",
+    "ruling": "reject"
+  },
+  "ccSnare:25304": {
+    "reason": "rank 11 of Frostbolt, MAGE Frost SkillLineAbility (ClassMask 128), MOD_DECREASE_SPEED mechanic 11 on enemy target",
+    "ruling": "accept"
+  },
+  "ccSnare:25809": {
+    "reason": "Crippling Poison copy with no description: not in SkillLineAbility or Talent and triggered by nothing, not the rogue poison aura (3409/11201)",
+    "ruling": "reject"
+  },
+  "ccSnare:26143": {
+    "reason": "NPC copy of Mind Flay (rank closure via priest family): unranked, not in SkillLineAbility or Talent, no player trigger",
+    "ruling": "reject"
+  },
+  "ccSnare:27584": {
+    "reason": "NPC copy of Hamstring: not in SkillLineAbility or Talent, triggered by no player spell",
+    "ruling": "reject"
+  },
+  "ccSnare:27633": {
+    "reason": "NPC/later-expansion copy of Wing Clip: not in SkillLineAbility or Talent, no player trigger",
+    "ruling": "reject"
+  },
+  "ccSnare:28310": {
+    "reason": "NPC copy of Mind Flay (rank closure via priest family): unranked, not in SkillLineAbility or Talent, no player trigger",
+    "ruling": "reject"
+  },
+  "ccSnare:29407": {
+    "reason": "NPC copy of Mind Flay (rank closure via priest family): unranked, not in SkillLineAbility or Talent, no player trigger",
+    "ruling": "reject"
+  },
+  "ccSnare:2974": {
+    "reason": "rank 1 of Wing Clip, HUNTER Survival SkillLineAbility (ClassMask 4), MOD_DECREASE_SPEED mechanic 11 on enemy target",
+    "ruling": "accept"
+  },
+  "ccSnare:3409": {
+    "reason": "Crippling Poison rank 1 debuff, applied by the ROGUE poison weapon coating (Snare Poison 6645 trigger), MOD_DECREASE_SPEED mechanic 11 on enemy; Retail ships 3409",
+    "ruling": "accept"
+  },
+  "ccSnare:350025": {
+    "reason": "NPC/proc copy of Frostbolt: unranked, not in SkillLineAbility or Talent, triggered by no player spell",
+    "ruling": "reject"
+  },
+  "ccSnare:3600": {
+    "reason": "Earthbind, the -50% speed aura (A33, Mechanic 11) on enemies near Earthbind Totem 2484 (SHAMAN Elemental Combat SkillLineAbility) via its passive 6474; Retail ships it by hand on ccSnare",
+    "ruling": "accept"
+  },
+  "ccSnare:412526": {
+    "reason": "NPC copy of Mind Flay (rank closure via priest family): unranked, not in SkillLineAbility or Talent, no player trigger",
+    "ruling": "reject"
+  },
+  "ccSnare:414923": {
+    "reason": "Feral Charge (Cat) Daze: SoD-era id with no SkillLineAbility, no Talent and no player trigger on Forever, so unreachable",
+    "ruling": "reject"
+  },
+  "ccSnare:474204": {
+    "reason": "NPC copy of Mind Flay (rank closure via priest family): unranked, not in SkillLineAbility or Talent, no player trigger",
+    "ruling": "reject"
+  },
+  "ccSnare:5116": {
+    "reason": "Concussive Shot, HUNTER Marksmanship SkillLineAbility (ClassMask 4), MOD_DECREASE_SPEED mechanic 11 on enemy target",
+    "ruling": "accept"
+  },
+  "ccSnare:6136": {
+    "reason": "Chilled aura of MAGE Frost Armor (all player ranks trigger it), MOD_DECREASE_SPEED+attack slow on the enemy that strikes the mage",
+    "ruling": "accept"
+  },
+  "ccSnare:7321": {
+    "reason": "Chilled aura of MAGE Ice Armor 7302/7320/10219/10220, MOD_DECREASE_SPEED+attack slow on the enemy that strikes the mage",
+    "ruling": "accept"
+  },
+  "ccSnare:7322": {
+    "reason": "rank 4 of Frostbolt, MAGE Frost SkillLineAbility (ClassMask 128), MOD_DECREASE_SPEED mechanic 11 on enemy target",
+    "ruling": "accept"
+  },
+  "ccSnare:7372": {
+    "reason": "rank 2 of Hamstring, WARRIOR Arms SkillLineAbility (ClassMask 1), MOD_DECREASE_SPEED mechanic 11 on enemy target",
+    "ruling": "accept"
+  },
+  "ccSnare:7373": {
+    "reason": "rank 3 of Hamstring, WARRIOR Arms SkillLineAbility (ClassMask 1), MOD_DECREASE_SPEED mechanic 11 on enemy target",
+    "ruling": "accept"
+  },
+  "ccSnare:8034": {
+    "reason": "rank 1 of Frostbrand Attack, the SHAMAN Frostbrand Weapon enchant's proc: -speed aura (A33) on the shaman's target",
+    "ruling": "accept"
+  },
+  "ccSnare:8037": {
+    "reason": "rank 2 of Frostbrand Attack, the SHAMAN Frostbrand Weapon enchant's proc: -speed aura (A33) on the shaman's target",
+    "ruling": "accept"
+  },
+  "ccSnare:8056": {
+    "reason": "rank 1 of Frost Shock, SHAMAN Elemental Combat SkillLineAbility (ClassMask 64), MOD_DECREASE_SPEED mechanic 11 on enemy target",
+    "ruling": "accept"
+  },
+  "ccSnare:8058": {
+    "reason": "rank 2 of Frost Shock, SHAMAN Elemental Combat SkillLineAbility (ClassMask 64), MOD_DECREASE_SPEED mechanic 11 on enemy target",
+    "ruling": "accept"
+  },
+  "ccSnare:837": {
+    "reason": "rank 3 of Frostbolt, MAGE Frost SkillLineAbility (ClassMask 128), MOD_DECREASE_SPEED mechanic 11 on enemy target",
+    "ruling": "accept"
+  },
+  "ccSnare:8406": {
+    "reason": "rank 5 of Frostbolt, MAGE Frost SkillLineAbility (ClassMask 128), MOD_DECREASE_SPEED mechanic 11 on enemy target",
+    "ruling": "accept"
+  },
+  "ccSnare:8407": {
+    "reason": "rank 6 of Frostbolt, MAGE Frost SkillLineAbility (ClassMask 128), MOD_DECREASE_SPEED mechanic 11 on enemy target",
+    "ruling": "accept"
+  },
+  "ccSnare:8408": {
+    "reason": "rank 7 of Frostbolt, MAGE Frost SkillLineAbility (ClassMask 128), MOD_DECREASE_SPEED mechanic 11 on enemy target",
+    "ruling": "accept"
+  },
+  "ccSnare:8492": {
+    "reason": "rank 2 of Cone of Cold, MAGE Frost SkillLineAbility (ClassMask 128), cone MOD_DECREASE_SPEED mechanic 11 on enemies",
+    "ruling": "accept"
+  },
+  "defensives:1020": {
+    "reason": "rank 2 of Divine Shield, PALADIN Protection SkillLineAbility, immunity aura on self, 5 min recast",
+    "ruling": "accept"
+  },
+  "defensives:1022": {
+    "reason": "rank 1 of Blessing of Protection, PALADIN Protection SkillLineAbility, physical-immunity aura (A39 + Mechanic 25) on a party member, 5 min recast; an external, so Defensives by the Retail owner precedent",
+    "ruling": "accept"
+  },
+  "defensives:10278": {
+    "reason": "rank 3 of Blessing of Protection, PALADIN Protection SkillLineAbility, physical-immunity aura on a party member, 5 min recast; external, Defensives by owner precedent",
+    "ruling": "accept"
+  },
+  "defensives:11426": {
+    "reason": "rank 1 of Ice Barrier, MAGE Frost talent (Talent + SkillLineAbility), absorb aura on self",
+    "ruling": "accept"
+  },
+  "defensives:11958": {
+    "reason": "Ice Block, MAGE Frost talent (Talent + SkillLineAbility), immunity aura on self, 5 min recast",
+    "ruling": "accept"
+  },
+  "defensives:1213278": {
+    "reason": "duplicate Ice Barrier Rank 4 with old tooltip, no SkillLineAbility/Talent/grant edge: not player-reachable (the player's rank 4 is 13033)",
+    "ruling": "reject"
+  },
+  "defensives:1277424": {
+    "reason": "NPC copy of Shield Wall: no SkillLineAbility/Talent/grant edge, 75% value and no recast",
+    "ruling": "reject"
+  },
+  "defensives:12976": {
+    "reason": "Last Stand health aura on self, triggered by WARRIOR Protection talent cast 12975 (cast applies no aura; 12976 is what shows)",
+    "ruling": "accept"
+  },
+  "defensives:13031": {
+    "reason": "rank 2 of Ice Barrier, MAGE Frost SkillLineAbility, absorb aura on self",
+    "ruling": "accept"
+  },
+  "defensives:13032": {
+    "reason": "rank 3 of Ice Barrier, MAGE Frost SkillLineAbility, absorb aura on self",
+    "ruling": "accept"
+  },
+  "defensives:13033": {
+    "reason": "rank 4 of Ice Barrier, MAGE Frost SkillLineAbility, absorb aura on self",
+    "ruling": "accept"
+  },
+  "defensives:1310612": {
+    "reason": "Trickster's Dance is a pet-line ability (Pet - Fox 3016), dodge aura on the pet, not a hunter personal defensive; pet lines are out of the pool",
+    "ruling": "reject"
+  },
+  "defensives:1311015": {
+    "reason": "Templar's Bulwark, PALADIN Protection SkillLineAbility and Forever talent tree 1100, max-health absorb aura on self, 5 min recast",
+    "ruling": "accept"
+  },
+  "defensives:15062": {
+    "reason": "NPC copy of Shield Wall: no SkillLineAbility/Talent/grant edge, 75% value and no recast, unlike the player's 871",
+    "ruling": "reject"
+  },
+  "defensives:15087": {
+    "reason": "NPC copy of Evasion: no SkillLineAbility/Talent/grant edge and no recast; the player's is 5277",
+    "ruling": "reject"
+  },
+  "defensives:19263": {
+    "reason": "Deterrence, HUNTER Survival talent (Talent + SkillLineAbility), +25% dodge/parry aura on self, 5 min recast",
+    "ruling": "accept"
+  },
+  "defensives:20729": {
+    "reason": "rank 2 of Blessing of Sacrifice, PALADIN Protection SkillLineAbility, damage-transfer aura on a party member",
+    "ruling": "accept"
+  },
+  "defensives:22812": {
+    "reason": "Barkskin, DRUID Balance SkillLineAbility, damage-reduction aura on self, 1 min recast",
+    "ruling": "accept"
+  },
+  "defensives:22842": {
+    "reason": "Frenzied Regeneration, DRUID Feral Combat SkillLineAbility, rage-to-health periodic aura (A23) on self in bear form, 3 min recast: the bear's personal defensive",
+    "ruling": "accept"
+  },
+  "defensives:26064": {
+    "reason": "Shell Shield is a pet-line ability (Pet - Turtle 251), cast by and on the pet, not a hunter personal defensive; pet lines are out of the pool",
+    "ruling": "reject"
+  },
+  "defensives:27619": {
+    "reason": "NPC copy of Ice Block: no SkillLineAbility/Talent/grant edge; the player's is 11958",
+    "ruling": "reject"
+  },
+  "defensives:29061": {
+    "reason": "NPC copy of Shield Wall: no SkillLineAbility/Talent/grant edge, 75% value and 30 s recast",
+    "ruling": "reject"
+  },
+  "defensives:428713": {
+    "reason": "rune ability: ally-targeted Barkskin granted only by the Improved Barkskin rune (431388 override; Engrave Helm 431449)",
+    "ruling": "reject"
+  },
+  "defensives:457437": {
+    "reason": "item effect: Magic damage reduction granted by the S03 T1 Rogue Tank 4P set bonus (457440 override), named Vanish, no SkillLineAbility",
+    "ruling": "reject"
+  },
+  "defensives:458312": {
+    "reason": "rune ability: 50% Divine Protection granted only by the Malleable Protection rune (458318 override; Engrave Belt 426175), no SkillLineAbility",
+    "ruling": "reject"
+  },
+  "defensives:458371": {
+    "reason": "rune ability: rank 2 of the Malleable Protection rune's Divine Protection (458318 override), no SkillLineAbility",
+    "ruling": "reject"
+  },
+  "defensives:459702": {
+    "reason": "hidden passive that grants the Desperate Prayer ability (override aura 332, attr hidden); Forever's Desperate Prayer 19236 is an instant heal with no aura",
+    "ruling": "reject"
+  },
+  "defensives:498": {
+    "reason": "rank 1 of Divine Protection, PALADIN Protection SkillLineAbility, immunity aura on self, 5 min recast",
+    "ruling": "accept"
+  },
+  "defensives:5277": {
+    "reason": "Evasion, ROGUE Combat SkillLineAbility, +50% dodge aura on self, 5 min recast",
+    "ruling": "accept"
+  },
+  "defensives:5573": {
+    "reason": "rank 2 of Divine Protection, PALADIN Protection SkillLineAbility, immunity aura on self, 5 min recast",
+    "ruling": "accept"
+  },
+  "defensives:5599": {
+    "reason": "rank 2 of Blessing of Protection, PALADIN Protection SkillLineAbility, physical-immunity aura on a party member, 5 min recast; external, Defensives by owner precedent",
+    "ruling": "accept"
+  },
+  "defensives:642": {
+    "reason": "rank 1 of Divine Shield, PALADIN Protection SkillLineAbility, immunity aura on self, 5 min recast",
+    "ruling": "accept"
+  },
+  "defensives:6940": {
+    "reason": "rank 1 of Blessing of Sacrifice, PALADIN Protection SkillLineAbility, damage-transfer aura on a party member (Retail owner placed it in Defensives)",
+    "ruling": "accept"
+  },
+  "defensives:871": {
+    "reason": "Shield Wall, WARRIOR Protection SkillLineAbility, 60% damage-taken reduction aura on self, 15 min recast",
+    "ruling": "accept"
+  },
+  "defensives:9799": {
+    "reason": "Eye for an Eye is a passive Retribution talent (SPELL_ATTR0_PASSIVE, permanent hidden proc aura), never a visible cooldown aura",
+    "ruling": "reject"
+  },
+  "groupBuffs:10156": {
+    "reason": "rank 4 of Arcane Intellect, MAGE Arcane SkillLineAbility, Intellect aura (29) on ally",
+    "ruling": "accept"
+  },
+  "groupBuffs:10157": {
+    "reason": "rank 5 of Arcane Intellect, MAGE Arcane SkillLineAbility, Intellect aura (29) on ally",
+    "ruling": "accept"
+  },
+  "groupBuffs:10937": {
+    "reason": "rank 5 of Power Word: Fortitude, PRIEST Discipline SkillLineAbility, Stamina aura (29) on ally",
+    "ruling": "accept"
+  },
+  "groupBuffs:10938": {
+    "reason": "rank 6 of Power Word: Fortitude, PRIEST Discipline SkillLineAbility, Stamina aura (29) on ally",
+    "ruling": "accept"
+  },
+  "groupBuffs:10957": {
+    "reason": "rank 2 of Shadow Protection, PRIEST Shadow Magic SkillLineAbility, shadow-resist buff on one ally: single-target twin of the accepted Prayer of Shadow Protection 27683",
+    "ruling": "accept"
+  },
+  "groupBuffs:10958": {
+    "reason": "rank 3 of Shadow Protection, PRIEST Shadow Magic SkillLineAbility, shadow-resist buff on one ally: single-target twin of the accepted Prayer of Shadow Protection 27683",
+    "ruling": "accept"
+  },
+  "groupBuffs:1126": {
+    "reason": "rank 1 of Mark of the Wild, DRUID Restoration SkillLineAbility, armor/stats aura on ally",
+    "ruling": "accept"
+  },
+  "groupBuffs:11549": {
+    "reason": "rank 4 of Battle Shout, WARRIOR Fury SkillLineAbility, attack-power aura (99) on party/raid",
+    "ruling": "accept"
+  },
+  "groupBuffs:11550": {
+    "reason": "rank 5 of Battle Shout, WARRIOR Fury SkillLineAbility, attack-power aura (99) on party/raid",
+    "ruling": "accept"
+  },
+  "groupBuffs:11551": {
+    "reason": "rank 6 of Battle Shout, WARRIOR Fury SkillLineAbility, attack-power aura (99) on party/raid",
+    "ruling": "accept"
+  },
+  "groupBuffs:1243": {
+    "reason": "rank 1 of Power Word: Fortitude, PRIEST Discipline SkillLineAbility, Stamina aura (29) on ally",
+    "ruling": "accept"
+  },
+  "groupBuffs:1244": {
+    "reason": "rank 2 of Power Word: Fortitude, PRIEST Discipline SkillLineAbility, Stamina aura (29) on ally",
+    "ruling": "accept"
+  },
+  "groupBuffs:1245": {
+    "reason": "rank 3 of Power Word: Fortitude, PRIEST Discipline SkillLineAbility, Stamina aura (29) on ally",
+    "ruling": "accept"
+  },
+  "groupBuffs:1291335": {
+    "reason": "Mark of the Wild 'Rank 7' self-target copy (no cast attributes) with no SkillLineAbility or trigger; NPC/item copy",
+    "ruling": "reject"
+  },
+  "groupBuffs:1310503": {
+    "reason": "Mark of the Wild 'Rank 7' area copy (target 22/30) with no SkillLineAbility or trigger; NPC copy",
+    "ruling": "reject"
+  },
+  "groupBuffs:13326": {
+    "reason": "Arcane Intellect copy (30-min index, 'an ally' text) with no SkillLineAbility or trigger; NPC copy",
+    "ruling": "reject"
+  },
+  "groupBuffs:1459": {
+    "reason": "rank 1 of Arcane Intellect, MAGE Arcane SkillLineAbility, Intellect aura (29) on ally",
+    "ruling": "accept"
+  },
+  "groupBuffs:1460": {
+    "reason": "rank 2 of Arcane Intellect, MAGE Arcane SkillLineAbility, Intellect aura (29) on ally",
+    "ruling": "accept"
+  },
+  "groupBuffs:1461": {
+    "reason": "rank 3 of Arcane Intellect, MAGE Arcane SkillLineAbility, Intellect aura (29) on ally",
+    "ruling": "accept"
+  },
+  "groupBuffs:14752": {
+    "reason": "rank 1 of Divine Spirit, PRIEST Discipline talent line, Spirit buff on one ally: single-target twin of the accepted Prayer of Spirit 27681",
+    "ruling": "accept"
+  },
+  "groupBuffs:14818": {
+    "reason": "rank 2 of Divine Spirit, PRIEST Discipline talent line, Spirit buff on one ally: single-target twin of the accepted Prayer of Spirit 27681",
+    "ruling": "accept"
+  },
+  "groupBuffs:14819": {
+    "reason": "rank 3 of Divine Spirit, PRIEST Discipline talent line, Spirit buff on one ally: single-target twin of the accepted Prayer of Spirit 27681",
+    "ruling": "accept"
+  },
+  "groupBuffs:16876": {
+    "reason": "Arcane Intellect area copy (target 22/30, $M1 text) with no SkillLineAbility or trigger; NPC copy",
+    "ruling": "reject"
+  },
+  "groupBuffs:19740": {
+    "reason": "rank 1 of Blessing of Might, PALADIN Retribution SkillLineAbility, 5 min buff on one ally (T21): the paladin's maintained group buff, the vanilla analogue of Battle Shout",
+    "ruling": "accept"
+  },
+  "groupBuffs:19742": {
+    "reason": "rank 1 of Blessing of Wisdom, PALADIN Holy SkillLineAbility, 5 min buff on one ally (T21): the paladin's maintained group buff, the vanilla analogue of Battle Shout",
+    "ruling": "accept"
+  },
+  "groupBuffs:19834": {
+    "reason": "rank 2 of Blessing of Might, PALADIN Retribution SkillLineAbility, 5 min buff on one ally (T21): the paladin's maintained group buff, the vanilla analogue of Battle Shout",
+    "ruling": "accept"
+  },
+  "groupBuffs:19835": {
+    "reason": "rank 3 of Blessing of Might, PALADIN Retribution SkillLineAbility, 5 min buff on one ally (T21): the paladin's maintained group buff, the vanilla analogue of Battle Shout",
+    "ruling": "accept"
+  },
+  "groupBuffs:19836": {
+    "reason": "rank 4 of Blessing of Might, PALADIN Retribution SkillLineAbility, 5 min buff on one ally (T21): the paladin's maintained group buff, the vanilla analogue of Battle Shout",
+    "ruling": "accept"
+  },
+  "groupBuffs:19837": {
+    "reason": "rank 5 of Blessing of Might, PALADIN Retribution SkillLineAbility, 5 min buff on one ally (T21): the paladin's maintained group buff, the vanilla analogue of Battle Shout",
+    "ruling": "accept"
+  },
+  "groupBuffs:19838": {
+    "reason": "rank 6 of Blessing of Might, PALADIN Retribution SkillLineAbility, 5 min buff on one ally (T21): the paladin's maintained group buff, the vanilla analogue of Battle Shout",
+    "ruling": "accept"
+  },
+  "groupBuffs:19850": {
+    "reason": "rank 2 of Blessing of Wisdom, PALADIN Holy SkillLineAbility, 5 min buff on one ally (T21): the paladin's maintained group buff, the vanilla analogue of Battle Shout",
+    "ruling": "accept"
+  },
+  "groupBuffs:19852": {
+    "reason": "rank 3 of Blessing of Wisdom, PALADIN Holy SkillLineAbility, 5 min buff on one ally (T21): the paladin's maintained group buff, the vanilla analogue of Battle Shout",
+    "ruling": "accept"
+  },
+  "groupBuffs:19853": {
+    "reason": "rank 4 of Blessing of Wisdom, PALADIN Holy SkillLineAbility, 5 min buff on one ally (T21): the paladin's maintained group buff, the vanilla analogue of Battle Shout",
+    "ruling": "accept"
+  },
+  "groupBuffs:19854": {
+    "reason": "rank 5 of Blessing of Wisdom, PALADIN Holy SkillLineAbility, 5 min buff on one ally (T21): the paladin's maintained group buff, the vanilla analogue of Battle Shout",
+    "ruling": "accept"
+  },
+  "groupBuffs:20217": {
+    "reason": "Blessing of Kings, PALADIN Protection talent (Talent + SkillLineAbility), +10% stats buff on one ally: the paladin's maintained group buff",
+    "ruling": "accept"
+  },
+  "groupBuffs:21562": {
+    "reason": "rank 1 of Prayer of Fortitude, PRIEST Discipline SkillLineAbility, Stamina aura on party/raid",
+    "ruling": "accept"
+  },
+  "groupBuffs:21564": {
+    "reason": "rank 2 of Prayer of Fortitude, PRIEST Discipline SkillLineAbility, Stamina aura on party/raid",
+    "ruling": "accept"
+  },
+  "groupBuffs:21849": {
+    "reason": "rank 1 of Gift of the Wild, DRUID Restoration SkillLineAbility, armor/stats/resist aura on party/raid",
+    "ruling": "accept"
+  },
+  "groupBuffs:21850": {
+    "reason": "rank 2 of Gift of the Wild, DRUID Restoration SkillLineAbility, armor/stats/resist aura on party/raid",
+    "ruling": "accept"
+  },
+  "groupBuffs:23028": {
+    "reason": "Arcane Brilliance, MAGE Arcane SkillLineAbility, Intellect aura (29) on party/raid",
+    "ruling": "accept"
+  },
+  "groupBuffs:23947": {
+    "reason": "Power Word: Fortitude copy (target 25, $M1 text) with no SkillLineAbility or trigger; NPC copy",
+    "ruling": "reject"
+  },
+  "groupBuffs:23948": {
+    "reason": "Power Word: Fortitude copy (target 25, $M1 text) with no SkillLineAbility or trigger; NPC copy",
+    "ruling": "reject"
+  },
+  "groupBuffs:24597": {
+    "reason": "Furious Howl rank 4 is a wolf pet ability (Pet - Wolf line via Beast Training 2459x); a short pet buff, not a maintained raid buff",
+    "ruling": "reject"
+  },
+  "groupBuffs:24603": {
+    "reason": "Furious Howl rank 3 is a wolf pet ability (Pet - Wolf line via Beast Training 2459x); a short pet buff, not a maintained raid buff",
+    "ruling": "reject"
+  },
+  "groupBuffs:24604": {
+    "reason": "Furious Howl rank 1 is a wolf pet ability (Pet - Wolf line via Beast Training 2459x); a short pet buff, not a maintained raid buff",
+    "ruling": "reject"
+  },
+  "groupBuffs:24605": {
+    "reason": "Furious Howl rank 2 is a wolf pet ability (Pet - Wolf line via Beast Training 2459x); a short pet buff, not a maintained raid buff",
+    "ruling": "reject"
+  },
+  "groupBuffs:24752": {
+    "reason": "Mark of the Wild 'Rank 7' copy (target 25, aura 558) with no SkillLineAbility or trigger; NPC copy",
+    "ruling": "reject"
+  },
+  "groupBuffs:25289": {
+    "reason": "rank 7 of Battle Shout, WARRIOR Fury SkillLineAbility, attack-power aura (99) on party/raid",
+    "ruling": "accept"
+  },
+  "groupBuffs:25290": {
+    "reason": "rank 6 of Blessing of Wisdom, PALADIN Holy SkillLineAbility, 5 min buff on one ally (T21): the paladin's maintained group buff, the vanilla analogue of Battle Shout",
+    "ruling": "accept"
+  },
+  "groupBuffs:25291": {
+    "reason": "rank 7 of Blessing of Might, PALADIN Retribution SkillLineAbility, 5 min buff on one ally (T21): the paladin's maintained group buff, the vanilla analogue of Battle Shout",
+    "ruling": "accept"
+  },
+  "groupBuffs:25782": {
+    "reason": "rank 1 of Greater Blessing of Might, PALADIN SkillLineAbility, 15 min class-wide buff (T153): the paladin's raid buff",
+    "ruling": "accept"
+  },
+  "groupBuffs:25894": {
+    "reason": "rank 1 of Greater Blessing of Wisdom, PALADIN SkillLineAbility, 15 min class-wide buff (T153): the paladin's raid buff",
+    "ruling": "accept"
+  },
+  "groupBuffs:25898": {
+    "reason": "Greater Blessing of Kings, PALADIN SkillLineAbility, 15 min class-wide buff (T153): the paladin's raid buff",
+    "ruling": "accept"
+  },
+  "groupBuffs:25916": {
+    "reason": "rank 2 of Greater Blessing of Might, PALADIN SkillLineAbility, 15 min class-wide buff (T153): the paladin's raid buff",
+    "ruling": "accept"
+  },
+  "groupBuffs:25918": {
+    "reason": "rank 2 of Greater Blessing of Wisdom, PALADIN SkillLineAbility, 15 min class-wide buff (T153): the paladin's raid buff",
+    "ruling": "accept"
+  },
+  "groupBuffs:27578": {
+    "reason": "Battle Shout duplicate 'Rank 6' (bp 185, party-only target) with no SkillLineAbility or trigger; NPC copy",
+    "ruling": "reject"
+  },
+  "groupBuffs:27681": {
+    "reason": "rank 1 of Prayer of Spirit, PRIEST Discipline SkillLineAbility, Spirit aura on party/raid",
+    "ruling": "accept"
+  },
+  "groupBuffs:27683": {
+    "reason": "Prayer of Shadow Protection, PRIEST Shadow Magic SkillLineAbility, shadow-resistance aura on party/raid",
+    "ruling": "accept"
+  },
+  "groupBuffs:27841": {
+    "reason": "rank 4 of Divine Spirit, PRIEST Discipline talent line, Spirit buff on one ally: single-target twin of the accepted Prayer of Spirit 27681",
+    "ruling": "accept"
+  },
+  "groupBuffs:2791": {
+    "reason": "rank 4 of Power Word: Fortitude, PRIEST Discipline SkillLineAbility, Stamina aura (29) on ally",
+    "ruling": "accept"
+  },
+  "groupBuffs:364161": {
+    "reason": "Arcane Intellect duplicate 'Rank 2' with no SkillLineAbility, trigger or override edge; not player-reachable",
+    "ruling": "reject"
+  },
+  "groupBuffs:364163": {
+    "reason": "Mark of the Wild duplicate 'Rank 6' with no SkillLineAbility, trigger or override edge; not player-reachable",
+    "ruling": "reject"
+  },
+  "groupBuffs:425600": {
+    "reason": "Horn of Lordaeron, PALADIN Holy SkillLineAbility (not a rune name), Strength/Agility aura on party members; the paladin's shout-style group buff",
+    "ruling": "accept"
+  },
+  "groupBuffs:5232": {
+    "reason": "rank 2 of Mark of the Wild, DRUID Restoration SkillLineAbility, armor/stats aura on ally",
+    "ruling": "accept"
+  },
+  "groupBuffs:5234": {
+    "reason": "rank 4 of Mark of the Wild, DRUID Restoration SkillLineAbility, armor/stats aura on ally",
+    "ruling": "accept"
+  },
+  "groupBuffs:5242": {
+    "reason": "rank 2 of Battle Shout, WARRIOR Fury SkillLineAbility, attack-power aura (99) on party/raid",
+    "ruling": "accept"
+  },
+  "groupBuffs:6192": {
+    "reason": "rank 3 of Battle Shout, WARRIOR Fury SkillLineAbility, attack-power aura (99) on party/raid",
+    "ruling": "accept"
+  },
+  "groupBuffs:6673": {
+    "reason": "rank 1 of Battle Shout, WARRIOR Fury SkillLineAbility, attack-power aura (99) on party/raid",
+    "ruling": "accept"
+  },
+  "groupBuffs:6756": {
+    "reason": "rank 3 of Mark of the Wild, DRUID Restoration SkillLineAbility, armor/stats aura on ally",
+    "ruling": "accept"
+  },
+  "groupBuffs:8907": {
+    "reason": "rank 5 of Mark of the Wild, DRUID Restoration SkillLineAbility, armor/stats aura on ally",
+    "ruling": "accept"
+  },
+  "groupBuffs:976": {
+    "reason": "rank 1 of Shadow Protection, PRIEST Shadow Magic SkillLineAbility, shadow-resist buff on one ally: single-target twin of the accepted Prayer of Shadow Protection 27683",
+    "ruling": "accept"
+  },
+  "groupBuffs:9884": {
+    "reason": "rank 6 of Mark of the Wild, DRUID Restoration SkillLineAbility, armor/stats aura on ally",
+    "ruling": "accept"
+  },
+  "groupBuffs:9885": {
+    "reason": "rank 7 of Mark of the Wild, DRUID Restoration SkillLineAbility, armor/stats aura on ally",
+    "ruling": "accept"
+  },
+  "hardCC:10308": {
+    "reason": "rank 4 of Hammer of Justice, PALADIN SkillLineAbility, stun aura on enemy",
+    "ruling": "accept"
+  },
+  "hardCC:10326": {
+    "reason": "rank 3 of Turn Undead, PALADIN SkillLineAbility, fear aura on enemy; same id Retail ships as Turn Evil",
+    "ruling": "accept"
+  },
+  "hardCC:10888": {
+    "reason": "rank 3 of Psychic Scream, PRIEST SkillLineAbility, fear aura on nearby enemies",
+    "ruling": "accept"
+  },
+  "hardCC:10890": {
+    "reason": "rank 4 of Psychic Scream, PRIEST SkillLineAbility, fear aura on nearby enemies",
+    "ruling": "accept"
+  },
+  "hardCC:10911": {
+    "reason": "rank 2 of Mind Control, PRIEST SkillLineAbility, MOD_CHARM aura on enemy",
+    "ruling": "accept"
+  },
+  "hardCC:10912": {
+    "reason": "rank 3 of Mind Control, PRIEST SkillLineAbility, MOD_CHARM aura on enemy",
+    "ruling": "accept"
+  },
+  "hardCC:10955": {
+    "reason": "rank 3 of Shackle Undead, PRIEST SkillLineAbility, shackle aura on enemy undead",
+    "ruling": "accept"
+  },
+  "hardCC:1098": {
+    "reason": "rank 1 of Subjugate Demon (Enslave Demon), WARLOCK SkillLineAbility, MOD_POSSESS aura on enemy demon; Retail ships 1098",
+    "ruling": "accept"
+  },
+  "hardCC:11285": {
+    "reason": "rank 4 of Gouge, ROGUE SkillLineAbility, incapacitate aura on enemy",
+    "ruling": "accept"
+  },
+  "hardCC:11286": {
+    "reason": "rank 5 of Gouge, ROGUE SkillLineAbility, incapacitate aura on enemy",
+    "ruling": "accept"
+  },
+  "hardCC:11297": {
+    "reason": "rank 3 of Sap, ROGUE SkillLineAbility, incapacitate aura on enemy",
+    "ruling": "accept"
+  },
+  "hardCC:11725": {
+    "reason": "rank 2 of Subjugate Demon, WARLOCK SkillLineAbility, possess aura on enemy demon",
+    "ruling": "accept"
+  },
+  "hardCC:11726": {
+    "reason": "rank 3 of Subjugate Demon, WARLOCK SkillLineAbility, possess aura on enemy demon",
+    "ruling": "accept"
+  },
+  "hardCC:118": {
+    "reason": "rank 1 of Polymorph, MAGE SkillLineAbility, polymorph aura (MOD_CONFUSE+transform) on enemy; Retail ships 118",
+    "ruling": "accept"
+  },
+  "hardCC:11958": {
+    "reason": "Ice Block is a self-cast immunity buff on the mage, not CC on a hostile unit; belongs in defensives (candidate defensives:11958)",
+    "ruling": "reject"
+  },
+  "hardCC:1213465": {
+    "reason": "NPC Intimidating Shout copy: no SkillLineAbility/Talent row, DR 0",
+    "ruling": "reject"
+  },
+  "hardCC:1235318": {
+    "reason": "NPC Blast Wave copy (known trap): no SkillLineAbility/Talent row; snare aura only",
+    "ruling": "reject"
+  },
+  "hardCC:12355": {
+    "reason": "Impact stun aura on enemy, MAGE Fire SkillLineAbility, triggered by talent 11103",
+    "ruling": "accept"
+  },
+  "hardCC:1235538": {
+    "reason": "NPC Charge copy: no WARRIOR SkillLineAbility/Talent row and not triggered by any player spell; player stun aura is 7922",
+    "ruling": "reject"
+  },
+  "hardCC:1270811": {
+    "reason": "NPC Intimidating Shout copy: no SkillLineAbility/Talent row, DR 0",
+    "ruling": "reject"
+  },
+  "hardCC:1277455": {
+    "reason": "Confounding Flash, PRIEST Discipline SkillLineAbility (gnome race mask), AoE confuse aura on enemies; aura of cast 1277662",
+    "ruling": "accept"
+  },
+  "hardCC:12809": {
+    "reason": "Concussion Blow, WARRIOR Protection talent, stun aura (mech stunned) on enemy",
+    "ruling": "accept"
+  },
+  "hardCC:12824": {
+    "reason": "rank 2 of Polymorph, MAGE SkillLineAbility, polymorph aura on enemy",
+    "ruling": "accept"
+  },
+  "hardCC:12825": {
+    "reason": "rank 3 of Polymorph, MAGE SkillLineAbility, polymorph aura on enemy",
+    "ruling": "accept"
+  },
+  "hardCC:12826": {
+    "reason": "rank 4 of Polymorph, MAGE SkillLineAbility, polymorph aura on enemy",
+    "ruling": "accept"
+  },
+  "hardCC:14308": {
+    "reason": "rank 2 Freezing Trap effect, frozen stun aura on enemy applied by the hunter trap",
+    "ruling": "accept"
+  },
+  "hardCC:14309": {
+    "reason": "rank 3 Freezing Trap effect, frozen stun aura on enemy applied by the hunter trap",
+    "ruling": "accept"
+  },
+  "hardCC:14326": {
+    "reason": "rank 2 of Scare Beast, HUNTER SkillLineAbility, fear aura on enemy beast",
+    "ruling": "accept"
+  },
+  "hardCC:14327": {
+    "reason": "rank 3 of Scare Beast, HUNTER SkillLineAbility, fear aura on enemy beast",
+    "ruling": "accept"
+  },
+  "hardCC:14902": {
+    "reason": "NPC Cheap Shot copy: no SkillLineAbility/Talent row",
+    "ruling": "reject"
+  },
+  "hardCC:15091": {
+    "reason": "NPC Blast Wave copy (known trap): no SkillLineAbility/Talent row; player Blast Wave is a daze snare, not hard CC",
+    "ruling": "reject"
+  },
+  "hardCC:1513": {
+    "reason": "rank 1 of Scare Beast, HUNTER SkillLineAbility, fear aura on enemy beast; Retail ships 1513",
+    "ruling": "accept"
+  },
+  "hardCC:15269": {
+    "reason": "Blackout stun aura on enemy, triggered by PRIEST Shadow talent ranks 15268/15323-15326",
+    "ruling": "accept"
+  },
+  "hardCC:15398": {
+    "reason": "NPC Psychic Scream copy (single-target stun): no SkillLineAbility/Talent row, DR 0",
+    "ruling": "reject"
+  },
+  "hardCC:15744": {
+    "reason": "NPC Blast Wave copy (known trap): no SkillLineAbility/Talent row; snare aura only",
+    "ruling": "reject"
+  },
+  "hardCC:16046": {
+    "reason": "NPC Blast Wave copy (known trap): no SkillLineAbility/Talent row; snare aura only",
+    "ruling": "reject"
+  },
+  "hardCC:16922": {
+    "reason": "Starfire Stun aura on enemy, triggered by DRUID Balance talent Improved Starfire 16850",
+    "ruling": "accept"
+  },
+  "hardCC:17145": {
+    "reason": "NPC Blast Wave copy (known trap): no SkillLineAbility/Talent row; snare aura only",
+    "ruling": "reject"
+  },
+  "hardCC:17277": {
+    "reason": "NPC Blast Wave copy (known trap): no SkillLineAbility/Talent row; snare aura only",
+    "ruling": "reject"
+  },
+  "hardCC:1776": {
+    "reason": "rank 1 of Gouge, ROGUE SkillLineAbility, incapacitate aura on enemy; Retail ships 1776",
+    "ruling": "accept"
+  },
+  "hardCC:1777": {
+    "reason": "rank 2 of Gouge, ROGUE SkillLineAbility, incapacitate aura on enemy",
+    "ruling": "accept"
+  },
+  "hardCC:17925": {
+    "reason": "rank 2 of Death Coil, WARLOCK SkillLineAbility, horror aura on enemy",
+    "ruling": "accept"
+  },
+  "hardCC:17926": {
+    "reason": "rank 3 of Death Coil, WARLOCK SkillLineAbility, horror aura on enemy",
+    "ruling": "accept"
+  },
+  "hardCC:17928": {
+    "reason": "rank 2 of Howl of Terror, WARLOCK SkillLineAbility, AoE fear aura on enemies",
+    "ruling": "accept"
+  },
+  "hardCC:18093": {
+    "reason": "Pyroclasm stun aura on enemy, WARLOCK Destruction SkillLineAbility (talent proc from Rain of Fire/Hellfire)",
+    "ruling": "accept"
+  },
+  "hardCC:1833": {
+    "reason": "Cheap Shot, ROGUE SkillLineAbility, stun aura on enemy; Retail ships 1833",
+    "ruling": "accept"
+  },
+  "hardCC:18647": {
+    "reason": "rank 2 of Banish, WARLOCK SkillLineAbility, banish aura on enemy",
+    "ruling": "accept"
+  },
+  "hardCC:18657": {
+    "reason": "rank 2 of Hibernate, DRUID SkillLineAbility, sleep aura on enemy",
+    "ruling": "accept"
+  },
+  "hardCC:18658": {
+    "reason": "rank 3 of Hibernate, DRUID SkillLineAbility, sleep aura on enemy",
+    "ruling": "accept"
+  },
+  "hardCC:19134": {
+    "reason": "NPC Intimidating Shout copy (known trap): no SkillLineAbility/Talent row, DR 0",
+    "ruling": "reject"
+  },
+  "hardCC:19410": {
+    "reason": "Improved Concussive Shot stun aura on enemy, triggered by HUNTER talent 19407 (SkillLineAbility+Talent)",
+    "ruling": "accept"
+  },
+  "hardCC:19503": {
+    "reason": "Scatter Shot, HUNTER Marksmanship talent, disorient aura (MOD_CONFUSE) on enemy",
+    "ruling": "accept"
+  },
+  "hardCC:20066": {
+    "reason": "Repentance, PALADIN Retribution talent, incapacitate aura (mech incapacitated) on enemy",
+    "ruling": "accept"
+  },
+  "hardCC:20170": {
+    "reason": "Seal of Justice stun proc, stun aura (mech stunned) on enemy triggered by player Seal of Justice 20164",
+    "ruling": "accept"
+  },
+  "hardCC:20253": {
+    "reason": "Intercept Stun rank 1, stun aura on enemy triggered by player Intercept 20252",
+    "ruling": "accept"
+  },
+  "hardCC:20511": {
+    "reason": "Intimidating Shout cower stun aura on the primary target, triggered by player 5246",
+    "ruling": "accept"
+  },
+  "hardCC:20549": {
+    "reason": "War Stomp, Tauren racial (Tauren Racial SkillLineAbility), area stun aura (A12, Mechanic 12) on enemies; Retail ships it in hardCC under ALL as well as Racials (allowed overlap)",
+    "ruling": "accept"
+  },
+  "hardCC:20614": {
+    "reason": "Intercept Stun rank 2, stun aura on enemy triggered by player Intercept 20616",
+    "ruling": "accept"
+  },
+  "hardCC:20615": {
+    "reason": "Intercept Stun rank 3, stun aura on enemy triggered by player Intercept 20617",
+    "ruling": "accept"
+  },
+  "hardCC:2070": {
+    "reason": "rank 2 of Sap, ROGUE SkillLineAbility, incapacitate aura (mech sapped) on enemy",
+    "ruling": "accept"
+  },
+  "hardCC:20882": {
+    "reason": "NPC Subjugate Demon copy: no SkillLineAbility/Talent row, DR 0",
+    "ruling": "reject"
+  },
+  "hardCC:2094": {
+    "reason": "Blind, ROGUE SkillLineAbility, disorient aura on enemy; Retail ships 2094",
+    "ruling": "accept"
+  },
+  "hardCC:22424": {
+    "reason": "NPC Blast Wave copy (known trap): no SkillLineAbility/Talent row; snare aura only",
+    "ruling": "reject"
+  },
+  "hardCC:22427": {
+    "reason": "NPC Concussion Blow copy: no SkillLineAbility/Talent row, DR 0",
+    "ruling": "reject"
+  },
+  "hardCC:22911": {
+    "reason": "NPC Charge copy: no WARRIOR SkillLineAbility/Talent row; the player's Charge stun aura is 7922",
+    "ruling": "reject"
+  },
+  "hardCC:23039": {
+    "reason": "NPC Blast Wave copy (known trap): no SkillLineAbility/Talent row; snare aura only",
+    "ruling": "reject"
+  },
+  "hardCC:23113": {
+    "reason": "NPC Blast Wave copy (known trap): no SkillLineAbility/Talent row; snare aura only",
+    "ruling": "reject"
+  },
+  "hardCC:23601": {
+    "reason": "NPC Scatter Shot copy: no SkillLineAbility/Talent row, mechanic 0",
+    "ruling": "reject"
+  },
+  "hardCC:24394": {
+    "reason": "Intimidation stun aura on the pet's target, triggered by HUNTER BM talent 19577; Retail ships 24394",
+    "ruling": "accept"
+  },
+  "hardCC:25049": {
+    "reason": "NPC Blast Wave copy (known trap): no SkillLineAbility/Talent row; snare aura only",
+    "ruling": "reject"
+  },
+  "hardCC:26044": {
+    "reason": "NPC Mind Flay copy (no SkillLineAbility/Talent) and a snare/DoT, not loss of control",
+    "ruling": "reject"
+  },
+  "hardCC:2637": {
+    "reason": "rank 1 of Hibernate, DRUID SkillLineAbility, sleep aura on enemy; Retail ships 2637",
+    "ruling": "accept"
+  },
+  "hardCC:27610": {
+    "reason": "NPC duplicate of Psychic Scream rank 4: no SkillLineAbility/Talent row; player rank 4 is 10890",
+    "ruling": "reject"
+  },
+  "hardCC:27615": {
+    "reason": "NPC Kidney Shot copy: no SkillLineAbility/Talent row, single stun effect",
+    "ruling": "reject"
+  },
+  "hardCC:27619": {
+    "reason": "NPC Ice Block copy: no SkillLineAbility/Talent row, self buff, not hostile CC",
+    "ruling": "reject"
+  },
+  "hardCC:28270": {
+    "reason": "Polymorph: Cow, MAGE Arcane SkillLineAbility row identical to Turtle/Pig, polymorph aura on enemy",
+    "ruling": "accept"
+  },
+  "hardCC:28271": {
+    "reason": "Polymorph (Turtle), MAGE Arcane SkillLineAbility (tome-learned), polymorph aura on enemy",
+    "ruling": "accept"
+  },
+  "hardCC:28272": {
+    "reason": "Polymorph (Pig), MAGE Arcane SkillLineAbility (tome-learned), polymorph aura on enemy",
+    "ruling": "accept"
+  },
+  "hardCC:28412": {
+    "reason": "NPC Death Coil copy: no SkillLineAbility/Talent row, extra non-player effect",
+    "ruling": "reject"
+  },
+  "hardCC:2878": {
+    "reason": "rank 1 of Turn Undead, PALADIN SkillLineAbility, fear aura (mech turned) on enemy undead",
+    "ruling": "accept"
+  },
+  "hardCC:29544": {
+    "reason": "Intimidating Shout cower aura triggered only by NPC copies 19134/1213465/1270811, not by the player's 5246",
+    "ruling": "reject"
+  },
+  "hardCC:3355": {
+    "reason": "rank 1 Freezing Trap effect, frozen stun aura on enemy applied by the hunter trap; Retail ships 3355",
+    "ruling": "accept"
+  },
+  "hardCC:408": {
+    "reason": "rank 1 of Kidney Shot, ROGUE SkillLineAbility, stun aura on enemy; Retail ships 408",
+    "ruling": "accept"
+  },
+  "hardCC:411688": {
+    "reason": "Charge Stun copy triggered only by 411684, a Charge with no SkillLineAbility/Talent row (rune/variant), not class-reachable",
+    "ruling": "reject"
+  },
+  "hardCC:457569": {
+    "reason": "NPC Banish copy (known trap): no SkillLineAbility/Talent row, implicit target 25 not the player's enemy target",
+    "ruling": "reject"
+  },
+  "hardCC:465352": {
+    "reason": "NPC Banish copy (known trap): no SkillLineAbility/Talent row, implicit target 25 not the player's enemy target",
+    "ruling": "reject"
+  },
+  "hardCC:469161": {
+    "reason": "NPC Blast Wave copy (known trap): no SkillLineAbility/Talent row; snare aura only",
+    "ruling": "reject"
+  },
+  "hardCC:474268": {
+    "reason": "NPC Mind Flay copy (no SkillLineAbility/Talent) and a snare/DoT, not loss of control",
+    "ruling": "reject"
+  },
+  "hardCC:5211": {
+    "reason": "rank 1 of Bash, DRUID SkillLineAbility, stun aura on enemy; Retail ships 5211",
+    "ruling": "accept"
+  },
+  "hardCC:5246": {
+    "reason": "Intimidating Shout, WARRIOR SkillLineAbility, fear aura (MOD_FEAR) on nearby enemies; Retail ships 5246",
+    "ruling": "accept"
+  },
+  "hardCC:5484": {
+    "reason": "rank 1 of Howl of Terror, WARLOCK SkillLineAbility, AoE fear aura on enemies; Retail ships 5484",
+    "ruling": "accept"
+  },
+  "hardCC:5588": {
+    "reason": "rank 2 of Hammer of Justice, PALADIN SkillLineAbility, stun aura on enemy",
+    "ruling": "accept"
+  },
+  "hardCC:5589": {
+    "reason": "rank 3 of Hammer of Justice, PALADIN SkillLineAbility, stun aura on enemy",
+    "ruling": "accept"
+  },
+  "hardCC:5627": {
+    "reason": "rank 2 of Turn Undead, PALADIN SkillLineAbility, fear aura (mech turned) on enemy undead",
+    "ruling": "accept"
+  },
+  "hardCC:5782": {
+    "reason": "rank 1 of Fear, WARLOCK SkillLineAbility, applies its own MOD_FEAR aura on enemy (Retail's separate aura id does not exist here)",
+    "ruling": "accept"
+  },
+  "hardCC:605": {
+    "reason": "rank 1 of Mind Control, PRIEST SkillLineAbility, MOD_CHARM aura on the enemy; Retail ships 605",
+    "ruling": "accept"
+  },
+  "hardCC:6213": {
+    "reason": "rank 2 of Fear, WARLOCK SkillLineAbility, fear aura on enemy",
+    "ruling": "accept"
+  },
+  "hardCC:6215": {
+    "reason": "rank 3 of Fear, WARLOCK SkillLineAbility, fear aura on enemy",
+    "ruling": "accept"
+  },
+  "hardCC:6770": {
+    "reason": "rank 1 of Sap, ROGUE SkillLineAbility, incapacitate aura on enemy; Retail ships 6770",
+    "ruling": "accept"
+  },
+  "hardCC:6789": {
+    "reason": "rank 1 of Death Coil, WARLOCK SkillLineAbility, horror aura (MOD_FEAR, mech horrified) on enemy; Retail ships 6789",
+    "ruling": "accept"
+  },
+  "hardCC:6798": {
+    "reason": "rank 2 of Bash, DRUID SkillLineAbility, stun aura on enemy",
+    "ruling": "accept"
+  },
+  "hardCC:710": {
+    "reason": "rank 1 of Banish, WARLOCK SkillLineAbility, banish aura (stun+immunity) on enemy; Retail ships 710",
+    "ruling": "accept"
+  },
+  "hardCC:7922": {
+    "reason": "Charge Stun, stun aura (APPLY_AURA 12, mech stunned) on the enemy, triggered by player Charge ranks 100/6178/11578",
+    "ruling": "accept"
+  },
+  "hardCC:8122": {
+    "reason": "rank 1 of Psychic Scream, PRIEST SkillLineAbility, fear aura on nearby enemies; Retail ships 8122",
+    "ruling": "accept"
+  },
+  "hardCC:8124": {
+    "reason": "rank 2 of Psychic Scream, PRIEST SkillLineAbility, fear aura on nearby enemies",
+    "ruling": "accept"
+  },
+  "hardCC:853": {
+    "reason": "rank 1 of Hammer of Justice, PALADIN SkillLineAbility, stun aura on enemy; Retail ships 853",
+    "ruling": "accept"
+  },
+  "hardCC:8629": {
+    "reason": "rank 3 of Gouge, ROGUE SkillLineAbility, incapacitate aura on enemy",
+    "ruling": "accept"
+  },
+  "hardCC:8643": {
+    "reason": "rank 2 of Kidney Shot, ROGUE SkillLineAbility, stun aura on enemy",
+    "ruling": "accept"
+  },
+  "hardCC:8983": {
+    "reason": "rank 3 of Bash, DRUID SkillLineAbility, stun aura on enemy",
+    "ruling": "accept"
+  },
+  "hardCC:9005": {
+    "reason": "rank 1 of Pounce, DRUID SkillLineAbility, stun aura on enemy (bleed is separate 9007)",
+    "ruling": "accept"
+  },
+  "hardCC:9484": {
+    "reason": "rank 1 of Shackle Undead, PRIEST SkillLineAbility, shackle stun aura on enemy undead; Retail ships 9484",
+    "ruling": "accept"
+  },
+  "hardCC:9485": {
+    "reason": "rank 2 of Shackle Undead, PRIEST SkillLineAbility, shackle aura on enemy undead",
+    "ruling": "accept"
+  },
+  "hardCC:9823": {
+    "reason": "rank 2 of Pounce, DRUID SkillLineAbility, stun aura on enemy",
+    "ruling": "accept"
+  },
+  "hardCC:9827": {
+    "reason": "rank 3 of Pounce, DRUID SkillLineAbility, stun aura on enemy",
+    "ruling": "accept"
+  },
+  "healing:1058": {
+    "reason": "rank 2 of Rejuvenation, DRUID Restoration SkillLineAbility, periodic heal aura (8) on ally",
+    "ruling": "accept"
+  },
+  "healing:10898": {
+    "reason": "rank 7 of Power Word: Shield, PRIEST Discipline SkillLineAbility, absorb aura (69) on ally",
+    "ruling": "accept"
+  },
+  "healing:10899": {
+    "reason": "rank 8 of Power Word: Shield, PRIEST Discipline SkillLineAbility, absorb aura (69) on ally",
+    "ruling": "accept"
+  },
+  "healing:10900": {
+    "reason": "rank 9 of Power Word: Shield, PRIEST Discipline SkillLineAbility, absorb aura (69) on ally",
+    "ruling": "accept"
+  },
+  "healing:10901": {
+    "reason": "rank 10 of Power Word: Shield, PRIEST Discipline SkillLineAbility, absorb aura (69) on ally",
+    "ruling": "accept"
+  },
+  "healing:10927": {
+    "reason": "rank 7 of Renew, PRIEST Holy SkillLineAbility, periodic heal aura (8) on ally",
+    "ruling": "accept"
+  },
+  "healing:10928": {
+    "reason": "rank 8 of Renew, PRIEST Holy SkillLineAbility, periodic heal aura (8) on ally",
+    "ruling": "accept"
+  },
+  "healing:10929": {
+    "reason": "rank 9 of Renew, PRIEST Holy SkillLineAbility, periodic heal aura (8) on ally",
+    "ruling": "accept"
+  },
+  "healing:1236151": {
+    "reason": "Renew 2500-point copy with no SkillLineAbility or trigger; NPC/encounter copy",
+    "ruling": "reject"
+  },
+  "healing:1236154": {
+    "reason": "Power Word: Shield 18000-point copy with no SkillLineAbility or trigger; NPC/encounter copy",
+    "ruling": "reject"
+  },
+  "healing:1253568": {
+    "reason": "Tranquility copy with no SkillLineAbility or trigger (aura effect 6, not the player channel); NPC copy",
+    "ruling": "reject"
+  },
+  "healing:1277456": {
+    "reason": "rank 1 of Contingency Plan heal-over-time (aura 8 on ally), triggered by PRIEST Discipline-line ward 1277462/1277634..; not a rune",
+    "ruling": "accept"
+  },
+  "healing:1277457": {
+    "reason": "rank 2 of Contingency Plan heal-over-time (aura 8 on ally), triggered by PRIEST Discipline-line ward 1277462/1277634..; not a rune",
+    "ruling": "accept"
+  },
+  "healing:1277458": {
+    "reason": "rank 3 of Contingency Plan heal-over-time (aura 8 on ally), triggered by PRIEST Discipline-line ward 1277462/1277634..; not a rune",
+    "ruling": "accept"
+  },
+  "healing:1277459": {
+    "reason": "rank 4 of Contingency Plan heal-over-time (aura 8 on ally), triggered by PRIEST Discipline-line ward 1277462/1277634..; not a rune",
+    "ruling": "accept"
+  },
+  "healing:1277460": {
+    "reason": "rank 5 of Contingency Plan heal-over-time (aura 8 on ally), triggered by PRIEST Discipline-line ward 1277462/1277634..; not a rune",
+    "ruling": "accept"
+  },
+  "healing:1277463": {
+    "reason": "rank 1 of Contingency Plan absorb shield (aura 69 on ally), triggered by PRIEST Discipline-line ward; not a rune",
+    "ruling": "accept"
+  },
+  "healing:1277464": {
+    "reason": "rank 2 of Contingency Plan absorb shield (aura 69 on ally), triggered by PRIEST Discipline-line ward; not a rune",
+    "ruling": "accept"
+  },
+  "healing:1277465": {
+    "reason": "rank 3 of Contingency Plan absorb shield (aura 69 on ally), triggered by PRIEST Discipline-line ward; not a rune",
+    "ruling": "accept"
+  },
+  "healing:1277466": {
+    "reason": "rank 5 of Contingency Plan absorb shield (aura 69 on ally), triggered by PRIEST Discipline-line ward; not a rune",
+    "ruling": "accept"
+  },
+  "healing:1277467": {
+    "reason": "rank 4 of Contingency Plan absorb shield (aura 69 on ally), triggered by PRIEST Discipline-line ward; not a rune",
+    "ruling": "accept"
+  },
+  "healing:1289450": {
+    "reason": "Renew 'Rank 9' copy (bp 35) with no SkillLineAbility, trigger or override edge; not reachable by a player priest",
+    "ruling": "reject"
+  },
+  "healing:139": {
+    "reason": "rank 1 of Renew, PRIEST Holy SkillLineAbility, periodic heal aura (8) on ally",
+    "ruling": "accept"
+  },
+  "healing:1430": {
+    "reason": "rank 3 of Rejuvenation, DRUID Restoration SkillLineAbility, periodic heal aura (8) on ally",
+    "ruling": "accept"
+  },
+  "healing:16488": {
+    "reason": "Blood Craze talent proc (16487, WARRIOR Fury talent) self-only passive regen, not a heal-over-time placed on allies as the Retail list uses",
+    "ruling": "reject"
+  },
+  "healing:17": {
+    "reason": "rank 1 of Power Word: Shield, PRIEST Discipline SkillLineAbility, absorb aura (69) on ally",
+    "ruling": "accept"
+  },
+  "healing:2090": {
+    "reason": "rank 4 of Rejuvenation, DRUID Restoration SkillLineAbility, periodic heal aura (8) on ally",
+    "ruling": "accept"
+  },
+  "healing:2091": {
+    "reason": "rank 5 of Rejuvenation, DRUID Restoration SkillLineAbility, periodic heal aura (8) on ally",
+    "ruling": "accept"
+  },
+  "healing:21791": {
+    "reason": "Tranquility copy with no SkillLineAbility or trigger (fixed 374 heal); NPC copy",
+    "ruling": "reject"
+  },
+  "healing:22009": {
+    "reason": "Greater Heal HoT from 'Greater Heal Renew' 22010, an item set bonus with no class skill line; item effect",
+    "ruling": "reject"
+  },
+  "healing:25299": {
+    "reason": "rank 11 of Rejuvenation, DRUID Restoration SkillLineAbility, periodic heal aura (8) on ally",
+    "ruling": "accept"
+  },
+  "healing:25315": {
+    "reason": "rank 10 of Renew, PRIEST Holy SkillLineAbility, periodic heal aura (8) on ally",
+    "ruling": "accept"
+  },
+  "healing:25817": {
+    "reason": "Tranquility copy with no SkillLineAbility or trigger (5847 heal); NPC/encounter copy",
+    "ruling": "reject"
+  },
+  "healing:27606": {
+    "reason": "Renew duplicate 'Rank 9' with no SkillLineAbility or trigger; NPC copy of player 10929",
+    "ruling": "reject"
+  },
+  "healing:27607": {
+    "reason": "Power Word: Shield duplicate 'Rank 10' (bp 942) with no SkillLineAbility or trigger; NPC copy of the player spell 10901",
+    "ruling": "reject"
+  },
+  "healing:27873": {
+    "reason": "rank 2 Lightwell Renew, PRIEST Holy SkillLineAbility (Lightwell talent rank), periodic heal aura on ally",
+    "ruling": "accept"
+  },
+  "healing:27874": {
+    "reason": "rank 3 Lightwell Renew, PRIEST Holy SkillLineAbility (Lightwell talent rank), periodic heal aura on ally",
+    "ruling": "accept"
+  },
+  "healing:28716": {
+    "reason": "Rejuvenation passive item-set bonus (aura 112 on self), never shows as a heal aura",
+    "ruling": "reject"
+  },
+  "healing:28744": {
+    "reason": "Regrowth passive item-set bonus (aura 112 on self), never shows as a heal aura",
+    "ruling": "reject"
+  },
+  "healing:28807": {
+    "reason": "Renew mana-cost passive (aura 108 on self, item set bonus), never a heal aura on a unit",
+    "ruling": "reject"
+  },
+  "healing:3627": {
+    "reason": "rank 6 of Rejuvenation, DRUID Restoration SkillLineAbility, periodic heal aura (8) on ally",
+    "ruling": "accept"
+  },
+  "healing:3747": {
+    "reason": "rank 4 of Power Word: Shield, PRIEST Discipline SkillLineAbility, absorb aura (69) on ally",
+    "ruling": "accept"
+  },
+  "healing:412020": {
+    "reason": "Flash of Light HoT granted by the Sacred Shield rune (412019, Engrave Boots - Sacred Shield); rune ability, owner ruling excludes",
+    "ruling": "reject"
+  },
+  "healing:412116": {
+    "reason": "Mana Shield rank 1 friendly-target override from the Advanced Warding rune 412115 (aura 332); rune ability, excluded",
+    "ruling": "reject"
+  },
+  "healing:412118": {
+    "reason": "Mana Shield rank 2 friendly-target override from the Advanced Warding rune 412115 (aura 332); rune ability, excluded",
+    "ruling": "reject"
+  },
+  "healing:412120": {
+    "reason": "Mana Shield rank 3 friendly-target override from the Advanced Warding rune 412115 (aura 332); rune ability, excluded",
+    "ruling": "reject"
+  },
+  "healing:412121": {
+    "reason": "Mana Shield rank 4 friendly-target override from the Advanced Warding rune 412115 (aura 332); rune ability, excluded",
+    "ruling": "reject"
+  },
+  "healing:412122": {
+    "reason": "Mana Shield rank 5 friendly-target override from the Advanced Warding rune 412115 (aura 332); rune ability, excluded",
+    "ruling": "reject"
+  },
+  "healing:412123": {
+    "reason": "Mana Shield rank 6 friendly-target override from the Advanced Warding rune 412115 (aura 332); rune ability, excluded",
+    "ruling": "reject"
+  },
+  "healing:412202": {
+    "reason": "Frost Ward rank 1 friendly-target override from the Advanced Warding rune 412115 (aura 332); rune ability, excluded",
+    "ruling": "reject"
+  },
+  "healing:412205": {
+    "reason": "Frost Ward rank 2 friendly-target override from the Advanced Warding rune 412115 (aura 332); rune ability, excluded",
+    "ruling": "reject"
+  },
+  "healing:412207": {
+    "reason": "Frost Ward rank 3 friendly-target override from the Advanced Warding rune 412115 (aura 332); rune ability, excluded",
+    "ruling": "reject"
+  },
+  "healing:412209": {
+    "reason": "Frost Ward rank 4 friendly-target override from the Advanced Warding rune 412115 (aura 332); rune ability, excluded",
+    "ruling": "reject"
+  },
+  "healing:412210": {
+    "reason": "Frost Ward rank 5 friendly-target override from the Advanced Warding rune 412115 (aura 332); rune ability, excluded",
+    "ruling": "reject"
+  },
+  "healing:412214": {
+    "reason": "Fire Ward rank 1 friendly-target override from the Advanced Warding rune 412115 (aura 332); rune ability, excluded",
+    "ruling": "reject"
+  },
+  "healing:412218": {
+    "reason": "Fire Ward rank 2 friendly-target override from the Advanced Warding rune 412115 (aura 332); rune ability, excluded",
+    "ruling": "reject"
+  },
+  "healing:412230": {
+    "reason": "Fire Ward rank 3 friendly-target override from the Advanced Warding rune 412115 (aura 332); rune ability, excluded",
+    "ruling": "reject"
+  },
+  "healing:412231": {
+    "reason": "Fire Ward rank 4 friendly-target override from the Advanced Warding rune 412115 (aura 332); rune ability, excluded",
+    "ruling": "reject"
+  },
+  "healing:412232": {
+    "reason": "Fire Ward rank 5 friendly-target override from the Advanced Warding rune 412115 (aura 332); rune ability, excluded",
+    "ruling": "reject"
+  },
+  "healing:417057": {
+    "reason": "Rejuvenation rank 1 override from Enhanced Restoration 417123 (DRUID Restoration SkillLineAbility, not a rune), periodic heal aura on ally",
+    "ruling": "accept"
+  },
+  "healing:417058": {
+    "reason": "Rejuvenation rank 2 override from Enhanced Restoration 417123 (DRUID Restoration SkillLineAbility, not a rune), periodic heal aura on ally",
+    "ruling": "accept"
+  },
+  "healing:417059": {
+    "reason": "Rejuvenation rank 3 override from Enhanced Restoration 417123 (DRUID Restoration SkillLineAbility, not a rune), periodic heal aura on ally",
+    "ruling": "accept"
+  },
+  "healing:417060": {
+    "reason": "Rejuvenation rank 4 override from Enhanced Restoration 417123 (DRUID Restoration SkillLineAbility, not a rune), periodic heal aura on ally",
+    "ruling": "accept"
+  },
+  "healing:417061": {
+    "reason": "Rejuvenation rank 5 override from Enhanced Restoration 417123 (DRUID Restoration SkillLineAbility, not a rune), periodic heal aura on ally",
+    "ruling": "accept"
+  },
+  "healing:417062": {
+    "reason": "Rejuvenation rank 6 override from Enhanced Restoration 417123 (DRUID Restoration SkillLineAbility, not a rune), periodic heal aura on ally",
+    "ruling": "accept"
+  },
+  "healing:417063": {
+    "reason": "Rejuvenation rank 7 override from Enhanced Restoration 417123 (DRUID Restoration SkillLineAbility, not a rune), periodic heal aura on ally",
+    "ruling": "accept"
+  },
+  "healing:417064": {
+    "reason": "Rejuvenation rank 8 override from Enhanced Restoration 417123 (DRUID Restoration SkillLineAbility, not a rune), periodic heal aura on ally",
+    "ruling": "accept"
+  },
+  "healing:417065": {
+    "reason": "Rejuvenation rank 9 override from Enhanced Restoration 417123 (DRUID Restoration SkillLineAbility, not a rune), periodic heal aura on ally",
+    "ruling": "accept"
+  },
+  "healing:417066": {
+    "reason": "Rejuvenation rank 10 override from Enhanced Restoration 417123 (DRUID Restoration SkillLineAbility, not a rune), periodic heal aura on ally",
+    "ruling": "accept"
+  },
+  "healing:417068": {
+    "reason": "Rejuvenation rank 11 override from Enhanced Restoration 417123 (DRUID Restoration SkillLineAbility, not a rune), periodic heal aura on ally",
+    "ruling": "accept"
+  },
+  "healing:425268": {
+    "reason": "Renew rank 1 override installed by Empowered Renew 425266 (aura 332 action-bar override); rune ability variant, owner ruling excludes",
+    "ruling": "reject"
+  },
+  "healing:425269": {
+    "reason": "Renew rank 2 override installed by Empowered Renew 425266 (aura 332 action-bar override); rune ability variant, owner ruling excludes",
+    "ruling": "reject"
+  },
+  "healing:425270": {
+    "reason": "Renew rank 3 override installed by Empowered Renew 425266 (aura 332 action-bar override); rune ability variant, owner ruling excludes",
+    "ruling": "reject"
+  },
+  "healing:425271": {
+    "reason": "Renew rank 4 override installed by Empowered Renew 425266 (aura 332 action-bar override); rune ability variant, owner ruling excludes",
+    "ruling": "reject"
+  },
+  "healing:425272": {
+    "reason": "Renew rank 5 override installed by Empowered Renew 425266 (aura 332 action-bar override); rune ability variant, owner ruling excludes",
+    "ruling": "reject"
+  },
+  "healing:425273": {
+    "reason": "Renew rank 6 override installed by Empowered Renew 425266 (aura 332 action-bar override); rune ability variant, owner ruling excludes",
+    "ruling": "reject"
+  },
+  "healing:425274": {
+    "reason": "Renew rank 7 override installed by Empowered Renew 425266 (aura 332 action-bar override); rune ability variant, owner ruling excludes",
+    "ruling": "reject"
+  },
+  "healing:425275": {
+    "reason": "Renew rank 8 override installed by Empowered Renew 425266 (aura 332 action-bar override); rune ability variant, owner ruling excludes",
+    "ruling": "reject"
+  },
+  "healing:425276": {
+    "reason": "Renew rank 9 override installed by Empowered Renew 425266 (aura 332 action-bar override); rune ability variant, owner ruling excludes",
+    "ruling": "reject"
+  },
+  "healing:425277": {
+    "reason": "Renew rank 10 override installed by Empowered Renew 425266 (aura 332 action-bar override); rune ability variant, owner ruling excludes",
+    "ruling": "reject"
+  },
+  "healing:436937": {
+    "reason": "Regrowth rank 1 override from Enhanced Restoration 417123 (DRUID Restoration SkillLineAbility, not a rune), periodic heal aura on ally",
+    "ruling": "accept"
+  },
+  "healing:436938": {
+    "reason": "Regrowth rank 2 override from Enhanced Restoration 417123 (DRUID Restoration SkillLineAbility, not a rune), periodic heal aura on ally",
+    "ruling": "accept"
+  },
+  "healing:436939": {
+    "reason": "Regrowth rank 3 override from Enhanced Restoration 417123 (DRUID Restoration SkillLineAbility, not a rune), periodic heal aura on ally",
+    "ruling": "accept"
+  },
+  "healing:436940": {
+    "reason": "Regrowth rank 4 override from Enhanced Restoration 417123 (DRUID Restoration SkillLineAbility, not a rune), periodic heal aura on ally",
+    "ruling": "accept"
+  },
+  "healing:436942": {
+    "reason": "Regrowth rank 5 override from Enhanced Restoration 417123 (DRUID Restoration SkillLineAbility, not a rune), periodic heal aura on ally",
+    "ruling": "accept"
+  },
+  "healing:436943": {
+    "reason": "Regrowth rank 6 override from Enhanced Restoration 417123 (DRUID Restoration SkillLineAbility, not a rune), periodic heal aura on ally",
+    "ruling": "accept"
+  },
+  "healing:436944": {
+    "reason": "Regrowth rank 7 override from Enhanced Restoration 417123 (DRUID Restoration SkillLineAbility, not a rune), periodic heal aura on ally",
+    "ruling": "accept"
+  },
+  "healing:436945": {
+    "reason": "Regrowth rank 8 override from Enhanced Restoration 417123 (DRUID Restoration SkillLineAbility, not a rune), periodic heal aura on ally",
+    "ruling": "accept"
+  },
+  "healing:436946": {
+    "reason": "Regrowth rank 9 override from Enhanced Restoration 417123 (DRUID Restoration SkillLineAbility, not a rune), periodic heal aura on ally",
+    "ruling": "accept"
+  },
+  "healing:592": {
+    "reason": "rank 2 of Power Word: Shield, PRIEST Discipline SkillLineAbility, absorb aura (69) on ally",
+    "ruling": "accept"
+  },
+  "healing:600": {
+    "reason": "rank 3 of Power Word: Shield, PRIEST Discipline SkillLineAbility, absorb aura (69) on ally",
+    "ruling": "accept"
+  },
+  "healing:6065": {
+    "reason": "rank 5 of Power Word: Shield, PRIEST Discipline SkillLineAbility, absorb aura (69) on ally",
+    "ruling": "accept"
+  },
+  "healing:6066": {
+    "reason": "rank 6 of Power Word: Shield, PRIEST Discipline SkillLineAbility, absorb aura (69) on ally",
+    "ruling": "accept"
+  },
+  "healing:6074": {
+    "reason": "rank 2 of Renew, PRIEST Holy SkillLineAbility, periodic heal aura (8) on ally",
+    "ruling": "accept"
+  },
+  "healing:6075": {
+    "reason": "rank 3 of Renew, PRIEST Holy SkillLineAbility, periodic heal aura (8) on ally",
+    "ruling": "accept"
+  },
+  "healing:6076": {
+    "reason": "rank 4 of Renew, PRIEST Holy SkillLineAbility, periodic heal aura (8) on ally",
+    "ruling": "accept"
+  },
+  "healing:6077": {
+    "reason": "rank 5 of Renew, PRIEST Holy SkillLineAbility, periodic heal aura (8) on ally",
+    "ruling": "accept"
+  },
+  "healing:6078": {
+    "reason": "rank 6 of Renew, PRIEST Holy SkillLineAbility, periodic heal aura (8) on ally",
+    "ruling": "accept"
+  },
+  "healing:7001": {
+    "reason": "rank 1 Lightwell Renew, PRIEST Holy SkillLineAbility (Lightwell talent), periodic heal aura on the ally who clicks",
+    "ruling": "accept"
+  },
+  "healing:740": {
+    "reason": "rank 1 of Tranquility (DRUID Restoration); the Retail list places Tranquility in raidCDs (owner 2026-09-25), so it belongs there, not here",
+    "ruling": "reject"
+  },
+  "healing:774": {
+    "reason": "rank 1 of Rejuvenation, DRUID Restoration SkillLineAbility, periodic heal aura (8) on ally",
+    "ruling": "accept"
+  },
+  "healing:8910": {
+    "reason": "rank 7 of Rejuvenation, DRUID Restoration SkillLineAbility, periodic heal aura (8) on ally",
+    "ruling": "accept"
+  },
+  "healing:8918": {
+    "reason": "rank 2 of Tranquility (DRUID Restoration); the Retail list places Tranquility in raidCDs (owner 2026-09-25), so it belongs there, not here",
+    "ruling": "reject"
+  },
+  "healing:8936": {
+    "reason": "rank 1 of Regrowth, DRUID Restoration SkillLineAbility, direct heal plus periodic heal aura (8) on ally",
+    "ruling": "accept"
+  },
+  "healing:8938": {
+    "reason": "rank 2 of Regrowth, DRUID Restoration SkillLineAbility, direct heal plus periodic heal aura (8) on ally",
+    "ruling": "accept"
+  },
+  "healing:8939": {
+    "reason": "rank 3 of Regrowth, DRUID Restoration SkillLineAbility, direct heal plus periodic heal aura (8) on ally",
+    "ruling": "accept"
+  },
+  "healing:8940": {
+    "reason": "rank 4 of Regrowth, DRUID Restoration SkillLineAbility, direct heal plus periodic heal aura (8) on ally",
+    "ruling": "accept"
+  },
+  "healing:8941": {
+    "reason": "rank 5 of Regrowth, DRUID Restoration SkillLineAbility, direct heal plus periodic heal aura (8) on ally",
+    "ruling": "accept"
+  },
+  "healing:9750": {
+    "reason": "rank 6 of Regrowth, DRUID Restoration SkillLineAbility, direct heal plus periodic heal aura (8) on ally",
+    "ruling": "accept"
+  },
+  "healing:9839": {
+    "reason": "rank 8 of Rejuvenation, DRUID Restoration SkillLineAbility, periodic heal aura (8) on ally",
+    "ruling": "accept"
+  },
+  "healing:9840": {
+    "reason": "rank 9 of Rejuvenation, DRUID Restoration SkillLineAbility, periodic heal aura (8) on ally",
+    "ruling": "accept"
+  },
+  "healing:9841": {
+    "reason": "rank 10 of Rejuvenation, DRUID Restoration SkillLineAbility, periodic heal aura (8) on ally",
+    "ruling": "accept"
+  },
+  "healing:9856": {
+    "reason": "rank 7 of Regrowth, DRUID Restoration SkillLineAbility, direct heal plus periodic heal aura (8) on ally",
+    "ruling": "accept"
+  },
+  "healing:9857": {
+    "reason": "rank 8 of Regrowth, DRUID Restoration SkillLineAbility, direct heal plus periodic heal aura (8) on ally",
+    "ruling": "accept"
+  },
+  "healing:9858": {
+    "reason": "rank 9 of Regrowth, DRUID Restoration SkillLineAbility, direct heal plus periodic heal aura (8) on ally",
+    "ruling": "accept"
+  },
+  "healing:9862": {
+    "reason": "rank 3 of Tranquility (DRUID Restoration); the Retail list places Tranquility in raidCDs (owner 2026-09-25), so it belongs there, not here",
+    "ruling": "reject"
+  },
+  "healing:9863": {
+    "reason": "rank 4 of Tranquility (DRUID Restoration); the Retail list places Tranquility in raidCDs (owner 2026-09-25), so it belongs there, not here",
+    "ruling": "reject"
+  },
+  "movement:1044": {
+    "reason": "Blessing of Freedom, PALADIN Protection SkillLineAbility, snare/root immunity aura (77) on a friendly target, Retail lists it in Movement",
+    "ruling": "accept"
+  },
+  "movement:11305": {
+    "reason": "rank 3 of Sprint, ROGUE Combat SkillLineAbility, self speed aura (31)",
+    "ruling": "accept"
+  },
+  "movement:12323": {
+    "reason": "Piercing Howl on Forever is a snare on enemies (aura 33, mechanic daze), not Retail's ally speed buff 1244157; it belongs in ccSnare",
+    "ruling": "reject"
+  },
+  "movement:1236175": {
+    "reason": "Blink copy with no SkillLineAbility, Talent or trigger path for a player: an NPC/scripted duplicate of 1953",
+    "ruling": "reject"
+  },
+  "movement:1238640": {
+    "reason": "Ghost Wolf as cast with the SHAMAN Improved Ghost Wolf talent 16262 (Talent + Enhancement SkillLineAbility), whose override (aura 332) swaps 2645 for 1238640: self wolf form (36) and +40% speed (31), shown under this id",
+    "ruling": "accept"
+  },
+  "movement:13159": {
+    "reason": "Aspect of the Pack, HUNTER Beast Mastery SkillLineAbility, party-area speed aura (31); a speed effect, so Movement not Stances (Retail has no hunter stances)",
+    "ruling": "accept"
+  },
+  "movement:1317257": {
+    "reason": "Strider Kick, HUNTER Survival SkillLineAbility (not an Engrave rune), attack that applies a self speed aura (31) under the same id",
+    "ruling": "accept"
+  },
+  "movement:14514": {
+    "reason": "Blink copy with no SkillLineAbility, Talent or trigger path for a player: an NPC/scripted duplicate of 1953",
+    "ruling": "reject"
+  },
+  "movement:18461": {
+    "reason": "Vanish Purge, hidden-attribute 1s immunity triggered by Vanish, never shows as an aura",
+    "ruling": "reject"
+  },
+  "movement:1850": {
+    "reason": "rank 1 of Dash, DRUID Feral Combat SkillLineAbility, self speed aura (31)",
+    "ruling": "accept"
+  },
+  "movement:1953": {
+    "reason": "Blink, MAGE Arcane: a teleport whose only aura is a 1s mechanic-immunity flash; Retail's Movement list leaves Blink out",
+    "ruling": "reject"
+  },
+  "movement:21655": {
+    "reason": "Blink copy with no SkillLineAbility, Talent or trigger path for a player: an NPC/scripted duplicate of 1953",
+    "ruling": "reject"
+  },
+  "movement:23099": {
+    "reason": "pet Dash, only on Pet - * skill lines (taught via Beast Training), an aura on the hunter pet, not a player-class aura",
+    "ruling": "reject"
+  },
+  "movement:23109": {
+    "reason": "pet Dash, only on Pet - * skill lines (taught via Beast Training), an aura on the hunter pet, not a player-class aura",
+    "ruling": "reject"
+  },
+  "movement:23110": {
+    "reason": "pet Dash, only on Pet - * skill lines (taught via Beast Training), an aura on the hunter pet, not a player-class aura",
+    "ruling": "reject"
+  },
+  "movement:23145": {
+    "reason": "pet Dive, only on Pet - * skill lines (taught via Beast Training), an aura on the hunter pet, not a player-class aura",
+    "ruling": "reject"
+  },
+  "movement:23147": {
+    "reason": "pet Dive, only on Pet - * skill lines (taught via Beast Training), an aura on the hunter pet, not a player-class aura",
+    "ruling": "reject"
+  },
+  "movement:23148": {
+    "reason": "pet Dive, only on Pet - * skill lines (taught via Beast Training), an aura on the hunter pet, not a player-class aura",
+    "ruling": "reject"
+  },
+  "movement:23600": {
+    "reason": "Piercing Howl NPC copy, no SkillLineAbility or Talent; enemy snare anyway",
+    "ruling": "reject"
+  },
+  "movement:23881": {
+    "reason": "rank 1 of Bloodthirst, WARRIOR Fury SkillLineAbility/talent; on Forever it also applies a 10% self speed aura (31) under this id, like Retail's Relentless Pursuit",
+    "ruling": "accept"
+  },
+  "movement:23892": {
+    "reason": "rank 2 of Bloodthirst, WARRIOR Fury SkillLineAbility/talent; on Forever it also applies a 10% self speed aura (31) under this id, like Retail's Relentless Pursuit",
+    "ruling": "accept"
+  },
+  "movement:23893": {
+    "reason": "rank 3 of Bloodthirst, WARRIOR Fury SkillLineAbility/talent; on Forever it also applies a 10% self speed aura (31) under this id, like Retail's Relentless Pursuit",
+    "ruling": "accept"
+  },
+  "movement:23894": {
+    "reason": "rank 4 of Bloodthirst, WARRIOR Fury SkillLineAbility/talent; on Forever it also applies a 10% self speed aura (31) under this id, like Retail's Relentless Pursuit",
+    "ruling": "accept"
+  },
+  "movement:26022": {
+    "reason": "Pursuit of Justice, passive and hidden talent aura, never shows as a buff",
+    "ruling": "reject"
+  },
+  "movement:2645": {
+    "reason": "Ghost Wolf, SHAMAN Enhancement SkillLineAbility, shapeshift plus speed aura (31); Retail keeps Ghost Wolf in Movement, not Stances",
+    "ruling": "accept"
+  },
+  "movement:28391": {
+    "reason": "Blink copy with no SkillLineAbility, Talent or trigger path for a player: an NPC/scripted duplicate of 1953",
+    "ruling": "reject"
+  },
+  "movement:29208": {
+    "reason": "Blink copy with no SkillLineAbility, Talent or trigger path for a player: an NPC/scripted duplicate of 1953",
+    "ruling": "reject"
+  },
+  "movement:29209": {
+    "reason": "Blink copy with no SkillLineAbility, Talent or trigger path for a player: an NPC/scripted duplicate of 1953",
+    "ruling": "reject"
+  },
+  "movement:29210": {
+    "reason": "Blink copy with no SkillLineAbility, Talent or trigger path for a player: an NPC/scripted duplicate of 1953",
+    "ruling": "reject"
+  },
+  "movement:29211": {
+    "reason": "Blink copy with no SkillLineAbility, Talent or trigger path for a player: an NPC/scripted duplicate of 1953",
+    "ruling": "reject"
+  },
+  "movement:2983": {
+    "reason": "rank 1 of Sprint, ROGUE Combat SkillLineAbility, self speed aura (31)",
+    "ruling": "accept"
+  },
+  "movement:30918": {
+    "reason": "Improved Sprint trigger: hidden-attribute 1s snare/root immunity from the talent proc, not shown as an aura",
+    "ruling": "reject"
+  },
+  "movement:411684": {
+    "reason": "Charge variant (411xxx) with no SkillLineAbility or Talent: rune/scripted copy, not the player Charge",
+    "ruling": "reject"
+  },
+  "movement:415233": {
+    "reason": "Ghost Wolf variant referenced only by Greater Ghost Wolf 415813 (Season-of-Discovery rune line), no player SkillLineAbility; runes excluded",
+    "ruling": "reject"
+  },
+  "movement:438538": {
+    "reason": "Charge copy with no SkillLineAbility or Talent, triggered only by NPC copy 438541",
+    "ruling": "reject"
+  },
+  "movement:438541": {
+    "reason": "Charge copy with no SkillLineAbility or Talent: NPC/scripted duplicate",
+    "ruling": "reject"
+  },
+  "movement:5118": {
+    "reason": "Aspect of the Cheetah, HUNTER Beast Mastery SkillLineAbility, self speed aura (31), Retail lists it in Movement",
+    "ruling": "accept"
+  },
+  "movement:8696": {
+    "reason": "rank 2 of Sprint, ROGUE Combat SkillLineAbility, self speed aura (31)",
+    "ruling": "accept"
+  },
+  "movement:9821": {
+    "reason": "rank 2 of Dash, DRUID Feral Combat SkillLineAbility, self speed aura (31)",
+    "ruling": "accept"
+  },
+  "offensiveCDs:11129": {
+    "reason": "Combustion, MAGE Fire talent (Talent + SkillLineAbility), the charge-holding Combustion buff on self, 3 min recast",
+    "ruling": "accept"
+  },
+  "offensiveCDs:12042": {
+    "reason": "Arcane Power, MAGE Arcane talent (Talent + SkillLineAbility), +30% spell damage aura on self, 3 min recast",
+    "ruling": "accept"
+  },
+  "offensiveCDs:12043": {
+    "reason": "Presence of Mind, MAGE Arcane talent (Talent + SkillLineAbility), next-spell instant-cast aura (A108) on self, 3 min recast, a burst cooldown like Arcane Power",
+    "ruling": "accept"
+  },
+  "offensiveCDs:12328": {
+    "reason": "Death Wish, WARRIOR Fury talent (Talent + SkillLineAbility), +20% physical damage aura on self, 3 min recast",
+    "ruling": "accept"
+  },
+  "offensiveCDs:1259812": {
+    "reason": "Eureka! is the Gnome racial (Racial - Gnome skill line, race mask 64): belongs in Racials",
+    "ruling": "reject"
+  },
+  "offensiveCDs:1259813": {
+    "reason": "Eureka! is the Gnome racial (Racial - Gnome skill line, race mask 64): belongs in Racials, like Retail's racial cooldowns",
+    "ruling": "reject"
+  },
+  "offensiveCDs:1259817": {
+    "reason": "Eureka! is the Gnome racial (Racial - Gnome skill line, race mask 64): belongs in Racials",
+    "ruling": "reject"
+  },
+  "offensiveCDs:1259821": {
+    "reason": "Eureka! is the Gnome racial (Racial - Gnome skill line, race mask 64): belongs in Racials",
+    "ruling": "reject"
+  },
+  "offensiveCDs:1259823": {
+    "reason": "Eureka! is the Gnome racial (Racial - Gnome skill line, race mask 64): belongs in Racials",
+    "ruling": "reject"
+  },
+  "offensiveCDs:13750": {
+    "reason": "Adrenaline Rush, ROGUE Combat talent (Talent + SkillLineAbility), energy-regen aura on self, 5 min recast",
+    "ruling": "accept"
+  },
+  "offensiveCDs:13847": {
+    "reason": "NPC copy of Recklessness (all attacks crit, armor reduced): no SkillLineAbility/Talent/grant edge",
+    "ruling": "reject"
+  },
+  "offensiveCDs:13877": {
+    "reason": "Blade Flurry, ROGUE Combat talent (Talent + SkillLineAbility), melee haste and cleave aura on self, 2 min recast",
+    "ruling": "accept"
+  },
+  "offensiveCDs:14177": {
+    "reason": "Cold Blood, ROGUE Assassination talent (Talent + SkillLineAbility), next-ability crit aura (A107) on self, 3 min recast",
+    "ruling": "accept"
+  },
+  "offensiveCDs:16166": {
+    "reason": "Lightning Mastery 16166 (vanilla Elemental Mastery under Forever's name), SHAMAN Elemental talent, next-spell crit and free-cast aura on self, 3 min recast; ranks 16579-16582 are the passive talent",
+    "ruling": "accept"
+  },
+  "offensiveCDs:1719": {
+    "reason": "Recklessness, WARRIOR Fury SkillLineAbility, crit aura on self, 30 min recast",
+    "ruling": "accept"
+  },
+  "offensiveCDs:18288": {
+    "reason": "Amplify Curse, WARLOCK Affliction talent (Talent + SkillLineAbility), curse-amplify aura on self, 3 min recast: the warlock's damage cooldown",
+    "ruling": "accept"
+  },
+  "offensiveCDs:19574": {
+    "reason": "Bestial Wrath, HUNTER Beast Mastery talent (Talent + SkillLineAbility), +50% damage enrage aura on the hunter's pet, 2 min recast",
+    "ruling": "accept"
+  },
+  "offensiveCDs:20554": {
+    "reason": "Berserking is the Troll racial (Racial - Troll skill line): belongs in Racials, where Retail lists Berserking 26297",
+    "ruling": "reject"
+  },
+  "offensiveCDs:28682": {
+    "reason": "Combustion crit-stack aura on self, triggered by the MAGE Fire talent 11129 (EffectTriggerSpell), shows beside the cast's buff",
+    "ruling": "accept"
+  },
+  "offensiveCDs:3045": {
+    "reason": "Rapid Fire, HUNTER Marksmanship SkillLineAbility, +ranged haste aura (A140) on self, 5 min recast: the hunter's damage cooldown",
+    "ruling": "accept"
+  },
+  "offensiveCDs:407788": {
+    "reason": "rune ability: Avenging Wrath is granted only through the rune override 409934 (AcquireMethod 3, not in the Forever paladin talent tree 1100)",
+    "ruling": "reject"
+  },
+  "offensiveCDs:407957": {
+    "reason": "hidden ally-targeted dummy aura of the SoD Avenging Wrath rune, no SkillLineAbility; not a player cooldown aura",
+    "ruling": "reject"
+  },
+  "offensiveCDs:409934": {
+    "reason": "passive rune override that grants Avenging Wrath 407788 (aura 332), never a cooldown aura",
+    "ruling": "reject"
+  },
+  "racialDebuffs:20549": {
+    "reason": "War Stomp, Tauren Racial active, stun aura (12) on enemies; racialDebuffs may overlap a CC key",
+    "ruling": "accept"
+  },
+  "racials:1259416": {
+    "reason": "Walk on Air, Skyborne Racial active, self glide aura (105)",
+    "ruling": "accept"
+  },
+  "racials:1259688": {
+    "reason": "Elemental Blessing, the speed buff triggered by Skyborne racial Skysight 1259686; a racial buff, so Racials (as Retail's Darkflight)",
+    "ruling": "accept"
+  },
+  "racials:1259707": {
+    "reason": "Elemental Insight, a passive racial trait, never shows as a buff (Retail list leaves passives out)",
+    "ruling": "reject"
+  },
+  "racials:1259710": {
+    "reason": "Wind Blessed, a passive racial trait, never shows as a buff (Retail list leaves passives out)",
+    "ruling": "reject"
+  },
+  "racials:1259719": {
+    "reason": "Artisan's Precision, a passive racial trait, never shows as a buff (Retail list leaves passives out)",
+    "ruling": "reject"
+  },
+  "racials:1259721": {
+    "reason": "Big Game Hunter, a passive racial trait, never shows as a buff (Retail list leaves passives out)",
+    "ruling": "reject"
+  },
+  "racials:1259799": {
+    "reason": "Elune's Light, Night Elf Racial active, self crit aura",
+    "ruling": "accept"
+  },
+  "racials:1259802": {
+    "reason": "Expansive Mind, a passive racial trait, never shows as a buff (Retail list leaves passives out)",
+    "ruling": "reject"
+  },
+  "racials:1259803": {
+    "reason": "Expansive Mind, a passive racial trait, never shows as a buff (Retail list leaves passives out)",
+    "ruling": "reject"
+  },
+  "racials:1259812": {
+    "reason": "Eureka!, Racial - Gnome per-class (ROGUE mask) timed self buff (cost/damage mods); a racial buff, Racials by Retail's precedence",
+    "ruling": "accept"
+  },
+  "racials:1259813": {
+    "reason": "Eureka!, Racial - Gnome per-class (WARRIOR mask) timed self buff (cost/damage mods); a racial buff, Racials by Retail's precedence",
+    "ruling": "accept"
+  },
+  "racials:1259817": {
+    "reason": "Eureka!, Racial - Gnome per-class (MAGE mask) timed self buff (cost/damage mods); a racial buff, Racials by Retail's precedence",
+    "ruling": "accept"
+  },
+  "racials:1259821": {
+    "reason": "Eureka!, Racial - Gnome per-class (WARLOCK mask) timed self buff (cost/damage mods); a racial buff, Racials by Retail's precedence",
+    "ruling": "accept"
+  },
+  "racials:1259823": {
+    "reason": "Eureka!, Racial - Gnome per-class (PRIEST mask) timed self buff (cost/damage mods); a racial buff, Racials by Retail's precedence",
+    "ruling": "accept"
+  },
+  "racials:1259918": {
+    "reason": "Plainsrunning, a passive racial trait, never shows as a buff (Retail list leaves passives out)",
+    "ruling": "reject"
+  },
+  "racials:1260189": {
+    "reason": "Touch of the Grave, a passive racial trait, never shows as a buff (Retail list leaves passives out)",
+    "ruling": "reject"
+  },
+  "racials:1260201": {
+    "reason": "Touch of the Grave, a passive racial trait, never shows as a buff (Retail list leaves passives out)",
+    "ruling": "reject"
+  },
+  "racials:1260270": {
+    "reason": "Rapid Regeneration, Racial - Troll active, self periodic heal aura",
+    "ruling": "accept"
+  },
+  "racials:1270842": {
+    "reason": "Energized, the regen buff triggered by Skyborne racial Read Leyline 1259705",
+    "ruling": "accept"
+  },
+  "racials:1299026": {
+    "reason": "Shatter Curse, Orc Racial active, self magic damage reduction aura",
+    "ruling": "accept"
+  },
+  "racials:20550": {
+    "reason": "Endurance, a passive racial trait, never shows as a buff (Retail list leaves passives out)",
+    "ruling": "reject"
+  },
+  "racials:20554": {
+    "reason": "Berserking, Racial - Troll active, self haste aura; Retail keeps Berserking in Racials",
+    "ruling": "accept"
+  },
+  "racials:20555": {
+    "reason": "Regeneration, a passive racial trait, never shows as a buff (Retail list leaves passives out)",
+    "ruling": "reject"
+  },
+  "racials:20557": {
+    "reason": "Beast Slaying, a passive racial trait, never shows as a buff (Retail list leaves passives out)",
+    "ruling": "reject"
+  },
+  "racials:20572": {
+    "reason": "Blood Fury, Orc Racial active, self AP/SP aura; Retail lists it in Racials",
+    "ruling": "accept"
+  },
+  "racials:20573": {
+    "reason": "Hardiness, a passive racial trait, never shows as a buff (Retail list leaves passives out)",
+    "ruling": "reject"
+  },
+  "racials:20575": {
+    "reason": "Command, a passive racial trait, never shows as a buff (Retail list leaves passives out)",
+    "ruling": "reject"
+  },
+  "racials:20576": {
+    "reason": "Command, a passive racial trait, never shows as a buff (Retail list leaves passives out)",
+    "ruling": "reject"
+  },
+  "racials:20578": {
+    "reason": "Cannibalize's health/mana regen aura on self; the Undead racial cast 20577 (Racial - Undead) is a dummy effect that applies it",
+    "ruling": "accept"
+  },
+  "racials:20580": {
+    "reason": "Shadowmeld, Night Elf Racial active, self stealth aura; Retail keeps Shadowmeld in Racials",
+    "ruling": "accept"
+  },
+  "racials:20582": {
+    "reason": "Quickness, a passive racial trait, never shows as a buff (Retail list leaves passives out)",
+    "ruling": "reject"
+  },
+  "racials:20589": {
+    "reason": "Escape Artist, Racial - Gnome active, self snare/root immunity aura (77)",
+    "ruling": "accept"
+  },
+  "racials:20591": {
+    "reason": "Expansive Mind, a passive racial trait, never shows as a buff (Retail list leaves passives out)",
+    "ruling": "reject"
+  },
+  "racials:20593": {
+    "reason": "Engineering Specialization, a passive racial trait, never shows as a buff (Retail list leaves passives out)",
+    "ruling": "reject"
+  },
+  "racials:20594": {
+    "reason": "Stoneform, Dwarven Racial active, self immunity/armor aura; Retail lists it in Racials",
+    "ruling": "accept"
+  },
+  "racials:20597": {
+    "reason": "Ruthless, a passive racial trait, never shows as a buff (Retail list leaves passives out)",
+    "ruling": "reject"
+  },
+  "racials:20598": {
+    "reason": "The Human Spirit, a passive racial trait, never shows as a buff (Retail list leaves passives out)",
+    "ruling": "reject"
+  },
+  "racials:20600": {
+    "reason": "Perception, Racial - Human active, self stealth-detection aura",
+    "ruling": "accept"
+  },
+  "racials:21009": {
+    "reason": "Quickness Passive, a passive racial trait, never shows as a buff (Retail list leaves passives out)",
+    "ruling": "reject"
+  },
+  "racials:21563": {
+    "reason": "Command, a passive racial trait, never shows as a buff (Retail list leaves passives out)",
+    "ruling": "reject"
+  },
+  "racials:2481": {
+    "reason": "Find Treasure, a tracking aura (45) shown on the minimap tracker, not a buff",
+    "ruling": "reject"
+  },
+  "racials:5227": {
+    "reason": "Underwater Breathing, a passive racial trait, never shows as a buff (Retail list leaves passives out)",
+    "ruling": "reject"
+  },
+  "racials:7744": {
+    "reason": "Will of the Forsaken, Racial - Undead active, self charm/fear/sleep immunity aura; Retail lists it in Racials",
+    "ruling": "accept"
+  },
+  "raidCDs:1253568": {
+    "reason": "NPC copy of Tranquility: no SkillLineAbility/Talent/grant edge, area-source targets (22/30) unlike the player's party aura",
+    "ruling": "reject"
+  },
+  "raidCDs:21791": {
+    "reason": "NPC copy of Tranquility: no SkillLineAbility/Talent/grant edge, no recast, fixed non-player heal value",
+    "ruling": "reject"
+  },
+  "raidCDs:25817": {
+    "reason": "NPC copy of Tranquility: no SkillLineAbility/Talent/grant edge, no recast, 5847 heal value",
+    "ruling": "reject"
+  },
+  "raidCDs:461475": {
+    "reason": "rune ability: Valor of Azeroth is a Season of Discovery warrior rune (AcquireMethod 3 on Protection, in neither Talent nor the Forever talent tree)",
+    "ruling": "reject"
+  },
+  "raidCDs:740": {
+    "reason": "rank 1 of Tranquility, DRUID Restoration SkillLineAbility, party-area heal aura on group members, 5 min recast (Retail owner placed it in Raid cooldowns)",
+    "ruling": "accept"
+  },
+  "raidCDs:8918": {
+    "reason": "rank 2 of Tranquility, DRUID Restoration SkillLineAbility, party-area heal aura on group members, 5 min recast",
+    "ruling": "accept"
+  },
+  "raidCDs:9862": {
+    "reason": "rank 3 of Tranquility, DRUID Restoration SkillLineAbility, party-area heal aura on group members, 5 min recast",
+    "ruling": "accept"
+  },
+  "raidCDs:9863": {
+    "reason": "rank 4 of Tranquility, DRUID Restoration SkillLineAbility, party-area heal aura on group members, 5 min recast",
+    "ruling": "accept"
+  },
+  "stances:10290": {
+    "reason": "rank 2 of Devotion Aura, PALADIN Protection SkillLineAbility, party area armor aura, a paladin aura",
+    "ruling": "accept"
+  },
+  "stances:10291": {
+    "reason": "rank 4 of Devotion Aura, PALADIN Protection SkillLineAbility, party area armor aura, a paladin aura",
+    "ruling": "accept"
+  },
+  "stances:10292": {
+    "reason": "rank 6 of Devotion Aura, PALADIN Protection SkillLineAbility, party area armor aura, a paladin aura",
+    "ruling": "accept"
+  },
+  "stances:10293": {
+    "reason": "rank 7 of Devotion Aura, PALADIN Protection SkillLineAbility, party area armor aura, a paladin aura",
+    "ruling": "accept"
+  },
+  "stances:10298": {
+    "reason": "rank 2 of Retribution Aura, PALADIN Retribution SkillLineAbility, party area damage-shield aura, a paladin aura",
+    "ruling": "accept"
+  },
+  "stances:10299": {
+    "reason": "rank 3 of Retribution Aura, PALADIN Retribution SkillLineAbility, party area damage-shield aura, a paladin aura",
+    "ruling": "accept"
+  },
+  "stances:10300": {
+    "reason": "rank 4 of Retribution Aura, PALADIN Retribution SkillLineAbility, party area damage-shield aura, a paladin aura",
+    "ruling": "accept"
+  },
+  "stances:10301": {
+    "reason": "rank 5 of Retribution Aura, PALADIN Retribution SkillLineAbility, party area damage-shield aura, a paladin aura",
+    "ruling": "accept"
+  },
+  "stances:1032": {
+    "reason": "rank 5 of Devotion Aura, PALADIN Protection SkillLineAbility, party area armor aura, a paladin aura",
+    "ruling": "accept"
+  },
+  "stances:10521": {
+    "reason": "rank 3 of Flametongue Totem: the totem's own passive area aura (SPELL_ATTR0_PASSIVE), not a player stance or form",
+    "ruling": "reject"
+  },
+  "stances:1066": {
+    "reason": "Aquatic Form, DRUID Feral Combat SkillLineAbility, self shapeshift aura (36), a druid form",
+    "ruling": "accept"
+  },
+  "stances:1238640": {
+    "reason": "Ghost Wolf: Retail keeps it in Movement, not Stances (owner 2026-09-25)",
+    "ruling": "reject"
+  },
+  "stances:1256867": {
+    "reason": "Stealth copy with no SkillLineAbility, Talent or trigger path; Stealth belongs in Utility anyway",
+    "ruling": "reject"
+  },
+  "stances:1299346": {
+    "reason": "Trueshot Aura rank 1: a hunter party aura/aspect, not a stance in Retail's sense (warrior stances, druid forms, paladin auras); the hunter aspects are not ruled as stances (Monkey, Hawk none)",
+    "ruling": "reject"
+  },
+  "stances:1299348": {
+    "reason": "Trueshot Aura rank 2: a hunter party aura/aspect, not a stance in Retail's sense (warrior stances, druid forms, paladin auras); the hunter aspects are not ruled as stances (Monkey, Hawk none)",
+    "ruling": "reject"
+  },
+  "stances:1310897": {
+    "reason": "Voice of Truth, a timed silence/interrupt immunity buff (duration 6s), not a stance or paladin aura",
+    "ruling": "reject"
+  },
+  "stances:13159": {
+    "reason": "Aspect of the Pack is a speed aura; ruled into Movement (one category per id)",
+    "ruling": "reject"
+  },
+  "stances:1329326": {
+    "reason": "Ghostly Strike's triggered proc buff (next Ambush/Garrote without Stealth), not a stance",
+    "ruling": "reject"
+  },
+  "stances:15036": {
+    "reason": "rank 4 of Flametongue Totem: the totem's own passive area aura (SPELL_ATTR0_PASSIVE), not a player stance or form",
+    "ruling": "reject"
+  },
+  "stances:15473": {
+    "reason": "Shadowform, PRIEST Shadow talent/SkillLineAbility, self shapeshift aura (36), Retail lists it in Stances",
+    "ruling": "accept"
+  },
+  "stances:1784": {
+    "reason": "Stealth rank: Retail places Stealth in Utility, one category per id",
+    "ruling": "reject"
+  },
+  "stances:1785": {
+    "reason": "Stealth rank: Retail places Stealth in Utility, one category per id",
+    "ruling": "reject"
+  },
+  "stances:1786": {
+    "reason": "Stealth rank: Retail places Stealth in Utility, one category per id",
+    "ruling": "reject"
+  },
+  "stances:1787": {
+    "reason": "Stealth rank: Retail places Stealth in Utility, one category per id",
+    "ruling": "reject"
+  },
+  "stances:19506": {
+    "reason": "Trueshot Aura rank 3: a hunter party aura/aspect, not a stance in Retail's sense (warrior stances, druid forms, paladin auras); the hunter aspects are not ruled as stances (Monkey, Hawk none)",
+    "ruling": "reject"
+  },
+  "stances:19746": {
+    "reason": "Concentration Aura, PALADIN Protection SkillLineAbility, party area aura on self, a paladin aura",
+    "ruling": "accept"
+  },
+  "stances:19876": {
+    "reason": "rank 1 of Shadow Resistance Aura, PALADIN Protection SkillLineAbility, raid-area aura (effect 65) on self and party: a paladin aura, which Retail's Stances holds",
+    "ruling": "accept"
+  },
+  "stances:19888": {
+    "reason": "rank 1 of Frost Resistance Aura, PALADIN Protection SkillLineAbility, raid-area aura (effect 65) on self and party: a paladin aura, which Retail's Stances holds",
+    "ruling": "accept"
+  },
+  "stances:19891": {
+    "reason": "rank 1 of Fire Resistance Aura, PALADIN Protection SkillLineAbility, raid-area aura (effect 65) on self and party: a paladin aura, which Retail's Stances holds",
+    "ruling": "accept"
+  },
+  "stances:19895": {
+    "reason": "rank 2 of Shadow Resistance Aura, PALADIN Protection SkillLineAbility, raid-area aura (effect 65) on self and party: a paladin aura, which Retail's Stances holds",
+    "ruling": "accept"
+  },
+  "stances:19896": {
+    "reason": "rank 3 of Shadow Resistance Aura, PALADIN Protection SkillLineAbility, raid-area aura (effect 65) on self and party: a paladin aura, which Retail's Stances holds",
+    "ruling": "accept"
+  },
+  "stances:19897": {
+    "reason": "rank 2 of Frost Resistance Aura, PALADIN Protection SkillLineAbility, raid-area aura (effect 65) on self and party: a paladin aura, which Retail's Stances holds",
+    "ruling": "accept"
+  },
+  "stances:19898": {
+    "reason": "rank 3 of Frost Resistance Aura, PALADIN Protection SkillLineAbility, raid-area aura (effect 65) on self and party: a paladin aura, which Retail's Stances holds",
+    "ruling": "accept"
+  },
+  "stances:19899": {
+    "reason": "rank 2 of Fire Resistance Aura, PALADIN Protection SkillLineAbility, raid-area aura (effect 65) on self and party: a paladin aura, which Retail's Stances holds",
+    "ruling": "accept"
+  },
+  "stances:19900": {
+    "reason": "rank 3 of Fire Resistance Aura, PALADIN Protection SkillLineAbility, raid-area aura (effect 65) on self and party: a paladin aura, which Retail's Stances holds",
+    "ruling": "accept"
+  },
+  "stances:20043": {
+    "reason": "Aspect of the Wild rank 1: a hunter party aura/aspect, not a stance in Retail's sense (warrior stances, druid forms, paladin auras); the hunter aspects are not ruled as stances (Monkey, Hawk none)",
+    "ruling": "reject"
+  },
+  "stances:20190": {
+    "reason": "Aspect of the Wild rank 2: a hunter party aura/aspect, not a stance in Retail's sense (warrior stances, druid forms, paladin auras); the hunter aspects are not ruled as stances (Monkey, Hawk none)",
+    "ruling": "reject"
+  },
+  "stances:20218": {
+    "reason": "Sanctity Aura, PALADIN Retribution talent, party area holy-damage aura, a paladin aura",
+    "ruling": "accept"
+  },
+  "stances:20905": {
+    "reason": "Trueshot Aura rank 4: a hunter party aura/aspect, not a stance in Retail's sense (warrior stances, druid forms, paladin auras); the hunter aspects are not ruled as stances (Monkey, Hawk none)",
+    "ruling": "reject"
+  },
+  "stances:20906": {
+    "reason": "Trueshot Aura rank 5: a hunter party aura/aspect, not a stance in Retail's sense (warrior stances, druid forms, paladin auras); the hunter aspects are not ruled as stances (Monkey, Hawk none)",
+    "ruling": "reject"
+  },
+  "stances:21791": {
+    "reason": "Tranquility NPC copy, no SkillLineAbility or Talent; and a heal channel, not a stance",
+    "ruling": "reject"
+  },
+  "stances:2457": {
+    "reason": "Battle Stance, WARRIOR Arms SkillLineAbility, a warrior stance",
+    "ruling": "accept"
+  },
+  "stances:2458": {
+    "reason": "Berserker Stance, WARRIOR Fury SkillLineAbility, a warrior stance",
+    "ruling": "accept"
+  },
+  "stances:24858": {
+    "reason": "Moonkin Form, DRUID Balance talent SkillLineAbility, self shapeshift aura (36), a druid form",
+    "ruling": "accept"
+  },
+  "stances:24907": {
+    "reason": "Moonkin Aura is the party crit aura Moonkin Form 24858 triggers; the form itself is the stance (one form, one id)",
+    "ruling": "reject"
+  },
+  "stances:24932": {
+    "reason": "Leader of the Pack is the hidden party aura of a passive feral talent, no SkillLineAbility; the cat/bear forms are the stances",
+    "ruling": "reject"
+  },
+  "stances:25817": {
+    "reason": "Tranquility NPC copy, no SkillLineAbility or Talent; and a heal channel, not a stance",
+    "ruling": "reject"
+  },
+  "stances:2645": {
+    "reason": "Ghost Wolf: Retail keeps it in Movement, not Stances (owner 2026-09-25)",
+    "ruling": "reject"
+  },
+  "stances:27827": {
+    "reason": "Spirit of Redemption, the death-state form from the passive talent 20711; Retail lists it in neither Stances nor Utility",
+    "ruling": "reject"
+  },
+  "stances:407804": {
+    "reason": "Divine Sacrifice, Season-of-Discovery-era id (acquire method 3), a timed damage-redirect, not a stance",
+    "ruling": "reject"
+  },
+  "stances:415233": {
+    "reason": "Ghost Wolf: Retail keeps it in Movement, not Stances (owner 2026-09-25)",
+    "ruling": "reject"
+  },
+  "stances:465": {
+    "reason": "rank 1 of Devotion Aura, PALADIN Protection SkillLineAbility, party area armor aura, a paladin aura",
+    "ruling": "accept"
+  },
+  "stances:5487": {
+    "reason": "Bear Form, DRUID Feral Combat SkillLineAbility, self shapeshift aura (36), a druid form",
+    "ruling": "accept"
+  },
+  "stances:643": {
+    "reason": "rank 3 of Devotion Aura, PALADIN Protection SkillLineAbility, party area armor aura, a paladin aura",
+    "ruling": "accept"
+  },
+  "stances:71": {
+    "reason": "Defensive Stance, WARRIOR Protection SkillLineAbility, a warrior stance",
+    "ruling": "accept"
+  },
+  "stances:7294": {
+    "reason": "rank 1 of Retribution Aura, PALADIN Retribution SkillLineAbility, party area damage-shield aura, a paladin aura",
+    "ruling": "accept"
+  },
+  "stances:740": {
+    "reason": "Tranquility rank, DRUID Restoration: a channelled area heal, not a stance; belongs in raidCDs/healing",
+    "ruling": "reject"
+  },
+  "stances:768": {
+    "reason": "Cat Form, DRUID Feral Combat SkillLineAbility, self shapeshift aura (36), a druid form",
+    "ruling": "accept"
+  },
+  "stances:783": {
+    "reason": "Travel Form, DRUID Feral Combat SkillLineAbility, self shapeshift aura (36), a druid form",
+    "ruling": "accept"
+  },
+  "stances:8178": {
+    "reason": "Grounding Totem's aura on the totem itself (spell redirect), not a player stance or form",
+    "ruling": "reject"
+  },
+  "stances:8230": {
+    "reason": "rank 1 of Flametongue Totem: the totem's own passive area aura (SPELL_ATTR0_PASSIVE), not a player stance or form",
+    "ruling": "reject"
+  },
+  "stances:8250": {
+    "reason": "rank 2 of Flametongue Totem: the totem's own passive area aura (SPELL_ATTR0_PASSIVE), not a player stance or form",
+    "ruling": "reject"
+  },
+  "stances:8918": {
+    "reason": "Tranquility rank, DRUID Restoration: a channelled area heal, not a stance; belongs in raidCDs/healing",
+    "ruling": "reject"
+  },
+  "stances:9634": {
+    "reason": "Dire Bear Form, DRUID Feral Combat SkillLineAbility, self shapeshift aura (36), a druid form",
+    "ruling": "accept"
+  },
+  "stances:9862": {
+    "reason": "Tranquility rank, DRUID Restoration: a channelled area heal, not a stance; belongs in raidCDs/healing",
+    "ruling": "reject"
+  },
+  "stances:9863": {
+    "reason": "Tranquility rank, DRUID Restoration: a channelled area heal, not a stance; belongs in raidCDs/healing",
+    "ruling": "reject"
+  },
+  "support:10060": {
+    "reason": "Power Infusion, PRIEST Discipline talent (Talent + SkillLineAbility), +20% spell damage/healing aura cast on an ally (Retail lists it in Support)",
+    "ruling": "accept"
+  },
+  "support:1022": {
+    "reason": "ruled into defensives (one category per id): Blessing of Protection is an external like Blessing of Sacrifice 6940/20729 (same Protection line, party target 57), and Retail's owner puts externals in Defensives, not Support",
+    "ruling": "reject"
+  },
+  "support:10278": {
+    "reason": "ruled into defensives (one category per id): Blessing of Protection is an external like Blessing of Sacrifice 6940/20729 (same Protection line, party target 57), and Retail's owner puts externals in Defensives, not Support",
+    "ruling": "reject"
+  },
+  "support:1277462": {
+    "reason": "rank 1 of Contingency Plan, PRIEST Discipline SkillLineAbility (Gnome race mask), ward aura cast on an ally (T21)",
+    "ruling": "accept"
+  },
+  "support:1277634": {
+    "reason": "rank 2 of Contingency Plan, PRIEST Discipline SkillLineAbility, ward aura cast on an ally",
+    "ruling": "accept"
+  },
+  "support:1277638": {
+    "reason": "rank 3 of Contingency Plan, PRIEST Discipline SkillLineAbility, ward aura cast on an ally",
+    "ruling": "accept"
+  },
+  "support:1277639": {
+    "reason": "rank 4 of Contingency Plan, PRIEST Discipline SkillLineAbility, ward aura cast on an ally",
+    "ruling": "accept"
+  },
+  "support:1277640": {
+    "reason": "rank 5 of Contingency Plan, PRIEST Discipline SkillLineAbility, ward aura cast on an ally",
+    "ruling": "accept"
+  },
+  "support:29166": {
+    "reason": "Innervate, DRUID Restoration SkillLineAbility, mana-regen aura cast on an ally (T21), 6 min recast (Retail lists it in Support)",
+    "ruling": "accept"
+  },
+  "support:428713": {
+    "reason": "rune ability: ally-targeted Barkskin granted only by the Improved Barkskin rune (431388 override; Engrave Helm 431449)",
+    "ruling": "reject"
+  },
+  "support:456195": {
+    "reason": "self-targeted Innervate copy with no SkillLineAbility/Talent/grant edge and no recast: not the player's (29166 is)",
+    "ruling": "reject"
+  },
+  "support:5599": {
+    "reason": "ruled into defensives (one category per id): Blessing of Protection is an external like Blessing of Sacrifice 6940/20729 (same Protection line, party target 57), and Retail's owner puts externals in Defensives, not Support",
+    "ruling": "reject"
+  },
+  "support:6346": {
+    "reason": "Fear Ward, PRIEST Holy SkillLineAbility (all races), fear-immunity ward aura cast on a friendly target, 3 min recast",
+    "ruling": "accept"
+  },
+  "utility:11327": {
+    "reason": "Vanish rank 1's improved-stealth aura (16), triggered by ROGUE Vanish 1856; the cast leaves no aura, this is what shows",
+    "ruling": "accept"
+  },
+  "utility:11329": {
+    "reason": "Vanish rank 2's improved-stealth aura (16), triggered by ROGUE Vanish 1857",
+    "ruling": "accept"
+  },
+  "utility:1256867": {
+    "reason": "Stealth copy with no SkillLineAbility, Talent or trigger path; the player Stealth is 1784-1787",
+    "ruling": "reject"
+  },
+  "utility:1285372": {
+    "reason": "Vanish 'rank 3' with no SkillLineAbility, Talent or teaching spell: unreachable for a player on this build",
+    "ruling": "reject"
+  },
+  "utility:1287162": {
+    "reason": "Stealth copy with only a dummy aura (4) and no SkillLineAbility, Talent or trigger path for a player",
+    "ruling": "reject"
+  },
+  "utility:1290708": {
+    "reason": "Stealth copy with only a dummy aura (4) and no SkillLineAbility, Talent or trigger path for a player",
+    "ruling": "reject"
+  },
+  "utility:130": {
+    "reason": "Slow Fall, MAGE Arcane SkillLineAbility, slow-fall aura (105), Retail lists it in Utility",
+    "ruling": "accept"
+  },
+  "utility:131": {
+    "reason": "Water Breathing, SHAMAN Enhancement SkillLineAbility, water-breathing aura (82) on a friendly target, the same kind as Unending Breath",
+    "ruling": "accept"
+  },
+  "utility:1318151": {
+    "reason": "Stealth copy with only a dummy aura (4) and no SkillLineAbility, Talent or trigger path for a player",
+    "ruling": "reject"
+  },
+  "utility:1326175": {
+    "reason": "Stealth copy with only a dummy aura (4) and no SkillLineAbility, Talent or trigger path for a player",
+    "ruling": "reject"
+  },
+  "utility:1706": {
+    "reason": "Levitate, PRIEST Discipline SkillLineAbility; on Forever the cast itself applies the levitate/water-walk auras (105/106/104), no separate 111759 aura",
+    "ruling": "accept"
+  },
+  "utility:1784": {
+    "reason": "rank 1 of Stealth, ROGUE Subtlety SkillLineAbility, self stealth aura (16), Retail lists Stealth in Utility",
+    "ruling": "accept"
+  },
+  "utility:1785": {
+    "reason": "rank 2 of Stealth, ROGUE Subtlety SkillLineAbility, self stealth aura (16), Retail lists Stealth in Utility",
+    "ruling": "accept"
+  },
+  "utility:1786": {
+    "reason": "rank 3 of Stealth, ROGUE Subtlety SkillLineAbility, self stealth aura (16), Retail lists Stealth in Utility",
+    "ruling": "accept"
+  },
+  "utility:1787": {
+    "reason": "rank 4 of Stealth, ROGUE Subtlety SkillLineAbility, self stealth aura (16), Retail lists Stealth in Utility",
+    "ruling": "accept"
+  },
+  "utility:1860": {
+    "reason": "Safe Fall, passive fall-damage reduction, never shows as an aura",
+    "ruling": "reject"
+  },
+  "utility:20707": {
+    "reason": "Soulstone Resurrection (Minor), the stored-soul aura on an ally (T21) cast from the WARLOCK's soulstone item (Create Soulstone, Demonology); Retail lists 20707 in Utility",
+    "ruling": "accept"
+  },
+  "utility:20719": {
+    "reason": "Feline Grace, passive fall-damage reduction, never shows as an aura",
+    "ruling": "reject"
+  },
+  "utility:20762": {
+    "reason": "Soulstone Resurrection (Lesser), the stored-soul aura on an ally (T21) cast from the WARLOCK's soulstone item (Create Soulstone, Demonology); Retail lists 20707 in Utility",
+    "ruling": "accept"
+  },
+  "utility:20763": {
+    "reason": "Soulstone Resurrection (plain), the stored-soul aura on an ally (T21) cast from the WARLOCK's soulstone item (Create Soulstone, Demonology); Retail lists 20707 in Utility",
+    "ruling": "accept"
+  },
+  "utility:20764": {
+    "reason": "Soulstone Resurrection (Greater), the stored-soul aura on an ally (T21) cast from the WARLOCK's soulstone item (Create Soulstone, Demonology); Retail lists 20707 in Utility",
+    "ruling": "accept"
+  },
+  "utility:20765": {
+    "reason": "Soulstone Resurrection (Major), the stored-soul aura on an ally (T21) cast from the WARLOCK's soulstone item (Create Soulstone, Demonology); Retail lists 20707 in Utility",
+    "ruling": "accept"
+  },
+  "utility:24450": {
+    "reason": "pet Prowl, only on Pet - Cat (taught via Beast Training), an aura on the hunter pet, not a player-class aura",
+    "ruling": "reject"
+  },
+  "utility:24452": {
+    "reason": "pet Prowl, only on Pet - Cat (taught via Beast Training), an aura on the hunter pet, not a player-class aura",
+    "ruling": "reject"
+  },
+  "utility:24453": {
+    "reason": "pet Prowl, only on Pet - Cat (taught via Beast Training), an aura on the hunter pet, not a player-class aura",
+    "ruling": "reject"
+  },
+  "utility:27827": {
+    "reason": "Spirit of Redemption, the death-state form from the passive talent 20711; Retail lists it in neither Utility nor Stances",
+    "ruling": "reject"
+  },
+  "utility:450667": {
+    "reason": "Stealth copy with only a dummy aura (4) and no SkillLineAbility, Talent or trigger path for a player",
+    "ruling": "reject"
+  },
+  "utility:461329": {
+    "reason": "Levitate copy with no SkillLineAbility, Talent or trigger path; the player Levitate is 1706",
+    "ruling": "reject"
+  },
+  "utility:5215": {
+    "reason": "rank 1 of Prowl, DRUID Feral Combat SkillLineAbility, self stealth aura (16), Retail lists Prowl in Utility",
+    "ruling": "accept"
+  },
+  "utility:5384": {
+    "reason": "Feign Death, HUNTER Survival SkillLineAbility, self feign-death aura (66), Retail lists it in Utility",
+    "ruling": "accept"
+  },
+  "utility:5421": {
+    "reason": "Aquatic Form (Passive), a passive part of the form, never shows as its own aura",
+    "ruling": "reject"
+  },
+  "utility:546": {
+    "reason": "Water Walking, SHAMAN Enhancement SkillLineAbility, water-walk aura (104) on a friendly target, Retail lists it in Utility",
+    "ruling": "accept"
+  },
+  "utility:5697": {
+    "reason": "Unending Breath, WARLOCK Demonology SkillLineAbility, water-breathing aura (82) on a friendly target, Retail lists it in Utility",
+    "ruling": "accept"
+  },
+  "utility:6783": {
+    "reason": "rank 2 of Prowl, DRUID Feral Combat SkillLineAbility, self stealth aura (16), Retail lists Prowl in Utility",
+    "ruling": "accept"
+  },
+  "utility:9913": {
+    "reason": "rank 3 of Prowl, DRUID Feral Combat SkillLineAbility, self stealth aura (16), Retail lists Prowl in Utility",
+    "ruling": "accept"
+  }
+}

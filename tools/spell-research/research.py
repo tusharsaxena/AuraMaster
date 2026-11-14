@@ -1927,8 +1927,10 @@ APPLY_AURA_EFFECT = 6
 # Vanilla's paladin auras are effect 35 alone (Devotion Aura 465, measured on 1.60.1.70938), so
 # with effect 6 only every rank would read as "can never match" and the panel would rewrite or
 # offer a same-named NPC copy. Forever's cast table counts them; Retail's stays on effect 6, as
-# shipped.
-FOREVER_AURA_EFFECTS = frozenset({APPLY_AURA_EFFECT, 35, 119, 128})
+# shipped. AM-FP05 adds 65 APPLY_AREA_AURA_RAID: vanilla's other raid auras are effect 65 alone
+# (Fire Resistance Aura 19891, Trueshot Aura 19506, Moonkin Aura 24907, measured on 1.60.1.70938),
+# so without it they too read as "can never match" and no category rule could see them.
+FOREVER_AURA_EFFECTS = frozenset({APPLY_AURA_EFFECT, 35, 65, 119, 128})
 
 # How far to walk EffectTriggerSpell looking for something that applies an aura. Shallow on purpose:
 # these chains are a cast triggering its aura, not a graph to explore, and a long walk starts
