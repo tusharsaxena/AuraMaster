@@ -3,7 +3,7 @@ local _, NS = ...
 -- settings/Containers.lua — the Containers page: which containers exist, and what each is.
 --
 --     band      [Container v picker ][ New container ]         <- above the rail AND the strip (options-ui-§14)
---     rail      | General |  [ General ]                        <- the rail's first entry, and its one tab
+--     rail      | General |  [ General ][ Presets ]             <- the rail's first entry, and its two tabs
 --               | Filters |  [Name] [Enable this container]
 --               | Layout  |  -- What it shows, and how --       <- subsection (options-ui-§7)
 --               | <style> |  [Unit] [Aura type] / [Style]
@@ -248,7 +248,14 @@ NS.Containers = { GROUP = GROUP, rows = ROWS, render = render }
 NS.RegisterContainerSection(PAGE, L["General"], {
     addonWide = true,
     tooltip   = L["Name this container, choose what it shows and how it is drawn, and duplicate, delete or copy settings onto it."],
-    tabs      = { { key = GROUP, label = GROUP, render = render } },
+    tabs      = {
+        { key = GROUP, label = GROUP, render = render },
+        -- The Presets tab (settings/ContainersPresets.lua, spec 2026-11-14-auramaster-presets section
+        -- 8): after General, addon-wide like it, and told when the page moves off it, so the preview
+        -- it put on the screen is restored.
+        { key = "Presets", label = L["Presets"], tooltip = L["Replace or add to every container in this profile with a ready-made set, previewed on your screen first."],
+          render = NS.RenderPresetsTab, onLeave = NS.PresetsTabLeft },
+    },
 })
 
 -- The band above the strip (options-ui-§14): the container picker every per-container page shares,

@@ -17,10 +17,12 @@ local addonName, NS = ...
 --   NS.PresetPickerHolding()   true while the window is up or a start is held: core/SkinSetup.lua's
 --                              skin picker waits behind it, so the two never show at once.
 --   NS.ConfirmPreset(n, l, m)  apply preset `n` in style `l`, mode `m`, behind the confirm that names
---                              the count it removes (Replace) or adds (Add): `/am preset <name>` now,
---                              the Containers page's Presets tab later. With the window up, it is
---                              the player's close of it: latch set, skin picker offered once the
+--                              the count it removes (Replace) or adds (Add): `/am preset <name>`, and
+--                              the Presets tab with no preview of its own up. With the window up, it
+--                              is the player's close of it: latch set, skin picker offered once the
 --                              confirm is answered.
+--   NS.ConfirmPreview(n, l, m) the same confirm over a preview that stays up while it is open, then
+--                              kept: the Containers page's Presets tab (settings/ContainersPresets.lua).
 --   NS.PresetPicker            { frame }: the window once built, for the suites.
 --
 -- WHEN. Once per profile, before the skin picker: addon:OnEnterWorld shows it at once (it does not
@@ -181,6 +183,35 @@ function NS.ConfirmPreset(name, look, mode)
         sayApplied(name, look, mode)
         return true
     end, after)
+end
+
+--- Keep the preview of preset `name` in style `look`, `mode` "replace" or "add", behind the same
+--- confirm: the Containers page's Presets tab. The preview stays on screen while the question is
+--- open; the count a Replace names is the player's own (the snapshot's). Answered, the preview is
+--- kept (EndPreview(true, mode)) when it is still the one asked about; one ended or swapped since
+--- (the tab left, combat) is restored and the preset applied afresh, so the answer always writes what
+--- the confirm named. With no preview up this is NS.ConfirmPreset. Answers as it does.
+function NS.ConfirmPreview(name, look, mode)
+    local P = NS.Presets
+    if not P.IsPreviewing() then return NS.ConfirmPreset(name, look, mode) end
+    if InCombatLockdown() then
+        return sayGray(L["cannot apply a preset during combat — its containers would not be drawn or placed until combat ends"])
+    end
+    local count = P.OwnContainerCount()
+    return confirmThen(name, mode, count, mode == "add" or count > 0, function()
+        local n, l = P.Previewed()
+        local ok, msg, gray
+        if n == name and l == look then
+            ok, msg, gray = P.EndPreview(true, mode)
+        else
+            if P.IsPreviewing() then P.EndPreview(false) end
+            ok, msg, gray = P.Apply(name, look, mode)
+        end
+        if not ok then return say(msg, gray) end
+        if NS.RefreshOptionsPanel then NS.RefreshOptionsPanel() end
+        sayApplied(name, look, mode)
+        return true
+    end)
 end
 
 -- ── the window's controls ────────────────────────────────────────────────────────────────────

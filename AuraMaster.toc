@@ -182,6 +182,9 @@ settings\GeneralUserCategories.lua
 settings\GeneralSpells.lua
 settings\GeneralDispel.lua
 settings\General.lua
+# LOAD-BEARING: the Containers page's Presets tab (NS.RenderPresetsTab, NS.PresetsTabLeft), after
+# OptionsSetup (the composers) and before Containers, which binds both into its section spec at file load.
+settings\ContainersPresets.lua
 # LOAD-BEARING: Containers is a top-level page (N-1); its tree position, right after General
 # and before Profiles, is fixed by this load position.
 settings\Containers.lua

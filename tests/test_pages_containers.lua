@@ -1,7 +1,7 @@
 -- tests/test_pages_containers.lua — settings/Containers.lua, driven through its widgets: the
 -- top-level Containers page (N-1, batch 7) — its own Blizzard category, its picker and New container
--- in the chrome block above the strip (feedback #2, options-ui-§14), its one tab, General, with the
--- identity rows and what each writes, and the acts on the selected container (Duplicate, Delete, Copy
+-- in the chrome block above the strip (feedback #2, options-ui-§14), its General tab with the
+-- identity rows and what each writes (the Presets tab beside it is tests/test_pages_presets.lua's), and the acts on the selected container (Duplicate, Delete, Copy
 -- settings from). This page used to be General's third tab; tests/test_pages_general.lua covers what
 -- is left of General after the split. The registry behavior under Duplicate/Delete/Copy is
 -- tests/test_containermanager.lua's; this suite proves the page reaches it, on the right container.
@@ -13,7 +13,7 @@ local test, assertEqual, assertTrue, assertFalse, assertNil =
 local fresh = dofile("tests/fresh_env.lua")
 local pages = dofile("tests/page_helpers.lua")
 
---- A fresh environment with the Containers page drawn (its only tab, so no click is needed).
+--- A fresh environment with the Containers page drawn (it opens on General, so no click is needed).
 local function containers(opts)
     local NS, m = fresh(opts)
     local P = pages(NS, m)
@@ -39,12 +39,12 @@ local function inScroll(NS, w)
     return walk(NS.Helpers.EnsureScroll(NS.Helpers.__pageCtx.containers))
 end
 
-test("containers: registers its own top-level Blizzard category, with one tab, General (N-1, options-ui-§14)", function()
+test("containers: registers its own top-level Blizzard category, with General first, then Presets (N-1, options-ui-§14)", function()
     local NS, m, P = containers()
     local keys = P.tabKeys("containers")
-    -- red under: the page drawing more than its one tab, or the tab not named General (options-ui-§14
-    -- names the tab holding a page's acts, under a band carrying its picker)
-    assertEqual(table.concat(keys, ","), NS.L["General"])
+    -- red under: the acts tab not named General or not first (options-ui-§14 names the tab holding a
+    -- page's acts, under a band carrying its picker), or the Presets tab (AM-PR06) missing
+    assertEqual(table.concat(keys, ","), NS.L["General"] .. ",Presets")
     assertTrue(m.__subcategories.Containers ~= nil, "the page registers its own category")
     for _, path in ipairs({ "container.name", "container.enabled", "container.unit", "container.auraType", "container.style" }) do
         local row = NS.FindSchemaRow(path)
@@ -260,7 +260,7 @@ test("containers: with no containers the page draws the band's picker and New, a
     local NS, _, P = containers()
     for _, c in ipairs(NS.Database.GetContainers()) do NS.ContainerManager.Delete(c.id) end
     local ws = P.rerender("Containers")
-    -- red under: RenderPage dropping the page's one tab when no container exists
+    -- red under: RenderPage dropping the page's General tab when no container exists
     assertEqual(P.tabKeys("containers")[1], NS.L["General"])
     local picker, new = headerWidgets(NS, P)
     assertTrue(new ~= nil, "New is still offered")

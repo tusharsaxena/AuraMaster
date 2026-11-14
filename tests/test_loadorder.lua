@@ -99,6 +99,10 @@ test("loadorder: the load-bearing pairs are in order, and the TOC says why", fun
         -- settings/OptionsSetup.lua, in any order: the rail's is SECTION_ORDER.
         { "settings/General.lua", "settings/Containers.lua" },
         { "settings/Containers.lua", "settings/Profiles.lua" },
+        -- Containers binds the Presets tab's render and leave into its section spec at file load
+        -- (AM-PR06); the tab file reads the composers OptionsSetup publishes.
+        { "settings/OptionsSetup.lua", "settings/ContainersPresets.lua" },
+        { "settings/ContainersPresets.lua", "settings/Containers.lua" },
         { "settings/OptionsSetup.lua", "settings/Filters.lua" },
         { "settings/OptionsSetup.lua", "settings/Text.lua" },
     }

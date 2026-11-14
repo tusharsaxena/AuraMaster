@@ -81,13 +81,14 @@ test("rail: every section draws a tooltip on its entry", function()
     end
 end)
 
-test("rail: the page opens on General, today's one General tab under the band, beside a 120px rail", function()
+test("rail: the page opens on General, its General tab first (then Presets) under the band, beside a 120px rail", function()
     local NS, _, P = env()
     local ctx = NS.Helpers.__pageCtx.containers
     local ws = P.show("Containers")
     assertEqual(ctx.activeSection, "containers")
     assertEqual(P.drawnRail(ctx).value, "containers")
-    assertEqual(table.concat(P.tabKeys("containers"), ","), NS.L["General"])
+    assertEqual(table.concat(P.tabKeys("containers"), ","), NS.L["General"] .. ",Presets")
+    assertEqual(ctx.activeTab, NS.L["General"], "the page opens on General, not Presets")
     assertTrue(P.find(ws, "Button", NS.L["New container"]) ~= nil, "the band keeps New container")
     assertEqual(ctx.railWidth, 120)
 end)

@@ -198,6 +198,15 @@ function Presets.IsPreviewing()
     return type(store) == "table" and store.previewSnapshot ~= nil
 end
 
+--- The preview this session put on the screen: its preset, its style and a token naming this one
+--- preview (the stored snapshot, opaque to the caller), so a surface can tell the preview it started
+--- from one another surface started after it. Nil while none is up.
+--- @return string|nil name, string|nil look, table|nil token
+function Presets.Previewed()
+    if not (onScreen and Presets.IsPreviewing()) then return nil end
+    return onScreen.name, onScreen.look, NS.db.profile.presets.previewSnapshot
+end
+
 --- Show preset `name` in style `look` on the real screen, in test mode, snapshotting the player's own
 --- containers first. A second call restores that snapshot, keeps it, and writes the new preset. Refused, with
 --- nothing changed, on the same grounds as Apply; a preset that fails part-way is undone by restoring.

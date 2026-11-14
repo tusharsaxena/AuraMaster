@@ -512,18 +512,63 @@ end
 -- The tabbed page: this addon's page spec, mapped onto the library's
 -- ---------------------------------------------------------------------------
 
+-- LEAVING A TAB. A tab whose spec carries `onLeave` (the Containers page's Presets tab, whose preview
+-- must end when the player moves on, spec 2026-11-14-auramaster-presets section 6) is told once when
+-- the page stops showing it: a later render that draws another tab or another section, or the
+-- panel's own OnHide. The library has no leave callback; a tab click is its alone (it re-renders the
+-- strip and the body without calling back), so the host tab's render below is where a click lands,
+-- and Helpers.RenderContainerPage checks before it draws a section. A redraw of the same tab is not a
+-- leave. The record is the ctx's `__tabLeave` (this file already keeps the section state there).
+
+--- Tell the tab `ctx` last drew with an `onLeave` that it was left, once.
+local function fireLeave(ctx)
+    local held = ctx.__tabLeave
+    if not held then return end
+    ctx.__tabLeave = nil
+    held.fn()
+end
+
+-- One OnHide hook per page context, keyed by the ctx (the library's table) rather than a flag on it.
+local leaveHooked = setmetatable({}, { __mode = "k" })
+
+local function hookLeaveOnHide(ctx)
+    local panel = ctx.panel
+    if leaveHooked[ctx] or type(panel) ~= "table" or type(panel.HookScript) ~= "function" then return end
+    leaveHooked[ctx] = true
+    panel:HookScript("OnHide", function() fireLeave(ctx) end)
+end
+
+--- Host tab `key` is being drawn on `ctx`: a tab held for a leave that is not this one is told first.
+--- Answers whether it was (the registry may have changed under the render that is starting).
+local function tabDrawn(ctx, key, onLeave)
+    local held, left = ctx.__tabLeave, false
+    if held and held.key ~= key then
+        fireLeave(ctx)
+        left = true
+    end
+    if onLeave then
+        ctx.__tabLeave = { key = key, section = ctx.activeSection, fn = onLeave }
+        hookLeaveOnHide(ctx)
+    end
+    return left
+end
+
 --- The page's own tabs as the library takes them: those the container's aura type admits, each
 --- handed the container as well as its rows. One keyed by a schema group takes that group's place
 --- and is handed its rows; one with `before` is drawn ahead of the tab it names (LibKa0s Options
---- 24.31.4.7.4, `opts.tabs`).
+--- 24.31.4.7.4, `opts.tabs`). One with `onLeave` is told when the page moves off it (above); a tab
+--- drawn just after such a leave is handed the container as it now stands.
 local function hostTabs(spec, cfg)
     local out = {}
     for _, t in ipairs(spec.tabs or {}) do
         if not t.auraTypes or (cfg and t.auraTypes[cfg.auraType]) then
-            local render, n = t.render, #out
+            local render, onLeave, key, n = t.render, t.onLeave, t.key, #out
             out[n + 1] = {
                 key = t.key, label = t.label, tooltip = t.tooltip, before = t.before,
-                render = function(ctx, rows) return render(ctx, cfg, rows) end,
+                render = function(ctx, rows)
+                    local left = tabDrawn(ctx, key, onLeave)
+                    return render(ctx, left and NS.ActiveContainer() or cfg, rows)
+                end,
             }
         end
     end
@@ -634,6 +679,14 @@ function Helpers.RenderContainerPage(ctx, band)
     stashTab(ctx)
     local list = railSections(NS.ActiveContainer())
     local section = settleSection(ctx, list)
+    -- A tab held for a leave (the Presets tab) that this render will not draw is told before
+    -- anything is drawn, so the section drawn reads the registry as the leave left it.
+    local held = ctx.__tabLeave
+    if held and (held.section ~= section.key or ctx.sectionTabs[section.key] ~= held.key) then
+        fireLeave(ctx)
+        list = railSections(NS.ActiveContainer())
+        section = settleSection(ctx, list)
+    end
     ctx.activeSection = section.key
     ctx.activeTab = ctx.sectionTabs[section.key]
     local entries = {}

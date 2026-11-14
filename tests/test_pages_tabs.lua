@@ -46,7 +46,7 @@ end
 -- The seven pages by display name and key, and the strip each draws for container 1 (buffs, bars).
 local STRIPS = {
     { "General",    "general",    "Master controls=Master controls | Blizzard frames=Blizzard frames | Spell categories=Spell categories | Dispel colors=Dispel colors | Appearance=Skin" },
-    { "Containers", "containers", "General=General" },
+    { "Containers", "containers", "General=General | Presets=Presets" },
     { "Filters",    "filters",    "General=General | Categories=Categories | overrides=Overrides | Situations=Situations" },
     { "Layout",     "layout",     "Scale and strata=Scale and strata | Position and growth=Position and growth | Mouse=Mouse | Label=Label" },
     { "Bars",       "bars",       "General=General | Background and border=Background and border | Name text=Name text | Time text=Time text | Stack text=Stack text | Icon=Icon | Pandemic=Pandemic" },
@@ -123,7 +123,7 @@ test("tabs: with no containers General keeps its tabs and Containers offers its 
     -- red under: an addon-wide page losing its tabs with the registry
     assertEqual(strip(P, NS.Helpers.__pageCtx.general), STRIPS[1][3], "General keeps its tabs")
     local ws = P.rerender("Containers")
-    assertEqual(strip(P, NS.Helpers.__pageCtx.containers), STRIPS[2][3], "Containers keeps its one tab")
+    assertEqual(strip(P, NS.Helpers.__pageCtx.containers), STRIPS[2][3], "Containers keeps its two tabs")
     assertTrue(P.hasText(ws, NS.L["No containers yet. Click New container, or type /am new."]), "and says how to make one")
     -- red under: a section that needs a container reachable with none (an empty page under a strip)
     assertFalse(NS.Helpers.SelectSection("filters"))
