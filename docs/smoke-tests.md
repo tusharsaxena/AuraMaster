@@ -2829,10 +2829,11 @@ what. Result:
 grouped with a healer, have a dispellable debuff put on you (a magic debuff from a caster mob, a
 poison or a curse) → record which of **Raid (you can dispel)**, **Raid in combat**, **Dispellable by
 your group**, **Dispellable by anyone** and **Has a dispel type** draw it, each set alone to Show.
-On a target buff container on a mob with a buff, record **Stealable / purgeable** and **Castable/
+On the same container, record **From non-players** against **From any player**, each set alone to
+Show, on a debuff from a mob and on one from a player (a duel, such as a warlock's curse). On a
+target buff container on a mob with a buff, record **Stealable / purgeable** and **Castable/
 Dispellable by you** (a priest's Dispel Magic or a shaman's Purge as the class to test with). On a
-player buff container, record **Cancelable** on any self buff, and **From players** against **From
-non-players** on a buff someone else cast on you. Result:
+player buff container, record **Cancelable** on any self buff. Result:
 
 **FOREVER-11. A gated category is absent. Client: WoW Forever.** Build 1.60.1.70938's data gates no
 category: `NS.CategorySeedsForever.EMPTY` is empty, so this check confirms the full set and is the

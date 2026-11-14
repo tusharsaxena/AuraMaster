@@ -465,7 +465,7 @@ after login is not primed until the next settings change or `/reload`. A contain
 cannot be dragged, and an attached one whose position reads secret jumps to the cursor when its drag
 starts. A Text line's glow costs `C.TEXT_GLOW_TWINS` twin engines, each with its own `UNIT_AURA`
 work; a twin could break a sort tie differently from its main, runs its loop a few frames out of
-phase, and under a hand-set Width its ring and paired shadow are clipped at its own box. Every
+phase, and under a hand-set Width its ring and paired shadow are clipped at its own box.
 On WoW Forever the spell lists are derived offline from the game's data until combat logs
 confirm them (#26), the token and flag categories are unmeasured until the smoke run, and a profile
 does not carry over from the other client. Every
