@@ -32,6 +32,7 @@ check's number is not reused. Checks with no recorded pass, and checks new or co
 | SKIN-1 to SKIN-53 | Skins | The skinning rollout: the one-time HUD reset under Ka0s Default, Ka0s Default otherwise unchanged, the Skin tab, each skin on the HUD, the unlock furniture, the settings pages and the tool windows, other addons stock, the font and texture companions and overrides, combat, EllesmereUI on, off and back, the copy, profiles, tooltips and popups, the first-run skin picker; the library follow-ups (each skin's HUD face, Ignore fonts on the HUD, the picker's title, the strings newly in the skin's face); the skin fonts run (the Font outline, From skin flags, `/am skin`, width parity, the HUD size scale, the own faces and glow back, the strips' re-fit) |
 | DEGRADED-1 | Library-absent install | The launcher libraries missing |
 | LOC-1 to LOC-2 | Non-English client | Spell names from the client, adding a spell by its localized name |
+| PRESETS-1 to PRESETS-19 | Presets | Each client: a new profile's Simple seed at the real screen size, the first-run preset picker before the skin picker (Escape, Not now, Empty), each preset in each style, Apply in Replace and Add, Stop preview, leaving the tab, closing the panel, a `/reload`, a profile switch and combat mid-preview, `/am preset` and its confirm, another Ka0s addon's skin picker, the cost of a swap, an existing profile after schema v19 |
 | FOREVER-1 to FOREVER-15 | WoW Forever | Each check names its client: the AddOns list and a clean load on Forever, the default skin per client, a rank-1 aura in a buff container, Forever's own spell lists, each Blizzard token and flag row measured on Forever, the gate on an empty category, hiding the Blizzard buff and debuff frames, weapon enchants, a typed cast id rewritten, and the Retail regression |
 
 ## Before you start
@@ -45,10 +46,13 @@ check's number is not reused. Checks with no recorded pass, and checks new or co
   tag.
 - **Place.** A training dummy, with a party or a friendly player nearby for the target and focus
   checks. COMBAT-2, COMBAT-7, DIAG-11 and DIAG-12 need a Mythic+ key or a boss encounter.
-- **The starter set.** Most checks start from a fresh profile's four starters: #1 *Player buffs*
-  (bars), #2 *Player debuffs* (icons, growing left), #3 *Target debuffs (mine)* (icons, growing right)
-  and #4 *Player cooldowns* (Text). Make a spare profile for this (PROFILE-2) so your own set is not
-  touched.
+- **The starter set.** Most checks start from the four starters a fresh profile got before schema
+  v19: #1 *Player buffs* (bars), #2 *Player debuffs* (icons, growing left), #3 *Target debuffs
+  (mine)* (icons, growing right) and #4 *Player cooldowns* (Text). Since v19 a new profile starts
+  from the Simple preset instead (PRESETS-1), so take a spare profile that still holds the four (a
+  profile seeded before v19 keeps them, PRESETS-19; Profiles → Copy From copies one), or build them
+  on a new one with `/am new` and rename them. Use the spare profile (PROFILE-2) so your own set is
+  not touched.
 - **The chain.** LAYOUT and some CONT checks use a chain: three Text containers A, B and C, each
   Justify Center and growing down, B attached to A and C attached to B (Layout → Anchor → Attach to
   *Another container*), both anchor-point rows left on Automatic. Name them so the names fit their
@@ -65,16 +69,17 @@ check's number is not reused. Checks with no recorded pass, and checks new or co
 **INSTALL-1. Fresh install.** Remove `WTF/Account/ACCOUNT/SavedVariables/AuraMaster.lua` and log in →
 the world loads with no Lua error. Result: pass (owner-marked 2026-10-10)
 
-**INSTALL-2. Starter containers.** On that fresh install, with no setup → four containers appear: #1
-*Player buffs* as bars near the top right, #2 *Player debuffs* as icons just above it, #3 *Target
-debuffs (mine)* as icons below the screen center, and #4 *Player cooldowns* as Text left of center.
-Your current buffs show in #1; target the dummy and apply a debuff → it appears in #3. Pop an
-offensive and a defensive cooldown → #4 shows both and nothing else (no food, flask, mount or raid
-buff). Result: pass (owner-marked 2026-10-10)
+**INSTALL-2. Starter containers.** On that fresh install, with no setup → the Simple preset's three
+containers appear as bars (schema v19): *Player buffs (all)* at the top-right corner, *Weapon
+enchants* attached under it, and *Player debuffs (all)* in the column to its left; and the first-run
+preset picker shows (PRESETS-2). Your current buffs show in Player buffs (all), every one but your
+weapon enchants, which show in Weapon enchants; take a debuff (a fall, or a mob's) → it appears in
+Player debuffs (all). Before v19 this check named four starters; it was re-opened for the Simple
+seed. Result:
 
 **INSTALL-3. Reload.** `/reload` → no Lua error; every container is where it was. Result: pass (owner-marked 2026-10-10)
 
-**INSTALL-4. Deleted starters stay deleted.** Delete all four (Containers → General → Delete),
+**INSTALL-4. Deleted starters stay deleted.** Delete all of them (Containers → General → Delete),
 `/reload` → they do not come back, because the profile is marked seeded. Get them back with
 General → Reset all settings (PROFILE-4). Result: pass (owner-marked 2026-10-10)
 
@@ -2750,6 +2755,184 @@ starts. Fail: the picker opening over a hidden HUD with test mode off, an eye th
 close that leaves test mode other than it was before the picker, or the checkbox disagreeing with the
 HUD. Result:
 
+## Presets
+
+Container presets (`docs/superpowers/specs/2026-11-14-auramaster-presets-design.md`): Empty, Simple
+(3), Intermediate (8), Advanced (20) and Healer (9), each in Bars or Icons, placed for the screen
+size and previewed on the real screen in test mode. Each check names its client. A check that says
+**Retail, then WoW Forever** is run once on each, with the WoW Forever setup in
+[WoW Forever](#wow-forever). Every rule of [Before you start](#before-you-start) holds. Run these on
+a spare profile, never on your own: Replace deletes every container in the profile.
+
+**Code:** `defaults/Presets.lua` (the data and the placement builder), `modules/Presets.lua` (apply,
+preview and its restores), `settings/PresetPicker.lua` (the first-run window and the confirm),
+`settings/ContainersPresets.lua` (the Presets tab), `core/Database.lua` (the Simple seed, schema v19),
+`core/AuraMaster.lua` (login, profile events and combat).
+
+**What the presets place.** A corner column of Player buffs (all) with Weapon enchants under it,
+hugging the top-right corner, and Player debuffs (all) in a column to its left (all three in every
+preset); the cooldown call-outs as Text in a column centered on the screen, from about a fifth of the
+way down (Advanced, and Healer's Raid cooldowns); and three side stacks from about 30% down: the
+player's (left of center), the target's (right of center) and the far-right one (target icon rows,
+then focus). Each stack's top container is placed on the screen and every other container in it is
+attached to the one above it.
+
+**PRESETS-1. A brand-new profile starts from Simple, at the real screen size. Client: Retail, then
+WoW Forever.** Profiles → type a new profile name → the three Simple containers appear, as bars:
+**Player buffs (all)** at the top-right corner, its right edge on the screen's right edge,
+**Weapon enchants** attached under it, and **Player debuffs (all)** in the column to its left. No
+container sits over the action bars or the unit frames. `/am test` → each fills with sample auras;
+the corner columns end well above the screen's middle. `/am test` off. Set **UI scale** off, then on
+at its smallest (Options → Graphics → UI Scale), each time making another new profile: the layout
+keeps its proportions and the corner column stays on the right edge. A profile already made keeps
+where its containers were placed. Result:
+
+**PRESETS-2. The picker on a new profile, before the skin picker. Client: Retail, then WoW Forever.**
+On that new profile (PRESETS-1) → the **Choose a preset** window shows at once, on the left of the
+screen and vertically centered, clear of the containers. It shows Ka0s Aura Master under the
+title, a dropdown (Empty - no containers, Simple - 3 containers, Intermediate - 8 containers,
+Advanced - 20 containers, Healer - 9 containers) with Simple selected, a Bars / Icons switch, one
+line describing the pick, **Apply** and **Not now**, and the footer "Change it later on Containers >
+Presets. The skin picker opens next." Opening it previews nothing: test mode stays off and Simple is
+on screen. The skin picker does not show while this window is up. Drag the window → it moves and
+stays on screen. Pick **Intermediate** → its containers replace Simple, test mode turns on, and the
+line "On your screen now, filled with sample auras. Nothing is saved until Apply." appears. Pick
+**Empty** → the Bars / Icons switch and that line hide, Simple is back and test mode is off; nothing
+is deleted until Apply. Result:
+
+**PRESETS-3. Escape restores, and Not now keeps Simple. Client: Retail.** On a new profile, pick
+**Advanced** in the picker → the 20 Advanced containers replace Simple, test mode turns on and every
+container fills with sample auras. Press **Escape** → the window closes, test mode turns off, and the
+three Simple containers are back where they were. Then the skin picker shows (it turns test mode on
+itself, SKIN-53); close it. `/reload` → neither picker shows again on this profile. Make another new profile and pick Healer, then **Not now** →
+the same: Simple back, test mode off, the skin picker next. Another new profile, then the window's
+close mark → the same. Result:
+
+**PRESETS-4. Simple in Bars and Icons. Client: Retail, then WoW Forever.** `/am preset` → the
+picker. Pick **Simple** → test mode on, the three containers fill. Switch to **Icons** → Player
+buffs (all) and Player debuffs (all) become icon rows growing left from the right edge, each row as
+wide as its column, Weapon enchants an icon row under Player buffs (all). Back to **Bars** → bars
+again. Not now → your containers back. Result:
+
+**PRESETS-5. Intermediate in Bars and Icons. Client: Retail, then WoW Forever.** `/am preset`, pick
+**Intermediate** → Simple's three, plus Player buffs, short and Player cooldowns left of center,
+Target debuffs (mine) and Target cooldowns right of center, Focus debuffs (mine) far right, all
+filled with sample auras; the side stacks start beside the screen's middle, above the action bars
+and unit frames. Switch to **Icons** → every bar container becomes an icon row; the side stacks'
+rows grow right. Each stack's members sit under the one above with a small gap and never overlap
+it. Not now → your containers back. Result:
+
+**PRESETS-6. Advanced in Bars and Icons. Client: Retail, then WoW Forever.** `/am preset`, pick
+**Advanced** → 20 containers: Offensive, Defensive and Raid cooldowns as Text in the middle column,
+the player's stack left (Player buffs, short; Player cooldowns; Player special (mine)), the target's
+stack right (Target debuffs (mine), Target buffs (mine), Target crowd control, Target cooldowns,
+players, Target cooldowns, NPCs, Target special (mine), and Target stealable, which is off and shows
+nothing), and far right Target debuffs (all) and Target buffs (all) as icons, then Focus debuffs
+(mine) and Focus buffs (mine). Text stays Text and the two icon rows stay icons in both styles; the
+call-out column grows down without reaching the side stacks beside it. Switch to **Icons** and back.
+Not now → your containers back, and General → Spell categories lists no *Special player buffs* or
+*Special target debuffs*. Result:
+
+**PRESETS-7. Healer in Bars and Icons. Client: Retail, then WoW Forever.** `/am preset`, pick
+**Healer** → Simple's three, plus Raid cooldowns as Text in the middle, Player cooldowns left of
+center, Your heals on target and Dispellable by you on target right of center, Your heals on focus
+and Dispellable by you on focus far right. Target a friendly player you have healed → Your heals on
+target shows your heals on them. Switch to **Icons** and back. Not now → your containers back.
+Result:
+
+**PRESETS-8. Apply in Replace mode, from the picker and the tab. Client: Retail.** On a new profile
+(nothing of yours changed since its seed), pick **Intermediate**, then **Apply** → no confirm, the
+eight containers stay, test mode turns off, and chat says "Applied the Intermediate preset (Bars)."
+Now make a container (`/am new`), `/am preset`, pick **Simple**, then **Apply** → a confirm reads
+"Replace your 9 containers with the Simple preset? Your containers are deleted."; **Cancel** → the
+window and the preview stay up and nothing is kept; **Apply** again and accept → Simple's three
+stay and the window closes. On another new profile, make a container first, then pick Simple in its
+first-run picker and **Apply** → it asks too (the seed is no longer untouched). On a third, pick
+**Empty** and **Apply** → no confirm, and the profile holds no container. On Containers →
+General → **Presets**, pick **Healer**, keep *Replace all my containers*, **Apply preset…** → the
+same confirm, naming 3; Apply → Healer's nine stay, the status line no longer says Previewing.
+Result:
+
+**PRESETS-9. Apply in Add mode. Client: Retail.** On a profile holding Simple's three, open
+Containers → General → Presets, pick **Simple**, set *When applied* to **Add next to my
+containers**, **Apply preset…** → a confirm reads "Add the Simple preset's 3 containers next to your
+own?"; Apply → six containers: your three, plus **Player buffs (all) (2)**, **Weapon enchants (2)**
+and **Player debuffs (all) (2)** over them. Layout → Position and growth on Weapon enchants (2) →
+it is attached to *Player buffs (all) (2)*, not to your Player buffs (all). Chat says "Added the
+Simple preset (Bars) next to your containers." Apply **Advanced** in Replace, fill *Special player
+buffs* with one spell (General → Spell categories), then apply Advanced again → still one *Special
+player buffs* and one *Special target debuffs*, the spell still listed, and Player special (mine)
+shows it. Result:
+
+**PRESETS-10. Stop preview. Client: Retail.** Containers → General → Presets, pick **Advanced** →
+the status line reads "Previewing Advanced (Bars) on your screen in test mode. …" and the panel stays
+open over the preview; move it aside to look. **Stop preview** → your containers back, test mode
+off, the status line back to "Pick a preset or a style to see it on your screen." Changing *When
+applied* alone previews nothing. Result:
+
+**PRESETS-11. Leaving the tab restores. Client: Retail.** On the Presets tab, pick **Healer** →
+previewing. Click the **General** tab → your containers back and test mode off. Back on Presets,
+pick Healer again, then click **Filters** in the rail → the same. Picking another container in the
+band while previewing keeps the preview (the tab is still shown). Result:
+
+**PRESETS-12. Closing the panel restores. Client: Retail.** On the Presets tab, pick
+**Intermediate** → previewing. Close the settings window with its close button → your containers
+back and test mode off. Again, closing it with **Escape** → the same. Result:
+
+**PRESETS-13. A /reload mid-preview. Client: Retail, then WoW Forever.** Note your containers' names
+and where they sit (`/am containers`). Pick **Advanced** on the Presets tab, then `/reload` while it
+is previewed → after the loading screen your own containers are back, with the same names, ids,
+positions and attachments (`/am containers` reads as before), test mode is off and no Lua error
+shows. Do the same from the first-run picker on a new profile → Simple is back after the reload and
+the picker shows again (it was never closed). Then log out to character select mid-preview and log
+back in → the same. Result:
+
+**PRESETS-14. A profile switch mid-preview. Client: Retail.** On profile A, pick **Advanced** on the
+Presets tab, then switch to profile B (`/am profile B`, or the Profiles page) → B's own containers
+show, test mode is off, and B holds no Advanced container. Switch back to A → A's own containers,
+none of Advanced's. Result:
+
+**PRESETS-15. Combat mid-preview. Client: Retail.** *Immediate restore:* out of any instance, pick
+**Advanced** on the Presets tab, then hit a training dummy → chat says "Preset preview ended: combat
+started, and your containers are back."; your own containers show and track real auras through the
+fight, and test mode is off. *Held restore:* inside a Mythic+ key between pulls (auras secret), pick
+**Healer** (the panel draws it; containers may wait for the next safe moment), then pull → chat says
+"Preset preview ended: combat started, and your containers come back when it ends."; the preview's
+containers show real auras through the fight; when combat ends your own containers come back with no
+Lua error. While in combat, `/am preset` is refused with a gray line naming combat. Result:
+
+**PRESETS-16. /am preset asks before Replace. Client: Retail, then WoW Forever.** On a profile with
+containers (one picker already closed): `/am preset` → the picker opens whatever it was before.
+`/am preset advanced` → the confirm "Replace your N containers with the Advanced preset? …", N your
+count; **Cancel** → nothing changes. `/am preset advanced icons` → Apply → Advanced in Icons, chat
+says "Applied the Advanced preset (Icons)." `/am preset simple add` → the Add confirm, Apply → three
+more, suffixed (2). `/am preset bogus` and `/am preset simple sideways` → the usage line "Usage: /am
+preset [simple|intermediate|advanced|healer|empty] [bars|icons] [add]", nothing changed. `/am preset
+empty add` → "The Empty preset has no containers to add." `/am preset empty` → the confirm, Apply →
+no containers. `/am disable`, `/am preset` → the disabled line naming `/am enable`; `/am enable`.
+Result:
+
+**PRESETS-17. Another Ka0s addon's skin picker. Client: Retail.** With another Ka0s addon enabled
+(any that shows a first-run skin picker) on a brand-new character → Aura Master's preset picker
+shows first; record whether the other addon's skin picker shows beside it (a known limitation,
+`docs/known-limitations.md`). Both windows can be dragged apart, each works, and Aura Master's own
+skin picker shows only after its preset picker closes. Result:
+
+**PRESETS-18. The cost of a swap. Client: Retail.** `/am preset`, then pick in turn Advanced, Healer,
+Advanced, Intermediate, Advanced, switching Bars and Icons between picks, as fast as the dropdown
+allows → each pick draws in place with no visible freeze; record roughly how long Advanced takes to
+draw. After **Not now**, `/am containers` lists exactly your own containers, and General → Spell
+categories lists no *Special player buffs* or *Special target debuffs*. With `/am debug on`, record
+the `[Presets]` lines one swap writes. Result:
+
+**PRESETS-19. An existing profile keeps its containers after v19. Client: Retail.** With a
+SavedVariables file saved by a build before schema v19 (one with the four old starters, and one with
+your own containers), log in on this build → no Lua error, every profile keeps its containers
+unchanged, and neither the preset picker nor a container change appears. With logging on from the
+session before (`/am debug on`), the console shows one `[Migrate] v19 profile '<name>'` line per
+profile marked. `/am preset` still opens the
+picker on demand. Result:
+
 ## WoW Forever
 
 Every check here names its client. Most run on a live **WoW Forever** client (1.60.1, interface
@@ -2779,7 +2962,8 @@ listed with its logo and is **not** marked *Out of date*, and "Load out of date 
 to be ticked for it to load. Result:
 
 **FOREVER-2. A fresh install loads clean. Client: WoW Forever.** With no `AuraMaster.lua` in
-Forever's SavedVariables, log in → no Lua error, and the four starters appear as INSTALL-2 describes.
+Forever's SavedVariables, log in → no Lua error, and the Simple preset's three containers and the
+preset picker appear as INSTALL-2 describes.
 `/am debug on` → the console's `[Init]` line reads the current schema, `schema v<N>` with N the
 last step in `core/Database.lua`'s `SCHEMA_STEPS` (`NS.SCHEMA_VERSION`), and names no error. `/am`,
 `/am help` and `/am diagnostics` answer, and the settings panel draws General, Containers and Profiles
@@ -2977,3 +3161,8 @@ Open from the WoW Forever port (`docs/superpowers/plans/2026-11-14-auramaster-fo
 FOREVER-1 to FOREVER-15 are new. FOREVER-1 to FOREVER-14 run on a live WoW Forever client, FOREVER-15
 on Retail. **Fully exit and restart the client**: the port's generated files are new, and `/reload`
 does not see them.
+
+Open from the presets run (`docs/superpowers/plans/2026-11-14-auramaster-presets.md`, AM-PR07):
+PRESETS-1 to PRESETS-19 are new, and INSTALL-2 is re-opened, because a new profile now starts from
+the Simple preset; INSTALL-4 and FOREVER-2 only follow its wording. Their `Result:` lines are empty
+until the owner runs them.

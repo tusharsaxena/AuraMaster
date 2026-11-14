@@ -10,6 +10,9 @@ Ka0s Aura Master draws player-built aura **containers**. A container is one unit
 the player's temporary weapon enchants are the buff category `weaponEnchants`, schema v5) and one style (`bars`, `icons` or
 `text` — `:49`), plus its filters, placement and look. A profile holds any number of them; a fresh
 profile is seeded with the Simple preset's three (`NS.PresetData`, `defaults/Presets.lua`; schema v19).
+The four-container starter set it replaced, `NS.STARTER_CONTAINERS`, is retired; the headless harness
+keeps that set as a test fixture (`tests/starters_fixture.lua`), handed to the first profile each test
+environment prepares.
 
 **The design is dictated by one client fact.** On Retail 12.1 an addon cannot read aura data while
 auras are secret — combat, encounters, Mythic+ and PvP (`core/Secrets.lua`, `docs/midnight-quirks.md`).
@@ -46,8 +49,8 @@ what each LibKa0s setup file publishes: `docs/module-map.md` → *Libraries*.
 ## Module Map
 
 Five source folders in the TOC's load order — `locales/` → `core/` → `defaults/` → `modules/` →
-`settings/` (layout-§1) — 66 authored Lua files under them as measured on 2026-11-14: one locale, 18 core, 6 defaults, 25
-modules and 16 settings. The load-bearing positions are annotated at their TOC lines:
+`settings/` (layout-§1) — 70 authored Lua files under them as measured on 2026-11-14: one locale, 18 core, 7 defaults, 26
+modules and 18 settings. The load-bearing positions are annotated at their TOC lines:
 `core/MediaSetup.lua` before `core/Constants.lua` (the monospace face), `core/Compat.lua` before
 `defaults/` (Categories and CastToAura_Forever ask `ClientKey` and `ForClient` at file load), `core/CoreSetup.lua` before
 anything that prints, `core/SkinSetup.lua` after it and before every frame builder (the skin owner registers at file load, skinning-§1), `core/PerfSetup.lua` before every module that takes `NS.Perf` as an upvalue,
@@ -64,7 +67,9 @@ load as the strip's `tooltipPlace`),
 before `modules/Anchors_Snap.lua`,
 `modules/Anchors_Snap.lua` after all three (it binds `NS.AnchorsAttach`'s pair table and
 `NS.AnchorsSnapRect` at file load and extends `Anchors` as `Anchors.Snap`),
-`settings/OptionsSetup.lua` before every page file (the composers run at file load), and
+`settings/OptionsSetup.lua` before every page file (the composers run at file load),
+`settings/ContainersPresets.lua` after it and before `settings/Containers.lua` (which binds
+`NS.RenderPresetsTab` and `NS.PresetsTabLeft` into its section spec at file load), and
 `settings/GeneralUserCategories.lua` (read by `settings/GeneralSpells.lua` at file load), then
 `settings/GeneralSpells.lua`, then `settings/GeneralDispel.lua` (which reads its bullet constants), all
 before `settings/General.lua`, which registers their rows after its own.
@@ -82,6 +87,51 @@ mode). How they place, attach, preview, unlock and drag a container: `docs/data-
 [*Placement, preview and drag in brief*](data-flow.md#placement-preview-and-drag-in-brief).
 
 Every non-vendored file, its responsibility and the full load order: `docs/module-map.md`.
+
+### Presets
+
+Five starting points for a profile's containers (spec
+`docs/superpowers/specs/2026-11-14-auramaster-presets-design.md`): **Empty** (none), **Simple** (3),
+**Intermediate** (8), **Advanced** (20, the owner's own setup) and **Healer** (9), each in **Bars** or
+**Icons**, placed for the player's screen size and previewed on the real screen in test mode.
+
+| File | Role |
+|---|---|
+| `defaults/Presets.lua` | `NS.PresetData`: the data (the six stacks in a 1080-tall reference space, the containers by role, each preset's stacks) and the pure builder. `Build(name, look, W, H, picked)` answers the specs in creation order, a stack's head placed on `UIParent` and every member attached to the container above it; `Realize(specs, keys, create)` walks them through a writer, filling each member's `attach.container` with the id its parent took. Carries no appearance media and no spell ids |
+| `modules/Presets.lua` | `NS.Presets`, the one writer: `Apply(name, look, mode)` through `ContainerManager.Create` / `.Delete` and `Categories.CreateUserCategory` (Advanced's two custom categories, reused by name on a re-apply, `ResolveCustom`); the preview (`BeginPreview`, `EndPreview`, `IsPreviewing`, `Previewed`, `RestoreStaleSnapshots`, `RestoreStaleSnapshot`, `OnCombatStart`, `OnCombatEnd`); the picker latch (`PickerSeen`, `MarkPickerSeen`); the untouched-seed record (`RecordSeed`, `SeedUntouched`, `Fingerprint`); `OwnContainerCount`, `ParentSize` |
+| `settings/PresetPicker.lua` | The first-run window (`NS.PresetPickerDue`, `NS.MaybeShowPresetPicker`, `NS.ShowPresetPicker`, `NS.HidePresetPicker`, `NS.PresetPickerHolding`) and the preset confirm, one StaticPopup behind two entry points: `NS.ConfirmPreset(name, look, mode)` applies (`/am preset <name>`, the tab with no preview of its own), `NS.ConfirmPreview(name, look, mode)` keeps the preview on screen while it asks, then keeps it (the tab) |
+| `settings/ContainersPresets.lua` | The Containers page's **Presets** tab, the General section's second tab: `NS.RenderPresetsTab`, and `NS.PresetsTabLeft`, its `onLeave` |
+
+- **Its own profile key**, `presets` (`docs/schema.md`): `pickerSeen` (default false; schema v19 sets
+  it on every profile already `seeded`), `seedPrint` (no default: the fingerprint of what the Simple
+  seed wrote, so the first-run picker skips its Replace confirm only over an untouched seed) and
+  `previewSnapshot` (no default: present only while a preview is up). Nothing records which preset
+  was applied.
+- **Preview is write-and-snapshot.** The first pick snapshots the registry and the custom categories
+  into `presets.previewSnapshot` (`ContainerManager.Snapshot`), writes the preset in Replace mode and
+  turns test mode on; a later pick restores the snapshot and writes the new preset, the first snapshot
+  kept. Ending unkept restores it exactly, ids included (`ContainerManager.RestoreSnapshot`, the
+  registry writer's restore act); keeping it in Replace drops it; keeping it in Add restores it, then
+  applies the preset on top. `NS.Presets.Previewed()` answers the preset, its style and a token naming
+  that one preview, so the picker and the tab each end only a preview they started.
+- **Every other end restores.** A `/reload` or a crash leaves the snapshot stored, and the next login
+  restores it in every profile before the migration ladder (`Presets.RestoreStaleSnapshots`, first in
+  `NS.RunMigrations`). A profile event restores the profile the preview was taken in, never the new
+  one, before anything rebuilds (`Presets.RestoreStaleSnapshot`, first in `core/AuraMaster.lua`'s
+  `prepareProfile`, then `NS.HidePresetPicker`). Combat's `PLAYER_REGEN_DISABLED` edge, before
+  lockdown, restores at once; when an apply would have to wait anyway, test mode goes off and the
+  restore is held to `PLAYER_REGEN_ENABLED`. One chat line says which.
+- **The tab's leave hook.** A tab in a `NS.RegisterContainerSection` spec may carry `onLeave`.
+  `settings/OptionsSetup.lua` records the tab drawn with one (`ctx.__tabLeave`) and calls it once when
+  a later render draws another tab or another rail section, or when the panel hides (one `OnHide`
+  hook per page context); a redraw of the same tab is not a leave. The library has no leave
+  callback, so the host's own render is where a tab click lands.
+- **Before the skin picker.** `addon:OnEnterWorld` shows the preset picker at once while it is due
+  and arms no skin start; `NS.MaybeShowSkinPicker` answers `nil, "held"` while
+  `NS.PresetPickerHolding()`, and every close of the preset picker sets the latch and then offers the
+  skin picker. `rebuildProfile` offers the preset picker, then the skin picker, to a new, reset or
+  copied profile. Another Ka0s addon's skin picker can still show beside it
+  (`docs/known-limitations.md`).
 
 ### Per-client features
 
@@ -228,8 +278,8 @@ on-display marker is a MAY for a HUD display such as an aura container (WS-01).
 | `/am perf …` | Measure performance — bare `/am perf` opens the workflow |
 | `/am version` | Print the addon version |
 
-**While the addon is disabled** the ten verbs that drive its features — `new`, `delete`, `preset`, `lock`,
-`unlock`, `test`, `pick`, `resetposition`, `forgettimed`, `redraw` — answer on one tagged line naming `/am enable` and
+**While the addon is disabled** the eleven verbs that drive its features — `skin`, `new`, `delete`, `preset`,
+`lock`, `unlock`, `test`, `pick`, `resetposition`, `forgettimed`, `redraw` — answer on one tagged line naming `/am enable` and
 do nothing else (slash-commands-§2). Everything else keeps working, the bare `/am` included: it
 opens the settings panel, which is the surface a player switches the addon back on from by hand. The
 gate is `LibKa0s-Slash-1.0`'s, closed by the descriptor's `isEnabled` in `settings/Slash.lua` with
@@ -472,7 +522,8 @@ work; a twin could break a sort tie differently from its main, runs its loop a f
 phase, and under a hand-set Width its ring and paired shadow are clipped at its own box.
 On WoW Forever the spell lists are derived offline from the game's data until combat logs
 confirm them (#26), the token and flag categories are unmeasured until the smoke run, and a profile
-does not carry over from the other client. Every
+does not carry over from the other client. A preset's corner column can grow into a side column
+under it in play, and another Ka0s addon's skin picker can show beside the preset picker. Every
 limitation, its cause and any ruling: `docs/known-limitations.md`.
 
 ## Documentation map

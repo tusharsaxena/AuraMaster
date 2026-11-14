@@ -2265,7 +2265,7 @@ Total.
 
 ### test_pages_containers.lua (35)
 
-- containers: registers its own top-level Blizzard category, with one tab, General (N-1, options-ui-§14)
+- containers: registers its own top-level Blizzard category, with General first, then Presets (N-1, options-ui-§14)
 - containers: Unit, Aura type and Style sit under their own subsection; Name and Enabled do not
 - containers: the subsection heading is drawn between Enabled and Unit, not anywhere else
 - containers: NS.OpenOptionsPage('containers') opens its own category, not the main one (N-3)
@@ -2506,7 +2506,7 @@ Total.
 - sections: each style section's gate is derived from its style, on both builds (Diagnostics' inert split)
 - rail: Containers draws General, Filters, Layout and the selected container's own style, in that order
 - rail: every section draws a tooltip on its entry
-- rail: the page opens on General, today's one General tab under the band, beside a 120px rail
+- rail: the page opens on General, its General tab first (then Presets) under the band, beside a 120px rail
 - rail: the draw order is PageBanner, NavRail, TabStrip
 - rail: a rail click draws that section's strip and rows under the same band
 - rail: each section keeps its own tab: Filters, Categories, Layout, back to Filters lands on Categories (smoke PANEL-12)
@@ -2668,6 +2668,20 @@ Total.
 - picker: /am preset with the window down leaves the latch alone
 - picker: showing re-raises a shown StaticPopup
 
+### test_pages_presets.lua (11)
+
+- presets tab: listed after General
+- presets tab: drawn with no containers too
+- presets tab: no empty option
+- presets tab: pick previews
+- presets tab: apply replace confirms and keeps
+- presets tab: add keeps player containers
+- presets tab: apply with nothing previewed applies the selection
+- presets tab: leaving the tab restores
+- presets tab: panel hide restores
+- presets tab: a preview the tab did not start is not its to end
+- presets tab: refused in combat
+
 ### test_perf.lua (8)
 
 - perf: every declared bucket is reached by a real bracket
@@ -2718,7 +2732,7 @@ Total.
 
 - prose: no authored file carries a British spelling from localization-§5's published list
 - prose: the gate carries localization-§5's two lists whole, and nothing of its own
-- prose: the exclusions this repository declared suppressed 15 of 263 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (15): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, and 12 more (list bounded)
+- prose: the exclusions this repository declared suppressed 15 of 265 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (15): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, and 12 more (list bounded)
 - prose: no path this repository narrows the gate by is loaded by a TOC
 - prose: every path this repository narrows the gate by is one .pkgmeta keeps out of the zip
 - prose self-test: the carve-out suppresses the named generated folder, and only it
@@ -2977,6 +2991,7 @@ Total.
 | test_presets_preview.lua | 17 |
 | test_presets_seed.lua | 7 |
 | test_presetpicker.lua | 20 |
+| test_pages_presets.lua | 11 |
 | test_perf.lua | 8 |
 | test_debuglogsetup.lua | 9 |
 | test_locale.lua | 10 |
@@ -2993,4 +3008,4 @@ Total.
 | test_skin_switch.lua | 34 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2451** |
+| **Total** | **2462** |

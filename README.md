@@ -4,7 +4,7 @@
 ![CurseForge Version](https://img.shields.io/curseforge/v/1698345)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-2451%2F2451_passing-green)
+![Tests](https://img.shields.io/badge/Tests-2462%2F2462_passing-green)
 
 Supports Retail and WoW Forever. Aura Master lets you build your own buff and debuff displays. Each one is a container. You pick
 whose auras it shows (yours, your target's, your focus's or your pet's), whether it shows buffs,
@@ -41,16 +41,27 @@ _[Watch on YouTube](https://www.youtube.com/watch?v=lJoZiVA_SBE)_
 
 ## Usage
 
-A fresh install gives you four containers to start from: your buffs as bars near the top right, your
-debuffs as a row of icons above them, the debuffs you've put on your target as icons just below the
-middle of the screen, and your offensive and defensive cooldowns as a line of text near the middle.
-They start locked. `/am unlock` puts a handle on each one so you can drag it where you want it, and
+A fresh install gives you three containers to start from, the Simple preset: your buffs as bars in
+the top-right corner with your weapon enchants under them, and your debuffs as bars beside them. A
+small window, **Choose a preset**, opens the first time so you can pick a bigger set instead (more on
+presets below). They start locked. `/am unlock` puts a handle on each one so you can drag it where you want it, and
 `/am lock` puts the handles away again. Drop a container next to another one and it attaches there,
 following that one as it grows: the other container's handle lights up with a green edge before you
 let go, and holding Shift as you drop places it without attaching. To detach one, drag it away until
 the marks turn red and let go; let go sooner and it snaps back. Test mode (`/am test`, or the
 checkbox on General → Master controls) fills every container with sample auras, so you can see what
 you're building without waiting for a real buff. It switches itself off when combat starts.
+
+**Presets** give you a whole set of containers in one go: Simple (3), Intermediate (8), Advanced (20,
+with cooldown call-outs in the middle of the screen, the full target stack and two special lists you
+fill yourself) or Healer (9, with your heals and what you can dispel on your target and focus), each as
+bars or as icons, placed for your screen size and clear of your action bars and unit frames. Picking
+one shows it on your real screen, filled with sample auras, and nothing is saved until you press
+Apply: close the window, press Escape, leave the tab or get pulled into combat and your own
+containers come back. They live on Containers → General → **Presets**, where you also choose whether a
+preset replaces your containers or goes next to them. `/am preset` opens the picker again, and
+`/am preset advanced icons` applies one straight away (add `add` to keep yours); either way it asks
+before it deletes anything.
 
 Building your own display takes four steps, all on the Containers page. The Container dropdown at
 the top picks which container you're working on, and the list down the left side takes you through
