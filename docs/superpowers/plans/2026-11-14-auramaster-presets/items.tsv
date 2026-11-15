@@ -21,3 +21,4 @@ AM-PR18	M6	AuraMaster	Docs, smoke, review and test record for round 3	AM-PR16 AM
 AM-PR19	M7	AuraMaster	Player stack nearer center, target cluster mirroring it, call-outs higher	AM-PR18
 AM-PR20	M7	AuraMaster	Existing users see the preset picker once	AM-PR18
 AM-PR21	M7	AuraMaster	Docs, smoke, review and test record for round 4	AM-PR19 AM-PR20
+AM-PR22	M8	AuraMaster	Every pick unlocks and turns test mode on; Empty previews an empty screen	AM-PR21
