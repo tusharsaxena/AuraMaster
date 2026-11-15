@@ -70,7 +70,11 @@ test("apply: replace simple", function()
     for i, name in ipairs(SIMPLE_NAMES) do assertEqual(list[i].name, name) end
     local pbuffs, wpn, pdebuffs = list[1], list[2], list[3]
     assertEqual(pbuffs.attach.mode, "screen")
-    assertEqual(pdebuffs.attach.mode, "screen")
+    -- Player debuffs (all) joins Player buffs (all)'s left side (presets spec section 17).
+    assertEqual(pdebuffs.attach.mode, "container")
+    assertEqual(pdebuffs.attach.container, pbuffs.id, "Player debuffs joins the new Player buffs")
+    assertEqual(pdebuffs.attach.childPoint, "TOPRIGHT")
+    assertEqual(pdebuffs.attach.relPoint, "TOPLEFT")
     -- red under: a member left on the placeholder id the builder hands the writer
     assertEqual(wpn.attach.mode, "container")
     assertEqual(wpn.attach.container, pbuffs.id, "Weapon enchants hangs under the new Player buffs")

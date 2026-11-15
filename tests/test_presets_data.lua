@@ -274,168 +274,29 @@ test("presets: every category key exists on this client", function()
     assertEqual(NS.PresetData.CUSTOM.SPECIAL_TARGET.auraType, "HARMFUL")
 end)
 
--- The screen sizes: three heights, each at the ratios spec section 11 names (16:9, 16:10, 21:9) and
--- the narrow ones (4:3, 5:4; 1024 x 768 is a UI-scale-off 4:3).
-local SCREENS = {}
-for _, h in ipairs({ 768, 1080, 1440 }) do
-    for _, ratio in ipairs({ 16 / 9, 16 / 10, 21 / 9, 4 / 3, 5 / 4 }) do SCREENS[#SCREENS + 1] = { h * ratio, h } end
-end
+local PS = dofile("tests/presets_spans.lua")
+local SCREENS, headRect, sampleSpans, rectGap = PS.SCREENS, PS.headRect, PS.sampleSpans, PS.rectGap
 
---- A head's span on a W x H parent, out of its stored position and size alone: [left, right] and the
---- y it is placed at (a negative offset from the parent's top edge): its top, or for an up stack's head
---- its bottom, the column's base. A text head's is its stored width, the column, centered on the
---- center line it hangs from by its TOP (defaults/Presets.lua, sizeTo and place).
-local function headRect(spec, W, H)
-    local o, P = spec.overrides, NS.PresetData
-    local pos = o.position
-    local ax = (pos.relativePoint == "TOPRIGHT") and W or (W / 2)
-    assertTrue(pos.relativePoint == "TOPRIGHT" or pos.relativePoint == "TOP", "a head hangs from TOP or TOPRIGHT")
-    local w
-    if o.style == "bars" then
-        w = o.bars.width
-    elseif o.style == "icons" then
-        w = o.layout.perLine * (o.icons.width + o.layout.spacing)
-    else
-        w = o.text.width
-        assertNear(w, P.STACKS[spec.stack].width * P.ScaleX(W, H), 1, "a text head is its column wide")
-    end
-    local x = ax + pos.x
-    if pos.point == "TOP" then return x - w / 2, x + w / 2, pos.y end
-    if pos.point:find("RIGHT$") then return x - w, x, pos.y end
-    assertTrue(pos.point == "TOPLEFT" or pos.point == "BOTTOMLEFT", "a head is placed by a corner")
-    return x, x + w, pos.y
-end
-
--- A CORNER COLUMN MAY RUN OVER A SIDE COLUMN (spec sections 4, 11 and 15, the plan's ruling on the
--- AM-PR01 review). By the spec 4 numbers the far stack sits under both corner columns on 16:9, the
--- right stack under cornerLeft on 16:10 as well, and on 4:3 and 5:4 the right and far stacks run under
--- the corners entirely. The corner stacks grow down from y = 46 and the side stacks grow up from
--- their base at y = 740 (spec section 15.1), so every corner stack must end above every side
--- stack's base. The check measures that at the test-mode sample count: every container of the preset
--- applied, each as tall as
--- Preview.Extent makes its placeholder block, each stack member hung from the one before by its gap,
--- below it growing down and above it growing up. Every other pair of columns stays disjoint. A tall
--- side stack (Advanced's target stack) may reach up into a corner column, and in play a corner stack
--- may grow further down (docs/known-limitations.md, presets).
+-- THE COLUMNS THE HEADS SHARE (spec section 17, the right-hand cluster lined up). Player debuffs
+-- (all) is no head: it joins Player buffs (all)'s left side, so the corner group is one head, and
+-- the focus and far stacks hang under it on Player debuffs' column, the focus stack above the far
+-- one and kept clear of it ("the focus stack stays clear of the far stack"). The target column sits
+-- TARGET_GAP left of theirs. On 16:10 and narrower it reaches the call-out column, the overlap section
+-- 17 allows and the case "the call-out block's overlap with the target column is the recorded one"
+-- measures (docs/known-limitations.md, presets). Every other pair of head columns stays disjoint.
+-- The corner stacks grow down from y = 46 and the side stacks grow up from their base at y = 740
+-- (spec section 15.1), so every corner stack must end above every side stack's base. The check
+-- measures that at the test-mode sample count: every container of the preset applied, each as tall
+-- as Preview.Extent makes its placeholder block, each stack member hung from the one before by its
+-- gap, below it growing down and above it growing up. In play a corner stack may grow further down
+-- (docs/known-limitations.md, presets).
 local CORNER = { cornerRight = true, cornerLeft = true }
 local SIDE = { left = true, right = true, far = true, focus = true }
+local SHARED_COLUMNS = { ["far|focus"] = true, ["middle|right"] = true }
 
--- THE FOCUS COLUMN (spec section 16) hangs from the corner's edge, Player debuffs' left edge, so it
--- shares a column with the far stack (above it, kept clear of it: "the focus stack stays clear of the
--- far stack") and, on most ratios, with the right stack (FOCUS_OVER_RIGHT, below).
-local SHARES_WITH_FOCUS = { far = true, right = true }
-
-local function cornerOverSide(a, b)
-    if (a == "focus" and SHARES_WITH_FOCUS[b]) or (b == "focus" and SHARES_WITH_FOCUS[a]) then return true end
-    return (CORNER[a] and SIDE[b]) or (CORNER[b] and SIDE[a]) or false
-end
-
---- The y offset container `id`'s anchor is placed at from what it hangs from, read off the live
---- placement (Anchors.Place): the stored gap plus the seam and, while unlocked, the drag strip's room
---- (modules/Anchors_Attach.lua seamRoom).
-local function placedOffset(env, id)
-    local inst = env.ContainerManager.instances[id]
-    local rec = {}
-    rawset(inst.anchor, "SetPoint", function(_, ...) rec[#rec + 1] = { ... } end)
-    env.Anchors.Place(inst)
-    rawset(inst.anchor, "SetPoint", nil)
-    local last = rec[#rec]
-    return last[5], inst, last[4], last[1], last[3]
-end
-
---- One container's span from what it hangs from (`parent`, nil for a head), its stored data `c`, its
---- placed y offset `dy` and its test-mode block's height `h`; while `unlocked`, `room` is its own
---- strip row, which sits on the side its auras start from (Anchors.StripPoints). A head's room is
---- added to the span (a member's is already in its offset, between it and its parent).
-local function spanFrom(parent, c, dy, h, room)
-    local up = c.layout.growV == "up"
-    local edge
-    if parent then
-        edge, room = up and parent.top + dy or parent.bottom + dy, 0
-    else
-        edge = c.position.y
-    end
-    if up then return { top = edge + h, bottom = edge - room } end
-    return { top = edge + room, bottom = edge - h }
-end
-
---- A point's horizontal part: "LEFT", "RIGHT", or "" for the middle.
-local function hPart(point) return point:match("LEFT$") or point:match("RIGHT$") or "" end
-
---- The x part `part` (hPart) sits at on span `r`.
-local function xOn(r, part)
-    if part == "LEFT" then return r.left end
-    if part == "RIGHT" then return r.right end
-    return (r.left + r.right) / 2
-end
-
---- Fill `span`'s [left, right]: a block `w` wide whose own `point` sits at `x`, and, while unlocked,
---- the drag strip's overhang past it (`over`, Anchors' stripOverhang): the strip starts on the side
---- the auras start from and runs on along the growth (Anchors.StripPoints, placeHandle).
-local function spanAcross(span, point, x, w, over, growH)
-    local part = hPart(point)
-    span.left = (part == "LEFT" and x) or (part == "RIGHT" and x - w) or (x - w / 2)
-    span.right = span.left + w
-    if over > 0 then
-        if growH == "left" then span.left = span.left - over else span.right = span.right + over end
-    end
-end
-
---- Widen stack span `whole` (nil for a stack's first) to hold container span `span`.
-local function union(whole, span)
-    if not whole then return { top = span.top, bottom = span.bottom, left = span.left, right = span.right } end
-    whole.top, whole.bottom = math.max(whole.top, span.top), math.min(whole.bottom, span.bottom)
-    whole.left, whole.right = math.min(whole.left, span.left), math.max(whole.right, span.right)
-    return whole
-end
-
---- The x container `c`'s own point sits at on a W-wide parent: a member's, its parent's relative
---- point (`rel`) moved on by its placed `dx`; a head's, its stored position from TOPRIGHT or TOP.
-local function pointX(parent, c, rel, dx, W)
-    if parent then return xOn(parent, hPart(rel)) + dx end
-    return ((c.position.relativePoint == "TOPRIGHT") and W or W / 2) + c.position.x
-end
-
---- Each stack's test-mode span with preset `name` in style `look` applied on a W x H parent in `env`,
---- every container filled with its test-mode samples: [stack] = { top, bottom, left, right }, top and
---- bottom offsets from the parent's top (negative is down), left and right from its left edge (each
---- block as wide as Preview.BlockSize makes it, joined where its live placement puts it). A head
---- placed by a BOTTOM point starts at its base and grows up; a member hangs below the one before it growing down, above it growing up, at its live placement's
---- offset. `unlocked` measures with the containers unlocked, their drag strips shown, as the preset
---- picker opens them (spec section 15); otherwise locked.
-local function sampleSpans(env, mocks, name, look, W, H, unlocked)
-    env.Presets.ParentSize = function() return W, H end
-    assertTrue(env.Presets.Apply(name, look, "replace"), name .. "/" .. look .. " applies")
-    env.SetByPath("locked", not unlocked)
-    env.Preview.SetTestMode(true)
-    mocks.__fireTimers()
-    local specs, p = env.PresetData.Build(name, look, W, H), env.db.profile
-    assertEqual(#p.containerOrder, #specs, "one container per spec, in creation order")
-    local spanOf, out, each = {}, {}, {}
-    for i, id in ipairs(p.containerOrder) do
-        local c = p.containers[id]
-        local extent = env.Preview.Extent({ Cfg = function() return c end, anchor = mocks.CreateFrame("Frame") })
-        local parent = (c.attach.mode == "container") and spanOf[tonumber(c.attach.container)]
-        local dy, inst, dx, point, rel = placedOffset(env, id)
-        -- A disabled container (Advanced's tsteal, as the source stores it) shows nothing, test mode
-        -- or not (ShouldShow): no height, and no part of its stack's span.
-        local shown = c.enabled ~= false
-        assertEqual(inst.stripShown == true, shown and unlocked == true, "the strip shows while unlocked")
-        local span = spanFrom(parent, c, dy, shown and extent.height or 0, env.AnchorsAttach.furnitureRoom(inst))
-        local over = unlocked and (inst.stripOverhang or 0) or 0
-        spanAcross(span, point, pointX(parent, c, rel, dx, W), (env.Preview.BlockSize(c)), over,
-            env.Anchors.EffectiveLayout(c).growH)
-        spanOf[id] = span
-        local stack = specs[i].stack
-        if shown then
-            out[stack] = union(out[stack], span)
-            each[#each + 1] = { role = specs[i].role, stack = stack, span = span }
-        end
-    end
-    env.Preview.SetTestMode(false)
-    env.SetByPath("locked", true)
-    mocks.__fireTimers()
-    return out, each
+local function columnsShared(a, b)
+    local key = (a < b) and (a .. "|" .. b) or (b .. "|" .. a)
+    return SHARED_COLUMNS[key] == true
 end
 
 --- Every corner stack ends above every side stack's base in test mode (`spans`, from sampleSpans;
@@ -480,10 +341,10 @@ local function checkTopEdge(spans, name, look, W, H, unlocked)
     end
 end
 
---- Heads `a` and `b` on one screen: disjoint columns, or a corner column over a side one.
+--- Heads `a` and `b` on one screen: disjoint columns, or two of SHARED_COLUMNS.
 local function checkColumns(a, b, what)
     if not (a.l < b.r and b.l < a.r) then return end
-    assertTrue(cornerOverSide(a.stack, b.stack), what .. " (only a corner over a side column may share)")
+    assertTrue(columnsShared(a.stack, b.stack), what .. " (only the recorded columns may share)")
 end
 
 test("presets: placement at 768/1080/1440 x 16:9, 16:10, 21:9, 4:3, 5:4", function()
@@ -507,6 +368,8 @@ test("presets: placement at 768/1080/1440 x 16:9, 16:10, 21:9, 4:3, 5:4", functi
                         if spec.stack == "cornerRight" then
                             local inset = -(P.STACKS.cornerRight.x + P.STACKS.cornerRight.width)
                             assertNear(r, W - inset * P.ScaleX(W, H), 1, where .. " sits its inset in from the right edge")
+                            -- Spec section 17: Player buffs' right edge at least 10 in from the edge.
+                            assertTrue(r <= W - 10 * P.ScaleX(W, H) + 0.5, where .. ": at least 10 in (" .. (W - r) .. ")")
                         end
                         heads[#heads + 1] = { l = l, r = r, stack = spec.stack }
                         placedY[spec.stack] = y
@@ -572,9 +435,9 @@ test("presets data: side stacks sit on the lower base", function()
     end
 end)
 
--- The column each up stack's head hangs from: the center line, but the focus column's, which hangs
--- from the corner's point (spec section 16).
-local HEAD_POINT = { left = "TOP", right = "TOP", far = "TOP", focus = "TOPRIGHT" }
+-- The point each up stack's head hangs from: the center line for the player stack, the right edge for
+-- the right-hand cluster's (spec section 17: the target, far and focus columns hang from it).
+local HEAD_POINT = { left = "TOP", right = "TOPRIGHT", far = "TOPRIGHT", focus = "TOPRIGHT" }
 
 --- An up stack's spec on a parent `H` tall: a member's gap is above the one before; a head sits on
 --- its stack's base by a BOTTOM point.
@@ -629,31 +492,30 @@ test("presets data: side stacks grow up from their base", function()
     assertEqual(adv.pcd.attachTo, adv.pshort.index, "Player cooldowns sits on it")
 end)
 
-test("presets data: the corner group sits left of and below its old place", function()
+test("presets data: the corner group hangs from the right edge, Player buffs 10 in", function()
     local P = NS.PresetData
     local S = P.STACKS
-    -- Spec section 15 moved it 80 left and 40 down; section 16 moves it further in, Player debuffs'
-    -- left edge on the focus column's ("Player debuffs' left edge lines up with Focus buffs'").
-    -- red under: section 15's place, Player debuffs' left edge 475 in from the right edge, and under
-    -- a token move: the owner asked for one they can see ("bring them in even further"), so the
-    -- distance is pinned, 45 further in than section 15's (520 in from the right edge).
-    assertTrue(S.cornerLeft.x < -395 - 80, "Player debuffs' column left of section 15's")
-    assertEqual(S.cornerLeft.x, -475 - 45, "and 45 further in, a move that shows")
-    assertEqual(S.cornerLeft.width, 215, "Player debuffs keeps its width")
-    assertEqual(S.cornerRight.width, 175, "Player buffs keeps its width")
-    assertEqual(S.cornerRight.x - (S.cornerLeft.x + S.cornerLeft.width), 5, "and the gap between the two")
-    assertEqual(S.cornerRight.y, -6 - 40, "40 further down")
-    assertEqual(S.cornerLeft.y, -6 - 40, "40 further down")
+    -- Spec section 17: the corner group's distance in is picked so the whole right-hand cluster fits
+    -- (target column, gap, focus and corner columns, Player buffs), Player buffs' right edge at least
+    -- 10 in. 10, the least, keeps the cluster furthest from the call-outs. red under: section 16's
+    -- place, Player buffs' right edge 125 in.
+    assertEqual(S.cornerRight.x + S.cornerRight.width, -10, "Player buffs' right edge 10 in from the edge")
+    assertEqual(S.cornerRight.width, 240, "as wide as Player cooldowns (spec section 17.2)")
+    assertEqual(S.cornerLeft.width, 240, "and Player debuffs")
+    assertEqual(S.cornerRight.x - (S.cornerLeft.x + S.cornerLeft.width), 5, "the gap between the two")
+    assertEqual(S.cornerLeft.beside, "cornerRight", "Player debuffs' column joins Player buffs'")
+    assertEqual(S.cornerRight.y, -6 - 40, "40 down, section 15's")
     local simple = byRole(P.Build("simple", "bars", 1920, 1080))
     local pos = simple.pbuffs.overrides.position
     assertEqual(pos.relativePoint, "TOPRIGHT")
     assertEqual(pos.point, "TOPLEFT")
     assertEqual(pos.x, S.cornerRight.x)
     assertEqual(pos.y, -46)
-    assertEqual(simple.pdebuffs.overrides.position.x, S.cornerLeft.x)
+    assertNil(simple.pdebuffs.overrides.position, "Player debuffs is not placed: it joins Player buffs")
     -- Still a corner group: it grows down, and the members hang below their heads.
     assertEqual(simple.wpn.overrides.layout.growV, "down")
     assertTrue(simple.wpn.overrides.attach.y < 0, "Weapon enchants hangs below Player buffs")
+    assertEqual(simple.wpn.attachTo, simple.pbuffs.index, "Weapon enchants stays under Player buffs")
 end)
 
 local CALLOUT_COLORS = {
@@ -805,12 +667,20 @@ test("presets: members chain", function()
     local P = NS.PresetData
     for _, name in ipairs(NAMES) do
         for _, look in ipairs(P.LOOKS) do
-            local last = {}
-            for i, spec in ipairs(P.Build(name, look, 1920, 1080)) do
+            local last, specs = {}, P.Build(name, look, 1920, 1080)
+            for i, spec in ipairs(specs) do
                 local a = spec.overrides.attach
                 assertTrue(a.mode ~= "frame", name .. " #" .. i .. ": never a frame")
                 assertTrue(a.frame == nil or a.frame == "", name .. " #" .. i .. ": no frame name")
-                if last[spec.stack] then
+                local beside = P.STACKS[spec.stack].beside
+                if not last[spec.stack] and beside and last[beside] then
+                    -- Player debuffs (all) joins Player buffs (all)'s left side (spec section 17).
+                    assertEqual(spec.role, "pdebuffs", name .. " #" .. i)
+                    assertEqual(specs[spec.attachTo].role, "pbuffs", name .. " #" .. i .. " joins Player buffs")
+                    assertEqual(a.mode, "container")
+                    assertNil(spec.overrides.position, name .. " #" .. i .. ": a member is not placed")
+                    assertEqual(a.y, 0, name .. " #" .. i .. ": top to top")
+                elseif last[spec.stack] then
                     assertEqual(spec.attachTo, last[spec.stack], name .. " #" .. i .. " attaches to the one above")
                     assertEqual(a.mode, "container")
                     assertNil(spec.overrides.position, name .. " #" .. i .. ": a member is not placed")
@@ -850,10 +720,12 @@ test("presets: the layout narrows across only on a narrow screen", function()
             assertEqual(P.ScaleX(h * ratio, h), P.Scale(h), ("%dx%d"):format(h * ratio, h))
         end
     end
-    -- 4:3 at 1080: the far column (570 + 220 right of center) ends 10 units in from the edge.
+    -- 4:3 at 1080: the right-hand cluster (785 in from the right edge, spec section 17) keeps its
+    -- left edge, the target column's, 10 units right of the center line.
     local kx = P.ScaleX(1440, 1080)
     assertTrue(kx < 1, "4:3 narrows")
-    assertNear(720 + 790 * kx, 1440 - 10 * kx, 0.001, "the far column ends at the edge's margin")
+    assertEqual(P.STACKS.right.x, -785, "the cluster reaches 785 in")
+    assertNear(1440 + P.STACKS.right.x * kx, 720 + 10 * kx, 0.001, "the target column ends at the center's margin")
     assertEqual(P.ScaleX(nil, 1080), 1, "an unreadable width does not narrow")
     assertEqual(P.ScaleX(0, nil), 1)
     -- Down is never narrowed: the heads' tops are the same on 4:3 as on 16:9.
@@ -1102,7 +974,9 @@ local function checkFocusSpec(specs, spec, head, where)
     assertEqual(spec.stack == "focus", FOCUS_ROLES[spec.role] == true, where .. ": the focus stack is the focus roles")
     assertEqual(o.unit == "focus", spec.stack == "focus", where .. ": a focus unit in the focus stack")
     if spec.attachTo then
-        assertEqual(specs[spec.attachTo].stack, spec.stack, where .. " attaches within its own stack")
+        local to = specs[spec.attachTo].stack
+        assertTrue(to == spec.stack or to == NS.PresetData.STACKS[spec.stack].beside,
+            where .. " attaches within its own stack, or beside the one its stack joins")
     end
     if spec.stack ~= "focus" then return head end
     assertEqual(o.layout.growV, "up", where .. " grows up")
@@ -1126,7 +1000,9 @@ local function checkFocusApplied(env, name, look)
         local where = ("%s/%s %s"):format(name, look, e.spec.role)
         local at = e.cfg.attach
         if at.mode == "container" then
-            assertEqual(stackOf[tonumber(at.container)], e.spec.stack, where .. " attaches within its stack")
+            local to = stackOf[tonumber(at.container)]
+            assertTrue(to == e.spec.stack or to == env.PresetData.STACKS[e.spec.stack].beside,
+                where .. " attaches within its stack, or beside the one its stack joins")
         end
         if e.spec.stack == "focus" and headId then
             assertEqual(env.Anchors.FlowRoot(e.cfg).id, headId, where .. " flows by the focus head")
@@ -1184,44 +1060,29 @@ test("presets data: no bars container is laid out horizontally after Apply", fun
     assertTrue(bars > 0, "the case saw bars")
 end)
 
---- The distance between rectangles `a` and `b` (from sampleSpans): the larger of the horizontal and
---- the vertical gap between their facing edges, 0 when they overlap. Never more than the straight
---- distance, so a check against it is the stricter one.
-local function rectGap(a, b)
-    local h = math.max(0, a.left - b.right, b.left - a.right)
-    local v = math.max(0, a.bottom - b.top, b.bottom - a.top)
-    return math.max(h, v)
-end
-
--- THE FOCUS COLUMN OVER THE RIGHT STACK'S (spec section 16.3). The focus column's left edge is Player
--- debuffs', 520 in from the right edge (45 further in than section 15's 475, a move the owner can
--- see), and the right (target) column ends 520 right of center, so on a 16:9 screen the two share 80
--- across, and in Advanced (Bars) the right stack runs from its base nearly to the top edge, so their
--- heights meet wherever the focus stack sits. Recorded in docs/known-limitations.md (presets). On
--- 16:10 and the narrow ratios the right edge comes in nearer the center line and the two share more;
--- on 21:9 they share nothing.
--- An Icons row grows left from its column's right edge, so the right stack's reaches 31 further
--- left (Advanced's heights meet; Intermediate's and Healer's do not). Each entry, by look and screen
--- at 1080 tall, unlocked in test mode, is what Advanced shares, exactly, and the most any preset may;
--- a screen not named shares nothing where the heights meet.
+-- THE FOCUS COLUMN BESIDE THE TARGET COLUMN (spec section 17). The target column now sits 50 left of
+-- the focus column, so the two share nothing across (section 16 had them share 80 to 194 at 1080).
+-- One overlap is left, recorded in docs/known-limitations.md (presets): on a 4:3 or 5:4 screen 768
+-- tall, unlocked, a focus icon row's drag strip, longer than the narrowed row, overhangs it to the
+-- left into the target column. Each entry, by look and screen, unlocked in test mode, is what
+-- Advanced shares, exactly, and the most any preset may; a screen not named shares nothing where the
+-- heights meet.
 local FOCUS_OVER_RIGHT = {
-    ["bars 1920x1080"] = 80, ["icons 1920x1080"] = 111,
-    ["bars 1728x1080"] = 176, ["icons 1728x1080"] = 207,
-    ["bars 1440x1080"] = 194, ["icons 1440x1080"] = 209,
-    ["bars 1350x1080"] = 182, ["icons 1350x1080"] = 200,
+    ["icons 1024x768"] = 4, ["icons 960x768"] = 11,
 }
 
---- Preset `name` in style `look` on a W x 1080 parent, unlocked in test mode: where the focus and the
+--- Preset `name` in style `look` on a W x H parent, unlocked in test mode: where the focus and the
 --- right stacks' heights meet, they share no more across than FOCUS_OVER_RIGHT records, and Advanced
 --- shares exactly that.
-local function checkFocusOverRight(env, mocks, name, look, W)
-    local spans = sampleSpans(env, mocks, name, look, W, 1080, true)
+local function checkFocusOverRight(env, mocks, name, look, W, H)
+    local spans = sampleSpans(env, mocks, name, look, W, H, true)
     local f, r = spans.focus, spans.right
     local meet = f.bottom < r.top and r.bottom < f.top
     local across = meet and math.max(0, math.min(f.right, r.right) - math.max(f.left, r.left)) or 0
-    local key = ("%s %dx1080"):format(look, W)
+    local key = ("%s %dx%d"):format(look, W, H)
     local most, where = FOCUS_OVER_RIGHT[key] or 0, name .. "/" .. key
-    assertTrue(across <= most, ("%s: the focus column shares %d with the right one, past %d"):format(where, across, most))
+    -- red under: section 16's layout, the focus column over the target column's right end
+    assertTrue(across <= most + 0.5, ("%s: the focus column shares %d with the right one, past %d"):format(where, across, most))
     if name == "advanced" then
         assertNear(across, most, 0.5, where .. ": the recorded overlap, no more and no less")
     end
@@ -1244,69 +1105,97 @@ test("presets data: the focus stack stays clear of the far stack beyond twice th
             end
         end
     end
-    -- Where the focus and the right stacks' heights meet at 1080 tall, the two share no more across
-    -- than FOCUS_OVER_RIGHT records.
+    -- Where the focus and the right stacks' heights meet, the two share no more across than
+    -- FOCUS_OVER_RIGHT records. An environment per screen (the kit's leak gate).
     for _, scr in ipairs(SCREENS) do
-        if scr[2] == 1080 then
-            for _, name in ipairs(WITH_FOCUS) do
-                for _, look in ipairs(env.PresetData.LOOKS) do checkFocusOverRight(env, mocks, name, look, scr[1]) end
-            end
+        local e, m = freshEnv()
+        e.Helpers.SkinPicker = function() return nil end
+        for _, name in ipairs(WITH_FOCUS) do
+            for _, look in ipairs(e.PresetData.LOOKS) do checkFocusOverRight(e, m, name, look, scr[1], scr[2]) end
         end
     end
 end)
 
-test("presets data: Player debuffs' left edge lines up with Focus buffs' left edge", function()
-    local P = NS.PresetData
-    for _, scr in ipairs(SCREENS) do
-        local W, H = scr[1], scr[2]
-        for _, name in ipairs(WITH_FOCUS) do
-            for _, look in ipairs(P.LOOKS) do
-                local heads = {}
-                for _, spec in ipairs(P.Build(name, look, W, H)) do
-                    if not spec.attachTo then heads[spec.stack] = { headRect(spec, W, H) } end
-                end
-                local where = ("%s/%s at %dx%d"):format(name, look, W, H)
-                local corner, focus = heads.cornerLeft, heads.focus
-                assertTrue(corner and focus, where .. ": both columns")
-                -- red under: the focus bars in the far column, 570 right of the center line
-                assertNear(focus[1], corner[1], 0.001, where .. ": one left edge")
-                assertNear(focus[2], corner[2], 0.001, where .. ": one right edge, one width")
-                -- The column's left edge (an Icons row grows left from its right edge, so its own left
-                -- edge is its row's): red under section 15's place, 475 in from the right edge.
-                local kx = P.ScaleX(W, H)
-                local column = W + math.floor(P.STACKS.cornerLeft.x * kx + 0.5)
-                assertTrue(column < W - 475 * kx - 0.5, where .. ": left of section 15's place")
-                if look == "bars" then assertNear(corner[1], column, 0.001, where .. ": a bar fills its column") end
-            end
+--- The left edge of column `stack` on a W x H parent, as `place` rounds a head's offset.
+local function columnLeft(P, stack, W, H)
+    return W + math.floor(P.STACKS[stack].x * P.ScaleX(W, H) + 0.5)
+end
+
+--- Preset `name` in style `look` built on a W x H parent: the focus and far heads' edges are Player
+--- debuffs' column's. An Icons row grows left from its column's right edge, so its own left edge is
+--- its full row's, each icon's size rounded down: up to a pixel per icon in from the column's; the far
+--- stack's rows grow right from the left edge, so their right edge is the one that falls short.
+local function checkColumnHeads(P, name, look, W, H)
+    local heads = {}
+    for _, spec in ipairs(P.Build(name, look, W, H)) do
+        if not spec.attachTo then heads[spec.stack] = { headRect(spec, W, H) } end
+    end
+    local where, kx = ("%s/%s at %dx%d"):format(name, look, W, H), P.ScaleX(W, H)
+    local column = columnLeft(P, "cornerLeft", W, H)
+    assertTrue(heads.focus ~= nil, where .. ": a focus head")
+    -- red under: the far column 570 right of the center line
+    for _, stack in ipairs({ "focus", "far" }) do
+        local h, perIcon = heads[stack], P.STACKS[stack].width / 28
+        if h then
+            local slack = (look == "icons") and perIcon or 0.001
+            assertTrue(h[1] >= column - 0.001 and h[1] <= column + slack,
+                ("%s: %s's left edge %d, the column's %d"):format(where, stack, h[1], column))
+            local right = column + P.STACKS[stack].width * kx
+            local rowSlack = (stack == "far") and perIcon or 0
+            assertTrue(math.abs(h[2] - right) <= 1 + rowSlack,
+                ("%s: %s's right edge %d, the column's %d"):format(where, stack, h[2], right))
         end
     end
-    -- In test mode every focus bar container starts on that one edge too, Focus buffs (mine) and
-    -- Dispellable by you on focus among them, each measured by its own block, not the stack's. An
-    -- environment per screen: one that applies every preset on every screen grows by each Apply's
-    -- containers, and the last one built stays live after the file (the kit's leak gate).
+    assertTrue(column < W - 475 * kx - 0.5, where .. ": left of section 15's place")
+end
+
+-- The containers that start on Player debuffs' left edge in test mode: the focus bars and the far
+-- stack's icon rows (which grow right from the column's left edge).
+local LINED = { fdeb = true, fbuff = true, healFocus = true, dispelFocus = true, ticoD = true, ticoB = true }
+
+--- Preset `name` (Bars) applied on a W x H parent in `env`, in test mode: Player debuffs on its
+--- column, and every LINED container on Player debuffs' left edge, each by its own block.
+local function checkColumnSpans(env, mocks, name, W, H)
+    local _, each = sampleSpans(env, mocks, name, "bars", W, H)
+    local own, left = {}, nil
+    for _, e in ipairs(each) do
+        own[e.role] = e.span
+        if e.role == "pdebuffs" then left = e.span.left end
+    end
+    local where = ("%s/bars at %dx%d"):format(name, W, H)
+    assertTrue(left ~= nil, where .. ": Player debuffs shows")
+    -- red under: Player debuffs joined a few units off its column
+    assertNear(left, columnLeft(env.PresetData, "cornerLeft", W, H), 0.5, where .. ": Player debuffs on its column")
+    local seen = 0
+    for role in pairs(LINED) do
+        if own[role] then
+            seen = seen + 1
+            -- red under: a member attached a few units off its head's left edge
+            assertNear(own[role].left, left, 0.5, where .. ": " .. role .. "'s left edge is Player debuffs'")
+        end
+    end
+    assertTrue(seen > 0, where .. ": a focus container to measure")
+end
+
+test("presets data: the focus, far and Player debuffs left edges line up", function()
+    local P = NS.PresetData
+    -- The columns: the focus and far stacks hang on Player debuffs' column (spec sections 16 and 17).
+    assertEqual(P.STACKS.focus.x, P.STACKS.cornerLeft.x, "the focus column is Player debuffs'")
+    assertEqual(P.STACKS.far.x, P.STACKS.cornerLeft.x, "and so is the far column")
     for _, scr in ipairs(SCREENS) do
-        local W, H = scr[1], scr[2]
+        for _, name in ipairs(WITH_FOCUS) do
+            for _, look in ipairs(P.LOOKS) do checkColumnHeads(P, name, look, scr[1], scr[2]) end
+        end
+    end
+    -- In test mode, measured where the live placement puts each one, in Bars only: an Icons Player
+    -- debuffs joins the left end of Player buffs' row, which moves with its icon count, so it is on
+    -- the column only while that row is full (docs/known-limitations.md, presets). An environment per
+    -- screen: one that applies every preset on every screen grows by each Apply's containers, and the
+    -- last one built stays live after the file (the kit's leak gate).
+    for _, scr in ipairs(SCREENS) do
         local env, mocks = freshEnv()
         env.Helpers.SkinPicker = function() return nil end
-        for _, name in ipairs(WITH_FOCUS) do
-            local _, each = sampleSpans(env, mocks, name, "bars", W, H)
-            local own, left = {}, nil
-            for _, e in ipairs(each) do
-                own[e.role] = e.span
-                if e.role == "pdebuffs" then left = e.span.left end
-            end
-            local where = ("%s/bars at %dx%d"):format(name, W, H)
-            assertTrue(left ~= nil, where .. ": Player debuffs shows")
-            local seen = 0
-            for role in pairs(FOCUS_ROLES) do
-                if own[role] then
-                    seen = seen + 1
-                    -- red under: a member attached a few units off its head's left edge
-                    assertNear(own[role].left, left, 0.5, where .. ": " .. role .. "'s left edge is Player debuffs'")
-                end
-            end
-            assertTrue(seen > 0, where .. ": a focus container to measure")
-        end
+        for _, name in ipairs(WITH_FOCUS) do checkColumnSpans(env, mocks, name, scr[1], scr[2]) end
     end
 end)
 
@@ -1314,15 +1203,15 @@ end)
 -- anchor again"). Unlocked in test mode, as a drag happens, Snap.Nearest at C.SNAP_RADIUS, with each
 -- focus container as the dragged rect and every container of another stack as a target. The far stack
 -- is never in range ("the focus stack stays clear of the far stack"), nor is Player debuffs (all) above
--- it, and Bars on a 1080-tall screen, the owner's preview, has nothing in range. What is left follows
--- from section 16.3's shared strip, recorded in docs/known-limitations.md (presets): the target stack's
--- containers, which run beside and above the focus stack in that strip, on a 768-tall screen the
--- corner group's Weapon enchants above it, and the call-outs to its left (at 768, and in Icons on 4:3
--- and 5:4 at 1080 and 1440). A target outside OPEN fails.
+-- it. With the target column 50 left of the focus column (spec section 17), nothing is in range on a
+-- 1080 or a 1440-tall screen. What is left is on a 768-tall one, where the layout shrinks and the bars
+-- do not, recorded in docs/known-limitations.md (presets): Weapon enchants beside the focus stack's
+-- top, and, in Icons unlocked, the target stack's rows and on 5:4 a call-out, which the focus rows'
+-- drag strips reach. A target outside OPEN fails.
 local SNAP_OPEN = {
     [768] = { right = true, cornerRight = true, middle = true },
-    [1080] = { right = true, middle = true },
-    [1440] = { right = true, middle = true },
+    [1080] = {},
+    [1440] = {},
 }
 
 --- Preset `name` in style `look` on a W x H parent, unlocked in test mode: the targets of other stacks
@@ -1340,7 +1229,7 @@ local function checkFocusSnapRange(env, mocks, name, look, W, H)
                     local where = ("%s/%s at %dx%d: %s is %d from %s (%s)"):format(name, look, W, H, f.role,
                         hit.dist, e.role, e.stack)
                     assertTrue(SNAP_OPEN[H][e.stack] == true, where .. ", a target outside the recorded ones")
-                    assertTrue(not (look == "bars" and H == 1080), where .. ": Bars at 1080 has none")
+                    assertTrue(H == 768, where .. ": only a 768-tall screen has any")
                 end
             end
         end

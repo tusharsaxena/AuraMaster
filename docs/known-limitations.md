@@ -498,87 +498,69 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   windows are movable. A shared first-run queue belongs to the FTUX that replaces this picker (issue #28); joining
   the library's queue now would need a LibKa0s internal or a library change, which the presets
   design's ruling 8 argues against (presets spec section 7, Claude's call).
-- **A corner stack and a side stack under it can meet.** The presets place the corner columns
-  (Player buffs (all) with Weapon enchants under it, and Player debuffs (all)) 46 down from the top
-  edge, growing down, and since the owner's round-1 feedback the side stacks grow up from a base 740
-  down, both in a 1080-tall reference space (presets spec sections 15 and 15.1). With the corner group moved
-  in, more columns share than the mockup's did: on 16:9 and 16:10 the right stack's column sits
-  under the Player debuffs column and the far stack's under both corner columns; on 4:3 and 5:4 the
-  right stack's sits under Player debuffs and reaches 17 to 18 under Player buffs, and the far
-  stack's sits under Player buffs; on 21:9 the far stack's right edge reaches 50 units under Player
-  debuffs. At the test-mode sample count every corner
-  stack ends above the base of every side stack (`tests/test_presets_data.lua`, "presets:
-  placement"), but the two now grow toward each other and bar height is not scaled. In play a heavy
-  buff or debuff load grows a corner column down, and a full side stack grows up, so either can
-  draw over the other. A tall side stack reaches the corner group's height even in test mode:
-  Advanced (Bars)'s target stack ends 16 under the top edge at 1080 unlocked (116 locked; below),
-  above where the Player debuffs column starts, and on 16:9 its column sits under that one's left edge. The
-  placement case checks every stack's top against the screen's edge, not against the corner
-  columns. The player can move either stack, or cap a container's auras. Ruled 2026-11-14 under the
-  presets plan's ruling on the AM-PR01 review, flagged to the owner (presets spec section 4);
-  section 15 records the upward overlap for the owner's call.
-- **The focus column shares a strip with the target stack's.** Since the owner's round-2 feedback
-  the focus containers are a stack of their own, its column lined up with Player debuffs (all)'s, its
-  left edge 520 in from the right edge in a 1080-tall reference space (presets spec section 16; 475
-  before). The target stack's column ends 520 right of the screen's center line, so on a 1920 x 1080
-  screen the two share 80 across, and Advanced (Bars)'s target stack runs from its base nearly to the
-  top edge, so wherever the focus stack sits their heights meet. Section 16 asks for no shared span,
-  or the smallest, but also for a corner group the owner can see move in (next entry). On 16:10
-  and the narrow ratios the screen's right edge comes nearer the center line and they share more
-  (176 on 16:10, 182 to 194 on 5:4 and 4:3, at 1080 tall); an Icons row grows left from its column's
-  right edge, so the target stack's Icons rows reach 31 further (111 on 16:9, 200 to 209 on the
-  narrower ratios); on 21:9 they share nothing. Before AM-PR13 the focus containers sat in the far
-  stack and shared nothing with the target column, so the owner's own preview (Bars, 1920 x 1080)
-  now shows the focus stack's left 80 over the target stack's right edge. A narrower target column,
-  or one moved toward the center line, would shrink the strip; both change the owner's own layout. The focus stack's base sits 550 down, over the far stack's, so the two stay more than
-  twice the snap radius apart in test mode, locked or unlocked, on every screen tested (53 at the
-  closest, 768 tall unlocked). `tests/test_presets_data.lua` ("presets data: the focus stack stays
-  clear of the far stack beyond twice the snap radius") pins each shared span at 1080. In play a full
-  target stack can draw under the focus stack's left edge; the player can move either. The focus
-  stack also stands in Player debuffs (all)'s own column, lined up with it by design (spec section
-  16.3), so in play a heavy debuff load growing that column down meets the top of the focus stack
-  growing up, as the corner-and-side entry above describes for the side stacks. Recorded
-  2026-11-15 (AM-PR13) for the owner's call.
-- **The corner group's round-2 move widens the focus column's shared strip.** The owner asked to
-  bring the corner group "in even further", to line Player debuffs (all)'s left edge up with Focus
-  buffs (mine)'s. Presets spec section 16.3 asks for both a corner group left of section 15's place
-  (Player debuffs' left edge more than 475 in from the right edge, in a 1080-tall reference space)
-  and the smallest strip the focus column shares with the target stack's. The two pull apart: the
-  focus column hangs from the corner's edge, so every unit the corner group moves left widens that
-  strip by one. A first build took the least move (480, about 5 pixels at 1080), which in a preview
-  looked unmoved; the presets now take a move the owner can see, 520 in, 45 further than section 15
-  (Player buffs keeps its width and its 5 gap, so its left edge is 300 in), at a cost of 40 more
-  shared strip on 16:9 (80 rather than 40). `tests/test_presets_data.lua` ("presets data: the corner
-  group sits left of and below its old place") pins the 520. Recorded 2026-11-15 (AM-PR13 review)
-  for the owner's call: keep 520, or name another distance.
+- **Player debuffs (all)'s column is the focus and far stacks' column.** Since the owner's round-3
+  feedback the presets hang a right-hand cluster from the screen's right edge, in a 1080-tall
+  reference space (presets spec section 17): Player buffs (all) 10 in from the edge with Weapon
+  enchants under it, Player debuffs (all) joined to its left side top to top, the focus stack and,
+  under it, the far stack on Player debuffs' left edge, and the target stack 50 left of that column,
+  every bar container 240 wide. Player debuffs grows down from 46 down and the focus stack grows up
+  from its base 550 down, in one column. At the test-mode sample count Player debuffs ends above the
+  focus stack's top on every screen tested (28 apart at the closest, 768 tall unlocked, Bars), and
+  the far stack stays more than twice the snap radius under the focus stack (49 at the closest, 768
+  tall unlocked), but in play a heavy debuff load grows Player debuffs down into the focus stack, and
+  a full focus stack grows up into it. Every corner stack still ends above every side stack's base
+  (`tests/test_presets_data.lua`, "presets: placement"). The target column no longer runs under a
+  corner column on any ratio. The player can move any stack, or cap a container's auras. Recorded
+  2026-11-15 (AM-PR16) for the owner's call.
+- **The target column meets the call-out block on 16:10 and narrower screens.** The call-outs keep
+  the screen's center (presets spec section 17) and the target column hangs 785 in from the right
+  edge, so the narrower the screen, the further it reaches into the block. The call-out column was
+  narrowed first, from 480 to 400 in the reference space, which section 17 allows down to the widest
+  test-mode line at the owner's 36 (C.PREVIEW_AURAS's longest name). Measured unlocked in test mode,
+  where the heights meet, over the stored line width, the overlap across is: 1920 x 1080, 25 in Bars
+  and 31 in Icons; 1728 x 1080, 121 and 127; 1440 x 1080, 172 and 186; 1350 x 1080, 162 and 179;
+  1365 x 768, 17 and 48; 1228 x 768, 86 and 117; 1024 x 768, 123 and 159; 960 x 768, 115 and 156;
+  2560 x 1440, 34 and 10; 2304 x 1440, 162 and 138; 1920 x 1440, 230 and 216; 1800 x 1440, 215 and
+  209. 21:9 has none. Healer's call-out overlaps as far across as Advanced's three. In game each line
+  sizes to fit its widest test-mode line (Size to fit, the template's), so the block is narrower than
+  the stored width and the overlap smaller: at 1920 x 1080 at the owner's size it may clear the
+  target column. On 4:3 and 5:4 the layout narrows across so the cluster keeps right of the center
+  line, 10 in from it, but half the block still lies over the target column. A full target stack in
+  play draws over the lowest call-out lines there. `tests/test_presets_cluster.lua` ("presets data:
+  the call-out block's overlap with the target column is the recorded one") pins each figure. The
+  player can move either. Recorded 2026-11-15 (AM-PR16) for the owner's call.
+- **In Icons, Player debuffs (all) moves with Player buffs (all)'s row.** Section 17 joins Player
+  debuffs' top right to Player buffs' top left in Icons too. A bar column is one bar wide whatever
+  its count, so in Bars Player debuffs stays on its column, the focus and far stacks' left edge. An
+  Icons row grows left from the right edge and is as wide as its icon count, so Player debuffs'
+  row sits on that column only while Player buffs' row is full (8 icons at 1080 tall); with fewer
+  it starts further right, 90 further with the 5 test-mode buffs at 1920 x 1080, and with none it
+  sits next to the screen edge. Unlocked, Player buffs' drag strip, longer than its row, pushes it
+  further left. `tests/test_presets_cluster.lua` ("presets data: Player debuffs attaches by its top
+  right to Player buffs' top left") checks the join in both looks, and the edges line up in Bars
+  ("presets data: the focus, far and Player debuffs left edges line up"). A Player buffs row growing
+  right, or Player debuffs left on the screen in Icons, would hold the column, each against the
+  owner's words. Recorded 2026-11-15 (AM-PR16) for the owner's call.
 - **Other containers sit within snap range of the focus stack while unlocked.** The focus stack
-  stays more than twice the snap radius (24) from the far stack on every screen tested, but with the
-  containers unlocked in test mode, as a drag happens, other targets sit within one snap radius of a
-  focus container, so a drop that barely moves can attach it to one of them:
-  - 1080 tall: none in Bars. In Icons, Advanced's Focus debuffs (mine) and Focus buffs (mine) sit 2
-    to 24 from Target cooldowns, players, Target cooldowns, NPCs, Target crowd control and Target
-    special (mine) (the target stack, in the shared strip), on every ratio but 21:9, and on 4:3 and
-    5:4 the focus rows of Advanced and Healer sit 1 to 15 from the call-outs (Offensive cooldowns,
-    Raid cooldowns).
-  - 1440 tall: in Bars the focus head sits 8 above the target stack's second container (Target
-    buffs (mine) in Advanced, Target cooldowns in Intermediate, Dispellable by you on target in
-    Healer) on every ratio but 21:9. In Icons, Advanced's focus rows are 0 to 20 from the target
-    cooldown and special rows, and on 5:4 Advanced's and Healer's 21 from the call-outs.
-  - 768 tall: in Bars Focus buffs (mine) and Dispellable by you on focus are 3 to 4 from Weapon
-    enchants above them (every ratio), and, on every ratio but 21:9, Focus debuffs (mine) 3 to 7 from
-    Target debuffs (mine) and Target crowd control and Focus buffs (mine) 21 from Target cooldowns,
-    players, and on 4:3 both 24 from Offensive cooldowns (Healer's Your heals on focus from Raid
-    cooldowns). In Icons the focus rows reach the call-outs (Offensive cooldowns or Raid cooldowns, 9
-    to 15) on 4:3 and 5:4, and the target stack's rows (0 to 23).
+  stays more than twice the snap radius (24) from the far stack on every screen tested, and since
+  the target column moved 50 left of the focus column (presets spec section 17) nothing else is in
+  snap range of a focus container on a 1080 or a 1440-tall screen, locked or unlocked. On a 768-tall
+  screen (UI scale off) the layout shrinks and the bars do not, so a drop that barely moves can
+  attach a focus container to:
+  - Weapon enchants, 3 from Focus buffs (mine) (Advanced) and Dispellable by you on focus (Healer)
+    in Bars, beside the focus stack's top, on every ratio, locked or unlocked;
+  - in Icons unlocked, Advanced's target rows, which the focus rows' drag strips reach: Target crowd
+    control and Target cooldowns, players 4 to 11 from Focus debuffs (mine) on every ratio, and on
+    4:3 and 5:4 Target cooldowns, NPCs and Target special (mine) 7 to 23 from the two focus rows;
+  - on 5:4, Offensive cooldowns, 19 from Focus debuffs (mine), in Icons unlocked.
 
-  The target stack's pairs follow from the shared strip above; no base clears them, since Advanced
-  (Bars)'s target stack runs nearly to the top edge. Moving the base is a trade: further down brings
-  the far stack within twice the snap radius at 768, which section 16.2 rules out; further up brings
-  the 1440 target pairs nearer (14 at 545). `tests/test_presets_data.lua` ("presets data: the focus
-  stack's snap range holds only the recorded targets") fails on a target outside these stacks, or on
-  any in Bars at 1080. A container that snaps on goes back to the screen when dragged away from
-  every container, or with Attach to set back to Screen. Recorded
-  2026-11-15 (AM-PR13 review) for the owner's call.
+  On 4:3 and 5:4 at 768 tall, unlocked, a focus row's strip also overhangs the target column, 4
+  across on 4:3 and 11 on 5:4. `tests/test_presets_data.lua` ("presets data: the focus stack's snap
+  range holds only the recorded targets", and "presets data: the focus stack stays clear of the far
+  stack beyond twice the snap radius" for the overhang) fails on a target outside these stacks, or on
+  any at 1080 or 1440. A container that snaps on goes back to the screen when dragged away from every
+  container, or with Attach to set back to Screen. Recorded 2026-11-15 (AM-PR13 review), re-measured
+  on AM-PR16, for the owner's call.
 - **Advanced (Bars)'s target stack runs off the top of a 768-tall screen in test mode.** Since the
   owner's ruling on the round-1 conflicts the side stacks grow up from a base 740 down in a 1080-tall
   reference space, 340 above the bottom edge (presets spec section 15.1; 600, then 640, before it).
@@ -591,7 +573,12 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   (`tests/test_presets_data.lua`, "presets: placement", which names this one as its only exception
   and caps how far over it may run each way at those measured values, so it cannot grow unnoticed).
   A lower base still would meet more unit frames and action bars (below); splitting the stack
-  changes the owner's own layout. Recorded 2026-11-15, re-measured on AM-PR12, for the owner's call.
+  changes the owner's own layout. Section 17 asks its top to line up with Player debuffs (all)'s as
+  closely as its height allows, its base held on the far stack's bottom line: at 1080 it ends 70
+  under Player debuffs' top locked and 10 over it unlocked (its seven strips against Player debuffs'
+  one), and at 768 121 over it locked and 201 unlocked; every other target stack ends under it
+  (`tests/test_presets_cluster.lua`, "presets data: the target stack's base is on the far stack's
+  bottom line and its test-mode top near Player debuffs' top"). Recorded 2026-11-15, re-measured on AM-PR12 and AM-PR16, for the owner's call.
 - **Tall unit frames or action bars can meet the side stacks' base.** The owner's ruling put the
   base 340 above the bottom edge at 1080 tall (presets spec section 15.1), lower than round 1's 440,
   to give the tall upward stacks room under the top edge. A setup whose player, target or focus frame

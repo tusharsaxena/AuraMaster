@@ -2592,7 +2592,7 @@ Total.
 - presets: placement at 768/1080/1440 x 16:9, 16:10, 21:9, 4:3, 5:4
 - presets data: side stacks sit on the lower base
 - presets data: side stacks grow up from their base
-- presets data: the corner group sits left of and below its old place
+- presets data: the corner group hangs from the right edge, Player buffs 10 in
 - presets data: the call-outs are centered and colored like the owner's
 - presets data: the call-out block takes the largest font that fits, centered as far as it can
 - presets data: the call-out rect is what the applied containers fill in test mode, unlocked
@@ -2610,8 +2610,16 @@ Total.
 - presets data: focus roles form their own screen-placed stack
 - presets data: no bars container is laid out horizontally after Apply
 - presets data: the focus stack stays clear of the far stack beyond twice the snap radius
-- presets data: Player debuffs' left edge lines up with Focus buffs' left edge
+- presets data: the focus, far and Player debuffs left edges line up
 - presets data: the focus stack's snap range holds only the recorded targets
+
+### test_presets_cluster.lua (5)
+
+- presets data: Player debuffs attaches by its top right to Player buffs' top left
+- presets data: the target column sits 50 left of the focus column
+- presets data: the target stack's base is on the far stack's bottom line and its test-mode top near Player debuffs' top
+- presets data: every bar container is as wide as Player cooldowns
+- presets data: the call-out block's overlap with the target column is the recorded one
 
 ### test_presets_apply.lua (11)
 
@@ -3024,6 +3032,7 @@ Total.
 | test_poolsetup.lua | 4 |
 | test_defaults.lua | 31 |
 | test_presets_data.lua | 26 |
+| test_presets_cluster.lua | 5 |
 | test_presets_apply.lua | 11 |
 | test_presets_preview.lua | 20 |
 | test_presets_seed.lua | 7 |
@@ -3045,4 +3054,4 @@ Total.
 | test_skin_switch.lua | 34 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2499** |
+| **Total** | **2504** |

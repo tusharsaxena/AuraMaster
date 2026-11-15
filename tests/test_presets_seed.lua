@@ -50,7 +50,11 @@ test("seed: new profile gets simple", function()
     assertTrue(NS.db.profile.seeded)
     local pbuffs, wpn, pdebuffs = list[1], list[2], list[3]
     assertEqual(pbuffs.attach.mode, "screen")
-    assertEqual(pdebuffs.attach.mode, "screen")
+    -- Player debuffs (all) joins Player buffs (all)'s left side (presets spec section 17).
+    assertEqual(pdebuffs.attach.mode, "container")
+    assertEqual(pdebuffs.attach.container, pbuffs.id, "Player debuffs joins the seeded Player buffs")
+    assertEqual(pdebuffs.attach.childPoint, "TOPRIGHT")
+    assertEqual(pdebuffs.attach.relPoint, "TOPLEFT")
     -- red under: a member left on the builder's placeholder id 0
     assertEqual(wpn.attach.mode, "container")
     assertEqual(wpn.attach.container, pbuffs.id, "Weapon enchants hangs under the seeded Player buffs")

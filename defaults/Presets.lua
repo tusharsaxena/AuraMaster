@@ -8,7 +8,8 @@ local _, NS = ...
 -- one container's name, unit, aura type, style, enabled state, the categories it hides and the
 -- filter and layout fields that differ from the shared base. A stack (STACKS) is a column on the
 -- screen: its head is placed on UIParent, and every other container in it attaches to the one created
--- just before it, so a filling container pushes the rest of its stack down.
+-- just before it, so a filling container pushes the rest of its stack along. A `beside` stack's head
+-- joins another stack's head instead (Player debuffs (all) beside Player buffs (all), spec section 17).
 --
 -- WHAT IT IS NOT. No appearance media and no spell ids (spec section 3): bars, icons, text and label
 -- settings come from NS.CONTAINER_TEMPLATE and the skin, except the column width (a bar's width, an
@@ -51,21 +52,23 @@ function P.Scale(parentH)
     return parentH / P.REF_H
 end
 
--- How far the TOP-anchored columns reach either side of the center line, in reference units, and the
--- room each kept clear of the screen edge. Set from STACKS below.
-local TOP_REACH, EDGE = 0, 10
+-- How far the layout reaches across from the center line, in reference units: the TOP-anchored
+-- columns either side of it, and the right-hand cluster (every TOPRIGHT column) in from the right
+-- edge; and the room kept clear of the screen edge and of the center line. Set from STACKS below.
+local TOP_REACH, CLUSTER_REACH, EDGE = 0, 0, 10
 
 --- The horizontal scale on a `parentW` x `parentH` parent: Scale(parentH), shrunk on a screen too
---- narrow for the TOP columns (below about 1.48:1, 4:3 and 5:4) until the outermost ends EDGE units
---- in from the edge, so every head stays on the screen. Unchanged on 16:10 and wider, and when the
---- width cannot be read.
+--- narrow for the layout (below about 1.6:1, 4:3 and 5:4) until the outermost TOP column ends EDGE
+--- units in from the edge and the right-hand cluster's left edge, the target column's, stays EDGE
+--- units right of the center line (spec section 17), so every head stays on the screen and the
+--- cluster on its own half. Unchanged on 16:10 and wider, and when the width cannot be read.
 --- @param parentW number|nil
 --- @param parentH number|nil
 --- @return number
 function P.ScaleX(parentW, parentH)
     local k = P.Scale(parentH)
     if type(parentW) ~= "number" or parentW ~= parentW or parentW <= 0 then return k end
-    return math.min(k, parentW / (2 * (TOP_REACH + EDGE)))
+    return math.min(k, parentW / (2 * (math.max(TOP_REACH, CLUSTER_REACH) + EDGE)))
 end
 
 -- The two custom categories Advanced creates (spec section 3): empty, for the player to fill. The
@@ -91,16 +94,18 @@ function P.CustomKeyOf(def)
     return nil
 end
 
--- The columns, in reference units (spec sections 4 and 15, the mockup's layout as the owner moved it).
--- `anchor` is the UIParent point the head hangs from; `x` is the column's LEFT edge from that point
--- (from the right edge for TOPRIGHT, from the center line for TOP); `iconsGrowH` is the way an Icons
--- row grows, away from the screen edge the column sits nearest (spec section 3.2): the columns right
--- of center grow left, the rest right (the middle one straddles the center line and grows right).
--- A stack grows down from a head placed by its top at `y`, but for an `up` stack (the side stacks,
--- spec section 15): that grows up from a head placed by its BOTTOM at `y`, the column's base, so the
--- tier's first role sits nearest the unit frames, as in the owner's own profile. The `center` stack
--- (the call-outs) hangs by its top from the center line and has no stored `y`: calloutLayout below
--- centers its test-mode block on the screen's middle, as far as the preset picker above it allows.
+-- The columns, in reference units (spec sections 4, 15, 16 and 17, the mockup's layout as the owner
+-- moved it). `anchor` is the UIParent point the head hangs from; `x` is the column's LEFT edge from
+-- that point (from the right edge for TOPRIGHT, from the center line for TOP); `iconsGrowH` is the way
+-- an Icons row grows, away from the screen edge the column sits nearest (spec section 3.2): the
+-- columns right of center grow left, the rest right (the middle one straddles the center line and
+-- grows right). A stack grows down from a head placed by its top at `y`, but for an `up` stack (the
+-- side stacks, spec section 15): that grows up from a head placed by its BOTTOM at `y`, the column's
+-- base, so the tier's first role sits nearest the unit frames, as in the owner's own profile. The
+-- `center` stack (the call-outs) hangs by its top from the center line and has no stored `y`:
+-- calloutLayout below centers its test-mode block on the screen's middle, as far as the preset
+-- picker above it allows. A `beside` stack's head is not placed: it joins the head of the stack it
+-- names by its TOPRIGHT to that head's TOPLEFT (besideAttach), so it takes that head's flow.
 -- THE BASE, 740 down (340 above the bottom at 1080 tall), the owner's ruling (spec section 15.1)
 -- after 600 and then 640 left Advanced's Bars target stack, six shown containers about 620 tall with
 -- their test-mode samples, too little room under the top edge. At 740 it fits a 1080-tall screen
@@ -110,31 +115,42 @@ local SIDE_BASE = -740
 -- THE FOCUS STACK (spec section 16): the focus roles in a stack of their own, placed on the screen.
 -- In the far stack they followed its head, Target debuffs (all), an icon row, and a container
 -- attached to another flows by its chain's head (Anchors.EffectiveLayout: axis and both growths), so
--- Advanced's focus bars were laid out across. Its column is Player debuffs' (cornerLeft's), from the
--- same right-edge point, so the two line up on every screen, and its base sits FOCUS_BASE down, high
--- enough over the far stack (which keeps its base) that the two stay more than twice C.SNAP_RADIUS
--- apart in test mode, locked or unlocked (53 at the closest, on a 768-tall screen unlocked), so a
--- drag near the far stack does not snap the focus stack back onto it. Other targets do sit within
--- C.SNAP_RADIUS of it while unlocked: the target stack's containers, beside it in the strip the two
--- columns share, on a 768-tall screen Weapon enchants above it (3), and in Icons on 4:3 and 5:4 the
--- call-outs; Bars at 1080 has none. A base further down brings the far stack into range at 768, one
--- further up the target stack at 1440 (docs/known-limitations.md, presets). The corner group moved in
--- with it, a move the owner can see ("bring them in even further"): Player debuffs' left edge 520 in
--- from the right edge, 45 further in than section 15's 475, Player buffs keeping its width and its 5
--- gap. On 16:9 the column then shares 80 with the right stack's, the cost of that move (the same file).
+-- Advanced's focus bars were laid out across. Its base sits FOCUS_BASE down, high enough over the far
+-- stack (which keeps its base) that the two stay more than twice C.SNAP_RADIUS apart in test mode,
+-- locked or unlocked, so a drag near the far stack does not snap the focus stack back onto it.
 local FOCUS_BASE = -550
+-- THE RIGHT-HAND CLUSTER (spec section 17, the owner's "after" layout). Every column that holds bars
+-- is COL_W wide, Player cooldowns' (section 17.2), so the edges below line up. From the right edge
+-- in: Player buffs (all) with Weapon enchants under it, its right edge EDGE_IN in; Player debuffs
+-- (all) joined to its left side by its top right, CORNER_GAP between; the focus stack and, under it,
+-- the far stack, on Player debuffs' left edge; and the target stack TARGET_GAP left of that column.
+-- All of it hangs from the right edge, so the gaps hold on every screen. EDGE_IN is the least
+-- section 17 allows, which keeps the cluster as far from the call-outs as it can be: at 1920 wide its
+-- left edge is 1135 across, 175 right of the center line; on 16:10 and narrower the target column
+-- still meets the call-out block (docs/known-limitations.md, presets).
+local COL_W, EDGE_IN, CORNER_GAP, TARGET_GAP = 240, 10, 5, 50
+local CORNER_Y = -46
+local CORNER_RIGHT_X = -(EDGE_IN + COL_W)
+local FOCUS_X = CORNER_RIGHT_X - CORNER_GAP - COL_W
 P.STACKS = {
-    cornerRight = { anchor = "TOPRIGHT", x = -300, y = -46,  width = 175, iconsGrowH = "left" },
-    cornerLeft  = { anchor = "TOPRIGHT", x = -520, y = -46,  width = 215, iconsGrowH = "left" },
-    middle      = { anchor = "TOP",      x = -240,           width = 480, iconsGrowH = "right", center = true },
-    left        = { anchor = "TOP",      x = -520, y = SIDE_BASE, width = 240, iconsGrowH = "right", up = true },
-    right       = { anchor = "TOP",      x = 280,  y = SIDE_BASE, width = 240, iconsGrowH = "left", up = true },
-    far         = { anchor = "TOP",      x = 570,  y = SIDE_BASE, width = 220, iconsGrowH = "left", up = true },
+    cornerRight = { anchor = "TOPRIGHT", x = CORNER_RIGHT_X, y = CORNER_Y, width = COL_W, iconsGrowH = "left" },
+    cornerLeft  = { anchor = "TOPRIGHT", x = FOCUS_X, y = CORNER_Y, width = COL_W, iconsGrowH = "left",
+        beside = "cornerRight" },
+    focus       = { anchor = "TOPRIGHT", x = FOCUS_X, y = FOCUS_BASE, width = COL_W, iconsGrowH = "left", up = true },
+    far         = { anchor = "TOPRIGHT", x = FOCUS_X, y = SIDE_BASE, width = COL_W, iconsGrowH = "left", up = true },
+    right       = { anchor = "TOPRIGHT", x = FOCUS_X - TARGET_GAP - COL_W, y = SIDE_BASE, width = COL_W,
+        iconsGrowH = "left", up = true },
+    -- THE CALL-OUT COLUMN, 400 wide (480 before section 17), narrowed so the target column meets it
+    -- less: its line sizes to fit its widest test-mode line (Size to fit, the template's), which is
+    -- the stored width only where a line cannot be measured, and 400 stays wider than that line at
+    -- the owner's 36 (C.PREVIEW_AURAS's longest name, "Power Word: Fortitude"), so narrowing it never
+    -- cuts a line. Section 17 allows no narrower.
+    middle      = { anchor = "TOP",      x = -200, width = 400, iconsGrowH = "right", center = true },
+    left        = { anchor = "TOP",      x = -520, y = SIDE_BASE, width = COL_W, iconsGrowH = "right", up = true },
 }
-P.STACKS.focus = { anchor = "TOPRIGHT", x = P.STACKS.cornerLeft.x, y = FOCUS_BASE, width = P.STACKS.cornerLeft.width,
-    iconsGrowH = "left", up = true }
 for _, stack in pairs(P.STACKS) do
     if stack.anchor == "TOP" then TOP_REACH = math.max(TOP_REACH, -stack.x, stack.x + stack.width) end
+    if stack.anchor == "TOPRIGHT" then CLUSTER_REACH = math.max(CLUSTER_REACH, -stack.x) end
 end
 
 -- The gap a stack member leaves from the container before it, in reference units, and the icon a
@@ -543,6 +559,27 @@ local function place(o, stack, kx, k, top)
     }
 end
 
+--- A `beside` stack's head's attachment to the head of the stack it names (spec section 17): its TOP
+--- RIGHT to that head's TOP LEFT, two explicit points (the panel's "Its Top right joins the Top left"),
+--- so it takes that head's flow (Anchors.EffectiveLayout) and sits on its left. The join is one of the
+--- nine sides under that flow (behind-start for a bars column, ahead-start for a row growing left), so
+--- its seam already leaves the container's own gap across (Anchors.SeamOffset: its line spacing
+--- between columns, its spacing along a row); the nudge makes up the rest of `gap`, the pixels between
+--- the two columns as they are rounded. `container` is the writer's to fill with the new id.
+local function besideAttach(o, gap)
+    local lay = o.layout
+    local seam = (lay.axis == "horizontal") and lay.spacing or lay.lineSpacing
+    return { mode = "container", container = 0, frame = "", childPoint = "TOPRIGHT", relPoint = "TOPLEFT",
+        x = -math.max(0, gap - seam), y = 0 }
+end
+
+--- The pixels between a `beside` stack's column and the column of the stack it names, each edge
+--- rounded as `place` rounds a head's offset.
+local function besideGap(stack, kx)
+    local to = P.STACKS[stack.beside]
+    return round(to.x * kx) - round((stack.x + stack.width) * kx)
+end
+
 --- A stack member's attachment to the container before it. Its join points are left Automatic
 --- (modules/Anchors_Attach.lua), so they follow the stack's growth: below the parent growing down,
 --- above it growing up (bottom-left to top-left, bottom-right to top-right for a row growing left),
@@ -662,7 +699,7 @@ function P.Build(name, look, parentW, parentH, picked)
     local tier = TIERS[name]
     if not (tier and IS_LOOK[look]) then return {} end
     local k, kx, withCustom = P.Scale(parentH), P.ScaleX(parentW, parentH), CREATES_CUSTOM[name] == true
-    local specs, last, callouts = {}, {}, {}
+    local specs, last, first, callouts = {}, {}, {}, {}
     for i, entry in ipairs(tier) do
         local stackKey, roleKey = entry[1], entry[2]
         local stack = P.STACKS[stackKey]
@@ -674,9 +711,13 @@ function P.Build(name, look, parentW, parentH, picked)
         if last[stackKey] then
             spec.attachTo = last[stackKey]
             o.attach = memberAttach(k, stack.up)
+        elseif stack.beside and first[stack.beside] then
+            spec.attachTo = first[stack.beside]
+            o.attach = besideAttach(o, besideGap(stack, kx))
         else
             place(o, stack, kx, k, 0)
         end
+        first[stackKey] = first[stackKey] or i
         if stack.center then callouts[#callouts + 1] = spec end
         if withCustom then spec.customKeys = copy(CUSTOM_ORDER) end
         last[stackKey] = i

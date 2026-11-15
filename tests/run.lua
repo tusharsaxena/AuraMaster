@@ -206,6 +206,7 @@ Kit.run{
         "test_poolsetup",
         "test_defaults",
         "test_presets_data",
+        "test_presets_cluster",
         "test_presets_apply",
         "test_presets_preview",
         "test_presets_seed",

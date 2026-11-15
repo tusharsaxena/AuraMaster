@@ -221,8 +221,8 @@ Each task keeps the Global Constraints, the gate and the commit rules above.
 ### Task AM-PR16: The right-hand cluster lined up, Player debuffs attached to Player buffs, equal bar widths
 
 **Files:** `defaults/Presets.lua`, `tests/test_presets_data.lua` and any preset suite whose expectations move, docs/known-limitations.md.
-- [ ] Failing tests first: `presets data: Player debuffs attaches by its top right to Player buffs' top left` (Bars and Icons, every tier, checked through Anchors.AttachPoints after Apply); `presets data: the focus, far and Player debuffs left edges line up`; `presets data: the target column sits 50 left of the focus column`; `presets data: the target stack's base is on the far stack's bottom line and its test-mode top near Player debuffs' top`; `presets data: every bar container is as wide as Player cooldowns`; the placement case at all 15 screens updated (everything on screen, Player buffs' right edge at least 10 in, the snap clearances); the call-out overlap measured and recorded.
-- [ ] Implement per §17.1–2, gate green, commit `AM-PR16: The right-hand cluster lined up, Player debuffs attached to Player buffs, equal bar widths`.
+- [x] Failing tests first: `presets data: Player debuffs attaches by its top right to Player buffs' top left` (Bars and Icons, every tier, checked through Anchors.AttachPoints after Apply); `presets data: the focus, far and Player debuffs left edges line up`; `presets data: the target column sits 50 left of the focus column`; `presets data: the target stack's base is on the far stack's bottom line and its test-mode top near Player debuffs' top`; `presets data: every bar container is as wide as Player cooldowns`; the placement case at all 15 screens updated (everything on screen, Player buffs' right edge at least 10 in, the snap clearances); the call-out overlap measured and recorded.
+- [x] Implement per §17.1–2, gate green, commit `AM-PR16: The right-hand cluster lined up, Player debuffs attached to Player buffs, equal bar widths`.
 
 ### Task AM-PR17: Bar colors and backgrounds, numbered names, the unlock hint
 
