@@ -775,7 +775,7 @@ function P.Build(name, look, parentW, parentH, picked)
         local stackKey, roleKey = entry[1], entry[2]
         local stack = cols[stackKey]
         local o = overridesFor(CONTAINERS[roleKey], withCustom, picked)
-        o.name = ("[%d] %s"):format(i, o.name)   -- the owner's numbering, not localized (spec 17.4)
+        o.name = ("[%02d] %s"):format(i, o.name) -- the owner's numbering, two digits so a name sort keeps it (not localized, spec 17.4)
         if look == "icons" then toIcons(o, stack) end
         growthIn(o, stack)
         sizeTo(o, stack, kx)

@@ -8,7 +8,7 @@ local freshEnv = dofile("tests/fresh_env.lua")
 local T = _G.AM_TEST
 local test, assertEqual, assertTrue, assertNil = T.test, T.assertEqual, T.assertTrue, T.assertNil
 
-local SIMPLE_NAMES = { "[1] Player buffs (all)", "[2] Weapon enchants", "[3] Player debuffs (all)" }
+local SIMPLE_NAMES = { "[01] Player buffs (all)", "[02] Weapon enchants", "[03] Player debuffs (all)" }
 
 --- A fresh environment with the first-run skin picker kept out of it: a profile event shows it, and
 --- a picker over a hidden HUD turns test mode on (tests/test_skin_picker.lua owns that).
@@ -112,12 +112,12 @@ end)
 test("apply: add mode chains to new ids", function()
     local NS = fresh()
     local CM = NS.ContainerManager
-    local seeded = assert(CM.Create({ name = "[1] Player buffs (all)" }))
+    local seeded = assert(CM.Create({ name = "[01] Player buffs (all)" }))
     local kept = #NS.Database.GetContainers()
     assertTrue(NS.Presets.Apply("simple", "bars", "add"))
     assertEqual(#NS.Database.GetContainers(), kept + 3, "the player's containers stay")
-    assertEqual(NS.Database.FindContainer(seeded).name, "[1] Player buffs (all)", "the player's keeps its name")
-    local pbuffs, wpn = byName(NS, "[1] Player buffs (all) (2)"), byName(NS, "[2] Weapon enchants")
+    assertEqual(NS.Database.FindContainer(seeded).name, "[01] Player buffs (all)", "the player's keeps its name")
+    local pbuffs, wpn = byName(NS, "[01] Player buffs (all) (2)"), byName(NS, "[02] Weapon enchants")
     assertTrue(pbuffs ~= nil, "the new one is suffixed")
     assertTrue(wpn ~= nil)
     -- red under: chaining members by the builder's index, or by name, instead of the id Create returned
@@ -136,10 +136,10 @@ test("apply: advanced creates two categories", function()
     assertEqual(cats[1].auraType, "HELPFUL")
     assertEqual(cats[2].name, "Special target debuffs")
     assertEqual(cats[2].auraType, "HARMFUL")
-    local pspec, tspec = byName(NS, "[9] Player special (mine)"), byName(NS, "[16] Target special (mine)")
+    local pspec, tspec = byName(NS, "[09] Player special (mine)"), byName(NS, "[16] Target special (mine)")
     assertEqual(pspec.filter.categories[cats[1].key], "show")
     assertEqual(tspec.filter.categories[cats[2].key], "show")
-    assertEqual(byName(NS, "[2] Weapon enchants").filter.categories[cats[1].key], "hide")
+    assertEqual(byName(NS, "[02] Weapon enchants").filter.categories[cats[1].key], "hide")
     -- red under: the builder's placeholder keys stored instead of the categories' own
     for _, c in ipairs(NS.Database.GetContainers()) do
         assertNil(c.filter.categories.SPECIAL_PLAYER, c.name)
@@ -162,7 +162,7 @@ test("apply: advanced re-apply reuses categories", function()
     assertEqual(again[1].key, first[1].key)
     assertEqual(again[2].key, first[2].key)
     assertEqual(serialize(p.categorySpells), spells, "the spell lists the player filled stay")
-    assertEqual(byName(NS, "[9] Player special (mine)").filter.categories[first[1].key], "show")
+    assertEqual(byName(NS, "[09] Player special (mine)").filter.categories[first[1].key], "show")
     assertEqual(byName(NS, "[16] Target special (mine)").filter.categories[first[2].key], "show")
     assertTrue(NS.Presets.Apply("advanced", "bars", "add"))
     assertEqual(#userCategories(NS), 2, "adding over it reuses them too")
@@ -175,11 +175,11 @@ test("apply: advanced hides a second category of the same name where it hides th
     local b = assert(Cat.CreateUserCategory("Special player buffs", "HELPFUL"))
     assertTrue(NS.Presets.Apply("advanced", "bars", "replace"))
     assertEqual(#userCategories(NS), 3, "the first match is reused; a target one is created")
-    local wpn = byName(NS, "[2] Weapon enchants").filter.categories
+    local wpn = byName(NS, "[02] Weapon enchants").filter.categories
     assertEqual(wpn[a], "hide")
     -- red under: hideLive exempting every name match, so the one not reused falls back to Show
     assertEqual(wpn[b], "hide", "the category not reused is hidden like any other custom one")
-    assertEqual(byName(NS, "[9] Player special (mine)").filter.categories[a], "show")
+    assertEqual(byName(NS, "[09] Player special (mine)").filter.categories[a], "show")
 end)
 
 test("apply: ResolveCustom reuses only a category of the same aura type, by name in any case", function()

@@ -627,7 +627,7 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   container's name starts with its number in the owner's order, `[n] ` (presets spec section 17.4),
   counted within the preset being written. Add places a preset's containers next to the player's own
   and keeps that numbering, so a profile holding Simple with Simple added has two of each number, the
-  second carrying the " (2)" suffix ("[1] Player buffs (all)" and "[1] Player buffs (all) (2)"), and
+  second carrying the " (2)" suffix ("[01] Player buffs (all)" and "[01] Player buffs (all) (2)"), and
   a container the player made or renamed carries no number at all. Nothing renumbers a profile's
   containers after a delete, a rename or an Add: the numbers are part of the name, which the player
   can edit, and `containerOrder` keeps the creation order (`tests/test_presets_data.lua`, "presets

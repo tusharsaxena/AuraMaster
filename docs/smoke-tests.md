@@ -70,9 +70,9 @@ check's number is not reused. Checks with no recorded pass, and checks new or co
 the world loads with no Lua error. Result: pass (owner-marked 2026-10-10)
 
 **INSTALL-2. Starter containers.** On that fresh install, with no setup → the Simple preset's three
-containers appear as bars (schema v19): *[1] Player buffs (all)* near the top-right corner (how far
-in: PRESETS-38), *[2] Weapon
-enchants* attached under it, and *[3] Player debuffs (all)* joined to its left side; and the first-run
+containers appear as bars (schema v19): *[01] Player buffs (all)* near the top-right corner (how far
+in: PRESETS-38), *[02] Weapon
+enchants* attached under it, and *[03] Player debuffs (all)* joined to its left side; and the first-run
 preset picker shows (PRESETS-2). Your current buffs show in Player buffs (all), every one but your
 weapon enchants, which show in Weapon enchants; take a debuff (a fall, or a mob's) → it appears in
 Player debuffs (all). Before v19 this check named four starters; it was re-opened for the Simple
@@ -2810,8 +2810,8 @@ where only the place matters, the checks name a container without it.
 
 **PRESETS-1. A brand-new profile starts from Simple, at the real screen size. Client: Retail, then
 WoW Forever.** Profiles → type a new profile name → the three Simple containers appear, as bars:
-**[1] Player buffs (all)** near the top-right corner, its right edge about 10 in from the screen's right edge
-on 16:9 and narrower, further in on a wider screen (how far: PRESETS-31 and PRESETS-38), **[2] Weapon enchants** attached under it, and **[3] Player debuffs (all)**
+**[01] Player buffs (all)** near the top-right corner, its right edge about 10 in from the screen's right edge
+on 16:9 and narrower, further in on a wider screen (how far: PRESETS-31 and PRESETS-38), **[02] Weapon enchants** attached under it, and **[03] Player debuffs (all)**
 joined to its left side (PRESETS-32), the three bars the same width (PRESETS-33). No
 container sits over the action bars or the unit frames. `/am test` → each fills with sample auras;
 the corner columns end well above the screen's middle. `/am test` off. Set **UI scale** off, then on
@@ -2819,7 +2819,7 @@ at its smallest (Options → Graphics → UI Scale), each time making another ne
 keeps its proportions and the corner columns keep the same place on the screen. A profile already made keeps
 where its containers were placed. *The login seed:* with UI scale on at its smallest, exit the
 game, move `AuraMaster.lua` out of `WTF/Account/<account>/SavedVariables/` and log in, so the first
-profile is seeded as the addon loads rather than in session. Select **[1] Player buffs (all)** on the
+profile is seeded as the addon loads rather than in session. Select **[01] Player buffs (all)** on the
 Containers band and note `/am get container.bars.width`, then `/am preset simple` → Apply → the
 width and the corner placement are the same (a different width means the UI scale was not yet
 applied when the addon loaded). Put the file back. Result:
@@ -2904,10 +2904,10 @@ Result:
 **PRESETS-9. Apply in Add mode. Client: Retail.** On a profile holding Simple's three, open
 General → Presets, pick **Simple**, set *When applied* to **Add next to my
 containers**, **Apply preset…** → a confirm reads "Add the Simple preset's 3 containers next to your
-own?"; Apply → six containers: your three, plus **[1] Player buffs (all) (2)**, **[2] Weapon enchants (2)**
-and **[3] Player debuffs (all) (2)** over them (the suffix after the name, the number before it).
-Layout → Position and growth on [2] Weapon enchants (2) →
-it is attached to *[1] Player buffs (all) (2)*, not to your [1] Player buffs (all). Chat says "Added the
+own?"; Apply → six containers: your three, plus **[01] Player buffs (all) (2)**, **[02] Weapon enchants (2)**
+and **[03] Player debuffs (all) (2)** over them (the suffix after the name, the number before it).
+Layout → Position and growth on [02] Weapon enchants (2) →
+it is attached to *[01] Player buffs (all) (2)*, not to your [01] Player buffs (all). Chat says "Added the
 Simple preset (Bars) next to your containers." Apply **Advanced** in Replace, fill *Special player
 buffs* with one spell (General → Spell categories), then apply Advanced again → still one *Special
 player buffs* and one *Special target debuffs*, the spell still listed, and Player special (mine)
@@ -3138,11 +3138,11 @@ columns, as icon rows. Every container stays on screen, Player buffs (all)'s rig
 screen's edge. Not now → your containers back, `/am test` off. Result:
 
 **PRESETS-32. Player debuffs attached to Player buffs. Client: Retail, then WoW Forever.** On a spare
-profile, `/am preset advanced` → Apply. Select **[3] Player debuffs (all)** on the Containers band,
-Layout → Position and growth → Attach to reads **[1] Player buffs (all)**, and the attach line reads
-"Its Top right joins the Top left of '[1] Player buffs (all)'": the right side of Player debuffs
-(all) against the left side of Player buffs (all), tops level. **[2] Weapon enchants** is still
-attached under [1] Player buffs (all). `/am unlock`, drag Player buffs (all) a little → Player
+profile, `/am preset advanced` → Apply. Select **[03] Player debuffs (all)** on the Containers band,
+Layout → Position and growth → Attach to reads **[01] Player buffs (all)**, and the attach line reads
+"Its Top right joins the Top left of '[01] Player buffs (all)'": the right side of Player debuffs
+(all) against the left side of Player buffs (all), tops level. **[02] Weapon enchants** is still
+attached under [01] Player buffs (all). `/am unlock`, drag Player buffs (all) a little → Player
 debuffs (all) moves with it, and so does Weapon enchants; drag it back. `/am lock`. Apply **Simple**,
 **Intermediate** and **Healer** the same way → the same attachment. `/am preset advanced icons` →
 Apply → the same attachment in Icons: with `/am test` on, Player debuffs (all)'s row starts at the
@@ -3152,8 +3152,8 @@ than the focus column (known, `docs/known-limitations.md`, presets). `/am test` 
 **PRESETS-33. Every bar is as wide as Player cooldowns. Client: Retail, then WoW Forever.** `/am
 preset`, pick **Advanced** (Bars), `/am test` → every bar container's bars are the same length as
 Player cooldowns', Player buffs (all) and Weapon enchants included (the round-3 complaint: they were
-narrower). On a spare profile Apply it, then select in turn [1] Player buffs (all), [2] Weapon
-enchants, [3] Player debuffs (all), [8] Player cooldowns, [10] Target debuffs (mine) and [19] Focus
+narrower). On a spare profile Apply it, then select in turn [01] Player buffs (all), [02] Weapon
+enchants, [03] Player debuffs (all), [08] Player cooldowns, [10] Target debuffs (mine) and [19] Focus
 debuffs (mine) and read `/am get container.bars.width` → the same number on each (240 at 1920 x 1080
 with UI scale at 1). Apply **Simple**, **Intermediate** and **Healer** in Bars → the same width on
 every bar container. In **Icons** each icon row still fills its column. Result:
@@ -3171,16 +3171,16 @@ skin → Color by and Background opacity stay as they were. In Icons every one o
 or Text, so the two settings do not show. Result:
 
 **PRESETS-35. The numbered names. Client: Retail, then WoW Forever.** `/am preset`, pick
-**Advanced** → the Containers band's container dropdown lists, in this order: [1] Player buffs
-(all), [2] Weapon enchants, [3] Player debuffs (all), [4] Offensive cooldowns, [5] Defensive
-cooldowns, [6] Raid cooldowns, [7] Player buffs, short, [8] Player cooldowns, [9] Player special
+**Advanced** → the Containers band's container dropdown lists, in this order: [01] Player buffs
+(all), [02] Weapon enchants, [03] Player debuffs (all), [04] Offensive cooldowns, [05] Defensive
+cooldowns, [06] Raid cooldowns, [07] Player buffs, short, [08] Player cooldowns, [09] Player special
 (mine), [10] Target debuffs (mine), [11] Target buffs (mine), [12] Target crowd control, [13] Target
 cooldowns, players, [14] Target cooldowns, NPCs, [15] Target stealable, [16] Target special (mine),
 [17] Target debuffs (all), [18] Target buffs (all), [19] Focus debuffs (mine), [20] Focus buffs
-(mine); `/am containers` lists them in the same order. **Simple** → [1] Player buffs (all), [2]
-Weapon enchants, [3] Player debuffs (all). **Intermediate** → those three, then [4] Player buffs,
-short, [5] Player cooldowns, [6] Target debuffs (mine), [7] Target cooldowns, [8] Focus debuffs
-(mine). **Healer** → the three, then [4] Raid cooldowns, [5] Player cooldowns, [6] Your heals on
+(mine); `/am containers` lists them in the same order. **Simple** → [01] Player buffs (all), [2]
+Weapon enchants, [03] Player debuffs (all). **Intermediate** → those three, then [04] Player buffs,
+short, [05] Player cooldowns, [06] Target debuffs (mine), [07] Target cooldowns, [08] Focus debuffs
+(mine). **Healer** → the three, then [04] Raid cooldowns, [05] Player cooldowns, [6] Your heals on
 target, [7] Dispellable by you on target, [8] Your heals on focus, [9] Dispellable by you on focus.
 No number is skipped or repeated within a preset. Each in Icons too → the same names. A brand-new
 profile's seed reads [1] to [3] as Simple does (INSTALL-2). On a non-English client the numbers are
@@ -3531,3 +3531,9 @@ empty screen until Apply or Not now. Its `Result:` line is empty until the owner
 
 On 2026-11-15 the owner reported that FILT-65 to FILT-67, the checks of the Retail seed re-validation
 (issue #27), passed, each recorded on its `Result:` line as `pass (owner-marked 2026-11-15)`.
+
+Open from the preset numbering fix (owner, 2026-11-15): a preset's container names now carry a
+two-digit number (**[01] Player buffs (all)** to **[20] Focus buffs (mine)**), so the Containers band and every
+container dropdown list Advanced's twenty in order rather than [10] before [2]. The PRESETS checks that quote a
+name read the new form; re-run PRESETS-2 and check one dropdown with Advanced applied. Containers a profile
+already holds keep the names they were created with.

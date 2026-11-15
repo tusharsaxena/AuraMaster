@@ -7,7 +7,7 @@ local freshEnv = dofile("tests/fresh_env.lua")
 local T = _G.AM_TEST
 local test, assertEqual, assertTrue, assertFalse = T.test, T.assertEqual, T.assertTrue, T.assertFalse
 
-local SIMPLE_NAMES = { "[1] Player buffs (all)", "[2] Weapon enchants", "[3] Player debuffs (all)" }
+local SIMPLE_NAMES = { "[01] Player buffs (all)", "[02] Weapon enchants", "[03] Player debuffs (all)" }
 
 --- A fresh environment holding the real first-run seed, not the harness's fixture
 --- (tests/starters_fixture.lua), with the first-run skin picker kept out of it

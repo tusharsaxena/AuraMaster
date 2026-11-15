@@ -1338,6 +1338,8 @@ test("presets data: names are numbered 1..N in the owner's order", function()
                 local num, rest = spec.overrides.name:match("^%[(%d+)%] (.+)$")
                 -- red under: an unnumbered name, a gap in the numbers, or creation out of the owner's order
                 assertEqual(tonumber(num), i, what .. ": numbered continuously, in creation order")
+                -- red under: a single-digit number, which a name sort puts after [10] (owner, 2026-11-15)
+                assertEqual(num, ("%02d"):format(i), what .. ": two digits, so a sort by name keeps the order")
                 assertTrue(rest ~= nil and not rest:find("^%["), what .. ": the localized name follows")
                 local rank = OWNER_RANK[spec.role]
                 assertTrue(rank ~= nil, what .. ": has a slot in the owner's order")
@@ -1358,9 +1360,9 @@ test("presets data: names are numbered 1..N in the owner's order", function()
     env.Helpers.SkinPicker = function() return nil end
     assertTrue(env.Presets.Apply("intermediate", "icons", "replace"))
     for i, c in ipairs(env.Database.GetContainers()) do
-        assertEqual(c.name:match("^%[(%d+)%] "), tostring(i), "stored #" .. i .. " " .. c.name)
+        assertEqual(c.name:match("^%[(%d+)%] "), ("%02d"):format(i), "stored #" .. i .. " " .. c.name)
     end
     assertTrue(env.Presets.Apply("simple", "bars", "add"))
     local list = env.Database.GetContainers()
-    assertEqual(list[#list - 2].name, "[1] " .. env.L["Player buffs (all)"] .. " (2)", "Add's suffix after the name")
+    assertEqual(list[#list - 2].name, "[01] " .. env.L["Player buffs (all)"] .. " (2)", "Add's suffix after the name")
 end)

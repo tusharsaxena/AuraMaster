@@ -237,9 +237,9 @@ through `ContainerManager.Create`.
 
 | Name | Unit | Type | Style | Where |
 |---|---|---|---|---|
-| [1] Player buffs (all) | player | HELPFUL | bars | The right-hand cluster's outermost column's head, hung from the center line and moved left only where it would end nearer the right edge than 10 (presets spec section 18.2); every buff but the weapon enchants |
-| [2] Weapon enchants | player | HELPFUL | bars | Attached under Player buffs (all); only the `weaponEnchants` category |
-| [3] Player debuffs (all) | player | HARMFUL | bars | Attached beside it, its top right to Player buffs (all)'s top left; every debuff |
+| [01] Player buffs (all) | player | HELPFUL | bars | The right-hand cluster's outermost column's head, hung from the center line and moved left only where it would end nearer the right edge than 10 (presets spec section 18.2); every buff but the weapon enchants |
+| [02] Weapon enchants | player | HELPFUL | bars | Attached under Player buffs (all); only the `weaponEnchants` category |
+| [03] Player debuffs (all) | player | HARMFUL | bars | Attached beside it, its top right to Player buffs (all)'s top left; every debuff |
 
 Each name carries its number in the owner's order (presets spec section 17.4); the name after it is
 localized, the number is not.
