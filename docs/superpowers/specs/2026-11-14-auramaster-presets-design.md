@@ -208,7 +208,7 @@ turns test mode off, and Not now, the close control and Escape put back the lock
 
 - **When:** on a brand-new profile, once, before the skin picker. A profile that has closed it (`presets.pickerSeen`)
   never sees it again; `/am preset` reopens the window on demand. Existing profiles are marked seen by a schema
-  migration, so no current player is prompted.
+  migration, so no current player is prompted. *Changed by §18.5: a current player sees it once per account.*
 - **What a new profile starts with:** **Simple (Bars)**, seeded as the starters are today, replacing the four-container
   starter set (`NS.STARTER_CONTAINERS` retires). Closing the picker without choosing keeps Simple. **(Claude's call:**
   the owner chose Empty as an option, so "nothing chosen" needs a default; Simple is the closest to today's starters
@@ -251,6 +251,8 @@ turns test mode off, and Not now, the close control and Escape put back the lock
 - Schema step v18 → v19: every existing profile that is already `seeded` gets `presets.pickerSeen = true`; a profile
   seeded with the old starter set keeps it. The step keys on `seeded`, because a fresh install climbs the whole
   migration ladder before its first seeding and must still see the picker.
+- `global.presets = { pickerSeen = false }` (§18.5): the account's latch, a skipRender row resolved against the
+  global store and written beside the profile's on every close the player makes; no migration step.
 - Nothing about which preset was applied is stored. **(Claude's call:** a preset is a starting point, not a mode;
   remembering it would invite "you changed it, it's no longer Advanced".)
 
@@ -394,7 +396,8 @@ section wins.
    need separate room. The call-out block is then sized and placed to clear the **preset picker's**
    rectangle (which is also the skin picker's), centered on the screen's middle as far as that allows,
    with the largest font from 24 to 36 that fits. The picker's position no longer depends on any
-   preset's call-outs. This replaces §15's "Picker position" bullet.
+   preset's call-outs. This replaces §15's "Picker position" bullet. *The call-out half is superseded
+   by §18.3: the block's top sits at the picker's top and may overlap it.*
 2. **Lower base.** The side stacks' base moves down to about 340 reference units above the bottom edge
    (y = -740 from the top at 1080 tall, scaled by k), to give tall upward stacks (Advanced's target
    stack) room under the top edge. Tall unit-frame or action-bar setups may now meet the base; that goes
@@ -479,7 +482,9 @@ owner's screenshots look like a 21:9 screen; every ratio §11 tests must still w
   `C.SNAP_RADIUS` (§16.2's rule, now vertical).
 - **The target stack (the `right` column) moves next to that column**, to its left, with a gap of about
   50 reference units between the target column's right edge and the focus column's left edge. It hangs
-  from the right edge like the focus column, so the gap holds on every screen.
+  from the right edge like the focus column, so the gap holds on every screen. *Superseded by §18.2: the
+  cluster hangs from the center line, the target column at the player column's mirror, and moves left
+  only to fit.*
 - **Tops and bottoms line up:** the target stack's base is on the far stack's bottom line, and in test
   mode its top lines up with the top of Player debuffs (all) as closely as its height allows. The other
   side stacks (the player stack on the left) keep the same base line.
@@ -586,3 +591,10 @@ Intermediate and Healer, in Bars and in Icons.
    row, a migration only if needed). The usual Replace confirm protects an existing player's own
    containers: nothing changes unless they Apply and confirm. If combat or a hidden UI holds the picker
    back, it shows when it can, as the first-run picker does now.
+
+Where each item is checked: tests `tests/test_presets_data.lua` and `tests/test_presets_cluster.lua`
+(points 1 to 3), `tests/test_presetpicker.lua` (points 3 and 5) and `tests/test_presets_seed.lua`
+(points 4 and 5); smoke PRESETS-37 (point 1), PRESETS-38 (point 2), PRESETS-39 (point 3), PRESETS-40
+(point 5) and PRESETS-41 (points 4 and 5) in docs/smoke-tests.md, with INSTALL-2, PRESETS-1, PRESETS-2,
+PRESETS-19, PRESETS-21 to PRESETS-23, PRESETS-29 and PRESETS-31 reworded to match. The overlaps, and
+the account latch's reach, are in docs/known-limitations.md (presets).

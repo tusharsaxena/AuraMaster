@@ -608,6 +608,15 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   is up the lines it previews are partly under the window. `tests/test_presetpicker.lua` ("picker:
   the call-out block starts at the picker's top for every preset") pins the top and the overlap.
   The window is movable. Recorded 2026-11-15 (AM-PR12), changed on AM-PR19 by the owner's ruling.
+- **The preset picker's once-per-account showing is per WoW account and per client.** Since the
+  owner's round 4 a player whose profiles predate the presets sees the first-run picker exactly once
+  per account (presets spec section 18.5), through `global.presets.pickerSeen`, which lives in that
+  account's `WTF/Account/<account>/SavedVariables/AuraMaster.lua`. A second WoW account on the same
+  Battle.net login keeps its own file, and so does WoW Forever, which keeps its own `WTF`, so each
+  shows the picker once more; so does a SavedVariables file deleted or restored from before the
+  close. The profile latch still offers it to a new, reset or copied profile (presets spec section
+  9), whatever the account latch says. `/am reset global.presets.pickerSeen` offers it again, at
+  the next login, on purpose; General's Defaults does not. Recorded 2026-11-15 (AM-PR21) for the owner's call.
 - **On a 768-tall 5:4 screen, Player debuffs (all)'s drag strip reaches the call-out block in
   Icons.** At 960 x 768 (UI scale off) the layout narrows across and the call-outs, at the owner's
   36 since round 4, start 12 under the top edge, beside the corner group. Unlocked in test mode

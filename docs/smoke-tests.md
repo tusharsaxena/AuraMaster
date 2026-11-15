@@ -32,7 +32,7 @@ check's number is not reused. Checks with no recorded pass, and checks new or co
 | SKIN-1 to SKIN-53 | Skins | The skinning rollout: the one-time HUD reset under Ka0s Default, Ka0s Default otherwise unchanged, the Skin tab, each skin on the HUD, the unlock furniture, the settings pages and the tool windows, other addons stock, the font and texture companions and overrides, combat, EllesmereUI on, off and back, the copy, profiles, tooltips and popups, the first-run skin picker; the library follow-ups (each skin's HUD face, Ignore fonts on the HUD, the picker's title, the strings newly in the skin's face); the skin fonts run (the Font outline, From skin flags, `/am skin`, width parity, the HUD size scale, the own faces and glow back, the strips' re-fit) |
 | DEGRADED-1 | Library-absent install | The launcher libraries missing |
 | LOC-1 to LOC-2 | Non-English client | Spell names from the client, adding a spell by its localized name |
-| PRESETS-1 to PRESETS-36 | Presets | Each client: a new profile's Simple seed at the real screen size, the first-run preset picker before the skin picker (Escape, Not now, Empty), each preset in each style, Apply in Replace and Add, Stop preview, leaving the tab, closing the panel, a `/reload`, a profile switch and combat mid-preview, `/am preset` and its confirm, another Ka0s addon's skin picker, the cost of a swap, an existing profile after schema v19; the owner's round 1: the side stacks growing up, the corner group's place, the call-outs' look and place, the picker on the skin picker's spot with the call-outs clear of it, the side stacks' lower base, opened unlocked, its lock and test buttons, Apply locking, Not now putting the lock back; the owner's round 2: the call-outs' glow, the focus stack of its own and its clearance from the far stack, Player debuffs lined up with the focus column, the Presets tab on the General page; the owner's round 3: the right-hand cluster lined up from the right edge, Player debuffs attached to Player buffs, equal bar widths, debuff bars colored by dispel type over a 50% background, the numbered names, the unlock hint in chat |
+| PRESETS-1 to PRESETS-41 | Presets | Each client: a new profile's Simple seed at the real screen size, the first-run preset picker before the skin picker (Escape, Not now, Empty), each preset in each style, Apply in Replace and Add, Stop preview, leaving the tab, closing the panel, a `/reload`, a profile switch and combat mid-preview, `/am preset` and its confirm, another Ka0s addon's skin picker, the cost of a swap, an existing profile after schema v19; the owner's round 1: the side stacks growing up, the corner group's place, the call-outs' look and place, the picker on the skin picker's spot with the call-outs clear of it, the side stacks' lower base, opened unlocked, its lock and test buttons, Apply locking, Not now putting the lock back; the owner's round 2: the call-outs' glow, the focus stack of its own and its clearance from the far stack, Player debuffs lined up with the focus column, the Presets tab on the General page; the owner's round 3: the right-hand cluster lined up from the right edge, Player debuffs attached to Player buffs, equal bar widths, debuff bars colored by dispel type over a 50% background, the numbered names, the unlock hint in chat; the owner's round 4: the player stack nearer the center, the target cluster mirroring it, the call-outs at the picker's top, the picker once per account for existing players and never twice for a new one |
 | FOREVER-1 to FOREVER-15 | WoW Forever | Each check names its client: the AddOns list and a clean load on Forever, the default skin per client, a rank-1 aura in a buff container, Forever's own spell lists, each Blizzard token and flag row measured on Forever, the gate on an empty category, hiding the Blizzard buff and debuff frames, weapon enchants, a typed cast id rewritten, and the Retail regression |
 
 ## Before you start
@@ -70,7 +70,8 @@ check's number is not reused. Checks with no recorded pass, and checks new or co
 the world loads with no Lua error. Result: pass (owner-marked 2026-10-10)
 
 **INSTALL-2. Starter containers.** On that fresh install, with no setup → the Simple preset's three
-containers appear as bars (schema v19): *[1] Player buffs (all)* at the top-right corner, *[2] Weapon
+containers appear as bars (schema v19): *[1] Player buffs (all)* near the top-right corner (how far
+in: PRESETS-38), *[2] Weapon
 enchants* attached under it, and *[3] Player debuffs (all)* joined to its left side; and the first-run
 preset picker shows (PRESETS-2). Your current buffs show in Player buffs (all), every one but your
 weapon enchants, which show in Weapon enchants; take a debuff (a fall, or a mob's) → it appears in
@@ -2769,15 +2770,19 @@ preview and its restores), `settings/PresetPicker.lua` (the first-run window and
 `settings/GeneralPresets.lua` (the Presets tab), `core/Database.lua` (the Simple seed, schema v19),
 `core/AuraMaster.lua` (login, profile events and combat).
 
-**What the presets place** (after the owner's round-1, round-2 and round-3 feedback, presets spec
-sections 15, 15.1, 16 and 17). A right-hand cluster hung from the screen's right edge: Player buffs
-(all) with Weapon enchants under it, its right edge just in from the right edge and down from the top
-edge, and Player debuffs (all) joined to its left side, top to top (all three in every preset),
-growing down; under Player debuffs (all), on its left edge, the focus stack (Intermediate, Advanced
-and Healer), growing up from a base about halfway down, and under that the far stack (Advanced's
-target icon rows); and the target's stack a small gap left of that column. The cooldown call-outs
-show as Text, each line centered on the screen's center line, in the owner's colors with a thin
-black glow (Advanced, and Healer's Raid cooldowns). The side stacks (the player's left of center,
+**What the presets place** (after the owner's round-1 to round-4 feedback, presets spec sections
+15, 15.1, 16, 17 and 18). The player's stack left of center, a small gap (40 at 1080 tall) left of
+the call-out column. A right-hand cluster hung from the screen's center line, its target stack
+mirroring the player's (as far right of the center line as the player's is left of it) wherever the
+cluster fits, and moved left as one just enough to keep Player buffs (all) 10 in from the right edge
+where it does not (16:9 and narrower): from the target stack out, a gap, then under Player debuffs
+(all), on its left edge, the focus stack (Intermediate, Advanced and Healer), growing up from a base
+about halfway down, and under that the far stack (Advanced's target icon rows); and Player debuffs
+(all) joined to the left side of Player buffs (all), top to top, with Weapon enchants under Player
+buffs (all) (all three in every preset), growing down from just under the top edge. The cooldown
+call-outs show as Text, each line centered on the screen's center line, in the owner's colors with a
+thin black glow (Advanced, and Healer's Raid cooldowns), the block's top at about the preset
+picker's top, behind the window while it is up. The side stacks (the player's left of center,
 the target's and the far one) grow up from one base about 70% of the way down. Every bar container
 is as wide as Player cooldowns. A corner stack's top container (Player buffs (all)) and a side or
 focus stack's bottom one are placed on the screen; every other container is attached to the one
@@ -2788,12 +2793,12 @@ where only the place matters, the checks name a container without it.
 **PRESETS-1. A brand-new profile starts from Simple, at the real screen size. Client: Retail, then
 WoW Forever.** Profiles → type a new profile name → the three Simple containers appear, as bars:
 **[1] Player buffs (all)** near the top-right corner, its right edge about 10 in from the screen's right edge
-(how far: PRESETS-31), **[2] Weapon enchants** attached under it, and **[3] Player debuffs (all)**
+on 16:9 and narrower, further in on a wider screen (how far: PRESETS-31 and PRESETS-38), **[2] Weapon enchants** attached under it, and **[3] Player debuffs (all)**
 joined to its left side (PRESETS-32), the three bars the same width (PRESETS-33). No
 container sits over the action bars or the unit frames. `/am test` → each fills with sample auras;
 the corner columns end well above the screen's middle. `/am test` off. Set **UI scale** off, then on
 at its smallest (Options → Graphics → UI Scale), each time making another new profile: the layout
-keeps its proportions and the corner columns keep the same distance in from the right edge. A profile already made keeps
+keeps its proportions and the corner columns keep the same place on the screen. A profile already made keeps
 where its containers were placed. *The login seed:* with UI scale on at its smallest, exit the
 game, move `AuraMaster.lua` out of `WTF/Account/<account>/SavedVariables/` and log in, so the first
 profile is seeded as the addon loads rather than in session. Select **[1] Player buffs (all)** on the
@@ -2809,7 +2814,8 @@ It shows Ka0s Aura Master under the title, a dropdown (Empty - no containers, Si
 Intermediate - 8 containers, Advanced - 20 containers, Healer - 9 containers) with Simple selected, a
 Bars / Icons switch, one line describing the pick, the buttons **Containers: unlocked** and **Test
 mode: off**, **Apply** and **Not now**, and the footer "Change it later on General >
-Presets. The skin picker opens next." Opening it previews nothing: test mode stays off and Simple is
+Presets. The skin picker opens next." (without its second sentence when the skin picker is not due,
+PRESETS-40). Opening it previews nothing: test mode stays off and Simple is
 on screen. The skin picker does not show while this window is up. Drag the window → it moves and
 stays on screen. Pick **Intermediate** → its containers replace Simple, test mode turns on, and the
 line "On your screen now, filled with sample auras. Nothing is saved until Apply." appears. Pick
@@ -2950,7 +2956,9 @@ the `[Presets]` lines one swap writes. Result:
 **PRESETS-19. An existing profile keeps its containers after v19. Client: Retail.** With a
 SavedVariables file saved by a build before schema v19 (one with the four old starters, and one with
 your own containers), log in on this build → no Lua error, every profile keeps its containers
-unchanged, and neither the preset picker nor a container change appears. With logging on from the
+unchanged, and no container change appears. The preset picker shows once, on the active profile,
+since the owner's round 4 (PRESETS-40 runs that showing); close it with **Not now** → nothing
+changes. With logging on from the
 session before (`/am debug on`), the console shows one `[Migrate] v19 profile '<name>'` line per
 profile marked. `/am preset` still opens the
 picker on demand. Result:
@@ -2976,7 +2984,7 @@ Not now → your containers back. Result:
 
 **PRESETS-21. The corner group's place. Client: Retail, then WoW Forever.** On a new profile → the
 three Simple containers sit near the top-right corner, just in from the right edge and down from the
-top edge (not flush with either; how far in: PRESETS-31), Player debuffs (all) joined to the left side of Player buffs (all) (PRESETS-32), Weapon
+top edge (not flush with either; how far in: PRESETS-31, and on 21:9 PRESETS-38), Player debuffs (all) joined to the left side of Player buffs (all) (PRESETS-32), Weapon
 enchants under Player buffs (all), and all three grow down. `/am test` → the corner columns fill and end above the
 side stacks' bases at every ratio you can set (16:9, 16:10, 21:9, a 4:3 window). With Advanced
 previewed, record whether the top of any side stack reaches a corner column
@@ -2987,20 +2995,19 @@ previewed, record whether the top of any side stack reaches a corner column
 the screen's center line (not left-aligned), in a larger font than the other containers' text,
 Offensive cooldowns green, Defensive cooldowns red and Raid cooldowns orange, each line with a thin
 black glow behind it, nudged a pixel right and down (its settings: PRESETS-27), and no name label
-above it; the three stacked down from just under the window (where
-the skin picker opens too, the upper middle of the screen), as close to the screen's middle as that
-allows, the last line near the bottom edge at 1080 tall. A skin change (`/am skin`) leaves those
+above it; the three stacked down from about the window's top (where the skin picker opens too, the
+upper middle of the screen), running down behind the window (where exactly: PRESETS-39), the last
+line above the bottom edge. A skin change (`/am skin`) leaves those
 colors alone. Pick **Healer** → its Raid cooldowns line looks the same, in the owner's size (36),
-just under the window. Switch both to **Icons**
+from about the window's top. Switch both to **Icons**
 → the call-outs stay Text and look the same. Not now → your containers back. Result:
 
 **PRESETS-23. The picker's place. Client: Retail, at 1920 x 1080 and at your own size.** `/am
 preset` → the window opens centered across the screen, its center about three quarters of the way
 up: close it and confirm that the skin picker which follows opens on the same spot. Pick **Healer**,
-then **Advanced**, each in Bars and Icons → the call-outs start under the window and do not meet it
-at 1080 tall or taller. With UI scale off (a 768-tall UI), Advanced's top lines run under the
-window's lower part (a known limitation, `docs/known-limitations.md`, open for the owner); record
-how many. Drag the window → it moves and stays on screen. `/reload` with the window down, `/am preset` → it opens in the same place.
+then **Advanced**, each in Bars and Icons → the call-outs start at about the window's top and run
+down behind it, at every size, which the owner accepts since round 4 (PRESETS-39; known,
+`docs/known-limitations.md`). Drag the window → it moves and stays on screen. `/reload` with the window down, `/am preset` → it opens in the same place.
 Result:
 
 **PRESETS-24. The picker opens unlocked, with lock and test buttons. Client: Retail, then WoW
@@ -3065,7 +3072,8 @@ any container that does highlight on such a small drag (the known pairs:
 1920 x 1080 and at your own size.** `/am preset`, pick **Advanced** (Bars), `/am test` → the left
 edge of **Player debuffs (all)** lines up with the left edge of **Focus buffs (mine)** and **Focus
 debuffs (mine)** below it, and of **Target buffs (all)** and **Target debuffs (all)** below them, on
-one vertical line. Since round 3 the corner group hangs from the right edge (PRESETS-31): at 1920 x
+one vertical line. Since round 4 the cluster hangs from the center line and moves left to fit
+(PRESETS-38): at 1920 x
 1080 with UI scale at 1, Player buffs (all)'s right edge about 10 pixels in from the right edge, and
 Player debuffs (all)'s left edge about 495 in, with a small gap (about 5) between the two columns.
 Pick **Intermediate** and **Healer** → Player debuffs (all) lines up with their focus column too.
@@ -3089,7 +3097,7 @@ came from a 21:9 screen; run each at your own size, and at 1920 x 1080 where it 
 **PRESETS-31. The right-hand cluster lined up. Client: Retail, then WoW Forever, at 1920 x 1080 and
 at your own size.** `/am preset`, pick **Advanced** (Bars), `/am test` → from the right edge in:
 Player buffs (all), its right edge about 10 pixels in from the screen's right edge (at 1920 x 1080
-with UI scale at 1) and its top about 46 down, Weapon enchants under it; Player debuffs (all) next to
+with UI scale at 1; on 21:9 further in, PRESETS-38) and its top about 46 down, Weapon enchants under it; Player debuffs (all) next to
 it, the two tops level (PRESETS-32); under Player debuffs (all), on its left edge, the focus stack
 (Focus debuffs (mine) at its bottom, about halfway down); under the focus stack the far stack (Target
 debuffs (all) with Target buffs (all) above it), its left edge on the same line, with a clear gap
@@ -3103,7 +3111,7 @@ presets); record where it ends at your size. The call-out block keeps the screen
 1080 the target column reaches about 25 pixels into the block's stored width, and the lines, sized
 to fit, may clear it; on 16:10 and narrower
 (and on 4:3 and 5:4 windows) it runs into it (known, the same file, with the figures); record by how
-much at your size. Pick **Intermediate** and **Healer** → the same cluster with their containers
+much at your size (on 21:9 it clears the block, PRESETS-38). Pick **Intermediate** and **Healer** → the same cluster with their containers
 (no far stack: the target stack's base is the same line). Switch each to **Icons** → the same
 columns, as icon rows. Every container stays on screen, Player buffs (all)'s right edge never at the
 screen's edge. Not now → your containers back, `/am test` off. Result:
@@ -3167,6 +3175,71 @@ On a new profile the first-run picker's close prints it the same way, before the
 With the window up, switch profiles (`/am profile <other>`) → the window goes down and no line
 prints (that close is the addon's, not yours). Type `/am unlock` → the containers show their drag
 handles; `/am lock`. Result:
+
+The next five check the owner's round-4 feedback (presets spec section 18, which wins over sections
+15 to 17). The owner's screenshots came from a 21:9 screen: run each at 2560 x 1080 (or your own
+21:9 size) and at 1920 x 1080, with UI scale at 1, unless it says otherwise.
+
+**PRESETS-37. The player stack nearer the center. Client: Retail, then WoW Forever.** `/am preset`,
+pick **Advanced** (Bars), `/am test` → the player's stack (Player buffs, short; Player cooldowns;
+Player special (mine)) stands left of the call-outs with half the gap it had: its right edge 240
+pixels left of the screen's center line and its left edge 480 left of it (at 1920 x 1080 from 480
+to 720 pixels in from the left edge; at 2560 x 1080 from 800 to 1040), 40 short of the call-out
+column's stored left edge (200 left of the center line; the lines, sized to fit, are narrower, so the
+gap you see is wider). The stack keeps its base, about 70% of the way down, and grows up. Pick
+**Intermediate** (Player buffs, short, Player cooldowns) and **Healer** (Player cooldowns) → the same
+column. Switch each to **Icons** → the rows start from that column's left edge and grow right, toward
+the call-outs, and, locked, end short of them. Not now → your containers back, `/am test` off. Result:
+
+**PRESETS-38. The target stack mirrors the player stack. Client: Retail, then WoW Forever.** `/am
+preset`, pick **Advanced** (Bars), `/am test`. *At 2560 x 1080:* the target stack's left edge sits
+240 right of the center line (1520 pixels in from the left edge), the mirror of the player stack's
+right edge (PRESETS-37), and the rest of the right-hand cluster moved with it, every gap of
+PRESETS-31 kept: the focus and far stacks 50 right of the target stack's right edge, on Player
+debuffs (all)'s left edge (750 in from the right edge), Player debuffs (all) joined to Player buffs
+(all), tops level, with about 5 between, and Player buffs (all)'s right edge about 265 in from the
+screen's right edge, no longer near it. The target column stays clear of the call-out block. *At
+1920 x 1080:* the cluster does not fit at the mirror, so it moved left as one just far enough to keep
+Player buffs (all)'s right edge about 10 in: the target stack's left edge 175 right of the center
+line (1135 in), every gap the same, and the target column meets the call-out block as recorded
+(known, `docs/known-limitations.md`, presets); record by how much. On a 16:10 or a 4:3 window →
+the same rule, the cluster further left, no container off the screen. Pick **Intermediate** and
+**Healer** → the same cluster with their containers. Switch each to **Icons** → the same columns,
+as icon rows. Not now → your containers back, `/am test` off. Result:
+
+**PRESETS-39. The call-outs at the picker's top. Client: Retail, then WoW Forever, at 1920 x 1080,
+at a 768-tall UI (UI scale off) and at your own size.** `/am preset`, pick **Advanced** (Bars) → the
+call-out block's top line starts at about the window's top edge (90 pixels down at 1080 tall, 12 at
+768, 180 at 1440), much higher than before round 4, and the lines run down behind the window, which
+the owner accepts; the block stays centered across the screen, in the owner's size (36) at 1080
+tall, and its last line stays above the bottom edge. Drag the window away → the lines under it read
+cleanly. Pick **Healer** → its Raid cooldowns line starts at the same height. Switch both to
+**Icons** → the same. Not now → your containers back. On a spare profile apply Advanced, `/am test`
+→ the call-outs sit at that same height with no window up. `/am test` off. Result:
+
+**PRESETS-40. An existing player sees the picker once per account. Client: Retail, then WoW
+Forever.** Copy `WTF/Account/<account>/SavedVariables/AuraMaster.lua` aside first. On SavedVariables
+saved by a build before this one, with two or more profiles of your own (as PRESETS-19 sets up, or
+any file whose `global` holds no `presets` entry), log in → the **Choose a preset** window shows
+once, at this login, on the active profile, with your own containers on screen and unchanged, the
+containers unlocked (PRESETS-24), and the footer reads "Change it later on General > Presets." (on
+a profile whose skin picker was already closed, as an existing one's usually was). Opening it previews nothing. Pick **Advanced** → the preview, then **Not
+now** → your containers back, unchanged, and `/am get global.presets.pickerSeen` reads true.
+`/reload` → no picker. Switch to your other profile (`/am profile <other>`) → no picker. Log in
+another character of the same account that uses one of these profiles → no picker. Put the copy back and repeat, closing with the
+window's close mark, then with **Escape** → the same each time. Put it back once more, pick
+**Simple**, **Apply** → a confirm names your container count; **Cancel** → nothing changes; Apply
+again and accept → Simple replaces your containers, and the picker never shows again on any profile.
+General → Master controls → **Defaults** → `/am get global.presets.pickerSeen` still reads true.
+Put the copy back when done. Result:
+
+**PRESETS-41. A brand-new install sees it once, and combat holds it. Client: Retail.** Move
+`AuraMaster.lua` out of the SavedVariables folder and log in → the picker shows once (PRESETS-2);
+close it with **Not now** → `/reload`, then log out and back in → no picker either time. A new profile
+(Profiles → type a name) still offers it once, as before (PRESETS-1). *Combat:* `/am reset
+global.presets.pickerSeen`, hit a training dummy and `/reload` while still in combat → after the
+loading screen no picker while combat lasts; stop and let combat end → the picker shows then, with
+no Lua error. Close it. Put your own `AuraMaster.lua` back. Result:
 
 ## WoW Forever
 
@@ -3423,3 +3496,10 @@ PRESETS-31 to PRESETS-36 are new; PRESETS-1, PRESETS-4 to PRESETS-6, PRESETS-9, 
 PRESETS-21, PRESETS-28 and PRESETS-29 now describe the right-hand cluster hung from the right edge,
 Player debuffs (all) joined to Player buffs (all) and the numbered names, and INSTALL-2 names the
 seed's numbered containers. Their `Result:` lines are empty until the owner runs them.
+
+Open from the owner's round-4 feedback on the presets (presets spec section 18, AM-PR19 to AM-PR21):
+PRESETS-37 to PRESETS-41 are new; INSTALL-2, PRESETS-1, PRESETS-2, PRESETS-19, PRESETS-21 to
+PRESETS-23, PRESETS-29 and PRESETS-31 now describe the player stack nearer the center, the
+right-hand cluster hung from the center line and moved left only to fit, the call-outs from the
+picker's top and the picker shown once per account to an existing player. Their `Result:` lines are
+empty until the owner runs them.

@@ -44,7 +44,9 @@ _[Watch on YouTube](https://www.youtube.com/watch?v=lJoZiVA_SBE)_
 A fresh install gives you three containers to start from, the Simple preset: your buffs as bars in
 the top-right corner with your weapon enchants under them, and your debuffs as bars beside them. A
 small window, **Choose a preset**, opens the first time so you can pick a bigger set instead (more on
-presets below). They start locked. `/am unlock` puts a handle on each one so you can drag it where you want it, and
+presets below). Already had Aura Master before presets? The window opens once at your next login,
+once for your whole account, and your containers stay as they are unless you apply a preset and
+confirm. The containers start locked. `/am unlock` puts a handle on each one so you can drag it where you want it, and
 `/am lock` puts the handles away again. Drop a container next to another one and it attaches there,
 following that one as it grows: the other container's handle lights up with a green edge before you
 let go, and holding Shift as you drop places it without attaching. To detach one, drag it away until
