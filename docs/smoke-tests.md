@@ -3031,12 +3031,13 @@ down behind it, at every size, which the owner accepts since round 4 (PRESETS-39
 `docs/known-limitations.md`). Drag the window → it moves and stays on screen. `/reload` with the window down, `/am preset` → it opens in the same place.
 Result:
 
-**PRESETS-24. The picker opens unlocked, with lock and test buttons. Client: Retail, then WoW
-Forever.** With the containers locked (`/am lock`), `/am preset` → the containers show their drag
-handles, and the window's buttons read **Containers: unlocked** and **Test mode: off**. Click
-**Containers: unlocked** → the handles go away and it reads **Containers: locked**; click it again →
-back. Click **Test mode: off** → every container fills with sample auras and it reads **Test mode:
-on**; click it again → off. Pick **Advanced** (test mode turns on), then click **Test mode: on** →
+**PRESETS-24. The picker opens unlocked and in test mode, with lock and test buttons. Client: Retail,
+then WoW Forever.** With the containers locked (`/am lock`) and test mode off, `/am preset` → the
+containers show their drag handles and fill with sample auras, and the window's buttons read
+**Containers: unlocked** and **Test mode: on** (owner, 2026-11-16: both as soon as it shows, the
+first-run showing too). Click **Containers: unlocked** → the handles go away and it reads
+**Containers: locked**; click it again → back. Click **Test mode: on** → the sample auras go and it
+reads **Test mode: off**; click it again → on. Pick **Advanced** (test mode stays on), then click **Test mode: on** →
 the preview ends with your containers back, as Not now would, and the window stays up. `/am lock`
 and `/am test` typed with the window up → its buttons follow. Drag a previewed container somewhere
 else, then **Apply** → it stays where you dropped it. Result:
@@ -3537,3 +3538,8 @@ two-digit number (**[01] Player buffs (all)** to **[20] Focus buffs (mine)**), s
 container dropdown list Advanced's twenty in order rather than [10] before [2]. The PRESETS checks that quote a
 name read the new form; re-run PRESETS-2 and check one dropdown with Advanced applied. Containers a profile
 already holds keep the names they were created with.
+
+Open from the picker's opening state (owner, 2026-11-16): the preset picker now turns test mode on as
+soon as it shows, on the first-run showing and on `/am preset`, beside the unlock it already made.
+PRESETS-24 is rewritten for it; re-run it, and make a new profile once to see the first-run window open
+with **Containers: unlocked** and **Test mode: on**.

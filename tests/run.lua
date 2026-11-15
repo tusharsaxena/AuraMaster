@@ -35,6 +35,8 @@ Starters.install(NS)
 -- PLAYER_LOGIN (the containers, Blizzard's frames, the settings panel), then the coalesced first
 -- apply the next frame would run.
 NS.addon:OnInitialize()
+-- The first-run picker leaves test mode alone in the harness (tests/picker_baseline.lua says why).
+dofile("tests/picker_baseline.lua")(NS)
 NS.addon:OnEnable()
 mocks.__fireTimers()
 -- The shared environment wears Ka0s Default on both kit profiles (tests/wear_ka0s.lua says why).

@@ -46,7 +46,8 @@ local addonName, NS = ...
 -- preset: the builder places every preset's call-out block clear of it
 -- (NS.PresetData.CalloutRect, unlocked, in test mode, under PresetData.ROOM).
 --
--- THE LOCK AND TEST MODE. Opening records the lock and unlocks the containers, through the seam
+-- THE LOCK AND TEST MODE. Opening records the lock, unlocks the containers and turns test mode on
+-- (owner, 2026-11-15), the lock through the seam
 -- `/am unlock` writes (NS.SetByPath "locked"). Two buttons show and flip the lock and test mode (test
 -- mode through NS.Preview.SetTestMode, as `/am test`); turning test mode off while a preview is up
 -- ends it with a restore, as Not now does. Apply locks and turns test mode off; Not now, the close
@@ -289,11 +290,14 @@ local function testModeOff()
     if NS.State.testMode then NS.Preview.SetTestMode(false, "preset picker") end
 end
 
---- Record the lock the window opens on, then unlock (spec section 15).
+--- Record the lock the window opens on, then unlock (spec section 15) and turn test mode on (owner,
+--- 2026-11-15): the window opens showing the containers as a pick would, unlocked and in test mode,
+--- so the two buttons read *Containers: unlocked* and *Test mode: on* from the start.
 local function openUnlocked()
     state.lockedAtOpen = NS.GetSetting("locked") and true or false
     state.lockProfile = NS.db and NS.db.profile
     setLock(false)
+    if not NS.State.testMode then NS.Preview.SetTestMode(true, "preset picker") end
 end
 
 --- What every close and hide ends with: test mode off, then the lock set to `locked`, in the profile

@@ -867,9 +867,9 @@ test("picker: apply leaves containers locked and test mode off", function()
     assertEqual(#NS.Database.GetContainers(), 20)
     assertTrue(NS.GetSetting("locked"), "locked")
     assertFalse(NS.State.testMode, "test mode off")
-    -- Nothing picked, test mode on by the button: Apply still locks and turns it off.
+    -- Nothing picked, test mode on as the window opened (owner, 2026-11-15): Apply still locks and
+    -- turns it off.
     f = NS.ShowPresetPicker()
-    f.testToggle:__fire("OnClick")
     assertTrue(NS.State.testMode)
     f.apply:__fire("OnClick")
     assertTrue(NS.GetSetting("locked"))
@@ -917,6 +917,31 @@ test("picker: /am preset opens unlocked too", function()
     assertFalse(NS.GetSetting("locked"), "unlocked")
     f.close:__fire("OnClick")
     assertTrue(NS.GetSetting("locked"))
+end)
+
+test("picker: opening unlocks and turns test mode on, the first-run showing and /am preset alike", function()
+    -- The first-run showing, with the picker's own behavior (no harness hold, tests/picker_baseline.lua).
+    local NS = fresh({ pickerTestMode = true })
+    NS.SetByPath("locked", true)
+    assertFalse(NS.State.testMode, "test mode off before the window")
+    local f = NS.MaybeShowPresetPicker()
+    recordLabels(NS, f)
+    f.lockToggle:__fire("OnClick"); f.lockToggle:__fire("OnClick") -- repaint the recorded labels
+    -- red under: a window that opens with test mode off, as it did before 2026-11-15
+    assertTrue(NS.State.testMode, "first run: test mode on as it opens")
+    assertFalse(NS.GetSetting("locked"), "first run: unlocked as it opens")
+    assertEqual(label(f.testToggle), NS.L["Test mode: on"], "the button says so")
+    assertEqual(label(f.lockToggle), NS.L["Containers: unlocked"])
+    assertFalse(NS.Presets.IsPreviewing(), "test mode alone previews nothing")
+    f.notNow:__fire("OnClick")
+    assertFalse(NS.State.testMode, "Not now turns it off")
+    assertTrue(NS.GetSetting("locked"), "and puts the lock back")
+    -- /am preset, the same.
+    NS.Slash:OnSlash("preset")
+    assertTrue(NS.State.testMode, "/am preset: test mode on as it opens")
+    assertFalse(NS.GetSetting("locked"), "/am preset: unlocked")
+    NS.PresetPicker.frame.close:__fire("OnClick")
+    assertFalse(NS.State.testMode)
 end)
 
 test("picker: a hide this addon makes puts the lock back and test mode off", function()

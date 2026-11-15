@@ -27,7 +27,10 @@
 --
 -- The build ends on Ka0s Default under either kit profile (tests/wear_ka0s.lua says why);
 -- `opts.clientSkin = true` keeps the client's own default skin, WoW Forever on the forever profile.
+-- `opts.pickerTestMode = true` keeps the test mode the first-run preset picker turned on
+-- (tests/picker_baseline.lua).
 local wearKa0s = dofile("tests/wear_ka0s.lua")
+local pickerBaseline = dofile("tests/picker_baseline.lua")
 
 return function(opts)
     opts = opts or {}
@@ -49,6 +52,7 @@ return function(opts)
     -- `opts.simple = true` leaves the real first-run seed, the Simple preset, in place.
     if not opts.simple then T.Starters.install(NS) end
     NS.addon:OnInitialize()
+    pickerBaseline(NS, opts.pickerTestMode)
     NS.addon:OnEnable()
     mocks.__fireTimers()
     if not opts.clientSkin then wearKa0s(NS, mocks) end
