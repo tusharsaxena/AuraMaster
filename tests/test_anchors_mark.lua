@@ -25,6 +25,9 @@ end
 --- under the recorder and shown (as tests/drag_helpers.lua's env).
 local function env(n)
     local NS, mocks = fresh()
+    -- The preset picker held down: it unlocks the containers it opens over (settings/PresetPicker.lua),
+    -- which is not this suite's subject.
+    NS.PresetPickerDue = function() return false end
     while #NS.Database.GetContainers() < n do NS.ContainerManager.Create({}) end
     mocks.__fireTimers()
     for _, c in ipairs(NS.Database.GetContainers()) do

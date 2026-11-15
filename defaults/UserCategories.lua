@@ -865,3 +865,52 @@ function Cat.ForgetUnusableUserRecords(profile, db)
     end
     return #bad
 end
+
+-- A SNAPSHOT'S CATEGORY HALF, AND ITS RESTORE, ARE THIS REGISTRY'S OWN ACTS (architecture-§5). A
+-- preset preview (modules/Presets.lua) snapshots the containers and the custom categories together,
+-- through ContainerManager.Snapshot, which asks this file for the category half; ending the preview
+-- unkept, or the next login after a /reload or a crash mid-preview, puts it back through
+-- ContainerManager.RestoreSnapshot, which hands that half here. The spell edits travel with it. In
+-- play, on the active profile, they go back through the seam's `categorySpells` carve-out once the
+-- records are stored and materialized. A quiet restore writes them whole directly instead: it runs
+-- before the schema exists at login, at a profile event before the sync, or into a profile not in
+-- use after a switch, the moments the carve-out's normalizer would answer wrongly
+-- (`isEditableCategory` reads the ACTIVE profile's records). The same file already writes
+-- `categorySpells[key]` directly, in `forgetUserKey`.
+local SNAPSHOT_FIELDS = { "userCategories", "userCategoryOrder", "categorySpells" }
+
+--- Deep copies of `profile`'s custom-category records, their order and the spell edits, set into
+--- `into` (a new table by default) under their storage keys. The category half of
+--- ContainerManager.Snapshot.
+--- @return table
+function Cat.SnapshotUserCategories(profile, into)
+    into = into or {}
+    if type(profile) ~= "table" then return into end
+    for _, field in ipairs(SNAPSHOT_FIELDS) do into[field] = NS.Database.DeepCopy(profile[field]) end
+    return into
+end
+
+--- Put `snap`'s category half back into `profile`: records, order and spell edits replaced by deep
+--- copies, keys kept. Then the load pass re-materializes them, unless `quiet`: the login path
+--- (NS.RunMigrations syncs after its ladder), a profile event (core/AuraMaster.lua's prepareProfile
+--- syncs) and a profile not in use (nothing of it is materialized). The category half of
+--- ContainerManager.RestoreSnapshot.
+--- @return boolean  whether anything was restored
+function Cat.RestoreUserCategories(snap, profile, quiet)
+    if type(snap) ~= "table" or type(profile) ~= "table" then return false end
+    local spells = NS.Database.DeepCopy(snap.categorySpells)
+    if type(spells) ~= "table" then spells = {} end
+    profile.userCategories = NS.Database.DeepCopy(snap.userCategories)
+    profile.userCategoryOrder = NS.Database.DeepCopy(snap.userCategoryOrder)
+    if NS.Debug then NS.Debug("Set", "restored a snapshot's custom categories") end
+    if quiet then
+        -- Login, a profile event or a profile not in use: the direct write the header explains.
+        profile.categorySpells = spells
+        return true
+    end
+    -- In play, on the active profile: the records are back and materialized first, so the seam's
+    -- carve-out normalizer (which reads the active profile's records) accepts every restored key.
+    Cat.SyncUserCategories(profile)
+    if not NS.SetByPath("categorySpells", spells) then profile.categorySpells = spells end
+    return true
+end

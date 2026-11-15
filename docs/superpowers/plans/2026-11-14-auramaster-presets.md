@@ -1,0 +1,257 @@
+# Aura Master Presets Implementation Plan
+
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+
+**Goal:** Ship four container presets (Simple, Intermediate, Advanced, Healer) in Bars and Icons, placed by screen size, previewed on the real screen in test mode, with a first-run picker and a Presets tab on the Containers page.
+
+**Architecture:** Presets are data (`defaults/Presets.lua`, `NS.PresetData`) that a pure builder turns into container overrides for a given screen size and style. One writer module (`modules/Presets.lua`, `NS.Presets`) applies them through the container registry writer (`NS.ContainerManager`) and the custom-category writer (`NS.Categories.CreateUserCategory`), and owns preview (snapshot in the profile, exact restore). Two UI surfaces call it: an Aura Master first-run window (`settings/PresetPicker.lua`) and a Presets tab (`settings/GeneralPresets.lua` since AM-PR14, on the General page; first built as `settings/ContainersPresets.lua`).
+
+**Tech Stack:** Lua 5.1 (WoW), Ace3 (AceDB), LibKa0s v1.98.0 (vendored), the headless harness `tests/run.lua` with the kit under `tests/_kit/`.
+
+**Spec:** `docs/superpowers/specs/2026-11-14-auramaster-presets-design.md` (owner-approved 2026-11-14). Source data: `docs/superpowers/specs/2026-11-14-presets/advanced-source.md`. Mockup: https://claude.ai/artifact/9KAkkmWekBLZcxTAQ1kK8A.
+
+## Global Constraints
+
+- Branch `feat/2026-11-14-presets` (cut from `feat/2026-11-14-forever-port`). Never switch branches, push, merge, tag or bump the version from a task; the lead session pushes at milestones.
+- Green gate before every commit: `lua tests/run.lua`, `KA0S_KIT_CLIENT=forever lua tests/run.lua`, `~/.claude/dev-copilot/bin/ka0s-bounded luacheck .` (0 warnings / 0 errors).
+- Commit subjects open `<ID>: ` (for example `AM-PR02: …`); a review fix is `<ID>: Review fixes: …`. End every commit message with the two trailer lines `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>` and `Claude-Session: https://claude.ai/code/session_01JV4dmMmczj1LVoM5UGRHRi`. Stage explicit paths only.
+- `.lua`, `.md`, `.tsv` files are CRLF (`.gitattributes`; the kit's eol test is strict); `.sh` is LF.
+- Ka0s WoW Addon Standard: every player-facing string in `locales/enUS.lua`; client checks only through `NS.Compat`; registry writes only through the registry writers (architecture-§5); every file ≤ 1500 lines; every function CCN ≤ 15; a new file is listed in `AuraMaster.toc` with a load-order note and pinned in `tests/test_loadorder.lua` when its position is load-bearing. A rule a task cannot meet: stop and report it, never deviate silently.
+- No in-game smoke is marked passed by any task; smoke is the owner's.
+- Presets carry no appearance media and no spell ids (spec §3). Every category key a preset names must exist on both kit profiles.
+
+## Review Focus
+
+1. **A `/reload` or crash mid-preview** must give the player their own containers back at the next login, with the same ids and attachments: AM-PR03 adds `test_presets_preview.lua` "stale snapshot restores at login".
+2. **A profile switch mid-preview** must restore the snapshot into the profile it came from, never the new one: AM-PR03 "profile change restores the old profile first".
+3. **Combat starting mid-preview** turns test mode off and must end the preview by restoring, never by keeping a half-applied preset: AM-PR03 "combat ends preview with restore". *Amended on the AM-PR08 review:* when an apply must wait at the pull (lockdown already up, or auras secret), the restore is held to `PLAYER_REGEN_ENABLED` and the preview's containers stay live through the fight (spec §6; AM-PR03 "combat under secrecy keeps the preview until combat ends"). The owner has not ruled on it yet.
+4. **Add mode over containers with the same names** gets unique names, and each new stack member attaches to the new container above it, never to a player's container with the old id: AM-PR02 "add mode chains to new ids".
+5. **Applying Advanced twice** must not create a second pair of special categories, and the spell list the player filled stays attached: AM-PR02 "advanced re-apply reuses categories".
+
+---
+
+### Task AM-PR01: Preset data and the builder
+
+**Files:**
+- Create: `defaults/Presets.lua` (data + pure builder, loads after `defaults/UserCategories.lua` and `defaults/Profile.lua`)
+- Modify: `AuraMaster.toc`, `tests/test_loadorder.lua`, `tests/run.lua` (suite list)
+- Test: `tests/test_presets_data.lua`
+
+**Interfaces:**
+- Produces `NS.PresetData` with:
+  - `NAMES = { "empty", "simple", "intermediate", "advanced", "healer" }`; `LOOKS = { "bars", "icons" }`
+  - `REF_H = 1080`; `Scale(parentH) -> number` (`parentH / 1080`, or `1` when `parentH` is nil, 0 or not a number)
+  - `Count(name) -> number` (0, 3, 8, 20, 9)
+  - `CUSTOM = { SPECIAL_PLAYER = { nameKey = "Special player buffs", auraType = "HELPFUL" }, SPECIAL_TARGET = { nameKey = "Special target debuffs", auraType = "HARMFUL" } }`
+  - `Build(name, look, parentW, parentH) -> specs` where `specs` is an array in creation order of `{ overrides = <table for ContainerManager.Create>, attachTo = <index into specs> | nil, customKeys = { "SPECIAL_PLAYER", … } | nil }`. A head has `overrides.position = { point, relativePoint, x, y }` and `overrides.attach.mode = "screen"`; a member has `attachTo` and `overrides.attach = { mode = "container", point = "TOPLEFT", relativePoint = "BOTTOMLEFT", x = 0, y = -<gap> }` (the writer fills `attach.container`). Unknown name or look: `{}`.
+- Data shape inside the file: `STACKS = { cornerRight = { anchor = "TOPRIGHT", x = -175, y = -6, width = 175 }, cornerLeft = { anchor = "TOPRIGHT", x = -395, y = -6, width = 215 }, middle = { anchor = "TOP", x = -240, y = -200, width = 480 }, left = { anchor = "TOP", x = -520, y = -330, width = 240 }, right = { anchor = "TOP", x = 280, y = -330, width = 240 }, far = { anchor = "TOP", x = 570, y = -330, width = 220 } }` (reference units; x of a TOP anchor is the column's LEFT edge from the center line, so the head's `point = "TOPLEFT"`, `relativePoint = "TOP"`; TOPRIGHT stacks use `point = "TOPLEFT"`, `relativePoint = "TOPRIGHT"` with the negative x). One `CONTAINERS` table keyed by role (`pbuffs`, `wpn`, `pdebuffs`, `txtOff`, …) holding name, unit, auraType, style, enabled, filter, layout, behavior, transcribed from `advanced-source.md` with the spec §3 changes (names, `growV = "down"`, no attach/position, empty white/blacklists, custom keys renamed to `SPECIAL_PLAYER`/`SPECIAL_TARGET`), plus Healer's four new roles and Intermediate's merged `tcd` (spec §3, §3.1). One `TIERS` table: name → list of `{ stack, role }` in creation order (spec §3 table; Advanced's stacks per the mockup: cornerRight pbuffs, wpn; cornerLeft pdebuffs; middle txtOff, txtDef, txtRaid; left pshort, pcd, pspec; right tdeb, tbuff, tcc, tcdp, tcdn, tspec, tsteal; far ticoD, ticoB, fdeb, fbuff).
+- Icons: `Build(…, "icons", …)` turns each `style = "bars"` role into `style = "icons"` with `layout.axis = "horizontal"`, `growH = "right"` (stacks left of center: `"left"`… use `"right"` for every stack but cornerRight/cornerLeft, which use `"left"`); text and icon roles unchanged. Bar `bars.width` (bars) or the icon row is set from the stack width × k.
+
+- [ ] **Step 1: Write the failing tests** in `tests/test_presets_data.lua`:
+  - `presets: counts` → `Count("empty")==0, simple 3, intermediate 8, advanced 20, healer 9`, and `#Build(n,"bars",1920,1080)==Count(n)` for each.
+  - `presets: advanced matches its source` → for each of the 20 roles, `filter` (except `whitelist`, `blacklist`, renamed custom keys), `layout` (except `growV`) and `behavior` equal the values in `advanced-source.md` (transcribe the expected values into the test as a table; `enabled` false only for Target stealable).
+  - `presets: every category key exists on this client` → for every spec, every key in `overrides.filter.categories` is `SPECIAL_PLAYER`, `SPECIAL_TARGET`, or found by `NS.Categories.Find("HELPFUL"|"HARMFUL", key)`; runs under both profiles.
+  - `presets: placement at 768/1080/1440 × 16:9, 16:10, 21:9` → every head's left edge ≥ 0 and right edge ≤ width, every head's top ≥ −0.6 × height, the six stacks' column spans do not overlap, cornerRight's right edge equals the parent's right edge within 1 unit.
+  - `presets: members chain` → every non-head spec has `attachTo` equal to the index of the previous spec in the same stack; no spec has `attach.mode == "frame"` or a non-empty `attach.frame`.
+  - `presets: scale fallback` → `Scale(nil)==1`, `Scale(0)==1`, `Scale(1080)==1`, `Scale(768)` ≈ 0.711.
+  - `presets: icons variant` → in `Build("advanced","icons",…)` every role that is bars in the bars build is icons with `layout.axis=="horizontal"`; the three text roles and `ticoD`/`ticoB` are identical across the two builds.
+  - `presets: names follow the data` → every spec whose name contains "(mine)" has `filter.castBy=="mine"`.
+- [ ] **Step 2:** Run `lua tests/run.lua`; expect the new cases to fail (`NS.PresetData` nil).
+- [ ] **Step 3:** Implement `defaults/Presets.lua` per the Interfaces block; add it to the TOC after `defaults\UserCategories.lua` with a load-order note, pin the pair in `tests/test_loadorder.lua`, add the suite to `tests/run.lua`. Names go through `L[...]`.
+- [ ] **Step 4:** Gate green (both profiles, luacheck).
+- [ ] **Step 5:** Commit `AM-PR01: Preset data and the placement builder`.
+
+**Rulings on the AM-PR01 review (settled 2026-11-14 by Claude under the run's "use your best judgement" rule; flagged to the owner in the M2 report, who can overturn them):**
+- *Ruling on 1:* keep the approved mockup layout and amend spec §4/§11 to allow a corner column over a side column. The strict non-overlap rule is replaced by a growth check: at the test-mode sample count, a corner stack's bottom stays above the side stacks' heads at 16:9 and 16:10. Where that cannot hold (heavy buff loads, 4:3 and 5:4), record it in docs/known-limitations.md. Done in AM-PR07.
+- *Ruling on 2:* amend spec §4 so icon size is derived from the scaled column width, as bar width is. The code stays as it is. Done in AM-PR07.
+
+**The questions as the review raised them:**
+1. *Corner over side columns.* Spec §4's reference numbers put the far stack under both corner columns on 16:9
+   (cornerLeft 1525..1740 against far 1530..1750 at 1920 × 1080) and the right stack under cornerLeft on 16:10; on 4:3
+   and 5:4 the right and far stacks run under the corners entirely. The corner stacks grow down from y = 6 and reach
+   the side stacks' tops (y = 330) at about 18 bars. Spec §11 says no two columns overlap. Until the owner rules
+   (move the columns so the spans are disjoint, or amend §4/§11 to allow corner-over-side sharing),
+   `tests/test_presets_data.lua` lets those pairs share with their heads 300 units apart and skips the column check
+   on 4:3 and 5:4.
+2. *Icon size.* Spec §4 says icon size stays in UI units; the builder sets an icon row's icon size from the scaled
+   column width (this plan's "the icon row is set from the stack width × k"), so icons are about 19 units at a
+   768-tall parent. Either keep icon size fixed and fit `perLine` to the column, or amend §4 to list icon size beside
+   bar width.
+
+### Task AM-PR02: Applying a preset (the writer)
+
+**Files:**
+- Create: `modules/Presets.lua`
+- Modify: `AuraMaster.toc`, `tests/test_loadorder.lua`, `tests/run.lua`, `locales/enUS.lua`
+- Test: `tests/test_presets_apply.lua`
+
+**Interfaces:**
+- Consumes: `NS.PresetData.Build`, `NS.ContainerManager.Create(overrides) -> id | nil, msg, gray`, `NS.ContainerManager.Delete(id)`, `NS.Database.GetContainers()`, `NS.Categories.CreateUserCategory(name, auraType)`, `UIParent:GetWidth()/GetHeight()`.
+- Produces `NS.Presets` with:
+  - `Apply(name, look, mode) -> true | nil, message` — `mode` is `"replace"` or `"add"`; refuses in combat (`InCombatLockdown()`) before anything is written, answering gray as `ContainerManager.Create` does, with a line of its own (`L["cannot apply a preset during combat — its containers would not be drawn or placed until combat ends"]`: Create's line names creating a container, and a Replace also deletes); `"empty"` + `"replace"` deletes every container; `"empty"` + `"add"` is refused.
+  - `ResolveCustom(customKey) -> userKey` — finds a custom category with the localized name and aura type, else creates it (spec §3: reuse).
+  - Replace deletes every existing container via `ContainerManager.Delete`, then creates the specs in order; each member's `overrides.attach.container` is the id the writer got for `specs[attachTo]`. Custom placeholder keys in `filter.categories` are rewritten to the resolved user keys before `Create`. Add mode lets `ContainerManager.UniqueName` suffix names.
+  - Debug lines through `NS.Debug("Presets", …)`.
+- [ ] **Step 1: Failing tests** (`tests/test_presets_apply.lua`, each in a `tests/fresh_env.lua` environment): `apply: replace simple` (3 containers, names, the corner chain attaches wpn to pbuffs' new id); `apply: replace empty` (0 containers); `apply: add empty refused`; `apply: add mode chains to new ids` (seed a container named "Player buffs (all)", Add simple → names get " (2)", wpn's `attach.container` is the new pbuffs id); `apply: advanced creates two categories`; `apply: advanced re-apply reuses categories` (fill SPECIAL_PLAYER's list, apply again → still two user categories, the list kept, containers point at the same keys); `apply: refused in combat` (mock `InCombatLockdown` true → nil, message, nothing changed); `apply: only the registry writers write` (spy `p.containers` writes outside `ContainerManager`, expect none).
+- [ ] **Step 2:** Run; expect failures.
+- [ ] **Step 3:** Implement `modules/Presets.lua`; TOC after `modules/ContainerManager.lua` with a note; pin the order; suite listed.
+- [ ] **Step 4:** Gate green.
+- [ ] **Step 5:** Commit `AM-PR02: Apply a preset through the registry writers`.
+
+### Task AM-PR03: Preview on the real screen
+
+**Files:**
+- Modify: `modules/Presets.lua`, `modules/ContainerManager.lua` (a restore writer), `core/AuraMaster.lua` (profile callbacks and login restore), `defaults/Profile.lua` (`presets` defaults)
+- Test: `tests/test_presets_preview.lua`
+
+**Interfaces:**
+- Produces in `NS.Presets`: `BeginPreview(name, look) -> true | nil, msg` (snapshot once into `profile.presets.previewSnapshot`, then `Apply(name, look, "replace")`, then `NS.Preview.SetTestMode(true, "preset preview")`; a second call swaps the preset and keeps the first snapshot), `EndPreview(keep, mode) -> true | nil, msg` (keep + `"replace"`: drop the snapshot; keep + `"add"`: restore then `Apply(name, look, "add")`; not keep: restore; every branch turns test mode off and clears the snapshot), `IsPreviewing() -> boolean`, `RestoreStaleSnapshot()` (called before containers are built at login and on every profile event: a snapshot present means a preview was interrupted).
+- Produces `NS.ContainerManager.RestoreSnapshot(snap)` — replaces `containers`, `containerOrder`, `nextContainerId` with deep copies from `snap` (ids kept), `userCategories`/`userCategoryOrder`/`categorySpells` likewise (then `NS.Categories.SyncUserCategories(profile)`), then `Announce(true)`. The snapshot shape: `{ containers, containerOrder, nextContainerId, userCategories, userCategoryOrder, categorySpells }`.
+- `defaults/Profile.lua`: `presets = { pickerSeen = false }` (no `previewSnapshot` default).
+- Combat: `PLAYER_REGEN_DISABLED` already turns test mode off (`core/AuraMaster.lua:166`); in the same branch, when `NS.Presets.IsPreviewing()`, call `EndPreview(false)` deferred to `PLAYER_REGEN_ENABLED` if the restore itself would be refused, and print one line.
+- [ ] **Step 1: Failing tests:** `preview: snapshot and restore exact` (ids, attach targets, categories, categorySpells equal after Begin+End(false)); `preview: swap keeps the first snapshot`; `preview: keep replace drops snapshot and test mode off`; `preview: keep add restores then adds`; `preview: stale snapshot restores at login` (seed a profile with `presets.previewSnapshot` → fresh env → own containers back, snapshot cleared); `preview: profile change restores the old profile first`; `preview: combat ends preview with restore`; `preview: categories the preview created are removed`.
+- [ ] **Step 2–4:** Run (fail), implement, gate green.
+- [ ] **Step 5:** Commit `AM-PR03: Preview a preset on the real screen with an exact restore`.
+
+### Task AM-PR04: New profiles start from Simple; schema v19
+
+**Files:**
+- Modify: `core/Database.lua` (seeding and a `{ to = 19 }` step), `defaults/Profile.lua` (retire `NS.STARTER_CONTAINERS`), every test that assumes the four starters (`grep -rln "STARTER_CONTAINERS\|Player cooldowns\"\|Target debuffs (mine)\"" tests`)
+- Test: `tests/test_presets_seed.lua`, plus the updated suites
+
+**Interfaces:**
+- Seeding: an unseeded profile with no containers gets `NS.PresetData.Build("simple", "bars", W, H)` created in order (heads and member attaches resolved by the same code path as `Presets.Apply`, called as a writer helper, not through `ContainerManager.Create`'s combat guard, since seeding runs at load). `seeded` set as today.
+- v19 step: for each profile with `p.seeded == true`, set `p.presets = p.presets or {}` and `p.presets.pickerSeen = true`. Keyed on `seeded` (spec §9).
+- [ ] **Step 1: Failing tests:** `seed: new profile gets simple` (3 containers, names); `seed: migrated profile marked seen` (a v18 profile with `seeded=true` → `presets.pickerSeen==true`, its containers unchanged); `seed: fresh install not marked seen` (no stored data → after load `pickerSeen==false`).
+- [ ] **Step 2:** Run (fail). Then update every existing test that counted or named the four starters to the Simple set; record each changed expectation in the commit body.
+- [ ] **Step 3:** Implement; gate green on both profiles.
+- [ ] **Step 4:** Commit `AM-PR04: New profiles start from the Simple preset; schema v19 marks existing profiles seen`.
+
+### Task AM-PR05: The first-run picker and `/am preset`
+
+**Files:**
+- Create: `settings/PresetPicker.lua`
+- Modify: `core/AuraMaster.lua` (show order: preset picker before the skin picker), `core/SkinSetup.lua` (only if a hook is needed to hold the skin picker while the preset picker is due), `settings/Slash.lua` (verb `preset`), `locales/enUS.lua`, `AuraMaster.toc`, `tests/test_loadorder.lua`, `tests/run.lua`, `docs/known-limitations.md` (other addons' skin pickers, spec §7)
+- Test: `tests/test_presetpicker.lua`, `tests/test_slash_verbs.lua`
+
+**Interfaces:**
+- Produces: `NS.PresetPickerDue() -> boolean` (profile `presets.pickerSeen` false and the addon stands up), `NS.MaybeShowPresetPicker()` (shows when due; in combat holds for `PLAYER_REGEN_ENABLED`), `NS.ShowPresetPicker()` (on demand, ignores the latch), `NS.HidePresetPicker()` (ends any preview with restore, no latch write).
+- Window: DIALOG strata, toplevel, clamped, movable, anchored `LEFT` of `UIParent` at x = 24, painted through `NS.SkinPaintAce`/the skin seams; controls from LibKa0s Options (dropdown, two-button switch, primary and secondary buttons) and copy from spec §7. A pick calls `NS.Presets.BeginPreview`; Empty calls `EndPreview(false)` and shows no test mode; Apply calls `EndPreview(true, "replace")` (Empty: `Apply("empty","replace")`); Not now, close and Escape call `EndPreview(false)`. Every close sets `presets.pickerSeen = true` and then calls `NS.MaybeShowSkinPicker()`.
+- Login: `addon:OnEnterWorld` shows the preset picker (no delay) when due and arms the skin picker only after it closes; a profile event calls `NS.HidePresetPicker()` first, then `NS.MaybeShowPresetPicker()`.
+- Slash: `/am preset` → `NS.ShowPresetPicker()`; `/am preset <name> [icons] [add]` → `NS.Presets.Apply` behind the same Replace confirm the tab uses (a StaticPopup), listed in help.
+- [ ] **Step 1: Failing tests:** `picker: due on new profile only`; `picker: shows before skin picker` (spy order); `picker: pick previews, close restores, latch set`; `picker: apply keeps`; `picker: empty applies no containers`; `picker: refused in combat holds`; slash `preset` opens; `preset simple icons add` applies; unknown name prints the usage line.
+- [ ] **Step 2–4:** Run (fail), implement, gate green.
+- [ ] **Step 5:** Commit `AM-PR05: First-run preset picker and /am preset`.
+
+### Task AM-PR06: The Presets tab
+
+**Files:**
+- Create: `settings/ContainersPresets.lua` (render function and rows)
+- Modify: `settings/Containers.lua` (second tab in the General section's `tabs`), `settings/OptionsSetup.lua` (only to end a preview when the panel hides or the tab changes), `locales/enUS.lua`, `AuraMaster.toc`, `tests/run.lua`
+- Test: `tests/test_pages_presets.lua`
+
+**Interfaces:**
+- `NS.RegisterContainerSection(PAGE, L["General"], { tabs = { { key = GROUP, … }, { key = "Presets", label = L["Presets"], render = NS.RenderPresetsTab } } })`.
+- `NS.RenderPresetsTab(container, ctx)`: the copy and controls of spec §8 (no Empty); picking a preset or style calls `NS.Presets.BeginPreview`; Apply preset… shows a confirm naming the count it replaces (Replace) or adds (Add), then `EndPreview(true, mode)`; Stop preview calls `EndPreview(false)`. Leaving the tab, closing the panel (`OnHide`) or a profile change calls `EndPreview(false)` when previewing.
+- [ ] **Step 1: Failing tests:** `presets tab: listed after General`; `presets tab: pick previews`; `presets tab: apply replace confirms and keeps`; `presets tab: add keeps player containers`; `presets tab: leaving the tab restores`; `presets tab: panel hide restores`; `presets tab: no empty option`.
+- [ ] **Step 2–4:** Run (fail), implement, gate green.
+- [ ] **Step 5:** Commit `AM-PR06: Presets tab on the Containers page`.
+
+### Task AM-PR07: Docs, smoke and inventory
+
+**Files:** `docs/ARCHITECTURE.md` (module map, message/state notes, the `presets` profile key), `docs/schema.md` (v19, `presets`), `docs/settings-panel.md` (Presets tab), `docs/smoke-tests.md` (a PRESETS theme: each preset in each style on Retail and Forever, picker on a new profile, Apply, Not now, `/reload` mid-preview, combat mid-preview, other Ka0s skin picker queue), `docs/known-limitations.md`, `README.md` (feature line, slash row, test badge), `docs/test-cases.md` (regenerate with `lua tests/run.lua --list`), `CLAUDE.md` only if a command changes.
+- [ ] Update each, regenerate the inventory, gate green, commit `AM-PR07: Docs, smoke checks and inventory for presets`.
+
+### Task AM-PR08: Whole-branch review fixes and the automated-test record
+
+- [ ] A whole-branch review against the spec, plan and standard; fix each real finding in commits `AM-PR08: Review fixes: …`.
+- [ ] Run the automated-test battery for both kit profiles per the AUTOMATED_TESTS.md playbook (`docs/automated-tests/<YYYYMMDD-HHMMSS>/`, `RESULTS.md`, `ANALYSIS.md`), append the checkpoint row and the RESUME log line, commit `AM-PR08: Automated-test record for presets`.
+
+## Round 2: owner feedback (spec §15)
+
+Each task keeps the Global Constraints, the gate and the commit rules above.
+
+### Task AM-PR09: Upward side stacks, the corner group moved, the center call-outs styled
+
+**Files:** `defaults/Presets.lua`, `tests/test_presets_data.lua` (and any preset suite whose expectations move: apply, seed, preview), `locales/enUS.lua` only if a string changes.
+- [ ] Failing tests first: `presets data: side stacks grow up from their base` (every left/right/far head is placed by a BOTTOM point, `growV == "up"`, and members attach BOTTOMLEFT to TOPLEFT above the one before, in Bars and Icons, for every tier); `presets data: the corner group sits left of and below its old place`; `presets data: the call-outs are centered and colored like the owner's` (justifyH CENTER, the three colors, glow, font size 24..36, head TOP at x 0); the call-out block's unlocked test-mode rect (`PresetData.CalloutRect`), which the picker places itself under; the placement case at all 15 screens updated per §15, every stack's test-mode top on screen. (The three-rectangle intersection case moved to AM-PR10, which lands the picker's placement function, on the AM-PR09 review.)
+- [ ] Implement per §15. Keep the seed path working (a new profile's Simple seed). Gate green, commit `AM-PR09: Side stacks grow up, the corner group moves in, the call-outs centered and colored`.
+
+### Task AM-PR10: The picker opens centered and unlocked, with lock and test-mode buttons
+
+**Files:** `settings/PresetPicker.lua`, `locales/enUS.lua`, `tests/test_presets_picker.lua` (or the picker suite that exists).
+- [ ] Failing tests first: `picker: opens centered below the call-outs`; `presets data: the call-out block, the picker and the skin picker do not intersect at 1080` (rectangles computed from the builder and the picker's placement function, the block unlocked); `picker: opening unlocks and remembers the lock`; `picker: the lock button flips the lock`; `picker: the test button flips test mode, and turning it off ends a preview`; `picker: apply leaves containers locked and test mode off`; `picker: not now, close and escape put the lock back and test mode off`; `picker: /am preset opens unlocked too`.
+- [ ] Implement per §15 (the lock write goes through the same seam `/am lock` uses; buttons use the window's existing widget style; frame layering unchanged). Gate green, commit `AM-PR10: The preset picker opens centered and unlocked, with lock and test-mode buttons`.
+
+### Task AM-PR11: Docs, smoke, whole-branch review and the automated-test record
+
+- [ ] Update the docs (ARCHITECTURE Presets section, settings-panel if touched, known-limitations, smoke checks PRESETS-* for the new behavior: upward stacks, corner group, call-out look, picker position, lock and test buttons, Apply locks and turns test off), the spec §4/§7 cross-references, test-cases.md and the README badge. Commit `AM-PR11: Docs and smoke checks for the owner's round-1 feedback`.
+- [ ] An independent review of AM-PR09..11 against spec §15; fix findings as `AM-PR11: Review fixes: …`.
+- [ ] A fresh automated-test record for both kit profiles (AUTOMATED_TESTS.md playbook), the M4 checkpoint row and the RESUME log line. Commit `AM-PR11: Automated-test record after round-1 feedback`.
+
+### Task AM-PR12: The owner's rulings on the round-1 conflicts (spec §15.1)
+
+**Files:** `settings/PresetPicker.lua`, `defaults/Presets.lua` (`ROOM`, the base, `CalloutRect`), `tests/test_presetpicker.lua`, `tests/test_presets_data.lua`, docs (ARCHITECTURE, known-limitations, smoke-tests PRESETS-20/23 and others that name the old spot or base, spec cross-refs), test-cases.md, README badge.
+- [ ] Failing tests first: `picker: opens where the skin picker does` (CENTER, 75% up, x 0, at 1080 and 768); `picker: the call-out block clears the picker at 1080 for every preset` (no exception for Advanced, `OVERLAPS_AT_1080` gone); `presets data: side stacks sit on the lower base`; the unlocked/locked top-edge checks tightened to what the lower base now achieves (state any remaining overshoot and record it).
+- [ ] Implement per §15.1, gate green, commit `AM-PR12: The picker takes the skin picker's spot, the side stacks start lower`.
+- [ ] Review, fixes as `AM-PR12: Review fixes: …`, then a fresh automated-test record and the M4 checkpoint row: `AM-PR12: Automated-test record after the round-1 rulings`.
+
+## Round 3: owner feedback, round 2 (spec §16)
+
+### Task AM-PR13: Call-out glow, a focus stack of its own, the corner group aligned with it
+
+**Files:** `defaults/Presets.lua`, `tests/test_presets_data.lua` and any preset suite whose expectations move, docs/known-limitations.md if an overlap remains.
+- [x] Failing tests first: `presets data: the call-outs carry the owner's glow exactly` (every field in §16.1); `presets data: focus roles form their own screen-placed stack` (every tier, both looks; head attach.mode screen, members attached within the focus stack only, nothing attached to a far-column container); `presets data: no bars container is laid out horizontally after Apply` (the effective layout, every tier and look); `presets data: the focus stack stays clear of the far stack beyond twice the snap radius` (test mode, locked and unlocked, all tested screens); `presets data: Player debuffs' left edge lines up with Focus buffs' left edge` (screen space, all tested ratios, and left of the §15 position).
+- [x] Implement per §16.1–3, gate green, commit `AM-PR13: The call-outs' glow, a focus stack of its own, the corner group aligned with it`.
+
+### Task AM-PR14: The Presets tab moves to the General page
+
+**Files:** `settings/ContainersPresets.lua` (or a renamed file), `settings/General.lua`, `settings/Containers.lua`, `AuraMaster.toc` if the file moves or is renamed, `locales/enUS.lua` (the picker footer string), the presets tab tests.
+- [x] Failing tests first: the tab is listed on the General page and not on the Containers page; every existing presets-tab case passes on its new page (pick previews, apply replace confirms and keeps, add keeps, leaving the tab restores, panel hide restores, no Empty); the footer names the General page.
+- [x] Implement per §16.4, gate green, commit `AM-PR14: The Presets tab moves to the General page`.
+
+### Task AM-PR15: Docs, smoke checks, review and the automated-test record for round 2
+
+- [x] Docs (ARCHITECTURE, settings-panel, module-map, known-limitations, smoke checks: the glow, the focus stack, the corner alignment, the tab's new place), test-cases.md and the README badge. Commit `AM-PR15: Docs and smoke checks for the owner's round-2 feedback`.
+- [ ] An independent review against §16; fixes as `AM-PR15: Review fixes: …`.
+- [ ] A fresh automated-test record, the M5 checkpoint row and the RESUME log line: `AM-PR15: Automated-test record after round-2 feedback`.
+
+## Round 4: owner feedback, round 3 (spec §17)
+
+### Task AM-PR16: The right-hand cluster lined up, Player debuffs attached to Player buffs, equal bar widths
+
+**Files:** `defaults/Presets.lua`, `tests/test_presets_data.lua` and any preset suite whose expectations move, docs/known-limitations.md.
+- [x] Failing tests first: `presets data: Player debuffs attaches by its top right to Player buffs' top left` (Bars and Icons, every tier, checked through Anchors.AttachPoints after Apply); `presets data: the focus, far and Player debuffs left edges line up`; `presets data: the target column sits 50 left of the focus column`; `presets data: the target stack's base is on the far stack's bottom line and its test-mode top near Player debuffs' top`; `presets data: every bar container is as wide as Player cooldowns`; the placement case at all 15 screens updated (everything on screen, Player buffs' right edge at least 10 in, the snap clearances); the call-out overlap measured and recorded.
+- [x] Implement per §17.1–2, gate green, commit `AM-PR16: The right-hand cluster lined up, Player debuffs attached to Player buffs, equal bar widths`.
+
+### Task AM-PR17: Bar colors and backgrounds, numbered names, the unlock hint
+
+**Files:** `defaults/Presets.lua`, `settings/PresetPicker.lua`, `locales/enUS.lua`, preset tests, `tests/test_presetpicker.lua`.
+- [x] Failing tests first: `presets data: debuff bars color by dispel type`; `presets data: bar backgrounds are 50% opaque`; `presets data: names are numbered 1..N in the owner's order` (every tier; continuous; creation order matches); `picker: every close prints the unlock hint once`.
+- [x] Implement per §17.3–5, gate green, commit `AM-PR17: Bar colors and backgrounds, numbered names, the unlock hint`.
+
+### Task AM-PR18: Docs, smoke checks, review and the automated-test record for round 3
+
+- [x] Docs (ARCHITECTURE, known-limitations, smoke checks for every §17 item, spec cross-references), test-cases.md and the README badge. Commit `AM-PR18: Docs and smoke checks for the owner's round-3 feedback`.
+- [ ] An independent review against §17; fixes as `AM-PR18: Review fixes: …`.
+- [ ] A fresh automated-test record, the M6 checkpoint row and the RESUME log line: `AM-PR18: Automated-test record after round-3 feedback`.
+
+## Round 5: owner feedback, round 4 (spec §18)
+
+### Task AM-PR19: Player stack nearer the center, the target cluster mirroring it, the call-outs higher
+
+**Files:** `defaults/Presets.lua`, `settings/PresetPicker.lua` if its tests move, preset tests (data, cluster, picker, apply, seed), `docs/known-limitations.md`.
+- [x] Failing tests first: `presets data: the player column sits 40 from the call-out column`; `presets data: the target column mirrors the player column where the cluster fits` (21:9 at 768, 1080 and 1440); `presets data: the cluster moves left just enough to fit on narrower screens` (Player buffs 10 in, every gap and alignment kept); `presets data: the call-out block starts at about the picker's top`; the placement, cluster, snap and top-edge cases updated; overlaps measured and recorded.
+- [x] Implement per §18.1–4, gate green, commit `AM-PR19: The player stack nearer the center, the target cluster mirroring it, the call-outs higher`.
+
+### Task AM-PR20: Existing users see the preset picker once
+
+**Files:** `modules/Presets.lua`, `settings/PresetPicker.lua`, `defaults/` global defaults and the schema row, `core/` migrations only if needed, `tests/test_presetpicker.lua`, `tests/test_presets_seed.lua`.
+- [x] Failing tests first: `picker: an existing profile sees the picker once per account`; `picker: closing it by any route marks it shown for every profile`; `picker: a brand-new install does not see it twice`; `picker: combat holds it until it can show`; `picker: an existing player's containers stay unless they apply and confirm`.
+- [x] Implement per §18.5, gate green, commit `AM-PR20: Existing users see the preset picker once`.
+
+### Task AM-PR21: Docs, smoke checks, review and the automated-test record for round 4
+
+- [x] Docs (ARCHITECTURE, schema.md, known-limitations, smoke checks for every §18 item, spec cross-references), test-cases.md and the README badge. Commit `AM-PR21: Docs and smoke checks for the owner's round-4 feedback`.
+- [ ] An independent review against §18; fixes as `AM-PR21: Review fixes: …`.
+- [ ] A fresh automated-test record, the M7 checkpoint row and the RESUME log line: `AM-PR21: Automated-test record after round-4 feedback`.

@@ -1,7 +1,7 @@
 # Settings panel
 
 How the options are organized, what each control does, and which schema key it writes. The rows
-below are derived from the live schema (`NS.Schema`, 318 rows on a profile with no categories of the
+below are derived from the live schema (`NS.Schema`, 320 rows on a profile with no categories of the
 player's own — each of those adds one more `container.filter.categories.<key>` row at runtime) by
 loading the addon headlessly and
 walking it page → group → subgroup; a page, tab or row listed here that the schema does not produce
@@ -12,7 +12,7 @@ is a defect in this doc (documentation-§3).
 | Page | Tabs | Covers |
 |---|---|---|
 | Ka0s Aura Master (landing) | — untabbed (options-ui-§13) | Logo, the TOC's one-line Notes, and the slash command list generated from `NS.COMMANDS`. `/am` and `/am config` open the panel here |
-| General | Master controls · Blizzard frames · Spell categories · Dispel colors · Skin | Turn the addon off, when containers show at all, master scale and opacity, lock (unlocked shows the drag handles), debug console, test mode (placeholder auras), the two resets; hiding Blizzard's buff and debuff frames; which spells each spell category matches, and one color per dispel type, both shared by every container |
+| General | Master controls · Presets · Blizzard frames · Spell categories · Dispel colors · Skin | Turn the addon off, when containers show at all, master scale and opacity, lock (unlocked shows the drag handles), debug console, test mode (placeholder auras), the two resets; a ready-made set of containers for the whole profile, previewed on the screen first; hiding Blizzard's buff and debuff frames; which spells each spell category matches, and one color per dispel type, both shared by every container |
 | Containers | a nav rail (options-ui-§13): General · Filters · Layout · the container's own style | One page per container (#6): the band's picker chooses the container, the rail chooses which part of it the tabs below show, and only the scroll moves |
 | Containers → General (rail) | General | A top-level page (`N-1`, batch 7): create, select, rename, enable, unit, aura type and style of a container, and duplicate, delete, copy settings between containers |
 | Containers → Filters (rail) | General · Categories · Overrides · Situations | Who cast it, timed or permanent, maximum duration, sort order and cap (per group), then the engine-group note and the five-rank priority block at the foot of the tab; what draws where spell lists don't apply, per NPC and per player, then the Show/Hide category grids (weapon enchants among them); the whitelist and blacklist spell lists, each entry's verdict in its "?" mark; the kinds of zone the container shows in, and the kinds of unit (NPC or player, friendly, neutral or hostile) a target or focus container shows for. Tabs vary with the aura type |
@@ -62,7 +62,7 @@ layout after it; the earlier names are noted where a row moved.
   returns to the tab you left. General, the addon page, is addon-wide, renders through
   `Helpers.RenderPage` and draws no banner.
 - **Rows that do not apply to the selected container are not drawn.** A row may carry `auraTypes`
-  (`settings/Schema.lua:411`): the buff categories and Hide enchants without a duration are not
+  (`settings/Schema.lua:419`): the buff categories and Hide enchants without a duration are not
   offered on a debuff container.
 - **Structural rows re-render the panel.** Changing a container's unit, aura type or style, or its
   attach mode, calls `NS.RequestPanelRefresh` (next frame, coalesced), because the set of rows other
@@ -86,7 +86,7 @@ band holds **the picker itself** (options-ui-§14):
   picker and **New container** on one row: `Helpers.ContainerBanner` with the page's own tooltip and
   New container as the library's `PageBanner` `action` (feedback #2, 2026-09-19; the picker+create
   band, LibKa0s v1.56.0). The acts on the selected container (Name, Enable this container, Duplicate
-  container, Delete container…, Copy settings from) are the rail's General section, whose one tab options-ui-§14 names **General**. The band is
+  container, Delete container…, Copy settings from) are the rail's General section, whose one tab options-ui-§14 names **General** (the Presets tab that was its second moved to the General page, presets spec section 16.4). The band is
   drawn on every render, so a Delete's two refreshes cannot lose it; the library releases the band's
   widgets of the render before once the new band exists, and refuses New container in combat as it
   refuses the picker's selection. **New container lands on General** (owner, 2026-09-26): once the
@@ -117,7 +117,8 @@ band holds **the picker itself** (options-ui-§14):
   Either press logs one `[Set] reset <page>: N rows` line, N the rows it changed (debug-logging-§10).
 - **`noReset` does not reach Reset all settings, on purpose.** Reset all is a whole-profile reset
   (options-ui-§12, `db:ResetProfile`), not a row walk: it removes your own containers rather than
-  renaming them, and brings the starter containers back under their shipped names. No name is
+  renaming them, and brings the starter containers (the Simple preset, schema v19) back under their
+  shipped names. No name is
   reset to a default there, so the flag has nothing to guard. Spec G-1's "excluded from Reset all"
   is met that way, with no row flag involved.
 - **Ratified 2026-09-13 (owner): a renamed container's name does not survive Reset all.** Because it
@@ -134,7 +135,7 @@ with its closed box justified LEFT, in a widget pool of its own, so its justific
 or arrives from, another panel's stock Dropdown. A row that names a control (`EditBox`, `Ka0sMedia_*`) keeps it.
 Every `container.` path is relative to the selected container (`docs/schema.md`).
 
-### General (26 rows, `settings/General.lua`, `settings/GeneralSpells.lua`, `settings/GeneralUserCategories.lua`, `settings/GeneralDispel.lua`)
+### General (28 rows, `settings/General.lua`, `settings/GeneralSpells.lua`, `settings/GeneralUserCategories.lua`, `settings/GeneralDispel.lua`)
 
 **Master controls** — composed by the library's `MasterControls` from one declaration
 (options-ui-§15), in canonical order, two per line:
@@ -157,6 +158,12 @@ unlocking, and each container's engine is disabled while it is on. It is bound t
 *Test mode* entry also use: off after a reload, ended when combat starts (`PLAYER_REGEN_DISABLED`), and a
 start in combat is refused with one gray line, the checkbox reading false again. Its default is
 false, so *Reset all settings* ends it too.
+
+**Two rows in the Master controls group draw nothing** (skipRender): the first-run preset picker's
+latches, `presets.pickerSeen` (this profile has closed the picker) and `global.presets.pickerSeen`
+(the account's, presets spec section 18.5), both set by every close the player makes of the picker
+(`NS.Presets.MarkPickerSeen`). `/am get|set|reset` reaches both; this page's **Defaults** skips the
+account row (`vetoedFromPanelReset`, `settings/OptionsSetup.lua`), as it skips the Minimap button.
 
 **Reset all settings does not reach the Minimap button.** That control is a profile reset
 (options-ui-§12) and the row is global, which is the reason launcher-§3 puts it there: a button the
@@ -407,9 +414,47 @@ text type word, backdrop or edge, so there is no None swatch. Icons do not read 
 colors on our Solid shape (owner, 2026-09-13; batch 8 DB-2), and the tab line and each row's tooltip say so. Profile-wide, so a
 write re-applies every container.
 
+#### The Presets tab (`settings/GeneralPresets.lua`)
+
+The General page's second tab, after Master controls (presets spec sections 8 and 16.4; it was the
+Containers page's General section's second tab until AM-PR14), drawn whether
+or not the profile has a container: a preset is how a profile with none gets some. It holds no schema
+row; its choices are session state that means nothing outside an open panel. Top to bottom:
+
+- A line saying a preset is a ready-made set of containers placed for the screen size, that applying
+  one changes every container in the profile, and that skin, fonts and the other General settings
+  are left alone.
+- **Preset**, a dropdown: Simple, Intermediate, Advanced, Healer, each with its container count.
+  Empty is not offered here (a one-click wipe stays off the panel; the band deletes containers one at
+  a time). **Style**, a dropdown: Bars or Icons; text containers stay text. Picking either previews
+  the selection on the real screen in test mode (`NS.Presets.BeginPreview`), swapping a preview the
+  tab already has up.
+- The status line: "Previewing … on your screen in test mode. Move this panel aside to look. Nothing is
+  saved until Apply; leaving this tab or closing the panel puts your containers back." while the tab's
+  own preview is up, else a note to pick a preset or a style.
+- **What it creates**: the names of the containers the selection creates, in creation order, two to a
+  row.
+- **When applied**, a dropdown: *Replace all my containers* or *Add next to my containers*. Choosing
+  it previews nothing.
+- **Apply preset…** asks first through the preset confirm, naming how many of the player's own
+  containers a Replace deletes, or how many an Add adds, then keeps the preview in that mode
+  (`NS.ConfirmPreview`); with no preview of the tab's up it applies the selection behind the same
+  confirm (`NS.ConfirmPreset`). A Replace over a profile with no containers does not ask.
+  **Stop preview** puts the player's containers back and turns test mode off.
+
+Leaving the tab ends its preview with a restore: a click on any other tab of the page (a schema tab
+the library draws itself through the page's chrome) and the panel's `OnHide` all reach the tab's `onLeave` (`NS.PresetsTabLeft`) through
+`settings/OptionsSetup.lua`'s leave record, and a profile change restores through
+`modules/Presets.lua`'s own profile-event path. The tab ends only a preview it started
+(`NS.Presets.Previewed`'s token), so a preview the first-run picker has up is the picker's. In combat
+a pick and Apply preset… are refused on a gray combat line; combat's start has already ended the
+preview by then (`docs/ARCHITECTURE.md` → *Presets*).
+
 ### Containers (5 rows, `settings/Containers.lua`)
 
-A top-level page (`N-1`, batch 7 — formerly General's third tab), one tab, **General**. The band above
+A top-level page (`N-1`, batch 7 — formerly General's third tab). The rail's General section has one
+tab, **General** (the Presets tab that followed it moved to the General page, presets spec section
+16.4). The band above
 the strip holds the Container picker and **New container** (a player-buff bar container, then
 selected, with the page moved to General/General) on one row. With no container, the band and one sentence are all the page draws.
 

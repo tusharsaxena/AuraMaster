@@ -608,7 +608,7 @@ test("slash verbs: /am delete matches a name in any case and names what it delet
         assertEqual(dump(slash(NS2, lines, miss)), "{No such container — /am containers lists them}", miss)
     end
     -- red under: runDelete falling through to Delete(nil) on a miss
-    assertEqual(#NS2.Database.GetContainers(), #NS2.STARTER_CONTAINERS - 1)
+    assertEqual(#NS2.Database.GetContainers(), #AM_TEST.STARTERS - 1)
 end)
 
 -- ── a bare number: name first, a cross-match refused, '#N' always the id (AM-R-05) ───────────
@@ -621,7 +621,7 @@ test("slash verbs: /am delete 3 refuses when one container is named '3' and anot
     NS2.Database.FindContainer(1).name = "3"
     -- red under: findContainer reading a numeric arg as an id before any name match
     assertEqual(dump(slash(NS2, lines, "delete 3")), "{" .. AMBIGUOUS_3 .. "}")
-    assertEqual(#NS2.Database.GetContainers(), #NS2.STARTER_CONTAINERS, "nothing was deleted")
+    assertEqual(#NS2.Database.GetContainers(), #AM_TEST.STARTERS, "nothing was deleted")
     NS2.State.SetActiveContainer(2)
     assertEqual(dump(slash(NS2, lines, "select 3")), "{" .. AMBIGUOUS_3 .. "}")
     assertEqual(NS2.State.activeContainerId, 2, "the selection does not move")
@@ -660,7 +660,7 @@ test("slash verbs: a bare number no container is named resolves by id, and one c
     -- red under: the cross-match refusal firing when the name and the id are the same container
     assertEqual(dump(slash(NS2, lines, "delete 3")), "{Deleted '3'}")
     assertNil(NS2.Database.FindContainer(3))
-    assertEqual(#NS2.Database.GetContainers(), #NS2.STARTER_CONTAINERS - 1)
+    assertEqual(#NS2.Database.GetContainers(), #AM_TEST.STARTERS - 1)
 end)
 
 test("slash verbs: /am resetposition and /am forgettimed do their act and say so", function()
@@ -947,4 +947,88 @@ test("slash verbs: /am new enchants makes a player buff container showing only W
     _, id = NS2.ActiveContainer()
     -- red under: an aura-type word beating the enchants word (a debuff container cannot show enchants)
     assertEqual(NS2.Database.FindContainer(id).auraType, "HELPFUL", "enchants are the player's buffs")
+end)
+
+-- ── /am preset (AM-PR05; spec sections 5 and 7) ──────────────────────────────────────────────
+
+--- Record StaticPopup_Show calls; each popup a table, as the client's is.
+local function popups(mocks)
+    local shown = {}
+    mocks.StaticPopup_Show = function(which, a1, a2)
+        local popup = { which = which, a1 = a1, a2 = a2 }
+        shown[#shown + 1] = popup
+        return popup
+    end
+    return shown
+end
+
+test("slash verbs: /am preset opens the preset picker, whatever the latch says", function()
+    local NS2, mocks = fresh()
+    NS2.Helpers.SkinPicker = function() return nil end
+    NS2.Presets.MarkPickerSeen()
+    local lines = capture(mocks)
+    slash(NS2, lines, "preset")
+    local f = NS2.PresetPicker.frame
+    -- red under: the verb missing from NS.COMMANDS, or routed through the first-run latch
+    assertTrue(f ~= nil and f:IsShown(), "the picker's window")
+    assertFalse(NS2.Presets.IsPreviewing(), "opening previews nothing")
+end)
+
+test("slash verbs: /am preset simple icons add applies after the confirm", function()
+    local NS2, mocks = fresh()
+    NS2.Helpers.SkinPicker = function() return nil end
+    local lines = capture(mocks)
+    local shown = popups(mocks)
+    local before = #NS2.Database.GetContainers()
+    slash(NS2, lines, "preset simple icons add")
+    assertEqual(#shown, 1, "Add asks first, as the tab's Apply preset... does")
+    assertEqual(shown[1].which, "AURAMASTER_APPLY_PRESET")
+    assertEqual(#NS2.Database.GetContainers(), before, "nothing written before the answer")
+    mocks.StaticPopupDialogs.AURAMASTER_APPLY_PRESET.OnAccept(shown[1], shown[1].data)
+    local list = NS2.Database.GetContainers()
+    -- red under: the style or mode words ignored (Bars, or Replace deleting the player's containers)
+    assertEqual(#list, before + NS2.PresetData.Count("simple"), "added after the player's own")
+    assertEqual(list[before + 1].style, "icons")
+    assertTrue(said(plain(lines), "Added the Simple preset (Icons) next to your containers."), dump(plain(lines)))
+end)
+
+test("slash verbs: /am preset advanced replaces after naming the count", function()
+    local NS2, mocks = fresh()
+    NS2.Helpers.SkinPicker = function() return nil end
+    local lines = capture(mocks)
+    local shown = popups(mocks)
+    slash(NS2, lines, "preset advanced")
+    assertEqual(#shown, 1)
+    assertEqual(shown[1].a1, #NS2.Database.GetContainers(), "the count it removes")
+    mocks.StaticPopupDialogs.AURAMASTER_APPLY_PRESET.OnAccept(shown[1], shown[1].data)
+    assertEqual(#NS2.Database.GetContainers(), 20)
+    assertEqual(NS2.Database.GetContainers()[1].style, "bars", "Bars by default")
+end)
+
+test("slash verbs: /am preset with an unknown name prints the usage line", function()
+    local NS2, mocks = fresh()
+    NS2.Helpers.SkinPicker = function() return nil end
+    local lines = capture(mocks)
+    local shown = popups(mocks)
+    local before = #NS2.Database.GetContainers()
+    local p = slash(NS2, lines, "preset fancy")
+    assertTrue(said(p, "Usage: /am preset [simple|intermediate|advanced|healer|empty] [bars|icons] [add]"), dump(p))
+    p = slash(NS2, lines, "preset simple sideways")
+    assertTrue(said(p, "Usage: /am preset [simple|intermediate|advanced|healer|empty] [bars|icons] [add]"), dump(p))
+    assertEqual(#shown, 0, "no confirm for a line it could not read")
+    assertEqual(#NS2.Database.GetContainers(), before)
+end)
+
+test("slash verbs: /am preset in combat is refused with the combat line", function()
+    local NS2, mocks = fresh()
+    NS2.Helpers.SkinPicker = function() return nil end
+    local lines = capture(mocks)
+    local shown = popups(mocks)
+    mocks.__lockdown = true
+    local p = slash(NS2, lines, "preset healer")
+    assertEqual(#shown, 0)
+    assertTrue(said(p, "cannot apply a preset during combat — its containers would not be drawn or placed until combat ends"), dump(p))
+    p = slash(NS2, lines, "preset")
+    assertTrue(NS2.PresetPicker.frame == nil or not NS2.PresetPicker.frame:IsShown(), "no window in combat")
+    assertEqual(#p, 1, dump(p))
 end)

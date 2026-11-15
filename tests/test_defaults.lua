@@ -60,7 +60,11 @@ local PROFILE_CARVE_OUTS = set({ "categorySpells", "userCategories", "userCatego
 test("defaults: every starter container is a valid container whose every override the template knows", function()
     local units, types, styles = set(C.UNITS), set(C.AURA_TYPES), set(C.STYLES)
     local names, bad = {}, {}
-    for i, s in ipairs(NS.STARTER_CONTAINERS) do
+    -- The starters are the Simple preset in Bars (schema v19, core/Database.lua's seedStarters).
+    local starters = {}
+    for i, spec in ipairs(NS.PresetData.Build("simple", "bars")) do starters[i] = spec.overrides end
+    assertEqual(#starters, NS.PresetData.Count("simple"))
+    for i, s in ipairs(starters) do
         assertTrue(units[s.unit] and types[s.auraType] and styles[s.style], "starter " .. i .. " is a container")
         assertFalse(names[s.name:lower()], "starter names are unique: " .. s.name)
         names[s.name:lower()] = true
@@ -295,6 +299,7 @@ end)
 
 test("defaults: every profile default is a settings row, a spell set or the registry's own bookkeeping", function()
     -- skin.fullSkinReset has no row on purpose: a row would let a Defaults path walk the record.
+    -- presets.pickerSeen is a row (settings/General.lua), like skin.pickerSeen.
     local BOOKKEEPING = set({ "containers", "containerOrder", "nextContainerId", "seeded", "skin.fullSkinReset" })
     local orphans = {}
     for _, leaf in ipairs(leaves(NS.defaults.profile, "")) do

@@ -55,6 +55,10 @@ local measureFS = { SetFont = function() return true end,
     SetText = function(self, t) measured = measured + 1; self.text = t end,
     GetStringWidth = function(self) return tostring(self.text):len() * 6 + 2 end }
 NS.Style.__measurer = function() return measureFS end
+-- The pinned figures were measured on the pre-v19 four starters (icon, bar, target, text). Since
+-- v19 a fresh profile seeds the Simple preset instead, so the runner installs the same fixture the
+-- headless harness uses (tests/starters_fixture.lua) and the figures stay comparable.
+dofile("tests/starters_fixture.lua").install(NS)
 NS.addon:OnInitialize()
 NS.addon:OnEnable()
 mocks.__fireTimers()

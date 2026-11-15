@@ -1,7 +1,7 @@
 -- tests/test_pages_containers.lua — settings/Containers.lua, driven through its widgets: the
 -- top-level Containers page (N-1, batch 7) — its own Blizzard category, its picker and New container
--- in the chrome block above the strip (feedback #2, options-ui-§14), its one tab, General, with the
--- identity rows and what each writes, and the acts on the selected container (Duplicate, Delete, Copy
+-- in the chrome block above the strip (feedback #2, options-ui-§14), its General tab with the
+-- identity rows and what each writes (the Presets tab beside it is tests/test_pages_presets.lua's), and the acts on the selected container (Duplicate, Delete, Copy
 -- settings from). This page used to be General's third tab; tests/test_pages_general.lua covers what
 -- is left of General after the split. The registry behavior under Duplicate/Delete/Copy is
 -- tests/test_containermanager.lua's; this suite proves the page reaches it, on the right container.
@@ -13,7 +13,7 @@ local test, assertEqual, assertTrue, assertFalse, assertNil =
 local fresh = dofile("tests/fresh_env.lua")
 local pages = dofile("tests/page_helpers.lua")
 
---- A fresh environment with the Containers page drawn (its only tab, so no click is needed).
+--- A fresh environment with the Containers page drawn (it opens on General, so no click is needed).
 local function containers(opts)
     local NS, m = fresh(opts)
     local P = pages(NS, m)
@@ -39,11 +39,12 @@ local function inScroll(NS, w)
     return walk(NS.Helpers.EnsureScroll(NS.Helpers.__pageCtx.containers))
 end
 
-test("containers: registers its own top-level Blizzard category, with one tab, General (N-1, options-ui-§14)", function()
+test("containers: registers its own top-level Blizzard category, its General section one General tab (N-1, options-ui-§14)", function()
     local NS, m, P = containers()
     local keys = P.tabKeys("containers")
-    -- red under: the page drawing more than its one tab, or the tab not named General (options-ui-§14
-    -- names the tab holding a page's acts, under a band carrying its picker)
+    -- red under: the acts tab not named General or not first (options-ui-§14 names the tab holding a
+    -- page's acts, under a band carrying its picker), or the Presets tab left here after AM-PR14
+    -- moved it to the General page (spec 16.4)
     assertEqual(table.concat(keys, ","), NS.L["General"])
     assertTrue(m.__subcategories.Containers ~= nil, "the page registers its own category")
     for _, path in ipairs({ "container.name", "container.enabled", "container.unit", "container.auraType", "container.style" }) do
@@ -200,9 +201,9 @@ test("containers: New container creates a container and selects it", function()
     local NS, _, P, ws = containers()
     P.find(ws, "Button", NS.L["New container"]):__fire("OnClick")
     -- red under: doNew not reaching ContainerManager.Create, or not selecting the new container
-    assertEqual(#NS.Database.GetContainers(), #NS.STARTER_CONTAINERS + 1)
+    assertEqual(#NS.Database.GetContainers(), #AM_TEST.STARTERS + 1)
     local _, id = NS.ActiveContainer()
-    assertEqual(id, NS.db.profile.containerOrder[#NS.STARTER_CONTAINERS + 1])
+    assertEqual(id, NS.db.profile.containerOrder[#AM_TEST.STARTERS + 1])
 end)
 
 test("containers: New container takes the Fill its style suits (B5)", function()
@@ -260,7 +261,7 @@ test("containers: with no containers the page draws the band's picker and New, a
     local NS, _, P = containers()
     for _, c in ipairs(NS.Database.GetContainers()) do NS.ContainerManager.Delete(c.id) end
     local ws = P.rerender("Containers")
-    -- red under: RenderPage dropping the page's one tab when no container exists
+    -- red under: RenderPage dropping the page's General tab when no container exists
     assertEqual(P.tabKeys("containers")[1], NS.L["General"])
     local picker, new = headerWidgets(NS, P)
     assertTrue(new ~= nil, "New is still offered")
@@ -514,7 +515,7 @@ test("containers: in combat the library refuses Duplicate and New container; not
     P.find(ws, "Button", NS.L["New container"]):__fire("OnClick")
     -- red under: the band's create act bypassing the library's combat refusal
     assertEqual(#lines, 1, "no second line: the lock already said it once this combat")
-    assertEqual(#NS.Database.GetContainers(), #NS.STARTER_CONTAINERS)
+    assertEqual(#NS.Database.GetContainers(), #AM_TEST.STARTERS)
 end)
 
 test("containers: Duplicate copies the selected container and selects the copy", function()
@@ -525,8 +526,8 @@ test("containers: Duplicate copies the selected container and selects the copy",
     P.find(ws, "Button", NS.L["Duplicate container"]):__fire("OnClick")
     local _, id = NS.ActiveContainer()
     -- red under: doDuplicate copying something other than the selection, or not selecting the copy
-    assertEqual(#NS.Database.GetContainers(), #NS.STARTER_CONTAINERS + 1)
-    assertTrue(id ~= 2 and id == NS.db.profile.containerOrder[#NS.STARTER_CONTAINERS + 1], "the copy is selected")
+    assertEqual(#NS.Database.GetContainers(), #AM_TEST.STARTERS + 1)
+    assertTrue(id ~= 2 and id == NS.db.profile.containerOrder[#AM_TEST.STARTERS + 1], "the copy is selected")
     local copy = NS.Database.FindContainer(id)
     assertEqual(copy.name, "Player debuffs (copy)")
     assertEqual(copy.icons.width, 44, "every setting came with it")
@@ -543,7 +544,7 @@ test("containers: Delete asks first, naming the container, and deletes it only o
     assertEqual(popups[1].which, "AURAMASTER_DELETE_CONTAINER")
     assertEqual(popups[1].text, "Player debuffs", "the popup names what it will delete")
     assertEqual(popups[1].data, 2)
-    assertEqual(#NS.Database.GetContainers(), #NS.STARTER_CONTAINERS, "nothing deleted before the answer")
+    assertEqual(#NS.Database.GetContainers(), #AM_TEST.STARTERS, "nothing deleted before the answer")
     m.StaticPopupDialogs.AURAMASTER_DELETE_CONTAINER.OnAccept(popups[1], popups[1].data)
     assertEqual(ids(NS), "1,3,4")
     local _, active = NS.ActiveContainer()

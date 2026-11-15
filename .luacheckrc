@@ -18,7 +18,7 @@ read_globals = {
     "UnitGUID", "time",   -- the user-category key generator's seed (defaults/UserCategories.lua)
     "IsMouseButtonDown", "GetCursorPosition",
     "IsShiftKeyDown",     -- the drag's snap suppression (modules/Anchors_Snap.lua, issue #22)
-    "Settings", "SettingsPanel", "StaticPopup_Show",
+    "Settings", "SettingsPanel", "StaticPopup_Show", "StaticPopup_Hide",
     "debugprofilestop",   -- the perf bracket's clock (performance-§2)
     "debugstack",         -- a failing styler's stack, kept for the error handler (modules/Style.lua)
     "geterrorhandler",    -- a failing container's apply is reported, not raised (modules/ContainerManager.lua)

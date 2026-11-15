@@ -61,6 +61,16 @@ test("loadorder: the load-bearing pairs are in order, and the TOC says why", fun
         { "defaults/CastToAura.lua", "defaults/CastToAura_Forever.lua" },
         { "core/SkinSetup.lua", "defaults/Profile.lua" },
         { "defaults/Categories.lua", "defaults/UserCategories.lua" },
+        -- Presets resolves its container names through NS.L at file load (AM-PR01). It reads the
+        -- category lists only at Build time, so its place after UserCategories and Profile is the
+        -- TOC's Conventional note and no load-time pair.
+        { "locales/enUS.lua", "defaults/Presets.lua" },
+        -- The preset writer binds NS.L at file load and reaches its peers at call time (AM-PR02), so its
+        -- place after ContainerManager is the TOC's Conventional note.
+        { "locales/enUS.lua", "modules/Presets.lua" },
+        -- The preset picker binds NS.L at file load (its labels and blurbs) and reaches its peers at
+        -- call time (AM-PR05), so its place after Slash is the TOC's Conventional note.
+        { "locales/enUS.lua", "settings/PresetPicker.lua" },
         { "modules/Style.lua", "modules/Style_Border.lua" },
         { "modules/Style.lua", "modules/Style_Bars.lua" },
         { "modules/Style.lua", "modules/Style_Text.lua" },
@@ -89,6 +99,10 @@ test("loadorder: the load-bearing pairs are in order, and the TOC says why", fun
         -- settings/OptionsSetup.lua, in any order: the rail's is SECTION_ORDER.
         { "settings/General.lua", "settings/Containers.lua" },
         { "settings/Containers.lua", "settings/Profiles.lua" },
+        -- General binds the Presets tab's render and leave into its page spec at file load
+        -- (AM-PR06, moved to General by AM-PR14); the tab file reads the composers OptionsSetup publishes.
+        { "settings/OptionsSetup.lua", "settings/GeneralPresets.lua" },
+        { "settings/GeneralPresets.lua", "settings/General.lua" },
         { "settings/OptionsSetup.lua", "settings/Filters.lua" },
         { "settings/OptionsSetup.lua", "settings/Text.lua" },
     }

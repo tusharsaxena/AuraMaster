@@ -69,6 +69,9 @@ local function env(atLogin, extra)
     -- The skin picker seen, so the first world entry arms no picker timer of its own (core/AuraMaster.lua
     -- OnEnterWorld): every case here counts the primer's timers alone.
     NS2.SetByPath("skin.pickerSeen", true)
+    -- The preset picker held down: it unlocks the containers it opens over (settings/PresetPicker.lua),
+    -- which is not this suite's subject.
+    NS2.PresetPickerDue = function() return false end
     if not atLogin then
         mocks.__fireEvent("PLAYER_ENTERING_WORLD")
         mocks.__fireEvent("LOADING_SCREEN_DISABLED")

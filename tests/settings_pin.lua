@@ -6,6 +6,9 @@
 -- run moved it with LibKa0s v1.82.0: every Font flags row gains From skin ("@skin") as its default
 -- (ruling D-07, schema v14), and skin.outline is new (D-06). FS-AM-FLIP moved it again (schema v16):
 -- the color, border and shadow companions are new rows, and the picks start on the Ka0s picks.
+-- AM-PR03 (presets) adds the default profile.presets.pickerSeen, the preset picker's latch; AM-PR08
+-- gives it its row (settings/General.lua, skipRender), the twin of skin.pickerSeen. AM-PR20 adds the
+-- account latch, global.presets.pickerSeen, with its default and its row (presets spec section 18.5).
 --
 -- Not a suite (tests/run.lua does not list it): data the pin suite dofiles.
 return {
@@ -312,9 +315,11 @@ return {
     [[row enchantSlots.offHand type=bool default=true min=nil max=nil step=nil values=- session=false]],
     [[row enchantSlots.ranged type=bool default=true min=nil max=nil step=nil values=- session=false]],
     [[row global.minimap.shown type=bool default=true min=nil max=nil step=nil values=- session=false]],
+    [[row global.presets.pickerSeen type=bool default=false min=nil max=nil step=nil values=- session=false]],
     [[row hideBlizzardBuffs type=bool default=false min=nil max=nil step=nil values=- session=false]],
     [[row hideBlizzardDebuffs type=bool default=false min=nil max=nil step=nil values=- session=false]],
     [[row locked type=bool default=true min=nil max=nil step=nil values=- session=false]],
+    [[row presets.pickerSeen type=bool default=false min=nil max=nil step=nil values=- session=false]],
     [[row scale type=number default=1 min=0.5 max=2 step=0.05 values=- session=false]],
     [[row skin.font type=string default="" min=nil max=nil step=nil values=- session=false]],
     [[row skin.ignoreFonts type=bool default=false min=nil max=nil step=nil values=- session=false]],
@@ -359,6 +364,7 @@ return {
     [[default profile.hideBlizzardDebuffs=false]],
     [[default profile.locked=true]],
     [[default profile.nextContainerId=1]],
+    [[default profile.presets.pickerSeen=false]],
     [[default profile.scale=1]],
     [[default profile.seeded=false]],
     [[default profile.skin.font=""]],
@@ -374,6 +380,7 @@ return {
     [[default profile.userCategoryOrder={}]],
     [[default profile.visibility="always"]],
     [[default global.minimap.hide=false]],
+    [[default global.presets.pickerSeen=false]],
     [[default global.schemaVersion=0]],
     [[default global.timedSpells={}]],
     [[default container.attach.container=0]],

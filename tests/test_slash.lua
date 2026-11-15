@@ -41,19 +41,22 @@ test("slash: the reserved verbs are all present", function()
     end
 end)
 
-test("slash: NS.COMMANDS carries 26 verbs, skin right after config, profile right after resetall, redraw right after forgettimed, diagnostics right after debug, and no diag verb", function()
+test("slash: NS.COMMANDS carries 27 verbs, skin right after config, profile right after resetall, preset right after delete, redraw right after forgettimed, diagnostics right after debug, and no diag verb", function()
     local n = #NS.COMMANDS
     -- red under: the count claims in docs/ARCHITECTURE.md, docs/slash-dispatch.md and
     -- docs/module-map.md left behind a verb added or removed (owner, 2026-09-25: 22 -> 23;
     -- 2026-09-29: 23 -> 24, the profile verb; 2026-09-30: 24 -> 25, the redraw verb; 2026-10-30:
-    -- 25 -> 26, the reserved skin verb, LibKa0s v1.82.0's O.SkinVerb, ruling D-16)
-    assertEqual(n, 26)
+    -- 25 -> 26, the reserved skin verb, LibKa0s v1.82.0's O.SkinVerb, ruling D-16; 2026-11-14:
+    -- 26 -> 27, the preset verb, presets spec section 5)
+    assertEqual(n, 27)
     local at = {}
     for i, e in ipairs(NS.COMMANDS) do at[e[1]] = i end
     -- red under: the skin verb anywhere but right after config (the standard's reserved order)
     assertEqual(at.skin, at.config + 1, "skin follows config")
     -- red under: the profile verb moved away from the settings verbs it sits beside
     assertEqual(at.profile, at.resetall + 1, "profile follows resetall")
+    -- red under: the preset verb moved away from the container verbs it sits beside
+    assertEqual(at.preset, at.delete + 1, "preset follows delete")
     -- red under: the redraw verb moved away from the maintenance verbs it sits beside
     assertEqual(at.redraw, at.forgettimed + 1, "redraw follows forgettimed")
     assertEqual(at.diagnostics, at.debug + 1, "diagnostics follows debug")
@@ -68,7 +71,7 @@ test("slash: /am new creates the described container and selects it", function()
     assertEqual(c.unit, "target")
     assertEqual(c.auraType, "HARMFUL")
     assertEqual(c.style, "icons")
-    assertEqual(#NS2.Database.GetContainers(), #NS2.STARTER_CONTAINERS + 1)
+    assertEqual(#NS2.Database.GetContainers(), #AM_TEST.STARTERS + 1)
 end)
 
 test("slash: /am new text creates a text-style container", function()
@@ -79,7 +82,7 @@ test("slash: /am new text creates a text-style container", function()
     -- red under: NEW_WORDS without "text" (the verb refuses the word and creates nothing)
     assertEqual(c.style, "text")
     assertEqual(c.auraType, "HELPFUL")
-    assertEqual(#NS2.Database.GetContainers(), #NS2.STARTER_CONTAINERS + 1)
+    assertEqual(#NS2.Database.GetContainers(), #AM_TEST.STARTERS + 1)
 end)
 
 test("slash: /am new gives the new container the Fill its style suits (B5)", function()
@@ -96,7 +99,7 @@ test("slash: /am new with a word it does not know creates nothing and says why",
     local NS2, mocks = fresh()
     local lines = capture(mocks)
     NS2.Slash:OnSlash("new target sparkles")
-    assertEqual(#NS2.Database.GetContainers(), #NS2.STARTER_CONTAINERS)
+    assertEqual(#NS2.Database.GetContainers(), #AM_TEST.STARTERS)
     assertTrue(said(lines, "sparkles"))
 end)
 
@@ -311,7 +314,7 @@ test("slash: /am delete removes a container by id", function()
     local NS2 = fresh()
     NS2.Slash:OnSlash("delete 3")
     assertNil(NS2.Database.FindContainer(3))
-    assertEqual(#NS2.Database.GetContainers(), #NS2.STARTER_CONTAINERS - 1)
+    assertEqual(#NS2.Database.GetContainers(), #AM_TEST.STARTERS - 1)
 end)
 
 test("slash: a name two containers share is refused, not guessed", function()
@@ -323,7 +326,7 @@ test("slash: a name two containers share is refused, not guessed", function()
     local lines = capture(mocks)
     NS2.Slash:OnSlash("delete dup")
     -- red under: findContainer returning the first match
-    assertEqual(#NS2.Database.GetContainers(), #NS2.STARTER_CONTAINERS, "both containers remain")
+    assertEqual(#NS2.Database.GetContainers(), #AM_TEST.STARTERS, "both containers remain")
     assertTrue(said(lines, "More than one container is called 'dup'"), lastLine(lines))
     NS2.Slash:OnSlash("select DUP")
     assertEqual(NS2.State.activeContainerId, 3, "the selection does not move")
@@ -337,7 +340,7 @@ test("slash: /am delete in combat refuses in gray and keeps the container", func
     NS2.Slash:OnSlash("delete 3")
     -- red under: runDelete without its InCombatLockdown gate
     assertTrue(NS2.Database.FindContainer(3) ~= nil, "the container survives")
-    assertEqual(#NS2.Database.GetContainers(), #NS2.STARTER_CONTAINERS)
+    assertEqual(#NS2.Database.GetContainers(), #AM_TEST.STARTERS)
     assertTrue(grayLine(lines, "cannot delete a container during combat"), lastLine(lines))
 end)
 
@@ -375,7 +378,7 @@ local function resetsUnderLockdown(surface)
     assertEqual(resets[1], 1, "db:ResetProfile(), once: the same act as Reset Profile")
     assertFalse(grayLine(lines, "during combat"), "no refusal: " .. lastLine(lines))
     assertTrue(said(lines, "All settings reset to defaults."), lastLine(lines))
-    assertEqual(#NS2.Database.GetContainers(), #NS2.STARTER_CONTAINERS, "the shipped set is back")
+    assertEqual(#NS2.Database.GetContainers(), NS2.PresetData.Count("simple"), "the shipped set, the Simple preset, is back")
     -- red under: CM.Sync destroying instead of parking under MustDefer
     assertEqual(hides[1], 0)
     assertEqual(clears[1], 0)
@@ -402,7 +405,7 @@ test("slash: /am new in combat refuses in gray and creates nothing", function()
     local lines = capture(mocks)
     mocks.__lockdown = true
     NS2.Slash:OnSlash("new target debuffs icons")
-    assertEqual(#NS2.Database.GetContainers(), #NS2.STARTER_CONTAINERS)
+    assertEqual(#NS2.Database.GetContainers(), #AM_TEST.STARTERS)
     -- red under: runNew printing a refused err through the plain printer
     assertTrue(grayLine(lines,
         "cannot create a container during combat — it would not be drawn or placed until combat ends"),

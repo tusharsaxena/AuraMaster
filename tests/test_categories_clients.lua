@@ -239,8 +239,10 @@ end)
 
 test("categories clients: a gated key leaves no ghost in the Player cooldowns starter", function()
     local NS = envWithEmpty({ "defensives" })
+    -- The fixture's Player cooldowns (tests/starters_fixture.lua), built in THIS environment, so its
+    -- StatesShowing list reads the gated lists.
     local starter
-    for _, c in ipairs(NS.STARTER_CONTAINERS) do
+    for _, c in ipairs(AM_TEST.Starters.list(NS)) do
         if c.name == "Player cooldowns" then starter = c end
     end
     local cats = starter.filter.categories

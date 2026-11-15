@@ -36,8 +36,14 @@ local PARENT_TITLE = "Ka0s Aura Master"
 -- button back, and settings/Slash.lua's descriptor carries its own applyDefault for exactly that.
 local MINIMAP_PATH = NS.MINIMAP_PATH -- settings/Schema.lua spells it once; it loads first
 
+-- The preset picker's ACCOUNT latch (presets spec section 18.5) is vetoed for the same kind of
+-- reason: it is account-wide, and General's Defaults is a press on one profile's page, so it must
+-- not offer the picker again on every other profile of the account. `/am reset` names it and is
+-- not vetoed.
+local ACCOUNT_PICKER_PATH = "global.presets.pickerSeen"
+
 local function vetoedFromPanelReset(row)
-    return row.path == MINIMAP_PATH
+    return row.path == MINIMAP_PATH or row.path == ACCOUNT_PICKER_PATH
 end
 
 -- The one rule about what a global reset must not touch, named once because it is enforced twice:
@@ -512,30 +518,90 @@ end
 -- The tabbed page: this addon's page spec, mapped onto the library's
 -- ---------------------------------------------------------------------------
 
+-- LEAVING A TAB. A tab whose spec carries `onLeave` (the General page's Presets tab, whose preview
+-- must end when the player moves on, spec 2026-11-14-auramaster-presets sections 6 and 16.4) is told
+-- once when the page stops showing it: a later render that draws another tab or another section, or
+-- the panel's own OnHide. The library has no leave callback; a tab click is its alone (it re-renders
+-- the strip and the body without calling back). Every render calls the page's `chrome` before the
+-- tab's content, a schema tab the library draws itself included, so the chrome below is where any
+-- click lands; a host tab's render checks again, and Helpers.RenderContainerPage checks before it
+-- draws a section. A redraw of the same tab is not a leave. The record is the ctx's `__tabLeave`
+-- (this file already keeps the section state there); `__tabLeft` marks a render a leave started.
+
+--- Tell the tab `ctx` last drew with an `onLeave` that it was left, once.
+local function fireLeave(ctx)
+    local held = ctx.__tabLeave
+    if not held then return end
+    ctx.__tabLeave = nil
+    held.fn()
+end
+
+-- One OnHide hook per page context, keyed by the ctx (the library's table) rather than a flag on it.
+local leaveHooked = setmetatable({}, { __mode = "k" })
+
+local function hookLeaveOnHide(ctx)
+    local panel = ctx.panel
+    if leaveHooked[ctx] or type(panel) ~= "table" or type(panel.HookScript) ~= "function" then return end
+    leaveHooked[ctx] = true
+    panel:HookScript("OnHide", function() fireLeave(ctx) end)
+end
+
+--- Host tab `key` is being drawn on `ctx`: a tab held for a leave that is not this one is told first.
+--- Answers whether it was (the registry may have changed under the render that is starting).
+local function tabDrawn(ctx, key, onLeave)
+    local held, left = ctx.__tabLeave, ctx.__tabLeft or false
+    if held and held.key ~= key then
+        fireLeave(ctx)
+        left = true
+    end
+    if onLeave then
+        ctx.__tabLeave = { key = key, section = ctx.activeSection, fn = onLeave }
+        hookLeaveOnHide(ctx)
+    end
+    return left
+end
+
 --- The page's own tabs as the library takes them: those the container's aura type admits, each
 --- handed the container as well as its rows. One keyed by a schema group takes that group's place
 --- and is handed its rows; one with `before` is drawn ahead of the tab it names (LibKa0s Options
---- 24.31.4.7.4, `opts.tabs`).
+--- 24.31.4.7.4, `opts.tabs`). One with `onLeave` is told when the page moves off it (above); a tab
+--- drawn just after such a leave is handed the container as it now stands.
 local function hostTabs(spec, cfg)
     local out = {}
     for _, t in ipairs(spec.tabs or {}) do
         if not t.auraTypes or (cfg and t.auraTypes[cfg.auraType]) then
-            local render, n = t.render, #out
+            local render, onLeave, key, n = t.render, t.onLeave, t.key, #out
             out[n + 1] = {
                 key = t.key, label = t.label, tooltip = t.tooltip, before = t.before,
-                render = function(ctx, rows) return render(ctx, cfg, rows) end,
+                render = function(ctx, rows)
+                    local left = tabDrawn(ctx, key, onLeave)
+                    return render(ctx, left and NS.ActiveContainer() or cfg, rows)
+                end,
             }
         end
     end
     return out
 end
 
+--- The render's chrome, ahead of every tab's content: a tab held for a leave that this render does
+--- not draw is told first (a schema tab's click reaches no host render), then the spec's `intro`,
+--- handed the container as the leave left it.
+local function pageChrome(intro, cfg)
+    return function(c)
+        local held = c.__tabLeave
+        c.__tabLeft = nil
+        if held and held.key ~= c.activeTab then
+            fireLeave(c)
+            c.__tabLeft = true
+        end
+        local now = c.__tabLeft and NS.ActiveContainer() or cfg
+        if intro and now then intro(c, now) end
+    end
+end
+
 --- The library's `opts` for one render of a page with a container (or an addon-wide page).
 local function pageOpts(spec, cfg)
-    local intro = spec.intro
-    local opts = { tabs = hostTabs(spec, cfg), cfg = cfg }
-    if intro and cfg then opts.chrome = function(c) intro(c, cfg) end end
-    return opts
+    return { tabs = hostTabs(spec, cfg), cfg = cfg, chrome = pageChrome(spec.intro, cfg) }
 end
 
 --- Render one tabbed page through the library's O.RenderTabbedSchema: the optional `banner(ctx)`
@@ -634,6 +700,14 @@ function Helpers.RenderContainerPage(ctx, band)
     stashTab(ctx)
     local list = railSections(NS.ActiveContainer())
     local section = settleSection(ctx, list)
+    -- A tab held for a leave (the Presets tab) that this render will not draw is told before
+    -- anything is drawn, so the section drawn reads the registry as the leave left it.
+    local held = ctx.__tabLeave
+    if held and (held.section ~= section.key or ctx.sectionTabs[section.key] ~= held.key) then
+        fireLeave(ctx)
+        list = railSections(NS.ActiveContainer())
+        section = settleSection(ctx, list)
+    end
     ctx.activeSection = section.key
     ctx.activeTab = ctx.sectionTabs[section.key]
     local entries = {}

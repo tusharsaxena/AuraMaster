@@ -7,7 +7,7 @@ client. The player-facing contract is the README; the engineering boundary is th
 ## What it does
 
 - **Player-built aura containers.** Any number per profile, each with its own name, enable switch,
-  filters, placement and look (`defaults/Profile.lua:172`, `NS.CONTAINER_TEMPLATE`).
+  filters, placement and look (`defaults/Profile.lua:188`, `NS.CONTAINER_TEMPLATE`).
 - **Four units:** `player`, `target`, `focus`, `pet` (`core/Constants.lua:39`).
 - **Two aura types:** buffs (`HELPFUL`) and debuffs (`HARMFUL`). The player's temporary weapon
   enchants are a buff category, not an aura type (schema v5, feedback #6): a player-buff container
@@ -44,10 +44,15 @@ client. The player-facing contract is the README; the engineering boundary is th
 - **Test mode:** placeholder auras drawn through the same `Style` code, switched by the Master
   controls *Test mode* checkbox, `/am test` or the minimap button's right-click menu; session-only and
   ended when combat starts. Unlocking only makes containers draggable, and live auras keep drawing.
+- **Presets:** five starting points for a whole profile's containers, Empty, Simple (3), Intermediate
+  (8), Advanced (20) and Healer (9), each in Bars or Icons, placed for the player's screen size and
+  previewed on the real screen in test mode until Apply (`defaults/Presets.lua`, `modules/Presets.lua`).
+  A new profile starts from Simple; the first-run picker, General → Presets and `/am preset` offer the
+  rest (`docs/ARCHITECTURE.md` → *Presets*). Nothing is anchored to a unit frame or another addon's frame.
 - **Hiding Blizzard's buff and debuff frames**, by reparenting them out of combat.
 - **Profiles** through AceDB, with a Profiles sub-page.
 - **A full CLI** — every schema row is reachable through `/am get|set|reset`, and the registry through
-  `/am containers|select|new|delete`.
+  `/am containers|select|new|delete|preset`.
 - **Retail and WoW Forever**, Interface 120105, 16001 (Midnight 12.1.5 and Forever 1.60.1), one
   codebase, English as the source locale. Forever's spell categories hold its own spells
   (`docs/ARCHITECTURE.md` → *Per-client features*).
@@ -156,4 +161,4 @@ These are not declined; the game forbids them, and a request for one is answered
   already correct for it. The keys live in a reserved `user` namespace nothing shipped may take, and
   a stored record outside that namespace is refused rather than materialized over a shipped category.
 - **Reset all settings is a profile reset** (options-ui-§12): every container goes with the profile,
-  and the starter containers come back.
+  and the starter containers (the Simple preset, schema v19) come back.

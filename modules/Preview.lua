@@ -222,20 +222,30 @@ function Preview.Extent(container, count)
         container.previewExtent = extent
     end
     if extent.placed and InCombatLockdown() then return extent end
+    local w, h, corner = Preview.BlockSize(cfg, count)
+    extent:ClearAllPoints()
+    extent:SetPoint(corner, container.anchor, corner, 0, 0)
+    extent:SetSize(w, h)
+    -- Kept as a plain number: what a follower's strip room reads (Anchors, EO-2). The frame's own
+    -- height can read secret under an attached anchor.
+    extent.height = h
+    extent.placed = true
+    return extent
+end
+
+--- The size of the block `count` placeholders of `cfg` fill (its whole placeholder set when `count`
+--- is nil), by Preview.Offset's arithmetic, and the corner they start at: what Preview.Extent sizes
+--- its frame to. Pure, so a caller with no container yet can measure one (defaults/Presets.lua sizes
+--- the presets' call-out block in test mode through it).
+--- @return number width, number height, string corner
+function Preview.BlockSize(cfg, count)
     local w, h = NS.Style.ElementSize(cfg)
     local corner, farX, farY = Preview.Offset(cfg, 1), 0, 0
     for i = 2, count or placeholderCount(cfg) do
         local _, x, y = Preview.Offset(cfg, i)
         farX, farY = math.max(farX, math.abs(x)), math.max(farY, math.abs(y))
     end
-    extent:ClearAllPoints()
-    extent:SetPoint(corner, container.anchor, corner, 0, 0)
-    extent:SetSize(farX + w, farY + h)
-    -- Kept as a plain number: what a follower's strip room reads (Anchors, EO-2). The frame's own
-    -- height can read secret under an attached anchor.
-    extent.height = farY + h
-    extent.placed = true
-    return extent
+    return farX + w, farY + h, corner
 end
 
 --- The TEST tag the unlocked drag strip's label carries after the name (modules/Anchors.lua's

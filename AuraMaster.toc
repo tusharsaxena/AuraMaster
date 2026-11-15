@@ -97,6 +97,9 @@ defaults\CastToAura.lua
 defaults\CastToAura_Forever.lua
 # Conventional: the profile defaults; the category lists it builds from load above (the Categories note).
 defaults\Profile.lua
+# Conventional: the container presets and their pure placement builder (NS.PresetData); the
+# category lists are read at Build time, and nothing above reads this file.
+defaults\Presets.lua
 
 # Modules
 # Conventional: a lookup over defaults/CastToAura.lua, read at add time by the two add boxes.
@@ -149,6 +152,9 @@ modules\Container.lua
 modules\Container_Twins.lua
 # Conventional: peers resolved at call time; it binds only NS.Perf and NS.L at load.
 modules\ContainerManager.lua
+# Conventional: applying a preset (NS.Presets) through the registry writers above; it binds only
+# NS.L at load and reaches PresetData, ContainerManager and Categories at call time.
+modules\Presets.lua
 # Conventional: the font primer (issue #24); reaches Style, Database and ContainerManager at call time.
 modules\FontPrimer.lua
 # Conventional: `/am diagnostics` and `/am debug diagnostics`; reads every module above at call time.
@@ -161,6 +167,9 @@ settings\Schema.lua
 settings\Schema_Validate.lua
 # Conventional: its handlers reach the schema and pages at call time.
 settings\Slash.lua
+# Conventional: the first-run preset picker and the preset confirm (NS.PresetPicker); it binds NS.L
+# at load and reaches Presets, PresetData, the skin seams and the skin picker at call time.
+settings\PresetPicker.lua
 # LOAD-BEARING: before every page file, which calls the composers at file load.
 settings\OptionsSetup.lua
 # Conventional: the page files, each registering its rows and page at load.
@@ -172,6 +181,9 @@ settings\About.lua
 settings\GeneralUserCategories.lua
 settings\GeneralSpells.lua
 settings\GeneralDispel.lua
+# LOAD-BEARING: the General page's Presets tab (NS.RenderPresetsTab, NS.PresetsTabLeft), after
+# OptionsSetup (the composers) and before General, which binds both into its page spec at file load.
+settings\GeneralPresets.lua
 settings\General.lua
 # LOAD-BEARING: Containers is a top-level page (N-1); its tree position, right after General
 # and before Profiles, is fixed by this load position.

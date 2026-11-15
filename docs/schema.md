@@ -6,7 +6,7 @@ Two SavedVariables globals (`AuraMasterDB`, `AuraMasterPerfDB`, `AuraMaster.toc:
 
 ## `AuraMasterDB` — the AceDB database
 
-Created by `NS.InitDB` (`core/Database.lua:271`) as `AceDB:New("AuraMasterDB", NS.defaults, true)`:
+Created by `NS.InitDB` (`core/Database.lua:291`) as `AceDB:New("AuraMasterDB", NS.defaults, true)`:
 the third argument puts every character on the shared `Default` profile until the player chooses
 otherwise (`docs/profiles.md`).
 
@@ -30,7 +30,8 @@ otherwise (`docs/profiles.md`).
 | `containerOrder` | array | `{}` | Container ids in display order |
 | `nextContainerId` | number | `1` | The next id to hand out |
 | `skin` | table | `{ source = "ka0s", skin = NS.DEFAULT_SKIN, ignorePanel = true, ignoreFonts = false, font = "", texture = "", outline = "hud", pickerSeen = false, fullSkinReset = false }` | The skin this addon wears (skinning-§2: per addon, per profile), drawn by General → Skin and written only through `NS.WriteSkinChoice` (`core/SkinSetup.lua`), which writes each half through `NS.SetByPath`. `source` is `ka0s` or `eui` (EllesmereUI); `skin` is a registered Ka0s skin key, starting on the client's default skin (`NS.DEFAULT_SKIN`, `Skin:DefaultSkin()` read once in `core/SkinSetup.lua`: `forever` on WoW Forever, `ka0s` on Retail and without the library); `ignorePanel` and `ignoreFonts` are the Scope's two exceptions; `font` and `texture` are LibSharedMedia keys over the skin's default (`""` keeps the skin's); `outline` is the Skin tab's Font outline, `all`, `hud` (the default since LibKa0s v1.83.0, D-10; a stored choice stays) or `off` (LibKa0s v1.82.0, ruling D-06), applied with `Skin:SetOutline` at load, on every profile event and on its row's write; `pickerSeen` is the first-run skin picker's memory; `fullSkinReset` is the record of schema v16's step, with no row. Eight skip-render rows of the General page's Appearance group, so `/am get\|set skin.*` reaches each |
-| `seeded` | bool | `false` | The starter containers have been created once; deleting them all does not bring them back |
+| `seeded` | bool | `false` | The first containers (the Simple preset, schema v19) have been created once; deleting them all does not bring them back |
+| `presets` | table | `{ pickerSeen = false }` | `modules/Presets.lua`'s own key; the local `profilePresets` (and `Presets.RecordSeed`) make the table when a profile has none yet. `pickerSeen`: this profile has closed the first-run preset picker; the picker is due while this or the account's `global.presets.pickerSeen` (below) is unset (presets spec section 18.5). A skipRender settings row (`settings/General.lua`, the twin of `skin.pickerSeen`), so `/am get\|set\|reset presets.pickerSeen` reaches it; written through `NS.SetByPath` by `Presets.MarkPickerSeen` (every close the player makes of the picker: Apply, Not now, the close control, Escape, and `/am preset <name>` with the window up), and set on every profile already `seeded` by the schema v19 step; every such close sets the account's latch too. `seedPrint` has no default: a number, the fingerprint of the containers and order the Simple seed wrote, written by `Presets.RecordSeed` (from `Database.PrepareProfile`, after the seed) and cleared by `Presets.MarkPickerSeen`; the first-run picker skips its Replace confirm only while the player's own containers still match it (`Presets.SeedUntouched`). `previewSnapshot` has no default: present only while a preset preview is up, it holds deep copies of `containers`, `containerOrder`, `nextContainerId`, `userCategories`, `userCategoryOrder` and `categorySpells`. Written by `Presets.BeginPreview` (a pick on the picker or the Presets tab takes it), cleared by `Presets.EndPreview` (keep, or a restore: Not now, Stop preview, a tab leave, combat, and `Presets.Apply` over a preview) and by the local `restoreInto`, which `Presets.RestoreStaleSnapshot` (a profile event) and `Presets.RestoreStaleSnapshots` (the login, before the ladder) reach |
 
 ### `global` — account-wide
 
@@ -38,12 +39,13 @@ otherwise (`docs/profiles.md`).
 |---|---|---|---|
 | `schemaVersion` | number | `0` | The migration stamp (savedvariables-§1), owned by `NS.RunMigrations`. Defaults to 0, never the current version: AceDB backfills the default onto a legacy account with no stamp, and strips a stored value equal to its default at logout; 0 is safe against both. See Migration path |
 | `minimap` | table | `{ hide = false }` | **LibDBIcon-1.0's own table**, handed straight to `:Register` (launcher-§3). Owned by `core/LauncherSetup.lua`, which hands it to `LibKa0s-Launcher-1.0` as the descriptor's `minimap` field. The CLI row is `global.minimap.shown` (inverted onto `hide` by `settings/Schema.lua`); `hide` and `minimapPos` are storage, not rows. `hide` is the Minimap button row's storage; `minimapPos` is written by LibDBIcon-1.0 when the player drags the button, through the LibKa0s-Launcher seam, and no addon code writes it (named non-setting state, `docs/ARCHITECTURE.md` → Settings Schema). Global, not profile, on purpose: a profile switch must not move the player's buttons. Surviving a reset is a separate guarantee and a property of the setting rather than of the store (launcher-§3): neither `Reset all settings` nor General's **Defaults** button may un-hide a button the player hid, and the second of those would have, so the options descriptor vetoes the row. Nothing seeds it but this declaration (architecture-§5) |
+| `presets` | table | `{ pickerSeen = false }` | The first-run preset picker's **account** latch (presets spec section 18.5): `pickerSeen` is true once the picker was closed on any profile of this account, so a player whose profiles predate the presets (the v19 step marked each one seen) is offered it exactly once, on whatever profile is active. A skipRender row on General (`global.presets.pickerSeen`, `settings/General.lua`), resolved against `db.global` by `settings/Schema.lua`'s `resolveRoot` and `NS.DefaultFor`; written through `NS.SetByPath` by `Presets.MarkPickerSeen`, beside the profile's `presets.pickerSeen`, on every close the player makes. General's Defaults leaves it alone (`vetoedFromPanelReset`, `settings/OptionsSetup.lua`); `/am reset global.presets.pickerSeen` names it. No migration: an account from before it reads the default |
 | `timedSpells` | map | `{}` | `[spellId] = true` for every buff `modules/TimedSpells.lua` has seen carry a duration; account-wide because it is a fact about the game. Learned data, not a setting: written at runtime only by its owner, `modules/TimedSpells.lua` (`TS.Scan` learns, `TS.Forget` behind `/am forgettimed` empties it), and backfilled on load by `NS.RunMigrations`. Named in `docs/ARCHITECTURE.md` → Settings Schema (architecture-§5) |
 
 ## The container template
 
 A container is created at runtime, so it cannot be an AceDB default. `NS.CONTAINER_TEMPLATE`
-(`defaults/Profile.lua:172`) is deep-copied for every new container (`Database.NewContainerData`), and
+(`defaults/Profile.lua:188`) is deep-copied for every new container (`Database.NewContainerData`), and
 every stored container is backfilled from it on load (`Database.PrepareProfile`, below). Each stored
 container also carries its own `id`. The render path reads its fallbacks from the template too: a leaf
 that is missing or garbage when a container is drawn falls back to the template's value for that same
@@ -151,7 +153,7 @@ backfills it onto every stored container, so it needs no schema step.
 | `expiringThreshold` | `5` | `expiringColor` | `{ 1, 0.25, 0.25, 1 }` |
 | `pandemic` | `false` | `pandemicColor` | `{ 1, 0.85, 0.10, 1 }` |
 
-The profile's `dispelColors` defaults (`C.DEFAULT_DISPEL_COLORS`, `core/Constants.lua:310`): Magic `{0.20, 0.60, 1.00}`, Curse `{0.60, 0.00, 1.00}`, Disease
+The profile's `dispelColors` defaults (`C.DEFAULT_DISPEL_COLORS`, `core/Constants.lua:313`): Magic `{0.20, 0.60, 1.00}`, Curse `{0.60, 0.00, 1.00}`, Disease
 `{0.60, 0.40, 0.00}`, Poison `{0.00, 0.60, 0.00}`,
 Bleed `{0.80, 0.10, 0.10}`, all alpha 1. An aura
 with no dispel type takes the surface's own color instead (feedback #7); schema v5 clears a stored
@@ -224,17 +226,28 @@ first. Sizes take no companion (cause L11). While
 HUD size over Ka0s Default's (D-09), so it is as wide in every skin; the stored `fontSize` is never
 rewritten, and with the companion off, or under Ignore fonts, it draws as stored.
 
-## The starter containers
+## The first containers
 
-`NS.STARTER_CONTAINERS` (`defaults/Profile.lua:343`) seeds a brand-new profile once, each spec merged
-over the template:
+A brand-new profile is seeded once with the **Simple** preset in **Bars** (schema v19, presets spec
+section 7): `seedStarters` in `core/Database.lua` builds it with `NS.PresetData.Build("simple", "bars",
+w, h)` on UIParent's size and hands the specs to `NS.PresetData.Realize`, the same walk
+`Presets.Apply` makes, so a stack member attaches to the id its head took. Only the writer differs:
+the seed writes the profile being prepared, merging each spec over the template, where Apply goes
+through `ContainerManager.Create`.
 
-| Name | Unit | Type | Style | Differs from the template |
+| Name | Unit | Type | Style | Where |
 |---|---|---|---|---|
-| Player buffs | player | HELPFUL | bars | `TOPRIGHT` −240, −220; enchants draw by the `weaponEnchants` category's default (Show) |
-| Player debuffs | player | HARMFUL | icons | `TOPRIGHT` −240, −160; horizontal, grows left |
-| Target debuffs (mine) | target | HARMFUL | icons | `castBy = "mine"`; `CENTER` 0, −160; horizontal, grows right |
-| Player cooldowns | player | HELPFUL | text | `CENTER` −260, −40; vertical, grows right and down; `filter.categories` from `Cat.StatesShowing({ "offensiveCDs", "defensives" })`: every other buff category Hidden, Uncategorized included |
+| [1] Player buffs (all) | player | HELPFUL | bars | The right-hand cluster's outermost column's head, hung from the center line and moved left only where it would end nearer the right edge than 10 (presets spec section 18.2); every buff but the weapon enchants |
+| [2] Weapon enchants | player | HELPFUL | bars | Attached under Player buffs (all); only the `weaponEnchants` category |
+| [3] Player debuffs (all) | player | HARMFUL | bars | Attached beside it, its top right to Player buffs (all)'s top left; every debuff |
+
+Each name carries its number in the owner's order (presets spec section 17.4); the name after it is
+localized, the number is not.
+
+Before v19 a new profile got four starter containers instead (Player buffs, Player debuffs, Target
+debuffs (mine), Player cooldowns); a profile seeded with them keeps them. The headless harness still
+hands that set to the first profile each test environment prepares, as a fixture
+(`tests/starters_fixture.lua`).
 
 ## Session state (not persisted)
 
@@ -256,8 +269,9 @@ and its one writer (the library's `P.Save`, behind `/am perf finish`) are named 
 
 ## Settings schema, registries and named non-setting state
 
-`NS.Schema` holds **318** rows (as measured on 2026-11-06) across seven pages: General 26 (its Dispel colors tab's five, its
-Spell categories tab's three `enchantSlots` rows and its Skin tab's eight `skin.*` rows among them), Containers 5 (`N-1`, batch 7 — split
+`NS.Schema` holds **320** rows (as measured on 2026-11-15) across seven pages: General 28 (its Dispel colors tab's five, its
+Spell categories tab's three `enchantSlots` rows, its Skin tab's eight `skin.*` rows and the preset picker's two skipRender
+latches, `presets.pickerSeen` and `global.presets.pickerSeen`, among them), Containers 5 (`N-1`, batch 7 — split
 out of General's own tab), Filters 57, Layout 41 (the Label tab's eleven among them, batch 8 and B9 LJ-1; batch 9's Side row replaced by batch 11's two anchor-point rows),
 Bars 89, Icons 50 and Text 50 (its `autoSize` among them; the nine "Use the skin's ..." companions,
 `barTextureFromSkin`, `bgTextureFromSkin` and every font block's `fontFromSkin`, are spread across
@@ -268,7 +282,7 @@ player's own; **the schema is a live table, not a frozen one**, and each user ca
 it in schema order, `NS.UnregisterSchemaRows(pred)` takes it down again on a profile switch, and
 `NS.Schema` is rebuilt in place so the live reference the options descriptor and the CLI hold stays
 the same table — the rest of this file). It drives the panel,
-`/am list|get|set|reset` and the resets; one write seam, `NS.SetByPath` (`settings/Schema.lua:913`),
+`/am list|get|set|reset` and the resets; one write seam, `NS.SetByPath` (`settings/Schema.lua:921`),
 is where the panel, the CLI, the Defaults buttons and a drag handle all land. It resolves the
 container, validates against it, runs the row's optional `normalize` hook, writes, reacts and
 announces, in that order.
@@ -305,10 +319,18 @@ it, and none can, since a row is a leaf.
 - **Registry writer:** `modules/ContainerManager.lua`. `ContainerManager.Create`, `.Delete` and
   `.Duplicate` (through `Create`) make every runtime membership change, and
   `Database.NewContainerData` mints the id and stamps `c.id` for it. `NewContainerData` has no
-  other caller, so it is part of the writer.
+  other caller, so it is part of the writer. `ContainerManager.RestoreSnapshot` is the writer's
+  fourth act: it puts back, ids included, the `containers`, `containerOrder` and `nextContainerId`
+  that `ContainerManager.Snapshot` copied before a preset preview (`modules/Presets.lua`), and hands
+  the snapshot's category half to that registry's own writer, `Cat.RestoreUserCategories`.
 - **Load pass:** `Database.PrepareProfile` (`core/Database.lua`), run from `NS.RunMigrations` at
   initialization and from `NS.OnProfileChanged` on AceDB's profile changed, copied and reset
-  callbacks, and from nowhere else. It runs `seedStarters`, `normalizeKeys`, `backfillContainers`
+  callbacks, and from nowhere else. Ahead of it in both paths, a preset preview a /reload, a crash or
+  a profile event interrupted is restored: `Presets.RestoreStaleSnapshots` at the top of
+  `NS.RunMigrations` (every stored profile, before the ladder), and `Presets.RestoreStaleSnapshot` at
+  the top of `core/AuraMaster.lua`'s `prepareProfile` (the profile just left and the one now active).
+  Both go through `ContainerManager.RestoreSnapshot`, quiet, so the pass that follows prepares what
+  came back. The pass itself runs `seedStarters`, `normalizeKeys`, `backfillContainers`
   (which also runs `normalizeAttach` on each container: a stored `attach.childPoint` or
   `attach.relPoint` that is not one of the nine WoW points is removed, so it reads as Automatic, with
   one `[Migrate]` debug line), the `nextContainerId` bump and `rebuildOrder`.
@@ -329,12 +351,21 @@ schema row addresses the registry itself; the row each member GETS is an ordinar
   `categorySpells[key]`, the same carve-out every other category's edits live in.
 - **Registry writer:** `defaults/UserCategories.lua`. `Cat.CreateUserCategory`, `Cat.RenameUserCategory`,
   `Cat.DeleteUserCategory` and `Cat.ForgetUnusableUserRecords` make every membership change, and
-  `Cat.NewUserKey` mints the key for `Create` and has no other caller. Nothing else writes a record,
+  `Cat.NewUserKey` mints the key for `Create` and has no other caller. `Cat.RestoreUserCategories`
+  puts back a preset preview's snapshot of `userCategories`, `userCategoryOrder` and `categorySpells`
+  whole (the copy `Cat.SnapshotUserCategories` took), called only by `ContainerManager.RestoreSnapshot`;
+  in play, on the active profile, the spell edits go back through `NS.SetByPath("categorySpells", ...)`
+  after the records are stored and synced; a quiet restore (the login, a profile event, a profile not in
+  use after a switch) writes `categorySpells` directly, because the carve-out's normalizer reads the
+  active profile's records, which are not in place at those moments. Nothing else writes a record,
   and **nothing anywhere writes `rec.auraType` but `Create`**, which is what makes a category's aura
   type immutable: it is the absence of an act rather than a refusal.
 - **Load pass:** `Cat.SyncUserCategories(profile)`, run from `NS.RunMigrations` after the whole schema
   ladder and before `Database.PrepareProfile`, from `core/AuraMaster.lua`'s `prepareProfile` (so a
-  profile switch, copy and reset all pass through it), and from each act above. It tears the previous
+  profile switch, copy and reset all pass through it), and from each act above. In both of the first
+  two paths it runs after the stale preview restore (`Presets.RestoreStaleSnapshots` before the
+  ladder, `Presets.RestoreStaleSnapshot` first in `prepareProfile`), whose quiet
+  `Cat.RestoreUserCategories` leaves the materializing to it. It tears the previous
   set down and builds the new one as ONE act over four mirrors — the two definition lists, the
   container template's `filter.categories`, and the schema rows — because a stale definition left
   behind makes `Cat.IsSpellCategory(deadKey)` true and quietly takes ids out of the complement
@@ -360,6 +391,7 @@ The surfaces this added, all read by name rather than duplicated:
 | `Cat.LabelOf(def)` | A category's name AS SHOWN — a shipped label routed through `NS.L`, a user label never. THE labeling rule; every drawing site asks it, and the panel's `(yours)` marker wraps it rather than copying it |
 | `Cat.IsUserCategory(defOrKey)` / `Cat.IsUserKey(key)` | Whether the player made it; whether a key sits in the reserved namespace (structural, not a guess at how the key was made) |
 | `Cat.CreateUserCategory` / `RenameUserCategory` / `DeleteUserCategory` | The three acts, each refusing anything without a stored record and anything outside the namespace |
+| `Cat.SnapshotUserCategories` / `Cat.RestoreUserCategories` | The category half of a preset preview's snapshot and its exact restore, asked for only by `ContainerManager.Snapshot` and `.RestoreSnapshot` |
 | `Cat.UnusableUserRecords` / `Cat.ForgetUnusableUserRecords` | The records the sync refuses, and the way to be rid of them |
 | `Cat.SanitizeUserName` / `Cat.CharCount` / `Cat.USER_NAME_MAX` | The stored form of a player-supplied name, capped in CHARACTERS — the same count `EditBox:SetMaxLetters` applies, so the box and the store cannot disagree |
 | `Cat.SyncUserCategories` / `Cat.UserCategoryOrder` / `Cat.HasUserRecord` / `Cat.UserKeysInUse` / `Cat.NewUserKey` / `Cat.UserCategoryNameTaken` | The load pass, the order reconcile, the record test `settings/Schema.lua` asks before a `categorySpells` write, and the key machinery |
@@ -412,12 +444,12 @@ SavedVariables shape, every default and the migration path: the rest of this fil
 ## How the schema paths map onto this shape
 
 A schema row's `path` is absolute into `profile` (`enabled`, `hideBlizzardBuffs`), absolute into
-`global` — which **one** row is, `global.minimap.shown` — or
+`global` — which **two** rows are, `global.minimap.shown` and `global.presets.pickerSeen` — or
 **container-relative**: `container.bars.width` means `profile.containers[activeId].bars.width`,
 where `activeId` is `NS.State.activeContainerId` or, when nothing is selected, the first container in
-`containerOrder` (`NS.ActiveContainer`, `settings/Schema.lua:199`). `NS.DefaultFor(path)` reads the
-same path out of the template (for `container.` paths) or `NS.defaults.profile` (the rest), and
-`NS.ValidateSchema` fails any row whose path resolves against neither. The panel tree and the row
+`containerOrder` (`NS.ActiveContainer`, `settings/Schema.lua:202`). `NS.DefaultFor(path)` reads the
+same path out of the template (for `container.` paths), `NS.defaults.global` (for `global.` paths) or
+`NS.defaults.profile` (the rest), and `NS.ValidateSchema` fails any row whose path resolves against none of them. The panel tree and the row
 list per page are in `docs/settings-panel.md`.
 
 `global.minimap.shown` is the exception, and it is one branch in each seam rather than a second
@@ -594,7 +626,7 @@ compare with the rest of the seam.
 
 ## Migration path
 
-The account-wide ladder is `SCHEMA_STEPS` in `core/Database.lua:338`: one `{ to = N, apply = fn }`
+The account-wide ladder is `SCHEMA_STEPS` in `core/Database.lua:362`: one `{ to = N, apply = fn }`
 row per stored-shape change, applied in order by `NS.RunMigrations` while
 `global.schemaVersion < to`, each logging one `[Migrate]` debug line. The ladder runs at
 `OnInitialize`, before logging can be on, so its summary lines go through the console's at-enable
@@ -891,6 +923,16 @@ The stamp follows savedvariables-§1 as ruled at WowAddonStandards v2.65.0:
   `Ka0s Ubuntu` (R3-L6), so every stored string naming the deleted face, at any depth (a container's
   face, the skin override), becomes `Ka0s Ubuntu`. Blizzard's own `Friz Quadrata TT`, the template's,
   stays (`tests/test_migrations.lua`).
+- **Schema v19** (`Database.MigrateV19`, `core/Database_Migrations.lua`, presets spec section 9) runs over
+  **every** stored profile and logs one `[Migrate] v19 profile '<name>'` line for a profile it marked.
+  A profile already `seeded` gets `presets.pickerSeen = true`, so a current player is not shown the
+  first-run preset picker once per profile, and keeps its containers (the old four-container starter
+  set included). Since the owner's round 4 (presets spec section 18.5) that player sees it exactly
+  once per account instead, through the account latch `global.presets.pickerSeen` (above), which
+  needs no step: an account from before it reads the default, false.
+  The step keys on `seeded`, not on the stamp: a fresh install climbs the whole ladder before its
+  first seeding, so its profile is still unseeded at v19 and sees the picker
+  (`tests/test_presets_seed.lua`).
 - **Migration lesson (batch 10 F7): a step already pushed is never extended again.** A step's
   version stamp is written once per account, so a half added to a step after any build carrying it
   has been pushed never reaches an install that already ran that build: the owner's v9 install
@@ -898,11 +940,11 @@ The stamp follows savedvariables-§1 as ruled at WowAddonStandards v2.65.0:
   While a step exists only in local, unpushed commits it may still grow; once the branch carrying it
   has been pushed, a new stored-shape change takes a new step with the next version, even when the
   earlier step is unreleased.
-- **An additive change needs no step.** `Database.PrepareProfile` (`core/Database.lua:250`) runs after
+- **An additive change needs no step.** `Database.PrepareProfile` (`core/Database.lua:268`) runs after
   the ladder on every `InitDB` and on every profile change: it backfills every stored container from
   the template with `== nil` tests (a stored `false` survives, savedvariables-§5), normalizes string
   ids to numbers, rebuilds `containerOrder` to exactly the ids that exist, raises `nextContainerId`
-  past the highest id, and seeds the starter containers on a profile whose `seeded` flag is unset.
+  past the highest id, and seeds the Simple preset on a profile whose `seeded` flag is unset.
   A container key that is neither a number nor a numeric string (a hand-edited file) is dropped,
   with one `[Migrate] dropped container key` debug line each, so the profile still loads. So is a
   numeric string whose id is already stored as a number: the numeric key is the form the addon

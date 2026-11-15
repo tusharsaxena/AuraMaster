@@ -734,6 +734,6 @@ test("migrations: v18 moves a stored Ka0s Friz Quadrata TT to Ka0s Ubuntu in eve
         assertEqual(p.skin.font, "Ka0s Ubuntu", name .. ": the skin override")
         assertEqual(p.containers[1].label.font.font, "Friz Quadrata TT", name .. ": Blizzard's own Friz stays")
     end
-    assertEqual(NS.db.global.schemaVersion, 18)
+    assertEqual(NS.db.global.schemaVersion, NS.SCHEMA_VERSION)
     assertEqual(NS.Database.RetireFonts(NS.db.sv.profiles.Raid), 0, "a second pass moves nothing")
 end)

@@ -78,7 +78,7 @@ Total.
 
 ### test_database.lua (56)
 
-- database: a fresh profile is seeded with the three starter containers, once
+- database: a fresh profile is seeded with the Simple preset's three containers, once
 - database: PrepareProfile is idempotent
 - database: string ids, dangling order entries and orphans are repaired
 - database: the backfill fills a missing leaf and keeps a stored false
@@ -785,7 +785,7 @@ Total.
 - lifecycle: a profile switch out of combat rebuilds every container for the new profile at once
 - lifecycle: every profile event clears the container selection and re-renders the panel once
 - lifecycle: a copied profile is prepared before its containers are built
-- lifecycle: a reset profile gets its starters back, numbered from 1 again
+- lifecycle: a reset profile is seeded with the Simple preset again, numbered from 1
 - lifecycle: a profile switch applies the new profile's Blizzard-frame settings
 - lifecycle: the degraded latch stands up and down only on an edge
 - lifecycle: one bad event name leaves the other eleven registered and is recorded
@@ -1744,7 +1744,7 @@ Total.
 
 - slash: every command is a positional {name, desc, fn} triple
 - slash: the reserved verbs are all present
-- slash: NS.COMMANDS carries 26 verbs, skin right after config, profile right after resetall, redraw right after forgettimed, diagnostics right after debug, and no diag verb
+- slash: NS.COMMANDS carries 27 verbs, skin right after config, profile right after resetall, preset right after delete, redraw right after forgettimed, diagnostics right after debug, and no diag verb
 - slash: /am new creates the described container and selects it
 - slash: /am new text creates a text-style container
 - slash: /am new gives the new container the Fill its style suits (B5)
@@ -1778,7 +1778,7 @@ Total.
 - slash: /am profile in combat refuses and switches nothing
 - slash: /am profile answers while disabled, and the switch re-reads the new profile's enabled flag
 
-### test_slash_verbs.lua (55)
+### test_slash_verbs.lua (60)
 
 - slash verbs: /am help prints the alias header, then one row per NS.COMMANDS verb in order
 - slash verbs: the landing page's rows are /am help's rows without the chat indent
@@ -1835,6 +1835,11 @@ Total.
 - slash verbs: while disabled the live set still answers — settings stay readable and repairable
 - slash verbs: the disabled gate is ONE decision over the whole verb table, not a per-verb guard
 - slash verbs: /am new enchants makes a player buff container showing only Weapon enchants (feedback #6)
+- slash verbs: /am preset opens the preset picker, whatever the latch says
+- slash verbs: /am preset simple icons add applies after the confirm
+- slash verbs: /am preset advanced replaces after naming the count
+- slash verbs: /am preset with an unknown name prints the usage line
+- slash verbs: /am preset in combat is refused with the combat line
 
 ### test_diagnostics.lua (50)
 
@@ -2010,7 +2015,7 @@ Total.
 - general: the Reset-all popup carries options-ui-§12's wording and cannot be clicked through
 - general: Defaults restores the General rows of the profile and no container setting, now that Containers is its own page
 - general: the page's Defaults tooltip no longer mentions a container's identity (N-1: Containers is its own page)
-- general: the tab strip reads Master controls, Blizzard frames, Spell categories, Dispel colors, Skin — Containers is gone from it
+- general: the tab strip reads Master controls, Presets, Blizzard frames, Spell categories, Dispel colors, Skin — Containers is gone from it
 - general → spell categories: the list is ordered by name, case-insensitively, ids the client cannot name last (owner 2026-09-20)
 - general → spell categories: the list draws two columns, filled row-major, in the by-name order (owner 2026-09-20)
 - general → spell categories: a dropdown of the fifteen spell categories plus Weapon enchants, opening on the first
@@ -2260,7 +2265,7 @@ Total.
 
 ### test_pages_containers.lua (35)
 
-- containers: registers its own top-level Blizzard category, with one tab, General (N-1, options-ui-§14)
+- containers: registers its own top-level Blizzard category, its General section one General tab (N-1, options-ui-§14)
 - containers: Unit, Aura type and Style sit under their own subsection; Name and Enabled do not
 - containers: the subsection heading is drawn between Enabled and Unit, not anywhere else
 - containers: NS.OpenOptionsPage('containers') opens its own category, not the main one (N-3)
@@ -2501,7 +2506,7 @@ Total.
 - sections: each style section's gate is derived from its style, on both builds (Diagnostics' inert split)
 - rail: Containers draws General, Filters, Layout and the selected container's own style, in that order
 - rail: every section draws a tooltip on its entry
-- rail: the page opens on General, today's one General tab under the band, beside a 120px rail
+- rail: the page opens on General, its one General tab under the band, beside a 120px rail
 - rail: the draw order is PageBanner, NavRail, TabStrip
 - rail: a rail click draws that section's strip and rows under the same band
 - rail: each section keeps its own tab: Filters, Categories, Layout, back to Filters lands on Categories (smoke PANEL-12)
@@ -2579,6 +2584,166 @@ Total.
 - defaults: userCategoryOrder is reconciled the way containerOrder is
 - defaults: the RAID-token row says it means castable OR dispellable, as Blizzard defines it
 
+### test_presets_data.lua (29)
+
+- presets: counts
+- presets: advanced matches its source
+- presets: every category key exists on this client
+- presets: placement at 768/1080/1440 x 16:9, 16:10, 21:9, 4:3, 5:4
+- presets data: side stacks sit on the lower base
+- presets data: side stacks grow up from their base
+- presets data: the corner group ends the cluster, Player buffs at least 10 in
+- presets data: the call-outs are centered and colored like the owner's
+- presets data: the call-out block takes the largest font that fits under the picker's top
+- presets data: the call-out rect is what the applied containers fill in test mode, unlocked
+- presets: members chain
+- presets: advanced stacks follow the mockup
+- presets: the layout narrows across only on a narrow screen
+- presets: scale fallback
+- presets: icons variant
+- presets: names follow the data
+- presets: intermediate's target cooldowns merge Advanced's two
+- presets: healer's category states (spec 3.1)
+- presets: a build is a fresh copy
+- presets: a role that shows only some categories hides the player's own
+- presets data: the call-outs carry the owner's glow exactly
+- presets data: focus roles form their own screen-placed stack
+- presets data: no bars container is laid out horizontally after Apply
+- presets data: the focus stack stays clear of the far stack beyond twice the snap radius
+- presets data: the focus, far and Player debuffs left edges line up
+- presets data: the focus stack's snap range holds only the recorded targets
+- presets data: debuff bars color by dispel type
+- presets data: bar backgrounds are 50% opaque
+- presets data: names are numbered 1..N in the owner's order
+
+### test_presets_cluster.lua (9)
+
+- presets data: Player debuffs attaches by its top right to Player buffs' top left
+- presets data: the target column sits 50 left of the focus column
+- presets data: the target stack's base is on the far stack's bottom line and its test-mode top near Player debuffs' top
+- presets data: every bar container is as wide as Player cooldowns
+- presets data: the call-out block's overlap with the target column is the recorded one
+- presets data: the player column sits 40 from the call-out column
+- presets data: the target column mirrors the player column where the cluster fits
+- presets data: the cluster moves left just enough to fit on narrower screens
+- presets data: the call-out block starts at about the picker's top
+
+### test_presets_apply.lua (11)
+
+- apply: replace simple
+- apply: replace empty
+- apply: add empty refused
+- apply: an unknown preset, style or mode is refused and changes nothing
+- apply: add mode chains to new ids
+- apply: advanced creates two categories
+- apply: advanced re-apply reuses categories
+- apply: advanced hides a second category of the same name where it hides the others
+- apply: ResolveCustom reuses only a category of the same aura type, by name in any case
+- apply: refused in combat
+- apply: only the registry writers write
+
+### test_presets_preview.lua (20)
+
+- preview: snapshot and restore exact
+- preview: swap keeps the first snapshot
+- preview: keep after swap carries only the kept preset's categories
+- preview: keep replace drops snapshot and test mode off
+- preview: keep add restores then adds
+- preview: an apply over a preview ends it first, and the applied preset survives
+- preview: an apply over a preview is refused whole in combat
+- preview: an unknown preset is refused before a snapshot is taken
+- preview: refused in combat, and ending it waits for combat
+- preview: stale snapshot restores at login
+- preview: a stale snapshot in a profile not in use is restored at login too
+- preview: profile change restores the old profile first
+- preview: a profile reached with a stale snapshot restores it
+- preview: combat ends preview with restore
+- preview: combat under secrecy keeps the preview until combat ends
+- preview: categories the preview created are removed
+- preview: RestoreSnapshot is the registry writer's, and the preset module writes no registry field
+- preview: the category half of a restore is the category registry's writer
+- preview: an in-play restore puts the spell edits back through the seam, exactly
+- preview: a category restore into a profile not in use writes it and syncs nothing
+
+### test_presets_seed.lua (8)
+
+- seed: new profile gets simple
+- seed: the seeded containers are what applying Simple (Bars) writes
+- seed: PrepareProfile seeds Simple from the profile's own counter
+- seed: the retired starter set is gone
+- seed: migrated profile marked seen
+- seed: fresh install not marked seen
+- seed: the v19 step is idempotent and keeps a stored false on an unseeded profile
+- seed: the account latch needs no migration step
+
+### test_presetpicker.lua (50)
+
+- picker: due on new profile only
+- picker: the latch is a settings row, written through the seam
+- picker: shows before skin picker
+- picker: the footer names the General page's Presets tab
+- picker: a profile that has seen it arms the skin picker's start as before
+- picker: an existing profile sees the picker once per account
+- picker: closing it by any route marks it shown for every profile
+- picker: a brand-new install does not see it twice
+- picker: combat holds it until it can show
+- picker: an existing player's containers stay unless they apply and confirm
+- picker: the account latch is a global row, written through the seam
+- picker: the window is a movable, clamped DIALOG, closed by Escape
+- picker: pick previews, close restores, latch set
+- picker: Escape restores like Not now
+- picker: apply keeps
+- picker: Apply with nothing picked keeps what the profile holds
+- picker: empty previews an empty screen and applies no containers
+- picker: Not now after an Empty preview puts the player's containers back
+- picker: every pick turns test mode on and unlocks, whatever the buttons were set to
+- picker: refused in combat holds
+- picker: on demand it asks before replacing the player's containers
+- picker: a profile event takes it down with a restore, then offers it to the new profile
+- picker: HidePresetPicker restores, unmarked
+- picker: a first-run Apply asks once the player has made a container
+- picker: an edited seed asks too, and an untouched one survives a reload
+- picker: a profile with no seed record always asks
+- picker: /am preset simple with the first-run window up is the player's close
+- picker: /am preset with the window up offers the skin picker on a Cancel too
+- picker: /am preset with the window down leaves the latch alone
+- picker: showing re-raises a shown StaticPopup
+- picker: a pick made under the confirm still applies what the confirm named
+- picker: combat under the confirm restores, and the answer still applies
+- picker: Not now under the confirm takes the confirm down with it
+- picker: a profile event takes an open preset confirm down unanswered
+- picker: opens where the skin picker does
+- picker: the call-out block starts at the picker's top for every preset
+- picker: opening unlocks and remembers the lock
+- picker: the lock button flips the lock
+- picker: the test button flips test mode, and turning it off ends a preview
+- picker: apply leaves containers locked and test mode off
+- picker: not now, close and escape put the lock back and test mode off
+- picker: /am preset opens unlocked too
+- picker: a hide this addon makes puts the lock back and test mode off
+- picker: a profile switch puts the lock back in the profile it opened on
+- picker: a profile reset under the window keeps the reset's lock
+- picker: /am preset <name> with the window up puts the lock back and test mode off
+- picker: a container dragged under the preview keeps its drop on Apply
+- picker: a logout with the window up writes back the lock it found
+- picker: after a /reload with the window up, Not now leaves the containers locked
+- picker: every close prints the unlock hint once
+
+### test_pages_presets.lua (12)
+
+- presets tab: listed on the General page after Master controls
+- presets tab: gone from the Containers page
+- presets tab: drawn with no containers too
+- presets tab: no empty option
+- presets tab: pick previews
+- presets tab: apply replace confirms and keeps
+- presets tab: add keeps player containers
+- presets tab: apply with nothing previewed applies the selection
+- presets tab: leaving the tab restores
+- presets tab: panel hide restores
+- presets tab: a preview the tab did not start is not its to end
+- presets tab: refused in combat
+
 ### test_perf.lua (8)
 
 - perf: every declared bucket is reached by a real bracket
@@ -2629,7 +2794,7 @@ Total.
 
 - prose: no authored file carries a British spelling from localization-§5's published list
 - prose: the gate carries localization-§5's two lists whole, and nothing of its own
-- prose: the exclusions this repository declared suppressed 15 of 254 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (15): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, and 12 more (list bounded)
+- prose: the exclusions this repository declared suppressed 15 of 267 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (15): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, and 12 more (list bounded)
 - prose: no path this repository narrows the gate by is loaded by a TOC
 - prose: every path this repository narrows the gate by is one .pkgmeta keeps out of the zip
 - prose self-test: the carve-out suppresses the named generated folder, and only it
@@ -2845,7 +3010,7 @@ Total.
 | test_layers.lua | 8 |
 | test_disabled.lua | 18 |
 | test_slash.lua | 35 |
-| test_slash_verbs.lua | 55 |
+| test_slash_verbs.lua | 60 |
 | test_diagnostics.lua | 50 |
 | test_diagnostics_situations.lua | 4 |
 | test_bulklog.lua | 20 |
@@ -2883,6 +3048,13 @@ Total.
 | test_envsetup.lua | 4 |
 | test_poolsetup.lua | 4 |
 | test_defaults.lua | 31 |
+| test_presets_data.lua | 29 |
+| test_presets_cluster.lua | 9 |
+| test_presets_apply.lua | 11 |
+| test_presets_preview.lua | 20 |
+| test_presets_seed.lua | 8 |
+| test_presetpicker.lua | 50 |
+| test_pages_presets.lua | 12 |
 | test_perf.lua | 8 |
 | test_debuglogsetup.lua | 9 |
 | test_locale.lua | 10 |
@@ -2899,4 +3071,4 @@ Total.
 | test_skin_switch.lua | 34 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2377** |
+| **Total** | **2521** |

@@ -128,7 +128,12 @@ out**, so every setup file takes its real degradation stub — the options stub 
 load, the slash stub has to answer, the perf stub has to carry every member the addon calls
 (testing-§8). Suites compare that environment against the live one; nothing hand-stubs a namespace
 member to test it. `tests/fresh_env.lua` builds an isolated, fully loaded environment for any suite
-that mutates state, so suite order cannot change a result. Both builders reuse the runner's one
+that mutates state, so suite order cannot change a result. Its first profile, and the shared
+environment's, hold `tests/starters_fixture.lua`'s four containers (the starter set a new profile got
+before schema v19, which most suites read as their furniture: an icon row at id 2, a target container
+at 3, a text container at 4), written just before the first `PrepareProfile`; every later preparation
+seeds the real Simple preset, and `fresh_env({ simple = true })` keeps the real first-run seed
+(`tests/test_presets_seed.lua`). Both builders reuse the runner's one
 `Loader`, mock builder and load lists (`AM_TEST.Loader`, `AM_TEST.buildMocks`,
 `AM_TEST.loadedLibFiles` / `loadedAddonFiles`): a build re-RUNS the cached chunks and never re-reads
 a file, which is what keeps the gate fast (testing-§14). A builder that `dofile`s its own

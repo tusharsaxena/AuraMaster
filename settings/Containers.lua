@@ -248,7 +248,11 @@ NS.Containers = { GROUP = GROUP, rows = ROWS, render = render }
 NS.RegisterContainerSection(PAGE, L["General"], {
     addonWide = true,
     tooltip   = L["Name this container, choose what it shows and how it is drawn, and duplicate, delete or copy settings onto it."],
-    tabs      = { { key = GROUP, label = GROUP, render = render } },
+    -- The Presets tab that followed General here moved to the General page (settings/GeneralPresets.lua,
+    -- presets spec section 16.4, AM-PR14).
+    tabs      = {
+        { key = GROUP, label = GROUP, render = render },
+    },
 })
 
 -- The band above the strip (options-ui-§14): the container picker every per-container page shares,

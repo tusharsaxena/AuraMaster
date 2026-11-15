@@ -1,0 +1,24 @@
+id	milestone	repo	title	depends_on
+AM-PR00	M0	AuraMaster	Design, plan and run tooling	
+AM-PR01	M1	AuraMaster	Preset data and the placement builder	AM-PR00
+AM-PR02	M1	AuraMaster	Apply a preset through the registry writers	AM-PR01
+AM-PR03	M1	AuraMaster	Preview on the real screen with an exact restore	AM-PR02
+AM-PR04	M2	AuraMaster	New profiles start from Simple; schema v19	AM-PR02
+AM-PR05	M2	AuraMaster	First-run preset picker and /am preset	AM-PR03 AM-PR04
+AM-PR06	M2	AuraMaster	Presets tab on the Containers page	AM-PR03
+AM-PR07	M3	AuraMaster	Docs, smoke checks and inventory	AM-PR05 AM-PR06
+AM-PR08	M3	AuraMaster	Whole-branch review fixes and the automated-test record	AM-PR07
+AM-PR09	M4	AuraMaster	Upward side stacks, corner group moved, call-outs styled	AM-PR08
+AM-PR10	M4	AuraMaster	Picker centered and unlocked, lock and test buttons	AM-PR08
+AM-PR11	M4	AuraMaster	Docs, smoke, review and automated-test record for round 1	AM-PR09 AM-PR10
+AM-PR12	M4	AuraMaster	Owner rulings on round-1 conflicts: picker spot, lower base	AM-PR11
+AM-PR13	M5	AuraMaster	Call-out glow, own focus stack, corner aligned with it	AM-PR12
+AM-PR14	M5	AuraMaster	Presets tab moves to the General page	AM-PR12
+AM-PR15	M5	AuraMaster	Docs, smoke, review and test record for round 2	AM-PR13 AM-PR14
+AM-PR16	M6	AuraMaster	Right-hand cluster lined up, debuffs attached to buffs, equal bar widths	AM-PR15
+AM-PR17	M6	AuraMaster	Bar colors and backgrounds, numbered names, unlock hint	AM-PR15
+AM-PR18	M6	AuraMaster	Docs, smoke, review and test record for round 3	AM-PR16 AM-PR17
+AM-PR19	M7	AuraMaster	Player stack nearer center, target cluster mirroring it, call-outs higher	AM-PR18
+AM-PR20	M7	AuraMaster	Existing users see the preset picker once	AM-PR18
+AM-PR21	M7	AuraMaster	Docs, smoke, review and test record for round 4	AM-PR19 AM-PR20
+AM-PR22	M8	AuraMaster	Every pick unlocks and turns test mode on; Empty previews an empty screen	AM-PR21

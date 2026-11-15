@@ -88,14 +88,17 @@ local S = SchemaLib and SchemaLib:New({
 NS.SchemaRuntime = S
 
 local CONTAINER = "container"
+local GLOBAL = "global"
 local L = NS.L
 local C = NS.Constants
 local NO_CONTAINER = L["No container exists yet — create one on Containers."]
 
--- THE MINIMAP ROW IS THE ONE PATH THAT IS NOT THE PROFILE'S (launcher-§3).
+-- THE MINIMAP ROW IS THE ONE PATH THAT IS NOT ITS STORAGE (launcher-§3).
 --
--- Every other absolute path in this schema resolves against `db.profile`, which is why resolveRoot
--- needs no root argument. This one resolves against `db.global`, and its path is spelled
+-- Every other absolute path in this schema resolves against `db.profile`, or against `db.global`
+-- when it starts `global.` (the preset picker's account latch, read and written like any profile
+-- row), which is why resolveRoot needs no root argument. This one resolves against `db.global`
+-- through its own seams, and its path is spelled
 -- `global.minimap.shown` VERBATIM -- the composer takes the path unprefixed for exactly that reason.
 -- The scope is the decision: a minimap button belongs to the installation, so a profile switch must
 -- not move it and Reset all settings, a profile reset, must not un-hide one the player deliberately hid.
@@ -210,7 +213,9 @@ function NS.ActiveContainer()
 end
 
 --- Where a path lives: its root table, the index of its first segment in that root, and the id of
---- the container it landed in (nil for a global row).
+--- the container it landed in (nil for a global row). A `global.` path resolves against the
+--- account-wide store (the preset picker's account latch, presets spec section 18.5); the minimap
+--- row never reaches here, its seams answer it first.
 local function resolveRoot(parts, containerId)
     if parts[1] == CONTAINER then
         if containerId ~= nil then
@@ -220,6 +225,7 @@ local function resolveRoot(parts, containerId)
         local c, id = NS.ActiveContainer()
         return c, 2, id
     end
+    if parts[1] == GLOBAL then return NS.db and NS.db.global or nil, 2, nil end
     return NS.db and NS.db.profile or nil, 1, nil
 end
 
@@ -237,8 +243,8 @@ local function nilAsFor(path)
     return row and row.nilAs
 end
 
---- The shipped default for `path` — from the container template for a `container.` path, from the
---- profile defaults otherwise, and an automatic row's `nilAs` where the template declares nothing.
+--- The shipped default for `path` — from the container template for a `container.` path, the global
+--- defaults for a `global.` one, the profile defaults otherwise, and an automatic row's `nilAs`.
 --- A deep copy, so a caller can never mutate the template.
 function NS.DefaultFor(path)
     -- Inverted off the ONE declaration, defaults/Profile.lua's stored `global.minimap.hide = false`,
@@ -253,6 +259,8 @@ function NS.DefaultFor(path)
     local d
     if parts[1] == CONTAINER then
         d = readFrom(NS.CONTAINER_TEMPLATE, parts, 2)
+    elseif parts[1] == GLOBAL then
+        d = readFrom(NS.defaults and NS.defaults.global, parts, 2)
     else
         d = readFrom(NS.defaults and NS.defaults.profile, parts, 1)
     end

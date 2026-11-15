@@ -2,13 +2,14 @@ local _, NS = ...
 
 -- settings/General.lua — the addon-wide page.
 --
---     [ Master controls ][ Blizzard frames ][ Spell categories ][ Dispel colors ]
+--     [ Master controls ][ Presets ][ Blizzard frames ][ Spell categories ][ Dispel colors ][ Skin ]
 --
 --     Master controls  [Enable Aura Master]  [General visibility]
 --                      [Master scale]        [Master opacity]
 --                      [Lock frame]          [Debug console]
 --                      [Minimap button]      [Test mode]
 --                      [Reset position]      [Reset all settings]     <- afterGroup button pair
+--     Presets          settings/GeneralPresets.lua: a ready-made set of containers, previewed first
 --     Blizzard frames  [Hide Blizzard buffs]  [Hide Blizzard debuffs]   <- no heading: the tab names it
 --     Spell categories settings/GeneralSpells.lua: one spell category's list, profile-wide
 --     Dispel colors    settings/GeneralDispel.lua: one color per dispel type, profile-wide
@@ -240,6 +241,29 @@ NS.RegisterSchemaRows({
     },
 })
 
+-- The first-run preset picker's memory (modules/Presets.lua, presets spec section 9), the twin of
+-- skin.pickerSeen: set when the picker closes, so it shows once per profile, and written through the
+-- seam by NS.Presets.MarkPickerSeen. Drawn by nothing (skipRender in the Master controls group, which
+-- the flow engine draws without it); a reset puts it back to false, and `/am get|set|reset
+-- presets.pickerSeen` reaches it.
+NS.RegisterSchemaRows({
+    {
+        path = "presets.pickerSeen", page = "general", group = H.MASTER_GROUP, type = "bool",
+        skipRender = true, effect = "none",
+        label = L["Preset picker seen"],
+        desc  = L["Whether the first-run preset picker was closed on this profile."],
+    },
+    -- The account's latch (presets spec section 18.5), in the GLOBAL store: set by the same closes,
+    -- so a player whose profiles predate the presets sees the picker once per account. A page's
+    -- Defaults leaves it alone (settings/OptionsSetup.lua's panel veto); `/am reset` names it.
+    {
+        path = "global.presets.pickerSeen", page = "general", group = H.MASTER_GROUP, type = "bool",
+        skipRender = true, effect = "none",
+        label = L["Preset picker seen"], -- options-ui-§21: no account suffix; the path tells the twins apart
+        desc  = L["Account-wide: shared by every profile. Whether the first-run preset picker was closed on any profile."],
+    },
+})
+
 -- Reset all settings: options-ui-§12's one wording, verbatim, and the same act as Profiles →
 -- Reset Profile.
 StaticPopupDialogs["AURAMASTER_RESET_ALL"] = {
@@ -273,14 +297,23 @@ local APPEARANCE_TAB = H.AppearanceTab({
     owner = NS.Skin and NS.Skin.owner, get = NS.SkinChoice, set = NS.WriteSkinChoice,
 })
 
--- The page's tabs: its schema groups, with Spell categories (settings/GeneralSpells.lua), Dispel
--- colors (settings/GeneralDispel.lua) and Skin as its bespoke ones. `addonWide`: every tab is drawn
--- whether or not a container exists.
+-- The Presets tab (settings/GeneralPresets.lua, presets spec sections 8 and 16.4): second, after
+-- Master controls, where it is easy to find (the owner moved it off the Containers page, AM-PR14).
+-- Told when the page moves off it, so the preview it put on the screen is restored.
+local PRESETS_TAB = {
+    key = "Presets", label = L["Presets"], before = L["Blizzard frames"],
+    tooltip = L["Replace or add to every container in this profile with a ready-made set, previewed on your screen first."],
+    render = NS.RenderPresetsTab, onLeave = NS.PresetsTabLeft,
+}
+
+-- The page's tabs: its schema groups, with Presets (above), Spell categories
+-- (settings/GeneralSpells.lua), Dispel colors (settings/GeneralDispel.lua) and Skin as its bespoke
+-- ones. `addonWide`: every tab is drawn whether or not a container exists.
 local PAGE_SPEC = {
     addonWide  = true,
     -- The group name IS the hook key, read off the instance rather than spelled again.
     afterGroup = { [H.MASTER_GROUP] = masterTail },
-    tabs       = { GS.TABS[1], GD.TAB, APPEARANCE_TAB },
+    tabs       = { PRESETS_TAB, GS.TABS[1], GD.TAB, APPEARANCE_TAB },
 }
 
 local function build(mainCategory)

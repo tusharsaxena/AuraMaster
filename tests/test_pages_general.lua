@@ -182,7 +182,7 @@ test("general: Reset all settings asks first and resets nothing until the answer
     -- red under: onResetAll calling RestoreAllDefaults straight away (a destructive act unasked)
     assertEqual(#popups, 1)
     assertEqual(popups[1].which, "AURAMASTER_RESET_ALL")
-    assertEqual(#NS.Database.GetContainers(), #NS.STARTER_CONTAINERS + 1, "nothing reset yet")
+    assertEqual(#NS.Database.GetContainers(), #AM_TEST.STARTERS + 1, "nothing reset yet")
     assertEqual(NS.db.profile.scale, 2)
 end)
 
@@ -225,7 +225,7 @@ test("general: Defaults restores the General rows of the profile and no containe
     -- red under: N-1 half-done (Containers rows still page = "general", so a General Defaults press
     -- would still reach the selected container's identity)
     assertFalse(NS.Database.FindContainer(1).enabled, "a Containers row is not a General row either")
-    assertEqual(#NS.Database.GetContainers(), #NS.STARTER_CONTAINERS, "and the registry is untouched")
+    assertEqual(#NS.Database.GetContainers(), #AM_TEST.STARTERS, "and the registry is untouched")
 end)
 
 test("general: the page's Defaults tooltip no longer mentions a container's identity (N-1: Containers is its own page)", function()
@@ -235,13 +235,14 @@ test("general: the page's Defaults tooltip no longer mentions a container's iden
         NS.L["Restore every General setting on this profile to its addon default. The Minimap button is left alone — whether the button is shown is a per-installation preference, like where you dragged it. The spell categories' lists are not rows; each category has its own restore."])
 end)
 
-test("general: the tab strip reads Master controls, Blizzard frames, Spell categories, Dispel colors, Skin — Containers is gone from it", function()
+test("general: the tab strip reads Master controls, Presets, Blizzard frames, Spell categories, Dispel colors, Skin — Containers is gone from it", function()
     local NS, m, P = general()
     local keys = P.tabKeys("general")
     -- red under: the Containers tab left behind on General after N-1's move, or dropped without the
     -- Spell categories / Dispel colors tabs shifting up to take its old place
     -- The Skin tab (skinning-§3) is last: the library's O.AppearanceTab, keyed by the Appearance group.
-    assertEqual(table.concat(keys, ","), "Master controls,Blizzard frames,Spell categories,Dispel colors,Appearance")
+    -- The Presets tab (settings/GeneralPresets.lua, AM-PR14) is second, after Master controls.
+    assertEqual(table.concat(keys, ","), "Master controls,Presets,Blizzard frames,Spell categories,Dispel colors,Appearance")
     local seen = {}
     for _, k in ipairs(keys) do
         assertNil(seen[k], "tab " .. k .. " drawn twice")

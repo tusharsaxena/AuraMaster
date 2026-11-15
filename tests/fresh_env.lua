@@ -22,6 +22,9 @@
 -- what one file published before the next file reads it (a synthetic Forever EMPTY set,
 -- tests/test_categories_clients.lua).
 --
+-- The first profile prepared holds the harness's fixture, the pre-v19 starter set
+-- (tests/starters_fixture.lua); `opts.simple = true` keeps the real seed, the Simple preset.
+--
 -- The build ends on Ka0s Default under either kit profile (tests/wear_ka0s.lua says why);
 -- `opts.clientSkin = true` keeps the client's own default skin, WoW Forever on the forever profile.
 local wearKa0s = dofile("tests/wear_ka0s.lua")
@@ -42,6 +45,9 @@ return function(opts)
     else
         Loader.loadAll(T.loadedAddonFiles, NS, mocks)
     end
+    -- The pre-v19 starter set as the first profile's furniture (tests/starters_fixture.lua);
+    -- `opts.simple = true` leaves the real first-run seed, the Simple preset, in place.
+    if not opts.simple then T.Starters.install(NS) end
     NS.addon:OnInitialize()
     NS.addon:OnEnable()
     mocks.__fireTimers()

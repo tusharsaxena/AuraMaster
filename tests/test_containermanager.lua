@@ -534,6 +534,8 @@ test("manager: an id a later Create reuses after a profile reset while auras are
     mocks.__aurasSecret, mocks.__lockdown = true, false
     NS.db:ResetProfile()
     assertTrue(CM.__retiring()[5] == inst5, "parked: the reset profile has no container 5")
+    -- The reset profile is seeded with the Simple preset (1-3), so id 4 goes first.
+    assertEqual(CM.Create({}), 4)
     assertEqual(CM.Create({}), 5, "the reset counter hands id 5 out again")
     assertTrue(CM.instances[5] == inst5, "revived, not rebuilt")
     assertEqual(made[1], 0)
@@ -601,6 +603,8 @@ test("manager: an id a profile reset hands out again out of combat revives its d
     assertNil(CM.instances[5], "the reset profile has no container 5")
     local made = spyCreate(mocks, "AuraMasterAnchor5")
     local points = counted(inst5.anchor, "SetPoint")
+    -- The reset profile is seeded with the Simple preset (1-3), so id 4 goes first.
+    assertEqual(CM.Create({}), 4)
     assertEqual(CM.Create({ unit = "focus" }), 5, "the reset counter hands id 5 out again")
     mocks.__fireTimers()
     -- red under: CM.Sync dropping a destroyed instance

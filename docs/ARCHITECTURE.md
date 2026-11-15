@@ -9,7 +9,10 @@ Ka0s Aura Master draws player-built aura **containers**. A container is one unit
 `target`, `focus`, `pet` — `core/Constants.lua:39`), one aura type (`HELPFUL` or `HARMFUL` — `:45`;
 the player's temporary weapon enchants are the buff category `weaponEnchants`, schema v5) and one style (`bars`, `icons` or
 `text` — `:49`), plus its filters, placement and look. A profile holds any number of them; a fresh
-profile is seeded with four (`NS.STARTER_CONTAINERS`, `defaults/Profile.lua:343`).
+profile is seeded with the Simple preset's three (`NS.PresetData`, `defaults/Presets.lua`; schema v19).
+The four-container starter set it replaced, `NS.STARTER_CONTAINERS`, is retired; the headless harness
+keeps that set as a test fixture (`tests/starters_fixture.lua`), handed to the first profile each test
+environment prepares.
 
 **The design is dictated by one client fact.** On Retail 12.1 an addon cannot read aura data while
 auras are secret — combat, encounters, Mythic+ and PvP (`core/Secrets.lua`, `docs/midnight-quirks.md`).
@@ -46,8 +49,8 @@ what each LibKa0s setup file publishes: `docs/module-map.md` → *Libraries*.
 ## Module Map
 
 Five source folders in the TOC's load order — `locales/` → `core/` → `defaults/` → `modules/` →
-`settings/` (layout-§1) — 66 authored Lua files under them as measured on 2026-11-14: one locale, 18 core, 6 defaults, 25
-modules and 16 settings. The load-bearing positions are annotated at their TOC lines:
+`settings/` (layout-§1) — 70 authored Lua files under them as measured on 2026-11-14: one locale, 18 core, 7 defaults, 26
+modules and 18 settings. The load-bearing positions are annotated at their TOC lines:
 `core/MediaSetup.lua` before `core/Constants.lua` (the monospace face), `core/Compat.lua` before
 `defaults/` (Categories and CastToAura_Forever ask `ClientKey` and `ForClient` at file load), `core/CoreSetup.lua` before
 anything that prints, `core/SkinSetup.lua` after it and before every frame builder (the skin owner registers at file load, skinning-§1), `core/PerfSetup.lua` before every module that takes `NS.Perf` as an upvalue,
@@ -64,7 +67,9 @@ load as the strip's `tooltipPlace`),
 before `modules/Anchors_Snap.lua`,
 `modules/Anchors_Snap.lua` after all three (it binds `NS.AnchorsAttach`'s pair table and
 `NS.AnchorsSnapRect` at file load and extends `Anchors` as `Anchors.Snap`),
-`settings/OptionsSetup.lua` before every page file (the composers run at file load), and
+`settings/OptionsSetup.lua` before every page file (the composers run at file load),
+`settings/GeneralPresets.lua` after it and before `settings/General.lua` (which binds
+`NS.RenderPresetsTab` and `NS.PresetsTabLeft` into its page spec at file load), and
 `settings/GeneralUserCategories.lua` (read by `settings/GeneralSpells.lua` at file load), then
 `settings/GeneralSpells.lua`, then `settings/GeneralDispel.lua` (which reads its bullet constants), all
 before `settings/General.lua`, which registers their rows after its own.
@@ -82,6 +87,140 @@ mode). How they place, attach, preview, unlock and drag a container: `docs/data-
 [*Placement, preview and drag in brief*](data-flow.md#placement-preview-and-drag-in-brief).
 
 Every non-vendored file, its responsibility and the full load order: `docs/module-map.md`.
+
+### Presets
+
+Five starting points for a profile's containers (spec
+`docs/superpowers/specs/2026-11-14-auramaster-presets-design.md`): **Empty** (none), **Simple** (3),
+**Intermediate** (8), **Advanced** (20, the owner's own setup) and **Healer** (9), each in **Bars** or
+**Icons**, placed for the player's screen size and previewed on the real screen in test mode.
+
+| File | Role |
+|---|---|
+| `defaults/Presets.lua` | `NS.PresetData`: the data (the seven stacks in a 1080-tall reference space, the containers by role, each preset's stacks) and the pure builder. `Build(name, look, W, H, picked)` answers the specs in creation order, a stack's head placed on `UIParent` and every member attached to the one before it; `Realize(specs, keys, create)` walks them through a writer, filling each member's `attach.container` with the id its parent took. `CalloutRect(name, look, W, H)` answers the call-out block's unlocked test-mode rectangle, and `ROOM` the room around it (the spot both pickers open on, 75% up, the skin picker's and the preset picker's sizes, the margin). Writes each name as `[n] <name>`, `n` its place in creation order, the owner's numbering (spec section 17.4; not localized, the name after it is), and on every bars container the bar look of section 17.3 (`bars.bgAlpha` 0.5; `bars.colorMode` `"dispel"` on a HARMFUL one, `"static"` otherwise, both written so neither the template nor a skin decides). Carries no spell ids and no appearance media but that bar look and the call-outs' look (spec section 15) |
+| `modules/Presets.lua` | `NS.Presets`, the one writer: `Apply(name, look, mode)` through `ContainerManager.Create` / `.Delete` and `Categories.CreateUserCategory` (Advanced's two custom categories, reused by name on a re-apply, `ResolveCustom`); the preview (`BeginPreview`, `EndPreview`, `IsPreviewing`, `Previewed`, `RestoreStaleSnapshots`, `RestoreStaleSnapshot`, `OnCombatStart`, `OnCombatEnd`); the picker latches, the profile's and the account's (`PickerSeen`, `MarkPickerSeen`); the untouched-seed record (`RecordSeed`, `SeedUntouched`, `Fingerprint`); `OwnContainerCount`, `ParentSize` |
+| `settings/PresetPicker.lua` | The first-run window (`NS.PresetPickerDue`, `NS.MaybeShowPresetPicker`, `NS.ShowPresetPicker`, `NS.HidePresetPicker`, `NS.PresetPickerHolding`, `NS.RefreshPresetPicker`; `NS.PresetPicker.Placement(W, H)`, where it opens), with its lock and test-mode buttons, and the preset confirm, one StaticPopup behind two entry points: `NS.ConfirmPreset(name, look, mode)` applies (`/am preset <name>`, the tab with no preview of its own), `NS.ConfirmPreview(name, look, mode)` keeps the preview on screen while it asks, then keeps it (the tab). An answer decides what it writes when it is given, and the confirm goes down unanswered with the window and with every `NS.HidePresetPicker` (a profile event, the stand-down). Every close the player makes of the window prints the unlock hint once (spec section 17.5, `sayUnlockHint`) |
+| `settings/GeneralPresets.lua` | The General page's **Presets** tab, its second tab after Master controls: `NS.RenderPresetsTab`, and `NS.PresetsTabLeft`, its `onLeave` |
+
+- **Its own profile key**, `presets` (`docs/schema.md`): `pickerSeen` (default false, a skipRender
+  settings row written through the seam; schema v19 sets it on every profile already `seeded`), `seedPrint` (no default: the fingerprint of what the Simple
+  seed wrote, so the first-run picker skips its Replace confirm only over an untouched seed) and
+  `previewSnapshot` (no default: present only while a preview is up). Nothing records which preset
+  was applied.
+- **And one account key**, `global.presets.pickerSeen` (spec section 18.5; default false, a
+  skipRender row on General that `settings/Schema.lua` resolves against `db.global`, the one other
+  `global.` row beside the minimap's). The picker is due while the profile's latch or this one is
+  unset (`Presets.PickerSeen`), and every close the player makes sets both through `NS.SetByPath`
+  (`Presets.MarkPickerSeen`). So a player whose profiles predate the presets (v19 marked each one
+  seen) sees the picker exactly once per account, at the next login, on whatever profile is active,
+  and a brand-new install's first close counts for the account too. No migration: an account from
+  before it reads the default. General's Defaults leaves it alone (`vetoedFromPanelReset`,
+  `settings/OptionsSetup.lua`), and `/am reset global.presets.pickerSeen` names it. The Replace
+  confirm still guards the player's own containers: no seed fingerprint is stored on such a profile.
+- **Preview is write-and-snapshot.** The first pick snapshots the registry and the custom categories
+  into `presets.previewSnapshot` (`ContainerManager.Snapshot`), writes the preset in Replace mode and
+  turns test mode on; a later pick restores the snapshot and writes the new preset, the first snapshot
+  kept. Ending unkept restores it exactly, ids included (`ContainerManager.RestoreSnapshot`, the
+  registry writer's restore act); keeping it in Replace drops it; keeping it in Add restores it, then
+  applies the preset on top. `NS.Presets.Previewed()` answers the preset, its style and a token naming
+  that one preview, so the picker and the tab each end only a preview they started. `Presets.Apply`
+  itself settles a preview that is up (a restore, then the write), so no caller can leave a snapshot
+  behind a confirmed preset; every end repaints the picker (`NS.RefreshPresetPicker`).
+- **Every other end restores.** A `/reload` or a crash leaves the snapshot stored, and the next login
+  restores it in every profile before the migration ladder (`Presets.RestoreStaleSnapshots`, first in
+  `NS.RunMigrations`). A profile event restores the profile the preview was taken in, never the new
+  one, before anything rebuilds (`Presets.RestoreStaleSnapshot`, first in `core/AuraMaster.lua`'s
+  `prepareProfile`, then `NS.HidePresetPicker`). Combat's `PLAYER_REGEN_DISABLED` edge, before
+  lockdown, restores at once; when an apply would have to wait anyway, test mode goes off and the
+  restore is held to `PLAYER_REGEN_ENABLED`. One chat line says which.
+- **The tab's leave hook.** A host tab in a page spec (the General page's `PAGE_SPEC`, where the
+  Presets tab sits since spec section 16.4) or in a `NS.RegisterContainerSection` spec may carry
+  `onLeave`. `settings/OptionsSetup.lua` records the tab drawn with one (`ctx.__tabLeave`) and calls
+  it once when a later render draws another tab or another rail section, or when the panel hides
+  (one `OnHide` hook per page context); a redraw of the same tab is not a leave. The library has no
+  leave callback, so the page's `chrome`, which every render calls before a tab's content, a schema
+  tab the library draws itself included, is where a tab click lands (`pageChrome`); a host tab's
+  render and `Helpers.RenderContainerPage` check again.
+- **Before the skin picker.** `addon:OnEnterWorld` shows the preset picker at once while it is due
+  and arms no skin start; `NS.MaybeShowSkinPicker` answers `nil, "held"` while
+  `NS.PresetPickerHolding()`, and every close of the preset picker sets both latches and then offers
+  the skin picker. `rebuildProfile` offers the preset picker, then the skin picker, to a new, reset or
+  copied profile. Another Ka0s addon's skin picker can still show over it, on the same spot
+  (`docs/known-limitations.md`).
+- **The placement after the owner's round 1** (spec sections 15 and 15.1). The side stacks (`left`,
+  `right`, `far`) grow up: each head is the stack's bottom container, placed by its BOTTOMLEFT
+  (BOTTOMRIGHT for a row growing left) on a base 740 down in the reference space (340 above the
+  bottom at 1080 tall), with `layout.growV = "up"`, and each member joins the top of the one before
+  it, so a tier's first role sits nearest the unit frames. The corner group still grows down, 46
+  down (where it sits across since round 4: the right-hand cluster below). The call-outs
+  (`middle`) hang by their TOP from the screen's center line, each line centered, colored like the
+  owner's three (from no skin), with the owner's glow (black from no skin, intensity 1, thickness
+  2, offset 1, -1, every glow leaf the template has stored, spec section 16.1) and no label. Since
+  round 4 (spec section 18.3, `calloutRoom` and `calloutLayout`) the block's top sits at the preset
+  picker's top (the picker's center 75% up, less half of `ROOM.pickerHeight`: 90 down at 1080 tall,
+  12 at 768, 180 at 1440), no nearer the top edge than `ROOM.margin`, and it may overlap the picker;
+  the builder takes the largest font from 36 down to 24 whose unlocked test-mode block ends above the
+  bottom margin. At 1080 tall that is the owner's 36 for Advanced and for Healer.
+- **The focus stack** (spec section 16.2). The focus roles (Intermediate's `fdeb`, Advanced's `fdeb`
+  and `fbuff`, Healer's `healFocus` and `dispelFocus`) are a stack of their own, `focus`, no longer the
+  far stack's tail: a container attached to another flows by its chain's head
+  (`Anchors.EffectiveLayout`: axis and both growths), so under Target debuffs (all), an icon row,
+  Advanced's focus bars were laid out across. Its head is placed on the screen (`attach.mode =
+  "screen"`) and grows up like the side stacks; its column is `cornerLeft`'s, a `cluster` column
+  moved with it, so Player debuffs and the focus containers share a left edge on every screen;
+  its base sits 550 down in the reference space (`FOCUS_BASE`), high enough over the far stack that
+  the two stay more than twice `C.SNAP_RADIUS` apart in test mode, locked or unlocked. On a 768-tall
+  screen other containers still sit within one snap radius of it while unlocked
+  (`docs/known-limitations.md`).
+- **The player column and its mirror** (spec sections 18.1 and 18.2, the owner's round 4). The
+  player stack's column (`left`) spans -480..-240 from the center line, `MIRROR` (240) left of it and
+  40 clear of the call-out column (80 before), and the target column (`right`) starts `MIRROR` right
+  of it, at +240, so the two mirror each other. Every column now hangs from the center line's `TOP`.
+- **The right-hand cluster** (spec section 17.1 and 17.2, the owner's round 3, placed by section
+  18.2; it overrides section 16.3's corner offsets). Every column that holds bars is `COL_W` (240)
+  wide, Player cooldowns' width. The `cluster` columns hang from the center line, from the target
+  column out, and end 1015 right of it (`CLUSTER_RIGHT`); where Player buffs' right edge would then
+  sit nearer the screen's right edge than `EDGE_IN` (10), on 16:9 and narrower, `P.ClusterShift`
+  moves the whole cluster left just enough to keep it 10 in (65 at 1920 x 1080), and `P.Columns`
+  hands every `cluster` column that shift, so its gaps hold on every screen. On 21:9 no shift is
+  needed and the target column sits at the mirror. Below about 1.47:1 (4:3, 5:4) `P.ScaleX` still
+  narrows across so the cluster keeps right of the center line. From the right in:
+  Player buffs (`cornerRight`), Weapon enchants under it;
+  Player debuffs (`cornerLeft`, a `beside` stack) is not placed but attached, `attach.mode =
+  "container"`, its `TOPRIGHT` to Player buffs' `TOPLEFT` with `CORNER_GAP` (5) between
+  (`besideAttach`), in Icons too, where it follows Player buffs' row; the focus stack and the far
+  stack under it on Player debuffs' left edge (`FOCUS_X`), their tops and bottoms more than twice
+  `C.SNAP_RADIUS` apart; and the target stack (`right`) `TARGET_GAP` (50) left of that column, on
+  the far stack's base, which the player stack shares. The call-out column is 400 wide (480 before),
+  still wider than its widest test-mode line at 36. On 16:9 and narrower screens, where the cluster
+  moves left, the target column still meets the call-out block (`docs/known-limitations.md`, with the
+  measured figures).
+- **Names and the bar look** (spec section 17.3 and 17.4). `Build` writes `[n] ` in front of each
+  role's localized name, `n` its index in the tier's list, so creation order (`containerOrder`) is
+  the numbering: each tier lists its roles in the owner's order (advanced-source.md's brackets), a
+  shorter tier numbers 1..N with no gap, and a role the owner's profile lacks stands in the slot of
+  the one it replaces. Add mode's " (2)" suffix still follows the whole name. `sizeTo` writes the
+  bar look with the width on every bars container; an Icons preset has none.
+- **The picker opens where the skin picker does, unlocked.** `place` mirrors the LibKa0s skin
+  picker's `place()`: its CENTER 75% of the way up from `UIParent`'s BOTTOM, centered across, on
+  `UIParent`'s height read at each showing, and the bare `CENTER` when it cannot be read.
+  `Placement(W, H)` answers that rectangle, as tall as `ROOM.pickerHeight`, and reads no preset's
+  call-outs; the call-out block starts at its top (spec section 18.3).
+  Opening records the lock and unlocks through the seam `/am unlock` writes (`NS.SetByPath`
+  `"locked"`); its two buttons show and flip the lock and test mode, and turning test mode off with
+  a preview up ends it with a restore. Every pick of a preset or a style leaves the containers
+  unlocked and test mode on, whatever the buttons were set to (spec section 19.1), and Empty is a
+  preview like the others: the snapshot is taken and every container leaves the screen until Apply
+  keeps the empty profile or a dismissal restores the player's own (spec section 19.2). Apply locks and turns test mode off; Not now, the close
+  control, Escape and this addon's own hides put back the lock the window found and turn test mode
+  off. Every preset's call-out block starts at the picker's top and runs down behind the window,
+  which the owner accepts (spec section 18.3; `docs/known-limitations.md`).
+- **The unlock hint** (spec section 17.5). Every close the player makes of the picker (Apply, Not
+  now, the close control, Escape, and `/am preset <name>` with the window up, once its confirm is
+  answered) prints one chat line, through `NS.Print` and its prefix, telling the player that `/am
+  unlock` enters unlock mode. `state.open` marks a showing not yet closed, so a stray `OnHide` after
+  the close prints no second line; `NS.HidePresetPicker` (a profile event, the stand-down) is this
+  addon's hide, not the player's, and prints none.
 
 ### Per-client features
 
@@ -116,7 +255,7 @@ that empties a category gates it with no code change.
 
 ## Settings Schema
 
-`NS.Schema` holds **318** rows (as measured on 2026-11-06) across seven pages (General 26, Containers 5, Filters 57, Layout 41,
+`NS.Schema` holds **320** rows (as measured on 2026-11-15) across seven pages (General 28, Containers 5, Filters 57, Layout 41,
 Bars 89, Icons 50, Text 50), plus one runtime row per user category. It drives the panel,
 `/am list|get|set|reset` and the resets through one write seam, `NS.SetByPath`.
 
@@ -179,9 +318,9 @@ pass on.
 
 | Message | Sender | Payload | Consumers |
 |---|---|---|---|
-| `Ka0s_AuraMaster_ContainersChanged` (`NS.MSG.CONTAINERS_CHANGED`) | `modules/ContainerManager.lua` — create, delete, rename, duplicate, profile change (copy-from and reset positions are settings writes, announced by `CONFIG_CHANGED`) | none | `settings/OptionsSetup.lua:433` — `NS.RequestPanelRefresh`, a coalesced panel re-render (every banner lists containers); `modules/TimedSpells.lua:204` — `TS.Sync`, which starts or stops the timed-spell scan (a container added or removed can change whether any needs it) |
-| `Ka0s_AuraMaster_ConfigChanged` (`NS.MSG.CONFIG_CHANGED`) | `settings/Schema.lua:629` — the write seam, once per write; never for a session row | `{ section, containerId, path }`; `containerId` nil for an addon-wide row, `path` the row written | `modules/ContainerManager.lua:866` — first `FontPrimer.PrimeAll` (a new font is drawn before anything is applied in it), then by the row's `effect`: `"visibility"` (the master enable, visibility, lock and alpha, a container's enable, its six `filter.zones` rows and its two `filter.unitFilter` rows) runs `ApplyVisibility()` at once, `"none"` queues nothing, `"view"` (the two `filter.situations` rows) runs `CM.ApplyViews` for that container at once, in combat too and never held, otherwise `RequestApply(containerId)` (nil re-applies all), a write to a flow or attachment path also re-applies every container following that one (`Anchors.Followers`), and a write to a container's attach points, mode or target also re-applies the container it attaches to (`requestParents`); `modules/TimedSpells.lua:203` — `TS.Sync`, the same re-sync (a filter write can change whether any container needs the scan) |
-| `Ka0s_AuraMaster_VisibilityChanged` (`NS.MSG.VISIBILITY_CHANGED`) | `core/AuraMaster.lua` — entering the world, combat start and end; `modules/Preview.lua` — `Preview.SetTestMode`, when test mode switches on or off | none | `modules/ContainerManager.lua:879` — `ApplyVisibility()` over every container |
+| `Ka0s_AuraMaster_ContainersChanged` (`NS.MSG.CONTAINERS_CHANGED`) | `modules/ContainerManager.lua` — create, delete, rename, duplicate, profile change (copy-from and reset positions are settings writes, announced by `CONFIG_CHANGED`) | none | `settings/OptionsSetup.lua:440` — `NS.RequestPanelRefresh`, a coalesced panel re-render (every banner lists containers); `modules/TimedSpells.lua:204` — `TS.Sync`, which starts or stops the timed-spell scan (a container added or removed can change whether any needs it) |
+| `Ka0s_AuraMaster_ConfigChanged` (`NS.MSG.CONFIG_CHANGED`) | `settings/Schema.lua:637` — the write seam, once per write; never for a session row | `{ section, containerId, path }`; `containerId` nil for an addon-wide row, `path` the row written | `modules/ContainerManager.lua:910` — first `FontPrimer.PrimeAll` (a new font is drawn before anything is applied in it), then by the row's `effect`: `"visibility"` (the master enable, visibility, lock and alpha, a container's enable, its six `filter.zones` rows and its two `filter.unitFilter` rows) runs `ApplyVisibility()` at once, `"none"` queues nothing, `"view"` (the two `filter.situations` rows) runs `CM.ApplyViews` for that container at once, in combat too and never held, otherwise `RequestApply(containerId)` (nil re-applies all), a write to a flow or attachment path also re-applies every container following that one (`Anchors.Followers`), and a write to a container's attach points, mode or target also re-applies the container it attaches to (`requestParents`); `modules/TimedSpells.lua:203` — `TS.Sync`, the same re-sync (a filter write can change whether any container needs the scan) |
+| `Ka0s_AuraMaster_VisibilityChanged` (`NS.MSG.VISIBILITY_CHANGED`) | `core/AuraMaster.lua` — entering the world, combat start and end; `modules/Preview.lua` — `Preview.SetTestMode`, when test mode switches on or off | none | `modules/ContainerManager.lua:923` — `ApplyVisibility()` over every container |
 | `Ka0s_AuraMaster_TimedSpellsChanged` (`NS.MSG.TIMED_SPELLS_CHANGED`) | `modules/TimedSpells.lua` — a scan learned timed spells, or `/am forgettimed` emptied the set | none from a scan; `{ byPlayer = true }` from `/am forgettimed` | `modules/ContainerManager.lua` `CM.Init` — `RequestApply(nil, system)` over every container (their excluded ids moved); a scan's request is the addon's own, so a deferral of it prints no notice |
 
 Four messages, well under the more-than-ten trigger for a separate `message-bus.md`.
@@ -189,7 +328,7 @@ Four messages, well under the more-than-ten trigger for a separate `message-bus.
 ## Slash Commands
 
 `/am` with `/auramaster` as the long alias, dispatched by `LibKa0s-Slash-1.0` over the addon's own
-ordered `NS.COMMANDS` (`settings/Slash.lua:39`). Twenty-six verbs; `options` is an alias of `config`.
+ordered `NS.COMMANDS` (`settings/Slash.lua:39`). Twenty-seven verbs; `options` is an alias of `config`.
 A bare `/am` runs `config`, opening the settings panel on its landing page (slash-commands-§4); `/am
 help` prints the list.
 `/am test` is the test mode's verb (preview-mode): unlocking no longer previews, so the placeholders
@@ -203,6 +342,7 @@ on-display marker is a MAY for a HUD display such as an aura container (WS-01).
 |---|---|
 | `/am help` | List available commands |
 | `/am config` | Open the settings panel (a bare `/am` does the same) |
+| `/am skin` | Choose a skin: open the skin picker |
 | `/am enable` | Turn Aura Master on (every enabled container shows again) |
 | `/am disable` | Turn Aura Master off (hides every container) |
 | `/am list` | List every setting and its current value (container settings read the selected container) |
@@ -215,6 +355,7 @@ on-display marker is a MAY for a HUD display such as an aura container (WS-01).
 | `/am select id-or-name` | Choose the container settings apply to |
 | `/am new [unit] [type] [style]` | Create a container (`player`/`target`/`focus`/`pet`, `buffs`/`debuffs`/`enchants`, `bars`/`icons`/`text`) |
 | `/am delete id-or-name` | Delete a container |
+| `/am preset [name] [bars\|icons] [add]` | Open the preset picker, or apply a preset behind its confirm |
 | `/am lock` | Lock every container in place |
 | `/am unlock` | Unlock containers so they can be dragged |
 | `/am test [on\|off]` | Toggle test mode: placeholder auras on every container; refused in combat |
@@ -227,8 +368,8 @@ on-display marker is a MAY for a HUD display such as an aura container (WS-01).
 | `/am perf …` | Measure performance — bare `/am perf` opens the workflow |
 | `/am version` | Print the addon version |
 
-**While the addon is disabled** the nine verbs that drive its features — `new`, `delete`, `lock`,
-`unlock`, `test`, `pick`, `resetposition`, `forgettimed`, `redraw` — answer on one tagged line naming `/am enable` and
+**While the addon is disabled** the eleven verbs that drive its features — `skin`, `new`, `delete`, `preset`,
+`lock`, `unlock`, `test`, `pick`, `resetposition`, `forgettimed`, `redraw` — answer on one tagged line naming `/am enable` and
 do nothing else (slash-commands-§2). Everything else keeps working, the bare `/am` included: it
 opens the settings panel, which is the surface a player switches the addon back on from by hand. The
 gate is `LibKa0s-Slash-1.0`'s, closed by the descriptor's `isEnabled` in `settings/Slash.lua` with
@@ -277,10 +418,12 @@ optional. The full table and the reasons:
 | `UNIT_AURA` for `player` and `pet`, and for `target` and `focus` | `modules/EmptyWatch.lua` — its two private frames, `EW.unitFrames[1]` (player, pet) and `[2]` (target, focus), the same carve-out, each filtering `UNIT_AURA` and nothing else, through `NS.SafeRegisterUnitEvent`; built once and reused, each registered only while a shown container on its units is unlocked and out of test mode, the addon is not suspended, combat has not started and auras are readable, and unregistered by hand in `EW.Stop` | the frames' one `OnEvent` only marks a pass due: one pass 0.2 s later (bucket `emptyPass`) re-predicts every watched container and re-runs the visibility pass of any whose answer changed |
 | `PLAYER_TARGET_CHANGED`, `PLAYER_FOCUS_CHANGED` | `modules/EmptyWatch.lua` (AceEvent, on its own target) — while its target and focus frame is registered | `CM.ApplyViews(unit)` first (AceEvent runs this and `OnUnitSwap` in no set order, so the prediction never reads the old unit's view; a no-op when the view is already right), then the pass run at once, not 0.2 s later, folding in one already due: the engine redraws for the new unit in the same frame, so a follower hung from a parent that just emptied would otherwise sit on the engine's 1x1 rect for the delay |
 | `UNIT_PET`, `UNIT_INVENTORY_CHANGED` | `modules/EmptyWatch.lua` (AceEvent, on its own target) — while its player and pet frame is registered | the same pass marked due, for the `player` unit only |
-| `UNIT_FACTION`, `UNIT_FLAGS` for `target` and `focus` | `modules/ContainerManager.lua:820` — the module's one private frame, `CM.viewFrame` (the same carve-out), through `NS.SafeRegisterUnitEvent`; built once, hidden and reused, opened by `CM.StartListening` and unregistered by hand in `CM.StopListening` | `onViewEvent`: proves the unit a safe key, then `CM.ApplyViews(unit)`: a reaction change without a swap (a duel, mind control, an NPC turning hostile) switches the view; the two setters redraw, so no refresh follows; then `CM.ApplyUnitGate(unit)` re-runs the visibility pass of each container whose Unit type answer moved (filter situations S6). Combat-legal, never held. When a view moved, `EW.OnViewsMoved` re-predicts at once (gated on unlocked, out of combat and auras readable), so the empty prediction follows the engine |
+| `UNIT_FACTION`, `UNIT_FLAGS` for `target` and `focus` | `modules/ContainerManager.lua:864` — the module's one private frame, `CM.viewFrame` (the same carve-out), through `NS.SafeRegisterUnitEvent`; built once, hidden and reused, opened by `CM.StartListening` and unregistered by hand in `CM.StopListening` | `onViewEvent`: proves the unit a safe key, then `CM.ApplyViews(unit)`: a reaction change without a swap (a duel, mind control, an NPC turning hostile) switches the view; the two setters redraw, so no refresh follows; then `CM.ApplyUnitGate(unit)` re-runs the visibility pass of each container whose Unit type answer moved (filter situations S6). Combat-legal, never held. When a view moved, `EW.OnViewsMoved` re-predicts at once (gated on unlocked, out of combat and auras readable), so the empty prediction follows the engine |
 | `UNIT_FACTION`, `UNIT_FLAGS` for `player` | `modules/ContainerManager.lua` — a second private frame, `CM.viewPlayerFrame`, built, opened and closed with `CM.viewFrame` (`RegisterUnitEvent` takes two units, and a second call replaces the first) | `onPlayerViewEvent`: proves the unit a safe key, then `CM.ApplyViews` for `target` and for `focus`, quietly, and one `EW.OnViewsMoved` if either moved: the player's own side changing (mind control) moves whether a target or focus can be assisted with no event for that unit (SV-05); then `CM.ApplyUnitGate` for `target` and for `focus`, since the same change moves their reaction to you |
 | `PLAYER_REGEN_DISABLED`, `PLAYER_REGEN_ENABLED`, `ADDON_RESTRICTION_STATE_CHANGED` | `modules/TimedSpells.lua` (AceEvent, on its own target) — while a container uses "without a duration" and the addon is not suspended | `syncAuraListen`: `PLAYER_REGEN_DISABLED` closes the readable gate by itself (it fires before combat lockdown begins); the other two re-check it, dropping or restoring `UNIT_AURA`; reopening schedules one scan |
-| AceDB `OnProfileChanged` / `OnProfileCopied` / `OnProfileReset` | `core/Database.lua:274-278` | `NS.OnProfileChanged` / `NS.OnProfileCopied` / `NS.OnProfileReset` → re-prepare the registry, trace the event once in its own words (a switch `[Profile] changed -> X`; a copy or a reset one `[Set]` line, debug-logging-§10), rebuild, re-render |
+| AceDB `OnProfileChanged` / `OnProfileCopied` / `OnProfileReset` | `core/Database.lua:294-298` | `NS.OnProfileChanged` / `NS.OnProfileCopied` / `NS.OnProfileReset` → re-prepare the registry, trace the event once in its own words (a switch `[Profile] changed -> X`; a copy or a reset one `[Set]` line, debug-logging-§10), rebuild, re-render |
+| AceDB `OnProfileShutdown` | `core/Database.lua:300` | `NS.OnProfileShutdown` → `NS.HidePresetPicker`, before a switch, while the profile being left is still the active one: the picker's lock goes back into that profile through the seam. No rebuild |
+| AceDB `OnDatabaseShutdown` (`PLAYER_LOGOUT`, a `/reload` too) | `core/Database.lua:302` | `NS.OnDatabaseShutdown` → `NS.HidePresetPicker`, before the defaults are stripped and SavedVariables written: the lock the picker found (held only in the session) is saved, the window unmarked. No rebuild |
 
 Each container's own `UNIT_AURA` belongs to its engine, and to each twin engine of a glowing Text
 container, which takes the same `SetUnit` (`modules/Container.lua:444`); none of it is addon code.
@@ -471,7 +614,18 @@ work; a twin could break a sort tie differently from its main, runs its loop a f
 phase, and under a hand-set Width its ring and paired shadow are clipped at its own box.
 On WoW Forever the spell lists are derived offline from the game's data until combat logs
 confirm them (#26), the token and flag categories are unmeasured until the smoke run, and a profile
-does not carry over from the other client. Every
+does not carry over from the other client. A preset's Player debuffs (all) shares its column with
+the focus and far stacks, so a heavy debuff load can grow it into the focus stack in play, and in
+Icons its row follows Player buffs (all)'s off that column; the target column meets the call-out
+block on 16:9 and narrower screens; Advanced (Bars)'s target stack runs off the top of a 768-tall
+screen in test mode; every preset's call-out block starts at the preset picker's top and runs
+behind it, as the owner accepted; tall unit frames or action bars can reach the side stacks' base;
+on a 768-tall 5:4 screen Player debuffs (all)'s Icons drag strip reaches the call-out block; and on
+a 768-tall screen, while unlocked, other containers sit within snap range of the focus stack. The
+account's preset-picker latch lives in that account's SavedVariables, so each WoW account, and each
+client, sees the picker once. Add mode's containers repeat the preset's
+numbers beside the player's own.
+Another Ka0s addon's skin picker can show over the preset picker, on the same spot. Every
 limitation, its cause and any ruling: `docs/known-limitations.md`.
 
 ## Documentation map
@@ -498,7 +652,7 @@ span bundle is `<date>-v<A>-v<B>/`, and the one untagged bundle is `docs/revendo
 | Doc | Status | Trigger |
 |---|---|---|
 | `perf-analysis/README.md` | Present | The performance harness is wired (`core/PerfSetup.lua`) |
-| `slash-dispatch.md` | Present | 26 commands in `NS.COMMANDS`, over the eight-or-more threshold |
+| `slash-dispatch.md` | Present | 27 commands in `NS.COMMANDS`, over the eight-or-more threshold |
 | `midnight-quirks.md` | Present | Always (documentation-§3): the vendored `client-quirks` catalog block, then the addon's own client-version workarounds: 12.1 aura secrecy and the aura container engine, and the taint notes that follow from them |
 | `compat-layer.md` | Present | 30 shims in `core/Compat.lua`, over the three-or-more threshold |
 | `message-bus.md` | Not applicable | 4 messages in `NS.MSG`; the trigger is more than ten. The table lives in `## Message Bus` above |
@@ -521,7 +675,7 @@ span bundle is `<date>-v<A>-v<B>/`, and the one untagged bundle is `docs/revendo
 | Doc | Covers |
 |---|---|
 | `known-limitations.md` | Every known limitation: what the player sees, why the client or the engine forces it, and the owner's ruling where one was made |
-| `spell-research/` | Frozen per-build derivation bundles written by `tools/spell-research/research.py`; the dated bundles are not enumerated |
+| `spell-research/` | Frozen per-build derivation bundles written by `tools/spell-research/research.py` and, for WoW Forever, `tools/spell-research/forever.py`; the dated bundles are not enumerated |
 
 ## Documented deviations
 
@@ -531,7 +685,7 @@ span bundle is `<date>-v<A>-v<B>/`, and the one untagged bundle is `docs/revendo
 | `frame-layering-§3` | Two levels are counted from a sibling, not the parent. The mouse blocker sits `LAYERS.LEVEL.BLOCKER` under the engine's current level (`ContainerClass:ApplyBlocker`). Each text-glow twin sits `GLOW_GAP` under the main engine, and its holder `GLOW_HOLDER` under that (`modules/Container_Twins.lua`). With `L = 5` a holder sits below the anchor. | A later `layout.level` raises the anchor, but the engine does not follow it, so only the engine's own current level keeps the blocker under it. The twins must sit under the main's whole text-and-icon stack, which is a fixed gap below the main and not a band over the anchor. The holders carry glow copies only. | 2026-10-24, the owner accepted AUR-Z10 (the frame-layering run, item 030). The values are unchanged and named in `NS.Constants.LAYERS`. | The engine follows its anchor's level, or the glow stops using twin engines. |
 | `layout-§1` | `defaults/Categories.lua` stays in the 1000–1500 band (1399 lines, measured 2026-11-14). `Cat.HELPFUL` and `Cat.HARMFUL` are not split across files. | The file is data: hand-curated spell ids, 10 functions, max CCN 5. `tools/spell-research/logs.py` is the only writer of those lists and rewrites this one path, and `sid_db2.py` tells a buff list from a debuff list by where it sits around `Cat.HARMFUL =` in this one file. A split would change the tool chain, so it is not a pure move. Tracks anti-pattern #53. | 2026-10-31 (FX-AM-SIZE) | The file reaches 1400 lines, or the spell-research tools are reworked to read more than one file. |
 | `skinning-§1` (follow the skin by default) | Container defaults sit off the skin: `text.glowColorFromSkin` (SF-AM-1); a bar's background and border color, and Show border on (SF-AM-2); a bar's fill color, the Text font color, and the icon border color on icons, beside a bar and beside a text line (SF-AM-3). | The owner's smoke ruling of 2026-11-01: a black glow, a dark background and border on a bar, and the fill, Text font and icon border colors the player's own. Other fonts still follow. Schema v17 moves a stored container still holding the old default; a value already different stays. v16 wrote explicit values, so an old default and a player's pick of the same value read alike, and v17 moves both. | 2026-11-02 | The standard rules on a per-leaf follow default, or a skin gains a glow the owner wants followed |
-| `documentation-§6` (*Citing the repo's own code*, SHOULD, v2.102.x) | The live docs cite this repo's own code as `path:N[-M]` (164 citations, as measured on 2026-11-06), not `path` plus a symbol or heading | `tests/test_docs.lua` already enforces what the rule is for: every `path:N` citation in `docs/*.md`, `DEPENDENCIES.md` and `README.md` must resolve to an existing file and a code line inside it, and must sit within 3 lines of a name its own sentence gives in backticks, so a line that moves under a citation turns the suite red instead of rotting silently. Owner ruling, sync-docs pass of 2026-11-06 | 2026-11-06 | `tests/test_docs.lua`'s citation checks are retired or weakened, or a citation form appears that they cannot check |
+| `documentation-§6` (*Citing the repo's own code*, SHOULD, v2.102.x) | The live docs cite this repo's own code as `path:N[-M]` (144 citations, as measured on 2026-11-15), not `path` plus a symbol or heading | `tests/test_docs.lua` already enforces what the rule is for: every `path:N` citation in `docs/*.md`, `DEPENDENCIES.md` and `README.md` must resolve to an existing file and a code line inside it, and must sit within 3 lines of a name its own sentence gives in backticks, so a line that moves under a citation turns the suite red instead of rotting silently. Owner ruling, sync-docs pass of 2026-11-06 | 2026-11-06 | `tests/test_docs.lua`'s citation checks are retired or weakened, or a citation form appears that they cannot check |
 
 ### Files over the 1500-line cap
 

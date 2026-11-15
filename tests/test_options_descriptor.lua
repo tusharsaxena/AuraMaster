@@ -112,6 +112,9 @@ end)
 
 test("options descriptor: Reset all writes only session rows through the seam and resets only the active profile", function()
     local NS2 = fresh()
+    -- The preset picker held down: it unlocks the containers it opens over (settings/PresetPicker.lua),
+    -- which is not this case's subject.
+    NS2.PresetPickerDue = function() return false end
     NS2.db:SetProfile("Raid")
     NS2.SetByPath("alpha", 0.3)
     NS2.db:SetProfile("Default")

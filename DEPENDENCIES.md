@@ -22,7 +22,7 @@ marked as such rather than listed as a requirement.
   container engine: `CM.Init` asks
   `Compat.EnsureAuraContainer` (`core/Compat.lua:92`), which loads Blizzard's on-demand aura
   container and then checks for it (`Compat.HasAuraContainer`, `core/Compat.lua:83`). On a client
-  without it, `CM.Init` prints a one-line notice (`modules/ContainerManager.lua:931`) and draws
+  without it, `CM.Init` prints a one-line notice (`modules/ContainerManager.lua:974`) and draws
   nothing.
 - **No deprecated API fallback.** `NS.Meta` (`core/EnvSetup.lua:24`) reads the TOC through
   `LibKa0s-Env-1.0`, or through `C_AddOns.GetAddOnMetadata` when the library is absent. It never
@@ -41,7 +41,7 @@ marked as such rather than listed as a requirement.
 - **No other optional integration.** Apart from the skin provider above, nothing in the addon checks
   whether another addon is loaded before using it. `Compat.EnsureAuraContainer`
   (`core/Compat.lua:92`) asks only about Blizzard's `Blizzard_AuraContainer`. The frame anchor
-  re-resolves on every `ADDON_LOADED` (`addon:OnAddonLoaded`, `core/AuraMaster.lua:211`) whatever
+  re-resolves on every `ADDON_LOADED` (`addon:OnAddonLoaded`, `core/AuraMaster.lua:231`) whatever
   the addon is.
 
 ## Development — the contributor toolchain
@@ -169,6 +169,7 @@ python3 -c 'import PIL; print(PIL.__version__)'    # prints a version
 ```sh
 lua tests/run.lua                                     # the suite, sharded across CPUs — must be green
 lua tests/run.lua -j 1                                # same, serially; must match it (testing-§14)
+KA0S_KIT_CLIENT=forever lua tests/run.lua             # the suite as WoW Forever — must be green too (clients-§6)
 ~/.claude/dev-copilot/bin/ka0s-bounded luacheck .    # must be 0 warnings / 0 errors
 bash tests/_kit/run-automated-tests.sh --suite complexity   # the sighted complexity report (release-time)
 ```

@@ -588,7 +588,7 @@ test("anchors: a drag whose offsets read secret saves nothing (E)", function()
     assertTrue(ok, tostring(err))
     -- red under: SavePosition rounding and storing a secret offset
     assertEqual(writes, 0)
-    assertEqual(NS.Database.FindContainer(1).position.x, NS.STARTER_CONTAINERS[1].position.x)
+    assertEqual(NS.Database.FindContainer(1).position.x, AM_TEST.STARTERS[1].position.x)
 end)
 
 -- ── the strip's TEST tag (feedback #8) ─────────────────────────────────────────────────────────────
