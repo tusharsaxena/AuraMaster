@@ -6,7 +6,7 @@ build on wago.tools (product `wow`, 12.1.5.70783). The previous derivation was t
 on 12.1.0.69875, corrected from the 2026-09-24 combat logs. Every candidate and flag the run
 raised is ruled in `tools/spell-research/retail_rulings.json`, and `RULINGS.md` beside this file
 lists each ruling with its reason. The owner asked Claude to make the rulings (2026-11-15), the
-same arrangement as the Forever run.
+same arrangement as the Forever run. The owner reviewed `RULINGS.md` on 2026-11-15 and accepted it as it stands.
 
 ## What changed in the game between the two builds
 

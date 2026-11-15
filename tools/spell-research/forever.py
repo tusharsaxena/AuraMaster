@@ -43,6 +43,7 @@ ONE CATEGORY PER ID
 
 USAGE
     python3 tools/spell-research/research.py --client forever --bundle docs/spell-research/2026-11-14-forever --date 2026-11-14
+    python3 tools/spell-research/forever.py status
     python3 tools/spell-research/forever.py derive --bundle docs/spell-research/2026-11-14-forever --date 2026-11-14
     python3 tools/spell-research/forever.py rule --key defensives:871 --ruling accept --reason "Shield Wall: the warrior's"
     python3 tools/spell-research/forever.py emit --bundle docs/spell-research/2026-11-14-forever --date 2026-11-14
@@ -77,7 +78,7 @@ from sid_seeds import (  # noqa: E402,F401  the shared half, re-exported (issue 
     FRIENDLY, ANY_AURA, LONG_RECAST_MS, CANDIDATE_KEY, RANK_TEXT, EffectRule,
     CategoryRule, DB2_RULES, RACIAL_PREFIX, RACIAL_SUFFIX, EffectRow, SeedDB,
     Candidate, load_rulings, save_rulings, split_by_ruling, read_tsv, db2_candidates,
-    write_json,
+    write_json, seed_bundles, status_line,
 )
 
 # The shared reader under the name this tool has always used.
@@ -607,6 +608,12 @@ def load_candidates(bundle: Path) -> dict:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+def cmd_status(args) -> int:
+    """CURRENT or NEW: the live wowf build against the newest `*-forever` bundle."""
+    print(status_line(research.resolve_build(None, "wowf"), seed_bundles(args.root, "-forever")))
+    return 0
+
+
 def cmd_derive(args) -> int:
     tables, build = bundle_tables(args.bundle, args.replay, args.cache_dir)
     doc = derive_bundle(tables, build, args.date, args.categories)
@@ -691,6 +698,9 @@ def _date(value: str) -> str:
 def parse_args(argv: list[str] | None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(prog="forever.py", description=__doc__.split("\n\n")[0])
     sub = parser.add_subparsers(dest="command", required=True)
+    status = sub.add_parser("status", help="is there a live Forever build (wago.tools wowf) newer than the newest bundle?")
+    status.add_argument("--root", type=Path, default=research.repo_root() / "docs" / "spell-research",
+                        help="where the bundles are")
     derive = sub.add_parser("derive", help="write the bundle's candidates.json")
     emit = sub.add_parser("emit", help="write defaults/Categories_Forever*.lua and CastToAura_Forever.lua")
     for p in (derive, emit):
@@ -715,7 +725,7 @@ def parse_args(argv: list[str] | None) -> argparse.Namespace:
 
 def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
-    return {"derive": cmd_derive, "emit": cmd_emit, "rule": cmd_rule}[args.command](args)
+    return {"status": cmd_status, "derive": cmd_derive, "emit": cmd_emit, "rule": cmd_rule}[args.command](args)
 
 
 if __name__ == "__main__":

@@ -42,4 +42,4 @@ not marked done.
 | RS-08 | Repeatable: `.claude/commands/aura-seeds-validate.md`, `docs/common-tasks.md` recipe | done (with RS-04) |
 | RS-09 | Upstream: WowAddonStandards clients-§10 (wago.tools reference), v2.111.0 | done (WowAddonStandards 83502de, unpushed) |
 
-**Current position (2026-11-15):** every item landed on the branches; nothing pushed or merged. Owed: the owner's review of `RULINGS.md`, smoke FILT-65 to FILT-67 (full client restart), and the go-ahead to merge and push both repos.
+**Current position (2026-11-15): FINALIZED.** Merged and pushed (AuraMaster `dce3d51`, WowAddonStandards `0a4f531`); the owner reviewed `RULINGS.md` and passed FILT-65 to FILT-67 the same day. Follow-up: the repeatable loop moved from the project command `/aura-seeds-validate` to the dev-copilot plugin's `/dev-copilot:validate-seeds <repo> <flavor>`, which runs this repo's contract `docs/validate-seeds.md` (retail and forever flavors).

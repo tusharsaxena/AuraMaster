@@ -418,3 +418,26 @@ def read_tsv(path: Path) -> list[tuple[str, str, str]]:
             raise SystemExit("%s: a ruling line is key<TAB>ruling<TAB>reason; got %r" % (path, line))
         out.append((parts[0].strip(), parts[1].strip(), parts[2].strip()))
     return out
+
+
+def seed_bundles(root: Path, suffix: str) -> list[Path]:
+    """Every seed-tool bundle under `root` whose name ends `suffix` (`-retail`, `-forever`) and that
+    holds a candidates.json, oldest first (by name: dates sort)."""
+    return sorted(p for p in root.glob("*" + suffix) if (p / "candidates.json").exists())
+
+
+def bundle_build(bundle: Path) -> str:
+    """The build a bundle was derived from, out of research.py's derived.json."""
+    return json.loads((bundle / "derived.json").read_text(encoding="utf-8"))["build"]
+
+
+def status_line(live: str, bundles: list[Path]) -> str:
+    """`CURRENT <build> (<bundle>)` when the newest bundle is of the live build, else
+    `NEW <build> ...`. The first word is what /dev-copilot:validate-seeds reads."""
+    if not bundles:
+        return "NEW %s (no bundle yet)" % live
+    last = bundles[-1]
+    built = bundle_build(last)
+    if built == live:
+        return "CURRENT %s (%s)" % (live, last.name)
+    return "NEW %s (last ruled %s, %s)" % (live, built, last.name)
