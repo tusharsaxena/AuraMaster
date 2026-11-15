@@ -235,3 +235,23 @@ Each task keeps the Global Constraints, the gate and the commit rules above.
 - [x] Docs (ARCHITECTURE, known-limitations, smoke checks for every §17 item, spec cross-references), test-cases.md and the README badge. Commit `AM-PR18: Docs and smoke checks for the owner's round-3 feedback`.
 - [ ] An independent review against §17; fixes as `AM-PR18: Review fixes: …`.
 - [ ] A fresh automated-test record, the M6 checkpoint row and the RESUME log line: `AM-PR18: Automated-test record after round-3 feedback`.
+
+## Round 5: owner feedback, round 4 (spec §18)
+
+### Task AM-PR19: Player stack nearer the center, the target cluster mirroring it, the call-outs higher
+
+**Files:** `defaults/Presets.lua`, `settings/PresetPicker.lua` if its tests move, preset tests (data, cluster, picker, apply, seed), `docs/known-limitations.md`.
+- [ ] Failing tests first: `presets data: the player column sits 40 from the call-out column`; `presets data: the target column mirrors the player column where the cluster fits` (21:9 at 768, 1080 and 1440); `presets data: the cluster moves left just enough to fit on narrower screens` (Player buffs 10 in, every gap and alignment kept); `presets data: the call-out block starts at about the picker's top`; the placement, cluster, snap and top-edge cases updated; overlaps measured and recorded.
+- [ ] Implement per §18.1–4, gate green, commit `AM-PR19: The player stack nearer the center, the target cluster mirroring it, the call-outs higher`.
+
+### Task AM-PR20: Existing users see the preset picker once
+
+**Files:** `modules/Presets.lua`, `settings/PresetPicker.lua`, `defaults/` global defaults and the schema row, `core/` migrations only if needed, `tests/test_presetpicker.lua`, `tests/test_presets_seed.lua`.
+- [ ] Failing tests first: `picker: an existing profile sees the picker once per account`; `picker: closing it by any route marks it shown for every profile`; `picker: a brand-new install does not see it twice`; `picker: combat holds it until it can show`; `picker: an existing player's containers stay unless they apply and confirm`.
+- [ ] Implement per §18.5, gate green, commit `AM-PR20: Existing users see the preset picker once`.
+
+### Task AM-PR21: Docs, smoke checks, review and the automated-test record for round 4
+
+- [ ] Docs (ARCHITECTURE, schema.md, known-limitations, smoke checks for every §18 item, spec cross-references), test-cases.md and the README badge. Commit `AM-PR21: Docs and smoke checks for the owner's round-4 feedback`.
+- [ ] An independent review against §18; fixes as `AM-PR21: Review fixes: …`.
+- [ ] A fresh automated-test record, the M7 checkpoint row and the RESUME log line: `AM-PR21: Automated-test record after round-4 feedback`.

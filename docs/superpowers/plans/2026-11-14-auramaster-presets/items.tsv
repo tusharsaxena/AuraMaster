@@ -18,3 +18,6 @@ AM-PR15	M5	AuraMaster	Docs, smoke, review and test record for round 2	AM-PR13 AM
 AM-PR16	M6	AuraMaster	Right-hand cluster lined up, debuffs attached to buffs, equal bar widths	AM-PR15
 AM-PR17	M6	AuraMaster	Bar colors and backgrounds, numbered names, unlock hint	AM-PR15
 AM-PR18	M6	AuraMaster	Docs, smoke, review and test record for round 3	AM-PR16 AM-PR17
+AM-PR19	M7	AuraMaster	Player stack nearer center, target cluster mirroring it, call-outs higher	AM-PR18
+AM-PR20	M7	AuraMaster	Existing users see the preset picker once	AM-PR18
+AM-PR21	M7	AuraMaster	Docs, smoke, review and test record for round 4	AM-PR19 AM-PR20

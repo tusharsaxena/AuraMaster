@@ -550,3 +550,39 @@ Where each item is checked: tests `tests/test_presets_cluster.lua` (points 1 and
 PRESETS-31 (point 1), PRESETS-32 (the attachment), PRESETS-33 (point 2), PRESETS-34 (point 3),
 PRESETS-35 (point 4) and PRESETS-36 (point 5) in docs/smoke-tests.md, with PRESETS-1, PRESETS-4 to
 PRESETS-6, PRESETS-9, PRESETS-20, PRESETS-21, PRESETS-28, PRESETS-29 and INSTALL-2 reworded to match.
+
+## 18. Owner feedback, round 4 (2026-11-15)
+
+The owner previewed Advanced (Bars) on their screen (it looks like 21:9). Where this conflicts with
+§15–§17, this section wins. Every earlier alignment stays: Player debuffs attached to Player buffs, the
+focus stack and far stack on Player debuffs' left edge, the target column 50 left of that column, the
+shared base line, equal bar widths, numbered names. Apply it with the same logic to Simple,
+Intermediate and Healer, in Bars and in Icons.
+
+1. **The player stack moves toward the center.** Halve the gap between the player stack (the `left`
+   column) and the call-out column: today 80 reference units (left column right edge at -280, call-out
+   column left edge at -200), so it becomes 40 (the left column spans -480..-240 from the center line).
+2. **The target stack mirrors the player stack.** The target column's left edge sits as far right of
+   the center line as the player column's right edge sits left of it (+240, spanning +240..+480). The
+   rest of the right-hand cluster (the focus and far stacks, Player debuffs, Player buffs, Weapon
+   enchants) moves with it by the same amount, keeping every gap and alignment, so the cluster now hangs
+   from the **center line**, not the right edge. Where the cluster would not fit (Player buffs' right
+   edge must stay at least 10 reference units in from the screen edge, which fails on 16:9 and narrower,
+   since the cluster reaches +1015), move the whole cluster left just enough to fit. The target column
+   then sits closer to the center than the mirror, and any overlap with the call-out block is measured
+   and recorded in docs/known-limitations.md. If it still cannot fit, narrow across as P.ScaleX does now.
+3. **The call-outs move up.** The call-out block's top sits at about the preset picker's top (the
+   picker's CENTER is 75% up UIParent, so its top is about 25% of the height down from the top, minus
+   half the picker's height). The block may overlap the picker; the owner accepts that, and §15.1's rule
+   that the block clears the picker no longer applies. The font is the largest from 24 to 36 that keeps
+   the test-mode block above a margin over the bottom edge. The block stays horizontally centered.
+4. **New profiles** get this layout through the Simple seed and the picker, as now.
+5. **Existing users see the picker once.** A player whose profiles were made before this change sees the
+   first-run preset picker **exactly once per account**: at the next login, on whatever profile is
+   active. Closing it by any route (Apply, Not now, the close control, Escape) marks it shown and it
+   never shows again for that account, on any profile. A brand-new install, whose first profile already
+   shows the picker, marks it shown too, so nobody sees it twice. This is a global (account-wide) latch,
+   not a profile key; follow the savedvariables and schema standards for it (a global default and a
+   row, a migration only if needed). The usual Replace confirm protects an existing player's own
+   containers: nothing changes unless they Apply and confirm. If combat or a hidden UI holds the picker
+   back, it shows when it can, as the first-run picker does now.
