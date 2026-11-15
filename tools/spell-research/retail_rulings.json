@@ -1,0 +1,2242 @@
+{
+  "activeMitigation:1223268": {
+    "reason": "filed under ALL: an item, delve or NPC copy, not a class ability; not seen in the logs",
+    "ruling": "reject"
+  },
+  "activeMitigation:1258163": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "activeMitigation:1266066": {
+    "reason": "filed under ALL: an item, delve or NPC copy, not a class ability; not seen in the logs",
+    "ruling": "reject"
+  },
+  "activeMitigation:137026": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "activeMitigation:137038": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "activeMitigation:137047": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "activeMitigation:203524": {
+    "reason": "not seen as a player buff in 102 million lines of the 2026-09-24 combat logs",
+    "ruling": "reject"
+  },
+  "activeMitigation:20582": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "activeMitigation:386011": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "activeMitigation:391409": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "activeMitigation:393515": {
+    "reason": "owner rejected 2026-09-25 (review sheet R0192)",
+    "ruling": "reject"
+  },
+  "activeMitigation:414132": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "activeMitigation:451214": {
+    "reason": "Whirling Steel: a parry proc, the shape the owner rejected for Pretense of Instability (R0192)",
+    "ruling": "reject"
+  },
+  "ccRoot:105771": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccRoot:145532": {
+    "reason": "a variant of Frost Nova, which ships as 122 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccRoot:157563": {
+    "reason": "a variant of Frost Nova, which ships as 122 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccRoot:170855": {
+    "reason": "a variant of Entangling Roots, which ships as 339 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccRoot:190927": {
+    "reason": "a variant of Harpoon, which ships as 190925 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccRoot:198121": {
+    "reason": "a variant of Frostbite, which ships as 378760 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccRoot:201192": {
+    "reason": "a variant of Entangling Roots, which ships as 339 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccRoot:201589": {
+    "reason": "a variant of Entangling Roots, which ships as 339 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccRoot:215664": {
+    "reason": "a variant of Frost Nova, which ships as 122 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccRoot:232978": {
+    "reason": "a variant of Harpoon, which ships as 190925 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccRoot:235235": {
+    "reason": "a variant of Frost Nova, which ships as 122 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccRoot:235963": {
+    "reason": "a variant of Entangling Roots, which ships as 339 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccRoot:247564": {
+    "reason": "a variant of Entangling Roots, which ships as 339 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccRoot:323996": {
+    "reason": "owner deleted The Hunt's root 2026-09-25 (review sheet R0058)",
+    "ruling": "reject"
+  },
+  "ccRoot:330873": {
+    "reason": "a variant of Entangling Roots, which ships as 339 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccRoot:342373": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), reached by the mechanic graph; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccRoot:386770": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccRoot:393456": {
+    "reason": "a variant of Entrapment, which ships as 64803 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccRoot:40363": {
+    "reason": "a variant of Entangling Roots, which ships as 339 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccRoot:410065": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccRoot:454787": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccRoot:460614": {
+    "reason": "a variant of Entangling Roots, which ships as 339 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccRoot:473290": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccRoot:53534": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccRoot:65792": {
+    "reason": "a variant of Frost Nova, which ships as 122 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccRoot:66070": {
+    "reason": "a variant of Entangling Roots, which ships as 339 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccRoot:96294": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:102793": {
+    "reason": "a variant of Ursol's Vortex, which ships as 127797 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:103024": {
+    "reason": "a variant of Mind Flay, which ships as 15407 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:115196": {
+    "reason": "a variant of Crippling Poison, which ships as 3409 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:1236942": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:1246033": {
+    "reason": "a variant of Blast Wave, which ships as 157981 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:12486": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:1268673": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:129033": {
+    "reason": "a variant of Mind Flay, which ships as 15407 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:13439": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:141425": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), reached by the mechanic graph; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:143375": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:144249": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:144251": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:149984": {
+    "reason": "a variant of Mind Flay, which ships as 15407 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:154125": {
+    "reason": "a variant of Mind Flay, which ships as 15407 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:16568": {
+    "reason": "a variant of Mind Flay, which ships as 15407 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:171131": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:17165": {
+    "reason": "a variant of Mind Flay, which ships as 15407 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:180724": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:180740": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:183324": {
+    "reason": "a variant of Mind Flay, which ships as 15407 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:188526": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:188764": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:190780": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), reached by the mechanic graph; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:191746": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:193473": {
+    "reason": "a variant of Mind Flay, which ships as 15407 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:196733": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:202214": {
+    "reason": "a variant of Infected Wounds, which ships as 58180 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:202894": {
+    "reason": "a variant of Mind Flay, which ships as 15407 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:203037": {
+    "reason": "a variant of Mind Flay, which ships as 15407 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:204242": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:204408": {
+    "reason": "a variant of Thunderstorm, which ships as 51490 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:205273": {
+    "reason": "owner removed Wake of Ashes 2026-09-20 (the note above hardCC)",
+    "ruling": "reject"
+  },
+  "ccSnare:205320": {
+    "reason": "a variant of Strike of the Windlord, which ships as 392983 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:211056": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:211793": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:216513": {
+    "reason": "a variant of Mind Flay, which ships as 15407 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:217916": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:222075": {
+    "reason": "a variant of Mind Flay, which ships as 15407 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:224729": {
+    "reason": "a variant of Bursting Shot, which ships as 186387 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:228645": {
+    "reason": "a variant of Heart Strike, which ships as 206930, 460501 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:236027": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:23953": {
+    "reason": "a variant of Mind Flay, which ships as 15407 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:240281": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:241934": {
+    "reason": "a variant of Mind Flay, which ships as 15407 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:247121": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:250440": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:260297": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:26143": {
+    "reason": "a variant of Mind Flay, which ships as 15407 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:264892": {
+    "reason": "a variant of Mind Flay, which ships as 15407 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:27584": {
+    "reason": "a variant of Hamstring, which ships as 1715 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:277521": {
+    "reason": "a variant of Mind Flay, which ships as 15407 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:278311": {
+    "reason": "a variant of Mind Flay, which ships as 15407 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:279303": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:28310": {
+    "reason": "a variant of Mind Flay, which ships as 15407 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:289308": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:292974": {
+    "reason": "a variant of Mind Flay, which ships as 15407 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:29539": {
+    "reason": "a variant of Curse of Exhaustion, which ships as 334275 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:29570": {
+    "reason": "a variant of Mind Flay, which ships as 15407 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:306391": {
+    "reason": "a variant of Mind Flay, which ships as 15407 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:30981": {
+    "reason": "a variant of Crippling Poison, which ships as 3409 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:30984": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:312526": {
+    "reason": "a variant of Mind Flay, which ships as 15407 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:312679": {
+    "reason": "a variant of Mind Flay, which ships as 15407 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:315949": {
+    "reason": "a variant of Mind Flay, which ships as 15407 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:317898": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:321329": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:321330": {
+    "reason": "a variant of Mind Flay, which ships as 15407 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:32417": {
+    "reason": "a variant of Mind Flay, which ships as 15407 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:327093": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:32774": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:330371": {
+    "reason": "a variant of Curse of Exhaustion, which ships as 334275 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:33061": {
+    "reason": "a variant of Blast Wave, which ships as 157981 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:330911": {
+    "reason": "a variant of Keg Smash, which ships as 121253 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:345209": {
+    "reason": "a variant of Infected Wounds, which ships as 58180 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:356084": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:359078": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:369093": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:36974": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:37276": {
+    "reason": "a variant of Mind Flay, which ships as 15407 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:37330": {
+    "reason": "a variant of Mind Flay, which ships as 15407 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:37621": {
+    "reason": "a variant of Mind Flay, which ships as 15407 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:38243": {
+    "reason": "a variant of Mind Flay, which ships as 15407 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:38256": {
+    "reason": "a variant of Piercing Howl, which ships as 12323 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:387344": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:389031": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:390232": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), reached by the mechanic graph; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:392490": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:394255": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:39665": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:410063": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:410790": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:42396": {
+    "reason": "a variant of Mind Flay, which ships as 15407 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:426912": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:431380": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:43512": {
+    "reason": "a variant of Mind Flay, which ships as 15407 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:435203": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:43530": {
+    "reason": "a variant of Piercing Howl, which ships as 12323 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:439606": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:442396": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:44289": {
+    "reason": "a variant of Crippling Poison, which ships as 3409 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:444834": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:450342": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:450596": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:450845": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:451210": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:451938": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:453263": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:453848": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:458480": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:461039": {
+    "reason": "a variant of Wing Buffet, which ships as 357214 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:462765": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:462899": {
+    "reason": "a variant of Mind Flay, which ships as 15407 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:52744": {
+    "reason": "a variant of Piercing Howl, which ships as 12323 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:54074": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:57941": {
+    "reason": "a variant of Mind Flay, which ships as 15407 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:59367": {
+    "reason": "a variant of Mind Flay, which ships as 15407 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:59638": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:59974": {
+    "reason": "a variant of Mind Flay, which ships as 15407 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:60472": {
+    "reason": "a variant of Mind Flay, which ships as 15407 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:61362": {
+    "reason": "a variant of Blast Wave, which ships as 157981 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:78751": {
+    "reason": "a variant of Mind Flay, which ships as 15407 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:79541": {
+    "reason": "a variant of Mind Flay, which ships as 15407 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:79711": {
+    "reason": "a variant of Mind Flay, which ships as 15407 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:80391": {
+    "reason": "a variant of Blast Wave, which ships as 157981 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:89032": {
+    "reason": "a variant of Mind Flay, which ships as 15407 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:91134": {
+    "reason": "a variant of Mind Flay, which ships as 15407 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "ccSnare:96089": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "defensives:115176": {
+    "reason": "Zen Meditation: not seen as a player buff in the 2026-09-24 logs",
+    "ruling": "reject"
+  },
+  "defensives:200851": {
+    "reason": "Rage of the Sleeper: not seen in the logs, filed under ALL (no class reach)",
+    "ruling": "reject"
+  },
+  "defensives:215769": {
+    "reason": "Spirit of Redemption: the priest's death state, not a cooldown a player presses",
+    "ruling": "reject"
+  },
+  "defensives:22842": {
+    "reason": "Frenzied Regeneration: the druid self-heal cooldown (Forever ships it in Defensives); 189 druids in the logs",
+    "ruling": "accept"
+  },
+  "defensives:311648": {
+    "reason": "Swarming Mist: a Shadowlands covenant ability, not seen in the 2026-09-24 logs",
+    "ruling": "reject"
+  },
+  "defensives:359816": {
+    "reason": "Dream Flight: an Evoker healing cooldown; the absorb rule matched its side effect",
+    "ruling": "reject"
+  },
+  "defensives:421453": {
+    "reason": "owner rejected 2026-09-25 (review sheet R0150)",
+    "ruling": "reject"
+  },
+  "defensives:437461": {
+    "reason": "an Aspect of the Turtle copy under ALL; the hunter's 186265 ships",
+    "ruling": "reject"
+  },
+  "defensives:466524": {
+    "reason": "Metal Sheet: an item effect, not a class defensive",
+    "ruling": "reject"
+  },
+  "defensives:47788": {
+    "reason": "Guardian Spirit: Holy's external, filed with the other externals (Pain Suppression, Ironbark); 47 priests in the logs",
+    "ruling": "accept"
+  },
+  "groupBuffs:355575": {
+    "reason": "Luminescence: a proc, not a group buff a player casts",
+    "ruling": "reject"
+  },
+  "groupBuffs:412629": {
+    "reason": "an Aura Mastery variant; Raid cooldowns ships 31821",
+    "ruling": "reject"
+  },
+  "hardCC:120086": {
+    "reason": "named exclusion in the 2026-09-20 curation note: an encounter, trinket or incidental stun",
+    "ruling": "reject"
+  },
+  "hardCC:1258862": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:126819": {
+    "reason": "a variant of Polymorph, which ships as 118 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:1276084": {
+    "reason": "named exclusion in the 2026-09-20 curation note: an encounter, trinket or incidental stun",
+    "ruling": "reject"
+  },
+  "hardCC:1276097": {
+    "reason": "named exclusion in the 2026-09-20 curation note: an encounter, trinket or incidental stun",
+    "ruling": "reject"
+  },
+  "hardCC:127886": {
+    "reason": "a variant of Blind, which ships as 2094, 427773 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:128846": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:130616": {
+    "reason": "a variant of Fear, which ships as 118699 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:144166": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:145048": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:145067": {
+    "reason": "a variant of Turn Evil, which ships as 10326 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:145424": {
+    "reason": "a variant of Cheap Shot, which ships as 1833 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:161353": {
+    "reason": "a variant of Polymorph, which ships as 118 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:161354": {
+    "reason": "a variant of Polymorph, which ships as 118 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:161355": {
+    "reason": "a variant of Polymorph, which ships as 118 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:161372": {
+    "reason": "a variant of Polymorph, which ships as 118 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:161792": {
+    "reason": "a variant of Dragon's Breath, which ships as 31661 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:162056": {
+    "reason": "named exclusion in the 2026-09-20 curation note: an encounter, trinket or incidental stun",
+    "ruling": "reject"
+  },
+  "hardCC:166972": {
+    "reason": "a variant of Mighty Bash, which ships as 5211 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:17276": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:175276": {
+    "reason": "a variant of Blind, which ships as 2094, 427773 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:176050": {
+    "reason": "a variant of Kidney Shot, which ships as 408 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:180187": {
+    "reason": "a variant of Hammer of Justice, which ships as 853 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:190481": {
+    "reason": "a variant of Mighty Bash, which ships as 5211 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:192220": {
+    "reason": "a variant of Hammer of Justice, which ships as 853 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:193082": {
+    "reason": "a variant of Sap, which ships as 6770 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:196942": {
+    "reason": "a variant of Hex, which ships as 51514 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:200166": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:203126": {
+    "reason": "a variant of Maim, which ships as 203123 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:203337": {
+    "reason": "a variant of Freezing Trap, which ships as 3355 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:205290": {
+    "reason": "owner removed Wake of Ashes 2026-09-20 (the note above hardCC)",
+    "ruling": "reject"
+  },
+  "hardCC:205439": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:210873": {
+    "reason": "a variant of Hex, which ships as 51514 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:211004": {
+    "reason": "a variant of Hex, which ships as 51514 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:211010": {
+    "reason": "a variant of Hex, which ships as 51514 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:211015": {
+    "reason": "a variant of Hex, which ships as 51514 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:212365": {
+    "reason": "a variant of Freezing Trap, which ships as 3355 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:213369": {
+    "reason": "a variant of Paralysis, which ships as 115078 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:214299": {
+    "reason": "a variant of Blind, which ships as 2094, 427773 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:218434": {
+    "reason": "a variant of Polymorph, which ships as 118 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:219215": {
+    "reason": "a variant of Hex, which ships as 51514 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:219216": {
+    "reason": "a variant of Hex, which ships as 51514 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:219217": {
+    "reason": "a variant of Hex, which ships as 51514 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:219218": {
+    "reason": "a variant of Hex, which ships as 51514 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:219219": {
+    "reason": "a variant of Hex, which ships as 51514 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:219393": {
+    "reason": "a variant of Polymorph, which ships as 118 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:219394": {
+    "reason": "a variant of Polymorph, which ships as 118 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:219398": {
+    "reason": "a variant of Polymorph, which ships as 118 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:219399": {
+    "reason": "a variant of Polymorph, which ships as 118 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:219400": {
+    "reason": "a variant of Polymorph, which ships as 118 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:219401": {
+    "reason": "a variant of Polymorph, which ships as 118 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:219402": {
+    "reason": "a variant of Polymorph, which ships as 118 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:219403": {
+    "reason": "a variant of Polymorph, which ships as 118 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:219404": {
+    "reason": "a variant of Polymorph, which ships as 118 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:219405": {
+    "reason": "a variant of Polymorph, which ships as 118 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:219406": {
+    "reason": "a variant of Polymorph, which ships as 118 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:219407": {
+    "reason": "a variant of Polymorph, which ships as 118 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:219692": {
+    "reason": "a variant of Sap, which ships as 6770 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:221527": {
+    "reason": "a variant of Imprison, which ships as 217832 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:222826": {
+    "reason": "a variant of Chaos Nova, which ships as 179057 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:222897": {
+    "reason": "a variant of Storm Bolt, which ships as 132169 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:22703": {
+    "reason": "named exclusion in the 2026-09-20 curation note: an encounter, trinket or incidental stun",
+    "ruling": "reject"
+  },
+  "hardCC:22911": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:232055": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:235612": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:238559": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:240134": {
+    "reason": "a variant of Polymorph, which ships as 118 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:247587": {
+    "reason": "a variant of Holy Word: Chastise, which ships as 200200, 200196 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:250206": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:250207": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:254412": {
+    "reason": "a variant of Hex, which ships as 51514 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:255941": {
+    "reason": "owner removed Wake of Ashes 2026-09-20 (the note above hardCC)",
+    "ruling": "reject"
+  },
+  "hardCC:26044": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:269352": {
+    "reason": "a variant of Hex, which ships as 51514 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:269355": {
+    "reason": "a variant of Hex, which ships as 51514 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:27610": {
+    "reason": "a variant of Psychic Scream, which ships as 8122 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:27615": {
+    "reason": "a variant of Kidney Shot, which ships as 408 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:277778": {
+    "reason": "a variant of Hex, which ships as 51514 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:277780": {
+    "reason": "a variant of Hex, which ships as 51514 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:277784": {
+    "reason": "a variant of Hex, which ships as 51514 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:277785": {
+    "reason": "a variant of Hex, which ships as 51514 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:277787": {
+    "reason": "a variant of Polymorph, which ships as 118 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:277788": {
+    "reason": "a variant of Polymorph, which ships as 118 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:277792": {
+    "reason": "a variant of Polymorph, which ships as 118 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:277793": {
+    "reason": "a variant of Polymorph, which ships as 118 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:28271": {
+    "reason": "a variant of Polymorph, which ships as 118 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:28272": {
+    "reason": "a variant of Polymorph, which ships as 118 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:29847": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:302583": {
+    "reason": "a variant of Polymorph, which ships as 118 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:305485": {
+    "reason": "a variant of Lightning Lasso, which ships as 204437 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:30600": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:30621": {
+    "reason": "a variant of Kidney Shot, which ships as 408 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:309328": {
+    "reason": "a variant of Hex, which ships as 51514 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:309329": {
+    "reason": "a variant of Hex, which ships as 51514 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:30980": {
+    "reason": "a variant of Sap, which ships as 6770 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:30986": {
+    "reason": "a variant of Cheap Shot, which ships as 1833 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:312678": {
+    "reason": "named exclusion in the 2026-09-20 curation note: an encounter, trinket or incidental stun",
+    "ruling": "reject"
+  },
+  "hardCC:316593": {
+    "reason": "a variant of Intimidating Shout, which ships as 5246 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:316595": {
+    "reason": "a variant of Intimidating Shout, which ships as 5246 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:31733": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:321177": {
+    "reason": "a variant of Freezing Trap, which ships as 3355 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:321395": {
+    "reason": "a variant of Polymorph, which ships as 118 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:323557": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:325886": {
+    "reason": "named exclusion in the 2026-09-20 curation note: an encounter, trinket or incidental stun",
+    "ruling": "reject"
+  },
+  "hardCC:326062": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:32864": {
+    "reason": "a variant of Kidney Shot, which ships as 408 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:332544": {
+    "reason": "a variant of Imprison, which ships as 217832 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:333762": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), reached by the mechanic graph; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:334693": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:33709": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:35250": {
+    "reason": "a variant of Dragon's Breath, which ships as 31661 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:35570": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:357768": {
+    "reason": "a variant of Paralysis, which ships as 115078 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:36140": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:36509": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:36911": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:37511": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:377048": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:38461": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:39082": {
+    "reason": "a variant of Shadowfury, which ships as 30283 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:391622": {
+    "reason": "a variant of Polymorph, which ships as 118 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:391631": {
+    "reason": "a variant of Polymorph, which ships as 118 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:39574": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:405397": {
+    "reason": "named exclusion in the 2026-09-20 curation note: an encounter, trinket or incidental stun",
+    "ruling": "reject"
+  },
+  "hardCC:413815": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:41389": {
+    "reason": "a variant of Kidney Shot, which ships as 408 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:41590": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:426589": {
+    "reason": "a variant of Kidney Shot, which ships as 408 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:42972": {
+    "reason": "a variant of Blind, which ships as 2094, 427773 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:43519": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:43651": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:449700": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:451118": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:459690": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:460392": {
+    "reason": "a variant of Polymorph, which ships as 118 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:460396": {
+    "reason": "a variant of Polymorph, which ships as 118 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:461489": {
+    "reason": "a variant of Polymorph, which ships as 118 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:473291": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:49616": {
+    "reason": "a variant of Kidney Shot, which ships as 408 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:53625": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:55317": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:5782": {
+    "reason": "a variant of Fear, which ships as 118699 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:58619": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:59611": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:61025": {
+    "reason": "a variant of Polymorph, which ships as 118 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:61305": {
+    "reason": "a variant of Polymorph, which ships as 118 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:61721": {
+    "reason": "a variant of Polymorph, which ships as 118 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:61780": {
+    "reason": "a variant of Polymorph, which ships as 118 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:62961": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:71319": {
+    "reason": "a variant of Polymorph, which ships as 118 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:77505": {
+    "reason": "the long tail the 2026-09-20 curation left out (rule 3), a family-bridged name match; derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:81441": {
+    "reason": "a variant of Shadowfury, which ships as 30283 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "hardCC:88010": {
+    "reason": "a variant of Cyclone, which ships as 33786 (curation rule 1); derived set unchanged since 12.1.0.69875",
+    "ruling": "reject"
+  },
+  "healing:196608": {
+    "reason": "not seen as a player buff in 102 million lines of the 2026-09-24 combat logs",
+    "ruling": "reject"
+  },
+  "healing:209525": {
+    "reason": "a Soothing Mist variant; 115175 and 1260617 ship",
+    "ruling": "reject"
+  },
+  "healing:370960": {
+    "reason": "Emerald Communion: a self channel, not seen in the logs",
+    "ruling": "reject"
+  },
+  "healing:378412": {
+    "reason": "Light of the Titans: a Protection talent's self-only heal proc, not a healer's HoT on others",
+    "ruling": "reject"
+  },
+  "healing:395180": {
+    "reason": "filed under ALL: an item, delve or NPC copy, not a class ability; not seen in the logs",
+    "ruling": "reject"
+  },
+  "healing:448086": {
+    "reason": "Bestow Light: a self-only proc buff, not a heal on others",
+    "ruling": "reject"
+  },
+  "movement:108843": {
+    "reason": "Blazing Speed: a proc, the shape the owner rejected for Felfire Haste (R0373)",
+    "ruling": "reject"
+  },
+  "movement:115008": {
+    "reason": "the Chi Torpedo cast; the speed aura 119085 ships",
+    "ruling": "reject"
+  },
+  "movement:1231980": {
+    "reason": "filed under ALL: an item, delve or NPC copy, not a class ability; not seen in the logs",
+    "ruling": "reject"
+  },
+  "movement:1232421": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "movement:1253887": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "movement:1263345": {
+    "reason": "owner rejected 2026-09-25 (review sheet R0404)",
+    "ruling": "reject"
+  },
+  "movement:1266762": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "movement:1267208": {
+    "reason": "not seen as a player buff in 102 million lines of the 2026-09-24 combat logs",
+    "ruling": "reject"
+  },
+  "movement:1273337": {
+    "reason": "filed under ALL: an item, delve or NPC copy, not a class ability; not seen in the logs",
+    "ruling": "reject"
+  },
+  "movement:131768": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "movement:184362": {
+    "reason": "owner rejected 2026-09-25 (review sheet R0366)",
+    "ruling": "reject"
+  },
+  "movement:1953": {
+    "reason": "Blink's momentary aura; the teleport itself is the effect",
+    "ruling": "reject"
+  },
+  "movement:196922": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "movement:20271": {
+    "reason": "owner rejected 2026-09-25 (review sheet R0388)",
+    "ruling": "reject"
+  },
+  "movement:20582": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "movement:212654": {
+    "reason": "a Wraith Walk variant; 212552 ships",
+    "ruling": "reject"
+  },
+  "movement:216331": {
+    "reason": "Avenging Crusader: a Holy paladin cooldown, not movement",
+    "ruling": "reject"
+  },
+  "movement:232709": {
+    "reason": "not seen as a player buff in 102 million lines of the 2026-09-24 combat logs",
+    "ruling": "reject"
+  },
+  "movement:236298": {
+    "reason": "filed under ALL: an item, delve or NPC copy, not a class ability; not seen in the logs",
+    "ruling": "reject"
+  },
+  "movement:24275": {
+    "reason": "owner rejected 2026-09-25 (review sheet R0401)",
+    "ruling": "reject"
+  },
+  "movement:262232": {
+    "reason": "owner rejected 2026-09-25 (review sheet R0368)",
+    "ruling": "reject"
+  },
+  "movement:264656": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "movement:265223": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "movement:31209": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "movement:314791": {
+    "reason": "Shifting Power: a channel, its speed effect incidental",
+    "ruling": "reject"
+  },
+  "movement:324143": {
+    "reason": "Conqueror's Banner: a Shadowlands covenant ability, not seen in the 2026-09-24 logs",
+    "ruling": "reject"
+  },
+  "movement:325013": {
+    "reason": "Boon of the Ascended: a Shadowlands covenant ability, not seen in the 2026-09-24 logs",
+    "ruling": "reject"
+  },
+  "movement:333892": {
+    "reason": "not seen as a player buff in 102 million lines of the 2026-09-24 combat logs",
+    "ruling": "reject"
+  },
+  "movement:370960": {
+    "reason": "Emerald Communion: a healing channel, not movement",
+    "ruling": "reject"
+  },
+  "movement:375542": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "movement:378002": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "movement:378813": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "movement:382215": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "movement:382260": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "movement:382900": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "movement:385427": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "movement:387254": {
+    "reason": "not seen as a player buff in 102 million lines of the 2026-09-24 combat logs",
+    "ruling": "reject"
+  },
+  "movement:389847": {
+    "reason": "owner rejected 2026-09-25 (review sheet R0373)",
+    "ruling": "reject"
+  },
+  "movement:421453": {
+    "reason": "owner rejected 2026-09-25 (review sheet R0150)",
+    "ruling": "reject"
+  },
+  "movement:431462": {
+    "reason": "the sibling of Will of the Dawn 431752, which the owner rejected (R0411)",
+    "ruling": "reject"
+  },
+  "movement:431752": {
+    "reason": "owner rejected 2026-09-25 (review sheet R0411)",
+    "ruling": "reject"
+  },
+  "movement:450574": {
+    "reason": "not seen as a player buff in 102 million lines of the 2026-09-24 combat logs",
+    "ruling": "reject"
+  },
+  "movement:455144": {
+    "reason": "owner rejected 2026-09-25 (review sheet R0418)",
+    "ruling": "reject"
+  },
+  "movement:469780": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "movement:474440": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "movement:58876": {
+    "reason": "a Spirit Walk variant; 58875 ships",
+    "ruling": "reject"
+  },
+  "offensiveCDs:102558": {
+    "reason": "Incarnation: Guardian of Ursoc, the Guardian twin of the shipped Feral and Balance Incarnations; 47 druids in the logs",
+    "ruling": "accept"
+  },
+  "offensiveCDs:123904": {
+    "reason": "Invoke Xuen: Windwalker's 2 min cooldown beside Storm, Earth, and Fire; seen in the 2026-09-24 logs",
+    "ruling": "accept"
+  },
+  "offensiveCDs:1250646": {
+    "reason": "Takedown: Survival's 90 s damage cooldown, a self buff 30 hunters applied in the 2026-09-24 logs",
+    "ruling": "accept"
+  },
+  "offensiveCDs:132158": {
+    "reason": "Nature's Swiftness: an instant next heal, not a damage cooldown",
+    "ruling": "reject"
+  },
+  "offensiveCDs:191634": {
+    "reason": "Stormkeeper: Elemental's 1 min cooldown, a self buff 75 shamans applied in the 2026-09-24 logs",
+    "ruling": "accept"
+  },
+  "offensiveCDs:200851": {
+    "reason": "Rage of the Sleeper: not seen in the logs, filed under ALL (no class reach)",
+    "ruling": "reject"
+  },
+  "offensiveCDs:204066": {
+    "reason": "Lunar Beam: a Guardian self-heal and mastery cooldown, not a damage cooldown",
+    "ruling": "reject"
+  },
+  "offensiveCDs:205495": {
+    "reason": "an older Stormkeeper id, not seen in the logs; 191634 is accepted",
+    "ruling": "reject"
+  },
+  "offensiveCDs:231895": {
+    "reason": "owner deleted it 2026-09-25 (review sheet R0027); Retribution ships 31884 and 454351",
+    "ruling": "reject"
+  },
+  "offensiveCDs:310454": {
+    "reason": "Weapons of Order: a Shadowlands covenant ability, not seen in the 2026-09-24 logs",
+    "ruling": "reject"
+  },
+  "offensiveCDs:322118": {
+    "reason": "Invoke Yu'lon: a Mistweaver healing summon, not a damage cooldown",
+    "ruling": "reject"
+  },
+  "offensiveCDs:323546": {
+    "reason": "Ravenous Frenzy: a Shadowlands covenant ability, not seen in the 2026-09-24 logs",
+    "ruling": "reject"
+  },
+  "offensiveCDs:323654": {
+    "reason": "Flagellation: a Shadowlands covenant ability, not seen in the 2026-09-24 logs",
+    "ruling": "reject"
+  },
+  "offensiveCDs:324220": {
+    "reason": "Deathborne: a Shadowlands covenant ability, not seen in the 2026-09-24 logs",
+    "ruling": "reject"
+  },
+  "offensiveCDs:325197": {
+    "reason": "Invoke Chi-Ji: a Mistweaver healing summon, not a damage cooldown",
+    "ruling": "reject"
+  },
+  "offensiveCDs:372760": {
+    "reason": "filed under ALL: an item, delve or NPC copy, not a class ability; not seen in the logs",
+    "ruling": "reject"
+  },
+  "offensiveCDs:383009": {
+    "reason": "a Stormkeeper copy under ALL, not seen in the logs; 191634 is accepted",
+    "ruling": "reject"
+  },
+  "offensiveCDs:387184": {
+    "reason": "Weapons of Order: a Shadowlands covenant ability, not seen in the 2026-09-24 logs",
+    "ruling": "reject"
+  },
+  "offensiveCDs:391109": {
+    "reason": "filed under ALL: an item, delve or NPC copy, not a class ability; not seen in the logs",
+    "ruling": "reject"
+  },
+  "offensiveCDs:406732": {
+    "reason": "Spatial Paradox: Support ships 406789, the owner's placement",
+    "ruling": "reject"
+  },
+  "offensiveCDs:442726": {
+    "reason": "Malevolence: the Hellcaller 1 min cooldown, a self buff 15 warlocks applied in the 2026-09-24 logs",
+    "ruling": "accept"
+  },
+  "offensiveCDs:50334": {
+    "reason": "Berserk: Guardian's, the twin of Feral's shipped 106951; seen in the 2026-09-24 logs",
+    "ruling": "accept"
+  },
+  "racials:107073": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "racials:107074": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "racials:107076": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "racials:1238623": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "racials:1238648": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "racials:1238677": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "racials:1238686": {
+    "reason": "a racial's non-combat or movement aura (flight, camp, glide), not seen as a player buff in the logs",
+    "ruling": "reject"
+  },
+  "racials:1260715": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "racials:154742": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "racials:154744": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "racials:154746": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "racials:154747": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "racials:154748": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "racials:20550": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "racials:20551": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "racials:20552": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "racials:20555": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "racials:20557": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "racials:20573": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "racials:20579": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "racials:20582": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "racials:20583": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "racials:20591": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "racials:20592": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "racials:20593": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "racials:20596": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "racials:20598": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "racials:21009": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "racials:21563": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "racials:227057": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "racials:240188": {
+    "reason": "a racial's non-combat or movement aura (flight, camp, glide), not seen as a player buff in the logs",
+    "ruling": "reject"
+  },
+  "racials:255650": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "racials:255651": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "racials:255652": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "racials:255653": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "racials:255655": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "racials:255656": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "racials:255658": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "racials:255659": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "racials:255663": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "racials:255664": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "racials:255665": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "racials:255667": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "racials:255668": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "racials:255669": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "racials:255670": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "racials:265222": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "racials:265223": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "racials:265224": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "racials:273216": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "racials:273217": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "racials:273220": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "racials:274738": {
+    "reason": "the Ancestral Call cast; its four buffs 274739-274742 ship",
+    "ruling": "reject"
+  },
+  "racials:28875": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "racials:28877": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "racials:291417": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "racials:291442": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "racials:291619": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "racials:291622": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "racials:291628": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "racials:292751": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "racials:312198": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "racials:312215": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "racials:312372": {
+    "reason": "a racial's non-combat or movement aura (flight, camp, glide), not seen as a player buff in the logs",
+    "ruling": "reject"
+  },
+  "racials:312896": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "racials:312916": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "racials:312923": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "racials:312924": {
+    "reason": "a racial's non-combat or movement aura (flight, camp, glide), not seen as a player buff in the logs",
+    "ruling": "reject"
+  },
+  "racials:313015": {
+    "reason": "Recently Failed: a lockout on yourself, which the owner left out (Categories.lua's racialDebuffs note)",
+    "ruling": "reject"
+  },
+  "racials:313055": {
+    "reason": "a racial's non-combat or movement aura (flight, camp, glide), not seen as a player buff in the logs",
+    "ruling": "reject"
+  },
+  "racials:315322": {
+    "reason": "a racial's non-combat or movement aura (flight, camp, glide), not seen as a player buff in the logs",
+    "ruling": "reject"
+  },
+  "racials:317795": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "racials:358731": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "racials:358733": {
+    "reason": "a racial's non-combat or movement aura (flight, camp, glide), not seen as a player buff in the logs",
+    "ruling": "reject"
+  },
+  "racials:358734": {
+    "reason": "a racial's non-combat or movement aura (flight, camp, glide), not seen as a player buff in the logs",
+    "ruling": "reject"
+  },
+  "racials:360009": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "racials:365575": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "racials:366489": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "racials:366646": {
+    "reason": "a racial's non-combat or movement aura (flight, camp, glide), not seen as a player buff in the logs",
+    "ruling": "reject"
+  },
+  "racials:368437": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "racials:369536": {
+    "reason": "a racial's non-combat or movement aura (flight, camp, glide), not seen as a player buff in the logs",
+    "ruling": "reject"
+  },
+  "racials:376743": {
+    "reason": "a racial's non-combat or movement aura (flight, camp, glide), not seen as a player buff in the logs",
+    "ruling": "reject"
+  },
+  "racials:381451": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "racials:386449": {
+    "reason": "a racial's non-combat or movement aura (flight, camp, glide), not seen as a player buff in the logs",
+    "ruling": "reject"
+  },
+  "racials:386451": {
+    "reason": "a racial's non-combat or movement aura (flight, camp, glide), not seen as a player buff in the logs",
+    "ruling": "reject"
+  },
+  "racials:403216": {
+    "reason": "a racial's non-combat or movement aura (flight, camp, glide), not seen as a player buff in the logs",
+    "ruling": "reject"
+  },
+  "racials:406096": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "racials:430846": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "racials:430935": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "racials:436339": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "racials:436340": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "racials:436341": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "racials:448924": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "racials:458619": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "racials:5227": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "racials:58943": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "racials:59221": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "racials:6562": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "racials:68975": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "racials:68976": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "racials:68978": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "racials:69042": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "racials:69044": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "racials:69045": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "racials:822": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "racials:92680": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "racials:92682": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "racials:94293": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "raidCDs:323546": {
+    "reason": "Ravenous Frenzy: a Shadowlands covenant ability, not seen in the 2026-09-24 logs",
+    "ruling": "reject"
+  },
+  "shipped:no-aura:ccSnare:35546": {
+    "reason": "Fatal Flourish: the cast, its aura unknown (issue #15); kept by the owner's ruling noted in the file",
+    "ruling": "keep"
+  },
+  "stances:1215304": {
+    "reason": "filed under ALL: an item, delve or NPC copy, not a class ability; not seen in the logs",
+    "ruling": "reject"
+  },
+  "stances:1243184": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "stances:1243185": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "stances:1243194": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "stances:1243195": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "stances:1243205": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "stances:1252190": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "stances:1270083": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "stances:1278914": {
+    "reason": "Dream Guide: a hero-talent proc aura, not a form",
+    "ruling": "reject"
+  },
+  "stances:183416": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "stances:183435": {
+    "reason": "Retribution Aura: not seen in the logs; Devotion, Concentration and Crusader Aura are the shipped auras",
+    "ruling": "reject"
+  },
+  "stances:197625": {
+    "reason": "a Moonkin Form variant, not seen in the logs; 24858 ships",
+    "ruling": "reject"
+  },
+  "stances:215769": {
+    "reason": "Spirit of Redemption: the priest's death state, not a stance",
+    "ruling": "reject"
+  },
+  "stances:22842": {
+    "reason": "Frenzied Regeneration is accepted into Defensives (hand); a heal, not a form",
+    "ruling": "reject"
+  },
+  "stances:323764": {
+    "reason": "Convoke the Spirits: a channel, not a form",
+    "ruling": "reject"
+  },
+  "stances:33891": {
+    "reason": "Incarnation: Tree of Life: a healing cooldown, not a stance; 6 druids in the logs",
+    "ruling": "reject"
+  },
+  "stances:368412": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "stances:3714": {
+    "reason": "Path of Frost is accepted into Utility; one category per aura type",
+    "ruling": "reject"
+  },
+  "stances:391528": {
+    "reason": "Convoke the Spirits: a channel, not a form; its 4 s self aura is not worth a row",
+    "ruling": "reject"
+  },
+  "stances:394313": {
+    "reason": "not seen as a player buff in 102 million lines of the 2026-09-24 combat logs",
+    "ruling": "reject"
+  },
+  "stances:400129": {
+    "reason": "Forestwalk's passive area aura; Movement ships 400126",
+    "ruling": "reject"
+  },
+  "stances:403530": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "stances:404752": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "stances:449620": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "stances:469279": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "support:370665": {
+    "reason": "Rescue: a reposition, its aura a debuff in the logs",
+    "ruling": "reject"
+  },
+  "support:408233": {
+    "reason": "Bestow Weyrnstone: a teleport stone, not support",
+    "ruling": "reject"
+  },
+  "support:47788": {
+    "reason": "Guardian Spirit is accepted into Defensives, where the owner files externals",
+    "ruling": "reject"
+  },
+  "support:53480": {
+    "reason": "Roar of Sacrifice: a hunter pet PvP talent",
+    "ruling": "reject"
+  },
+  "utility:101545": {
+    "reason": "Flying Serpent Kick: a movement ability's own aura, not seen in the logs",
+    "ruling": "reject"
+  },
+  "utility:102547": {
+    "reason": "a Prowl variant; 5215 ships",
+    "ruling": "reject"
+  },
+  "utility:110960": {
+    "reason": "Greater Invisibility: the mage's invisibility beside the shipped 32612; 118 mages in the logs",
+    "ruling": "accept"
+  },
+  "utility:1248049": {
+    "reason": "filed under ALL: an item, delve or NPC copy, not a class ability; not seen in the logs",
+    "ruling": "reject"
+  },
+  "utility:1273353": {
+    "reason": "filed under ALL: an item, delve or NPC copy, not a class ability; not seen in the logs",
+    "ruling": "reject"
+  },
+  "utility:164862": {
+    "reason": "Flap: a form-only slow fall, not seen in the logs",
+    "ruling": "reject"
+  },
+  "utility:1860": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "utility:200183": {
+    "reason": "Apotheosis: a Holy healing cooldown, not utility",
+    "ruling": "reject"
+  },
+  "utility:20719": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "utility:215769": {
+    "reason": "Spirit of Redemption: the priest's death state, not something a player tracks as utility",
+    "ruling": "reject"
+  },
+  "utility:3714": {
+    "reason": "Path of Frost: the death knight's group water walking, beside Water Walking 546; seen in the logs",
+    "ruling": "accept"
+  },
+  "utility:434777": {
+    "reason": "a Feign Death copy under ALL; the hunter's 5384 ships",
+    "ruling": "reject"
+  },
+  "utility:5227": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  },
+  "utility:5421": {
+    "reason": "passive: an always-on aura, which the owner leaves out of these lists",
+    "ruling": "reject"
+  }
+}
