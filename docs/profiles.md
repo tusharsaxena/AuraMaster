@@ -32,6 +32,8 @@ entirely, performance-§5) and the session state (`debug`, the selected containe
 
 ```
 NS.OnProfileChanged() / OnProfileReset() / OnProfileCopied(source)
+  ├─ Presets.RestoreStaleSnapshot()          a preset preview goes back into the profile it was
+  │                                          taken in; then the preset and skin pickers go down
   ├─ Database.PrepareProfile(db.profile)    backfill every container, normalize the order,
   │                                          seed the Simple preset if this profile never had it
   ├─ State.SetActiveContainer(nil)           the old selection's id may not exist here
@@ -41,7 +43,9 @@ NS.OnProfileChanged() / OnProfileReset() / OnProfileCopied(source)
   ├─ ContainerManager.Announce()             instances follow the new registry, apply all,
   │                                          CONTAINERS_CHANGED → the panel re-renders
   ├─ BlizzardFrames.Apply()                  the new profile's hide switches
-  └─ NS.RefreshOptionsPanel()
+  ├─ NS.RefreshOptionsPanel()
+  └─ NS.MaybeShowPresetPicker(), then        the first-run pickers, to a profile that has not
+     NS.MaybeShowSkinPicker()                closed them
 ```
 
 - **A new profile** starts empty, so `PrepareProfile` seeds the Simple preset's three containers into

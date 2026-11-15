@@ -169,6 +169,7 @@ python3 -c 'import PIL; print(PIL.__version__)'    # prints a version
 ```sh
 lua tests/run.lua                                     # the suite, sharded across CPUs — must be green
 lua tests/run.lua -j 1                                # same, serially; must match it (testing-§14)
+KA0S_KIT_CLIENT=forever lua tests/run.lua             # the suite as WoW Forever — must be green too (clients-§6)
 ~/.claude/dev-copilot/bin/ka0s-bounded luacheck .    # must be 0 warnings / 0 errors
 bash tests/_kit/run-automated-tests.sh --suite complexity   # the sighted complexity report (release-time)
 ```

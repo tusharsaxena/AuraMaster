@@ -208,7 +208,10 @@ Five starting points for a profile's containers (spec
   call-outs; the call-out block starts at its top (spec section 18.3).
   Opening records the lock and unlocks through the seam `/am unlock` writes (`NS.SetByPath`
   `"locked"`); its two buttons show and flip the lock and test mode, and turning test mode off with
-  a preview up ends it with a restore. Apply locks and turns test mode off; Not now, the close
+  a preview up ends it with a restore. Every pick of a preset or a style leaves the containers
+  unlocked and test mode on, whatever the buttons were set to (spec section 19.1), and Empty is a
+  preview like the others: the snapshot is taken and every container leaves the screen until Apply
+  keeps the empty profile or a dismissal restores the player's own (spec section 19.2). Apply locks and turns test mode off; Not now, the close
   control, Escape and this addon's own hides put back the lock the window found and turn test mode
   off. Every preset's call-out block starts at the picker's top and runs down behind the window,
   which the owner accepts (spec section 18.3; `docs/known-limitations.md`).
@@ -252,7 +255,7 @@ that empties a category gates it with no code change.
 
 ## Settings Schema
 
-`NS.Schema` holds **318** rows (as measured on 2026-11-06) across seven pages (General 26, Containers 5, Filters 57, Layout 41,
+`NS.Schema` holds **320** rows (as measured on 2026-11-15) across seven pages (General 28, Containers 5, Filters 57, Layout 41,
 Bars 89, Icons 50, Text 50), plus one runtime row per user category. It drives the panel,
 `/am list|get|set|reset` and the resets through one write seam, `NS.SetByPath`.
 
@@ -317,7 +320,7 @@ pass on.
 |---|---|---|---|
 | `Ka0s_AuraMaster_ContainersChanged` (`NS.MSG.CONTAINERS_CHANGED`) | `modules/ContainerManager.lua` — create, delete, rename, duplicate, profile change (copy-from and reset positions are settings writes, announced by `CONFIG_CHANGED`) | none | `settings/OptionsSetup.lua:440` — `NS.RequestPanelRefresh`, a coalesced panel re-render (every banner lists containers); `modules/TimedSpells.lua:204` — `TS.Sync`, which starts or stops the timed-spell scan (a container added or removed can change whether any needs it) |
 | `Ka0s_AuraMaster_ConfigChanged` (`NS.MSG.CONFIG_CHANGED`) | `settings/Schema.lua:637` — the write seam, once per write; never for a session row | `{ section, containerId, path }`; `containerId` nil for an addon-wide row, `path` the row written | `modules/ContainerManager.lua:910` — first `FontPrimer.PrimeAll` (a new font is drawn before anything is applied in it), then by the row's `effect`: `"visibility"` (the master enable, visibility, lock and alpha, a container's enable, its six `filter.zones` rows and its two `filter.unitFilter` rows) runs `ApplyVisibility()` at once, `"none"` queues nothing, `"view"` (the two `filter.situations` rows) runs `CM.ApplyViews` for that container at once, in combat too and never held, otherwise `RequestApply(containerId)` (nil re-applies all), a write to a flow or attachment path also re-applies every container following that one (`Anchors.Followers`), and a write to a container's attach points, mode or target also re-applies the container it attaches to (`requestParents`); `modules/TimedSpells.lua:203` — `TS.Sync`, the same re-sync (a filter write can change whether any container needs the scan) |
-| `Ka0s_AuraMaster_VisibilityChanged` (`NS.MSG.VISIBILITY_CHANGED`) | `core/AuraMaster.lua` — entering the world, combat start and end; `modules/Preview.lua` — `Preview.SetTestMode`, when test mode switches on or off | none | `modules/ContainerManager.lua:922` — `ApplyVisibility()` over every container |
+| `Ka0s_AuraMaster_VisibilityChanged` (`NS.MSG.VISIBILITY_CHANGED`) | `core/AuraMaster.lua` — entering the world, combat start and end; `modules/Preview.lua` — `Preview.SetTestMode`, when test mode switches on or off | none | `modules/ContainerManager.lua:923` — `ApplyVisibility()` over every container |
 | `Ka0s_AuraMaster_TimedSpellsChanged` (`NS.MSG.TIMED_SPELLS_CHANGED`) | `modules/TimedSpells.lua` — a scan learned timed spells, or `/am forgettimed` emptied the set | none from a scan; `{ byPlayer = true }` from `/am forgettimed` | `modules/ContainerManager.lua` `CM.Init` — `RequestApply(nil, system)` over every container (their excluded ids moved); a scan's request is the addon's own, so a deferral of it prints no notice |
 
 Four messages, well under the more-than-ten trigger for a separate `message-bus.md`.
@@ -672,7 +675,7 @@ span bundle is `<date>-v<A>-v<B>/`, and the one untagged bundle is `docs/revendo
 | Doc | Covers |
 |---|---|
 | `known-limitations.md` | Every known limitation: what the player sees, why the client or the engine forces it, and the owner's ruling where one was made |
-| `spell-research/` | Frozen per-build derivation bundles written by `tools/spell-research/research.py`; the dated bundles are not enumerated |
+| `spell-research/` | Frozen per-build derivation bundles written by `tools/spell-research/research.py` and, for WoW Forever, `tools/spell-research/forever.py`; the dated bundles are not enumerated |
 
 ## Documented deviations
 
@@ -682,7 +685,7 @@ span bundle is `<date>-v<A>-v<B>/`, and the one untagged bundle is `docs/revendo
 | `frame-layering-§3` | Two levels are counted from a sibling, not the parent. The mouse blocker sits `LAYERS.LEVEL.BLOCKER` under the engine's current level (`ContainerClass:ApplyBlocker`). Each text-glow twin sits `GLOW_GAP` under the main engine, and its holder `GLOW_HOLDER` under that (`modules/Container_Twins.lua`). With `L = 5` a holder sits below the anchor. | A later `layout.level` raises the anchor, but the engine does not follow it, so only the engine's own current level keeps the blocker under it. The twins must sit under the main's whole text-and-icon stack, which is a fixed gap below the main and not a band over the anchor. The holders carry glow copies only. | 2026-10-24, the owner accepted AUR-Z10 (the frame-layering run, item 030). The values are unchanged and named in `NS.Constants.LAYERS`. | The engine follows its anchor's level, or the glow stops using twin engines. |
 | `layout-§1` | `defaults/Categories.lua` stays in the 1000–1500 band (1399 lines, measured 2026-11-14). `Cat.HELPFUL` and `Cat.HARMFUL` are not split across files. | The file is data: hand-curated spell ids, 10 functions, max CCN 5. `tools/spell-research/logs.py` is the only writer of those lists and rewrites this one path, and `sid_db2.py` tells a buff list from a debuff list by where it sits around `Cat.HARMFUL =` in this one file. A split would change the tool chain, so it is not a pure move. Tracks anti-pattern #53. | 2026-10-31 (FX-AM-SIZE) | The file reaches 1400 lines, or the spell-research tools are reworked to read more than one file. |
 | `skinning-§1` (follow the skin by default) | Container defaults sit off the skin: `text.glowColorFromSkin` (SF-AM-1); a bar's background and border color, and Show border on (SF-AM-2); a bar's fill color, the Text font color, and the icon border color on icons, beside a bar and beside a text line (SF-AM-3). | The owner's smoke ruling of 2026-11-01: a black glow, a dark background and border on a bar, and the fill, Text font and icon border colors the player's own. Other fonts still follow. Schema v17 moves a stored container still holding the old default; a value already different stays. v16 wrote explicit values, so an old default and a player's pick of the same value read alike, and v17 moves both. | 2026-11-02 | The standard rules on a per-leaf follow default, or a skin gains a glow the owner wants followed |
-| `documentation-§6` (*Citing the repo's own code*, SHOULD, v2.102.x) | The live docs cite this repo's own code as `path:N[-M]` (164 citations, as measured on 2026-11-06), not `path` plus a symbol or heading | `tests/test_docs.lua` already enforces what the rule is for: every `path:N` citation in `docs/*.md`, `DEPENDENCIES.md` and `README.md` must resolve to an existing file and a code line inside it, and must sit within 3 lines of a name its own sentence gives in backticks, so a line that moves under a citation turns the suite red instead of rotting silently. Owner ruling, sync-docs pass of 2026-11-06 | 2026-11-06 | `tests/test_docs.lua`'s citation checks are retired or weakened, or a citation form appears that they cannot check |
+| `documentation-§6` (*Citing the repo's own code*, SHOULD, v2.102.x) | The live docs cite this repo's own code as `path:N[-M]` (144 citations, as measured on 2026-11-15), not `path` plus a symbol or heading | `tests/test_docs.lua` already enforces what the rule is for: every `path:N` citation in `docs/*.md`, `DEPENDENCIES.md` and `README.md` must resolve to an existing file and a code line inside it, and must sit within 3 lines of a name its own sentence gives in backticks, so a line that moves under a citation turns the suite red instead of rotting silently. Owner ruling, sync-docs pass of 2026-11-06 | 2026-11-06 | `tests/test_docs.lua`'s citation checks are retired or weakened, or a citation form appears that they cannot check |
 
 ### Files over the 1500-line cap
 

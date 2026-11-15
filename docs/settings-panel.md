@@ -1,7 +1,7 @@
 # Settings panel
 
 How the options are organized, what each control does, and which schema key it writes. The rows
-below are derived from the live schema (`NS.Schema`, 318 rows on a profile with no categories of the
+below are derived from the live schema (`NS.Schema`, 320 rows on a profile with no categories of the
 player's own — each of those adds one more `container.filter.categories.<key>` row at runtime) by
 loading the addon headlessly and
 walking it page → group → subgroup; a page, tab or row listed here that the schema does not produce
@@ -135,7 +135,7 @@ with its closed box justified LEFT, in a widget pool of its own, so its justific
 or arrives from, another panel's stock Dropdown. A row that names a control (`EditBox`, `Ka0sMedia_*`) keeps it.
 Every `container.` path is relative to the selected container (`docs/schema.md`).
 
-### General (26 rows, `settings/General.lua`, `settings/GeneralSpells.lua`, `settings/GeneralUserCategories.lua`, `settings/GeneralDispel.lua`)
+### General (28 rows, `settings/General.lua`, `settings/GeneralSpells.lua`, `settings/GeneralUserCategories.lua`, `settings/GeneralDispel.lua`)
 
 **Master controls** — composed by the library's `MasterControls` from one declaration
 (options-ui-§15), in canonical order, two per line:
@@ -158,6 +158,12 @@ unlocking, and each container's engine is disabled while it is on. It is bound t
 *Test mode* entry also use: off after a reload, ended when combat starts (`PLAYER_REGEN_DISABLED`), and a
 start in combat is refused with one gray line, the checkbox reading false again. Its default is
 false, so *Reset all settings* ends it too.
+
+**Two rows in the Master controls group draw nothing** (skipRender): the first-run preset picker's
+latches, `presets.pickerSeen` (this profile has closed the picker) and `global.presets.pickerSeen`
+(the account's, presets spec section 18.5), both set by every close the player makes of the picker
+(`NS.Presets.MarkPickerSeen`). `/am get|set|reset` reaches both; this page's **Defaults** skips the
+account row (`vetoedFromPanelReset`, `settings/OptionsSetup.lua`), as it skips the Minimap button.
 
 **Reset all settings does not reach the Minimap button.** That control is a profile reset
 (options-ui-§12) and the row is global, which is the reason launcher-§3 puts it there: a button the

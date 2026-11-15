@@ -269,8 +269,9 @@ and its one writer (the library's `P.Save`, behind `/am perf finish`) are named 
 
 ## Settings schema, registries and named non-setting state
 
-`NS.Schema` holds **318** rows (as measured on 2026-11-06) across seven pages: General 26 (its Dispel colors tab's five, its
-Spell categories tab's three `enchantSlots` rows and its Skin tab's eight `skin.*` rows among them), Containers 5 (`N-1`, batch 7 — split
+`NS.Schema` holds **320** rows (as measured on 2026-11-15) across seven pages: General 28 (its Dispel colors tab's five, its
+Spell categories tab's three `enchantSlots` rows, its Skin tab's eight `skin.*` rows and the preset picker's two skipRender
+latches, `presets.pickerSeen` and `global.presets.pickerSeen`, among them), Containers 5 (`N-1`, batch 7 — split
 out of General's own tab), Filters 57, Layout 41 (the Label tab's eleven among them, batch 8 and B9 LJ-1; batch 9's Side row replaced by batch 11's two anchor-point rows),
 Bars 89, Icons 50 and Text 50 (its `autoSize` among them; the nine "Use the skin's ..." companions,
 `barTextureFromSkin`, `bgTextureFromSkin` and every font block's `fontFromSkin`, are spread across

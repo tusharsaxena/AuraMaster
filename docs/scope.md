@@ -44,10 +44,15 @@ client. The player-facing contract is the README; the engineering boundary is th
 - **Test mode:** placeholder auras drawn through the same `Style` code, switched by the Master
   controls *Test mode* checkbox, `/am test` or the minimap button's right-click menu; session-only and
   ended when combat starts. Unlocking only makes containers draggable, and live auras keep drawing.
+- **Presets:** five starting points for a whole profile's containers, Empty, Simple (3), Intermediate
+  (8), Advanced (20) and Healer (9), each in Bars or Icons, placed for the player's screen size and
+  previewed on the real screen in test mode until Apply (`defaults/Presets.lua`, `modules/Presets.lua`).
+  A new profile starts from Simple; the first-run picker, General → Presets and `/am preset` offer the
+  rest (`docs/ARCHITECTURE.md` → *Presets*). Nothing is anchored to a unit frame or another addon's frame.
 - **Hiding Blizzard's buff and debuff frames**, by reparenting them out of combat.
 - **Profiles** through AceDB, with a Profiles sub-page.
 - **A full CLI** — every schema row is reachable through `/am get|set|reset`, and the registry through
-  `/am containers|select|new|delete`.
+  `/am containers|select|new|delete|preset`.
 - **Retail and WoW Forever**, Interface 120105, 16001 (Midnight 12.1.5 and Forever 1.60.1), one
   codebase, English as the source locale. Forever's spell categories hold its own spells
   (`docs/ARCHITECTURE.md` → *Per-client features*).
