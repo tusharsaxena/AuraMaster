@@ -598,3 +598,12 @@ Where each item is checked: tests `tests/test_presets_data.lua` and `tests/test_
 (point 5) and PRESETS-41 (points 4 and 5) in docs/smoke-tests.md, with INSTALL-2, PRESETS-1, PRESETS-2,
 PRESETS-19, PRESETS-21 to PRESETS-23, PRESETS-29 and PRESETS-31 reworded to match. The overlaps, and
 the account latch's reach, are in docs/known-limitations.md (presets).
+
+## 19. Owner feedback, round 5 (2026-11-15)
+
+1. **Every pick sets the window's two toggles.** Picking any preset or style in the first-run picker
+   leaves **Containers: unlocked** and **Test mode: on**, whatever the buttons were set to before.
+2. **Empty previews an empty screen.** Picking Empty is a preview like any other: the snapshot is taken
+   and every container leaves the screen until Apply (which keeps the empty profile) or Not now / the
+   close control / Escape (which restore the player's own containers). This replaces the earlier
+   behavior, where Empty ended the preview and put the player's containers back on screen.

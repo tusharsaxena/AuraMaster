@@ -2819,8 +2819,10 @@ PRESETS-40). Opening it previews nothing: test mode stays off and Simple is
 on screen. The skin picker does not show while this window is up. Drag the window → it moves and
 stays on screen. Pick **Intermediate** → its containers replace Simple, test mode turns on, and the
 line "On your screen now, filled with sample auras. Nothing is saved until Apply." appears. Pick
-**Empty** → the Bars / Icons switch and that line hide, Simple is back and test mode is off; nothing
-is deleted until Apply. Result:
+**Empty** → the Bars / Icons switch hides and every container leaves the screen (an empty preview);
+test mode stays on and the containers stay unlocked. Click **Containers: unlocked** and **Test mode:
+on** to flip them off, then pick **Simple** → both come back on (every pick sets them). **Not now**
+after Empty → the player's own containers return; nothing is deleted until Apply. Result:
 
 **PRESETS-3. Escape restores, and Not now keeps Simple. Client: Retail.** On a new profile, pick
 **Advanced** in the picker → the 20 Advanced containers replace Simple, test mode turns on and every

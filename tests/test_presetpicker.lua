@@ -402,21 +402,45 @@ test("picker: Apply with nothing picked keeps what the profile holds", function(
     assertTrue(NS.Presets.PickerSeen())
 end)
 
-test("picker: empty applies no containers", function()
+test("picker: empty previews an empty screen and applies no containers", function()
     local NS = fresh({ simple = true })
-    local before = ids(NS)
     local f = NS.MaybeShowPresetPicker()
     f.dd.onSelect("simple")
     assertTrue(NS.Presets.IsPreviewing())
     f.dd.onSelect("empty")
-    -- red under: Empty previewed in test mode, or the style switch left showing for it
-    assertFalse(NS.Presets.IsPreviewing(), "Empty ends the preview")
-    assertFalse(NS.State.testMode, "and shows no test mode")
-    assertEqual(ids(NS), before, "the player's own containers are back until Apply")
+    -- red under: Empty putting the player's own containers back on screen during its preview
+    assertTrue(NS.Presets.IsPreviewing(), "Empty is a preview too")
+    assertEqual(#NS.Database.GetContainers(), 0, "its preview shows no containers")
+    assertTrue(NS.State.testMode, "test mode stays on")
+    assertFalse(NS.GetSetting("locked"), "containers stay unlocked")
     assertFalse(f.styleBars:IsShown(), "no Bars / Icons switch for Empty")
     f.apply:__fire("OnClick")
     assertEqual(#NS.Database.GetContainers(), 0, "Empty applied: no containers")
     assertFalse(f:IsShown())
+end)
+
+test("picker: Not now after an Empty preview puts the player's containers back", function()
+    local NS = fresh({ simple = true })
+    local before = ids(NS)
+    local f = NS.MaybeShowPresetPicker()
+    f.dd.onSelect("empty")
+    assertEqual(#NS.Database.GetContainers(), 0, "previewing Empty")
+    f.notNow:__fire("OnClick")
+    assertEqual(ids(NS), before, "Not now restores the player's own containers")
+    assertFalse(NS.Presets.IsPreviewing())
+end)
+
+test("picker: every pick turns test mode on and unlocks, whatever the buttons were set to", function()
+    local NS = fresh({ simple = true })
+    local f = NS.MaybeShowPresetPicker()
+    for _, name in ipairs({ "simple", "empty", "advanced" }) do
+        NS.SetByPath("locked", true)
+        if NS.State.testMode then NS.Preview.SetTestMode(false, "test") end
+        f.dd.onSelect(name)
+        -- red under: a pick that leaves test mode off or the containers locked
+        assertTrue(NS.State.testMode, name .. ": test mode on")
+        assertFalse(NS.GetSetting("locked"), name .. ": containers unlocked")
+    end
 end)
 
 test("picker: refused in combat holds", function()

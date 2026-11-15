@@ -59,8 +59,9 @@ local addonName, NS = ...
 --
 -- WHAT A PICK DOES. Nothing is previewed when the window opens: the profile already holds what it
 -- holds (Simple, on a new one). A pick of a preset or a style previews it on the real screen in
--- test mode (NS.Presets.BeginPreview); a pick of Empty ends a preview and shows no test mode.
--- Apply keeps the pick (EndPreview(true, "replace"), or Apply("empty") for Empty); with nothing
+-- test mode (NS.Presets.BeginPreview); Empty too, as an empty screen. Every pick leaves the
+-- containers unlocked and test mode on (spec section 19). Apply keeps the pick (EndPreview(true,
+-- "replace"), or Apply afresh when a preview combat ended or another pick swapped); with nothing
 -- picked it keeps what is there. Not now, the close control and Escape restore (EndPreview(false)).
 -- Every close the player makes sets both latches, `presets.pickerSeen` and the account's
 -- `global.presets.pickerSeen`, through NS.Presets.
@@ -101,7 +102,7 @@ local LABELS = {
     advanced = L["Advanced"], healer = L["Healer"],
 }
 local BLURBS = {
-    empty = L["No containers: start from a blank screen and build your own. Test mode stays off."],
+    empty = L["No containers: start from a blank screen and build your own."],
     simple = L["Your buffs, weapon enchants and debuffs in the top-right corner."],
     intermediate = L["Simple, plus your short buffs and cooldowns, your debuffs on the target, the target's cooldowns and your debuffs on focus."],
     advanced = L["Everything: cooldown call-outs in the middle, the full target stack, icon rows and two special lists you fill yourself."],
@@ -327,19 +328,15 @@ end
 
 -- ── the window's controls ────────────────────────────────────────────────────────────────────
 
---- Preview the selection: a preset in its style, or, for Empty, the player's own containers back.
+--- Preview the selection on the real screen: the preset in its style, Empty as an empty screen (its
+--- preview takes every container away until Apply). Every pick leaves the containers unlocked and
+--- test mode on (BeginPreview turns it on), whatever the buttons were set to before it.
 local function preview()
     local P = NS.Presets
-    if state.sel == "empty" then
-        if P.IsPreviewing() and state.owns then
-            local ok, msg, gray = P.EndPreview(false)
-            if not ok then say(msg, gray) end
-        end
-        state.owns = false
-        return refresh()
-    end
-    local ok, msg, gray = P.BeginPreview(state.sel, state.look)
+    local look = (state.sel == "empty") and "bars" or state.look
+    local ok, msg, gray = P.BeginPreview(state.sel, look)
     if ok then state.owns = true else say(msg, gray) end
+    if NS.GetSetting("locked") then setLock(false) end
     refresh()
 end
 
@@ -386,7 +383,7 @@ end
 local function keep(sel, look)
     local P = NS.Presets
     local n, l = P.Previewed()
-    if sel ~= "empty" and state.owns and n == sel and l == look then
+    if state.owns and n == sel and (sel == "empty" or l == look) then
         return P.EndPreview(true, "replace")
     end
     return P.Apply(sel, look, "replace")

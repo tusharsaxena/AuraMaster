@@ -2676,7 +2676,7 @@ Total.
 - seed: the v19 step is idempotent and keeps a stored false on an unseeded profile
 - seed: the account latch needs no migration step
 
-### test_presetpicker.lua (48)
+### test_presetpicker.lua (50)
 
 - picker: due on new profile only
 - picker: the latch is a settings row, written through the seam
@@ -2694,7 +2694,9 @@ Total.
 - picker: Escape restores like Not now
 - picker: apply keeps
 - picker: Apply with nothing picked keeps what the profile holds
-- picker: empty applies no containers
+- picker: empty previews an empty screen and applies no containers
+- picker: Not now after an Empty preview puts the player's containers back
+- picker: every pick turns test mode on and unlocks, whatever the buttons were set to
 - picker: refused in combat holds
 - picker: on demand it asks before replacing the player's containers
 - picker: a profile event takes it down with a restore, then offers it to the new profile
@@ -3051,7 +3053,7 @@ Total.
 | test_presets_apply.lua | 11 |
 | test_presets_preview.lua | 20 |
 | test_presets_seed.lua | 8 |
-| test_presetpicker.lua | 48 |
+| test_presetpicker.lua | 50 |
 | test_pages_presets.lua | 12 |
 | test_perf.lua | 8 |
 | test_debuglogsetup.lua | 9 |
@@ -3069,4 +3071,4 @@ Total.
 | test_skin_switch.lua | 34 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2519** |
+| **Total** | **2521** |
