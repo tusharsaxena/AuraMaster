@@ -241,8 +241,8 @@ Each task keeps the Global Constraints, the gate and the commit rules above.
 ### Task AM-PR19: Player stack nearer the center, the target cluster mirroring it, the call-outs higher
 
 **Files:** `defaults/Presets.lua`, `settings/PresetPicker.lua` if its tests move, preset tests (data, cluster, picker, apply, seed), `docs/known-limitations.md`.
-- [ ] Failing tests first: `presets data: the player column sits 40 from the call-out column`; `presets data: the target column mirrors the player column where the cluster fits` (21:9 at 768, 1080 and 1440); `presets data: the cluster moves left just enough to fit on narrower screens` (Player buffs 10 in, every gap and alignment kept); `presets data: the call-out block starts at about the picker's top`; the placement, cluster, snap and top-edge cases updated; overlaps measured and recorded.
-- [ ] Implement per §18.1–4, gate green, commit `AM-PR19: The player stack nearer the center, the target cluster mirroring it, the call-outs higher`.
+- [x] Failing tests first: `presets data: the player column sits 40 from the call-out column`; `presets data: the target column mirrors the player column where the cluster fits` (21:9 at 768, 1080 and 1440); `presets data: the cluster moves left just enough to fit on narrower screens` (Player buffs 10 in, every gap and alignment kept); `presets data: the call-out block starts at about the picker's top`; the placement, cluster, snap and top-edge cases updated; overlaps measured and recorded.
+- [x] Implement per §18.1–4, gate green, commit `AM-PR19: The player stack nearer the center, the target cluster mirroring it, the call-outs higher`.
 
 ### Task AM-PR20: Existing users see the preset picker once
 

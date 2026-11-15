@@ -367,8 +367,9 @@ test("presets: placement at 768/1080/1440 x 16:9, 16:10, 21:9, 4:3, 5:4", functi
                         assertTrue(y <= 0, where .. ": head or base below the top edge")
                         assertTrue(y >= -0.7 * H, where .. ": above 70% of the height")
                         if spec.stack == "cornerRight" then
-                            local inset = -(P.STACKS.cornerRight.x + P.STACKS.cornerRight.width)
-                            assertNear(r, W - inset * P.ScaleX(W, H), 1, where .. " sits its inset in from the right edge")
+                            -- Spec section 18: at the cluster's place, the mirror's end or moved left.
+                            local col = P.Columns(W, H).cornerRight
+                            assertNear(r, W / 2 + (col.x + col.width) * P.ScaleX(W, H), 1, where .. " ends the cluster")
                             -- Spec section 17: Player buffs' right edge at least 10 in from the edge.
                             assertTrue(r <= W - 10 * P.ScaleX(W, H) + 0.5, where .. ": at least 10 in (" .. (W - r) .. ")")
                         end
@@ -436,9 +437,9 @@ test("presets data: side stacks sit on the lower base", function()
     end
 end)
 
--- The point each up stack's head hangs from: the center line for the player stack, the right edge for
--- the right-hand cluster's (spec section 17: the target, far and focus columns hang from it).
-local HEAD_POINT = { left = "TOP", right = "TOPRIGHT", far = "TOPRIGHT", focus = "TOPRIGHT" }
+-- The point each up stack's head hangs from: the center line, for the player stack and, since spec
+-- section 18, the right-hand cluster's too (the target, far and focus columns).
+local HEAD_POINT = { left = "TOP", right = "TOP", far = "TOP", focus = "TOP" }
 
 --- An up stack's spec on a parent `H` tall: a member's gap is above the one before; a head sits on
 --- its stack's base by a BOTTOM point.
@@ -493,14 +494,16 @@ test("presets data: side stacks grow up from their base", function()
     assertEqual(adv.pcd.attachTo, adv.pshort.index, "Player cooldowns sits on it")
 end)
 
-test("presets data: the corner group hangs from the right edge, Player buffs 10 in", function()
+test("presets data: the corner group ends the cluster, Player buffs at least 10 in", function()
     local P = NS.PresetData
     local S = P.STACKS
-    -- Spec section 17: the corner group's distance in is picked so the whole right-hand cluster fits
-    -- (target column, gap, focus and corner columns, Player buffs), Player buffs' right edge at least
-    -- 10 in. 10, the least, keeps the cluster furthest from the call-outs. red under: section 16's
-    -- place, Player buffs' right edge 125 in.
-    assertEqual(S.cornerRight.x + S.cornerRight.width, -10, "Player buffs' right edge 10 in from the edge")
+    -- Spec section 18: the corner group ends the right-hand cluster, which hangs from the center line,
+    -- the target column mirroring the player column; Player buffs' right edge 1015 right of the
+    -- center line, moved left where that is not at least 10 in from the screen edge (the cluster case
+    -- "the cluster moves left just enough to fit on narrower screens"). red under: section 17's
+    -- place, hung 10 in from the right edge.
+    assertEqual(S.cornerRight.x + S.cornerRight.width, 1015, "Player buffs' right edge, from the center line")
+    assertEqual(S.cornerRight.anchor, "TOP", "the cluster hangs from the center line")
     assertEqual(S.cornerRight.width, 240, "as wide as Player cooldowns (spec section 17.2)")
     assertEqual(S.cornerLeft.width, 240, "and Player debuffs")
     assertEqual(S.cornerRight.x - (S.cornerLeft.x + S.cornerLeft.width), 5, "the gap between the two")
@@ -508,9 +511,12 @@ test("presets data: the corner group hangs from the right edge, Player buffs 10 
     assertEqual(S.cornerRight.y, -6 - 40, "40 down, section 15's")
     local simple = byRole(P.Build("simple", "bars", 1920, 1080))
     local pos = simple.pbuffs.overrides.position
-    assertEqual(pos.relativePoint, "TOPRIGHT")
+    assertEqual(pos.relativePoint, "TOP")
     assertEqual(pos.point, "TOPLEFT")
-    assertEqual(pos.x, S.cornerRight.x)
+    -- At 1920 x 1080 the mirror's end, 960 + 1015, is past the edge: moved 65 left, 10 in.
+    assertEqual(P.ClusterShift(1920, 1080), -65, "1920 x 1080 moves the cluster 65 left")
+    assertEqual(pos.x, S.cornerRight.x - 65)
+    assertEqual(960 + pos.x + S.cornerRight.width, 1910, "10 in from the right edge")
     assertEqual(pos.y, -46)
     assertNil(simple.pdebuffs.overrides.position, "Player debuffs is not placed: it joins Player buffs")
     -- Still a corner group: it grows down, and the members hang below their heads.
@@ -585,15 +591,15 @@ test("presets data: the call-outs are centered and colored like the owner's", fu
     assertEqual(seen, 3, "three call-outs")
 end)
 
---- The room the call-out block may take on a `H` tall parent (spec section 15.1): from a margin below
---- the pickers' shared rectangle (centered `skinShare` of the way up, as tall as the taller of the
---- two) down to a margin above the bottom edge, as offsets from the top edge.
+--- The room the call-out block may take on a `H` tall parent (spec section 18.3): from the preset
+--- picker's top (centered `skinShare` of the way up, `pickerHeight` tall), no nearer the top edge than
+--- a margin, down to a margin above the bottom edge, as offsets from the top edge.
 local function calloutRoom(P, H)
     local R = P.ROOM
-    return H * (1 - R.skinShare) + math.max(R.skinHeight, R.pickerHeight) / 2 + R.margin, H - R.margin
+    return math.max(R.margin, H * (1 - R.skinShare) - R.pickerHeight / 2), H - R.margin
 end
 
-test("presets data: the call-out block takes the largest font that fits, centered as far as it can", function()
+test("presets data: the call-out block takes the largest font that fits under the picker's top", function()
     -- Its own environment: the case narrows the size range to probe the next size up.
     local P = freshEnv().PresetData
     assertEqual(P.CALLOUT_SIZE_MAX, 36, "the owner's size")
@@ -618,16 +624,14 @@ test("presets data: the call-out block takes the largest font that fits, centere
                 assertTrue(bigger.height > hi - lo, where .. ": one size larger would not fit")
             end
             if r.height <= hi - lo then
-                assertTrue(top >= lo - 0.5, where .. ": below the pickers")
+                assertNear(top, lo, 0.5, where .. ": at the picker's top")
                 assertTrue(bottom <= hi + 0.5, where .. ": above the bottom edge")
-                local want = math.min(math.max(H / 2 - r.height / 2, lo), hi - r.height)
-                assertNear(top, want, 0.5, where .. ": as near the middle as the room allows")
             else
                 assertEqual(r.fontSize, min, where .. ": nothing fits, so the smallest")
             end
         end
     end
-    -- Healer's one call-out fits at the owner's size on a 1080-tall screen, centered on its middle.
+    -- Healer's one call-out fits at the owner's size on a 1080-tall screen.
     local heal = P.CalloutRect("healer", "bars", 1920, 1080)
     assertEqual(heal.fontSize, 36)
     -- A build in either look places the block the same.
@@ -721,12 +725,14 @@ test("presets: the layout narrows across only on a narrow screen", function()
             assertEqual(P.ScaleX(h * ratio, h), P.Scale(h), ("%dx%d"):format(h * ratio, h))
         end
     end
-    -- 4:3 at 1080: the right-hand cluster (785 in from the right edge, spec section 17) keeps its
-    -- left edge, the target column's, 10 units right of the center line.
+    -- 4:3 at 1080: the right-hand cluster, moved left until Player buffs is 10 in (spec section 18),
+    -- is 785 wide with that 10, and keeps its left edge, the target column's, 10 units right of the
+    -- center line.
     local kx = P.ScaleX(1440, 1080)
     assertTrue(kx < 1, "4:3 narrows")
-    assertEqual(P.STACKS.right.x, -785, "the cluster reaches 785 in")
-    assertNear(1440 + P.STACKS.right.x * kx, 720 + 10 * kx, 0.001, "the target column ends at the center's margin")
+    assertEqual(P.STACKS.right.x, 240, "the target column's reference place, the mirror")
+    local right = P.Columns(1440, 1080).right
+    assertNear(720 + right.x * kx, 720 + 10 * kx, 0.001, "the target column ends at the center's margin")
     assertEqual(P.ScaleX(nil, 1080), 1, "an unreadable width does not narrow")
     assertEqual(P.ScaleX(0, nil), 1)
     -- Down is never narrowed: the heads' tops are the same on 4:3 as on 16:9.
@@ -1117,9 +1123,10 @@ test("presets data: the focus stack stays clear of the far stack beyond twice th
     end
 end)
 
---- The left edge of column `stack` on a W x H parent, as `place` rounds a head's offset.
+--- The left edge of column `stack` on a W x H parent (from the center line, the cluster's move
+--- included: P.Columns), as `place` rounds a head's offset.
 local function columnLeft(P, stack, W, H)
-    return W + math.floor(P.STACKS[stack].x * P.ScaleX(W, H) + 0.5)
+    return W / 2 + math.floor(P.Columns(W, H)[stack].x * P.ScaleX(W, H) + 0.5)
 end
 
 --- Preset `name` in style `look` built on a W x H parent: the focus and far heads' edges are Player

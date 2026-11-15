@@ -499,11 +499,12 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   the library's queue now would need a LibKa0s internal or a library change, which the presets
   design's ruling 8 argues against (presets spec section 7, Claude's call).
 - **Player debuffs (all)'s column is the focus and far stacks' column.** Since the owner's round-3
-  feedback the presets hang a right-hand cluster from the screen's right edge, in a 1080-tall
-  reference space (presets spec section 17): Player buffs (all) 10 in from the edge with Weapon
-  enchants under it, Player debuffs (all) joined to its left side top to top, the focus stack and,
-  under it, the far stack on Player debuffs' left edge, and the target stack 50 left of that column,
-  every bar container 240 wide. Player debuffs grows down from 46 down and the focus stack grows up
+  feedback the presets line up a right-hand cluster, in a 1080-tall reference space (presets spec
+  section 17): Player buffs (all) with Weapon enchants under it, Player debuffs (all) joined to its
+  left side top to top, the focus stack and, under it, the far stack on Player debuffs' left edge,
+  and the target stack 50 left of that column, every bar container 240 wide. Since round 4 the
+  cluster hangs from the center line, the target column mirroring the player column, and moves left
+  only where Player buffs would end nearer the right edge than 10 (presets spec section 18). Player debuffs grows down from 46 down and the focus stack grows up
   from its base 550 down, in one column. At the test-mode sample count Player debuffs ends above the
   focus stack's top on every screen tested (28 apart at the closest, 768 tall unlocked, Bars), and
   the far stack stays more than twice the snap radius under the focus stack (49 at the closest, 768
@@ -513,22 +514,29 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   corner column on any ratio. The player can move any stack, or cap a container's auras. Recorded
   2026-11-15 (AM-PR16) for the owner's call.
 - **The target column meets the call-out block on 16:9 and narrower screens.** The call-outs keep
-  the screen's center (presets spec section 17) and the target column hangs 785 in from the right
-  edge, so the narrower the screen, the further it reaches into the block. The call-out column was
-  narrowed first, from 480 to 400 in the reference space, which section 17 allows down to the widest
-  test-mode line at the owner's 36 (C.PREVIEW_AURAS's longest name). Measured unlocked in test mode,
-  where the heights meet, over the stored line width, the overlap across is: 1920 x 1080, 25 in Bars
-  and 31 in Icons; 1728 x 1080, 121 and 127; 1440 x 1080, 172 and 186; 1350 x 1080, 162 and 179;
-  1365 x 768, 17 and 48; 1228 x 768, 86 and 117; 1024 x 768, 123 and 159; 960 x 768, 115 and 156;
-  2560 x 1440, 34 and 10; 2304 x 1440, 162 and 138; 1920 x 1440, 230 and 216; 1800 x 1440, 215 and
-  209. 21:9 has none. Healer's call-out overlaps as far across as Advanced's three. In game each line
+  the screen's center (presets spec section 17). Since round 4 the target column mirrors the player
+  column, 240 right of the center line and 40 clear of the call-out column, wherever the whole
+  right-hand cluster fits there with Player buffs (all) 10 in from the right edge (presets spec
+  section 18); 21:9 does. On 16:9 and narrower it does not, so the whole cluster moves left until
+  Player buffs is 10 in (65 at 1920 x 1080), and the narrower the screen, the further the target
+  column reaches into the block. The call-out column was narrowed first, from 480 to 400 in the
+  reference space, which section 17 allows down to the widest test-mode line at the owner's 36
+  (C.PREVIEW_AURAS's longest name). Measured unlocked in test mode, where the heights meet, over the
+  stored line width, the overlap across is: 1920 x 1080, 25 in Bars and 31 in Icons; 1728 x 1080,
+  121 and 127; 1440 x 1080, 172 and 186; 1350 x 1080, 162 and 179; 1365 x 768, 18 and 48;
+  1228 x 768, 86 and 116; 1024 x 768, 123 and 159; 960 x 768, 115 and 156; 2560 x 1440, 34 and 10;
+  2304 x 1440, 162 and 138; 1920 x 1440, 230 and 216; 1800 x 1440, 215 and 209. 21:9 has none in
+  Bars, and in Icons only at 768 tall: 2, where a target row's drag strip, longer than its row,
+  overhangs the 28 pixels the 40-unit gap scales to. Healer's call-out overlaps as far across as
+  Advanced's three. In game each line
   sizes to fit its widest test-mode line (Size to fit, the template's), so the block is narrower than
   the stored width and the overlap smaller: at 1920 x 1080 at the owner's size it may clear the
   target column. On 4:3 and 5:4 the layout narrows across so the cluster keeps right of the center
   line, 10 in from it, but half the block still lies over the target column. A full target stack in
   play draws over the lowest call-out lines there. `tests/test_presets_cluster.lua` ("presets data:
   the call-out block's overlap with the target column is the recorded one") pins each figure. The
-  player can move either. Recorded 2026-11-15 (AM-PR16) for the owner's call.
+  player can move either. Recorded 2026-11-15 (AM-PR16), re-measured on AM-PR19, for the owner's
+  call.
 - **In Icons, Player debuffs (all) moves with Player buffs (all)'s row.** Section 17 joins Player
   debuffs' top right to Player buffs' top left in Icons too. A bar column is one bar wide whatever
   its count, so in Bars Player debuffs stays on its column, the focus and far stacks' left edge. An
@@ -586,20 +594,26 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   to give the tall upward stacks room under the top edge. A setup whose player, target or focus frame
   or whose action bars stand higher than that, beside the center of the screen, now sits where a side
   stack's bottom container is; the stacks grow up, away from them, so only that first container
-  shares the space. The call-out block can reach low too: it hangs below the pickers' spot and takes
-  the largest font that fits above the bottom edge, so in test mode Advanced's three call-outs (at
-  30 on a 1080-tall screen) end 12 above it, where the bottom action bars usually sit; in play only
-  the cooldowns that are up show, from the top line down. The player can move any container, or
-  `/am preset` again after moving their frames. Recorded 2026-11-15 (AM-PR12) for the owner's call.
-- **On a 768-tall screen, Advanced's call-outs rise over the preset picker.** The preset picker
-  opens where the skin picker does, its center 75% of the way up (presets spec section 15.1), and the
-  builder places every preset's call-out block, unlocked and in test mode, a margin under it. At 1080
-  tall and above every preset clears it, at every ratio tested. At 768 (UI scale off) the room under
-  it is 380, which Healer's single call-out fits, but Advanced's three are 516 tall even at the
-  smallest size the builder uses (24), so the block starts higher and its top lines run under the
-  picker's lower part. `tests/test_presetpicker.lua` ("picker: the call-out block clears the picker
-  at 1080 for every preset") checks the clearance at 1080 and 1440 and pins the 768 overlap as forced.
-  The window is movable. Recorded 2026-11-15 (AM-PR12) for the owner's call.
+  shares the space. The call-out block reaches low too: since round 4 its top sits at the preset
+  picker's top and it takes the largest font from 24 to 36 that ends above the bottom edge (presets
+  spec section 18.3), so in test mode, unlocked, Advanced's three call-outs at the owner's 36 run
+  from 90 to 790 down on a 1080-tall screen, past the side stacks' base at 740; on a 768-tall one
+  (UI scale off) from 12 to 708. In play only the cooldowns that are up show, from the top line down.
+  The player can move any container, or `/am preset` again after moving their frames. Recorded
+  2026-11-15 (AM-PR12), re-measured on AM-PR19, for the owner's call.
+- **The call-out block overlaps the preset picker.** The preset picker opens where the skin picker
+  does, its center 75% of the way up (presets spec section 15.1). Since the owner's round 4 every
+  preset's call-out block starts at the picker's top (90 down at 1080 tall, 12 at 768, 180 at 1440)
+  and runs down behind it, which the owner accepts (presets spec section 18.3), so while the picker
+  is up the lines it previews are partly under the window. `tests/test_presetpicker.lua` ("picker:
+  the call-out block starts at the picker's top for every preset") pins the top and the overlap.
+  The window is movable. Recorded 2026-11-15 (AM-PR12), changed on AM-PR19 by the owner's ruling.
+- **On a 768-tall 5:4 screen, Player debuffs (all)'s drag strip reaches the call-out block in
+  Icons.** At 960 x 768 (UI scale off) the layout narrows across and the call-outs, at the owner's
+  36 since round 4, start 12 under the top edge, beside the corner group. Unlocked in test mode
+  Player debuffs' Icons row, joined to the left end of Player buffs' row, overhangs the block by 4
+  across and 38 down with its drag strip, in Advanced and Healer. Locked, and on every other screen
+  tested, the two are apart. Measured 2026-11-15 (AM-PR19) for the owner's call.
 - **Add mode's containers repeat the preset's numbers.** Since the owner's round 3 every preset
   container's name starts with its number in the owner's order, `[n] ` (presets spec section 17.4),
   counted within the preset being written. Add places a preset's containers next to the player's own

@@ -2592,9 +2592,9 @@ Total.
 - presets: placement at 768/1080/1440 x 16:9, 16:10, 21:9, 4:3, 5:4
 - presets data: side stacks sit on the lower base
 - presets data: side stacks grow up from their base
-- presets data: the corner group hangs from the right edge, Player buffs 10 in
+- presets data: the corner group ends the cluster, Player buffs at least 10 in
 - presets data: the call-outs are centered and colored like the owner's
-- presets data: the call-out block takes the largest font that fits, centered as far as it can
+- presets data: the call-out block takes the largest font that fits under the picker's top
 - presets data: the call-out rect is what the applied containers fill in test mode, unlocked
 - presets: members chain
 - presets: advanced stacks follow the mockup
@@ -2616,13 +2616,17 @@ Total.
 - presets data: bar backgrounds are 50% opaque
 - presets data: names are numbered 1..N in the owner's order
 
-### test_presets_cluster.lua (5)
+### test_presets_cluster.lua (9)
 
 - presets data: Player debuffs attaches by its top right to Player buffs' top left
 - presets data: the target column sits 50 left of the focus column
 - presets data: the target stack's base is on the far stack's bottom line and its test-mode top near Player debuffs' top
 - presets data: every bar container is as wide as Player cooldowns
 - presets data: the call-out block's overlap with the target column is the recorded one
+- presets data: the player column sits 40 from the call-out column
+- presets data: the target column mirrors the player column where the cluster fits
+- presets data: the cluster moves left just enough to fit on narrower screens
+- presets data: the call-out block starts at about the picker's top
 
 ### test_presets_apply.lua (11)
 
@@ -2700,7 +2704,7 @@ Total.
 - picker: Not now under the confirm takes the confirm down with it
 - picker: a profile event takes an open preset confirm down unanswered
 - picker: opens where the skin picker does
-- picker: the call-out block clears the picker at 1080 for every preset
+- picker: the call-out block starts at the picker's top for every preset
 - picker: opening unlocks and remembers the lock
 - picker: the lock button flips the lock
 - picker: the test button flips test mode, and turning it off ends a preview
@@ -3036,7 +3040,7 @@ Total.
 | test_poolsetup.lua | 4 |
 | test_defaults.lua | 31 |
 | test_presets_data.lua | 29 |
-| test_presets_cluster.lua | 5 |
+| test_presets_cluster.lua | 9 |
 | test_presets_apply.lua | 11 |
 | test_presets_preview.lua | 20 |
 | test_presets_seed.lua | 7 |
@@ -3058,4 +3062,4 @@ Total.
 | test_skin_switch.lua | 34 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2508** |
+| **Total** | **2512** |

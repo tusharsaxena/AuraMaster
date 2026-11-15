@@ -587,12 +587,12 @@ test("picker: opens where the skin picker does", function()
     assertNear((fb.top + fb.bottom) / 2, 1080 * 0.75, 0.001, "the pure fallback is 1920 x 1080")
 end)
 
-test("picker: the call-out block clears the picker at 1080 for every preset", function()
+test("picker: the call-out block starts at the picker's top for every preset", function()
     local NS = fresh()
     local D, R = NS.PresetData, NS.PresetData.ROOM
-    -- 16:9, 16:10, 21:9, 4:3 and 5:4 at 1080 tall, and 1440 tall at 16:9.
+    -- 16:9, 16:10, 21:9, 4:3 and 5:4 at 1080 tall, 16:9 at 1440, and 768 tall (UI scale off).
     for _, scr in ipairs({ { 1920, 1080 }, { 1728, 1080 }, { 2520, 1080 }, { 1440, 1080 }, { 1350, 1080 },
-        { 2560, 1440 } }) do
+        { 2560, 1440 }, { 1365, 768 }, { 1792, 768 }, { 1024, 768 } }) do
         local W, H = scr[1], scr[2]
         local place, skin = NS.PresetPicker.Placement(W, H), skinRect(R, W, H)
         assertTrue(place.bottom >= R.margin and place.left >= 0 and place.right <= W, W .. ": the picker on the screen")
@@ -602,27 +602,13 @@ test("picker: the call-out block clears the picker at 1080 for every preset", fu
             for _, look in ipairs(D.LOOKS) do
                 local block, where = D.CalloutRect(name, look, W, H), ("%s/%s at %dx%d"):format(name, look, W, H)
                 if block then
-                    -- red under: Advanced's block under the skin picker's room, the old picker over its lower lines
-                    assertFalse(intersects(block, place), where .. ": the call-outs clear of the picker")
-                    assertFalse(intersects(block, skin), where .. ": and of the skin picker")
-                    assertTrue(block.top <= place.bottom - R.margin, where .. ": a margin under the picker")
+                    -- Spec section 18.3: the block's top at the picker's, which it may overlap, and
+                    -- no nearer the top edge than the margin. red under: section 15.1's block, under it
+                    assertNear(block.top, math.min(place.top, H - R.margin), 0.5, where .. ": at the picker's top")
+                    assertTrue(intersects(block, place), where .. ": over the picker, as the owner accepts")
                     assertTrue(block.bottom >= R.margin - 0.5, where .. ": above the bottom edge")
                 end
             end
-        end
-    end
-    -- 768 tall (UI scale off): the room under the pickers is 380, which Healer's one call-out fits but
-    -- Advanced's three cannot, 516 tall unlocked even at 24, so they rise over the picker's lower part
-    -- (docs/known-limitations.md, presets). Forced, not chosen: pinned so it cannot spread.
-    for _, W in ipairs({ 1365, 1229, 1792, 1024, 960 }) do
-        local place = NS.PresetPicker.Placement(W, 768)
-        for _, look in ipairs(D.LOOKS) do
-            local heal, adv = D.CalloutRect("healer", look, W, 768), D.CalloutRect("advanced", look, W, 768)
-            assertFalse(intersects(heal, place), ("healer/%s at %dx768: clear of the picker"):format(look, W))
-            local where = ("advanced/%s at %dx768"):format(look, W)
-            assertEqual(adv.fontSize, D.CALLOUT_SIZE_MIN, where .. ": already the smallest size")
-            assertTrue(adv.height > (768 - R.margin) - (768 - place.bottom + R.margin), where .. ": no room under it")
-            assertTrue(adv.bottom >= R.margin - 0.5, where .. ": on the screen")
         end
     end
 end)

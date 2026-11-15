@@ -43,10 +43,10 @@ local function headsOf(P, name, look, W, H)
     return heads
 end
 
---- The x a column's edge `x` (reference units, from the anchor) is placed at on a W x H parent, as
---- defaults/Presets.lua's `place` rounds a head's offset.
+--- The x a column's edge `x` (reference units, from the center line, the cluster's move included:
+--- P.Columns) is placed at on a W x H parent, as defaults/Presets.lua's `place` rounds a head's offset.
 local function edgeAt(P, x, W, H)
-    return W + math.floor(x * P.ScaleX(W, H) + 0.5)
+    return W / 2 + math.floor(x * P.ScaleX(W, H) + 0.5)
 end
 
 test("presets data: Player debuffs attaches by its top right to Player buffs' top left", function()
@@ -77,7 +77,8 @@ test("presets data: Player debuffs attaches by its top right to Player buffs' to
             -- Weapon enchants stays under Player buffs; Player buffs still hangs from the top right.
             assertEqual(tonumber(wpn.attach.container), pb.id, where .. ": Weapon enchants under Player buffs")
             assertEqual(pb.attach.mode, "screen", where)
-            assertEqual(pb.position.relativePoint, "TOPRIGHT", where .. ": the corner group's head")
+            -- red under: section 17's corner group, hung from the top-right corner
+            assertEqual(pb.position.relativePoint, "TOP", where .. ": the corner group's head, from the center line")
         end
     end
     -- In test mode Player debuffs' top is Player buffs' top, its right edge 5 left of Player buffs'
@@ -94,18 +95,20 @@ end)
 
 test("presets data: the target column sits 50 left of the focus column", function()
     local P = NS.PresetData
-    assertEqual(P.STACKS.right.anchor, "TOPRIGHT", "the target column hangs from the right edge")
+    -- red under: section 17's target column, hung from the right edge
+    assertEqual(P.STACKS.right.anchor, "TOP", "the target column hangs from the center line (spec section 18)")
     assertEqual(P.STACKS.focus.x - (P.STACKS.right.x + P.STACKS.right.width), 50, "50 between the columns")
     for _, scr in ipairs(SCREENS) do
         local W, H = scr[1], scr[2]
+        local C = P.Columns(W, H)
         for _, name in ipairs(WITH_TARGET) do
             for _, look in ipairs(P.LOOKS) do
                 local where = ("%s/%s at %dx%d"):format(name, look, W, H)
                 local heads = headsOf(P, name, look, W, H)
-                local focusLeft = edgeAt(P, P.STACKS.focus.x, W, H)
+                local focusLeft = edgeAt(P, C.focus.x, W, H)
                 -- The target head's right edge is its column's: a bar fills it, an Icons row grows
                 -- left from it. red under: section 16's target column, 280 right of the center line
-                assertNear(heads.right[2], edgeAt(P, P.STACKS.right.x + P.STACKS.right.width, W, H), 0.001, where)
+                assertNear(heads.right[2], edgeAt(P, C.right.x + C.right.width, W, H), 0.001, where)
                 assertNear(focusLeft - heads.right[2], 50 * P.ScaleX(W, H), 1, where .. ": 50 to the focus column")
             end
         end
@@ -226,22 +229,50 @@ test("presets data: every bar container is as wide as Player cooldowns", functio
     end
 end)
 
--- THE CALL-OUT BLOCK AND THE TARGET COLUMN (spec section 17.1). The call-outs keep the screen's
--- center; the target column hangs from the right edge, so on 16:10 and narrower, and at 1920 x 1080
--- by 25, it reaches the block. The call-out column was narrowed first, 480 to 400, never below the
--- widest test-mode line at the owner's 36. Each entry, by look and screen, unlocked in test mode, is
--- how far across the two overlap where their heights meet, Advanced's exactly and the most any preset
--- may (Healer's call-out overlaps as far across); a screen not named, 21:9, has none. Measured over
--- the stored line width, which stands in game only where a line cannot be measured: with Size to fit
--- the block is its widest line, narrower. Recorded in docs/known-limitations.md (presets).
+-- THE CALL-OUT BLOCK AND THE TARGET COLUMN (spec sections 17.1 and 18.2). The call-outs keep the
+-- screen's center. The target column mirrors the player column, 40 clear of the call-out column, but
+-- where the cluster does not fit at the mirror it moves left with it (16:9 and narrower), and there,
+-- at 1920 x 1080 by 25, it reaches the block. The call-out column was narrowed first, 480 to 400,
+-- never below the widest test-mode line at the owner's 36. Each entry, by look and screen, unlocked
+-- in test mode, is how far across the two overlap where their heights meet, Advanced's exactly and
+-- the most any preset may (Healer's call-out overlaps as far across); a screen not named has none.
+-- 21:9 at 768 tall in Icons shares 2: a target row's drag strip, longer than its row, overhangs it
+-- toward the center line by more than the 28 pixels the 40-unit gap scales to there. Measured over the stored line width, which stands in game only where a
+-- line cannot be measured: with Size to fit the block is its widest line, narrower. Recorded in
+-- docs/known-limitations.md (presets).
 local CALLOUT_OVER_RIGHT = {
-    ["bars 1365x768"] = 17.3, ["icons 1365x768"] = 48.3, ["bars 1228x768"] = 85.6, ["icons 1228x768"] = 116.6,
+    ["bars 1365x768"] = 18, ["icons 1365x768"] = 48, ["bars 1228x768"] = 86, ["icons 1228x768"] = 116,
+    ["icons 1792x768"] = 2,
     ["bars 1024x768"] = 123, ["icons 1024x768"] = 159, ["bars 960x768"] = 115, ["icons 960x768"] = 156,
     ["bars 1920x1080"] = 25, ["icons 1920x1080"] = 31, ["bars 1728x1080"] = 121, ["icons 1728x1080"] = 127,
     ["bars 1440x1080"] = 172, ["icons 1440x1080"] = 186, ["bars 1350x1080"] = 162, ["icons 1350x1080"] = 179,
     ["bars 2560x1440"] = 34, ["icons 2560x1440"] = 10, ["bars 2304x1440"] = 162, ["icons 2304x1440"] = 138,
     ["bars 1920x1440"] = 230, ["icons 1920x1440"] = 216, ["bars 1800x1440"] = 215, ["icons 1800x1440"] = 209,
 }
+
+-- Every other stack the call-out block shares area with, unlocked in test mode (spec section 18.3 put
+-- the block's top at the preset picker's, beside the corner group's): Player debuffs (all)'s Icons
+-- row, with its drag strip, at 960 x 768, 4 across, in Advanced and Healer. Recorded in
+-- docs/known-limitations.md (presets).
+local CALLOUT_OVER_OTHER = { ["cornerLeft icons 960x768"] = 4 }
+
+--- How far across rectangles `a` and `b` (sampleSpans') share area, 0 when they do not.
+local function sharedAcross(a, b)
+    if not (a.bottom < b.top and b.bottom < a.top) then return 0 end
+    return math.max(0, math.min(a.right, b.right) - math.max(a.left, b.left))
+end
+
+--- No stack in `spans` but the target column shares more area with the call-out block than
+--- CALLOUT_OVER_OTHER records for `look` on a W x H parent.
+local function checkCalloutOthers(spans, where, look, W, H)
+    for stack, span in pairs(spans) do
+        if stack ~= "middle" and stack ~= "right" then
+            local key = ("%s %s %dx%d"):format(stack, look, W, H)
+            local across, most = sharedAcross(spans.middle, span), CALLOUT_OVER_OTHER[key] or 0
+            assertNear(across, most, 0.5, ("%s: the call-outs share %.1f with %s"):format(where, across, stack))
+        end
+    end
+end
 
 test("presets data: the call-out block's overlap with the target column is the recorded one", function()
     local P = NS.PresetData
@@ -253,9 +284,9 @@ test("presets data: the call-out block's overlap with the target column is the r
             for _, look in ipairs(P.LOOKS) do
                 local spans = sampleSpans(env, mocks, name, look, W, H, true)
                 local m, r = spans.middle, spans.right
-                local meet = m.bottom < r.top and r.bottom < m.top
-                local across = meet and math.max(0, math.min(m.right, r.right) - math.max(m.left, r.left)) or 0
+                local across = sharedAcross(m, r)
                 local key = ("%s %dx%d"):format(look, W, H)
+                checkCalloutOthers(spans, name .. "/" .. key, look, W, H)
                 local most, where = CALLOUT_OVER_RIGHT[key] or 0, name .. "/" .. key
                 assertTrue(across <= most + 0.5, ("%s: the call-outs share %.1f with the target column, past %.1f"):format(
                     where, across, most))
@@ -266,11 +297,163 @@ test("presets data: the call-out block's overlap with the target column is the r
         end
     end
     -- Nothing else in the cluster meets the call-outs or the player stack: the heads say so on every
-    -- screen (the placement case's SHARED_COLUMNS), and the cluster keeps right of the center line.
+    -- screen (the placement case's SHARED_COLUMNS), and the cluster keeps right of the center line,
+    -- moved left of the mirror only as far as it must (spec section 18.2).
     for _, scr in ipairs(SCREENS) do
         local W, H = scr[1], scr[2]
         local heads = headsOf(P, "advanced", "bars", W, H)
         assertTrue(heads.right[1] >= W / 2 + 10 * P.ScaleX(W, H) - 1, ("%dx%d: the cluster right of center"):format(W, H))
         assertNil(heads.cornerLeft, "Player debuffs is no head")
     end
+end)
+
+-- ---------------------------------------------------------------------------
+-- Spec section 18, the owner's round-4 feedback: the player stack nearer the center, the target
+-- cluster mirroring it from the center line, clamped left only where it would not fit.
+-- ---------------------------------------------------------------------------
+
+-- The reference layout of section 18: the player column 240 wide, its right edge 240 left of the
+-- center line (40 from the call-out column's left edge, -200); the target column's left edge 240
+-- right of it; the cluster's right edge, Player buffs', 1015 right of it (240 + 240 + 50 + 240 + 5 +
+-- 240); Player buffs at least 10 in from the screen's right edge.
+local MIRROR, CLUSTER_RIGHT, EDGE_IN = 240, 1015, 10
+
+--- The x the cluster's Player buffs right edge sits at on a W x H parent: the mirror's, or, where that
+--- runs past EDGE_IN from the right edge, EDGE_IN in (spec section 18.2).
+local function clusterRightAt(P, W, H)
+    local kx = P.ScaleX(W, H)
+    return math.min(W / 2 + CLUSTER_RIGHT * kx, W - EDGE_IN * kx)
+end
+
+test("presets data: the player column sits 40 from the call-out column", function()
+    local P = NS.PresetData
+    local L, M = P.STACKS.left, P.STACKS.middle
+    -- red under: section 17's player column, -520..-280, 80 from the call-out column
+    assertEqual(L.x, -480, "the player column's left edge")
+    assertEqual(L.x + L.width, -240, "its right edge")
+    assertEqual(M.x - (L.x + L.width), 40, "40 to the call-out column, half of 80")
+    assertEqual(L.anchor, "TOP", "it hangs from the center line")
+    for _, scr in ipairs(SCREENS) do
+        local W, H = scr[1], scr[2]
+        local kx = P.ScaleX(W, H)
+        for _, name in ipairs(PRESETS) do
+            for _, look in ipairs(P.LOOKS) do
+                local heads = headsOf(P, name, look, W, H)
+                local where = ("%s/%s at %dx%d"):format(name, look, W, H)
+                if heads.left then
+                    -- A bar fills the column; an Icons row grows right from its left edge.
+                    assertNear(heads.left[1], W / 2 - 480 * kx, 1, where .. ": the player column's left edge")
+                    local slack = (look == "icons") and (240 / 28) or 0
+                    assertTrue(math.abs(heads.left[2] - (W / 2 - 240 * kx)) <= 1 + slack, where .. ": its right edge")
+                end
+            end
+        end
+    end
+end)
+
+test("presets data: the target column mirrors the player column where the cluster fits", function()
+    local P = NS.PresetData
+    for _, H in ipairs({ 768, 1080, 1440 }) do
+        local W = H * 21 / 9
+        local k = P.Scale(H)
+        assertEqual(P.ScaleX(W, H), k, "21:9 is not narrowed")
+        assertTrue(W / 2 + CLUSTER_RIGHT * k <= W - EDGE_IN * k, "the whole cluster fits at the mirror")
+        for _, name in ipairs(WITH_TARGET) do
+            for _, look in ipairs(P.LOOKS) do
+                local heads, where = headsOf(P, name, look, W, H), ("%s/%s at %dx%d"):format(name, look, W, H)
+                -- The target head's right edge is its column's (a bar fills it, an Icons row grows
+                -- left from it), so the column's left edge is that less its width.
+                local targetLeft = heads.right[2] - P.STACKS.right.width * k
+                local playerRight = (look == "bars") and heads.left[2] or (W / 2 - 240 * k)
+                -- red under: section 17's target column, hung 785 in from the right edge
+                assertNear(targetLeft - W / 2, W / 2 - playerRight, 1, where .. ": the mirror of the player column")
+                assertNear(targetLeft, W / 2 + MIRROR * k, 1, where .. ": 240 right of the center line")
+                assertEqual(P.ClusterShift(W, H), 0, where .. ": no shift")
+            end
+        end
+        -- Player buffs at the mirror's end of the cluster, 1015 right of the center line.
+        local pb = headsOf(P, "simple", "bars", W, H).cornerRight
+        assertNear(pb[2], W / 2 + CLUSTER_RIGHT * k, 1, ("%dx%d: Player buffs at the mirror's end"):format(W, H))
+    end
+    -- The cluster hangs from the center line now, so the mirror holds wherever the screen is wide.
+    for _, spec in ipairs(P.Build("advanced", "bars", 2560, 1080)) do
+        if not spec.attachTo and spec.stack ~= "middle" then
+            assertEqual(spec.overrides.position.relativePoint, "TOP", spec.role .. " hangs from the center line")
+        end
+    end
+end)
+
+test("presets data: the cluster moves left just enough to fit on narrower screens", function()
+    local P = NS.PresetData
+    local S = P.STACKS
+    for _, scr in ipairs(SCREENS) do
+        local W, H = scr[1], scr[2]
+        local kx = P.ScaleX(W, H)
+        local fits = W / 2 + CLUSTER_RIGHT * kx <= W - EDGE_IN * kx
+        local want = clusterRightAt(P, W, H)
+        local shift = P.ClusterShift(W, H)
+        local where = ("%dx%d"):format(W, H)
+        assertTrue(shift <= 0, where .. ": the cluster only ever moves left")
+        assertEqual(shift == 0, fits, where .. ": it moves only where the mirror does not fit")
+        local pb = headsOf(P, "simple", "bars", W, H).cornerRight
+        -- red under: a cluster hung from the right edge (no move) or one left at the mirror (off screen)
+        assertNear(pb[2], want, 1, where .. ": Player buffs' right edge, the mirror's or 10 in")
+        assertTrue(pb[2] <= W - EDGE_IN * kx + 0.5, where .. ": at least 10 in from the right edge")
+        for _, name in ipairs(WITH_TARGET) do
+            local heads = headsOf(P, name, "bars", W, H)
+            local w = ("%s/bars at %s"):format(name, where)
+            -- Every gap and alignment kept: the target column 50 left of the focus column, the focus
+            -- and far columns on Player debuffs' left edge, Player debuffs 5 left of Player buffs.
+            local focusLeft = heads.focus and heads.focus[1] or (pb[1] - (5 + 240) * kx)
+            assertNear(focusLeft - heads.right[2], 50 * kx, 1, w .. ": 50 to the focus column")
+            assertNear(pb[1] - (focusLeft + 240 * kx), 5 * kx, 1, w .. ": 5 to Player buffs")
+            if heads.far then assertNear(heads.far[1], focusLeft, 1, w .. ": the far column on the focus one") end
+            -- Moved by the same amount as the rest: closer to the center than the mirror, never past
+            -- 10 right of the center line.
+            assertTrue(heads.right[1] <= W / 2 + MIRROR * kx + 1, w .. ": no further right than the mirror")
+            assertTrue(heads.right[1] >= W / 2 + EDGE_IN * kx - 1, w .. ": right of the center line")
+        end
+        -- The columns as stored: the cluster hangs from the center line, shifted by the same amount.
+        local cols = P.Columns(W, H)
+        for _, key in ipairs({ "right", "focus", "far", "cornerLeft", "cornerRight" }) do
+            assertEqual(cols[key].anchor, "TOP", where .. " " .. key .. " hangs from the center line")
+            assertNear(cols[key].x, S[key].x + shift, 1e-9, where .. " " .. key .. " moved with the cluster")
+        end
+        assertEqual(cols.left.x, S.left.x, where .. ": the player column never moves")
+    end
+    assertEqual(S.right.x, MIRROR, "the target column's reference place is the mirror")
+    assertEqual(S.cornerRight.x + S.cornerRight.width, CLUSTER_RIGHT, "the cluster ends 1015 right of the center")
+end)
+
+test("presets data: the call-out block starts at about the picker's top", function()
+    -- Its own environment: the case narrows the size range to probe the next size up.
+    local P = freshEnv().PresetData
+    local R = P.ROOM
+    local max, min = P.CALLOUT_SIZE_MAX, P.CALLOUT_SIZE_MIN
+    for _, H in ipairs({ 768, 1080, 1440 }) do
+        for _, ratio in ipairs({ 16 / 9, 21 / 9 }) do
+            local W = H * ratio
+            -- The preset picker's top, down from the screen's top edge: its CENTER 75% up (spec 15.1).
+            local pickerTop = H * (1 - R.skinShare) - R.pickerHeight / 2
+            for _, name in ipairs({ "advanced", "healer" }) do
+                for _, look in ipairs(P.LOOKS) do
+                    local r, where = P.CalloutRect(name, look, W, H), ("%s/%s at %dx%d"):format(name, look, W, H)
+                    local top, bottom = H - r.top, H - r.bottom
+                    -- red under: section 15.1's block, under the picker
+                    assertNear(top, math.max(R.margin, pickerTop), 0.5, where .. ": the block's top at the picker's")
+                    assertTrue(bottom <= H - R.margin + 0.5, where .. ": a margin over the bottom edge")
+                    assertNear((r.left + r.right) / 2, W / 2, 0.001, where .. ": centered across")
+                    if r.fontSize < max then
+                        P.CALLOUT_SIZE_MAX, P.CALLOUT_SIZE_MIN = r.fontSize + 1, r.fontSize + 1
+                        local bigger = P.CalloutRect(name, look, W, H)
+                        P.CALLOUT_SIZE_MAX, P.CALLOUT_SIZE_MIN = max, min
+                        assertTrue(H - bigger.bottom > H - R.margin + 0.5 or bigger.top ~= r.top,
+                            where .. ": one size larger would run past the bottom margin")
+                    end
+                end
+            end
+        end
+    end
+    -- At 1080 Advanced now takes the owner's 36 (it fell to 24 under the picker in section 15.1).
+    assertEqual(P.CalloutRect("advanced", "bars", 1920, 1080).fontSize, 36, "Advanced at the owner's size")
 end)
