@@ -170,7 +170,7 @@ Five starting points for a profile's containers (spec
   stack under it on Player debuffs' left edge (`FOCUS_X`), their tops and bottoms more than twice
   `C.SNAP_RADIUS` apart; and the target stack (`right`) `TARGET_GAP` (50) left of that column, on
   the far stack's base, which the player stack shares. The call-out column is 400 wide (480 before),
-  still wider than its widest test-mode line at 36. On 16:10 and narrower screens the target column
+  still wider than its widest test-mode line at 36. On 16:9 and narrower screens the target column
   still meets the call-out block (`docs/known-limitations.md`, with the measured figures).
 - **Names and the bar look** (spec section 17.3 and 17.4). `Build` writes `[n] ` in front of each
   role's localized name, `n` its index in the tier's list, so creation order (`containerOrder`) is
@@ -591,7 +591,7 @@ confirm them (#26), the token and flag categories are unmeasured until the smoke
 does not carry over from the other client. A preset's Player debuffs (all) shares its column with
 the focus and far stacks, so a heavy debuff load can grow it into the focus stack in play, and in
 Icons its row follows Player buffs (all)'s off that column; the target column meets the call-out
-block on 16:10 and narrower screens; Advanced (Bars)'s target stack runs off the top of a 768-tall
+block on 16:9 and narrower screens; Advanced (Bars)'s target stack runs off the top of a 768-tall
 screen in test mode, where Advanced's call-outs also rise over the preset picker; tall unit frames
 or action bars can reach the side stacks' base; and on a 768-tall screen, while unlocked, other
 containers sit within snap range of the focus stack. Add mode's containers repeat the preset's

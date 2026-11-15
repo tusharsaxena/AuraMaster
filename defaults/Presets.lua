@@ -59,7 +59,7 @@ end
 local TOP_REACH, CLUSTER_REACH, EDGE = 0, 0, 10
 
 --- The horizontal scale on a `parentW` x `parentH` parent: Scale(parentH), shrunk on a screen too
---- narrow for the layout (below about 1.6:1, 4:3 and 5:4) until the outermost TOP column ends EDGE
+--- narrow for the layout (below about 1.47:1, so 4:3 and 5:4) until the outermost TOP column ends EDGE
 --- units in from the edge and the right-hand cluster's left edge, the target column's, stays EDGE
 --- units right of the center line (spec section 17), so every head stays on the screen and the
 --- cluster on its own half. Unchanged on 16:10 and wider, and when the width cannot be read.
@@ -127,7 +127,7 @@ local FOCUS_BASE = -550
 -- the far stack, on Player debuffs' left edge; and the target stack TARGET_GAP left of that column.
 -- All of it hangs from the right edge, so the gaps hold on every screen. EDGE_IN is the least
 -- section 17 allows, which keeps the cluster as far from the call-outs as it can be: at 1920 wide its
--- left edge is 1135 across, 175 right of the center line; on 16:10 and narrower the target column
+-- left edge is 1135 across, 175 right of the center line; on 16:9 and narrower the target column
 -- still meets the call-out block (docs/known-limitations.md, presets).
 local COL_W, EDGE_IN, CORNER_GAP, TARGET_GAP = 240, 10, 5, 50
 local CORNER_Y = -46
@@ -145,7 +145,8 @@ P.STACKS = {
     -- less: its line sizes to fit its widest test-mode line (Size to fit, the template's), which is
     -- the stored width only where a line cannot be measured, and 400 stays wider than that line at
     -- the owner's 36 (C.PREVIEW_AURAS's longest name, "Power Word: Fortitude"), so narrowing it never
-    -- cuts a line. Section 17 allows no narrower.
+    -- cuts a line. It could go narrower, down to that line's width (section 17); 400 keeps a margin
+-- because the harness cannot measure text and the estimate needs an in-game check.
     middle      = { anchor = "TOP",      x = -200, width = 400, iconsGrowH = "right", center = true },
     left        = { anchor = "TOP",      x = -520, y = SIDE_BASE, width = COL_W, iconsGrowH = "right", up = true },
 }

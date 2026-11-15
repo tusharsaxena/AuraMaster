@@ -512,7 +512,7 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   (`tests/test_presets_data.lua`, "presets: placement"). The target column no longer runs under a
   corner column on any ratio. The player can move any stack, or cap a container's auras. Recorded
   2026-11-15 (AM-PR16) for the owner's call.
-- **The target column meets the call-out block on 16:10 and narrower screens.** The call-outs keep
+- **The target column meets the call-out block on 16:9 and narrower screens.** The call-outs keep
   the screen's center (presets spec section 17) and the target column hangs 785 in from the right
   edge, so the narrower the screen, the further it reaches into the block. The call-out column was
   narrowed first, from 480 to 400 in the reference space, which section 17 allows down to the widest

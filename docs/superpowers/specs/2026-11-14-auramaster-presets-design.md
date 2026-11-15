@@ -528,7 +528,7 @@ Where the build lands, and where it departs from the letter of section 17, each 
    joins it with a 5 gap, and the target column sits 50 left of the focus column. At 1920 x 1080 the
    cluster's left edge is 785 in from the right edge. The call-out column was narrowed from 480 to 400,
    still wider than its widest test-mode line at 36. The target column still meets the call-out block
-   on 16:10 and narrower screens; the measured overlaps are in docs/known-limitations.md (presets),
+   on 16:9 and narrower screens; the measured overlaps are in docs/known-limitations.md (presets),
    pinned by `tests/test_presets_cluster.lua`.
 2. **The target stack's top (point 1).** On its base the Bars target stack of Advanced ends 64 under
    Player debuffs (all)'s top at 1080 tall locked and 16 over it unlocked (its seven drag strips), and
