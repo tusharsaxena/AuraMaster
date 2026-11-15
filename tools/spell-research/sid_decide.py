@@ -205,7 +205,7 @@ class _Lua:
     bundle date a new line's comment cites.
     """
 
-    def __init__(self, text, names=None, date=""):
+    def __init__(self, text, names=None, date="", provenance=None):
         self.newline = "\r\n" if "\r\n" in text else "\n"
         self.trailing = text.endswith(("\r\n", "\n"))
         self.lines = text.replace("\r\n", "\n").split("\n")
@@ -213,6 +213,9 @@ class _Lua:
             self.lines.pop()
         self.names = dict(names or {})
         self.date = date
+        # What a new id line says about where it came from. The combat-log review leaves it None
+        # ("added from the <date> combat logs (SID)"); retail.py passes its own wording.
+        self.provenance = provenance
 
     def text(self):
         out = self.newline.join(self.lines)
@@ -316,8 +319,11 @@ class _Lua:
 
     def _added_comment(self, sid, replaced):
         parts = [self.names.get(sid) or ""]
-        parts.append("added from the %s combat logs (SID)" % self.date if self.date
-                     else "added from the combat logs (SID)")
+        if self.provenance:
+            parts.append(self.provenance)
+        else:
+            parts.append("added from the %s combat logs (SID)" % self.date if self.date
+                         else "added from the combat logs (SID)")
         if replaced:
             parts.append("replaces %s" % _joined(replaced))
         return "; ".join(p for p in parts if p)
