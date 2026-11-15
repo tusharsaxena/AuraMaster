@@ -32,6 +32,7 @@ archaeology, for the same reason a skip is never a pass (`automated-tests-§4`).
 
 | Run | Commit | Tree | Version | Lint w/e | Files | Tests | Perf | NLOC | Funcs | Avg NLOC | Avg CCN | Max CCN | CCN warn | Verdict |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| [`20261115-123413`](20261115-123413/) | `317a515` | clean | 1.1.0 | 0/0 | 226 | 2508/1/2509 | pass | 63489 | 6698 | 8.3 | 2.4 | 15 | 0 | **green** |
 | [`20261115-050232`](20261115-050232/) | `ffc8e8e` | clean | 1.1.0 | 0/0 | 224 | 2499/1/2500 | pass | 63065 | 6664 | 8.3 | 2.4 | 15 | 0 | **green** |
 | [`20261115-024639`](20261115-024639/) | `9c6bfd2` | clean | 1.1.0 | 0/0 | 224 | 2491/1/2492 | pass | 62743 | 6635 | 8.3 | 2.4 | 15 | 0 | **green** |
 | [`20261115-021129`](20261115-021129/) | `01f7833` | clean | 1.1.0 | 0/0 | 224 | 2490/1/2491 | pass | 62714 | 6633 | 8.3 | 2.4 | 15 | 0 | **green** |
@@ -63,18 +64,18 @@ archaeology, for the same reason a skip is never a pass (`automated-tests-§4`).
 
 ## Test suite
 
-**2500 cases** — 2499 passed, 0 failed, 1 skipped. The generated inventory
-[`20261115-050232/test-cases.md`](20261115-050232/test-cases.md) is the authority on which cases existed at this run;
+**2509 cases** — 2508 passed, 0 failed, 1 skipped. The generated inventory
+[`20261115-123413/test-cases.md`](20261115-123413/test-cases.md) is the authority on which cases existed at this run;
 `docs/test-cases.md` is that same list at HEAD.
 
-Moved **2492 → 2500** since the previous run.
+Moved **2500 → 2509** since the previous run.
 
 **1 case(s) reported a `skip`.** A skip is counted in the total and never in `passed`, and at
 the release gate it is NOT EVALUATED rather than passed (`automated-tests-§3`).
 
 ## Lint
 
-**0 warnings / 0 errors over 224 files** (`luacheck .`).
+**0 warnings / 0 errors over 226 files** (`luacheck .`).
 
 Read that figure with its scope attached: `.luacheckrc` excludes 6 path(s) from it — `libs/`, `tests/_kit/`, `docs/audits/`, `docs/reviews/`, `docs/automated-tests/`, `_dev/` —
 so nothing under them is in the count above. A `0/0` that never moves is partly a statement about
@@ -84,29 +85,29 @@ to whoever thinks to open `.luacheckrc`.
 ## Perf
 
 **12 scenarios** from `tests/perf.lua`; the measurements are in
-[`20261115-050232/perf.json`](20261115-050232/perf.json).
+[`20261115-123413/perf.json`](20261115-123413/perf.json).
 
 | `scenario` | `iters` | `ms/iter` | `api/iter` | `bytes/iter` |
 |---|---|---|---|---|
-| `compile` | 2000 | 0.00943 | 0.0 | 4136.0 |
-| `applyPass` | 200 | 1.45230 | 30.0 | 107062.5 |
-| `restyle` | 200 | 1.26965 | 0.0 | 50646.1 |
-| `restyleText` | 200 | 0.70554 | 0.0 | 32067.7 |
-| `restyleTextGlow` | 200 | 3.09651 | 0.0 | 144963.7 |
-| `visibilityPass` | 1000 | 0.02113 | 8.0 | 384.0 |
-| `unitSwap` | 1000 | 0.00317 | 1.0 | 0.0 |
-| `probeOverheadOff` | 1000 | 0.02159 | 9.0 | 384.0 |
-| `probeOverheadOn` | 1000 | 0.02252 | 9.0 | 384.5 |
-| `probeAbsent` | 1000 | 0.01718 | 9.0 | 384.0 |
-| `unitAuraFiltered` | 1000 | 0.00023 | 0.0 | 0.0 |
-| `emptyWatchAura` | 1000 | 0.00005 | 0.0 | 0.0 |
+| `compile` | 2000 | 0.00874 | 0.0 | 4136.0 |
+| `applyPass` | 200 | 1.43519 | 30.0 | 107062.5 |
+| `restyle` | 200 | 1.24154 | 0.0 | 50646.1 |
+| `restyleText` | 200 | 0.74319 | 0.0 | 32067.7 |
+| `restyleTextGlow` | 200 | 3.23550 | 0.0 | 144963.7 |
+| `visibilityPass` | 1000 | 0.02398 | 8.0 | 384.0 |
+| `unitSwap` | 1000 | 0.00362 | 1.0 | 0.0 |
+| `probeOverheadOff` | 1000 | 0.02576 | 9.0 | 384.0 |
+| `probeOverheadOn` | 1000 | 0.02360 | 9.0 | 384.5 |
+| `probeAbsent` | 1000 | 0.01921 | 9.0 | 384.0 |
+| `unitAuraFiltered` | 1000 | 0.00021 | 0.0 | 0.0 |
+| `emptyWatchAura` | 1000 | 0.00010 | 0.0 | 0.0 |
 
 `perf` never fails a run and never blocks a commit — it is recorded, read and compared, not
 thresholded (`performance-§9`). It does gate the **tag** (`automated-tests-§3`).
 
 ## Complexity watch list
 
-Current as of [`20261115-050232`](20261115-050232/) — **this run's measurement, not its diff.** Max CCN **15** across 6664
+Current as of [`20261115-123413`](20261115-123413/) — **this run's measurement, not its diff.** Max CCN **15** across 6698
 functions, **0** of them warned on; 10 file(s) in the 1000–1500 band and 0 over the 1500 cap
 (`layout-§1`).
 
@@ -134,7 +135,7 @@ None.
 | 1000–1500 (on notice) | `modules/ContainerManager.lua` | 1000 | Accepted — newly in the band at this run (956 → 1000, the preview snapshot and its exact restore, AM-PR03), at the band floor; 68 functions, max CCN 13 (`CM.FlushPending`). One concern, the live containers' lifecycle and the coalesced apply; the preview snapshot and restore is the next seam to peel if it grows |
 | 1000–1500 (on notice) | `settings/Filters.lua` | 1018 | Accepted — newly in the band at this run (971 → 1018), just inside it; 49 functions, max CCN 11 (`viewWhich`). One settings page: its four tabs, their grids and the per-category help text, so size rather than tangle |
 | 1000–1500 (on notice) | `settings/Schema.lua` | 1017 | Accepted — newly in the band at this run (975 → 1017, the follow rows and the tinted choices of FS-AM-FLIP and FS-AM-FIX), just inside it; the seam every write goes through. Split if it grows again. |
-| 1000–1500 (on notice) | `tests/test_presets_data.lua` | 1365 | Accepted — newly in the band at this run (971 → 1365, the six round-2 layout cases of AM-PR13); a suite file, so case count, not tangle: 26 cases, 70 functions, max CCN 14. Split by concern (layout, call-outs, snap range) if it grows again |
+| 1000–1500 (on notice) | `tests/test_presets_data.lua` | 1359 | Accepted — in the band since 20261115-050232 (971 → 1365, the six round-2 layout cases of AM-PR13), now 1359 lines after round 3 (AM-PR16, AM-PR17); a suite file, so case count, not tangle: 29 cases, 67 functions, max CCN 14. The round-3 cluster cases went to their own file, `tests/test_presets_cluster.lua`, with the shared span helpers in `tests/presets_spans.lua`; split further by concern (layout, call-outs, snap range) if it grows again |
 | 1000–1500 (on notice) | `tests/test_slash_verbs.lua` | 1034 | Accepted — newly in the band at this run (950 → 1034, the five `/am preset` cases of AM-PR05); a suite file, so case count, not tangle: 88 functions, max CCN 5. Split by verb family if it grows again |
 
 `lizard` counts every `and`/`or` short-circuit as a decision, so in Lua a run of

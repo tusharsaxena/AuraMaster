@@ -42,3 +42,10 @@ Git is the only state.
   files), perf pass (12 scenarios, matching 20261115-024639), max CCN 15, 0 warnings. Owed: the AM-PR15 independent
   review against section 16, the owner's PRESETS smoke (round-1, 15.1 and round-2 checks included), the owner
   rulings recorded in the plan, and the pushes.
+- 2026-11-15: The owner's round-3 feedback landed (spec section 17, AM-PR16..18: the right-hand cluster lined up,
+  Player debuffs attached to Player buffs, equal bar widths, debuff bars by dispel type, 50% bar backgrounds,
+  numbered names, the unlock hint; docs and smoke checks). Automated-test bundle 20261115-123413 at 317a515 is
+  green: retail 2508/0/1, forever 2507/0/2, lint 0/0 (226 files), perf pass (12 scenarios, matching
+  20261115-050232), max CCN 15, 0 warnings. Owed: the AM-PR18 independent review against section 17 (the AM-PR15
+  review landed as cef03ff and 054b507), the owner's PRESETS smoke (round-1, 15.1, round-2 and round-3 checks
+  included), the owner rulings recorded in the plan, and the pushes.
