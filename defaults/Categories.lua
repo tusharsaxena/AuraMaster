@@ -217,6 +217,11 @@ Cat.HELPFUL = {
 
 local ALL_DISPELS = { Magic = true, Curse = true, Disease = true, Poison = true, Bleed = true }
 
+-- RE-VALIDATED AGAINST BUILD 12.1.5.70783, 2026-11-15 (issue #27): `tools/spell-research/retail.py`
+-- derived the same CC buckets as on 12.1.0.69875 and every derived id the lists below leave out is
+-- ruled, with its reason, in tools/spell-research/retail_rulings.json; the bundle is
+-- docs/spell-research/2026-11-15-retail/. The derivation note that follows still holds.
+--
 -- DERIVED AGAINST BUILD 12.1.0.69875, 2026-09-20 (spec C6). Both lists below came out of
 -- `python3 tools/spell-research/research.py`, which is what regenerates them; its frozen bundle for
 -- this pair is docs/spell-research/2026-09-20/ (derived.json, DIFF.md, ANALYSIS.md and the gzipped

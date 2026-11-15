@@ -70,6 +70,7 @@ seed("defensives", "HELPFUL", {
         47585,  -- Dispersion
         19236,  -- Desperate Prayer
         33206,  -- Pain Suppression; from the 2026-09-24 combat logs; owner review placed it here, not in Support
+        47788,  -- Guardian Spirit; added from the 2026-11-15 wago.tools re-validation (12.1.5.70783)
     },
     DEATHKNIGHT = {
         48792,  -- Icebound Fortitude
@@ -105,6 +106,7 @@ seed("defensives", "HELPFUL", {
         22812,  -- Barkskin
         61336,  -- Survival Instincts
         102342, -- Ironbark; from the 2026-09-24 combat logs; owner review placed it here, not in Support
+        22842,  -- Frenzied Regeneration; added from the 2026-11-15 wago.tools re-validation (12.1.5.70783)
     },
     -- Metamorphosis (162264, 187827) is Offensive cooldowns only (owner 2026-09-25)
     DEMONHUNTER = {
@@ -198,6 +200,7 @@ seed("offensiveCDs", "HELPFUL", {
     },
     WARLOCK = {
         1276767, -- Tyrant's Oblation; added from the 2026-09-24 combat logs
+        442726,  -- Malevolence; added from the 2026-11-15 wago.tools re-validation (12.1.5.70783)
     },
     DRUID = {
         194223,  -- Celestial Alignment
@@ -205,6 +208,8 @@ seed("offensiveCDs", "HELPFUL", {
         106951,  -- Berserk
         102543,  -- Incarnation: Avatar of Ashamane
         252071,  -- Incarnation: Avatar of Ashamane; the aura id the 2026-09-24 combat logs show
+        50334,   -- Berserk; added from the 2026-11-15 wago.tools re-validation (12.1.5.70783)
+        102558,  -- Incarnation: Guardian of Ursoc; added from the 2026-11-15 wago.tools re-validation (12.1.5.70783)
     },
     HUNTER = {
         288613,  -- Trueshot
@@ -213,6 +218,7 @@ seed("offensiveCDs", "HELPFUL", {
         186254,  -- Bestial Wrath; the aura id the 2026-09-24 combat logs show
         1235388, -- Bestial Wrath; the aura id the 2026-09-24 combat logs show
         1285912, -- Bestial Wrath; the aura id the 2026-09-24 combat logs show
+        1250646, -- Takedown; added from the 2026-11-15 wago.tools re-validation (12.1.5.70783)
     },
     MAGE = {
         190319,  -- Combustion
@@ -234,11 +240,13 @@ seed("offensiveCDs", "HELPFUL", {
     },
     MONK = {
         137639,  -- Storm, Earth, and Fire
+        123904,  -- Invoke Xuen, the White Tiger; added from the 2026-11-15 wago.tools re-validation (12.1.5.70783)
     },
     SHAMAN = {
         114051,  -- Ascendance
         114052,  -- Ascendance; the aura id the 2026-09-24 combat logs show
         1219480, -- Ascendance; the aura id the 2026-09-24 combat logs show
+        191634,  -- Stormkeeper; added from the 2026-11-15 wago.tools re-validation (12.1.5.70783)
     },
     EVOKER = {
         375087,  -- Dragonrage
@@ -465,6 +473,9 @@ seed("movement", "HELPFUL", {
 
 -- Utility (Cat.HELPFUL)
 seed("utility", "HELPFUL", {
+    DEATHKNIGHT = {
+        3714,   -- Path of Frost; added from the 2026-11-15 wago.tools re-validation (12.1.5.70783)
+    },
     WARLOCK = {
         20707,  -- Soulstone
         5697,   -- Unending Breath
@@ -478,6 +489,7 @@ seed("utility", "HELPFUL", {
     MAGE = {
         130,    -- Slow Fall
         32612,  -- Invisibility
+        110960, -- Greater Invisibility; added from the 2026-11-15 wago.tools re-validation (12.1.5.70783)
     },
     HUNTER = {
         5384,   -- Feign Death

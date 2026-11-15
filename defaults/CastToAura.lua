@@ -2,7 +2,7 @@ local _, NS = ...
 
 -- defaults/CastToAura.lua -- GENERATED. Do not edit by hand.
 --
---   Build 12.1.0.69875, derived 2026-09-20 by tools/spell-research/research.py --emit-cast-aura.
+--   Build 12.1.5.70783, derived 2026-11-15 by tools/spell-research/research.py --emit-cast-aura.
 --   Re-run the tool to refresh it; the bundle it came from is under docs/spell-research/.
 --
 -- WHAT THIS IS. Aura Master filters on the id an AURA carries, and many abilities are CAST as
@@ -17,7 +17,7 @@ local _, NS = ...
 -- REWRITES: the data resolves exactly one aura, so the panel stores that instead and says so.
 -- CHOICES:  more than one candidate survives; the panel lists them and never guesses.
 --
--- Derived over 7020 player-castable spells. 187428 ids in the whole game apply an aura of their
+-- Derived over 7028 player-castable spells. 188231 ids in the whole game apply an aura of their
 -- own -- that second number is the game, not this pool, and is here only to say what the
 -- membership test was run against.
 
@@ -206,7 +206,7 @@ NS.CastToAura.CHOICES = {
     [47540] = { 47757, 47758, 171130, 171131, 197419 },   -- Penance (name, 5 candidates)
     [47541] = { 28412, 30500, 30741, 32709, 33130, 34437, 39661, 41070, 44142, 46283, 65820, 125665, 280280 },   -- Death Coil (name, 13 candidates)
     [49020] = { 148785, 149312, 193023, 204042, 358619 },   -- Obliterate (name, 5 candidates)
-    [49143] = { 43568, 321633, 330736, 1305762 },   -- Frost Strike (name, 4 candidates)
+    [49143] = { 43568, 321633, 330736, 1305700, 1305762 },   -- Frost Strike (name, 5 candidates)
     [49184] = { 316800 },   -- Howling Blast (name, 1 candidate)
     [49359] = { 292018 },   -- Teleport: Theramore (name, 1 candidate)
     [49576] = { 51399, 57603, 1233502 },   -- Death Grip (name, 3 candidates)
@@ -664,7 +664,7 @@ NS.CastToAura.CHOICES = {
     [1236492] = { 1237014, 1237016 },   -- Oil of Dawn (name, 2 candidates)
     [1237579] = { 1244238, 1259213 },   -- Devouring Banding (name, 2 candidates)
     [1241462] = { 260369, 277500, 423607 },   -- Arcane Pulse (name, 3 candidates)
-    [1244258] = { 126104, 126131, 126132, 136923, 144113, 145263, 147996, 219167, 255595, 369828, 385145, 398988, 420853, 471076, 1227962 },   -- Chomp (name, 15 candidates)
+    [1244258] = { 126104, 126131, 126132, 136923, 144113, 145263, 147996, 219167, 255595, 369828, 385145, 398988, 420853, 471076, 1227962, 1310257 },   -- Chomp (name, 16 candidates)
     [1247227] = { 283668 },   -- Crimson Tempest (name, 1 candidate)
     [1247378] = { 1244030, 1255821 },   -- Putrefy (name, 2 candidates)
     [1248829] = { 12486, 173009, 250423, 321696 },   -- Blizzard (name, 4 candidates)

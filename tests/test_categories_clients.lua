@@ -68,18 +68,20 @@ end
 --
 -- Taken from master's defaults/Categories.lua before AM-FP06 (2026-11-14): each category's key in
 -- declaration order, and for a `spells` category its distinct id count and the sum of its ids.
+-- Rolled 2026-11-15 (issue #27, RS-07) for the ten ids the wago.tools re-validation added to
+-- defensives, offensiveCDs and utility (docs/spell-research/2026-11-15-retail/RULINGS.md).
 local RETAIL_SNAPSHOT = {
     HELPFUL = {
-        { "defensives", 54, 7800558 },
+        { "defensives", 56, 7871188 },
         { "bigDefensive" }, { "externals" },
         { "activeMitigation", 6, 1046344 },
         { "raidCDs", 16, 4191808 },
-        { "offensiveCDs", 35, 10900713 },
+        { "offensiveCDs", 41, 13062515 },
         { "healing", 44, 17554122 },
         { "support", 26, 9305177 },
         { "groupBuffs", 18, 5456421 },
         { "movement", 53, 15483836 },
-        { "utility", 9, 183834 },
+        { "utility", 11, 298508 },
         { "stances", 15, 2304469 },
         { "racials", 37, 8955369 },
         { "important" }, { "castable" }, { "cancelable" }, { "stealable" },
