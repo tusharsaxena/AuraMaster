@@ -1243,18 +1243,18 @@ restart the client (`defaults/Categories_Retail.lua` is a new file, which `/relo
 error at login. Filters → Categories shows the same rows in the same order, and General → Spell
 categories → *CC Loss of Control* still lists Hammer of Justice, Polymorph and Storm Bolt, *Racials*
 still lists Stoneform and Berserking. On WoW Forever the same page still lists Forever's own spells
-(FOREVER-15's counterpart). Result:
+(FOREVER-15's counterpart). Result: pass (owner-marked 2026-11-15)
 
 **FILT-66. The ten ids the re-validation added draw with their names. Client: Retail.** General →
 Spell categories → *Defensive cooldowns* lists Guardian Spirit and Frenzied Regeneration;
 *Offensive cooldowns* lists Takedown, Stormkeeper, Malevolence, Invoke Xuen, the White Tiger,
 Incarnation: Guardian of Ursoc and Berserk (the Guardian one); *Utility* lists Path of Frost and
-Greater Invisibility. Each row shows its icon and name, none an *Unknown spell*. Result:
+Greater Invisibility. Each row shows its icon and name, none an *Unknown spell*. Result: pass (owner-marked 2026-11-15)
 
 **FILT-67. A new id matches in a container. Client: Retail.** On an Elemental shaman (or any class
 from FILT-66 you can reach), make a player buffs container whose Filters → Categories hide every row
 but *Offensive cooldowns* → cast Stormkeeper → its aura draws; on a guardian druid, a container
-showing only *Defensive cooldowns* draws Frenzied Regeneration. Result:
+showing only *Defensive cooldowns* draws Frenzied Regeneration. Result: pass (owner-marked 2026-11-15)
 
 ## Layout
 
@@ -3529,6 +3529,5 @@ Open from the owner's round-5 feedback on the presets (presets spec section 19, 
 now describes every pick leaving the containers unlocked and test mode on, and Empty previewing an
 empty screen until Apply or Not now. Its `Result:` line is empty until the owner runs it.
 
-Open from the Retail seed re-validation (issue #27, `docs/superpowers/plans/2026-11-15-retail-seed-revalidation.md`):
-FILT-65 to FILT-67 are new. **Fully exit and restart the client**: `defaults/Categories_Retail.lua` is a
-new file, not seen by `/reload`. Their `Result:` lines are empty until the owner runs them.
+On 2026-11-15 the owner reported that FILT-65 to FILT-67, the checks of the Retail seed re-validation
+(issue #27), passed, each recorded on its `Result:` line as `pass (owner-marked 2026-11-15)`.

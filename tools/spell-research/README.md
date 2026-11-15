@@ -358,6 +358,9 @@ category, which nothing in DB2 names, and writes the shipped files:
 # 1. Freeze Forever's tables and derive the CC buckets (the coverage gate must pass)
 python3 tools/spell-research/research.py --client forever --bundle docs/spell-research/2026-11-14-forever --date 2026-11-14
 
+# 0. Is there anything to do? CURRENT <build> when the newest *-forever bundle is the live wowf build
+python3 tools/spell-research/forever.py status
+
 # 2. Candidates: the bundle's candidates.json, from four sources (below)
 python3 tools/spell-research/forever.py derive --bundle docs/spell-research/2026-11-14-forever --date 2026-11-14
 
@@ -415,7 +418,8 @@ Issue #27. Retail's lists are hand-curated, so nothing regenerates them. What a 
 is a re-check: which ids the build added that a list should carry, and which shipped ids have
 gone stale. `retail.py` does that against one pinned build and records every answer as data, so
 the next run asks only about what is new. The one-line recipe is the project command
-`/aura-seeds-validate` (`.claude/commands/aura-seeds-validate.md`), and `docs/common-tasks.md` has
+`/dev-copilot:validate-seeds AuraMaster retail`, which runs the contract in `docs/validate-seeds.md`
+(the same contract has a `forever` flavor over `forever.py`), and `docs/common-tasks.md` has
 the same steps by hand.
 
 > **2026-11-15: the Retail lists moved** out of `defaults/Categories.lua` into

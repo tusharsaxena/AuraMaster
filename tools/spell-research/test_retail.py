@@ -234,6 +234,27 @@ class ReportTest(unittest.TestCase):
         self.assertIn("Last \\| Stand", md)
 
 
+class StatusTest(unittest.TestCase):
+    def test_current_new_and_no_bundle(self):
+        import sid_seeds
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            self.assertEqual(sid_seeds.status_line("1.2.3", sid_seeds.seed_bundles(root, "-retail")),
+                             "NEW 1.2.3 (no bundle yet)")
+            for name, build in (("2026-01-01-retail", "1.2.2"), ("2026-02-01-retail", "1.2.3"),
+                                ("2026-03-01-forever", "9.9.9"), ("2026-04-01-retail", "")):
+                b = root / name
+                b.mkdir()
+                if build:  # the last one has no candidates.json: not a finished bundle
+                    (b / "derived.json").write_text(json.dumps({"build": build}), encoding="utf-8")
+                    (b / "candidates.json").write_text("{}", encoding="utf-8")
+            bundles = sid_seeds.seed_bundles(root, "-retail")
+            self.assertEqual([b.name for b in bundles], ["2026-01-01-retail", "2026-02-01-retail"])
+            self.assertEqual(sid_seeds.status_line("1.2.3", bundles), "CURRENT 1.2.3 (2026-02-01-retail)")
+            self.assertEqual(sid_seeds.status_line("1.2.4", bundles),
+                             "NEW 1.2.4 (last ruled 1.2.3, 2026-02-01-retail)")
+
+
 SEEDS_REAL = HERE.parent.parent / "defaults" / "Categories_Retail.lua"
 BUNDLES = retail.retail_bundles(HERE.parent.parent / "docs" / "spell-research")
 

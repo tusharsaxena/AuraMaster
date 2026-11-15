@@ -675,6 +675,7 @@ span bundle is `<date>-v<A>-v<B>/`, and the one untagged bundle is `docs/revendo
 
 | Doc | Covers |
 |---|---|
+| `validate-seeds.md` | The seed-validation contract `/dev-copilot:validate-seeds AuraMaster <retail\|forever>` runs: each client's tools, files, ruling precedent, steps and gate |
 | `known-limitations.md` | Every known limitation: what the player sees, why the client or the engine forces it, and the owner's ruling where one was made |
 | `spell-research/` | Frozen per-build derivation bundles written by `tools/spell-research/research.py`, with `tools/spell-research/retail.py` (the Retail re-validation) or, for WoW Forever, `tools/spell-research/forever.py`; the dated bundles are not enumerated |
 

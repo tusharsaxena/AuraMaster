@@ -66,7 +66,8 @@ import research  # noqa: E402
 import sid_decide  # noqa: E402
 from sid_seeds import (  # noqa: E402
     ALLOWED_OVERLAPS, AURA_TYPE, CATEGORY_KEYS, CATEGORY_RANK, CC_KEYS, Candidate, SeedDB,
-    db2_candidates, load_rulings, read_tsv, save_rulings, write_json,
+    bundle_build, db2_candidates, load_rulings, read_tsv, save_rulings, seed_bundles, status_line,
+    write_json,
 )
 
 CLIENT = "retail"
@@ -246,13 +247,9 @@ def bundle_tables(bundle: Path, replay: bool, cache_dir: Path) -> tuple[dict[str
     return tables, build
 
 
-def bundle_build(bundle: Path) -> str:
-    return json.loads((bundle / "derived.json").read_text(encoding="utf-8"))["build"]
-
-
 def retail_bundles(root: Path = SPELL_RESEARCH) -> list[Path]:
     """Every retail.py bundle under docs/spell-research/, oldest first (by name: dates sort)."""
-    return sorted(p for p in root.glob("*" + BUNDLE_SUFFIX) if (p / "candidates.json").exists())
+    return seed_bundles(root, BUNDLE_SUFFIX)
 
 
 def previous_reach(previous: Path | None, cache_dir: Path) -> tuple[set[int] | None, dict, str]:
@@ -474,18 +471,7 @@ def _date(value: str) -> str:
 
 
 def cmd_status(args) -> int:
-    live = research.resolve_build(None, "wow")
-    bundles = retail_bundles(args.root)
-    if not bundles:
-        research.log("Live Retail is %s; no retail.py bundle yet." % live)
-        print("NEW %s" % live)
-        return 0
-    last = bundles[-1]
-    built = bundle_build(last)
-    if built == live:
-        print("CURRENT %s (%s)" % (live, last.name))
-    else:
-        print("NEW %s (last ruled %s, %s)" % (live, built, last.name))
+    print(status_line(research.resolve_build(None, "wow"), retail_bundles(args.root)))
     return 0
 
 

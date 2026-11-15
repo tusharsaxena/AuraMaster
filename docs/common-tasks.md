@@ -105,8 +105,8 @@ path it walks, for when something about it has to be changed or debugged.
 ## Re-validate the Retail seed lists against a new build
 
 Every `spells` list in `defaults/Categories_Retail.lua` is re-checked against the live Retail build on
-wago.tools by `tools/spell-research/retail.py` (issue #27). The slash command `/aura-seeds-validate`
-(`.claude/commands/aura-seeds-validate.md`) runs the whole loop; by hand it is:
+wago.tools by `tools/spell-research/retail.py` (issue #27). `/dev-copilot:validate-seeds AuraMaster retail`
+(or `forever`) runs the whole loop from the contract in `docs/validate-seeds.md`; by hand, for Retail, it is:
 
 1. `python3 tools/spell-research/retail.py status` — `CURRENT` means the newest bundle already covers
    the live build and there is nothing to do; `NEW <build>` means a run is due.
