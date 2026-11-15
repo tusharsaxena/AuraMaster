@@ -7,7 +7,7 @@ client. The player-facing contract is the README; the engineering boundary is th
 ## What it does
 
 - **Player-built aura containers.** Any number per profile, each with its own name, enable switch,
-  filters, placement and look (`defaults/Profile.lua:171`, `NS.CONTAINER_TEMPLATE`).
+  filters, placement and look (`defaults/Profile.lua:172`, `NS.CONTAINER_TEMPLATE`).
 - **Four units:** `player`, `target`, `focus`, `pet` (`core/Constants.lua:39`).
 - **Two aura types:** buffs (`HELPFUL`) and debuffs (`HARMFUL`). The player's temporary weapon
   enchants are a buff category, not an aura type (schema v5, feedback #6): a player-buff container
@@ -48,7 +48,9 @@ client. The player-facing contract is the README; the engineering boundary is th
 - **Profiles** through AceDB, with a Profiles sub-page.
 - **A full CLI** — every schema row is reachable through `/am get|set|reset`, and the registry through
   `/am containers|select|new|delete`.
-- **Retail only**, Interface 120105 (Midnight 12.1.5), English as the source locale.
+- **Retail and WoW Forever**, Interface 120105, 16001 (Midnight 12.1.5 and Forever 1.60.1), one
+  codebase, English as the source locale. Forever's spell categories hold its own spells
+  (`docs/ARCHITECTURE.md` → *Per-client features*).
 
 ## What it deliberately does not do
 

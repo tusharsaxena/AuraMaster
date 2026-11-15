@@ -1,16 +1,18 @@
 # Compat layer
 
-`core/Compat.lua` publishes **26** shims on `NS.Compat`, counted with the command documentation-§3
+`core/Compat.lua` publishes **30** shims on `NS.Compat`, counted with the command documentation-§3
 fixes:
 
 ```sh
-grep -cE '^\s*function\s+[A-Za-z_][A-Za-z0-9_]*\.' core/Compat.lua    # 26
+grep -cE '^\s*function\s+[A-Za-z_][A-Za-z0-9_]*\.' core/Compat.lua    # 30
 ```
 
 A shim is the one entry point a feature module calls in place of a new-in-12.x, version-variant or
 enum-valued client API, so a renamed enum or a moved function is a one-file fix, and a headless run
-(where none of these globals exist) degrades to a plain answer (compat). Retail only: every shim
-covers a cross-**patch** difference, never a game flavor. What LibKa0s already supplies — the TOC
+(where none of these globals exist) degrades to a plain answer (compat). Every shim covers a
+cross-**patch** difference or detects one API, never a game flavor, except shims 27–30: the client
+seam (clients-§3), which only routes `LibKa0s-Compat-1.0`'s answer to "which client is this", so no
+other file reads a `WOW_PROJECT_*` global or an interface number. What LibKa0s already supplies — the TOC
 metadata ladder (`LibKa0s-Env-1.0`, `core/EnvSetup.lua`), the secret-safe stringifier
 (`LibKa0s-Core-1.0`), and the spell-info reader and the three secret guards
 (`LibKa0s-Compat-1.0`) — is not repeated here. Shim 16 delegates to that last major behind this
@@ -47,11 +49,16 @@ their library-absent arm.
 | 24 | `IsPlayerUnit(unit)` | `UnitIsPlayer(unit)`, pcall-guarded and `NS.Secrets.CanAccess`-checked (not documented as answering secret) | `nil` (the API absent, raising or answering secret, or no unit): `ContainerClass:ResolveView` takes the stricter Situations setting | Whether a target or focus is a player or an NPC, which picks the Situations setting where spell ids are not applied (filter situations, S2) | `modules/Container.lua` |
 | 25 | `InstanceType()` | `IsInInstance()` second value, pcall-guarded, `NS.Secrets.CanAccess`-checked and string-checked | `nil` (the API absent, raising, answering secret, or not a string): `zoneAllows` allows the container | The kind of place the player is in, which the Situations -> Show in checkboxes gate on (filter situations, S3) | `modules/Container.lua` |
 | 26 | `UnitReactionKind(unit)` | `UnitReaction(unit, "player")` in three bands (5 and above `"friendly"`, 4 `"neutral"`, 3 and below `"hostile"`), pcall-guarded, `NS.Secrets.CanAccess`-checked and number-checked (not documented as answering secret) | `nil` (the API absent, raising, answering secret or not a number, or no unit): `unitAllows` allows the container | How a target or focus stands toward the player, which the Situations -> Unit type gate's Reaction reads (filter situations, S6) | `modules/Container.lua` |
+| 27 | `IsForever()` | `LibKa0s-Compat-1.0`'s `IsForever` | `false` (without the library: the stand-in answers Retail) | The client seam (clients-§3): the one place the addon asks which client it is on | the Forever port's per-client seeds and category gate |
+| 28 | `IsRetail()` | `LibKa0s-Compat-1.0`'s `IsRetail` | `true` (the stand-in answers Retail) | Same | Same |
+| 29 | `ClientKey()` | `LibKa0s-Compat-1.0`'s `ClientKey`: `"retail"`, `"forever"` or `nil` | `"retail"` (the stand-in) | Same; picks a per-client list once at file load (clients-§5) | Same |
+| 30 | `ForClient(clients)` | `LibKa0s-Compat-1.0`'s `ForClient`: `nil` and `"both"` serve both clients, an array names them, an unknown token raises | the library's rule over a Retail client: true for `nil`, `"both"` and a list naming `retail` or `both` | A feature's client declaration (clients-§4), gated at registration | Same |
 
 ## Rules for this file
 
 - A feature module calls `NS.Compat.X`, never the global it wraps.
 - Every shim answers something sensible when the API is absent, because the headless harness has
   none of them.
-- No `WOW_PROJECT_ID` branching; Retail patch differences only.
+- No `WOW_PROJECT_ID` branching anywhere: the client is asked through shims 27–30, which route the
+  library's answer, and their stand-in answers Retail without reading a project constant.
 - A new shim adds a row here and moves the count in `docs/ARCHITECTURE.md`'s Documentation map.

@@ -256,7 +256,7 @@ table key, index it or run `#` on it.
 - `core/Secrets.lua` is the only file that asks whether a value is secret (`IsSecret`, `CanAccess`,
   `IsReadableNumber`, `IsSafeKey`), and it degrades to "nothing is secret" on a client without
   `issecretvalue` / `canaccessvalue`.
-- `Compat.AurasAreSecret()` (`core/Compat.lua:46`) wraps `C_Secrets.ShouldAurasBeSecret()` and gates
+- `Compat.AurasAreSecret()` (`core/Compat.lua:104`) wraps `C_Secrets.ShouldAurasBeSecret()` and gates
   everything that would touch an aura or an aura button.
 - The one place that does read auras, `modules/TimedSpells.lua`, runs only when that answers false,
   and checks every field through `core/Secrets.lua` before comparing or keying on it.
@@ -445,7 +445,7 @@ docs/superpowers/specs/2026-10-02-filter-situations-design.md S1). Where the rem
 (both Who cast it rows Hidden, or "Only auras without a duration" on buffs) the other groups keep
 their blizzard view, so the every view is the blizzard view (SI-06). `FC.IdsMode` pins buffs on the
 player and the pet to the ids view and their debuffs to the view their Players setting picks; for a
-target or focus, `Compat.IdsApply` (`core/Compat.lua:330`) asks steps 2 to 4 above and answers false
+target or focus, `Compat.IdsApply` (`core/Compat.lua:388`) asks steps 2 to 4 above and answers false
 when a call raises or its answer is secret, and where it is false `Compat.IsPlayerUnit`
 (`UnitIsPlayer`, guarded the same way though not documented as secret; nil when not knowable, and
 the stricter setting is taken then) picks the NPCs or Players setting (filter situations S2).

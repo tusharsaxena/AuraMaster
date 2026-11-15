@@ -466,7 +466,7 @@ local SCHEMA_STEPS = {
         local function hudFace(p)
             local key = type(p.skin) == "table" and p.skin.skin or nil
             if Skin and type(Skin.ResolveSkin) == "function" then
-                local tokens = Skin:ResolveSkin(key or "ka0s")
+                local tokens = Skin:ResolveSkin(key or NS.DEFAULT_SKIN or "ka0s")
                 if type(tokens) == "table" and type(tokens["hud.font"]) == "string" then return tokens["hud.font"] end
             end
             return Database.DEFAULT_HUD_FACE

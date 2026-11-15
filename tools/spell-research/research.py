@@ -113,6 +113,13 @@ USAGE
     python3 tools/spell-research/research.py --bundle docs/spell-research/2026-09-20
     python3 tools/spell-research/research.py --build 12.1.0.69875 --refresh --diff --emit
     python3 tools/spell-research/research.py --replay docs/spell-research/2026-09-20 --diff
+    python3 tools/spell-research/research.py --client forever --diff    # WoW Forever (wowf)
+
+CLIENTS
+    `--client retail` (the default; every line above) or `--client forever`. Forever has no
+    SpecializationSpells or TraitTreeLoadout, so its pool is SkillLineAbility plus vanilla's
+    Talent ranks (build_pool_forever), closed over ranks by name within a class (rank_closure),
+    and gated on SENTINELS_FOREVER by id. A bundle records its client; --replay checks it.
 
 See tools/spell-research/README.md for the walkthrough and the honest limitations.
 """
@@ -457,6 +464,66 @@ TABLES = (
     ("SpellMechanic", "the mechanic id -> name table BUCKET_MECHANICS is written against"),
 )
 
+# ---------------------------------------------------------------------------
+# The clients (AM-FP03). Retail is the default everywhere, so every command above is unchanged.
+# ---------------------------------------------------------------------------
+#
+# WoW Forever (wago product `wowf`, measured on 1.60.1.70938) is a vanilla-shaped client on the
+# modern engine. Two tables Retail's pool reads do not exist there (`SpecializationSpells`,
+# `TraitTreeLoadout`: HTTP 400 "Table not found"); vanilla's talent data does (`Talent`,
+# `TalentTab`). The Trait* tables still export and are still fetched, so a bundle carries the same
+# raw set either way, but Forever's pool never reads them: with no TraitTreeLoadout nothing joins a
+# trait to a class.
+_FOREVER_DROPPED = ("SpecializationSpells", "TraitTreeLoadout")
+TABLES_FOREVER = tuple(t for t in TABLES if t[0] not in _FOREVER_DROPPED) + (
+    ("Talent", "vanilla talents: SpellRank_0..8 are every rank's spell id, classed by ClassID or TabID"),
+    ("TalentTab", "talent tab -> ClassMask; Forever's Talent rows carry ClassID 0 (all 432 measured)"),
+)
+
+# The Forever coverage gate. Ids, not names: these are vanilla's rank-1 ids, which Forever keeps,
+# and a NAME would pass on any one of a spell's ranks while the rank-1 id a fresh character has
+# went missing. Each is the canonical rank 1 of a crowd control every Forever player meets.
+SENTINELS_FOREVER = {
+    "hardCC": {118: "Polymorph", 853: "Hammer of Justice", 5782: "Fear", 408: "Kidney Shot"},
+    "ccRoot": {122: "Frost Nova", 339: "Entangling Roots"},
+    "ccSnare": {1715: "Hamstring"},
+}
+
+# `SkillLine` rows Forever's pool never reads, whatever their ClassMask. The ids are the client's
+# and are kept as ids because the names are generic enough to recur.
+FOREVER_EXCLUDED_SKILL_LINES = {
+    2851: "Engraving: the 'Engrave <Slot> - <Rune>' learn spells (owner ruling 3, 2026-11-14: no runes)",
+    2853: "Runes: the '<Slot> Rune Ability' placeholders (owner ruling 3)",
+    777: "Mounts: CategoryID 7 like a class line, and three paladin rows would class 216 mounts",
+    778: "Companions: CategoryID 7, no class",
+}
+# The rune ABILITIES are not on either rune line: they sit on the class talent-tree lines (Living
+# Flame 401558 on Fire, Mutilate 399956 on Assassination), beside the trained spells. Only their
+# names tie them to the runes: each "Engrave <Slot> - <Rune>" spell on line 2851 names one, and its
+# ClassMask says which classes engrave it. ForeverFence drops a spell by that name and class.
+ENGRAVING_SKILL_LINE = 2851
+ENGRAVE_NAME = re.compile(r"^Engrave .+? - (.+)$")
+# Pet lines (`Pet - Imp`, `Pet - Generic`, ...) are left out by this name prefix, as on Retail,
+# where a pet line is never a class line. A pet's own spell is not an aura the player's class has.
+PET_SKILL_LINE_PREFIX = "Pet - "
+
+# Forever's nine classes. A ClassMask of -1 (every bit) names Retail-only classes too, so Forever's
+# pool keeps only these; no DEATHKNIGHT, MONK, DEMONHUNTER or EVOKER key can reach a Forever list.
+FOREVER_CLASS_TOKENS = frozenset(("WARRIOR", "PALADIN", "HUNTER", "ROGUE", "PRIEST", "SHAMAN",
+                                  "MAGE", "WARLOCK", "DRUID"))
+
+CLIENTS = {
+    "retail": {"product": "wow", "title": "Retail", "tables": TABLES, "sentinels": SENTINELS},
+    "forever": {"product": "wowf", "title": "WoW Forever", "tables": TABLES_FOREVER,
+                "sentinels": SENTINELS_FOREVER},
+}
+
+
+def tables_for(client: str) -> tuple:
+    """The `(table, why)` fetch list for a client. Retail's is TABLES, unchanged."""
+    return CLIENTS[client]["tables"]
+
+
 DOWNLOAD_CHUNK = 1 << 20  # 1 MiB; SpellEffect is ~57 MB and must never be read into a string
 
 # The emitted Lua's line terminator. The repo is pinned `* text=auto eol=crlf`, and a generated
@@ -481,21 +548,21 @@ def http_get(url: str, accept: str = "*/*"):
                          % (url, err.reason))
 
 
-def resolve_build(explicit: str | None) -> str:
-    """The build to pin the run to: `--build` if given, else the newest retail build.
+def resolve_build(explicit: str | None, product: str = "wow") -> str:
+    """The build to pin the run to: `--build` if given, else the newest build of `product`.
 
-    The builds API returns one list per product; "wow" is retail (the others are PTR, beta, classic
-    and so on), newest first. A run is pinned to ONE build on purpose: the bundle records it, and a
-    diff between two bundles is then a diff of the game rather than of when someone happened to run
-    the tool.
+    The builds API returns one list per product; "wow" is retail and "wowf" is WoW Forever (the
+    others are PTR, beta, classic and so on), newest first. A run is pinned to ONE build on purpose:
+    the bundle records it, and a diff between two bundles is then a diff of the game rather than of
+    when someone happened to run the tool.
     """
     if explicit:
         return explicit
-    log("Resolving the live retail build from %s ..." % BUILDS_URL)
+    log("Resolving the live '%s' build from %s ..." % (product, BUILDS_URL))
     data = json.load(http_get(BUILDS_URL, accept="application/json"))
-    builds = data.get("wow") or []
+    builds = data.get(product) or []
     if not builds:
-        raise SystemExit("The builds API returned no 'wow' (retail) builds; pass --build explicitly.")
+        raise SystemExit("The builds API returned no '%s' builds; pass --build explicitly." % product)
     version = builds[0]["version"]
     log("  build %s (created %s)" % (version, builds[0].get("created_at", "?")))
     return version
@@ -530,6 +597,25 @@ def replay_provenance(replay_dir: Path, explicit_build: str | None) -> tuple[str
             % replay_dir)
     fetched_at = meta.get("fetchedAt", "unknown")
     return build, "%s (replayed from %s)" % (fetched_at, replay_dir.as_posix())
+
+
+def check_replay_client(replay_dir: Path, client: str) -> None:
+    """Refuse to replay a bundle under the other client's tables and pool.
+
+    A bundle records its client in derived.json; one written before the clients existed has none
+    and is Retail. Replaying a Forever bundle without `--client forever` would look for Retail-only
+    tables in its raw/ and, worse, derive it through the Retail pool.
+    """
+    manifest = replay_dir / "derived.json"
+    recorded = "retail"
+    if manifest.exists():
+        try:
+            recorded = json.loads(manifest.read_text(encoding="utf-8")).get("client", "retail")
+        except ValueError:
+            return
+    if recorded != client:
+        raise SystemExit("--replay %s is a '%s' bundle; pass --client %s." % (replay_dir, recorded,
+                                                                            recorded))
 
 
 def fetch_table(table: str, build: str, cache_dir: Path, refresh: bool,
@@ -788,6 +874,242 @@ def trait_definition_classes(cache: dict[str, Path],
 
 
 # ---------------------------------------------------------------------------
+# Step 3, WoW Forever — the vanilla-shaped pool (AM-FP03)
+# ---------------------------------------------------------------------------
+
+def load_forever_class_lines(cache: dict[str, Path]) -> dict[int, str]:
+    """`SkillLine.ID` -> class token for Forever's class skill lines.
+
+    Forever's class lines are vanilla's talent-tree lines (Arms 26, Fire 8, Holy 56 AND Holy 594),
+    so the class cannot be read from the line's name the way Retail's is. It is read from the line's
+    own abilities instead: a `CategoryID == 7` line whose single-class `SkillLineAbility` rows all
+    name ONE class is that class's line. Measured on 1.60.1.70938 every talent-tree line resolves
+    this way. A pet line, an excluded line (FOREVER_EXCLUDED_SKILL_LINES) and a line whose masked
+    rows disagree or are absent is not a class line, so its ClassMask-0 rows stay out.
+    """
+    candidates = {}
+    for row in iter_csv(cache["SkillLine"]):
+        line = as_int(row.get("ID"))
+        name = (row.get("DisplayName_lang") or "").strip()
+        if (as_int(row.get("CategoryID")) == 7 and line not in FOREVER_EXCLUDED_SKILL_LINES
+                and not name.startswith(PET_SKILL_LINE_PREFIX)):
+            candidates[line] = name
+    seen: dict[int, set[str]] = defaultdict(set)
+    for row in iter_csv(cache["SkillLineAbility"]):
+        line = as_int(row.get("SkillLine"))
+        mask = as_int(row.get("ClassMask"))
+        tokens = classes_from_mask(mask)
+        if line in candidates and len(tokens) == 1:  # a -1 or multi-class row casts no vote
+            seen[line] |= tokens
+    return {line: next(iter(tokens)) for line, tokens in seen.items() if len(tokens) == 1}
+
+
+def forever_line_excluded(line: int, names: dict[int, str]) -> bool:
+    """True for a skill line Forever's pool drops whole: a rune line, Mounts, Companions, a pet."""
+    return line in FOREVER_EXCLUDED_SKILL_LINES or names.get(line, "").startswith(PET_SKILL_LINE_PREFIX)
+
+
+def read_talent_ranks(path: Path) -> list[tuple[dict, list[int]]]:
+    """`[(Talent row, [every non-zero SpellRank_0..8 id])]`, in file order."""
+    out = []
+    for row in iter_csv(path):
+        ranks = [as_int(row.get("SpellRank_%d" % rank)) for rank in range(9)]
+        out.append((row, [spell for spell in ranks if spell]))
+    return out
+
+
+class ForeverFence:
+    """The spells Forever's pool keeps out one by one, where a whole-line rule cannot reach them.
+
+    a. A RUNE ABILITY (owner ruling 3): a spell named like an "Engrave <Slot> - <Rune>" spell, for a
+       class that engraves that rune. The rune abilities sit on the class talent-tree lines, so no
+       line rule drops them. A talent rank is never one: several vanilla talents share a rune's name
+       (Soul Siphon 17804, Holy Specialization 14889), and a talent is the class's own.
+    b. A spell whose `SkillLineAbility` rows all sit on dropped lines (forever_line_excluded): a pet's
+       Claw or Bite. `rank_closure` reaches those by name through the hunter family otherwise.
+
+    The class fence keeps a trained spell that only shares the name: druid Wrath 5176 stays, because
+    the Wrath rune is the paladin's; hunter Lacerate 24118 stays, because the Lacerate rune is the
+    druid's. Measured on 1.60.1.70938 no trained, non-talent spell shares a rune's name AND class.
+
+    Scope: the fence guards the pool (build_pool_forever) and `rank_closure`, NOT the trigger
+    closure. A hunter-masked Beast Training learn spell still triggers pet-line-only abilities into
+    the buckets through EffectTriggerSpell: on 1.60.1.70938 Web 1265843/1265878/1265880/1265881/
+    1265883 (ccRoot), Pinch 1264735-1264742 and Tendon Rip 1265038-1265042 (ccSnare), and
+    Intimidation 24394 (hardCC). Fencing the trigger closure wholesale would be wrong, because
+    Intimidation 24394 is a genuine hunter CC aura, so these reach AM-FP05 as candidates to rule
+    one by one.
+    """
+
+    def __init__(self, rune_classes: dict[str, set[str]], talent_ranks: set[int],
+                 dropped_only: set[int]):
+        self.rune_classes = rune_classes
+        self.talent_ranks = talent_ranks
+        self.dropped_only = dropped_only
+
+    def blocks(self, spell: int, name: str, tokens: set[str]) -> bool:
+        """True when `spell` (called `name`, of the classes `tokens`) stays out of the pool."""
+        if spell in self.talent_ranks:
+            return False
+        return spell in self.dropped_only or bool(self.rune_classes.get(name, set()) & tokens)
+
+
+def load_forever_fence(tables: dict[str, Path], line_names: dict[int, str] | None = None) -> ForeverFence:
+    """Build the ForeverFence from SkillLine, SkillLineAbility, SpellName and Talent."""
+    if line_names is None:
+        line_names = {as_int(r.get("ID")): (r.get("DisplayName_lang") or "").strip()
+                      for r in iter_csv(tables["SkillLine"])}
+    names = read_names(tables["SpellName"])
+    rune_classes: dict[str, set[str]] = defaultdict(set)
+    kept_lines: dict[int, bool] = {}
+    for row in iter_csv(tables["SkillLineAbility"]):
+        spell, line = as_int(row.get("Spell")), as_int(row.get("SkillLine"))
+        if not spell:
+            continue
+        dropped = forever_line_excluded(line, line_names)
+        kept_lines[spell] = kept_lines.get(spell, False) or not dropped
+        engraved = ENGRAVE_NAME.match(names.get(spell, "")) if line == ENGRAVING_SKILL_LINE else None
+        if engraved:
+            # A mask of 0 names no class; read it as every class rather than lose the rune.
+            mask = as_int(row.get("ClassMask")) or -1
+            rune_classes[engraved.group(1).strip()] |= classes_from_mask(mask) & FOREVER_CLASS_TOKENS
+    talent_ranks = {spell for _row, ranks in read_talent_ranks(tables["Talent"]) for spell in ranks}
+    dropped_only = {spell for spell, kept in kept_lines.items() if not kept}
+    return ForeverFence(dict(rune_classes), talent_ranks, dropped_only)
+
+
+def _forever_skill_line_pass(tables: dict[str, Path], line_names: dict[int, str],
+                             pool: dict[int, set[str]]) -> None:
+    """build_pool_forever's source (a): `SkillLineAbility` rows by ClassMask or class skill line."""
+    class_lines = load_forever_class_lines(tables)
+    for row in iter_csv(tables["SkillLineAbility"]):
+        spell, line = as_int(row.get("Spell")), as_int(row.get("SkillLine"))
+        if not spell or forever_line_excluded(line, line_names):
+            continue
+        mask = as_int(row.get("ClassMask"))
+        if not mask and line not in class_lines:
+            continue  # a profession, a mount, a racial trade skill: not a class ability
+        pool[spell] |= classes_from_mask(mask) & FOREVER_CLASS_TOKENS
+        if line in class_lines:
+            pool[spell].add(class_lines[line])
+
+
+def _forever_talent_pass(tables: dict[str, Path], pool: dict[int, set[str]]) -> None:
+    """build_pool_forever's source (b): every `Talent` rank, by ClassID or its TalentTab's ClassMask."""
+    tab_class = {as_int(r.get("ID")): classes_from_mask(as_int(r.get("ClassMask"))) & FOREVER_CLASS_TOKENS
+                 for r in iter_csv(tables["TalentTab"])}
+    for row, ranks in read_talent_ranks(tables["Talent"]):
+        token = CLASS_BY_CLASS_ID.get(as_int(row.get("ClassID")))
+        tokens = ({token} & FOREVER_CLASS_TOKENS) if token else tab_class.get(as_int(row.get("TabID")), set())
+        for spell in ranks:
+            pool[spell] |= tokens
+
+
+def build_pool_forever(tables: dict[str, Path]) -> dict[int, set[str]]:
+    """Forever's player pool: `{spell_id: set(class tokens)}`.
+
+    Two sources:
+      a. `SkillLineAbility` rows by ClassMask, or on a class skill line (load_forever_class_lines),
+         minus every row on the rune lines 2851 and 2853, Mounts, Companions and the `Pet - ` lines.
+      b. `Talent.SpellRank_0..8`, every rank a talent grants, classed by `Talent.ClassID` or, where
+         that is 0 (every row measured on 1.60.1.70938), by `TalentTab.ClassMask` through `TabID`.
+
+    Then every rune ability is dropped (ForeverFence): those sit on the class lines, so (a) keeps them.
+
+    The trigger closure, the family bridge and the rank closure run on top of this in `derive`.
+    """
+    line_names = {as_int(r.get("ID")): (r.get("DisplayName_lang") or "").strip()
+                  for r in iter_csv(tables["SkillLine"])}
+    pool: dict[int, set[str]] = defaultdict(set)
+    _forever_skill_line_pass(tables, line_names, pool)
+    _forever_talent_pass(tables, pool)
+    fence = load_forever_fence(tables, line_names)
+    names = read_names(tables["SpellName"])
+    for spell in [s for s, tokens in pool.items() if fence.blocks(s, names.get(s, ""), tokens)]:
+        del pool[spell]
+    return pool
+
+
+def family_class_of(pool: dict[int, set[str]], families: dict[int, int]) -> dict[int, set[str]]:
+    """`{spell: set(class tokens)}` for every spell with a spell family, from the family's class.
+
+    A family's class is the one that holds a strict majority of the family's classed pool spells
+    (on 1.60.1.70938 each of the nine families is 99%+ one class: family 3 is all MAGE, family 4 is
+    132 WARRIOR and 1 PALADIN). Family 0 is no family and gives no class, which keeps SOME NPC
+    copies of a name (Polymorph 13323, 14621, ...) out of `rank_closure`. Only some: many NPC copies
+    carry the player class's family and so join as source 'rank' (on 1.60.1.70938 Blast Wave 15091,
+    17145, 22424, ...; Mind Flay 16568, 17165, ...; Frostbolt 13439; Intimidating Shout 19134,
+    29544; Charge 22911; Banish 457569, 465352). The closure still holds its contract (same name AND
+    same class), so the real ranks join (Polymorph 118 -> 12824/12825/12826), but a 'rank' candidate
+    is not proof of a player rank: AM-FP05 rejects the NPC copies while ruling.
+    """
+    votes: dict[int, dict[str, int]] = defaultdict(lambda: defaultdict(int))
+    for spell, tokens in pool.items():
+        family = families.get(spell, NO_SPELL_FAMILY)
+        if family and len(tokens) == 1:
+            votes[family][next(iter(tokens))] += 1
+    family_class: dict[int, str] = {}
+    for family, counts in votes.items():
+        token, count = max(counts.items(), key=lambda kv: (kv[1], kv[0]))
+        if count * 2 > sum(counts.values()):
+            family_class[family] = token
+    return {spell: {family_class[family]} for spell, family in families.items()
+            if family in family_class}
+
+
+def rank_closure(pool: dict[int, set[str]], names: dict[int, str],
+                 class_of: dict[int, set[str]],
+                 fence: ForeverFence | None = None) -> dict[int, set[str]]:
+    """Add every spell with the same name and the same class as a pool spell. Returns `pool`.
+
+    Forever keeps vanilla's ranks as separate ids (Polymorph 118, 12824, 12825, 12826) with
+    `SkillLineAbility.SupercedesSpell` 0, so the only link between ranks is the name within a class.
+    An aura filter matches one id, so every rank has to ship or a player who has not trained the top
+    rank never matches. `class_of` (family_class_of) is the candidate's class; a candidate with no
+    class, or another class's, never joins. Nor does one the `fence` blocks: the hunter family
+    carries the pets' Claw and Bite, and a warlock talent's name may be a rune's. The pool is grown in
+    place and returned.
+    """
+    by_name: dict[str, list[int]] = defaultdict(list)
+    for spell, name in names.items():
+        if name and spell in class_of:
+            by_name[name].append(spell)
+    for spell in sorted(pool):
+        tokens = pool[spell]
+        for candidate in by_name.get(names.get(spell, ""), ()):
+            shared = class_of[candidate] & tokens
+            if not shared or candidate in pool:
+                continue
+            if fence is None or not fence.blocks(candidate, names.get(candidate, ""), shared):
+                pool[candidate] = set(shared)
+    return pool
+
+
+def apply_rank_closure(pool: set[int], classes: dict[int, set[str]], names: dict[int, str],
+                       families: dict[int, int], fence: ForeverFence | None = None) -> set[int]:
+    """`rank_closure` over derive()'s set-and-classes pool shape. Returns the ids it added."""
+    view = {spell: set(classes.get(spell, ())) for spell in pool}
+    before = set(view)
+    rank_closure(view, names, family_class_of(view, families), fence)
+    added = set(view) - before
+    for spell in added:
+        pool.add(spell)
+        classes[spell] |= view[spell]
+    return added
+
+
+def pool_for(cache: dict[str, Path], client: str) -> tuple[set[int], dict[int, set[str]]]:
+    """The pool in derive()'s `(set, classes)` shape, built the client's way."""
+    if client == "forever":
+        forever = build_pool_forever(cache)
+        classes: dict[int, set[str]] = defaultdict(set)
+        for spell, tokens in forever.items():
+            classes[spell] |= tokens
+        return set(forever), classes
+    return build_pool(cache)
+
+
+# ---------------------------------------------------------------------------
 # Step 4 and 5 — the trigger closure and the mechanic union
 # ---------------------------------------------------------------------------
 
@@ -978,16 +1300,106 @@ def read_mechanic_names(path: Path) -> dict[int, str]:
     return {as_int(row["ID"]): (row.get("StateName_lang") or "").strip() for row in iter_csv(path)}
 
 
-def derive(cache: dict[str, Path]) -> dict:
+POOL_SOURCES = {"forever": "skill lines and talents", "retail": "skill lines, specializations and traits"}
+
+
+def _client_pool(cache: dict[str, Path], client: str):
+    """derive()'s per-client step: the pool, its classes and the fence (Forever's only; None on Retail)."""
+    log("Building the player pool (%s) ..." % client)
+    pool, classes = pool_for(cache, client)
+    fence = load_forever_fence(cache) if client == "forever" else None
+    log("  %d spells from %s" % (len(pool), POOL_SOURCES.get(client, POOL_SOURCES["retail"])))
+    return pool, classes, fence
+
+
+def _close_to_fixed_point(pool, classes, triggers, names, families, fence, mechanics_of, cc_mechanics):
+    """derive()'s steps 4 and 5: `(triggered count, bridged set, ranked set)` once nothing grows."""
+    # STEPS 4 AND 5, ALTERNATED TO A FIXED POINT.
+    #
+    # Each step feeds the other. The closure walks EffectTriggerSpell, and a spell it reaches may be
+    # the one whose family sibling carries the mechanic — that is exactly the Ring of Frost chain,
+    # 113724 -> (trigger) 136511 -> (family bridge) 82691, which needs the closure to run before the
+    # bridge. The bridge adds auras, and a bridged aura may itself trigger something further — a trap
+    # whose aura refreshes a second spell — which needs the bridge to run before the closure.
+    #
+    # Running each exactly once would therefore make the ORDER of two steps load-bearing, and leave
+    # whichever ran first holding a pool it had not finished walking. Nothing in the file said which
+    # order was right, because there is no right one. Iterating until neither step adds anything
+    # removes the question: the result is the same set whichever step goes first, and a future edit
+    # cannot break it by reordering two lines. The loop terminates because both steps only ever ADD
+    # to a pool bounded by the number of spells in the build.
+    log("Closing over EffectTriggerSpell (spec C1) and bridging spell families, to a fixed point ...")
+    added = 0
+    bridged: set[int] = set()
+    ranked: set[int] = set()
+    passes = 0
+    while True:
+        passes += 1
+        grew = close_over_triggers(pool, classes, triggers)
+        # FOREVER: every rank of a pool spell (same name, same class) joins INSIDE the fixed point,
+        # because a higher rank may trigger its own aura id the lower one does not. It runs before
+        # the bridge only so a CC rank is labelled "rank" rather than "bridge"; the fixed point is
+        # the same set either way.
+        ranks = apply_rank_closure(pool, classes, names, families, fence) if fence else set()
+        newly = bridge_spell_families(pool, classes, names, families, mechanics_of, cc_mechanics)
+        added += grew
+        bridged |= newly
+        ranked |= ranks
+        log("  pass %d: +%d triggered, +%d bridged, +%d ranks; pool is now %d"
+            % (passes, grew, len(newly), len(ranks), len(pool)))
+        if not grew and not newly and not ranks:
+            break
+    log("  fixed point after %d passes: +%d triggered, +%d bridged, +%d ranks; pool is %d"
+        % (passes, added, len(bridged), len(ranked), len(pool)))
+    return added, bridged, ranked
+
+
+def _check_bucket_names(mechanic_names: dict[int, str]) -> None:
+    """Warn for every BUCKET_MECHANICS name that this build spells differently."""
+    # Cross-check the authored bucket map against the build being read. A mechanic whose name has
+    # moved is not fatal — ids are what match — but it is the loudest early warning available that
+    # BUCKET_MECHANICS needs a human to look at it.
+    for bucket, expected in BUCKET_MECHANICS.items():
+        for mid, expected_name in expected.items():
+            actual = mechanic_names.get(mid, "")
+            if actual.lower() != expected_name.lower():
+                log("  WARNING: %s mechanic %d is %r in this build, BUCKET_MECHANICS says %r"
+                    % (bucket, mid, actual, expected_name))
+
+
+def _place_in_buckets(pool, classes, names, mechanics_of, mechanic_names, diminish, bridged, ranked):
+    """`{bucket: {spell: row}}` for every named pool spell whose mechanics place it in a CC bucket."""
+    buckets: dict[str, dict[int, dict]] = {name: {} for name in BUCKET_ORDER}
+    for spell in sorted(pool):
+        name = names.get(spell, "")
+        if not name:
+            continue  # unnamed internal ids would be blank rows in the editor
+        placed = bucket_of(mechanics_of(spell))
+        if placed is None:
+            continue
+        bucket, matched = placed
+        reached = sorted(classes.get(spell, ()))
+        buckets[bucket][spell] = {
+            "id": spell,
+            "name": name,
+            "classes": reached,
+            "class": emit_class_key(reached),
+            "classSource": "skillline" if reached else "unknown",
+            "source": "bridge" if spell in bridged else ("rank" if spell in ranked else "pool"),
+            "mechanics": [{"id": m, "name": mechanic_names.get(m, "?")} for m in matched],
+            "diminishType": diminish.get(spell, 0),
+        }
+    return buckets
+
+
+def derive(cache: dict[str, Path], client: str = "retail") -> dict:
     """Run the whole pipeline over a fetched cache and return the derived result.
 
     The return value is the shape `derived.json` is written in and the shape every consumer below
     (diff, emit, bundle, the coverage gate) reads, so there is exactly one description of what a run
-    produced.
+    produced. `client` picks the pool builder; on Forever the rank closure joins the fixed point.
     """
-    log("Building the player pool ...")
-    pool, classes = build_pool(cache)
-    log("  %d spells from skill lines, specializations and traits" % len(pool))
+    pool, classes, fence = _client_pool(cache, client)
 
     log("Reading SpellEffect (the big one) ...")
     effect_mechanics, triggers = read_spell_effect(cache["SpellEffect"])
@@ -1015,71 +1427,16 @@ def derive(cache: dict[str, Path]) -> dict:
     for mapping in BUCKET_MECHANICS.values():
         cc_mechanics |= set(mapping)
 
-    # STEPS 4 AND 5, ALTERNATED TO A FIXED POINT.
-    #
-    # Each step feeds the other. The closure walks EffectTriggerSpell, and a spell it reaches may be
-    # the one whose family sibling carries the mechanic — that is exactly the Ring of Frost chain,
-    # 113724 -> (trigger) 136511 -> (family bridge) 82691, which needs the closure to run before the
-    # bridge. The bridge adds auras, and a bridged aura may itself trigger something further — a trap
-    # whose aura refreshes a second spell — which needs the bridge to run before the closure.
-    #
-    # Running each exactly once would therefore make the ORDER of two steps load-bearing, and leave
-    # whichever ran first holding a pool it had not finished walking. Nothing in the file said which
-    # order was right, because there is no right one. Iterating until neither step adds anything
-    # removes the question: the result is the same set whichever step goes first, and a future edit
-    # cannot break it by reordering two lines. The loop terminates because both steps only ever ADD
-    # to a pool bounded by the number of spells in the build.
-    log("Closing over EffectTriggerSpell (spec C1) and bridging spell families, to a fixed point ...")
-    added = 0
-    bridged: set[int] = set()
-    passes = 0
-    while True:
-        passes += 1
-        grew = close_over_triggers(pool, classes, triggers)
-        newly = bridge_spell_families(pool, classes, names, families, mechanics_of, cc_mechanics)
-        added += grew
-        bridged |= newly
-        log("  pass %d: +%d triggered, +%d bridged; pool is now %d"
-            % (passes, grew, len(newly), len(pool)))
-        if not grew and not newly:
-            break
-    log("  fixed point after %d passes: +%d triggered, +%d bridged; pool is %d"
-        % (passes, added, len(bridged), len(pool)))
-
-    # Cross-check the authored bucket map against the build being read. A mechanic whose name has
-    # moved is not fatal — ids are what match — but it is the loudest early warning available that
-    # BUCKET_MECHANICS needs a human to look at it.
-    for bucket, expected in BUCKET_MECHANICS.items():
-        for mid, expected_name in expected.items():
-            actual = mechanic_names.get(mid, "")
-            if actual.lower() != expected_name.lower():
-                log("  WARNING: %s mechanic %d is %r in this build, BUCKET_MECHANICS says %r"
-                    % (bucket, mid, actual, expected_name))
-
-    buckets: dict[str, dict[int, dict]] = {name: {} for name in BUCKET_ORDER}
-    for spell in sorted(pool):
-        name = names.get(spell, "")
-        if not name:
-            continue  # unnamed internal ids would be blank rows in the editor
-        placed = bucket_of(mechanics_of(spell))
-        if placed is None:
-            continue
-        bucket, matched = placed
-        reached = sorted(classes.get(spell, ()))
-        buckets[bucket][spell] = {
-            "id": spell,
-            "name": name,
-            "classes": reached,
-            "class": emit_class_key(reached),
-            "classSource": "skillline" if reached else "unknown",
-            "source": "bridge" if spell in bridged else "pool",
-            "mechanics": [{"id": m, "name": mechanic_names.get(m, "?")} for m in matched],
-            "diminishType": diminish.get(spell, 0),
-        }
+    added, bridged, ranked = _close_to_fixed_point(pool, classes, triggers, names, families, fence,
+                                                   mechanics_of, cc_mechanics)
+    _check_bucket_names(mechanic_names)
+    buckets = _place_in_buckets(pool, classes, names, mechanics_of, mechanic_names, diminish,
+                                bridged, ranked)
     return {
         "poolSize": len(pool),
         "triggerClosureAdded": added,
         "familyBridgeAdded": len(bridged),
+        "rankClosureAdded": len(ranked),
         "buckets": buckets,
     }
 
@@ -1120,16 +1477,25 @@ def emit_class_key(reached: list[str]) -> str:
 # Step 6 — the coverage gate
 # ---------------------------------------------------------------------------
 
-def check_sentinels(result: dict) -> list[str]:
+def check_sentinels(result: dict, sentinels: dict | None = None) -> list[str]:
     """Return the sentinels that did NOT appear in their bucket. Empty means the gate passed.
 
     See SENTINELS for why this exists at all. The caller exits non-zero on any miss: a run that
     cannot prove it found Hammer of Justice has no business printing a Lua fragment.
+
+    `sentinels` defaults to Retail's SENTINELS (names per bucket). A bucket given as a dict
+    `{id: name}` (SENTINELS_FOREVER) is matched by ID: that exact id must be in the bucket.
     """
     missing: list[str] = []
     for bucket in BUCKET_ORDER:
-        have = {entry["name"].lower() for entry in result["buckets"][bucket].values()}
-        for sentinel in SENTINELS.get(bucket, ()):
+        wanted = (SENTINELS if sentinels is None else sentinels).get(bucket, ())
+        entries = result["buckets"][bucket]
+        if isinstance(wanted, dict):
+            missing += ["%s: %s (%d)" % (bucket, name, spell)
+                        for spell, name in wanted.items() if spell not in entries]
+            continue
+        have = {entry["name"].lower() for entry in entries.values()}
+        for sentinel in wanted:
             if sentinel.lower() not in have:
                 missing.append("%s: %s" % (bucket, sentinel))
     return missing
@@ -1457,7 +1823,7 @@ def write_repo_text(path: Path, text: str) -> None:
 
 
 def write_bundle(bundle_dir: Path, date: str, build: str, cache: dict[str, Path],
-                 result: dict, diff_text: str, fetched_at: str) -> None:
+                 result: dict, diff_text: str, fetched_at: str, client: str = "retail") -> None:
     """Freeze the run into `docs/spell-research/<date>/` (spec C5).
 
     Same convention as `docs/audits/`, `docs/reviews/` and `docs/automated-tests/`: a dated directory
@@ -1472,7 +1838,8 @@ def write_bundle(bundle_dir: Path, date: str, build: str, cache: dict[str, Path]
     bundle_dir.mkdir(parents=True, exist_ok=True)
     raw_dir = bundle_dir / "raw"
     raw_dir.mkdir(exist_ok=True)
-    for table, _why in TABLES:
+    tables = tables_for(client)
+    for table, _why in tables:
         source = cache[table]
         target = raw_dir / ("%s.csv.gz" % table)
         if source.suffix == ".gz":
@@ -1496,19 +1863,26 @@ def write_bundle(bundle_dir: Path, date: str, build: str, cache: dict[str, Path]
         "",
         "| Field | Value |",
         "| --- | --- |",
+        "| Client | `%s` (%s, wago product `%s`) |" % (client, CLIENTS[client]["title"],
+                                                      CLIENTS[client]["product"]),
         "| Build | `%s` |" % build,
         "| Fetched | %s |" % fetched_at,
         "| Builds API | <%s> |" % BUILDS_URL,
         "| Player pool | %d spells |" % result["poolSize"],
         "| Added by the EffectTriggerSpell closure | %d (spec C1) |" % result["triggerClosureAdded"],
         "| Added by the spell-family name bridge | %d |" % result["familyBridgeAdded"],
+    ]
+    if client == "forever":
+        sources.append("| Added by the rank closure (same name, same class) | %d |"
+                       % result.get("rankClosureAdded", 0))
+    sources += [
         "",
         "## Tables",
         "",
         "| Table | Why | URL |",
         "| --- | --- | --- |",
     ]
-    for table, why in TABLES:
+    for table, why in tables:
         sources.append("| `%s` | %s | <%s> |" % (table, why, CSV_URL.format(table=table, build=build)))
     sources += [
         "",
@@ -1531,6 +1905,7 @@ def write_bundle(bundle_dir: Path, date: str, build: str, cache: dict[str, Path]
     write_repo_text(bundle_dir / "SOURCES.md", "\n".join(sources))
 
     payload = {
+        "client": client,
         "build": build,
         "date": date,
         "fetchedAt": fetched_at,
@@ -1542,6 +1917,8 @@ def write_bundle(bundle_dir: Path, date: str, build: str, cache: dict[str, Path]
         "buckets": {b: [result["buckets"][b][i] for i in sorted(result["buckets"][b])]
                     for b in BUCKET_ORDER},
     }
+    if client == "forever":
+        payload["rankClosureAdded"] = result.get("rankClosureAdded", 0)
     write_repo_text(bundle_dir / "derived.json",
                     json.dumps(payload, indent=2, ensure_ascii=False) + "\n")
 
@@ -1581,6 +1958,16 @@ DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 # A spell with none does not, whatever else it does.
 APPLY_AURA_EFFECT = 6
 
+# WoW Forever (AM-FP04): the AREA auras put an aura carrying the spell's own id on a unit too --
+# 35 APPLY_AREA_AURA_PARTY, 119 APPLY_AREA_AURA_PET, 128 APPLY_AREA_AURA_FRIEND (sid_db2's set).
+# Vanilla's paladin auras are effect 35 alone (Devotion Aura 465, measured on 1.60.1.70938), so
+# with effect 6 only every rank would read as "can never match" and the panel would rewrite or
+# offer a same-named NPC copy. Forever's cast table counts them; Retail's stays on effect 6, as
+# shipped. AM-FP05 adds 65 APPLY_AREA_AURA_RAID: vanilla's other raid auras are effect 65 alone
+# (Fire Resistance Aura 19891, Trueshot Aura 19506, Moonkin Aura 24907, measured on 1.60.1.70938),
+# so without it they too read as "can never match" and no category rule could see them.
+FOREVER_AURA_EFFECTS = frozenset({APPLY_AURA_EFFECT, 35, 65, 119, 128})
+
 # How far to walk EffectTriggerSpell looking for something that applies an aura. Shallow on purpose:
 # these chains are a cast triggering its aura, not a graph to explore, and a long walk starts
 # collecting the unrelated. close_over_triggers above walks to a fixed point because it is growing a
@@ -1588,7 +1975,13 @@ APPLY_AURA_EFFECT = 6
 TRIGGER_DEPTH = 3
 
 
-def read_aura_appliers(path: Path) -> set[int]:
+def aura_effects_for(client: str) -> frozenset:
+    """The SpellEffect.Effect values that make a spell an aura for the cast table: Retail's 6 alone,
+    Forever's FOREVER_AURA_EFFECTS."""
+    return FOREVER_AURA_EFFECTS if client == "forever" else frozenset({APPLY_AURA_EFFECT})
+
+
+def read_aura_appliers(path: Path, effects: frozenset = frozenset({APPLY_AURA_EFFECT})) -> set[int]:
     """Every spell with an APPLY_AURA effect of its own, i.e. every id that can BE an aura.
 
     Its own streaming pass over SpellEffect rather than a third return from read_spell_effect,
@@ -1599,7 +1992,7 @@ def read_aura_appliers(path: Path) -> set[int]:
     for row in iter_csv(path):
         if not base_difficulty(row):
             continue
-        if as_int(row.get("Effect")) == APPLY_AURA_EFFECT:
+        if as_int(row.get("Effect")) in effects:
             spell = as_int(row.get("SpellID"))
             if spell:
                 out.add(spell)
@@ -1633,7 +2026,37 @@ def triggered_auras(spell: int, triggers: dict[int, set[int]], appliers: set[int
     return []
 
 
-def derive_cast_aura(cache: dict[str, Path]) -> dict:
+def _cast_aura_client_inputs(cache: dict[str, Path], client: str) -> tuple[set[int], set[int]]:
+    """derive_cast_aura's per-client step: `(player pool, aura appliers)`.
+
+    The pool is built the client's way, and on Forever every rank joins it (the rank closure). The
+    appliers are read with the client's aura effects (aura_effects_for)."""
+    log("Building the player pool (%s) ..." % client)
+    pool, classes = pool_for(cache, client)
+    if client == "forever":
+        apply_rank_closure(pool, classes, read_names(cache["SpellName"]),
+                           read_spell_families(cache["SpellClassOptions"]), load_forever_fence(cache))
+    log("  %d player-castable spells" % len(pool))
+
+    log("Reading SpellEffect for APPLY_AURA ...")
+    appliers = read_aura_appliers(cache["SpellEffect"], aura_effects_for(client))
+    log("  %d spells apply an aura of their own id" % len(appliers))
+    return pool, appliers
+
+
+def _cast_aura_candidates(spell, name, triggers, appliers, by_name, families) -> tuple[list[int], str]:
+    """`(candidate auras, source)` for a cast that applies no aura: its trigger edges first, else the
+    aura-applying spells of the same name, narrowed to its spell family when any share it."""
+    found = triggered_auras(spell, triggers, appliers)
+    if found:
+        return found, "trigger"
+    siblings = [s for s in by_name.get(name, ()) if s != spell]
+    family = families.get(spell)
+    fenced = [s for s in siblings if family and families.get(s) == family]
+    return sorted(fenced or siblings), "name"
+
+
+def derive_cast_aura(cache: dict[str, Path], client: str = "retail") -> dict:
     """The cast -> aura table: every player-castable id that can never match, with what it means.
 
     Only ids the panel can SAY SOMETHING USEFUL ABOUT are emitted -- a spell that applies no aura
@@ -1658,13 +2081,7 @@ def derive_cast_aura(cache: dict[str, Path]) -> dict:
     class's. It narrows; it does not always settle. Renewing Mist has seven same-named auras and
     five survive the fence, so it stays a choice.
     """
-    log("Building the player pool ...")
-    pool, _classes = build_pool(cache)
-    log("  %d player-castable spells" % len(pool))
-
-    log("Reading SpellEffect for APPLY_AURA ...")
-    appliers = read_aura_appliers(cache["SpellEffect"])
-    log("  %d spells apply an aura of their own id" % len(appliers))
+    pool, appliers = _cast_aura_client_inputs(cache, client)
 
     log("Reading SpellEffect for trigger edges ...")
     _mechanics, triggers = read_spell_effect(cache["SpellEffect"])
@@ -1683,14 +2100,7 @@ def derive_cast_aura(cache: dict[str, Path]) -> dict:
         if spell in appliers:
             continue                      # it applies its own aura; nothing to say
         name = names.get(spell, "")
-        found = triggered_auras(spell, triggers, appliers)
-        source = "trigger"
-        if not found:
-            siblings = [s for s in by_name.get(name, ()) if s != spell]
-            family = families.get(spell)
-            fenced = [s for s in siblings if family and families.get(s) == family]
-            found = sorted(fenced or siblings)
-            source = "name"
+        found, source = _cast_aura_candidates(spell, name, triggers, appliers, by_name, families)
         if not found:
             dead_no_candidate += 1
             continue
@@ -1714,8 +2124,15 @@ def derive_cast_aura(cache: dict[str, Path]) -> dict:
             "dead_no_candidate": dead_no_candidate}
 
 
-def format_cast_aura_lua(result: dict, build: str, date: str) -> str:
-    """`defaults/CastToAura.lua`, whole. Written by this tool and never edited by hand."""
+def format_cast_aura_lua(result: dict, build: str, date: str, table: str = "NS.CastToAura",
+                         path: str = "defaults/CastToAura.lua",
+                         how: str = "tools/spell-research/research.py --emit-cast-aura") -> str:
+    """`defaults/CastToAura.lua`, whole. Written by this tool and never edited by hand.
+
+    `table`, `path` and `how` name the published table, the file and the command in the header.
+    Their defaults are Retail's, byte for byte; forever.py passes `NS.CastToAuraForever` and
+    `defaults/CastToAura_Forever.lua` (AM-FP04) and appends its client selector.
+    """
     entries = result["entries"]
     unique = {s: e["unique"] for s, e in entries.items() if e["unique"]}
     choices = {s: e["auras"] for s, e in entries.items() if not e["unique"]}
@@ -1723,9 +2140,9 @@ def format_cast_aura_lua(result: dict, build: str, date: str) -> str:
     w = out.append
     w("local _, NS = ...")
     w("")
-    w("-- defaults/CastToAura.lua -- GENERATED. Do not edit by hand.")
+    w("-- %s -- GENERATED. Do not edit by hand." % path)
     w("--")
-    w("--   Build %s, derived %s by tools/spell-research/research.py --emit-cast-aura." % (build, date))
+    w("--   Build %s, derived %s by %s." % (build, date, how))
     w("--   Re-run the tool to refresh it; the bundle it came from is under docs/spell-research/.")
     w("--")
     w("-- WHAT THIS IS. Aura Master filters on the id an AURA carries, and many abilities are CAST as")
@@ -1744,16 +2161,16 @@ def format_cast_aura_lua(result: dict, build: str, date: str) -> str:
     w("-- own -- that second number is the game, not this pool, and is here only to say what the")
     w("-- membership test was run against.")
     w("")
-    w("NS.CastToAura = NS.CastToAura or {}")
+    w("%s = %s or {}" % (table, table))
     w("")
     w("-- [cast id] = the one aura it applies.")
-    w("NS.CastToAura.REWRITE = {")
+    w("%s.REWRITE = {" % table)
     for spell in sorted(unique):
         w("    [%d] = %d,%s" % (spell, unique[spell], _trail(entries[spell], unique[spell])))
     w("}")
     w("")
     w("-- [cast id] = { every aura id that could be the one }, ascending.")
-    w("NS.CastToAura.CHOICES = {")
+    w("%s.CHOICES = {" % table)
     for spell in sorted(choices):
         ids = ", ".join(str(i) for i in choices[spell])
         w("    [%d] = { %s },%s" % (spell, ids, _trail(entries[spell], None)))
@@ -1900,7 +2317,11 @@ def parse_args(argv: list[str] | None) -> argparse.Namespace:
                     "\"CC Root\", ccSnare \"CC Snare\") from Blizzard's DB2 exports.",
         epilog="This tool never writes defaults/Categories.lua. See tools/spell-research/README.md.",
     )
-    parser.add_argument("--build", help="pin a build (e.g. 12.1.0.69875); default is live retail")
+    parser.add_argument("--client", choices=sorted(CLIENTS), default="retail",
+                        help="which game client's data to derive from: retail (wago product wow, "
+                             "the default) or forever (WoW Forever, product wowf)")
+    parser.add_argument("--build", help="pin a build (e.g. 12.1.0.69875); default is the client's "
+                                        "live build")
     parser.add_argument("--cache-dir", type=Path,
                         default=Path(__file__).resolve().parent / ".cache",
                         help="where the CSV exports are cached; outside git by default")
@@ -1962,6 +2383,8 @@ def main(argv: list[str] | None = None) -> int:
             "to name a run that exists. Pass --date YYYY-MM-DD naming the bundle these ids came\n"
             "from (see docs/spell-research/), or --bundle DIR to freeze this run and use its date.")
 
+    client = args.client
+    tables = tables_for(client)
     if args.replay:
         # REPLAY RESOLVES ITS BUILD FROM THE BUNDLE, NOT FROM THE BUILDS API. `resolve_build` is a
         # network call, and a replay whose whole point is running without network must not make one;
@@ -1969,15 +2392,16 @@ def main(argv: list[str] | None = None) -> int:
         # number onto numbers derived from last month's bytes. The bundle's own derived.json records
         # the build it read, and that is the only honest answer. `--build` still wins when the caller
         # insists, for the case of a hand-assembled bundle with no derived.json.
+        check_replay_client(args.replay, client)
         build, fetched_at = replay_provenance(args.replay, args.build)
         log("Replaying %d tables from %s (build %s, fetched %s) ..."
-            % (len(TABLES), args.replay, build, fetched_at))
+            % (len(tables), args.replay, build, fetched_at))
     else:
-        build = resolve_build(args.build)
-        log("Fetching %d tables for build %s ..." % (len(TABLES), build))
+        build = resolve_build(args.build, CLIENTS[client]["product"])
+        log("Fetching %d tables for build %s (%s) ..." % (len(tables), build, client))
         fetched_at = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
     cache = {table: fetch_table(table, build, args.cache_dir, args.refresh, args.replay)
-             for table, _why in TABLES}
+             for table, _why in tables}
 
     if args.check_shipped:
         # Its own pipeline and its own exit, like --emit-cast-aura: it reads the shipped file and
@@ -1996,17 +2420,18 @@ def main(argv: list[str] | None = None) -> int:
         # ITS OWN PIPELINE, AND IT RETURNS HERE. The CC derivation below answers a different
         # question and its coverage gate is about CC sentinels, so running it would gate this
         # emit on something that has nothing to do with it.
-        sys.stdout.write(format_cast_aura_lua(derive_cast_aura(cache), build, date))
+        sys.stdout.write(format_cast_aura_lua(derive_cast_aura(cache, client), build, date))
         return 0
 
-    result = derive(cache)
+    result = derive(cache, client)
     for bucket in BUCKET_ORDER:
         entries = result["buckets"][bucket]
         bridged = sum(1 for e in entries.values() if e["source"] == "bridge")
         log("Derived %s: %d spells (%d from the mechanic graph, %d bridged by name)"
             % (bucket, len(entries), len(entries) - bridged, bridged))
 
-    missing = check_sentinels(result)
+    sentinels = CLIENTS[client]["sentinels"]
+    missing = check_sentinels(result, sentinels)
     if missing:
         log("")
         log("COVERAGE GATE FAILED — %d sentinel(s) missing from the derived set:" % len(missing))
@@ -2016,7 +2441,8 @@ def main(argv: list[str] | None = None) -> int:
         log("A missing sentinel means the pool or the bucket map lost coverage, NOT that the spell")
         log("stopped existing. Do not ship the derived list until this passes (spec C4).")
         return 1
-    log("Coverage gate: PASS (%d sentinels)" % sum(len(s) for s in SENTINELS.values()))
+    log("Coverage gate: PASS (%d %s sentinels)"
+        % (sum(len(s) for s in sentinels.values()), client))
 
     shipped = read_shipped(args.categories)
     diff_text = format_diff(result, shipped, args.categories)
@@ -2025,7 +2451,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.emit:
         print(format_lua(result, build, date))
     if args.bundle:
-        write_bundle(args.bundle, date, build, cache, result, diff_text, fetched_at)
+        write_bundle(args.bundle, date, build, cache, result, diff_text, fetched_at, client)
     return 0
 
 

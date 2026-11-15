@@ -14,6 +14,9 @@ local test, assertEqual, assertTrue, assertFalse = T.test, T.assertEqual, T.asse
 local fresh = dofile("tests/fresh_env.lua")
 
 local KAIT, PROTO, FRIZ = "Ka0s Kait", "Ka0s Prototype", "Friz Quadrata TT"
+-- A profile with no skin stored wears the client's default skin (skinning-§2): Ka0s Default, whose HUD
+-- face is Ka0s Prototype, on retail; WoW Forever, whose HUD face is not, on forever.
+local ON_KA0S_DEFAULT = (os.getenv("KA0S_KIT_CLIENT") or "retail") ~= "forever"
 
 --- One stored text block, on the skin's face (v13 left every companion on).
 local function font(face) return { font = face, fontFromSkin = true, fontSize = 36, fontFlags = "THICKOUTLINE" } end
@@ -21,7 +24,7 @@ local function font(face) return { font = face, fontFromSkin = true, fontSize = 
 --- A v14 profile like the owner's: three Text containers on Ka0s Kait with the glow on, one bars
 --- container on Ka0s Prototype (Ka0s Default's own HUD face) and Friz Quadrata (the template's), and
 --- one block the player already took off the skin. `skin` is the profile's skin key, nil for none
---- stored (Ka0s Default).
+--- stored (the client's default skin).
 local function v14profile(skin)
     local function textC(name)
         return { name = name, style = "text", text = { glow = true, glowThickness = 4, glowX = -4, font = font(KAIT) },
@@ -67,8 +70,10 @@ test("glow restore: v15 takes the owner's Ka0s Kait picks off the skin's face in
             assertEqual(cs[id].text.font.font, KAIT, name .. " #" .. id .. ": the stored face is kept")
             assertTrue(cs[id].label.font.fontFromSkin, name .. " #" .. id .. ": the template's Friz still follows")
         end
-        -- red under: a step that turns off every companion (the skin's own face is no pick)
-        assertTrue(cs[1].bars.name.fontFromSkin, name .. ": Ka0s Prototype is Ka0s Default's own HUD face")
+        -- red under: a step that turns off every companion (the skin's own face is no pick), or one
+        -- that measures a profile with no stored skin against Ka0s Default on the Forever client
+        assertEqual(cs[1].bars.name.fontFromSkin, ON_KA0S_DEFAULT,
+            name .. ": Ka0s Prototype is a pick of its own unless the profile's skin is Ka0s Default")
         assertTrue(cs[1].bars.time.fontFromSkin, name .. ": the template's face is no pick")
         assertFalse(cs[1].bars.stacks.fontFromSkin, name .. ": an off stays off")
         -- Nothing else moves: the glow and the flags are the player's.

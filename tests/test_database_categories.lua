@@ -7,6 +7,9 @@ local T = _G.AM_TEST
 local test, assertEqual, assertTrue, assertFalse, assertNil =
     T.test, T.assertEqual, T.assertTrue, T.assertFalse, T.assertNil
 local fresh = dofile("tests/fresh_env.lua")
+-- The kit profile (clients-§6). The v12 split's frozen sets are Retail's lists, and WoW Forever ships
+-- its own seeds (defaults/Categories.lua picks them), so the drift check between the two is Retail's.
+local IS_FOREVER = os.getenv("KA0S_KIT_CLIENT") == "forever"
 
 -- ── user categories: storage, keying, dynamic rows (issue #10 checkpoint 3) ────────────────────
 --
@@ -241,7 +244,7 @@ test("v12: the frozen split is the shipped CC Root and CC Snare lists exactly", 
         assertEqual(p.categorySpells.ccSnare[id], false, "snare " .. id)
         assertNil(p.categorySpells.ccRoot[id], "snare " .. id .. " is not a root")
     end
-end)
+end, IS_FOREVER and "Retail data: the v12 frozen sets mirror Retail's lists, and WoW Forever ships its own seeds" or nil)
 
 test("v12: a v11 profile climbs to v12 in every profile with every schema row still resolving", function()
     local function raw()

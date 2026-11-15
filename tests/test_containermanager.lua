@@ -830,7 +830,8 @@ end)
 
 test("manager: a reload while auras are secret (mid-key, out of combat) still builds at login", function()
     local lines
-    local NS, mocks = fresh({ before = function(m)
+    -- clientSkin: the harness's own move onto Ka0s Default is a post-login apply, which waits here
+    local NS, mocks = fresh({ clientSkin = true, before = function(m)
         m.__aurasSecret, m.__lockdown = true, false
         lines = chat(m)
     end })

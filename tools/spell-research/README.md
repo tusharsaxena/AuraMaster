@@ -334,6 +334,81 @@ afterwards:
 `docs` is already `.pkgmeta`-ignored, so none of it reaches a player. `ANALYSIS.md` — the write-up of
 what was accepted and why — is written by hand beside them, as in every other bundle here.
 
+## WoW Forever (`--client forever` and `forever.py`)
+
+Aura Master serves Retail and WoW Forever from one codebase, and Forever's spell categories are
+seeded from Forever's own DB2 data, never by filtering Retail's lists (clients-§5). Design of record:
+`docs/superpowers/specs/2026-11-14-auramaster-forever-port-design.md`, §3.3 to §3.5. Retail's lists
+and every command above are unchanged: `--client retail` is the default.
+
+**What differs on Forever.** wago.tools serves the build under product `wowf`. Forever has no
+`SpecializationSpells` or `TraitTreeLoadout`, so the player pool is `SkillLineAbility` by class
+(the rune lines `Engraving` 2851 and `Runes` 2853 and the pet lines left out) plus vanilla's
+`Talent.SpellRank_0..8`. Vanilla keeps every rank as its own id (Polymorph 118, 12824, 12825, 12826,
+...), and an aura filter matches one id, so the pool is closed over ranks by name within a class
+(`rank_closure`) and **every rank ships**. The coverage gate checks Forever's own sentinels
+(`SENTINELS_FOREVER`: Polymorph, Hammer of Justice, Fear, Kidney Shot, Frost Nova, Entangling Roots
+and Hamstring). The class keys are Forever's nine.
+
+**Two tools, three steps.** `research.py --client forever` derives the three CC buckets by
+mechanic, as on Retail, and freezes the raw tables. `forever.py` builds every **other** `spells`
+category, which nothing in DB2 names, and writes the shipped files:
+
+```sh
+# 1. Freeze Forever's tables and derive the CC buckets (the coverage gate must pass)
+python3 tools/spell-research/research.py --client forever --bundle docs/spell-research/2026-11-14-forever --date 2026-11-14
+
+# 2. Candidates: the bundle's candidates.json, from four sources (below)
+python3 tools/spell-research/forever.py derive --bundle docs/spell-research/2026-11-14-forever --date 2026-11-14
+
+# 3. Rule every candidate, one key at a time or from a key<TAB>ruling<TAB>reason file
+python3 tools/spell-research/forever.py rule --key defensives:871 --ruling accept --reason "Shield Wall: the warrior's"
+python3 tools/spell-research/forever.py rule --tsv rulings.tsv --bundle docs/spell-research/2026-11-14-forever
+
+# 4. Emit defaults/Categories_Forever*.lua and defaults/CastToAura_Forever.lua, and the bundle's RULINGS.md
+python3 tools/spell-research/forever.py emit --bundle docs/spell-research/2026-11-14-forever --date 2026-11-14
+
+# Re-derive a past run offline, out of the bundle's raw/
+python3 tools/spell-research/forever.py derive --bundle docs/spell-research/2026-11-14-forever --date 2026-11-14 --replay
+python3 tools/spell-research/research.py --replay docs/spell-research/2026-11-14-forever --client forever --diff
+```
+
+**The candidate sources.** Each candidate carries the source that proposed it:
+
+- `name-map`: a Retail entry's spell name, matched to the same class's Forever spells, every rank.
+  A cast that applies no aura of its own is followed along `EffectTriggerSpell` to the aura it lands,
+  because the addon filters on the aura's id.
+- `db2-effect`: a Forever spell whose own aura effects fit the category (shapeshift 36 on yourself
+  for Stances, a raid or party aura for Group buffs, and so on). `DB2_RULES` in `forever.py` spells
+  out every rule. This finds the vanilla-only spells no Retail entry names.
+- `cc-mechanic` (or `bridge`): `research.py`'s three CC buckets, unchanged.
+- `hand`: `HAND_CANDIDATES` in `forever.py`, the ids no table edge reaches (a totem's aura, an
+  item's or a weapon enchant's proc, a scripted racial), each with its reason. A hand id that is not
+  an aura on the build is reported as unmapped, so a later build shows what fell out.
+
+**Rulings are data.** `tools/spell-research/forever_rulings.json` holds one accept or reject per
+candidate, with a one-line reason, and `forever.py rule` is its only writer. A name match is a
+candidate, never a conclusion: NPC copies share a player spell's name and often its class family.
+`emit` refuses to run while any candidate is unruled, so a re-derive that finds something new never
+ships it silently, and a re-run reproduces the shipped lists exactly. Within one aura type an id
+ships in one category, the first in `defaults/Categories.lua`'s order; a later accepted duplicate is
+dropped at emit and listed as a conflict in `RULINGS.md` (the Racials debuff overlap is the one
+allowed exception, as on Retail).
+
+**What it writes.** `forever.py` never edits `defaults/Categories.lua`. It writes
+`defaults/Categories_Forever*.lua` (split by category boundary so no file passes 1400 lines), which
+publish `NS.CategorySeedsForever` and its `.EMPTY` set, and `defaults/CastToAura_Forever.lua`. The
+addon picks the client's lists once at file load. A category in `.EMPTY` has nothing on Forever
+and is gated off there, so a re-run that fills it ungates it with no code change.
+
+**The Forever bundle** (`docs/spell-research/2026-11-14-forever/`) holds the same `raw/*.csv.gz`,
+`SOURCES.md`, `derived.json` and `DIFF.md` as a Retail one, plus `candidates.json`, `RULINGS.md`
+(every candidate, its ruling and its reason, generated) and the hand-written `ANALYSIS.md`.
+
+**Limits.** No combat log has been read for Forever: every list is derived offline from the game's
+data. Issue #26 re-runs `logs.py` from Forever logs after max-level dungeons and raids, and the
+bundle's `ANALYSIS.md` lists what that run should re-check.
+
 ## Combat-log evidence (`logs.py`)
 
 `research.py` says which aura ids a spell *could* land; only the combat log says which one a given

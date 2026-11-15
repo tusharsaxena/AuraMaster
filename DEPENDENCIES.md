@@ -9,22 +9,25 @@ marked as such rather than listed as a requirement.
 
 | Group | Who needs it | Short answer |
 |---|---|---|
-| Runtime (in-game) | Players | World of Warcraft (Retail), patch 12.1 or later. Nothing else. |
+| Runtime (in-game) | Players | World of Warcraft, Retail (patch 12.1 or later) or WoW Forever. Nothing else. |
 | Development | Contributors | Lua **5.1** (+ `luac`), `luacheck`, `lizard`, `git`, `bash`, `~/.claude/dev-copilot/bin/ka0s-bounded` (the dev-copilot plugin), and a POSIX shell with `ls` and `grep` (`nproc` optional, for `-j auto`). |
-| Release / assets | Whoever regenerates a committed asset | Python **3.8+** (the spell-research generator, `tools/spell-research/research.py`, which regenerates `defaults/CastToAura.lua`, and the combat-log tool `tools/spell-research/logs.py`) and a working internet connection for its non-`--replay` runs; Pillow (the 128 icon TGA). Not needed to build, run or test. |
+| Release / assets | Whoever regenerates a committed asset | Python **3.8+** (the spell-research generator, `tools/spell-research/research.py`, which regenerates `defaults/CastToAura.lua`, its WoW Forever half `tools/spell-research/forever.py`, which regenerates `defaults/Categories_Forever.lua` and `defaults/CastToAura_Forever.lua`, and the combat-log tool `tools/spell-research/logs.py`) and a working internet connection for its non-`--replay` runs; Pillow (the 128 icon TGA). Not needed to build, run or test. |
 
 ## Runtime (in-game) — what a player needs
 
-- **World of Warcraft (Retail).** Single `## Interface: 120105` line in `AuraMaster.toc:1` — Retail
-  only. The addon needs the 12.1 aura container engine: `CM.Init` asks
-  `Compat.EnsureAuraContainer` (`core/Compat.lua:34`), which loads Blizzard's on-demand aura
-  container and then checks for it (`Compat.HasAuraContainer`, `core/Compat.lua:25`). On a client
+- **World of Warcraft, Retail or WoW Forever.** The TOC declares the interface for each client:
+  `## Interface: 120105, 16001` in `AuraMaster.toc:1`, Retail's number first and Forever's second
+  (toc-file-§3). One codebase serves both clients, and the client is asked only through `NS.Compat`
+  (clients-§3). WoW Forever ships the same `Blizzard_AuraContainer`. The addon needs the 12.1 aura
+  container engine: `CM.Init` asks
+  `Compat.EnsureAuraContainer` (`core/Compat.lua:92`), which loads Blizzard's on-demand aura
+  container and then checks for it (`Compat.HasAuraContainer`, `core/Compat.lua:83`). On a client
   without it, `CM.Init` prints a one-line notice (`modules/ContainerManager.lua:931`) and draws
   nothing.
 - **No deprecated API fallback.** `NS.Meta` (`core/EnvSetup.lua:24`) reads the TOC through
   `LibKa0s-Env-1.0`, or through `C_AddOns.GetAddOnMetadata` when the library is absent. It never
-  falls back to the deprecated global `GetAddOnMetadata`; the TOC is Retail-only, where `C_AddOns`
-  always exists.
+  falls back to the deprecated global `GetAddOnMetadata`; both clients the TOC declares have
+  `C_AddOns`, which the kit's `test_client_globals` suite checks against each client's API set.
 - **Nothing else.** The TOC declares no `## Dependencies`. Every library it loads — LibStub,
   CallbackHandler-1.0, the Ace3 modules, LibDataBroker-1.1, LibDBIcon-1.0, LibKa0s and
   LibSharedMedia-3.0 — is vendored under `libs/` and listed in
@@ -37,7 +40,7 @@ marked as such rather than listed as a requirement.
   and EllesmereUI's gate holds. Without it the source is the Ka0s skins alone.
 - **No other optional integration.** Apart from the skin provider above, nothing in the addon checks
   whether another addon is loaded before using it. `Compat.EnsureAuraContainer`
-  (`core/Compat.lua:34`) asks only about Blizzard's `Blizzard_AuraContainer`. The frame anchor
+  (`core/Compat.lua:92`) asks only about Blizzard's `Blizzard_AuraContainer`. The frame anchor
   re-resolves on every `ADDON_LOADED` (`addon:OnAddonLoaded`, `core/AuraMaster.lua:211`) whatever
   the addon is.
 
@@ -49,7 +52,7 @@ marked as such rather than listed as a requirement.
 | `luacheck` | any recent | `~/.claude/dev-copilot/bin/ka0s-bounded luacheck .`, the other half of the green gate | `.luacheckrc` at the repo root |
 | `ka0s-bounded` | the dev-copilot plugin | `~/.claude/dev-copilot/bin/ka0s-bounded`, the bounded runner lint goes through, because `luacheck` loads no kit and cannot bound itself (testing-§15) | installed with the dev-copilot Claude Code plugin |
 | `lizard` | any recent | the `complexity` suite of `tests/_kit/run-automated-tests.sh` (automated-tests) | `tests/_kit/run-automated-tests.sh:168` probes `command -v lizard` |
-| `git` | any recent | the vendored-payload gate, the lint-config gate, the line-ending gate, the layout cap gate, the runner-mode (100755) case, and the runner's manifest | `tests/_kit/vendor_sync.lua:441` (`git -C … show`), `tests/test_lintconfig.lua:155` (`git ls-files`), `tests/_kit/test_eol.lua` (`git check-attr`), `tests/_kit/test_layout_cap.lua:171` (`git ls-files`), `tests/_kit/vendor_sync.lua:657` (`git ls-files -s`, the kit's runner-mode case), `tests/_kit/run-automated-tests.sh:172` (`git rev-parse`) |
+| `git` | any recent | the vendored-payload gate, the lint-config gate, the line-ending gate, the layout cap gate, the runner-mode (100755) case, and the runner's manifest | `tests/_kit/vendor_sync.lua:598` (`git -C … show`), `tests/test_lintconfig.lua:155` (`git ls-files`), `tests/_kit/test_eol.lua` (`git check-attr`), `tests/_kit/test_layout_cap.lua:171` (`git ls-files`), `tests/_kit/vendor_sync.lua:894` (`git ls-files -s`, the kit's runner-mode case), `tests/_kit/run-automated-tests.sh:172` (`git rev-parse`) |
 | `bash` | any recent | running the vendored automated-test runner, and the standard utilities it pipes through: `sed`, `grep`, `awk`, `date`, `find`, `wc`, `sort`, `head`, `tail`, `tr` | `tests/_kit/run-automated-tests.sh:1` is `#!/usr/bin/env bash` and uses bash arrays; `:69`, `:81` and `:94` (`sed`), `:81` and `:166` (`grep`), `:101` (`date`), `:78` (`head`), `:81` (`tr`); `awk` builds `PERF_SCENARIOS`, `PERF_TABLE` and `CCN_BAND_ROWS`, `find`, `wc` and `sort` build `CCN_BAND_ROWS`, and `tail` picks the lint `Total:` line and the tests `footer` |
 | POSIX shell with `ls` and `grep` (`-r`, `--include`) | any | tests that list or scan source files by shelling out: the docs gate, the locale gate, the close-button, icon-declaration and metadata-reader source scans, and the kit's directory listing | `tests/test_docs.lua:45` and `tests/test_locale.lua:24` (`io.popen("ls -1 …")`), `tests/test_setups.lua:42`, `:74` and `:108` (`io.popen("grep -r… --include='*.lua' …")`), `tests/_kit/framework.lua` (`listDir`, `ls -A`) |
 | POSIX `sh` + `nproc` (coreutils) | any | the parallel harness, which `lua tests/run.lua` uses by default (`jobs = "auto"`; `-j N` overrides); `nproc` is optional: without it (or `sysctl -n hw.ncpu`), `auto` falls back to one job | `tests/_kit/framework.lua` (`nproc` for `--jobs auto`; `os.execute(":")`, the POSIX-shell probe; shards backgrounded with `&` and joined with `wait`) |
@@ -89,14 +92,14 @@ Versions are pinned only where a version matters: `lua5.1` is hard, `luacheck` a
 ### Optional: a sibling `../LibKa0s` checkout
 
 `tests/test_vendor_sync.lua` hands the comparison to the vendored `tests/_kit/vendor_sync.lua`, which
-reads the tag named in root `CLAUDE.md` (`v1.91.0`) out of a checkout at `../LibKa0s` and compares
+reads the tag on root `CLAUDE.md`'s Bundles line out of a checkout at `../LibKa0s` and compares
 `libs/LibKa0s/` and `tests/_kit/` against it. Without that checkout the case records a **skip with
 its reason**, not a pass and not a failure (testing-§11). Clone it if you touch `libs/`, re-vendor,
 or want that case to actually compare:
 
 ```sh
 git clone https://github.com/tusharsaxena/LibKa0s.git ../LibKa0s
-git -C ../LibKa0s rev-parse --short v1.91.0   # verify: prints a commit
+git -C ../LibKa0s rev-parse --short v1.98.0   # verify: prints a commit (the tag on CLAUDE.md's Bundles line)
 ```
 
 ### Not dependencies of this repo
@@ -127,6 +130,7 @@ required to build, run or test the addon.**
 |---|---|---|---|
 | `python3` | **3.8** or newer | the spell-research generator, `tools/spell-research/research.py` — the offline half of issue #11's Part C, which derives the CC Loss of Control / CC Root / CC Snare spell lists from Blizzard's DB2 exports. Not part of the green gate, and not needed to build, run or test the addon | `tools/spell-research/research.py:1` is `#!/usr/bin/env python3`, and it imports `argparse`, `csv`, `gzip`, `json`, `urllib` and friends and **nothing outside the standard library** — so there is no `pip install` step and no virtualenv. 3.8 is the floor because the file's `from __future__ import annotations` is what lets it write `dict[int, str]` and `str \| None` annotations on an older interpreter |
 | a working internet connection | — | the same generator, on any run that is not `--replay`: it fetches the DB2 CSV exports over HTTPS and caches them in `tools/spell-research/.cache/` (~75 MB a build, git-ignored). A frozen bundle can be re-derived offline (`--replay docs/spell-research/<date>`) | `tools/spell-research/research.py` imports `urllib.request` and `urllib.error`; `tools/spell-research/.gitignore:1-2` describes the cache as "~75 MB a build, re-downloadable at any time" |
+| `python3` (same install) | **3.8** or newer | the WoW Forever seed generator, `tools/spell-research/forever.py`, which derives every non-CC spell category's Forever list from WoW Forever's DB2 exports (wago.tools product `wowf`) and emits `defaults/Categories_Forever.lua` and `defaults/CastToAura_Forever.lua`. Not part of the green gate. Network access only on a run that is not `--replay`, as above | `tools/spell-research/forever.py:1` is `#!/usr/bin/env python3`; it imports only the standard library plus `research.py` and `sid_db2.py` as modules. Its tests are `unittest` cases, run by the same `python3 -m unittest discover -s tools/spell-research -p 'test_*.py'` as `logs.py`'s |
 | `python3` (same install) | **3.8** or newer | the combat-log evidence tool, `tools/spell-research/logs.py` and its `sid_*.py` modules, which mine the owner's combat logs for the aura ids each spec applies and drive the `/aura-spells-review` command. Not part of the green gate | `tools/spell-research/logs.py:1` is `#!/usr/bin/env python3`; it and the `sid_*.py` modules import only the standard library (`argparse`, `csv`, `dataclasses`, `hashlib`, `json`, `statistics`, `pathlib`, …) plus `research.py` as a module. Its tests are `python3 -m unittest discover -s tools/spell-research -p 'test_*.py'` |
 | a folder of combat logs (optional) | — | `logs.py scan`'s input: the `WoWCombatLog-*.txt` files the client writes with advanced combat logging on. Default `/mnt/g/Games/Blizzard/World of Warcraft/_retail_/Logs/RaiderIOLogsArchive`, any other folder with `--logs`. Only the owner's review needs it; nothing else reads it. Its per-log cache and salt live outside the repo, in `~/.cache/auramaster-spell-research/` | `tools/spell-research/logs.py` (`DEFAULT_LOGS`), `tools/spell-research/sid_cache.py` (`DEFAULT_CACHE_DIR`) |
 | Pillow (`python3-pil`) | any recent | regenerating the 128 icon TGA (below) | the recipe below does `from PIL import Image` |

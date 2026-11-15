@@ -9,6 +9,20 @@ local fresh = dofile("tests/fresh_env.lua")
 local snapshot = dofile("tests/settings_pin_snapshot.lua")
 local PIN = dofile("tests/settings_pin.lua")
 
+-- The snapshot is the retail profile's. skin.skin's default is the client's default skin
+-- (skinning-§2), WoW Forever on the forever profile: those two lines, and only those, read it there.
+-- Pinned from the profile, never read back from the addon.
+if (os.getenv("KA0S_KIT_CLIENT") or "retail") == "forever" then
+    local pinned = {}
+    for i, line in ipairs(PIN) do
+        if line:find("skin.skin ", 1, true) or line:find("profile.skin.skin=", 1, true) then
+            line = line:gsub('"ka0s"', '"forever"', 1)
+        end
+        pinned[i] = line
+    end
+    PIN = pinned
+end
+
 --- The lines of `a` that `b` lacks, joined for a failure message.
 local function missing(a, b)
     local have, out = {}, {}

@@ -46,13 +46,14 @@ NS.defaults.profile = {
 
     -- The skin this addon wears (skinning-§2: per addon, per profile), written only through the write
     -- seam (core/SkinSetup.lua's NS.WriteSkinChoice) and drawn by the library's Skin tab on General.
-    -- `source` and `skin` start on Ka0s Default; the Scope's two exceptions leave the settings panel
+    -- `source` starts on the Ka0s skins and `skin` on the client's default skin, NS.DEFAULT_SKIN
+    -- (core/SkinSetup.lua: WoW Forever on the Forever client, Ka0s Default on Retail); the Scope's two exceptions leave the settings panel
     -- the client's and skin the fonts (the owner's call for a new profile, LootHistory SF-45); `font`
     -- and `texture` are the overrides, "" for the skin's own; `pickerSeen` is the first-run picker's
     -- memory, false on every profile, old and new (owner ruling O3); `outline` is the Font outline,
     -- "all" text, "hud" text only or "off" (LibKa0s v1.82.0, ruling D-06).
     skin = {
-        source = "ka0s", skin = "ka0s", ignorePanel = true, ignoreFonts = false,
+        source = "ka0s", skin = NS.DEFAULT_SKIN or "ka0s", ignorePanel = true, ignoreFonts = false,
         font = "", texture = "", outline = "hud", pickerSeen = false,
         -- The record of the one step onto the skin (core/Database.lua's Database.FollowSkin): no schema
         -- row, so no Defaults path walks it and a companion turned off afterwards stays off.

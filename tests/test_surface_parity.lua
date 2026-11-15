@@ -66,12 +66,13 @@ test("parity: the Bus stub carries every LibKa0s-Bus-1.0 member the addon calls"
     })
 end)
 
--- LibKa0s-Compat-1.0's nine members sit on two host tables here: GetSpellInfo on NS.Compat, the three
+-- LibKa0s-Compat-1.0's members sit on two host tables here: GetSpellInfo on NS.Compat, the three
 -- guards on NS.Secrets. Two calls, each ignoring what the other carries, so a member the major gains
 -- later is ignored by neither and fails one of them until this host decides where it goes.
 local COMPAT_READERS = { "GetSpellInfo", "GetSpellName", "GetSpellTexture", "GetSpellCooldown",
                          "GetSpecialization", "GetSpecializationInfo",
-                         "IsForever", "IsRetail", "ClientKey", "ForClient" }
+                         "IsForever", "IsRetail", "ClientKey", "ForClient",
+                         "RegionalNames", "UnitCharacterName", "CharacterKey", "RealmKey" }
 
 test("parity: the Compat arms carry every LibKa0s-Compat-1.0 member the addon wires", function()
     local NS2 = loadDegraded()
@@ -84,6 +85,9 @@ test("parity: the Compat arms carry every LibKa0s-Compat-1.0 member the addon wi
         "GetSpecializationInfo",
         -- LibKa0s v1.92.0 (Compat minor 2) added these four client helpers. No caller here until the Forever port.
         "IsForever", "IsRetail", "ClientKey", "ForClient",
+        -- LibKa0s v1.94.0 (Compat minor 4) added character identity. No caller here: AceDB keys the
+        -- profile store itself, and nothing in this addon names a character or a realm.
+        "RegionalNames", "UnitCharacterName", "CharacterKey", "RealmKey",
     })
     T.assertSurfaceParity(NS2.Secrets, "LibKa0s-Compat-1.0", COMPAT_READERS)
 end)

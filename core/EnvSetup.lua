@@ -8,7 +8,7 @@
 --
 -- A degraded install (libs/LibKa0s missing) falls back to C_AddOns.GetAddOnMetadata, then nil, so
 -- `/am version` and the landing page's Notes line still work. The deprecated global is never read:
--- the TOC is Retail-only, where C_AddOns always exists.
+-- both clients the TOC declares (Retail and WoW Forever) have C_AddOns.
 --
 -- Nothing here is resolved at load beyond the LibStub lookup, so the TOC position is conventional.
 

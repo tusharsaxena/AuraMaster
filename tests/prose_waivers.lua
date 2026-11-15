@@ -13,4 +13,13 @@ return {
     -- the day it ran, not authored prose, and it is not rewritten -- the same bargain every other
     -- dated bundle in this collection strikes.
     skipDirs = { "docs/spell-research/" },
+
+    -- GAME DATA in a generated file that ships. The paladin spells are named "Judge" .. "ment" by
+    -- Blizzard on WoW Forever ("Judge" .. "ment" of Light, of Wisdom, ...), and forever.py emit copies
+    -- each spell's name into the comment beside its id; renaming it would make the comment
+    -- disagree with the build it was derived from. Spelled in two halves here so this file
+    -- does not carry the word itself.
+    waived = {
+        ["defaults/CastToAura_Forever.lua"] = { ["judge" .. "ment"] = true },
+    },
 }

@@ -52,6 +52,14 @@ test("loadorder: the load-bearing pairs are in order, and the TOC says why", fun
         { "core/PerfSetup.lua", "core/AuraMaster.lua" },
         { "core/Constants.lua", "core/DebugLogSetup.lua" },
         { "defaults/Categories.lua", "defaults/Profile.lua" },
+        -- Categories picks the Forever seeds and gates its definitions through NS.Compat at file load,
+        -- and CastToAura_Forever replaces NS.CastToAura there; Profile reads NS.DEFAULT_SKIN at load
+        -- (clients-§5, skinning-§2).
+        { "core/Compat.lua", "defaults/Categories.lua" },
+        { "core/Compat.lua", "defaults/CastToAura_Forever.lua" },
+        { "defaults/Categories_Forever.lua", "defaults/Categories.lua" },
+        { "defaults/CastToAura.lua", "defaults/CastToAura_Forever.lua" },
+        { "core/SkinSetup.lua", "defaults/Profile.lua" },
         { "defaults/Categories.lua", "defaults/UserCategories.lua" },
         { "modules/Style.lua", "modules/Style_Border.lua" },
         { "modules/Style.lua", "modules/Style_Bars.lua" },
@@ -90,6 +98,9 @@ test("loadorder: the load-bearing pairs are in order, and the TOC says why", fun
     end
     assertTrue(readFile("AuraMaster.toc"):find("Constants.FONT_MONO is resolved from", 1, true) ~= nil,
         "the MediaSetup position carries its note")
+    assertTrue(readFile("AuraMaster.toc"):find("NS.Compat.ClientKey and NS.Compat.ForClient at file load",
+        1, true) ~= nil,
+        "the Compat position carries its note")
 end)
 
 test("loadorder: GeneralDispel loads after GeneralSpells and before General", function()

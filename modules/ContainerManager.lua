@@ -928,7 +928,7 @@ function CM.__listening() return ev ~= nil end
 --- nothing and builds no frame: the stand-up (core/LifecycleSetup.lua) syncs the registry then.
 function CM.Init()
     if not NS.Compat.EnsureAuraContainer() then
-        print_(L["This client has no aura container API (Retail 12.1 or later is required); containers will not be drawn."])
+        print_(L["This client has no aura container API (Retail 12.1 or later, or WoW Forever, is required); containers will not be drawn."])
     end
     if NS.IsStoodDown() then
         if NS.TimedSpells and NS.TimedSpells.Sync then NS.TimedSpells.Sync() end

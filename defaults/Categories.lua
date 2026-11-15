@@ -1214,6 +1214,58 @@ Cat.HARMFUL = {
 }
 
 -- ---------------------------------------------------------------------------
+-- The client's seeds and the client gate (clients-§5, clients-§4; AM-FP06)
+-- ---------------------------------------------------------------------------
+--
+-- TWO LISTS, PICKED ONCE. The inline lists above are Retail's, and they stay where
+-- tools/spell-research's `logs.py apply` and `research.py --check-shipped` read and write them.
+-- WoW Forever's are generated into defaults/Categories_Forever*.lua, which load before this file and
+-- publish NS.CategorySeedsForever[key] = { CLASS = { ids } }. The client is read HERE, once; nothing
+-- that reads `Cat` ever asks which client it is on. On Forever every shipped `spells` list is
+-- REPLACED by Forever's own, never filtered: a Retail list with the ids Forever lacks taken out is a
+-- guess with holes in it (clients-§5).
+--
+-- THE HELPER RUNS AFTER THE LISTS, NOT AROUND EACH ONE. Every definition above still reads
+-- `spells = spells({`, the line the Retail tooling anchors on, so the swap is one pass over the
+-- definitions rather than a rewritten opener on fifteen of them.
+--
+-- THE GATE. A definition may carry `clients = { "retail" }` (or any clients-§1 token list), and the
+-- two lists are rebuilt through NS.Compat.ForClient, so a gated category NEVER ENTERS THEM: not the
+-- Filters grid, not the General page > Spell categories, not DefaultStates, not the schema rows, not
+-- the compiler. A `spells` category the Forever data declares empty (NS.CategorySeedsForever.EMPTY,
+-- the generator's one fact about it) is declared Retail-only here, so a re-run that fills it ungates
+-- it with no code change. A profile that still names a gated key (copied by hand from the other
+-- client) keeps its value; nothing reads it as a category.
+local FOREVER_SEEDS = (NS.Compat.ClientKey() == "forever") and (NS.CategorySeedsForever or {}) or nil
+local FOREVER_EMPTY = (NS.CategorySeedsForever and NS.CategorySeedsForever.EMPTY) or {}
+local RETAIL_ONLY = { "retail" }
+
+--- The id -> class map a shipped `spells` category carries on the running client: Forever's own
+--- seed on Forever, `retailSpells` (the inline list above, already built) on Retail.
+--- @param key string  the category key
+--- @param retailSpells table  the Retail map, [id] = class
+--- @return table
+local function seeded(key, retailSpells)
+    if FOREVER_SEEDS then return spells(FOREVER_SEEDS[key] or {}) end
+    return retailSpells
+end
+
+local function servedHere(list)
+    local out = {}
+    for _, def in ipairs(list) do
+        if def.kind == "spells" then
+            if FOREVER_EMPTY[def.key] then def.clients = RETAIL_ONLY end
+            def.spells = seeded(def.key, def.spells)
+        end
+        if NS.Compat.ForClient(def.clients) then out[#out + 1] = def end
+    end
+    return out
+end
+
+Cat.HELPFUL = servedHere(Cat.HELPFUL)
+Cat.HARMFUL = servedHere(Cat.HARMFUL)
+
+-- ---------------------------------------------------------------------------
 -- Aura type, stamped onto every definition (issue #10 checkpoint 2)
 -- ---------------------------------------------------------------------------
 --
@@ -1330,7 +1382,10 @@ end
 function Cat.StatesShowing(keys)
     local out = Cat.DefaultStates()
     for _, def in ipairs(Cat.HELPFUL) do out[def.key] = "hide" end
-    for _, key in ipairs(keys) do out[key] = "show" end
+    -- A key the running client gates off (clients-§4) is in neither list, so it gets no state.
+    for _, key in ipairs(keys) do
+        if out[key] then out[key] = "show" end
+    end
     return out
 end
 
