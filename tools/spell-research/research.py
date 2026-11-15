@@ -1537,7 +1537,13 @@ def check_sentinels(result: dict, sentinels: dict | None = None) -> list[str]:
 # A `spells({ ... })` block opens on its own line and closes on the first line that starts `})`.
 # Both are line-anchored, so prose in the file's header comments that mentions `spells({ ... })`
 # never opens a block, and a `})` inside a comment never closes one.
-SPELLS_OPEN = re.compile(r"^[ \t]*spells\s*=\s*spells\(\{", re.MULTILINE)
+SPELLS_OPEN = re.compile(r'^[ \t]*(?:spells\s*=\s*spells\(\{|seed\("\w+"\s*,\s*"\w+"\s*,\s*\{)', re.MULTILINE)
+# THE SEED-FILE SHAPE (2026-11-15, issue #27): defaults/Categories_Retail.lua holds Retail's lists,
+# one `seed("<key>", "<HELPFUL|HARMFUL>", {` opener per category, closed like an inline block by the
+# first line starting `})`. The opener names the key and the aura type itself, so a seed file is read
+# without the definitions; the labels come from the sibling Categories.lua (category_labels).
+SEED_OPEN = re.compile(r'^seed\("(?P<key>\w+)"\s*,\s*"(?P<aura>HELPFUL|HARMFUL)"\s*,\s*\{[ \t]*\r?$',
+                       re.MULTILINE)
 SPELLS_CLOSE = re.compile(r"^[ \t]*\}\)", re.MULTILINE)
 # A category's opening line: `key = "...", kind = "spells", label = "..."`. Line-anchored, so a
 # commented-out one (`-- key = ...`) is never read.
@@ -1636,11 +1642,15 @@ def spells_block_at(text: str, pos: int = 0) -> tuple[int, int, str] | None:
     return opened.start(), closed.end(), text[opened.end():closed.start()]
 
 
-def read_spells_categories(text: str) -> list[dict]:
+def read_spells_categories(text: str, labels: dict[str, str] | None = None) -> list[dict]:
     """Every `kind = "spells"` category of a Categories.lua text that has a `spells({ ... })` block
-    of its own, in file order: `{"key", "label", "start", "records"}` (`start` is the offset of the
-    category's `key = ` line; `records` is parse_spells_body's list). A spells-kind category whose
-    next `spells({` belongs to a later category (no `key = ` line may sit between) is skipped."""
+    of its own, and every `seed(...)` list of a seed file, in file order:
+    `{"key", "label", "start", "records", "aura"}` (`start` is the offset of the category's `key = `
+    line, or of its `seed(` line; `records` is parse_spells_body's list; `aura` is "HELPFUL" or
+    "HARMFUL" for a seed list, None for an inline one, whose aura type is where it sits). A
+    spells-kind category whose next `spells({` belongs to a later category (no `key = ` line may sit
+    between) is skipped. `labels` ({key: label}) names a seed list; without it the label is the key.
+    """
     out: list[dict] = []
     for cat in SPELLS_CATEGORY.finditer(text):
         block = spells_block_at(text, cat.end())
@@ -1648,8 +1658,32 @@ def read_spells_categories(text: str) -> list[dict]:
         if not block or (following and following.start() < block[0]):
             continue  # no spells table of its own: not something this tool can read
         out.append({"key": cat.group("key"), "label": cat.group("label"), "start": cat.start(),
-                    "records": parse_spells_body(block[2])})
+                    "records": parse_spells_body(block[2]), "aura": None})
+    for opened in SEED_OPEN.finditer(text):
+        block = spells_block_at(text, opened.start())
+        if not block:
+            continue
+        key = opened.group("key")
+        out.append({"key": key, "label": (labels or {}).get(key, key), "start": opened.start(),
+                    "records": parse_spells_body(block[2]), "aura": opened.group("aura")})
+    out.sort(key=lambda cat: cat["start"])
     return out
+
+
+def category_labels(path: Path) -> dict[str, str]:
+    """{key: label} of every `spells` definition in the Categories.lua beside `path` (a seed file's
+    labels), or {} when there is none."""
+    defs = path.parent / "Categories.lua"
+    if not defs.exists():
+        return {}
+    return {m.group("key"): m.group("label")
+            for m in SPELLS_CATEGORY.finditer(defs.read_text(encoding="utf-8"))}
+
+
+def read_categories_file(path: Path) -> list[dict]:
+    """read_spells_categories over one file, a Categories.lua or a seed file, with a seed file's
+    labels taken from its sibling Categories.lua."""
+    return read_spells_categories(path.read_text(encoding="utf-8"), category_labels(path))
 
 
 def read_shipped(path: Path) -> dict[str, dict[int, str]]:
@@ -1663,7 +1697,7 @@ def read_shipped(path: Path) -> dict[str, dict[int, str]]:
     shipped: dict[str, dict[int, str]] = {bucket: {} for bucket in BUCKET_ORDER}
     if not path.exists():
         return shipped
-    for cat in read_spells_categories(path.read_text(encoding="utf-8")):
+    for cat in read_categories_file(path):
         if cat["key"] in shipped:
             shipped[cat["key"]] = {rec["id"]: rec["class"] for rec in cat["records"]}
     return shipped
@@ -2330,7 +2364,7 @@ def parse_args(argv: list[str] | None) -> argparse.Namespace:
     parser.add_argument("--replay", type=Path, metavar="DIR",
                         help="re-derive offline from a past bundle's raw/*.csv.gz, e.g. "
                              "docs/spell-research/2026-09-20 (no network, no cache)")
-    parser.add_argument("--categories", type=Path, default=repo_root() / "defaults" / "Categories.lua",
+    parser.add_argument("--categories", type=Path, default=repo_root() / "defaults" / "Categories_Retail.lua",
                         help="the defaults file to diff against (read-only, always)")
     parser.add_argument("--diff", action="store_true",
                         help="report added / removed / regrouped against the shipped lists (default)")

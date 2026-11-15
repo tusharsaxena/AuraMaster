@@ -6,7 +6,7 @@ argument-hint: [logs-folder] | apply <filled REVIEW.csv>
 # /aura-spells-review
 
 Mine the owner's combat logs for the aura ids players of each spec actually apply, propose
-corrections to `defaults/Categories.lua`'s `spells` categories and additions to them, and hand the
+corrections to `defaults/Categories_Retail.lua`'s `spells` categories and additions to them, and hand the
 owner **one review sheet**, `REVIEW.csv`, to rule on in a spreadsheet. When the owner hands the
 filled sheet back, apply it in one shot. Design of record:
 `docs/superpowers/specs/2026-09-24-spell-ids-from-combat-logs-design.md` (and the plan's addendum,
@@ -23,7 +23,7 @@ The command has two modes, chosen by `$ARGUMENTS`:
 
 Rules that hold throughout:
 
-- **Only `logs.py ingest` (or `logs.py apply`) writes `defaults/Categories.lua`**, and only for
+- **Only `logs.py ingest` (or `logs.py apply`) writes `defaults/Categories_Retail.lua`**, and only for
   rulings recorded in `tools/spell-research/decisions.json`. Never edit either file by hand.
 - **Rulings come from the owner's sheet, through `logs.py ingest`.** Never hand-edit
   `decisions.json`, and never fill in a decision the owner did not write.
@@ -92,7 +92,7 @@ python3 tools/spell-research/logs.py ingest --bundle docs/spell-research/<bundle
 
 It checks the sheet against the bundle's `REVIEW.csv` by `row_id`, `spell_id` and `type`, records
 every Approve/Reject in `decisions.json` (one entry per row), applies the approved rows to
-`defaults/Categories.lua`, writes `DECISIONS.md` into the bundle, and prints each line change and
+`defaults/Categories_Retail.lua`, writes `DECISIONS.md` into the bundle, and prints each line change and
 a summary (approved, rejected, pending, line changes). If it exits non-zero (an unknown or
 mismatched row, an unrecognized decision value, an edited category that is not a `spells` category
 key or label), nothing was written: show its message, ask the owner to fix the sheet, and stop.
@@ -121,7 +121,7 @@ sheet is not committed; the rulings live in `decisions.json` and `DECISIONS.md`.
 Stage exactly these paths and commit:
 
 ```sh
-git add defaults/Categories.lua tools/spell-research/decisions.json docs/spell-research/<bundle date>-logs
+git add defaults/Categories_Retail.lua tools/spell-research/decisions.json docs/spell-research/<bundle date>-logs
 git commit -m "Spell categories: apply combat-log review sheet (<date>)"
 ```
 

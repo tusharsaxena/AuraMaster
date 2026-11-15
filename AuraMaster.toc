@@ -84,6 +84,9 @@ core\Database_Migrations.lua
 # LOAD-BEARING: the generated WoW Forever seed lists before Categories, which picks them on Forever
 # (NS.CategorySeedsForever, with its EMPTY set) once at file load (clients-§5).
 defaults\Categories_Forever.lua
+# LOAD-BEARING: the Retail seed lists before Categories, which picks them on Retail
+# (NS.CategorySeedsRetail) once at file load (clients-§5).
+defaults\Categories_Retail.lua
 # LOAD-BEARING: Categories before Profile — the container template's category states are built
 # from the category lists.
 defaults\Categories.lua

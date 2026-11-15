@@ -176,8 +176,9 @@ class ShippedCategoriesTest(unittest.TestCase):
             self.assertEqual(set(cat), {"key", "label", "aura", "classes"})
 
     def test_the_real_file_parses_and_ascendance_is_listed(self):
-        real = HERE.parent.parent / "defaults" / "Categories.lua"
+        real = HERE.parent.parent / "defaults" / "Categories_Retail.lua"
         cats = {c["key"]: c for c in sid_db2.shipped_categories(real)}
+        self.assertEqual(cats["defensives"]["label"], "Defensive cooldowns", "labels from Categories.lua")
         self.assertIn(114051, cats["offensiveCDs"]["classes"]["SHAMAN"])
         self.assertEqual(cats["hardCC"]["aura"], "DEBUFF")
         self.assertEqual(cats["defensives"]["aura"], "BUFF")
@@ -208,7 +209,7 @@ class ShippedCategoriesTest(unittest.TestCase):
 
 
 MULTILINE = HERE / "fixtures" / "Categories-multiline.lua"
-REAL = HERE.parent.parent / "defaults" / "Categories.lua"
+REAL = HERE.parent.parent / "defaults" / "Categories_Retail.lua"
 
 # Every digit run in the multiline fixture's COMMENTS that is not itself a shipped id there: dates,
 # "replaces 374348", "98007 is the cast", "issue #15", a commented-out 999999, the legacy aside's
@@ -306,20 +307,19 @@ class SharedReaderTest(unittest.TestCase):
         self.assertIn("## Ids whose name disagrees with the comment beside them — 1", report)
         self.assertIn("the file says **Bloodlust**, the build says **Heroism**", report)
 
-    @unittest.skipUnless(REAL.exists(), "defaults/Categories.lua is not beside the tool")
+    @unittest.skipUnless(REAL.exists(), "defaults/Categories_Retail.lua is not beside the tool")
     def test_the_real_file_every_id_line_is_one_id_with_a_name(self):
         # a count that shares no code with the reader: `<digits>,` lines inside spells({ ... })
         count, inside = {}, None
         for line in REAL.read_text(encoding="utf-8").splitlines():
-            key = re.match(r'\s*key = "(\w+)"', line)
-            if key:
-                current = key.group(1)
-            if re.match(r"\s*spells = spells\(\{", line):
-                inside = current
+            seed = re.match(r'seed\("(\w+)", "(?:HELPFUL|HARMFUL)", \{$', line)
+            if seed:
+                inside = seed.group(1)
             elif inside and re.match(r"\s*\}\)", line):
                 inside = None
             elif inside and re.match(r"\s*\d+,", line):
                 count[inside] = count.get(inside, 0) + 1
+        self.assertEqual(len(count), 15, "every spells category has a seed list")
         cats = sid_db2.shipped_categories(REAL)
         self.assertEqual({c["key"]: sum(len(v) for v in c["classes"].values()) for c in cats}, count)
         records = research.read_shipped_named(REAL)

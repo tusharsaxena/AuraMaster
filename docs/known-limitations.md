@@ -132,7 +132,7 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   test that excludes professions and mounts throws away; and Earthbind Totem (2484) and Earthgrab
   Totem, whose totems carry no mechanic and whose auras no matching name — those two now ship by
   hand (Earthbind 3600 on CC Snare, Earthgrab 64695 on CC Root, owner 2026-10-04). The KNOWN GAPS comment
-  above `hardCC` (`defaults/Categories.lua:822`) records each one and why rather than papering over it. A player who
+  above `hardCC` (`defaults/Categories.lua:328`) records each one and why rather than papering over it. A player who
   wants any of the other three adds it by id on General → Spell categories, which is a profile-wide edit
   every container picks up.
 - **"Only auras without a duration" is learned, not filtered.** The engine has no such filter; the

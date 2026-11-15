@@ -1,0 +1,7709 @@
+{
+ "build": "12.1.5.70783",
+ "candidates": [
+  {
+   "category": "defensives",
+   "class": "PRIEST",
+   "id": 47788,
+   "key": "defensives:47788",
+   "name": "Guardian Spirit",
+   "notes": [
+    "hand: an external; the owner files externals in Defensives (Pain Suppression 33206)"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "hand",
+   "via": null
+  },
+  {
+   "category": "defensives",
+   "class": "PRIEST",
+   "id": 215769,
+   "key": "defensives:215769",
+   "name": "Spirit of Redemption",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "defensives",
+   "class": "PRIEST",
+   "id": 421453,
+   "key": "defensives:421453",
+   "name": "Ultimate Penitence",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "defensives",
+   "class": "DEATHKNIGHT",
+   "id": 311648,
+   "key": "defensives:311648",
+   "name": "Swarming Mist",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "defensives",
+   "class": "MONK",
+   "id": 115176,
+   "key": "defensives:115176",
+   "name": "Zen Meditation",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "defensives",
+   "class": "DRUID",
+   "id": 22842,
+   "key": "defensives:22842",
+   "name": "Frenzied Regeneration",
+   "notes": [
+    "hand: a self-heal cooldown; the rules propose it as a stance (shapeshift-only effect)"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "hand",
+   "via": null
+  },
+  {
+   "category": "defensives",
+   "class": "EVOKER",
+   "id": 359816,
+   "key": "defensives:359816",
+   "name": "Dream Flight",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "defensives",
+   "class": "ALL",
+   "id": 437461,
+   "key": "defensives:437461",
+   "name": "Aspect of the Turtle",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "defensives",
+   "class": "ALL",
+   "id": 466524,
+   "key": "defensives:466524",
+   "name": "Metal Sheet",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "defensives",
+   "class": "ALL",
+   "id": 200851,
+   "key": "defensives:200851",
+   "name": "Rage of the Sleeper",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "activeMitigation",
+   "class": "WARRIOR",
+   "id": 203524,
+   "key": "activeMitigation:203524",
+   "name": "Neltharion's Fury",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "activeMitigation",
+   "class": "WARRIOR",
+   "id": 1258163,
+   "key": "activeMitigation:1258163",
+   "name": "Protection Warrior",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "activeMitigation",
+   "class": "WARRIOR",
+   "id": 386011,
+   "key": "activeMitigation:386011",
+   "name": "Shield Specialization",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "activeMitigation",
+   "class": "WARRIOR",
+   "id": 137047,
+   "key": "activeMitigation:137047",
+   "name": "Warrior",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "activeMitigation",
+   "class": "PALADIN",
+   "id": 137026,
+   "key": "activeMitigation:137026",
+   "name": "Paladin",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "activeMitigation",
+   "class": "SHAMAN",
+   "id": 137038,
+   "key": "activeMitigation:137038",
+   "name": "Shaman",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "activeMitigation",
+   "class": "MONK",
+   "id": 414132,
+   "key": "activeMitigation:414132",
+   "name": "Dance of the Wind",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "activeMitigation",
+   "class": "MONK",
+   "id": 393515,
+   "key": "activeMitigation:393515",
+   "name": "Pretense of Instability",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "activeMitigation",
+   "class": "MONK",
+   "id": 451214,
+   "key": "activeMitigation:451214",
+   "name": "Whirling Steel",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "activeMitigation",
+   "class": "DEMONHUNTER",
+   "id": 391409,
+   "key": "activeMitigation:391409",
+   "name": "Aldrachi Design",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "activeMitigation",
+   "class": "ALL",
+   "id": 1223268,
+   "key": "activeMitigation:1223268",
+   "name": "Neltharion's Fury",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "activeMitigation",
+   "class": "ALL",
+   "id": 20582,
+   "key": "activeMitigation:20582",
+   "name": "Quickness",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "activeMitigation",
+   "class": "ALL",
+   "id": 1266066,
+   "key": "activeMitigation:1266066",
+   "name": "Tank Modifiers",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "raidCDs",
+   "class": "DRUID",
+   "id": 323546,
+   "key": "raidCDs:323546",
+   "name": "Ravenous Frenzy",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "offensiveCDs",
+   "class": "HUNTER",
+   "id": 1250646,
+   "key": "offensiveCDs:1250646",
+   "name": "Takedown",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "offensiveCDs",
+   "class": "ROGUE",
+   "id": 323654,
+   "key": "offensiveCDs:323654",
+   "name": "Flagellation",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "offensiveCDs",
+   "class": "SHAMAN",
+   "id": 191634,
+   "key": "offensiveCDs:191634",
+   "name": "Stormkeeper",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "offensiveCDs",
+   "class": "SHAMAN",
+   "id": 205495,
+   "key": "offensiveCDs:205495",
+   "name": "Stormkeeper",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "offensiveCDs",
+   "class": "MAGE",
+   "id": 324220,
+   "key": "offensiveCDs:324220",
+   "name": "Deathborne",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "offensiveCDs",
+   "class": "WARLOCK",
+   "id": 442726,
+   "key": "offensiveCDs:442726",
+   "name": "Malevolence",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "offensiveCDs",
+   "class": "MONK",
+   "id": 325197,
+   "key": "offensiveCDs:325197",
+   "name": "Invoke Chi-Ji, the Red Crane",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "offensiveCDs",
+   "class": "MONK",
+   "id": 123904,
+   "key": "offensiveCDs:123904",
+   "name": "Invoke Xuen, the White Tiger",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "offensiveCDs",
+   "class": "MONK",
+   "id": 322118,
+   "key": "offensiveCDs:322118",
+   "name": "Invoke Yu'lon, the Jade Serpent",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "offensiveCDs",
+   "class": "MONK",
+   "id": 310454,
+   "key": "offensiveCDs:310454",
+   "name": "Weapons of Order",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "offensiveCDs",
+   "class": "MONK",
+   "id": 387184,
+   "key": "offensiveCDs:387184",
+   "name": "Weapons of Order",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "offensiveCDs",
+   "class": "DRUID",
+   "id": 50334,
+   "key": "offensiveCDs:50334",
+   "name": "Berserk",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "offensiveCDs",
+   "class": "DRUID",
+   "id": 102558,
+   "key": "offensiveCDs:102558",
+   "name": "Incarnation: Guardian of Ursoc",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "offensiveCDs",
+   "class": "DRUID",
+   "id": 204066,
+   "key": "offensiveCDs:204066",
+   "name": "Lunar Beam",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "offensiveCDs",
+   "class": "DRUID",
+   "id": 132158,
+   "key": "offensiveCDs:132158",
+   "name": "Nature's Swiftness",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "offensiveCDs",
+   "class": "DRUID",
+   "id": 323546,
+   "key": "offensiveCDs:323546",
+   "name": "Ravenous Frenzy",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "offensiveCDs",
+   "class": "EVOKER",
+   "id": 406732,
+   "key": "offensiveCDs:406732",
+   "name": "Spatial Paradox",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "offensiveCDs",
+   "class": "ALL",
+   "id": 231895,
+   "key": "offensiveCDs:231895",
+   "name": "Avenging Wrath",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "offensiveCDs",
+   "class": "ALL",
+   "id": 391109,
+   "key": "offensiveCDs:391109",
+   "name": "Dark Ascension",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "offensiveCDs",
+   "class": "ALL",
+   "id": 372760,
+   "key": "offensiveCDs:372760",
+   "name": "Divine Word",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "offensiveCDs",
+   "class": "ALL",
+   "id": 200851,
+   "key": "offensiveCDs:200851",
+   "name": "Rage of the Sleeper",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "offensiveCDs",
+   "class": "ALL",
+   "id": 383009,
+   "key": "offensiveCDs:383009",
+   "name": "Stormkeeper",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "healing",
+   "class": "PALADIN",
+   "id": 448086,
+   "key": "healing:448086",
+   "name": "Bestow Light",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "healing",
+   "class": "PALADIN",
+   "id": 378412,
+   "key": "healing:378412",
+   "name": "Light of the Titans",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "healing",
+   "class": "MONK",
+   "id": 196608,
+   "key": "healing:196608",
+   "name": "Eye of the Tiger",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "healing",
+   "class": "MONK",
+   "id": 209525,
+   "key": "healing:209525",
+   "name": "Soothing Mist",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "healing",
+   "class": "EVOKER",
+   "id": 370960,
+   "key": "healing:370960",
+   "name": "Emerald Communion",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "healing",
+   "class": "ALL",
+   "id": 395180,
+   "key": "healing:395180",
+   "name": "Barrier of Faith",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "support",
+   "class": "HUNTER",
+   "id": 53480,
+   "key": "support:53480",
+   "name": "Roar of Sacrifice",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "support",
+   "class": "PRIEST",
+   "id": 47788,
+   "key": "support:47788",
+   "name": "Guardian Spirit",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "support",
+   "class": "EVOKER",
+   "id": 408233,
+   "key": "support:408233",
+   "name": "Bestow Weyrnstone",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "support",
+   "class": "EVOKER",
+   "id": 370665,
+   "key": "support:370665",
+   "name": "Rescue",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "groupBuffs",
+   "class": "PALADIN",
+   "id": 412629,
+   "key": "groupBuffs:412629",
+   "name": "Aura Mastery",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "groupBuffs",
+   "class": "PALADIN",
+   "id": 355575,
+   "key": "groupBuffs:355575",
+   "name": "Luminescence",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "movement",
+   "class": "WARRIOR",
+   "id": 324143,
+   "key": "movement:324143",
+   "name": "Conqueror's Banner",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "movement",
+   "class": "WARRIOR",
+   "id": 382900,
+   "key": "movement:382900",
+   "name": "Dual Wield Specialization",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "movement",
+   "class": "WARRIOR",
+   "id": 184362,
+   "key": "movement:184362",
+   "name": "Enrage",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "movement",
+   "class": "WARRIOR",
+   "id": 382260,
+   "key": "movement:382260",
+   "name": "Fast Footwork",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "movement",
+   "class": "WARRIOR",
+   "id": 333892,
+   "key": "movement:333892",
+   "name": "Hateful Fetish",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "movement",
+   "class": "WARRIOR",
+   "id": 262232,
+   "key": "movement:262232",
+   "name": "War Machine",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "movement",
+   "class": "PALADIN",
+   "id": 216331,
+   "key": "movement:216331",
+   "name": "Avenging Crusader",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "movement",
+   "class": "PALADIN",
+   "id": 24275,
+   "key": "movement:24275",
+   "name": "Hammer of Wrath",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "movement",
+   "class": "PALADIN",
+   "id": 20271,
+   "key": "movement:20271",
+   "name": "Judgment",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "movement",
+   "class": "PALADIN",
+   "id": 469780,
+   "key": "movement:469780",
+   "name": "Lead the Charge",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "movement",
+   "class": "PALADIN",
+   "id": 385427,
+   "key": "movement:385427",
+   "name": "Obduracy",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "movement",
+   "class": "PALADIN",
+   "id": 431462,
+   "key": "movement:431462",
+   "name": "Will of the Dawn",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "movement",
+   "class": "PALADIN",
+   "id": 431752,
+   "key": "movement:431752",
+   "name": "Will of the Dawn",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "movement",
+   "class": "HUNTER",
+   "id": 1253887,
+   "key": "movement:1253887",
+   "name": "Conditioning",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "movement",
+   "class": "HUNTER",
+   "id": 474440,
+   "key": "movement:474440",
+   "name": "Cunning",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "movement",
+   "class": "HUNTER",
+   "id": 1267208,
+   "key": "movement:1267208",
+   "name": "Moment of Opportunity",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "movement",
+   "class": "HUNTER",
+   "id": 378002,
+   "key": "movement:378002",
+   "name": "Pathfinding",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "movement",
+   "class": "ROGUE",
+   "id": 455144,
+   "key": "movement:455144",
+   "name": "Acrobatic Strikes",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "movement",
+   "class": "ROGUE",
+   "id": 31209,
+   "key": "movement:31209",
+   "name": "Fleet Footed",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "movement",
+   "class": "ROGUE",
+   "id": 378813,
+   "key": "movement:378813",
+   "name": "Fleet Footed",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "movement",
+   "class": "ROGUE",
+   "id": 196922,
+   "key": "movement:196922",
+   "name": "Hit and Run",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "movement",
+   "class": "PRIEST",
+   "id": 325013,
+   "key": "movement:325013",
+   "name": "Boon of the Ascended",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "movement",
+   "class": "PRIEST",
+   "id": 421453,
+   "key": "movement:421453",
+   "name": "Ultimate Penitence",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "movement",
+   "class": "DEATHKNIGHT",
+   "id": 212654,
+   "key": "movement:212654",
+   "name": "Wraith Walk",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "movement",
+   "class": "SHAMAN",
+   "id": 58876,
+   "key": "movement:58876",
+   "name": "Spirit Walk",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "movement",
+   "class": "SHAMAN",
+   "id": 382215,
+   "key": "movement:382215",
+   "name": "Winds of Al'Akir",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "movement",
+   "class": "MAGE",
+   "id": 108843,
+   "key": "movement:108843",
+   "name": "Blazing Speed",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "movement",
+   "class": "MAGE",
+   "id": 1953,
+   "key": "movement:1953",
+   "name": "Blink",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "movement",
+   "class": "MAGE",
+   "id": 314791,
+   "key": "movement:314791",
+   "name": "Shifting Power",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "movement",
+   "class": "MONK",
+   "id": 115008,
+   "key": "movement:115008",
+   "name": "Chi Torpedo",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "movement",
+   "class": "MONK",
+   "id": 450574,
+   "key": "movement:450574",
+   "name": "Flow of Chi",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "movement",
+   "class": "MONK",
+   "id": 387254,
+   "key": "movement:387254",
+   "name": "Graceful Exit",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "movement",
+   "class": "MONK",
+   "id": 1263345,
+   "key": "movement:1263345",
+   "name": "Swift as a Coursing River",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "movement",
+   "class": "DRUID",
+   "id": 131768,
+   "key": "movement:131768",
+   "name": "Feline Swiftness",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "movement",
+   "class": "DEMONHUNTER",
+   "id": 1266762,
+   "key": "movement:1266762",
+   "name": "Felbound",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "movement",
+   "class": "DEMONHUNTER",
+   "id": 389847,
+   "key": "movement:389847",
+   "name": "Felfire Haste",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "movement",
+   "class": "DEMONHUNTER",
+   "id": 232709,
+   "key": "movement:232709",
+   "name": "Vengeful Retreat",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "movement",
+   "class": "EVOKER",
+   "id": 370960,
+   "key": "movement:370960",
+   "name": "Emerald Communion",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "movement",
+   "class": "EVOKER",
+   "id": 375542,
+   "key": "movement:375542",
+   "name": "Exuberance",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "movement",
+   "class": "ALL",
+   "id": 1231980,
+   "key": "movement:1231980",
+   "name": "Azshara's Riptide",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "movement",
+   "class": "ALL",
+   "id": 236298,
+   "key": "movement:236298",
+   "name": "Chrono Shift",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "movement",
+   "class": "ALL",
+   "id": 265223,
+   "key": "movement:265223",
+   "name": "Dungeon Delver",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "movement",
+   "class": "ALL",
+   "id": 1232421,
+   "key": "movement:1232421",
+   "name": "Energized Ley Crystal",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "movement",
+   "class": "ALL",
+   "id": 264656,
+   "key": "movement:264656",
+   "name": "Pathfinding",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "movement",
+   "class": "ALL",
+   "id": 20582,
+   "key": "movement:20582",
+   "name": "Quickness",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "movement",
+   "class": "ALL",
+   "id": 1273337,
+   "key": "movement:1273337",
+   "name": "Relaxing Flow",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "utility",
+   "class": "ROGUE",
+   "id": 1860,
+   "key": "utility:1860",
+   "name": "Safe Fall",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "utility",
+   "class": "PRIEST",
+   "id": 200183,
+   "key": "utility:200183",
+   "name": "Apotheosis",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "utility",
+   "class": "PRIEST",
+   "id": 215769,
+   "key": "utility:215769",
+   "name": "Spirit of Redemption",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "utility",
+   "class": "DEATHKNIGHT",
+   "id": 3714,
+   "key": "utility:3714",
+   "name": "Path of Frost",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "utility",
+   "class": "MAGE",
+   "id": 110960,
+   "key": "utility:110960",
+   "name": "Greater Invisibility",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "utility",
+   "class": "MONK",
+   "id": 101545,
+   "key": "utility:101545",
+   "name": "Flying Serpent Kick",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "utility",
+   "class": "DRUID",
+   "id": 5421,
+   "key": "utility:5421",
+   "name": "Aquatic Form Passive",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "utility",
+   "class": "DRUID",
+   "id": 20719,
+   "key": "utility:20719",
+   "name": "Feline Grace",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "utility",
+   "class": "DRUID",
+   "id": 164862,
+   "key": "utility:164862",
+   "name": "Flap",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "utility",
+   "class": "DRUID",
+   "id": 102547,
+   "key": "utility:102547",
+   "name": "Prowl",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "utility",
+   "class": "ALL",
+   "id": 1273353,
+   "key": "utility:1273353",
+   "name": "Blessing: Buoyant Flame",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "utility",
+   "class": "ALL",
+   "id": 1248049,
+   "key": "utility:1248049",
+   "name": "Consult the Tome",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "utility",
+   "class": "ALL",
+   "id": 434777,
+   "key": "utility:434777",
+   "name": "Feign Death",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "utility",
+   "class": "ALL",
+   "id": 5227,
+   "key": "utility:5227",
+   "name": "Touch of the Grave",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "stances",
+   "class": "WARRIOR",
+   "id": 394313,
+   "key": "stances:394313",
+   "name": "Battering Ram",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "stances",
+   "class": "PALADIN",
+   "id": 1270083,
+   "key": "stances:1270083",
+   "name": "Beacon of the Savior",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "stances",
+   "class": "PALADIN",
+   "id": 183416,
+   "key": "stances:183416",
+   "name": "Blessing of Dawn",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "stances",
+   "class": "PALADIN",
+   "id": 404752,
+   "key": "stances:404752",
+   "name": "Instrument of Retribution",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "stances",
+   "class": "PALADIN",
+   "id": 403530,
+   "key": "stances:403530",
+   "name": "Punishment",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "stances",
+   "class": "PALADIN",
+   "id": 183435,
+   "key": "stances:183435",
+   "name": "Retribution Aura",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "stances",
+   "class": "PALADIN",
+   "id": 469279,
+   "key": "stances:469279",
+   "name": "Worthy Sacrifice",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "stances",
+   "class": "PRIEST",
+   "id": 215769,
+   "key": "stances:215769",
+   "name": "Spirit of Redemption",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "stances",
+   "class": "DEATHKNIGHT",
+   "id": 3714,
+   "key": "stances:3714",
+   "name": "Path of Frost",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "stances",
+   "class": "WARLOCK",
+   "id": 449620,
+   "key": "stances:449620",
+   "name": "Necrolyte Teachings",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "stances",
+   "class": "DRUID",
+   "id": 323764,
+   "key": "stances:323764",
+   "name": "Convoke the Spirits",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "stances",
+   "class": "DRUID",
+   "id": 391528,
+   "key": "stances:391528",
+   "name": "Convoke the Spirits",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "stances",
+   "class": "DRUID",
+   "id": 1278914,
+   "key": "stances:1278914",
+   "name": "Dream Guide",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "stances",
+   "class": "DRUID",
+   "id": 400129,
+   "key": "stances:400129",
+   "name": "Forestwalk",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "stances",
+   "class": "DRUID",
+   "id": 22842,
+   "key": "stances:22842",
+   "name": "Frenzied Regeneration",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "stances",
+   "class": "DRUID",
+   "id": 33891,
+   "key": "stances:33891",
+   "name": "Incarnation: Tree of Life",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "stances",
+   "class": "DRUID",
+   "id": 197625,
+   "key": "stances:197625",
+   "name": "Moonkin Form",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "stances",
+   "class": "EVOKER",
+   "id": 368412,
+   "key": "stances:368412",
+   "name": "Time of Need",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "stances",
+   "class": "ALL",
+   "id": 1243194,
+   "key": "stances:1243194",
+   "name": "Blessing: Flame of Vitality",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "stances",
+   "class": "ALL",
+   "id": 1243195,
+   "key": "stances:1243195",
+   "name": "Blessing: Flowing Flame",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "stances",
+   "class": "ALL",
+   "id": 1243185,
+   "key": "stances:1243185",
+   "name": "Blessing: Hunt for Simplicity",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "stances",
+   "class": "ALL",
+   "id": 1243184,
+   "key": "stances:1243184",
+   "name": "Blessing: Neverending Hunt",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "stances",
+   "class": "ALL",
+   "id": 1243205,
+   "key": "stances:1243205",
+   "name": "Blessing: War Against Threats",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "stances",
+   "class": "ALL",
+   "id": 1252190,
+   "key": "stances:1252190",
+   "name": "Flight of the Val'kyr",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "stances",
+   "class": "ALL",
+   "id": 1215304,
+   "key": "stances:1215304",
+   "name": "Impact Conversion Matrix",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 68976,
+   "key": "racials:68976",
+   "name": "Aberration",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 403216,
+   "key": "racials:403216",
+   "name": "Aerial Halt",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 317795,
+   "key": "racials:317795",
+   "name": "Alpaca Saddlebags",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 94293,
+   "key": "racials:94293",
+   "name": "Altered Form",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 274738,
+   "key": "racials:274738",
+   "name": "Ancestral Call",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 255663,
+   "key": "racials:255663",
+   "name": "Ancient History",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 154742,
+   "key": "racials:154742",
+   "name": "Arcane Acuity",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 28877,
+   "key": "racials:28877",
+   "name": "Arcane Affinity",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 822,
+   "key": "racials:822",
+   "name": "Arcane Resistance",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 20592,
+   "key": "racials:20592",
+   "name": "Arcane Resistance",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 255664,
+   "key": "racials:255664",
+   "name": "Arcane Resistance",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 365575,
+   "key": "racials:365575",
+   "name": "Awakened",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 20557,
+   "key": "racials:20557",
+   "name": "Beast Slaying",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 69044,
+   "key": "racials:69044",
+   "name": "Best Deals Anywhere",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 69045,
+   "key": "racials:69045",
+   "name": "Better Living Through Chemistry",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 107076,
+   "key": "racials:107076",
+   "name": "Bouncy",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 291628,
+   "key": "racials:291628",
+   "name": "Brush It Off",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 406096,
+   "key": "racials:406096",
+   "name": "Calm the Wolf",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 313055,
+   "key": "racials:313055",
+   "name": "Camp Location",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 315322,
+   "key": "racials:315322",
+   "name": "Camping",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 291622,
+   "key": "racials:291622",
+   "name": "Child of the Sea",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 255668,
+   "key": "racials:255668",
+   "name": "Chill of Night",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 291619,
+   "key": "racials:291619",
+   "name": "City of Gold",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 312923,
+   "key": "racials:312923",
+   "name": "Combat Analysis",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 21563,
+   "key": "racials:21563",
+   "name": "Command",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 20552,
+   "key": "racials:20552",
+   "name": "Cultivation",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 58943,
+   "key": "racials:58943",
+   "name": "Da Voodoo Shuffle",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 255653,
+   "key": "racials:255653",
+   "name": "Demonbane",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 366489,
+   "key": "racials:366489",
+   "name": "Discerning Eye",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 265223,
+   "key": "racials:265223",
+   "name": "Dungeon Delver",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 21009,
+   "key": "racials:21009",
+   "name": "Elusiveness",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 292751,
+   "key": "racials:292751",
+   "name": "Embrace of the Loa",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 312916,
+   "key": "racials:312916",
+   "name": "Emergency Failsafe",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 430846,
+   "key": "racials:430846",
+   "name": "Empowered Soaring",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 20550,
+   "key": "racials:20550",
+   "name": "Endurance",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 20593,
+   "key": "racials:20593",
+   "name": "Engineering Specialization",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 255669,
+   "key": "racials:255669",
+   "name": "Entropic Embrace",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 255667,
+   "key": "racials:255667",
+   "name": "Ethereal Connection",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 20591,
+   "key": "racials:20591",
+   "name": "Expansive Mind",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 154744,
+   "key": "racials:154744",
+   "name": "Expansive Mind",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 154746,
+   "key": "racials:154746",
+   "name": "Expansive Mind",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 154747,
+   "key": "racials:154747",
+   "name": "Expansive Mind",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 227057,
+   "key": "racials:227057",
+   "name": "Expansive Mind",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 430935,
+   "key": "racials:430935",
+   "name": "Expedited Takeoff",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 92682,
+   "key": "racials:92682",
+   "name": "Explorer",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 240188,
+   "key": "racials:240188",
+   "name": "Fade to Black",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 360009,
+   "key": "racials:360009",
+   "name": "Familiar Skies",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 366646,
+   "key": "racials:366646",
+   "name": "Familiar Skies",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 312198,
+   "key": "racials:312198",
+   "name": "Fire Resistance",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 68978,
+   "key": "racials:68978",
+   "name": "Flayer",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 255650,
+   "key": "racials:255650",
+   "name": "Forge of Light",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 265224,
+   "key": "racials:265224",
+   "name": "Forged in Flames",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 20596,
+   "key": "racials:20596",
+   "name": "Frost Resistance",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 28875,
+   "key": "racials:28875",
+   "name": "Gemcutting",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 358731,
+   "key": "racials:358731",
+   "name": "Glide",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 358733,
+   "key": "racials:358733",
+   "name": "Glide",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 358734,
+   "key": "racials:358734",
+   "name": "Glide",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 107073,
+   "key": "racials:107073",
+   "name": "Gourmand",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 20573,
+   "key": "racials:20573",
+   "name": "Hardiness",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 6562,
+   "key": "racials:6562",
+   "name": "Heroic Presence",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 255651,
+   "key": "racials:255651",
+   "name": "Holy Providence",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 312924,
+   "key": "racials:312924",
+   "name": "Hyper Organic Light Originator",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 436339,
+   "key": "racials:436339",
+   "name": "Hyper Productive",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 436341,
+   "key": "racials:436341",
+   "name": "Ingest Minerals",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 107074,
+   "key": "racials:107074",
+   "name": "Inner Peace",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 291442,
+   "key": "racials:291442",
+   "name": "Jack of All Trades",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 1238623,
+   "key": "racials:1238623",
+   "name": "Lash Out",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 255652,
+   "key": "racials:255652",
+   "name": "Light's Reckoning",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 255665,
+   "key": "racials:255665",
+   "name": "Magical Affinity",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 265222,
+   "key": "racials:265222",
+   "name": "Mass Production",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 312896,
+   "key": "racials:312896",
+   "name": "Mastercraft",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 255658,
+   "key": "racials:255658",
+   "name": "Mountaineer",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 20551,
+   "key": "racials:20551",
+   "name": "Nature Resistance",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 20583,
+   "key": "racials:20583",
+   "name": "Nature Resistance",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 92680,
+   "key": "racials:92680",
+   "name": "Nimble Fingers",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 458619,
+   "key": "racials:458619",
+   "name": "No Place Like Home",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 312215,
+   "key": "racials:312215",
+   "name": "Nose For Trouble",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 1238648,
+   "key": "racials:1238648",
+   "name": "One With Nature",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 273216,
+   "key": "racials:273216",
+   "name": "Open Skies",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 255670,
+   "key": "racials:255670",
+   "name": "Preternatural Calm",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 255655,
+   "key": "racials:255655",
+   "name": "Pride of Ironhorn",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 381451,
+   "key": "racials:381451",
+   "name": "Principles of Soaring",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 20582,
+   "key": "racials:20582",
+   "name": "Quickness",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 313015,
+   "key": "racials:313015",
+   "name": "Recently Failed",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 20555,
+   "key": "racials:20555",
+   "name": "Regeneration",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 312372,
+   "key": "racials:312372",
+   "name": "Return to Camp",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 291417,
+   "key": "racials:291417",
+   "name": "Rime of the Ancient Mariner",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 1260715,
+   "key": "racials:1260715",
+   "name": "Rootwalker",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 1238686,
+   "key": "racials:1238686",
+   "name": "Rootwalking",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 255659,
+   "key": "racials:255659",
+   "name": "Rugged Tenacity",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 273220,
+   "key": "racials:273220",
+   "name": "Savage Blood",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 20579,
+   "key": "racials:20579",
+   "name": "Shadow Resistance",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 59221,
+   "key": "racials:59221",
+   "name": "Shadow Resistance",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 386451,
+   "key": "racials:386451",
+   "name": "Skyward Ascent",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 369536,
+   "key": "racials:369536",
+   "name": "Soar",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 1238677,
+   "key": "racials:1238677",
+   "name": "Subterranean Predator",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 376743,
+   "key": "racials:376743",
+   "name": "Surge Forward",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 386449,
+   "key": "racials:386449",
+   "name": "Surge Forward",
+   "notes": [],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 273217,
+   "key": "racials:273217",
+   "name": "Sympathetic Vigor",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 20598,
+   "key": "racials:20598",
+   "name": "The Human Spirit",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 69042,
+   "key": "racials:69042",
+   "name": "Time is Money",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 436340,
+   "key": "racials:436340",
+   "name": "Titan-Wrought Frame",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 154748,
+   "key": "racials:154748",
+   "name": "Touch of Elune",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 5227,
+   "key": "racials:5227",
+   "name": "Touch of the Grave",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 68975,
+   "key": "racials:68975",
+   "name": "Viciousness",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 368437,
+   "key": "racials:368437",
+   "name": "Visage",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 255656,
+   "key": "racials:255656",
+   "name": "Waste Not, Want Not",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "racials",
+   "class": "ALL",
+   "id": 448924,
+   "key": "racials:448924",
+   "name": "Wide-Eyed Wonder",
+   "notes": [
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "db2-effect",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "WARRIOR",
+   "id": 325886,
+   "key": "hardCC:325886",
+   "name": "Ancient Aftershock",
+   "notes": [
+    "mechanic: stunned"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "cc-mechanic",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "WARRIOR",
+   "id": 326062,
+   "key": "hardCC:326062",
+   "name": "Ancient Aftershock",
+   "notes": [
+    "mechanic: stunned"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "WARRIOR",
+   "id": 22911,
+   "key": "hardCC:22911",
+   "name": "Charge",
+   "notes": [
+    "mechanic: stunned"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "WARRIOR",
+   "id": 29847,
+   "key": "hardCC:29847",
+   "name": "Charge",
+   "notes": [
+    "mechanic: stunned"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "WARRIOR",
+   "id": 31733,
+   "key": "hardCC:31733",
+   "name": "Charge",
+   "notes": [
+    "mechanic: stunned"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "WARRIOR",
+   "id": 33709,
+   "key": "hardCC:33709",
+   "name": "Charge",
+   "notes": [
+    "mechanic: stunned"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "WARRIOR",
+   "id": 35570,
+   "key": "hardCC:35570",
+   "name": "Charge",
+   "notes": [
+    "mechanic: stunned"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "WARRIOR",
+   "id": 36140,
+   "key": "hardCC:36140",
+   "name": "Charge",
+   "notes": [
+    "mechanic: stunned"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "WARRIOR",
+   "id": 36509,
+   "key": "hardCC:36509",
+   "name": "Charge",
+   "notes": [
+    "mechanic: stunned"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "WARRIOR",
+   "id": 37511,
+   "key": "hardCC:37511",
+   "name": "Charge",
+   "notes": [
+    "mechanic: stunned"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "WARRIOR",
+   "id": 38461,
+   "key": "hardCC:38461",
+   "name": "Charge",
+   "notes": [
+    "mechanic: stunned"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "WARRIOR",
+   "id": 39574,
+   "key": "hardCC:39574",
+   "name": "Charge",
+   "notes": [
+    "mechanic: stunned"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "WARRIOR",
+   "id": 43519,
+   "key": "hardCC:43519",
+   "name": "Charge",
+   "notes": [
+    "mechanic: stunned"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "WARRIOR",
+   "id": 43651,
+   "key": "hardCC:43651",
+   "name": "Charge",
+   "notes": [
+    "mechanic: stunned"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "WARRIOR",
+   "id": 55317,
+   "key": "hardCC:55317",
+   "name": "Charge",
+   "notes": [
+    "mechanic: stunned"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "WARRIOR",
+   "id": 58619,
+   "key": "hardCC:58619",
+   "name": "Charge",
+   "notes": [
+    "mechanic: stunned"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "WARRIOR",
+   "id": 59611,
+   "key": "hardCC:59611",
+   "name": "Charge",
+   "notes": [
+    "mechanic: stunned"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "WARRIOR",
+   "id": 62961,
+   "key": "hardCC:62961",
+   "name": "Charge",
+   "notes": [
+    "mechanic: stunned"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "WARRIOR",
+   "id": 144166,
+   "key": "hardCC:144166",
+   "name": "Charge",
+   "notes": [
+    "mechanic: stunned"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "WARRIOR",
+   "id": 145048,
+   "key": "hardCC:145048",
+   "name": "Charge",
+   "notes": [
+    "mechanic: stunned"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "WARRIOR",
+   "id": 413815,
+   "key": "hardCC:413815",
+   "name": "Charge",
+   "notes": [
+    "mechanic: stunned"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "WARRIOR",
+   "id": 451118,
+   "key": "hardCC:451118",
+   "name": "Charge",
+   "notes": [
+    "mechanic: stunned"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "WARRIOR",
+   "id": 53625,
+   "key": "hardCC:53625",
+   "name": "Heroic Leap",
+   "notes": [
+    "mechanic: stunned"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "WARRIOR",
+   "id": 316593,
+   "key": "hardCC:316593",
+   "name": "Intimidating Shout",
+   "notes": [
+    "mechanic: fleeing"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "WARRIOR",
+   "id": 316595,
+   "key": "hardCC:316595",
+   "name": "Intimidating Shout",
+   "notes": [
+    "mechanic: fleeing"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "WARRIOR",
+   "id": 222897,
+   "key": "hardCC:222897",
+   "name": "Storm Bolt",
+   "notes": [
+    "mechanic: stunned"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "PALADIN",
+   "id": 180187,
+   "key": "hardCC:180187",
+   "name": "Hammer of Justice",
+   "notes": [
+    "mechanic: stunned"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "PALADIN",
+   "id": 192220,
+   "key": "hardCC:192220",
+   "name": "Hammer of Justice",
+   "notes": [
+    "mechanic: stunned"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "PALADIN",
+   "id": 162056,
+   "key": "hardCC:162056",
+   "name": "Jailer's Judgment",
+   "notes": [
+    "mechanic: stunned"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "cc-mechanic",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "PALADIN",
+   "id": 145067,
+   "key": "hardCC:145067",
+   "name": "Turn Evil",
+   "notes": [
+    "mechanic: fleeing, turned"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "PALADIN",
+   "id": 205290,
+   "key": "hardCC:205290",
+   "name": "Wake of Ashes",
+   "notes": [
+    "mechanic: stunned"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "PALADIN",
+   "id": 255941,
+   "key": "hardCC:255941",
+   "name": "Wake of Ashes",
+   "notes": [
+    "mechanic: stunned"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "HUNTER",
+   "id": 203337,
+   "key": "hardCC:203337",
+   "name": "Freezing Trap",
+   "notes": [
+    "mechanic: frozen"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "HUNTER",
+   "id": 212365,
+   "key": "hardCC:212365",
+   "name": "Freezing Trap",
+   "notes": [
+    "mechanic: frozen"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "HUNTER",
+   "id": 321177,
+   "key": "hardCC:321177",
+   "name": "Freezing Trap",
+   "notes": [
+    "mechanic: frozen"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "ROGUE",
+   "id": 42972,
+   "key": "hardCC:42972",
+   "name": "Blind",
+   "notes": [
+    "mechanic: disoriented"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "ROGUE",
+   "id": 127886,
+   "key": "hardCC:127886",
+   "name": "Blind",
+   "notes": [
+    "mechanic: disoriented"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "ROGUE",
+   "id": 175276,
+   "key": "hardCC:175276",
+   "name": "Blind",
+   "notes": [
+    "mechanic: disoriented"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "ROGUE",
+   "id": 214299,
+   "key": "hardCC:214299",
+   "name": "Blind",
+   "notes": [
+    "mechanic: disoriented"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "ROGUE",
+   "id": 30986,
+   "key": "hardCC:30986",
+   "name": "Cheap Shot",
+   "notes": [
+    "mechanic: stunned"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "ROGUE",
+   "id": 145424,
+   "key": "hardCC:145424",
+   "name": "Cheap Shot",
+   "notes": [
+    "mechanic: stunned"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "ROGUE",
+   "id": 27615,
+   "key": "hardCC:27615",
+   "name": "Kidney Shot",
+   "notes": [
+    "mechanic: stunned"
+   ],
+   "origin": null,
+   "rank": "Rank 2",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "ROGUE",
+   "id": 30621,
+   "key": "hardCC:30621",
+   "name": "Kidney Shot",
+   "notes": [
+    "mechanic: stunned"
+   ],
+   "origin": null,
+   "rank": "Rank 2",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "ROGUE",
+   "id": 32864,
+   "key": "hardCC:32864",
+   "name": "Kidney Shot",
+   "notes": [
+    "mechanic: stunned"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "ROGUE",
+   "id": 41389,
+   "key": "hardCC:41389",
+   "name": "Kidney Shot",
+   "notes": [
+    "mechanic: stunned"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "ROGUE",
+   "id": 49616,
+   "key": "hardCC:49616",
+   "name": "Kidney Shot",
+   "notes": [
+    "mechanic: stunned"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "ROGUE",
+   "id": 176050,
+   "key": "hardCC:176050",
+   "name": "Kidney Shot",
+   "notes": [
+    "mechanic: stunned"
+   ],
+   "origin": null,
+   "rank": "Rank 2",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "ROGUE",
+   "id": 426589,
+   "key": "hardCC:426589",
+   "name": "Kidney Shot",
+   "notes": [
+    "mechanic: stunned"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "ROGUE",
+   "id": 30980,
+   "key": "hardCC:30980",
+   "name": "Sap",
+   "notes": [
+    "mechanic: incapacitated"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "ROGUE",
+   "id": 193082,
+   "key": "hardCC:193082",
+   "name": "Sap",
+   "notes": [
+    "mechanic: incapacitated"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "ROGUE",
+   "id": 219692,
+   "key": "hardCC:219692",
+   "name": "Sap",
+   "notes": [
+    "mechanic: sapped"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "PRIEST",
+   "id": 247587,
+   "key": "hardCC:247587",
+   "name": "Holy Word: Chastise",
+   "notes": [
+    "mechanic: disoriented"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "PRIEST",
+   "id": 312678,
+   "key": "hardCC:312678",
+   "name": "Insanity",
+   "notes": [
+    "mechanic: horrified"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "cc-mechanic",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "PRIEST",
+   "id": 26044,
+   "key": "hardCC:26044",
+   "name": "Mind Flay",
+   "notes": [
+    "mechanic: fleeing"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "PRIEST",
+   "id": 27610,
+   "key": "hardCC:27610",
+   "name": "Psychic Scream",
+   "notes": [
+    "mechanic: fleeing"
+   ],
+   "origin": null,
+   "rank": "Rank 4",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "DEATHKNIGHT",
+   "id": 235612,
+   "key": "hardCC:235612",
+   "name": "Frost Breath",
+   "notes": [
+    "mechanic: stunned"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "SHAMAN",
+   "id": 77505,
+   "key": "hardCC:77505",
+   "name": "Earthquake",
+   "notes": [
+    "mechanic: stunned"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "SHAMAN",
+   "id": 1258862,
+   "key": "hardCC:1258862",
+   "name": "Encasing Cold",
+   "notes": [
+    "mechanic: frozen"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "SHAMAN",
+   "id": 196942,
+   "key": "hardCC:196942",
+   "name": "Hex",
+   "notes": [
+    "mechanic: polymorphed"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "SHAMAN",
+   "id": 210873,
+   "key": "hardCC:210873",
+   "name": "Hex",
+   "notes": [
+    "mechanic: polymorphed"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "cc-mechanic",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "SHAMAN",
+   "id": 211004,
+   "key": "hardCC:211004",
+   "name": "Hex",
+   "notes": [
+    "mechanic: polymorphed"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "cc-mechanic",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "SHAMAN",
+   "id": 211010,
+   "key": "hardCC:211010",
+   "name": "Hex",
+   "notes": [
+    "mechanic: polymorphed"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "cc-mechanic",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "SHAMAN",
+   "id": 211015,
+   "key": "hardCC:211015",
+   "name": "Hex",
+   "notes": [
+    "mechanic: polymorphed"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "cc-mechanic",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "SHAMAN",
+   "id": 219215,
+   "key": "hardCC:219215",
+   "name": "Hex",
+   "notes": [
+    "mechanic: polymorphed"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "SHAMAN",
+   "id": 219216,
+   "key": "hardCC:219216",
+   "name": "Hex",
+   "notes": [
+    "mechanic: polymorphed"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "SHAMAN",
+   "id": 219217,
+   "key": "hardCC:219217",
+   "name": "Hex",
+   "notes": [
+    "mechanic: polymorphed"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "SHAMAN",
+   "id": 219218,
+   "key": "hardCC:219218",
+   "name": "Hex",
+   "notes": [
+    "mechanic: polymorphed"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "SHAMAN",
+   "id": 219219,
+   "key": "hardCC:219219",
+   "name": "Hex",
+   "notes": [
+    "mechanic: polymorphed"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "SHAMAN",
+   "id": 254412,
+   "key": "hardCC:254412",
+   "name": "Hex",
+   "notes": [
+    "mechanic: polymorphed"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "SHAMAN",
+   "id": 269352,
+   "key": "hardCC:269352",
+   "name": "Hex",
+   "notes": [
+    "mechanic: polymorphed"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "cc-mechanic",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "SHAMAN",
+   "id": 269355,
+   "key": "hardCC:269355",
+   "name": "Hex",
+   "notes": [
+    "mechanic: polymorphed"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "SHAMAN",
+   "id": 277778,
+   "key": "hardCC:277778",
+   "name": "Hex",
+   "notes": [
+    "mechanic: polymorphed"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "cc-mechanic",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "SHAMAN",
+   "id": 277780,
+   "key": "hardCC:277780",
+   "name": "Hex",
+   "notes": [
+    "mechanic: polymorphed"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "SHAMAN",
+   "id": 277784,
+   "key": "hardCC:277784",
+   "name": "Hex",
+   "notes": [
+    "mechanic: polymorphed"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "cc-mechanic",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "SHAMAN",
+   "id": 277785,
+   "key": "hardCC:277785",
+   "name": "Hex",
+   "notes": [
+    "mechanic: polymorphed"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "SHAMAN",
+   "id": 309328,
+   "key": "hardCC:309328",
+   "name": "Hex",
+   "notes": [
+    "mechanic: polymorphed"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "cc-mechanic",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "SHAMAN",
+   "id": 309329,
+   "key": "hardCC:309329",
+   "name": "Hex",
+   "notes": [
+    "mechanic: polymorphed"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "SHAMAN",
+   "id": 305485,
+   "key": "hardCC:305485",
+   "name": "Lightning Lasso",
+   "notes": [
+    "mechanic: stunned"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "MAGE",
+   "id": 35250,
+   "key": "hardCC:35250",
+   "name": "Dragon's Breath",
+   "notes": [
+    "mechanic: disoriented"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "MAGE",
+   "id": 161792,
+   "key": "hardCC:161792",
+   "name": "Dragon's Breath",
+   "notes": [
+    "mechanic: disoriented"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "MAGE",
+   "id": 36911,
+   "key": "hardCC:36911",
+   "name": "Ice Block",
+   "notes": [
+    "mechanic: frozen"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "MAGE",
+   "id": 41590,
+   "key": "hardCC:41590",
+   "name": "Ice Block",
+   "notes": [
+    "mechanic: frozen"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "MAGE",
+   "id": 28271,
+   "key": "hardCC:28271",
+   "name": "Polymorph",
+   "notes": [
+    "mechanic: polymorphed"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "cc-mechanic",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "MAGE",
+   "id": 28272,
+   "key": "hardCC:28272",
+   "name": "Polymorph",
+   "notes": [
+    "mechanic: polymorphed"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "cc-mechanic",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "MAGE",
+   "id": 61025,
+   "key": "hardCC:61025",
+   "name": "Polymorph",
+   "notes": [
+    "mechanic: polymorphed"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "cc-mechanic",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "MAGE",
+   "id": 61305,
+   "key": "hardCC:61305",
+   "name": "Polymorph",
+   "notes": [
+    "mechanic: polymorphed"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "cc-mechanic",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "MAGE",
+   "id": 61721,
+   "key": "hardCC:61721",
+   "name": "Polymorph",
+   "notes": [
+    "mechanic: polymorphed"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "cc-mechanic",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "MAGE",
+   "id": 61780,
+   "key": "hardCC:61780",
+   "name": "Polymorph",
+   "notes": [
+    "mechanic: polymorphed"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "cc-mechanic",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "MAGE",
+   "id": 71319,
+   "key": "hardCC:71319",
+   "name": "Polymorph",
+   "notes": [
+    "mechanic: polymorphed"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "MAGE",
+   "id": 126819,
+   "key": "hardCC:126819",
+   "name": "Polymorph",
+   "notes": [
+    "mechanic: polymorphed"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "cc-mechanic",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "MAGE",
+   "id": 161353,
+   "key": "hardCC:161353",
+   "name": "Polymorph",
+   "notes": [
+    "mechanic: polymorphed"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "cc-mechanic",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "MAGE",
+   "id": 161354,
+   "key": "hardCC:161354",
+   "name": "Polymorph",
+   "notes": [
+    "mechanic: polymorphed"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "cc-mechanic",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "MAGE",
+   "id": 161355,
+   "key": "hardCC:161355",
+   "name": "Polymorph",
+   "notes": [
+    "mechanic: polymorphed"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "cc-mechanic",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "MAGE",
+   "id": 161372,
+   "key": "hardCC:161372",
+   "name": "Polymorph",
+   "notes": [
+    "mechanic: polymorphed"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "cc-mechanic",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "MAGE",
+   "id": 218434,
+   "key": "hardCC:218434",
+   "name": "Polymorph",
+   "notes": [
+    "mechanic: polymorphed"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "MAGE",
+   "id": 219393,
+   "key": "hardCC:219393",
+   "name": "Polymorph",
+   "notes": [
+    "mechanic: polymorphed"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "MAGE",
+   "id": 219394,
+   "key": "hardCC:219394",
+   "name": "Polymorph",
+   "notes": [
+    "mechanic: polymorphed"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "MAGE",
+   "id": 219398,
+   "key": "hardCC:219398",
+   "name": "Polymorph",
+   "notes": [
+    "mechanic: polymorphed"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "MAGE",
+   "id": 219399,
+   "key": "hardCC:219399",
+   "name": "Polymorph",
+   "notes": [
+    "mechanic: polymorphed"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "MAGE",
+   "id": 219400,
+   "key": "hardCC:219400",
+   "name": "Polymorph",
+   "notes": [
+    "mechanic: polymorphed"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "MAGE",
+   "id": 219401,
+   "key": "hardCC:219401",
+   "name": "Polymorph",
+   "notes": [
+    "mechanic: polymorphed"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "MAGE",
+   "id": 219402,
+   "key": "hardCC:219402",
+   "name": "Polymorph",
+   "notes": [
+    "mechanic: polymorphed"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "MAGE",
+   "id": 219403,
+   "key": "hardCC:219403",
+   "name": "Polymorph",
+   "notes": [
+    "mechanic: polymorphed"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "MAGE",
+   "id": 219404,
+   "key": "hardCC:219404",
+   "name": "Polymorph",
+   "notes": [
+    "mechanic: polymorphed"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "MAGE",
+   "id": 219405,
+   "key": "hardCC:219405",
+   "name": "Polymorph",
+   "notes": [
+    "mechanic: polymorphed"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "MAGE",
+   "id": 219406,
+   "key": "hardCC:219406",
+   "name": "Polymorph",
+   "notes": [
+    "mechanic: polymorphed"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "MAGE",
+   "id": 219407,
+   "key": "hardCC:219407",
+   "name": "Polymorph",
+   "notes": [
+    "mechanic: polymorphed"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "MAGE",
+   "id": 240134,
+   "key": "hardCC:240134",
+   "name": "Polymorph",
+   "notes": [
+    "mechanic: polymorphed"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "MAGE",
+   "id": 277787,
+   "key": "hardCC:277787",
+   "name": "Polymorph",
+   "notes": [
+    "mechanic: polymorphed"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "cc-mechanic",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "MAGE",
+   "id": 277788,
+   "key": "hardCC:277788",
+   "name": "Polymorph",
+   "notes": [
+    "mechanic: polymorphed"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "MAGE",
+   "id": 277792,
+   "key": "hardCC:277792",
+   "name": "Polymorph",
+   "notes": [
+    "mechanic: polymorphed"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "cc-mechanic",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "MAGE",
+   "id": 277793,
+   "key": "hardCC:277793",
+   "name": "Polymorph",
+   "notes": [
+    "mechanic: polymorphed"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "MAGE",
+   "id": 302583,
+   "key": "hardCC:302583",
+   "name": "Polymorph",
+   "notes": [
+    "mechanic: polymorphed"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "MAGE",
+   "id": 321395,
+   "key": "hardCC:321395",
+   "name": "Polymorph",
+   "notes": [
+    "mechanic: polymorphed"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "cc-mechanic",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "MAGE",
+   "id": 391622,
+   "key": "hardCC:391622",
+   "name": "Polymorph",
+   "notes": [
+    "mechanic: polymorphed"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "cc-mechanic",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "MAGE",
+   "id": 391631,
+   "key": "hardCC:391631",
+   "name": "Polymorph",
+   "notes": [
+    "mechanic: polymorphed"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "MAGE",
+   "id": 460392,
+   "key": "hardCC:460392",
+   "name": "Polymorph",
+   "notes": [
+    "mechanic: polymorphed"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "cc-mechanic",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "MAGE",
+   "id": 460396,
+   "key": "hardCC:460396",
+   "name": "Polymorph",
+   "notes": [
+    "mechanic: polymorphed"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "MAGE",
+   "id": 461489,
+   "key": "hardCC:461489",
+   "name": "Polymorph",
+   "notes": [
+    "mechanic: polymorphed"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "MAGE",
+   "id": 17276,
+   "key": "hardCC:17276",
+   "name": "Scald",
+   "notes": [
+    "mechanic: stunned"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "WARLOCK",
+   "id": 5782,
+   "key": "hardCC:5782",
+   "name": "Fear",
+   "notes": [
+    "mechanic: fleeing"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "cc-mechanic",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "WARLOCK",
+   "id": 130616,
+   "key": "hardCC:130616",
+   "name": "Fear",
+   "notes": [
+    "mechanic: fleeing"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "WARLOCK",
+   "id": 22703,
+   "key": "hardCC:22703",
+   "name": "Infernal Awakening",
+   "notes": [
+    "mechanic: stunned"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "cc-mechanic",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "WARLOCK",
+   "id": 39082,
+   "key": "hardCC:39082",
+   "name": "Shadowfury",
+   "notes": [
+    "mechanic: stunned"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "WARLOCK",
+   "id": 81441,
+   "key": "hardCC:81441",
+   "name": "Shadowfury",
+   "notes": [
+    "mechanic: stunned"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "MONK",
+   "id": 128846,
+   "key": "hardCC:128846",
+   "name": "Clash",
+   "notes": [
+    "mechanic: stunned"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "MONK",
+   "id": 120086,
+   "key": "hardCC:120086",
+   "name": "Fists of Fury",
+   "notes": [
+    "mechanic: stunned"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "cc-mechanic",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "MONK",
+   "id": 232055,
+   "key": "hardCC:232055",
+   "name": "Fists of Fury",
+   "notes": [
+    "mechanic: stunned"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "MONK",
+   "id": 213369,
+   "key": "hardCC:213369",
+   "name": "Paralysis",
+   "notes": [
+    "mechanic: sapped"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "MONK",
+   "id": 357768,
+   "key": "hardCC:357768",
+   "name": "Paralysis",
+   "notes": [
+    "mechanic: incapacitated"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "DRUID",
+   "id": 88010,
+   "key": "hardCC:88010",
+   "name": "Cyclone",
+   "notes": [
+    "mechanic: banished"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "DRUID",
+   "id": 203126,
+   "key": "hardCC:203126",
+   "name": "Maim",
+   "notes": [
+    "mechanic: incapacitated"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "DRUID",
+   "id": 166972,
+   "key": "hardCC:166972",
+   "name": "Mighty Bash",
+   "notes": [
+    "mechanic: stunned"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "DRUID",
+   "id": 190481,
+   "key": "hardCC:190481",
+   "name": "Mighty Bash",
+   "notes": [
+    "mechanic: stunned"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "DRUID",
+   "id": 323557,
+   "key": "hardCC:323557",
+   "name": "Ravenous Frenzy",
+   "notes": [
+    "mechanic: stunned"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "DEMONHUNTER",
+   "id": 222826,
+   "key": "hardCC:222826",
+   "name": "Chaos Nova",
+   "notes": [
+    "mechanic: stunned"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "DEMONHUNTER",
+   "id": 221527,
+   "key": "hardCC:221527",
+   "name": "Imprison",
+   "notes": [
+    "mechanic: banished"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "DEMONHUNTER",
+   "id": 332544,
+   "key": "hardCC:332544",
+   "name": "Imprison",
+   "notes": [
+    "mechanic: sapped"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "DEMONHUNTER",
+   "id": 200166,
+   "key": "hardCC:200166",
+   "name": "Metamorphosis",
+   "notes": [
+    "mechanic: stunned"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "DEMONHUNTER",
+   "id": 333762,
+   "key": "hardCC:333762",
+   "name": "The Hunt",
+   "notes": [
+    "mechanic: stunned"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "cc-mechanic",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "ALL",
+   "id": 334693,
+   "key": "hardCC:334693",
+   "name": "Absolute Zero",
+   "notes": [
+    "mechanic: stunned"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "ALL",
+   "id": 377048,
+   "key": "hardCC:377048",
+   "name": "Absolute Zero",
+   "notes": [
+    "mechanic: stunned"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "ALL",
+   "id": 30600,
+   "key": "hardCC:30600",
+   "name": "Blast Wave",
+   "notes": [
+    "mechanic: incapacitated"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "ALL",
+   "id": 205439,
+   "key": "hardCC:205439",
+   "name": "Bursting Shot",
+   "notes": [
+    "mechanic: disoriented"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "ALL",
+   "id": 238559,
+   "key": "hardCC:238559",
+   "name": "Bursting Shot",
+   "notes": [
+    "mechanic: disoriented"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "ALL",
+   "id": 250206,
+   "key": "hardCC:250206",
+   "name": "Bursting Shot",
+   "notes": [
+    "mechanic: disoriented"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "ALL",
+   "id": 250207,
+   "key": "hardCC:250207",
+   "name": "Bursting Shot",
+   "notes": [
+    "mechanic: disoriented"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "ALL",
+   "id": 1276097,
+   "key": "hardCC:1276097",
+   "name": "Ensorcelled by Flame",
+   "notes": [
+    "mechanic: charmed"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "cc-mechanic",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "ALL",
+   "id": 449700,
+   "key": "hardCC:449700",
+   "name": "Gravity Lapse",
+   "notes": [
+    "mechanic: stunned"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "ALL",
+   "id": 473291,
+   "key": "hardCC:473291",
+   "name": "Gravity Lapse",
+   "notes": [
+    "mechanic: stunned"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "ALL",
+   "id": 405397,
+   "key": "hardCC:405397",
+   "name": "Hammer of Retribution",
+   "notes": [
+    "mechanic: stunned"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "cc-mechanic",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "ALL",
+   "id": 459690,
+   "key": "hardCC:459690",
+   "name": "Spearhead",
+   "notes": [
+    "mechanic: stunned"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "hardCC",
+   "class": "ALL",
+   "id": 1276084,
+   "key": "hardCC:1276084",
+   "name": "Victor's Presence",
+   "notes": [
+    "mechanic: stunned"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "cc-mechanic",
+   "via": null
+  },
+  {
+   "category": "ccRoot",
+   "class": "WARRIOR",
+   "id": 105771,
+   "key": "ccRoot:105771",
+   "name": "Charge",
+   "notes": [
+    "mechanic: rooted"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccRoot",
+   "class": "HUNTER",
+   "id": 190927,
+   "key": "ccRoot:190927",
+   "name": "Harpoon",
+   "notes": [
+    "mechanic: rooted"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccRoot",
+   "class": "HUNTER",
+   "id": 232978,
+   "key": "ccRoot:232978",
+   "name": "Harpoon",
+   "notes": [
+    "mechanic: rooted"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccRoot",
+   "class": "DEATHKNIGHT",
+   "id": 53534,
+   "key": "ccRoot:53534",
+   "name": "Chains of Ice",
+   "notes": [
+    "mechanic: rooted"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccRoot",
+   "class": "DEATHKNIGHT",
+   "id": 96294,
+   "key": "ccRoot:96294",
+   "name": "Chains of Ice",
+   "notes": [
+    "mechanic: rooted"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccRoot",
+   "class": "DEATHKNIGHT",
+   "id": 454787,
+   "key": "ccRoot:454787",
+   "name": "Ice Prison",
+   "notes": [
+    "mechanic: rooted"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccRoot",
+   "class": "MAGE",
+   "id": 342373,
+   "key": "ccRoot:342373",
+   "name": "Fae Tendrils",
+   "notes": [
+    "mechanic: rooted"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "cc-mechanic",
+   "via": null
+  },
+  {
+   "category": "ccRoot",
+   "class": "MAGE",
+   "id": 386770,
+   "key": "ccRoot:386770",
+   "name": "Freezing Cold",
+   "notes": [
+    "mechanic: rooted"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccRoot",
+   "class": "MAGE",
+   "id": 65792,
+   "key": "ccRoot:65792",
+   "name": "Frost Nova",
+   "notes": [
+    "mechanic: rooted"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccRoot",
+   "class": "MAGE",
+   "id": 145532,
+   "key": "ccRoot:145532",
+   "name": "Frost Nova",
+   "notes": [
+    "mechanic: rooted"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccRoot",
+   "class": "MAGE",
+   "id": 157563,
+   "key": "ccRoot:157563",
+   "name": "Frost Nova",
+   "notes": [
+    "mechanic: rooted"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccRoot",
+   "class": "MAGE",
+   "id": 215664,
+   "key": "ccRoot:215664",
+   "name": "Frost Nova",
+   "notes": [
+    "mechanic: rooted"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccRoot",
+   "class": "MAGE",
+   "id": 235235,
+   "key": "ccRoot:235235",
+   "name": "Frost Nova",
+   "notes": [
+    "mechanic: rooted"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccRoot",
+   "class": "DRUID",
+   "id": 40363,
+   "key": "ccRoot:40363",
+   "name": "Entangling Roots",
+   "notes": [
+    "mechanic: rooted"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccRoot",
+   "class": "DRUID",
+   "id": 66070,
+   "key": "ccRoot:66070",
+   "name": "Entangling Roots",
+   "notes": [
+    "mechanic: rooted"
+   ],
+   "origin": null,
+   "rank": "Rank 8",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccRoot",
+   "class": "DRUID",
+   "id": 170855,
+   "key": "ccRoot:170855",
+   "name": "Entangling Roots",
+   "notes": [
+    "mechanic: rooted"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccRoot",
+   "class": "DRUID",
+   "id": 201192,
+   "key": "ccRoot:201192",
+   "name": "Entangling Roots",
+   "notes": [
+    "mechanic: rooted"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccRoot",
+   "class": "DRUID",
+   "id": 201589,
+   "key": "ccRoot:201589",
+   "name": "Entangling Roots",
+   "notes": [
+    "mechanic: rooted"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccRoot",
+   "class": "DRUID",
+   "id": 235963,
+   "key": "ccRoot:235963",
+   "name": "Entangling Roots",
+   "notes": [
+    "mechanic: rooted"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccRoot",
+   "class": "DRUID",
+   "id": 247564,
+   "key": "ccRoot:247564",
+   "name": "Entangling Roots",
+   "notes": [
+    "mechanic: rooted"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccRoot",
+   "class": "DRUID",
+   "id": 330873,
+   "key": "ccRoot:330873",
+   "name": "Entangling Roots",
+   "notes": [
+    "mechanic: rooted"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccRoot",
+   "class": "DRUID",
+   "id": 460614,
+   "key": "ccRoot:460614",
+   "name": "Entangling Roots",
+   "notes": [
+    "mechanic: rooted"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccRoot",
+   "class": "DRUID",
+   "id": 410065,
+   "key": "ccRoot:410065",
+   "name": "Reactive Resin",
+   "notes": [
+    "mechanic: rooted"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccRoot",
+   "class": "DEMONHUNTER",
+   "id": 323996,
+   "key": "ccRoot:323996",
+   "name": "The Hunt",
+   "notes": [
+    "mechanic: rooted"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "cc-mechanic",
+   "via": null
+  },
+  {
+   "category": "ccRoot",
+   "class": "ALL",
+   "id": 393456,
+   "key": "ccRoot:393456",
+   "name": "Entrapment",
+   "notes": [
+    "mechanic: rooted"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccRoot",
+   "class": "ALL",
+   "id": 198121,
+   "key": "ccRoot:198121",
+   "name": "Frostbite",
+   "notes": [
+    "mechanic: rooted"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccRoot",
+   "class": "ALL",
+   "id": 473290,
+   "key": "ccRoot:473290",
+   "name": "Gravity Lapse",
+   "notes": [
+    "mechanic: rooted"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "WARRIOR",
+   "id": 458480,
+   "key": "ccSnare:458480",
+   "name": "Boneshaker",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "WARRIOR",
+   "id": 236027,
+   "key": "ccSnare:236027",
+   "name": "Charge",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "WARRIOR",
+   "id": 141425,
+   "key": "ccSnare:141425",
+   "name": "Frostbolt Volley",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "cc-mechanic",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "WARRIOR",
+   "id": 27584,
+   "key": "ccSnare:27584",
+   "name": "Hamstring",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "Rank 3",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "WARRIOR",
+   "id": 38256,
+   "key": "ccSnare:38256",
+   "name": "Piercing Howl",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "WARRIOR",
+   "id": 43530,
+   "key": "ccSnare:43530",
+   "name": "Piercing Howl",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "WARRIOR",
+   "id": 52744,
+   "key": "ccSnare:52744",
+   "name": "Piercing Howl",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "WARRIOR",
+   "id": 389031,
+   "key": "ccSnare:389031",
+   "name": "Rend",
+   "notes": [
+    "mechanic: snared",
+    "passive"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "WARRIOR",
+   "id": 426912,
+   "key": "ccSnare:426912",
+   "name": "Thunder Clap",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "WARRIOR",
+   "id": 435203,
+   "key": "ccSnare:435203",
+   "name": "Thunder Clap",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "PALADIN",
+   "id": 32774,
+   "key": "ccSnare:32774",
+   "name": "Avenger's Shield",
+   "notes": [
+    "mechanic: dazed"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "PALADIN",
+   "id": 451938,
+   "key": "ccSnare:451938",
+   "name": "Avenger's Shield",
+   "notes": [
+    "mechanic: dazed"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "PALADIN",
+   "id": 204242,
+   "key": "ccSnare:204242",
+   "name": "Consecration",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "PALADIN",
+   "id": 431380,
+   "key": "ccSnare:431380",
+   "name": "Dawnlight",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "PALADIN",
+   "id": 1236942,
+   "key": "ccSnare:1236942",
+   "name": "Divine Hammer",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "PALADIN",
+   "id": 205273,
+   "key": "ccSnare:205273",
+   "name": "Wake of Ashes",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "cc-mechanic",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "HUNTER",
+   "id": 1268673,
+   "key": "ccSnare:1268673",
+   "name": "Cold Feet",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "HUNTER",
+   "id": 442396,
+   "key": "ccSnare:442396",
+   "name": "Dark Chains",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "ROGUE",
+   "id": 30981,
+   "key": "ccSnare:30981",
+   "name": "Crippling Poison",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "ROGUE",
+   "id": 44289,
+   "key": "ccSnare:44289",
+   "name": "Crippling Poison",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "ROGUE",
+   "id": 115196,
+   "key": "ccSnare:115196",
+   "name": "Crippling Poison",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "ROGUE",
+   "id": 359078,
+   "key": "ccSnare:359078",
+   "name": "Numbing Poison",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "ROGUE",
+   "id": 30984,
+   "key": "ccSnare:30984",
+   "name": "Wound Poison",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "ROGUE",
+   "id": 36974,
+   "key": "ccSnare:36974",
+   "name": "Wound Poison",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "ROGUE",
+   "id": 39665,
+   "key": "ccSnare:39665",
+   "name": "Wound Poison",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "ROGUE",
+   "id": 54074,
+   "key": "ccSnare:54074",
+   "name": "Wound Poison",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "PRIEST",
+   "id": 356084,
+   "key": "ccSnare:356084",
+   "name": "Blaze of Light",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "PRIEST",
+   "id": 16568,
+   "key": "ccSnare:16568",
+   "name": "Mind Flay",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "PRIEST",
+   "id": 17165,
+   "key": "ccSnare:17165",
+   "name": "Mind Flay",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "PRIEST",
+   "id": 23953,
+   "key": "ccSnare:23953",
+   "name": "Mind Flay",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "PRIEST",
+   "id": 26143,
+   "key": "ccSnare:26143",
+   "name": "Mind Flay",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "PRIEST",
+   "id": 28310,
+   "key": "ccSnare:28310",
+   "name": "Mind Flay",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "PRIEST",
+   "id": 29570,
+   "key": "ccSnare:29570",
+   "name": "Mind Flay",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "PRIEST",
+   "id": 32417,
+   "key": "ccSnare:32417",
+   "name": "Mind Flay",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "PRIEST",
+   "id": 37276,
+   "key": "ccSnare:37276",
+   "name": "Mind Flay",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "PRIEST",
+   "id": 37330,
+   "key": "ccSnare:37330",
+   "name": "Mind Flay",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "PRIEST",
+   "id": 37621,
+   "key": "ccSnare:37621",
+   "name": "Mind Flay",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "PRIEST",
+   "id": 38243,
+   "key": "ccSnare:38243",
+   "name": "Mind Flay",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "PRIEST",
+   "id": 42396,
+   "key": "ccSnare:42396",
+   "name": "Mind Flay",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "PRIEST",
+   "id": 43512,
+   "key": "ccSnare:43512",
+   "name": "Mind Flay",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "PRIEST",
+   "id": 57941,
+   "key": "ccSnare:57941",
+   "name": "Mind Flay",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "PRIEST",
+   "id": 59367,
+   "key": "ccSnare:59367",
+   "name": "Mind Flay",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "PRIEST",
+   "id": 59974,
+   "key": "ccSnare:59974",
+   "name": "Mind Flay",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "PRIEST",
+   "id": 60472,
+   "key": "ccSnare:60472",
+   "name": "Mind Flay",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "PRIEST",
+   "id": 78751,
+   "key": "ccSnare:78751",
+   "name": "Mind Flay",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "PRIEST",
+   "id": 79541,
+   "key": "ccSnare:79541",
+   "name": "Mind Flay",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "PRIEST",
+   "id": 79711,
+   "key": "ccSnare:79711",
+   "name": "Mind Flay",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "PRIEST",
+   "id": 89032,
+   "key": "ccSnare:89032",
+   "name": "Mind Flay",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "PRIEST",
+   "id": 91134,
+   "key": "ccSnare:91134",
+   "name": "Mind Flay",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "PRIEST",
+   "id": 103024,
+   "key": "ccSnare:103024",
+   "name": "Mind Flay",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "PRIEST",
+   "id": 129033,
+   "key": "ccSnare:129033",
+   "name": "Mind Flay",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "PRIEST",
+   "id": 149984,
+   "key": "ccSnare:149984",
+   "name": "Mind Flay",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "PRIEST",
+   "id": 154125,
+   "key": "ccSnare:154125",
+   "name": "Mind Flay",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "PRIEST",
+   "id": 183324,
+   "key": "ccSnare:183324",
+   "name": "Mind Flay",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "PRIEST",
+   "id": 193473,
+   "key": "ccSnare:193473",
+   "name": "Mind Flay",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "PRIEST",
+   "id": 202894,
+   "key": "ccSnare:202894",
+   "name": "Mind Flay",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "PRIEST",
+   "id": 203037,
+   "key": "ccSnare:203037",
+   "name": "Mind Flay",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "PRIEST",
+   "id": 216513,
+   "key": "ccSnare:216513",
+   "name": "Mind Flay",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "PRIEST",
+   "id": 222075,
+   "key": "ccSnare:222075",
+   "name": "Mind Flay",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "PRIEST",
+   "id": 241934,
+   "key": "ccSnare:241934",
+   "name": "Mind Flay",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "PRIEST",
+   "id": 264892,
+   "key": "ccSnare:264892",
+   "name": "Mind Flay",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "PRIEST",
+   "id": 277521,
+   "key": "ccSnare:277521",
+   "name": "Mind Flay",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "PRIEST",
+   "id": 278311,
+   "key": "ccSnare:278311",
+   "name": "Mind Flay",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "PRIEST",
+   "id": 292974,
+   "key": "ccSnare:292974",
+   "name": "Mind Flay",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "PRIEST",
+   "id": 306391,
+   "key": "ccSnare:306391",
+   "name": "Mind Flay",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "PRIEST",
+   "id": 312526,
+   "key": "ccSnare:312526",
+   "name": "Mind Flay",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "PRIEST",
+   "id": 312679,
+   "key": "ccSnare:312679",
+   "name": "Mind Flay",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "PRIEST",
+   "id": 315949,
+   "key": "ccSnare:315949",
+   "name": "Mind Flay",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "PRIEST",
+   "id": 321330,
+   "key": "ccSnare:321330",
+   "name": "Mind Flay",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "PRIEST",
+   "id": 462899,
+   "key": "ccSnare:462899",
+   "name": "Mind Flay",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "PRIEST",
+   "id": 451210,
+   "key": "ccSnare:451210",
+   "name": "No Escape",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "PRIEST",
+   "id": 171131,
+   "key": "ccSnare:171131",
+   "name": "Penance",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "PRIEST",
+   "id": 453848,
+   "key": "ccSnare:453848",
+   "name": "Shock Pulse",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "DEATHKNIGHT",
+   "id": 317898,
+   "key": "ccSnare:317898",
+   "name": "Blinding Sleet",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "DEATHKNIGHT",
+   "id": 392490,
+   "key": "ccSnare:392490",
+   "name": "Enfeeble",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "DEATHKNIGHT",
+   "id": 190780,
+   "key": "ccSnare:190780",
+   "name": "Frost Breath",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "cc-mechanic",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "DEATHKNIGHT",
+   "id": 240281,
+   "key": "ccSnare:240281",
+   "name": "Frost Breath",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "DEATHKNIGHT",
+   "id": 279303,
+   "key": "ccSnare:279303",
+   "name": "Frostwyrm's Fury",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "DEATHKNIGHT",
+   "id": 410790,
+   "key": "ccSnare:410790",
+   "name": "Frostwyrm's Fury",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "DEATHKNIGHT",
+   "id": 228645,
+   "key": "ccSnare:228645",
+   "name": "Heart Strike",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "DEATHKNIGHT",
+   "id": 211793,
+   "key": "ccSnare:211793",
+   "name": "Remorseless Winter",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "DEATHKNIGHT",
+   "id": 444834,
+   "key": "ccSnare:444834",
+   "name": "Trollbane's Icy Fury",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "SHAMAN",
+   "id": 462765,
+   "key": "ccSnare:462765",
+   "name": "Arctic Snowstorm",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "SHAMAN",
+   "id": 188526,
+   "key": "ccSnare:188526",
+   "name": "Earthquake",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "SHAMAN",
+   "id": 204408,
+   "key": "ccSnare:204408",
+   "name": "Thunderstorm",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "MAGE",
+   "id": 191746,
+   "key": "ccSnare:191746",
+   "name": "Arcane Explosion",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "MAGE",
+   "id": 12486,
+   "key": "ccSnare:12486",
+   "name": "Blizzard",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "MAGE",
+   "id": 217916,
+   "key": "ccSnare:217916",
+   "name": "Flamestrike",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "MAGE",
+   "id": 394255,
+   "key": "ccSnare:394255",
+   "name": "Freezing Cold",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "MAGE",
+   "id": 13439,
+   "key": "ccSnare:13439",
+   "name": "Frostbolt",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "MAGE",
+   "id": 59638,
+   "key": "ccSnare:59638",
+   "name": "Frostbolt",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "MAGE",
+   "id": 96089,
+   "key": "ccSnare:96089",
+   "name": "Frostbolt",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "MAGE",
+   "id": 144249,
+   "key": "ccSnare:144249",
+   "name": "Frostbolt",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "MAGE",
+   "id": 144251,
+   "key": "ccSnare:144251",
+   "name": "Frostbolt",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "MAGE",
+   "id": 188764,
+   "key": "ccSnare:188764",
+   "name": "Frostbolt",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "MAGE",
+   "id": 250440,
+   "key": "ccSnare:250440",
+   "name": "Frozen Orb",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "MAGE",
+   "id": 289308,
+   "key": "ccSnare:289308",
+   "name": "Frozen Orb",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "MAGE",
+   "id": 211056,
+   "key": "ccSnare:211056",
+   "name": "Mark of Aluneth",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "MAGE",
+   "id": 321329,
+   "key": "ccSnare:321329",
+   "name": "Ring of Frost",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "WARLOCK",
+   "id": 29539,
+   "key": "ccSnare:29539",
+   "name": "Curse of Exhaustion",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "WARLOCK",
+   "id": 330371,
+   "key": "ccSnare:330371",
+   "name": "Curse of Exhaustion",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "MONK",
+   "id": 450342,
+   "key": "ccSnare:450342",
+   "name": "Crashing Momentum",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "MONK",
+   "id": 330911,
+   "key": "ccSnare:330911",
+   "name": "Keg Smash",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "MONK",
+   "id": 196733,
+   "key": "ccSnare:196733",
+   "name": "Special Delivery",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "MONK",
+   "id": 450596,
+   "key": "ccSnare:450596",
+   "name": "Spirit's Essence",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "MONK",
+   "id": 205320,
+   "key": "ccSnare:205320",
+   "name": "Strike of the Windlord",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "DRUID",
+   "id": 202214,
+   "key": "ccSnare:202214",
+   "name": "Infected Wounds",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "DRUID",
+   "id": 345209,
+   "key": "ccSnare:345209",
+   "name": "Infected Wounds",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "cc-mechanic",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "DRUID",
+   "id": 410063,
+   "key": "ccSnare:410063",
+   "name": "Reactive Resin",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "DRUID",
+   "id": 102793,
+   "key": "ccSnare:102793",
+   "name": "Ursol's Vortex",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "cc-mechanic",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "DEMONHUNTER",
+   "id": 247121,
+   "key": "ccSnare:247121",
+   "name": "Metamorphosis",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "DEMONHUNTER",
+   "id": 453263,
+   "key": "ccSnare:453263",
+   "name": "Wave of Debilitation",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "EVOKER",
+   "id": 369093,
+   "key": "ccSnare:369093",
+   "name": "Disintegrate",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "EVOKER",
+   "id": 439606,
+   "key": "ccSnare:439606",
+   "name": "Perilous Fate",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "EVOKER",
+   "id": 387344,
+   "key": "ccSnare:387344",
+   "name": "Walloping Blow",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "ALL",
+   "id": 260297,
+   "key": "ccSnare:260297",
+   "name": "Arctic Bola",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "ALL",
+   "id": 390232,
+   "key": "ccSnare:390232",
+   "name": "Arctic Bola",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "cc-mechanic",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "ALL",
+   "id": 33061,
+   "key": "ccSnare:33061",
+   "name": "Blast Wave",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "ALL",
+   "id": 61362,
+   "key": "ccSnare:61362",
+   "name": "Blast Wave",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "ALL",
+   "id": 80391,
+   "key": "ccSnare:80391",
+   "name": "Blast Wave",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "ALL",
+   "id": 1246033,
+   "key": "ccSnare:1246033",
+   "name": "Blast Wave",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "ALL",
+   "id": 224729,
+   "key": "ccSnare:224729",
+   "name": "Bursting Shot",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "cc-mechanic",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "ALL",
+   "id": 327093,
+   "key": "ccSnare:327093",
+   "name": "Pestilence",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "ALL",
+   "id": 450845,
+   "key": "ccSnare:450845",
+   "name": "Sideline",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "ALL",
+   "id": 180724,
+   "key": "ccSnare:180724",
+   "name": "Slick Ice",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "ALL",
+   "id": 180740,
+   "key": "ccSnare:180740",
+   "name": "Slick Ice",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "ALL",
+   "id": 143375,
+   "key": "ccSnare:143375",
+   "name": "Tightening Grasp",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  },
+  {
+   "category": "ccSnare",
+   "class": "ALL",
+   "id": 461039,
+   "key": "ccSnare:461039",
+   "name": "Wing Buffet",
+   "notes": [
+    "mechanic: snared"
+   ],
+   "origin": null,
+   "rank": "",
+   "source": "bridge",
+   "via": null
+  }
+ ],
+ "client": "retail",
+ "counts": {
+  "activeMitigation": 13,
+  "ccRoot": 27,
+  "ccSnare": 128,
+  "defensives": 10,
+  "groupBuffs": 2,
+  "hardCC": 153,
+  "healing": 6,
+  "movement": 46,
+  "offensiveCDs": 22,
+  "racialDebuffs": 0,
+  "racials": 108,
+  "raidCDs": 1,
+  "stances": 25,
+  "support": 4,
+  "utility": 14
+ },
+ "date": "2026-11-15",
+ "flags": [
+  {
+   "category": "ccSnare",
+   "class": "ROGUE",
+   "comment": "Fatal Flourish",
+   "id": 35546,
+   "key": "shipped:no-aura:ccSnare:35546",
+   "kind": "no-aura",
+   "name": "Fatal Flourish"
+  }
+ ],
+ "handMissing": [],
+ "poolDelta": {
+  "added": [
+   {
+    "candidate": false,
+    "id": 414658,
+    "name": "Ice Cold"
+   },
+   {
+    "candidate": false,
+    "id": 1314570,
+    "name": "Viperwind Idol"
+   },
+   {
+    "candidate": false,
+    "id": 1314978,
+    "name": "Dusty Loa Totem"
+   },
+   {
+    "candidate": false,
+    "id": 1315060,
+    "name": "Ouroboric Curse"
+   },
+   {
+    "candidate": false,
+    "id": 1315061,
+    "name": "Corrosive Bilespear"
+   },
+   {
+    "candidate": false,
+    "id": 1315062,
+    "name": "Essence Trap"
+   },
+   {
+    "candidate": false,
+    "id": 1315063,
+    "name": "Dundun's Favor"
+   },
+   {
+    "candidate": false,
+    "id": 1315064,
+    "name": "Soul-Cracking Dreamcatcher"
+   },
+   {
+    "candidate": false,
+    "id": 1315065,
+    "name": "Venom Infusion"
+   },
+   {
+    "candidate": false,
+    "id": 1319011,
+    "name": "Blood Fletching"
+   }
+  ],
+  "removed": [
+   {
+    "id": 414659,
+    "name": "Ice Cold",
+    "shipped": false
+   },
+   {
+    "id": 1277548,
+    "name": "Unload",
+    "shipped": false
+   }
+  ]
+ },
+ "previous": {
+  "build": "12.1.0.69875",
+  "bundle": "2026-09-20"
+ },
+ "reachSize": 8241,
+ "tool": "tools/spell-research/retail.py derive"
+}

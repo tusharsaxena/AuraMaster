@@ -40,7 +40,7 @@ import sid_propose  # noqa: E402
 DEFAULT_LOGS = Path("/mnt/g/Games/Blizzard/World of Warcraft/_retail_/Logs/RaiderIOLogsArchive")
 DEFAULT_DB2_CACHE = HERE / ".cache"
 REPO = HERE.parent.parent
-DEFAULT_CATEGORIES = REPO / "defaults" / "Categories.lua"
+DEFAULT_CATEGORIES = REPO / "defaults" / "Categories_Retail.lua"
 DEFAULT_CAST_TO_AURA = REPO / "defaults" / "CastToAura.lua"
 DEFAULT_DECISIONS = HERE / "decisions.json"
 
@@ -319,7 +319,7 @@ def build_parser():
     prop.add_argument("--db2-cache", type=Path, default=DEFAULT_DB2_CACHE,
                       help="research.py's DB2 CSV cache (default: %(default)s)")
     prop.add_argument("--categories", type=Path, default=DEFAULT_CATEGORIES,
-                      help="the shipped categories (default: defaults/Categories.lua)")
+                      help="the shipped categories (default: defaults/Categories_Retail.lua)")
     prop.add_argument("--cast-to-aura", type=Path, default=DEFAULT_CAST_TO_AURA,
                       help="the cast -> aura candidates (default: defaults/CastToAura.lua)")
     prop.add_argument("--decisions", type=Path, default=DEFAULT_DECISIONS,
@@ -352,7 +352,7 @@ def build_parser():
     app.add_argument("--bundle", type=Path, required=True,
                      help="bundle folder holding proposals.json; DECISIONS.md is written there")
     app.add_argument("--categories", type=Path, default=DEFAULT_CATEGORIES,
-                     help="the file to rewrite (default: defaults/Categories.lua)")
+                     help="the file to rewrite (default: defaults/Categories_Retail.lua)")
     app.add_argument("--decisions", type=Path, default=DEFAULT_DECISIONS,
                      help="the owner's rulings (default: tools/spell-research/decisions.json)")
     app.set_defaults(func=cmd_apply)
@@ -365,7 +365,7 @@ def build_parser():
     ing.add_argument("--date", required=True,
                      help="the rulings' date, YYYY-MM-DD (required; never taken from the clock)")
     ing.add_argument("--categories", type=Path, default=DEFAULT_CATEGORIES,
-                     help="the file to rewrite (default: defaults/Categories.lua)")
+                     help="the file to rewrite (default: defaults/Categories_Retail.lua)")
     ing.add_argument("--decisions", type=Path, default=DEFAULT_DECISIONS,
                      help="the owner's rulings (default: tools/spell-research/decisions.json)")
     ing.set_defaults(func=cmd_ingest)

@@ -253,7 +253,8 @@ def shipped_categories(categories_lua: Path) -> List[dict]:
     """Every `kind = "spells"` category, in file order.
 
     [{"key", "label", "aura": "BUFF"|"DEBUFF", "classes": {CLASS: [ids in file order]}}], aura from
-    whether the category sits in Cat.HELPFUL or Cat.HARMFUL. Read with research.py's shared reader
+    whether the category sits in Cat.HELPFUL or Cat.HARMFUL (an inline Categories.lua list), or from
+    its `seed("<key>", "<HELPFUL|HARMFUL>", {` line (defaults/Categories_Retail.lua). Read with research.py's shared reader
     (research.read_spells_categories / parse_spells_body), the same one research.read_shipped_named
     uses, so the two see the same ids: both the shipped one-id-per-line class tables and legacy
     one-line class entries, commented-out lines skipped, and no id ever taken from a comment.
@@ -264,14 +265,18 @@ def shipped_categories(categories_lua: Path) -> List[dict]:
     harmful = _HARMFUL.search(text)
     harmful_at = harmful.start() if harmful else len(text)
     out: List[dict] = []
-    for cat in research.read_spells_categories(text):
+    for cat in research.read_spells_categories(text, research.category_labels(categories_lua)):
         classes: Dict[str, List[int]] = {}
         for rec in cat["records"]:
             classes.setdefault(rec["class"], []).append(rec["id"])
+        if cat["aura"]:  # a seed file's list names its own aura type
+            aura = "DEBUFF" if cat["aura"] == "HARMFUL" else "BUFF"
+        else:
+            aura = "DEBUFF" if cat["start"] > harmful_at else "BUFF"
         out.append({
             "key": cat["key"],
             "label": cat["label"],
-            "aura": "DEBUFF" if cat["start"] > harmful_at else "BUFF",
+            "aura": aura,
             "classes": classes,
         })
     return out

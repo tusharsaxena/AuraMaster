@@ -77,7 +77,7 @@ class DeriveTest(unittest.TestCase):
         cls.by_key = {c.key: c for c in cls.cands}
 
     def test_spell_categories_match_the_shipped_file(self):
-        shipped = sid_db2.shipped_categories(research.repo_root() / "defaults" / "Categories.lua")
+        shipped = sid_db2.shipped_categories(research.repo_root() / "defaults" / "Categories_Retail.lua")
         self.assertEqual(tuple((c["key"], c["aura"]) for c in shipped), forever.SPELL_CATEGORIES)
 
     def test_forever_maps_through_trigger(self):

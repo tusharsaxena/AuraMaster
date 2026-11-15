@@ -22,7 +22,7 @@ check's number is not reused. Checks with no recorded pass, and checks new or co
 | COMBAT-1 to COMBAT-7 | Combat and restrictions | Deferred changes, the settings lock, resets in combat, Mythic+ keys |
 | DIAG-1 to DIAG-22 | Debug, diagnostics, perf | The debug console, bulk `[Set]` lines, `/am diagnostics`, `/am perf`, the event trace, resizing the console, its copy window and the perf panel, the console's Diagnostics link, diagnostics turning logging on, the library's own lines (a slash refusal, a stand-down edge, the launcher's at-enable line) |
 | CONT-1 to CONT-27 | Containers | Create, duplicate, delete, rename, copy; handles, strips and the close mark; test mode (no TEST marker on a locked container, the strip's TEST tag); unit swaps; empty placeholders |
-| FILT-1 to FILT-64 | Filters and spell categories | Cast by, the category grids, Overrides, the add-a-spell box, aura ids, your own categories, weapon enchants and their names, the help marks' art, where spell lists apply, the Situations tab, its zones and its Unit type gate |
+| FILT-1 to FILT-67 | Filters and spell categories | Cast by, the category grids, Overrides, the add-a-spell box, aura ids, your own categories, weapon enchants and their names, the help marks' art, where spell lists apply, the Situations tab, its zones and its Unit type gate |
 | LAYOUT-1 to LAYOUT-38 | Layout | Anchor modes, attaching, chains, growth, anchor points, seams, the name label, mouse and tooltips |
 | DRAG-1 to DRAG-18 | Layout | Drag to attach (issue #22): dropping a container on another, the highlight on the target's strip, the side a drop picks, Shift, loops, detaching and its leeway (green hold, snap back, red past it), the growth-conflict popup, combat, a parent holding auras, frame-attached containers, the strip's tooltip, a drop between pulls in a key, a dropped side surviving a growth change, a drag cut short, a before-side drop with the line between the two join dots, the strip edge following the mark |
 | STYLE-1 to STYLE-31 | Bars and Icons style, fonts | Bars and Icons tabs, the spark, borders, dispel colors, pandemic, the font primer |
@@ -1237,6 +1237,24 @@ Players / Friendly. Result: pass (owner, 2026-10-02)
 Filters → Overrides, with a blacklisted spell that a category claims, and on General → Spell
 Categories, on a claimed spell → the entry's help mark draws the library's info art: not blank, and
 not the client's blue disc. Result: pass (owner-marked 2026-10-23)
+
+**FILT-65. The Retail lists after the seed-file split (issue #27). Client: Retail.** Fully exit and
+restart the client (`defaults/Categories_Retail.lua` is a new file, which `/reload` does not see) → no Lua
+error at login. Filters → Categories shows the same rows in the same order, and General → Spell
+categories → *CC Loss of Control* still lists Hammer of Justice, Polymorph and Storm Bolt, *Racials*
+still lists Stoneform and Berserking. On WoW Forever the same page still lists Forever's own spells
+(FOREVER-15's counterpart). Result:
+
+**FILT-66. The ten ids the re-validation added draw with their names. Client: Retail.** General →
+Spell categories → *Defensive cooldowns* lists Guardian Spirit and Frenzied Regeneration;
+*Offensive cooldowns* lists Takedown, Stormkeeper, Malevolence, Invoke Xuen, the White Tiger,
+Incarnation: Guardian of Ursoc and Berserk (the Guardian one); *Utility* lists Path of Frost and
+Greater Invisibility. Each row shows its icon and name, none an *Unknown spell*. Result:
+
+**FILT-67. A new id matches in a container. Client: Retail.** On an Elemental shaman (or any class
+from FILT-66 you can reach), make a player buffs container whose Filters → Categories hide every row
+but *Offensive cooldowns* → cast Stormkeeper → its aura draws; on a guardian druid, a container
+showing only *Defensive cooldowns* draws Frenzied Regeneration. Result:
 
 ## Layout
 
@@ -3510,3 +3528,7 @@ empty until the owner runs them.
 Open from the owner's round-5 feedback on the presets (presets spec section 19, AM-PR22): PRESETS-2
 now describes every pick leaving the containers unlocked and test mode on, and Empty previewing an
 empty screen until Apply or Not now. Its `Result:` line is empty until the owner runs it.
+
+Open from the Retail seed re-validation (issue #27, `docs/superpowers/plans/2026-11-15-retail-seed-revalidation.md`):
+FILT-65 to FILT-67 are new. **Fully exit and restart the client**: `defaults/Categories_Retail.lua` is a
+new file, not seen by `/reload`. Their `Result:` lines are empty until the owner runs them.

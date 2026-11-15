@@ -68,18 +68,20 @@ end
 --
 -- Taken from master's defaults/Categories.lua before AM-FP06 (2026-11-14): each category's key in
 -- declaration order, and for a `spells` category its distinct id count and the sum of its ids.
+-- Rolled 2026-11-15 (issue #27, RS-07) for the ten ids the wago.tools re-validation added to
+-- defensives, offensiveCDs and utility (docs/spell-research/2026-11-15-retail/RULINGS.md).
 local RETAIL_SNAPSHOT = {
     HELPFUL = {
-        { "defensives", 54, 7800558 },
+        { "defensives", 56, 7871188 },
         { "bigDefensive" }, { "externals" },
         { "activeMitigation", 6, 1046344 },
         { "raidCDs", 16, 4191808 },
-        { "offensiveCDs", 35, 10900713 },
+        { "offensiveCDs", 41, 13062515 },
         { "healing", 44, 17554122 },
         { "support", 26, 9305177 },
         { "groupBuffs", 18, 5456421 },
         { "movement", 53, 15483836 },
-        { "utility", 9, 183834 },
+        { "utility", 11, 298508 },
         { "stances", 15, 2304469 },
         { "racials", 37, 8955369 },
         { "important" }, { "castable" }, { "cancelable" }, { "stealable" },
@@ -165,6 +167,35 @@ test("categories clients: the Forever data covers every shipped spells category 
             assertTrue(def ~= nil and def.kind == "spells", "EMPTY names a spells category: " .. tostring(key))
         end
     end
+end)
+
+test("categories clients: the Retail seed file covers every shipped spells category once, aura type matching", function()
+    local NS = T.NS
+    local seeds = NS.CategorySeedsRetail
+    -- The tools (tools/spell-research) read each list's aura type off its `seed("<key>", "<AURA>", {`
+    -- line, so a line that disagrees with where defaults/Categories.lua declares the category would
+    -- send a debuff list's candidates through the buff rules.
+    local f = assert(io.open("defaults/Categories_Retail.lua", "rb"))
+    local text = f:read("*a")
+    f:close()
+    local declared, n = {}, 0
+    for key, aura in text:gmatch('\nseed%("(%w+)", "(%u+)", {') do
+        -- red under: one key seeded twice, the second silently winning
+        assertNil(declared[key], key .. " is seeded once")
+        declared[key], n = aura, n + 1
+    end
+    local master = 0
+    for _, auraType in ipairs({ "HELPFUL", "HARMFUL" }) do
+        for _, row in ipairs(RETAIL_SNAPSHOT[auraType]) do
+            if row[2] then
+                master = master + 1
+                -- red under: a category with no Retail list, or a list under the wrong aura type
+                assertEqual(declared[row[1]], auraType, row[1] .. "'s seed line names its aura type")
+                assertTrue(seeds[row[1]] ~= nil, row[1] .. " is published")
+            end
+        end
+    end
+    assertEqual(n, master, "no seed for a category Categories.lua does not declare")
 end)
 
 test("categories clients: hardCC holds every Polymorph rank on forever", function()

@@ -67,6 +67,8 @@ _CATEGORY_LINE = r'^[ \t]*key\s*=\s*"%s"\s*,\s*kind\s*=\s*"spells"'
 _ANY_KEY_LINE = re.compile(r'^[ \t]*key\s*=\s*"')
 _BLOCK_OPEN = re.compile(r"spells\s*=\s*spells\(\{\s*$")
 _BLOCK_CLOSE = re.compile(r"^[ \t]*\}\)")
+# A seed file's list opener (research.SEED_OPEN): `seed("<key>", "<HELPFUL|HARMFUL>", {`.
+_SEED_LINE = r'^seed\("%s"\s*,\s*"(?:HELPFUL|HARMFUL)"\s*,\s*\{[ \t]*$'
 # The widest id a line is laid out for when no neighbor shows a comment column: seven digits
 # and the comma, then the space before `--`.
 _DEFAULT_COMMENT_OFFSET = 9
@@ -203,7 +205,7 @@ class _Lua:
     bundle date a new line's comment cites.
     """
 
-    def __init__(self, text, names=None, date=""):
+    def __init__(self, text, names=None, date="", provenance=None):
         self.newline = "\r\n" if "\r\n" in text else "\n"
         self.trailing = text.endswith(("\r\n", "\n"))
         self.lines = text.replace("\r\n", "\n").split("\n")
@@ -211,6 +213,9 @@ class _Lua:
             self.lines.pop()
         self.names = dict(names or {})
         self.date = date
+        # What a new id line says about where it came from. The combat-log review leaves it None
+        # ("added from the <date> combat logs (SID)"); retail.py passes its own wording.
+        self.provenance = provenance
 
     def text(self):
         out = self.newline.join(self.lines)
@@ -220,11 +225,19 @@ class _Lua:
 
     def block(self, category):
         # type: (str) -> Tuple[int, int]
-        """(first line after `spells = spells({`, the `}),` line) of the category's block."""
+        """(first line after `spells = spells({` or `seed("<key>", ..., {`, the closing `})` line) of
+        the category's block."""
+        seed = re.compile(_SEED_LINE % re.escape(category))
+        opened = next((i for i, line in enumerate(self.lines) if seed.match(line)), None)
+        if opened is not None:  # a seed file's list (defaults/Categories_Retail.lua)
+            for j in range(opened + 1, len(self.lines)):
+                if _BLOCK_CLOSE.match(self.lines[j]):
+                    return opened + 1, j
+            raise ValueError("category %r's seed list is never closed" % category)
         head = re.compile(_CATEGORY_LINE % re.escape(category))
         start = next((i for i, line in enumerate(self.lines) if head.match(line)), None)
         if start is None:
-            raise ValueError("no `spells` category %r in Categories.lua" % category)
+            raise ValueError("no `spells` category %r in the categories file" % category)
         for i in range(start + 1, len(self.lines)):
             if _ANY_KEY_LINE.match(self.lines[i]):
                 break
@@ -306,8 +319,11 @@ class _Lua:
 
     def _added_comment(self, sid, replaced):
         parts = [self.names.get(sid) or ""]
-        parts.append("added from the %s combat logs (SID)" % self.date if self.date
-                     else "added from the combat logs (SID)")
+        if self.provenance:
+            parts.append(self.provenance)
+        else:
+            parts.append("added from the %s combat logs (SID)" % self.date if self.date
+                         else "added from the combat logs (SID)")
         if replaced:
             parts.append("replaces %s" % _joined(replaced))
         return "; ".join(p for p in parts if p)

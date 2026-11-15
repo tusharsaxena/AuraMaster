@@ -3,7 +3,7 @@
 The repeatable half of GitHub issue #11. Design of record:
 `docs/superpowers/specs/2026-09-20-cc-categories-spell-research-design.md`, **Part C**.
 
-`defaults/Categories.lua`'s spell lists are a starter set that was assembled by hand from public
+`defaults/Categories_Retail.lua`'s spell lists are a starter set that was assembled by hand from public
 spell data (that file's own header says so). This tool replaces the hand-assembly for the three CC
 categories — `hardCC` ("CC Loss of Control"), `ccRoot` ("CC Root") and `ccSnare` ("CC Snare"): it
 reads Blizzard's DB2 tables for one pinned retail build, works out which spells a
@@ -19,13 +19,13 @@ fragment.
 > records and are not edited. `decisions.json`'s five `softCC` rulings were re-keyed to the new
 > categories the same day.
 
-**`research.py` never writes `defaults/Categories.lua`.** Part C's narrowing rule is that the author accepts
+**`research.py` never writes `defaults/Categories_Retail.lua`.** Part C's narrowing rule is that the author accepts
 the diff per change. A generator that edited the shipped file would turn a judgment call into a
 rubber stamp, and the limitations at the bottom of this page are exactly the cases where that
 judgment is the only thing standing between the addon and a wrong list.
 
 Its sibling `logs.py` answers a different question from the owner's combat logs (which aura id a
-spec actually gets) and does write `defaults/Categories.lua`, but only through `logs.py apply` and
+spec actually gets) and does write `defaults/Categories_Retail.lua`, but only through `logs.py apply` and
 only for proposals the owner has ruled on; see *Combat-log evidence* at the end of this page.
 
 ## Running it
@@ -36,11 +36,11 @@ Python 3 and the standard library. No pip packages, no virtualenv — see `DEPEN
 # What would change, against the live retail build (this is also what a bare run does)
 python3 tools/spell-research/research.py --diff
 
-# The paste-ready Lua fragment, in defaults/Categories.lua's own shape. --emit REQUIRES a date:
-# the date is pasted into defaults/Categories.lua as provenance, so it has to name a real run.
+# The paste-ready Lua fragment, in defaults/Categories_Retail.lua's own shape. --emit REQUIRES a date:
+# the date is pasted into defaults/Categories_Retail.lua as provenance, so it has to name a real run.
 python3 tools/spell-research/research.py --emit --date 2026-09-20
 
-# Cross-check every id defaults/Categories.lua ships, against the build (issue #15). Three
+# Cross-check every id defaults/Categories_Retail.lua ships, against the build (issue #15). Three
 # questions, over all of them and not just the three CC buckets: does the build still name this id,
 # does it apply an aura of its own, and does its name still agree with the comment beside it?
 python3 tools/spell-research/research.py --check-shipped
@@ -67,7 +67,7 @@ argument, never `datetime.now()`**: the caller decides what a bundle is called, 
 straddles midnight must not quietly land somewhere else.
 
 `--emit` **fails without one.** It used to fall back to the clock, which put a date belonging to no
-recorded run into the provenance comment that gets pasted into `defaults/Categories.lua` — where it
+recorded run into the provenance comment that gets pasted into `defaults/Categories_Retail.lua` — where it
 is read afterwards as "the day this list was derived", with nothing left to contradict it and no
 bundle to look the run up in. Give it the bundle the ids came from (`--date`), or freeze this run
 and use its date (`--bundle`).
@@ -159,7 +159,7 @@ Two steps exist solely because of this:
 
 `--diff` derives the three CC buckets and compares them. Nothing checked the **other** shipped
 lists, and nothing checked any list for the failure that actually bites: an id that is no longer
-what the file says it is. This does, mechanically, over every id in `defaults/Categories.lua`:
+what the file says it is. This does, mechanically, over every id in `defaults/Categories_Retail.lua`:
 
 * **The build does not name it** — mistyped, or the spell is gone. It draws as *Unknown spell N*.
 * **It applies no aura of its own** — it is the CAST of an ability whose aura carries a different
@@ -168,7 +168,7 @@ what the file says it is. This does, mechanically, over every id in `defaults/Ca
   or was transcribed wrong. `format_diff` used to say a rename "cannot be detected against the
   shipped file, which stores no names". It does store them, in the comment beside each id.
 
-**Where the names come from.** `defaults/Categories.lua` writes one table per class with **one id
+**Where the names come from.** `defaults/Categories_Retail.lua` writes one table per class with **one id
 per line**, and the comment on that line gives the spell's name, then any context after a `;`
 (`436358,  -- Demolish; from the 2026-09-24 combat logs; ...`). The name is the text before the
 first `;`, so every shipped id carries one: all 440 do today. One reader in `research.py`
@@ -276,7 +276,7 @@ ChrSpecialization`), well over half the derived spells landed in `ALL`; with it,
 puts 46 of 427 there and only 40 carry `classSource: "unknown"`.
 
 A spell reachable by **seven or more** classes is emitted as `ALL` — the key
-`defaults/Categories.lua` already uses for racials such as Shadowmeld. Real class abilities reach
+`defaults/Categories_Retail.lua` already uses for racials such as Shadowmeld. Real class abilities reach
 one class, or two or three when a mask covers a shared tree; the things that reach many are racials,
 trinkets and item effects. Nothing sits in between, so any threshold in the middle separates the two
 populations cleanly, and seven is a simple majority of thirteen.
@@ -308,7 +308,7 @@ populations cleanly, and seven is a simple majority of thirteen.
   bridge, which needs an exact name match, can cross from the totem to its snare. Recorded under
   `ccSnare` in `SENTINELS_UNREACHABLE`. Earthgrab Totem's root (aura 64695, mechanic 7) has the same
   shape: only the totem's pulse 116943 triggers it, and the pool never reaches that. Both auras ship
-  in `defaults/Categories.lua` BY HAND (owner 2026-10-04), so every `--diff` will list Earthbind 3600
+  in `defaults/Categories_Retail.lua` BY HAND (owner 2026-10-04), so every `--diff` will list Earthbind 3600
   and Earthgrab 64695 as shipped-but-not-derived; keep them.
 - **A trait outside any loadout's tree has no class** and falls to `ALL` with
   `classSource: "unknown"` in `derived.json`.
@@ -395,7 +395,7 @@ ships in one category, the first in `defaults/Categories.lua`'s order; a later a
 dropped at emit and listed as a conflict in `RULINGS.md` (the Racials debuff overlap is the one
 allowed exception, as on Retail).
 
-**What it writes.** `forever.py` never edits `defaults/Categories.lua`. It writes
+**What it writes.** `forever.py` never edits `defaults/Categories_Retail.lua`. It writes
 `defaults/Categories_Forever*.lua` (split by category boundary so no file passes 1400 lines), which
 publish `NS.CategorySeedsForever` and its `.EMPTY` set, and `defaults/CastToAura_Forever.lua`. The
 addon picks the client's lists once at file load. A category in `.EMPTY` has nothing on Forever
@@ -409,6 +409,74 @@ and is gated off there, so a re-run that fills it ungates it with no code change
 data. Issue #26 re-runs `logs.py` from Forever logs after max-level dungeons and raids, and the
 bundle's `ANALYSIS.md` lists what that run should re-check.
 
+## Retail re-validation (`retail.py`)
+
+Issue #27. Retail's lists are hand-curated, so nothing regenerates them. What a new build needs
+is a re-check: which ids the build added that a list should carry, and which shipped ids have
+gone stale. `retail.py` does that against one pinned build and records every answer as data, so
+the next run asks only about what is new. The one-line recipe is the project command
+`/aura-seeds-validate` (`.claude/commands/aura-seeds-validate.md`), and `docs/common-tasks.md` has
+the same steps by hand.
+
+> **2026-11-15: the Retail lists moved** out of `defaults/Categories.lua` into
+> `defaults/Categories_Retail.lua`, one `seed("<key>", "<HELPFUL|HARMFUL>", { ... })` list per
+> category, with the bodies unchanged. The definitions stayed behind with no ids of their own.
+> Every reader and writer here takes both that shape and the inline `spells = spells({ ... })`
+> one (the test fixtures still use the inline shape). `--categories` and `logs.py`'s default now
+> name the seed file, and labels come from the sibling `Categories.lua`.
+
+```sh
+python3 tools/spell-research/retail.py status                      # CURRENT, or NEW <build>
+python3 tools/spell-research/research.py --bundle docs/spell-research/<date>-retail --date <date>
+python3 tools/spell-research/retail.py derive --bundle docs/spell-research/<date>-retail --date <date>
+python3 tools/spell-research/retail.py check  --bundle docs/spell-research/<date>-retail
+python3 tools/spell-research/retail.py rule   --tsv rulings.tsv --bundle docs/spell-research/<date>-retail
+python3 tools/spell-research/retail.py report --bundle docs/spell-research/<date>-retail --date <date>
+python3 tools/spell-research/retail.py apply  --bundle docs/spell-research/<date>-retail --date <date>
+```
+
+**Candidates** (`<category>:<id>`, ruled `accept` or `reject`):
+
+- `cc-mechanic` / `bridge`: research.derive's CC ids that the list lacks.
+- `db2-effect`: `sid_seeds.DB2_RULES`, the same rules `forever.py` runs on Forever, over the Retail
+  pool, minus anything already shipped in the same aura type.
+- `hand`: `HAND_CANDIDATES`, each with its reason.
+
+**Flags** (`shipped:<kind>:<category>:<id>`, ruled `keep` or `remove`), raised for every shipped id:
+
+- `unnamed`: the build's SpellName has no row for it.
+- `no-aura`: it has no aura effect of its own (6, 35, 65, 119 or 128).
+- `renamed`: its name disagrees with the comment beside it.
+- `dropped`: the previous bundle's build could reach it and this build cannot.
+
+`dropped` is a delta on purpose. About a quarter of the shipped ids sit outside the reachable set
+on any build: auras applied by a server script, and ids taken from the combat logs. An absolute
+"not reachable" check would flag them all on every run.
+
+**Reach** is the class pool closed over `EffectTriggerSpell`, plus the racial lines and the derived
+CC ids. It is frozen in the bundle's `reach.json`, so the next run computes its `dropped` flags and
+its reach delta without the old build's tables. A `--previous` that is a `research.py` bundle with no
+`reach.json` (the 2026-09-20 one) is re-derived from its `raw/`.
+
+**Rulings are data.** `tools/spell-research/retail_rulings.json` is keyed by category and id, never
+by build. A ruling therefore holds until the thing it ruled on stops being proposed, and a later
+run's `check` lists only what is new. `rule` is the file's only writer.
+
+`apply` refuses while anything is unruled. It also refuses an accept whose id another category of
+the same aura type already holds (the Racials debuff overlap is allowed, as in `forever.py`). It
+writes through `sid_decide`'s line writer, so a new line reads `<id>, -- <Name>; added from the
+<date> wago.tools re-validation (<build>)`. Running it a second time changes nothing.
+
+**Ordering.** Run `report` before `apply`. Once `apply` has shipped an accepted id, a re-derive no
+longer proposes it, so its ruling stays in the file with no candidate behind it (provenance, not
+an error). `RULINGS.md` describes the run as it was derived.
+
+**The Retail bundle** (`docs/spell-research/<date>-retail/`) holds `research.py`'s `raw/`,
+`SOURCES.md`, `derived.json` and `DIFF.md`, plus `raw/` copies of `Spell`, `SpellCooldowns` and
+`SpellMisc`, `candidates.json`, `reach.json`, the generated `RULINGS.md` and the hand-written
+`ANALYSIS.md`. `DIFF.md` is still `research.py`'s raw CC diff, and it lists every unshipped derived
+id. `RULINGS.md` gives the verdict on each of them.
+
 ## Combat-log evidence (`logs.py`)
 
 `research.py` says which aura ids a spell *could* land; only the combat log says which one a given
@@ -416,7 +484,7 @@ spec actually gets. The owner's case: Offensive cooldowns listed Ascendance as `
 Restoration Shaman never receives that id; Restoration gets `114052`, so a container showing only
 cooldowns drew nothing. `logs.py` mines the owner's combat logs for the aura ids **players** of
 each spec apply, proposes corrections and additions for the `spells` categories of
-`defaults/Categories.lua`, and applies only the ones the owner rules on. Design of record:
+`defaults/Categories_Retail.lua`, and applies only the ones the owner rules on. Design of record:
 `docs/superpowers/specs/2026-09-24-spell-ids-from-combat-logs-design.md`.
 
 The review is normally driven by the `/aura-spells-review` slash command
@@ -454,7 +522,7 @@ python3 tools/spell-research/logs.py propose --date 2026-09-24 \
 # 3. Ingest the filled review sheet: check it against the bundle's REVIEW.csv (by row_id, spell_id
 #    and type; any mismatch, unknown row, unrecognized decision or unknown edited category fails
 #    the whole run before anything is written), record each Approve/Reject in decisions.json by
-#    row, apply the approved rows to defaults/Categories.lua and write the bundle's DECISIONS.md.
+#    row, apply the approved rows to defaults/Categories_Retail.lua and write the bundle's DECISIONS.md.
 #    Blank decisions stay pending. A second ingest of the same sheet changes nothing.
 python3 tools/spell-research/logs.py ingest --bundle docs/spell-research/2026-09-24-logs \
   --csv ~/REVIEW-filled.csv --date 2026-09-25
@@ -465,7 +533,7 @@ python3 tools/spell-research/logs.py ingest --bundle docs/spell-research/2026-09
 python3 tools/spell-research/logs.py decide --bundle docs/spell-research/2026-09-24-logs \
   --key 'replace|offensiveCDs|SHAMAN|ascendance|114052' --ruling accept --date 2026-09-24
 
-# ... and apply rewrites the ruled class tables of defaults/Categories.lua and writes the bundle's
+# ... and apply rewrites the ruled class tables of defaults/Categories_Retail.lua and writes the bundle's
 #    DECISIONS.md. Unruled proposals are left alone.
 python3 tools/spell-research/logs.py apply --bundle docs/spell-research/2026-09-24-logs
 ```
@@ -477,7 +545,7 @@ subcommand takes `--help`. `scan` and `propose` read the DB2 tables from `--db2-
 `propose`, `decide`, `apply` and `ingest` take `--categories` and `--decisions` (and `propose` also
 `--cast-to-aura`) to work on copies, which is what the tests do.
 
-**`logs.py apply` and `logs.py ingest` are the only paths that write `defaults/Categories.lua`**,
+**`logs.py apply` and `logs.py ingest` are the only paths that write `defaults/Categories_Retail.lua`**,
 and they write only what has a ruling in `decisions.json`. They edit just the class tables a ruling
 touches and keep every other line as it was. An id they remove loses its line, and a class table
 left empty is deleted (the table only: a comment line above it stays). An id they add gets its own
