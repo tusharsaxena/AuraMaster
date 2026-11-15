@@ -2821,8 +2821,9 @@ stays on screen. Pick **Intermediate** → its containers replace Simple, test m
 line "On your screen now, filled with sample auras. Nothing is saved until Apply." appears. Pick
 **Empty** → the Bars / Icons switch hides and every container leaves the screen (an empty preview);
 test mode stays on and the containers stay unlocked. Click **Containers: unlocked** and **Test mode:
-on** to flip them off, then pick **Simple** → both come back on (every pick sets them). **Not now**
-after Empty → the player's own containers return; nothing is deleted until Apply. Result:
+on** to flip them off → turning test mode off ends the Empty preview, so your own containers come
+back on screen. Pick **Simple** → both buttons come back on (every pick sets them). Pick **Empty**
+again, then **Not now** → your own containers return; nothing is deleted until Apply. Result:
 
 **PRESETS-3. Escape restores, and Not now keeps Simple. Client: Retail.** On a new profile, pick
 **Advanced** in the picker → the 20 Advanced containers replace Simple, test mode turns on and every

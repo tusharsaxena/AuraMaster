@@ -378,8 +378,9 @@ local function dismiss()
 end
 
 --- What Apply keeps, decided when the player answers: the preview this window started, while it is
---- still preset `sel` in style `look`; else `sel` applied afresh (a preview combat ended or another
---- pick swapped, or Empty), Apply settling any preview still up first.
+--- still preset `sel` in style `look` (Empty matches on its name alone: it has no style); else `sel`
+--- applied afresh (a preview combat ended or another pick swapped), Apply settling any preview still
+--- up first.
 local function keep(sel, look)
     local P = NS.Presets
     local n, l = P.Previewed()
