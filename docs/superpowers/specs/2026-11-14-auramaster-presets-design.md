@@ -457,7 +457,8 @@ These record where the build departs from the letter of section 16, each left fo
    `cornerRight` at 300 in, keeping its width and its 5 gap. The cost is 40 more shared strip with
    the target column (80 on 16:9, 176 on 16:10, 182 to 194 on 5:4 and 4:3 in Bars), and in Icons on
    4:3 and 5:4 the call-outs come within one snap radius of the focus rows at 1080 and 1440
-   (docs/known-limitations.md, presets). The owner keeps 520 or names another distance.
+   (docs/known-limitations.md, presets). The owner keeps 520 or names another distance. *Superseded by
+   section 17.1, which hangs the whole right-hand cluster from the right edge instead.*
 
 ## 17. Owner feedback, round 3 (2026-11-15)
 
@@ -517,3 +518,35 @@ not localized; the names after them stay localized. Add mode's " (2)" suffix sti
 **5. An unlock hint.** When the preset picker closes, by any route (Apply, Not now, the close control,
 Escape), print one chat line telling the player they can type `/am unlock` to enter unlock mode. It is
 localized, uses the addon's chat prefix, and prints once per close.
+
+### 17.1 Notes from building section 17 (AM-PR16 to AM-PR18, 2026-11-15)
+
+Where the build lands, and where it departs from the letter of section 17, each left for the owner's call.
+
+1. **The distances (point 1).** Player buffs (all)'s right edge sits 10 in from the right edge, the least
+   point 1 allows, which keeps the cluster as far from the call-outs as it can be; Player debuffs (all)
+   joins it with a 5 gap, and the target column sits 50 left of the focus column. At 1920 x 1080 the
+   cluster's left edge is 785 in from the right edge. The call-out column was narrowed from 480 to 400,
+   still wider than its widest test-mode line at 36. The target column still meets the call-out block
+   on 16:10 and narrower screens; the measured overlaps are in docs/known-limitations.md (presets),
+   pinned by `tests/test_presets_cluster.lua`.
+2. **The target stack's top (point 1).** On its base the Bars target stack of Advanced ends 64 under
+   Player debuffs (all)'s top at 1080 tall locked and 16 over it unlocked (its seven drag strips), and
+   runs off a 768-tall screen as before (docs/known-limitations.md).
+3. **Player debuffs in Icons (point 1).** Joined by its top right to Player buffs (all)'s row, it leaves
+   the focus column whenever that row is not full. Kept as the owner asked; docs/known-limitations.md.
+4. **The bar look (point 3).** A buff bar has its Fill > Color by written too, as One color
+   (`colorMode = "static"`), so a skin default cannot change it either. An Icons preset has no bars
+   container, so the two fields appear only in Bars.
+5. **The numbering (point 4).** Advanced's Target stealable (15) is now created before Target special
+   (16), so it sits under it in the target stack. Add mode keeps the preset's numbers, so a profile can
+   hold two of a number; nothing renumbers after a delete or a rename (docs/known-limitations.md).
+6. **The hint (point 5).** It prints on the player's closes only: `NS.HidePresetPicker` (a profile
+   event, the stand-down) is the addon's own hide and prints none. `/am preset <name>` with the window
+   up prints it once its confirm is answered, Apply or Cancel.
+
+Where each item is checked: tests `tests/test_presets_cluster.lua` (points 1 and 2),
+`tests/test_presets_data.lua` (points 3 and 4) and `tests/test_presetpicker.lua` (point 5); smoke
+PRESETS-31 (point 1), PRESETS-32 (the attachment), PRESETS-33 (point 2), PRESETS-34 (point 3),
+PRESETS-35 (point 4) and PRESETS-36 (point 5) in docs/smoke-tests.md, with PRESETS-1, PRESETS-4 to
+PRESETS-6, PRESETS-9, PRESETS-20, PRESETS-21, PRESETS-28, PRESETS-29 and INSTALL-2 reworded to match.

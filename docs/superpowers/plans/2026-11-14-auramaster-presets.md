@@ -232,6 +232,6 @@ Each task keeps the Global Constraints, the gate and the commit rules above.
 
 ### Task AM-PR18: Docs, smoke checks, review and the automated-test record for round 3
 
-- [ ] Docs (ARCHITECTURE, known-limitations, smoke checks for every §17 item, spec cross-references), test-cases.md and the README badge. Commit `AM-PR18: Docs and smoke checks for the owner's round-3 feedback`.
+- [x] Docs (ARCHITECTURE, known-limitations, smoke checks for every §17 item, spec cross-references), test-cases.md and the README badge. Commit `AM-PR18: Docs and smoke checks for the owner's round-3 feedback`.
 - [ ] An independent review against §17; fixes as `AM-PR18: Review fixes: …`.
 - [ ] A fresh automated-test record, the M6 checkpoint row and the RESUME log line: `AM-PR18: Automated-test record after round-3 feedback`.

@@ -97,9 +97,9 @@ Five starting points for a profile's containers (spec
 
 | File | Role |
 |---|---|
-| `defaults/Presets.lua` | `NS.PresetData`: the data (the seven stacks in a 1080-tall reference space, the containers by role, each preset's stacks) and the pure builder. `Build(name, look, W, H, picked)` answers the specs in creation order, a stack's head placed on `UIParent` and every member attached to the one before it; `Realize(specs, keys, create)` walks them through a writer, filling each member's `attach.container` with the id its parent took. `CalloutRect(name, look, W, H)` answers the call-out block's unlocked test-mode rectangle, and `ROOM` the room around it (the spot both pickers open on, 75% up, the skin picker's and the preset picker's sizes, the margin). Carries no spell ids and no appearance media but the call-outs' look (spec section 15) |
+| `defaults/Presets.lua` | `NS.PresetData`: the data (the seven stacks in a 1080-tall reference space, the containers by role, each preset's stacks) and the pure builder. `Build(name, look, W, H, picked)` answers the specs in creation order, a stack's head placed on `UIParent` and every member attached to the one before it; `Realize(specs, keys, create)` walks them through a writer, filling each member's `attach.container` with the id its parent took. `CalloutRect(name, look, W, H)` answers the call-out block's unlocked test-mode rectangle, and `ROOM` the room around it (the spot both pickers open on, 75% up, the skin picker's and the preset picker's sizes, the margin). Writes each name as `[n] <name>`, `n` its place in creation order, the owner's numbering (spec section 17.4; not localized, the name after it is), and on every bars container the bar look of section 17.3 (`bars.bgAlpha` 0.5; `bars.colorMode` `"dispel"` on a HARMFUL one, `"static"` otherwise, both written so neither the template nor a skin decides). Carries no spell ids and no appearance media but that bar look and the call-outs' look (spec section 15) |
 | `modules/Presets.lua` | `NS.Presets`, the one writer: `Apply(name, look, mode)` through `ContainerManager.Create` / `.Delete` and `Categories.CreateUserCategory` (Advanced's two custom categories, reused by name on a re-apply, `ResolveCustom`); the preview (`BeginPreview`, `EndPreview`, `IsPreviewing`, `Previewed`, `RestoreStaleSnapshots`, `RestoreStaleSnapshot`, `OnCombatStart`, `OnCombatEnd`); the picker latch (`PickerSeen`, `MarkPickerSeen`); the untouched-seed record (`RecordSeed`, `SeedUntouched`, `Fingerprint`); `OwnContainerCount`, `ParentSize` |
-| `settings/PresetPicker.lua` | The first-run window (`NS.PresetPickerDue`, `NS.MaybeShowPresetPicker`, `NS.ShowPresetPicker`, `NS.HidePresetPicker`, `NS.PresetPickerHolding`, `NS.RefreshPresetPicker`; `NS.PresetPicker.Placement(W, H)`, where it opens), with its lock and test-mode buttons, and the preset confirm, one StaticPopup behind two entry points: `NS.ConfirmPreset(name, look, mode)` applies (`/am preset <name>`, the tab with no preview of its own), `NS.ConfirmPreview(name, look, mode)` keeps the preview on screen while it asks, then keeps it (the tab). An answer decides what it writes when it is given, and the confirm goes down unanswered with the window and with every `NS.HidePresetPicker` (a profile event, the stand-down) |
+| `settings/PresetPicker.lua` | The first-run window (`NS.PresetPickerDue`, `NS.MaybeShowPresetPicker`, `NS.ShowPresetPicker`, `NS.HidePresetPicker`, `NS.PresetPickerHolding`, `NS.RefreshPresetPicker`; `NS.PresetPicker.Placement(W, H)`, where it opens), with its lock and test-mode buttons, and the preset confirm, one StaticPopup behind two entry points: `NS.ConfirmPreset(name, look, mode)` applies (`/am preset <name>`, the tab with no preview of its own), `NS.ConfirmPreview(name, look, mode)` keeps the preview on screen while it asks, then keeps it (the tab). An answer decides what it writes when it is given, and the confirm goes down unanswered with the window and with every `NS.HidePresetPicker` (a profile event, the stand-down). Every close the player makes of the window prints the unlock hint once (spec section 17.5, `sayUnlockHint`) |
 | `settings/GeneralPresets.lua` | The General page's **Presets** tab, its second tab after Master controls: `NS.RenderPresetsTab`, and `NS.PresetsTabLeft`, its `onLeave` |
 
 - **Its own profile key**, `presets` (`docs/schema.md`): `pickerSeen` (default false, a skipRender
@@ -142,9 +142,7 @@ Five starting points for a profile's containers (spec
   (BOTTOMRIGHT for a row growing left) on a base 740 down in the reference space (340 above the
   bottom at 1080 tall), with `layout.growV = "up"`, and each member joins the top of the one before
   it, so a tier's first role sits nearest the unit frames. The corner group still grows down from the
-  top-right corner, 46 down; since the owner's round 2 (spec section 16.3) Player debuffs
-  (`cornerLeft`)'s left edge sits 520 in from the right edge (475 in section 15) and Player buffs
-  (`cornerRight`)'s 300, its width and its 5 gap kept. The call-outs
+  top-right corner, 46 down (where it sits across since round 3: the right-hand cluster below). The call-outs
   (`middle`) hang by their TOP from the screen's center line, each line centered, colored like the
   owner's three (from no skin), with the owner's glow (black from no skin, intensity 1, thickness
   2, offset 1, -1, every glow leaf the template has stored, spec section 16.1) and no label; the builder takes the largest font
@@ -159,9 +157,27 @@ Five starting points for a profile's containers (spec
   "screen"`) and grows up like the side stacks; its column is `cornerLeft`'s, from the same
   right-edge point, so Player debuffs and the focus containers share a left edge on every screen;
   its base sits 550 down in the reference space (`FOCUS_BASE`), high enough over the far stack that
-  the two stay more than twice `C.SNAP_RADIUS` apart in test mode, locked or unlocked. It shares a
-  strip with the target stack's column, and other containers sit within one snap radius of it while
-  unlocked (`docs/known-limitations.md`).
+  the two stay more than twice `C.SNAP_RADIUS` apart in test mode, locked or unlocked. On a 768-tall
+  screen other containers still sit within one snap radius of it while unlocked
+  (`docs/known-limitations.md`).
+- **The right-hand cluster** (spec section 17.1 and 17.2, the owner's round 3; it overrides section
+  16.3's corner offsets). Every column that holds bars is `COL_W` (240) wide, Player cooldowns'
+  width, and every `TOPRIGHT` stack hangs from the right edge, so its gaps hold on every screen:
+  Player buffs (`cornerRight`) with its right edge `EDGE_IN` (10) in, Weapon enchants under it;
+  Player debuffs (`cornerLeft`, a `beside` stack) is not placed but attached, `attach.mode =
+  "container"`, its `TOPRIGHT` to Player buffs' `TOPLEFT` with `CORNER_GAP` (5) between
+  (`besideAttach`), in Icons too, where it follows Player buffs' row; the focus stack and the far
+  stack under it on Player debuffs' left edge (`FOCUS_X`), their tops and bottoms more than twice
+  `C.SNAP_RADIUS` apart; and the target stack (`right`) `TARGET_GAP` (50) left of that column, on
+  the far stack's base, which the player stack shares. The call-out column is 400 wide (480 before),
+  still wider than its widest test-mode line at 36. On 16:10 and narrower screens the target column
+  still meets the call-out block (`docs/known-limitations.md`, with the measured figures).
+- **Names and the bar look** (spec section 17.3 and 17.4). `Build` writes `[n] ` in front of each
+  role's localized name, `n` its index in the tier's list, so creation order (`containerOrder`) is
+  the numbering: each tier lists its roles in the owner's order (advanced-source.md's brackets), a
+  shorter tier numbers 1..N with no gap, and a role the owner's profile lacks stands in the slot of
+  the one it replaces. Add mode's " (2)" suffix still follows the whole name. `sizeTo` writes the
+  bar look with the width on every bars container; an Icons preset has none.
 - **The picker opens where the skin picker does, unlocked.** `place` mirrors the LibKa0s skin
   picker's `place()`: its CENTER 75% of the way up from `UIParent`'s BOTTOM, centered across, on
   `UIParent`'s height read at each showing, and the bare `CENTER` when it cannot be read.
@@ -173,6 +189,12 @@ Five starting points for a profile's containers (spec
   control, Escape and this addon's own hides put back the lock the window found and turn test mode
   off. On a 768-tall screen Advanced's call-outs cannot fit under the picker, so they rise over its
   lower part (`docs/known-limitations.md`).
+- **The unlock hint** (spec section 17.5). Every close the player makes of the picker (Apply, Not
+  now, the close control, Escape, and `/am preset <name>` with the window up, once its confirm is
+  answered) prints one chat line, through `NS.Print` and its prefix, telling the player that `/am
+  unlock` enters unlock mode. `state.open` marks a showing not yet closed, so a stray `OnHide` after
+  the close prints no second line; `NS.HidePresetPicker` (a profile event, the stand-down) is this
+  addon's hide, not the player's, and prints none.
 
 ### Per-client features
 
@@ -566,12 +588,14 @@ work; a twin could break a sort tie differently from its main, runs its loop a f
 phase, and under a hand-set Width its ring and paired shadow are clipped at its own box.
 On WoW Forever the spell lists are derived offline from the game's data until combat logs
 confirm them (#26), the token and flag categories are unmeasured until the smoke run, and a profile
-does not carry over from the other client. A preset's corner column can grow into a side column
-under it in play, and a tall side stack growing up can reach a corner column; Advanced (Bars)'s
-target stack runs off the top of a 768-tall screen in test mode, where Advanced's call-outs also
-rise over the preset picker; tall unit frames or action bars can reach the side stacks' base. The
-focus stack shares a strip with the target stack's column (80 across on 16:9), widened by the corner
-group's round-2 move, and while unlocked other containers sit within snap range of it.
+does not carry over from the other client. A preset's Player debuffs (all) shares its column with
+the focus and far stacks, so a heavy debuff load can grow it into the focus stack in play, and in
+Icons its row follows Player buffs (all)'s off that column; the target column meets the call-out
+block on 16:10 and narrower screens; Advanced (Bars)'s target stack runs off the top of a 768-tall
+screen in test mode, where Advanced's call-outs also rise over the preset picker; tall unit frames
+or action bars can reach the side stacks' base; and on a 768-tall screen, while unlocked, other
+containers sit within snap range of the focus stack. Add mode's containers repeat the preset's
+numbers beside the player's own.
 Another Ka0s addon's skin picker can show over the preset picker, on the same spot. Every
 limitation, its cause and any ruling: `docs/known-limitations.md`.
 

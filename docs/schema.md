@@ -236,9 +236,12 @@ through `ContainerManager.Create`.
 
 | Name | Unit | Type | Style | Where |
 |---|---|---|---|---|
-| Player buffs (all) | player | HELPFUL | bars | The top-right corner column's head; every buff but the weapon enchants |
-| Weapon enchants | player | HELPFUL | bars | Attached under Player buffs (all); only the `weaponEnchants` category |
-| Player debuffs (all) | player | HARMFUL | bars | The column left of it; every debuff |
+| [1] Player buffs (all) | player | HELPFUL | bars | The top-right corner column's head; every buff but the weapon enchants |
+| [2] Weapon enchants | player | HELPFUL | bars | Attached under Player buffs (all); only the `weaponEnchants` category |
+| [3] Player debuffs (all) | player | HARMFUL | bars | Attached beside it, its top right to Player buffs (all)'s top left; every debuff |
+
+Each name carries its number in the owner's order (presets spec section 17.4); the name after it is
+localized, the number is not.
 
 Before v19 a new profile got four starter containers instead (Player buffs, Player debuffs, Target
 debuffs (mine), Player cooldowns); a profile seeded with them keeps them. The headless harness still
