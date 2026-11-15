@@ -102,6 +102,22 @@ local function spanAcross(span, point, x, w, over, growH)
     end
 end
 
+--- Narrow the span of a container that shows nothing (`span`, its anchor's) to what a follower
+--- hangs from when it hangs from its ENGINE (Anchors.HangMode "engine"): an empty engine's 1x1 rect,
+--- pinned ENGINE_LEAD behind its anchor's start corner across (modules/Container.lua), so the
+--- follower's placed offset, which takes that lead back (modules/Anchors_Attach.lua), lands it on
+--- the anchor's start edge. Down the growth the empty rect's far edge is the start, which the span's
+--- zero height already is.
+local function emptyEngineAcross(env, inst, span, growH)
+    if env.Anchors.HangMode(inst) ~= "engine" then return end
+    local lead = env.Container.ENGINE_LEAD
+    if growH == "left" then
+        span.left, span.right = span.right, span.right + lead
+    else
+        span.left, span.right = span.left - lead, span.left
+    end
+end
+
 --- Widen stack span `whole` (nil for a stack's first) to hold container span `span`.
 local function union(whole, span)
     if not whole then return { top = span.top, bottom = span.bottom, left = span.left, right = span.right } end
@@ -145,8 +161,9 @@ local function sampleSpans(env, mocks, name, look, W, H, unlocked)
         local span = spanFrom(parent, c, dy, shown and extent.height or 0, env.AnchorsAttach.furnitureRoom(inst),
             point, rel)
         local over = unlocked and (inst.stripOverhang or 0) or 0
-        spanAcross(span, point, pointX(parent, c, rel, dx, W), (env.Preview.BlockSize(c)), over,
-            env.Anchors.EffectiveLayout(c).growH)
+        local growH = env.Anchors.EffectiveLayout(c).growH
+        spanAcross(span, point, pointX(parent, c, rel, dx, W), (env.Preview.BlockSize(c)), over, growH)
+        if not shown then emptyEngineAcross(env, inst, span, growH) end
         spanOf[id] = span
         local stack = specs[i].stack
         if shown then

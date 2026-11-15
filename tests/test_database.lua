@@ -11,7 +11,7 @@ test("database: a fresh profile is seeded with the Simple preset's three contain
     local NS = fresh({ simple = true })
     local list = NS.Database.GetContainers()
     assertEqual(#list, NS.PresetData.Count("simple"))
-    assertEqual(list[1].name, "Player buffs (all)")
+    assertEqual(list[1].name, "[1] Player buffs (all)")
     assertTrue(NS.db.profile.seeded)
     -- Deleting every container must not bring the starters back on the next preparation.
     for _, c in ipairs(list) do NS.ContainerManager.Delete(c.id) end
@@ -211,7 +211,7 @@ test("database: PrepareProfile seeds an empty profile from its own counter, in d
     assertEqual(table.concat(p.containerOrder, ","), table.concat(want, ","))
     assertEqual(p.nextContainerId, 10 + n)
     assertEqual(p.containers[10].id, 10)
-    assertEqual(p.containers[10].name, "Player buffs (all)", "the Simple preset, in its order")
+    assertEqual(p.containers[10].name, "[1] Player buffs (all)", "the Simple preset, in its order")
     assertTrue(p.seeded)
     assertEqual(NS.Database.PrepareProfile(p), 0, "a second call seeds nothing")
 end)

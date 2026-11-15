@@ -566,19 +566,21 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   reference space, 340 above the bottom edge (presets spec section 15.1; 600, then 640, before it).
   The Bars target stack is seven containers, six of them shown (Spell stealable is stored off, as in
   the owner's profile), and with their test-mode samples it is about 620 tall. On a 1080-tall parent
-  it now ends 116 under the top edge locked, and 16 under it unlocked, as the preset picker opens it
+  it now ends 110 under the top edge locked, and 10 under it unlocked, as the preset picker opens it
   (each drag strip adds 20). On a 768-tall one (UI scale off) the base scales down with the screen
-  but the bars do not, so it runs 88 above the top edge locked and 188 unlocked. Every other stack,
+  but the bars do not, so it runs 92 above the top edge locked and 192 unlocked. Every other stack,
   in either style, stays on screen, locked or unlocked, on every screen tested
   (`tests/test_presets_data.lua`, "presets: placement", which names this one as its only exception
   and caps how far over it may run each way at those measured values, so it cannot grow unnoticed).
   A lower base still would meet more unit frames and action bars (below); splitting the stack
   changes the owner's own layout. Section 17 asks its top to line up with Player debuffs (all)'s as
-  closely as its height allows, its base held on the far stack's bottom line: at 1080 it ends 70
-  under Player debuffs' top locked and 10 over it unlocked (its seven strips against Player debuffs'
-  one), and at 768 121 over it locked and 201 unlocked; every other target stack ends under it
+  closely as its height allows, its base held on the far stack's bottom line: at 1080 it ends 64
+  under Player debuffs' top locked and 16 over it unlocked (its seven strips against Player debuffs'
+  one), and at 768 125 over it locked and 205 unlocked; every other target stack ends under it
   (`tests/test_presets_cluster.lua`, "presets data: the target stack's base is on the far stack's
-  bottom line and its test-mode top near Player debuffs' top"). Recorded 2026-11-15, re-measured on AM-PR12 and AM-PR16, for the owner's call.
+  bottom line and its test-mode top near Player debuffs' top"). Since AM-PR17 numbered the names in the owner's order (section 17.4), Target stealable (15),
+  stored off, sits under Target special (16), and its empty link still keeps its gap, 6 at 1080 tall.
+  Recorded 2026-11-15, re-measured on AM-PR12, AM-PR16 and AM-PR17, for the owner's call.
 - **Tall unit frames or action bars can meet the side stacks' base.** The owner's ruling put the
   base 340 above the bottom edge at 1080 tall (presets spec section 15.1), lower than round 1's 440,
   to give the tall upward stacks room under the top edge. A setup whose player, target or focus frame

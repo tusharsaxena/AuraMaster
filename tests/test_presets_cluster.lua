@@ -121,13 +121,15 @@ end)
 -- target stack is as tall as its containers, so its top is at or under Player debuffs' everywhere,
 -- but where the stack is taller than the room: TOP_OVER names each, with how far its top sits over
 -- Player debuffs' top, exactly. Advanced (Bars) on a 768-tall screen also runs off the top edge
--- (the placement case's OFF_TOP), and unlocked on a 1080-tall one its seven drag strips take it 10
--- over. TOP_UNDER pins the owner's preview, Advanced (Bars) at 1080 locked, 70 under.
+-- (the placement case's OFF_TOP), and unlocked on a 1080-tall one its seven drag strips take it 16
+-- over. TOP_UNDER pins the owner's preview, Advanced (Bars) at 1080 locked, 64 under. Since AM-PR17
+-- (spec section 17.4) Target stealable, stored off, sits under Target special, numbered 15 before
+-- it, and its empty link keeps its gap: 6 more at 1080, 4 at 768.
 local TOP_OVER = {
-    ["advanced/bars 768"] = 121, ["advanced/bars 768 unlocked"] = 201,
-    ["advanced/bars 1080 unlocked"] = 10,
+    ["advanced/bars 768"] = 125, ["advanced/bars 768 unlocked"] = 205,
+    ["advanced/bars 1080 unlocked"] = 16,
 }
-local TOP_UNDER = { ["advanced/bars 1080"] = 70 }
+local TOP_UNDER = { ["advanced/bars 1080"] = 64 }
 
 --- The target stack's test-mode top against Player debuffs' for preset `name` in style `look` on a
 --- W x H parent, against TOP_OVER and TOP_UNDER.

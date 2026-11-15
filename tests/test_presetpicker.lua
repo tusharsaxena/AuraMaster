@@ -883,3 +883,50 @@ test("picker: after a /reload with the window up, Not now leaves the containers 
     -- red under: the reload's window finding locked=false, and Not now putting that back
     assertTrue(again.GetSetting("locked"), "locked, as before the reload")
 end)
+
+-- ── the unlock hint (spec section 17.5) ──────────────────────────────────────────────────────
+
+--- How many chat lines carry the unlock hint.
+local function hints(NS, lines)
+    local n, want = 0, NS.L["Type /am unlock to enter unlock mode and move your containers."]
+    for _, l in ipairs(lines) do
+        if l:find(want, 1, true) then n = n + 1 end
+    end
+    return n
+end
+
+test("picker: every close prints the unlock hint once", function()
+    local routes = {
+        apply = function(f) f.dd.onSelect("advanced"); f.apply:__fire("OnClick") end,
+        ["apply, nothing picked"] = function(f) f.apply:__fire("OnClick") end,
+        ["not now"] = function(f) f.dd.onSelect("healer"); f.notNow:__fire("OnClick") end,
+        close = function(f) f.close:__fire("OnClick") end,
+        escape = function(f) f:Hide(); f:__fire("OnHide") end,
+    }
+    for route, close in pairs(routes) do
+        local NS, _, _, lines = fresh({ simple = true })
+        local f = NS.MaybeShowPresetPicker()
+        -- red under: a close that says nothing, or a line printed twice
+        assertEqual(hints(NS, lines), 0, route .. ": nothing while the window is up")
+        close(f)
+        assertFalse(f:IsShown(), route .. ": closed")
+        assertEqual(hints(NS, lines), 1, route .. ": the hint, once")
+        f:__fire("OnHide")
+        assertEqual(hints(NS, lines), 1, route .. ": a stray hide after the close prints no second")
+        assertTrue(type(NS.PREFIX) == "string" and anyLine(lines, NS.PREFIX .. " " .. NS.L["Type /am unlock to enter unlock mode and move your containers."]),
+            route .. ": with the addon's prefix")
+    end
+    -- /am preset <name> with the window up closes it too: the hint once the confirm is answered.
+    local NS, m, _, lines = fresh()
+    local shown = popups(m)
+    NS.MaybeShowPresetPicker()
+    NS.Slash:OnSlash("preset simple")
+    assertEqual(hints(NS, lines), 0, "not under the confirm")
+    accept(m, shown[1])
+    assertEqual(hints(NS, lines), 1, "slash: once the confirm is answered")
+    -- A hide this addon makes (a profile event, the stand-down) is not the player's close.
+    local NS2, _, _, lines2 = fresh()
+    NS2.MaybeShowPresetPicker()
+    NS2.HidePresetPicker()
+    assertEqual(hints(NS2, lines2), 0, "no hint for the addon's own hide")
+end)

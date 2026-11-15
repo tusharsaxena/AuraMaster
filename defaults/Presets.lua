@@ -13,15 +13,16 @@ local _, NS = ...
 --
 -- WHAT IT IS NOT. No appearance media and no spell ids (spec section 3): bars, icons, text and label
 -- settings come from NS.CONTAINER_TEMPLATE and the skin, except the column width (a bar's width, an
--- icon row's icon size), so a stack's containers line up, and the call-outs' look, which copies the
--- owner's own (spec section 15). Whitelists and blacklists are empty.
+-- icon row's icon size), so a stack's containers line up, the bar look (a 50% background, debuff
+-- bars colored by dispel type, spec section 17.3), and the call-outs' look, which copies the owner's
+-- own (spec section 15). Whitelists and blacklists are empty.
 --
 -- THE SOURCE. Advanced is the owner's Retail Default profile, container by container, transcribed from
 -- docs/superpowers/specs/2026-11-14-presets/advanced-source.md with the section 3 changes: plain
--- names, growV away from the head ("up" in a side stack, spec section 15), no attach or position
--- (placed here instead), empty spell lists, and the two personal custom categories renamed
--- SPECIAL_PLAYER and SPECIAL_TARGET. tests/test_presets_data.lua
--- holds every role to that document field by field.
+-- names numbered in the owner's order (spec section 17.4), growV away from the head ("up" in a side
+-- stack, spec section 15), no attach or position (placed here instead), empty spell lists, and the
+-- two personal custom categories renamed SPECIAL_PLAYER and SPECIAL_TARGET.
+-- tests/test_presets_data.lua holds every role to that document field by field.
 --
 -- PURE. Build reads its arguments and, for a role that shows only some categories, the live category
 -- lists (NS.Categories, at call time): the player's own custom categories are hidden there too, since
@@ -374,7 +375,13 @@ CONTAINERS.pcdHealer = {
 }
 
 -- The presets, each a list of { stack, role } in creation order (spec section 3's table, the mockup's
--- stacks). A stack's first entry is its head.
+-- stacks). A stack's first entry is its head. Creation order is the owner's numbering (spec section
+-- 17.4, advanced-source.md's brackets), which Build writes in front of each name: a preset with fewer
+-- containers keeps the relative order and numbers 1..N, and a role the owner's profile lacks takes
+-- the slot of the one it stands in for (Healer's Player cooldowns at Player cooldowns, its target and
+-- focus roles at Target and Focus debuffs (mine), Intermediate's Target cooldowns at Target
+-- cooldowns, players). Advanced's Target stealable (15) is created before Target special (16), so it
+-- sits under it in the target stack.
 local SIMPLE = { { "cornerRight", "pbuffs" }, { "cornerRight", "wpn" }, { "cornerLeft", "pdebuffs" } }
 
 --- `SIMPLE` followed by `more`.
@@ -397,7 +404,7 @@ local TIERS = {
         { "middle", "txtOff" }, { "middle", "txtDef" }, { "middle", "txtRaid" },
         { "left", "pshort" }, { "left", "pcd" }, { "left", "pspec" },
         { "right", "tdeb" }, { "right", "tbuff" }, { "right", "tcc" }, { "right", "tcdp" },
-        { "right", "tcdn" }, { "right", "tspec" }, { "right", "tsteal" },
+        { "right", "tcdn" }, { "right", "tsteal" }, { "right", "tspec" },
         { "far", "ticoD" }, { "far", "ticoB" },
         { "focus", "fdeb" }, { "focus", "fbuff" },
     }),
@@ -520,6 +527,11 @@ local function toIcons(o, stack)
     o.layout.perLine = math.max(1, math.floor(stack.width / ICON_REF))
 end
 
+-- THE BAR LOOK (spec section 17.3), on every bars container, both fields written so neither the
+-- template nor a skin decides them: the background 50% opaque (bars.bgAlpha, Background opacity), and
+-- Fill > Color by (bars.colorMode) By dispel type on a debuff bar, One color on a buff bar.
+local BAR_BG_ALPHA = 0.5
+
 --- The column width, scaled: a bar's width, or an icon row's icon size (its line fills the column). A
 --- text line's stored width is the column too, which stands when Size to fit is off or cannot measure;
 --- with it on (the template's) a call-out line is as wide as its content, centered on the center
@@ -529,7 +541,7 @@ end
 local function sizeTo(o, stack, kx)
     local w = round((stack.x + stack.width) * kx) - round(stack.x * kx)
     if o.style == "bars" then
-        o.bars = { width = w }
+        o.bars = { width = w, bgAlpha = BAR_BG_ALPHA, colorMode = (o.auraType == "HARMFUL") and "dispel" or "static" }
     elseif o.style == "text" then
         o.text = o.text or {}
         o.text.width = w
@@ -704,6 +716,7 @@ function P.Build(name, look, parentW, parentH, picked)
         local stackKey, roleKey = entry[1], entry[2]
         local stack = P.STACKS[stackKey]
         local o = overridesFor(CONTAINERS[roleKey], withCustom, picked)
+        o.name = ("[%d] %s"):format(i, o.name)   -- the owner's numbering, not localized (spec 17.4)
         if look == "icons" then toIcons(o, stack) end
         growthIn(o, stack)
         sizeTo(o, stack, kx)

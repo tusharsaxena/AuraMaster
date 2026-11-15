@@ -2584,7 +2584,7 @@ Total.
 - defaults: userCategoryOrder is reconciled the way containerOrder is
 - defaults: the RAID-token row says it means castable OR dispellable, as Blizzard defines it
 
-### test_presets_data.lua (26)
+### test_presets_data.lua (29)
 
 - presets: counts
 - presets: advanced matches its source
@@ -2612,6 +2612,9 @@ Total.
 - presets data: the focus stack stays clear of the far stack beyond twice the snap radius
 - presets data: the focus, far and Player debuffs left edges line up
 - presets data: the focus stack's snap range holds only the recorded targets
+- presets data: debuff bars color by dispel type
+- presets data: bar backgrounds are 50% opaque
+- presets data: names are numbered 1..N in the owner's order
 
 ### test_presets_cluster.lua (5)
 
@@ -2668,7 +2671,7 @@ Total.
 - seed: fresh install not marked seen
 - seed: the v19 step is idempotent and keeps a stored false on an unseeded profile
 
-### test_presetpicker.lua (41)
+### test_presetpicker.lua (42)
 
 - picker: due on new profile only
 - picker: the latch is a settings row, written through the seam
@@ -2711,6 +2714,7 @@ Total.
 - picker: a container dragged under the preview keeps its drop on Apply
 - picker: a logout with the window up writes back the lock it found
 - picker: after a /reload with the window up, Not now leaves the containers locked
+- picker: every close prints the unlock hint once
 
 ### test_pages_presets.lua (12)
 
@@ -2777,7 +2781,7 @@ Total.
 
 - prose: no authored file carries a British spelling from localization-§5's published list
 - prose: the gate carries localization-§5's two lists whole, and nothing of its own
-- prose: the exclusions this repository declared suppressed 15 of 265 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (15): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, and 12 more (list bounded)
+- prose: the exclusions this repository declared suppressed 15 of 267 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (15): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, and 12 more (list bounded)
 - prose: no path this repository narrows the gate by is loaded by a TOC
 - prose: every path this repository narrows the gate by is one .pkgmeta keeps out of the zip
 - prose self-test: the carve-out suppresses the named generated folder, and only it
@@ -3031,12 +3035,12 @@ Total.
 | test_envsetup.lua | 4 |
 | test_poolsetup.lua | 4 |
 | test_defaults.lua | 31 |
-| test_presets_data.lua | 26 |
+| test_presets_data.lua | 29 |
 | test_presets_cluster.lua | 5 |
 | test_presets_apply.lua | 11 |
 | test_presets_preview.lua | 20 |
 | test_presets_seed.lua | 7 |
-| test_presetpicker.lua | 41 |
+| test_presetpicker.lua | 42 |
 | test_pages_presets.lua | 12 |
 | test_perf.lua | 8 |
 | test_debuglogsetup.lua | 9 |
@@ -3054,4 +3058,4 @@ Total.
 | test_skin_switch.lua | 34 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2504** |
+| **Total** | **2508** |

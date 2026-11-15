@@ -227,8 +227,8 @@ Each task keeps the Global Constraints, the gate and the commit rules above.
 ### Task AM-PR17: Bar colors and backgrounds, numbered names, the unlock hint
 
 **Files:** `defaults/Presets.lua`, `settings/PresetPicker.lua`, `locales/enUS.lua`, preset tests, `tests/test_presetpicker.lua`.
-- [ ] Failing tests first: `presets data: debuff bars color by dispel type`; `presets data: bar backgrounds are 50% opaque`; `presets data: names are numbered 1..N in the owner's order` (every tier; continuous; creation order matches); `picker: every close prints the unlock hint once`.
-- [ ] Implement per §17.3–5, gate green, commit `AM-PR17: Bar colors and backgrounds, numbered names, the unlock hint`.
+- [x] Failing tests first: `presets data: debuff bars color by dispel type`; `presets data: bar backgrounds are 50% opaque`; `presets data: names are numbered 1..N in the owner's order` (every tier; continuous; creation order matches); `picker: every close prints the unlock hint once`.
+- [x] Implement per §17.3–5, gate green, commit `AM-PR17: Bar colors and backgrounds, numbered names, the unlock hint`.
 
 ### Task AM-PR18: Docs, smoke checks, review and the automated-test record for round 3
 

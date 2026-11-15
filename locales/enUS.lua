@@ -897,6 +897,7 @@ L["Change it later on General > Presets."] = "Change it later on General > Prese
 L["Replace your %s containers with the %s preset? Your containers are deleted."] = "Replace your %s containers with the %s preset? Your containers are deleted."
 L["Add the %s preset's %s containers next to your own?"] = "Add the %s preset's %s containers next to your own?"
 L["Applied the %s preset (%s)."] = "Applied the %s preset (%s)."
+L["Type /am unlock to enter unlock mode and move your containers."] = "Type /am unlock to enter unlock mode and move your containers."
 L["Added the %s preset (%s) next to your containers."] = "Added the %s preset (%s) next to your containers."
 L["cannot open the preset picker during combat — previewing a preset rebuilds your containers"] = "cannot open the preset picker during combat — previewing a preset rebuilds your containers"
 L["Choose a container preset: open the preset picker, or apply one — /am preset [name] [icons] [add]"] = "Choose a container preset: open the preset picker, or apply one — /am preset [name] [icons] [add]"

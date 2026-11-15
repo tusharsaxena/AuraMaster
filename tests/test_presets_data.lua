@@ -317,12 +317,13 @@ end
 -- Every stack's test-mode span, locked and unlocked (as the preset picker opens the containers, each
 -- drag strip adding its room), stays on the screen: at or under its top edge. At 1080 tall that now
 -- holds for every stack, Advanced's Bars target stack (six shown containers about 620 tall with their
--- samples; the seventh, tsteal, is stored off) included: 16 under the top edge unlocked. But one,
+-- samples; the seventh, tsteal, is stored off) included: 10 under the top edge unlocked. But one,
 -- recorded in docs/known-limitations.md (presets) for the owner's call: that stack cannot fit a
--- 768-tall screen above the base, 88 over its top locked and 188 unlocked. Each entry is the most it
+-- 768-tall screen above the base, 92 over its top locked and 192 unlocked (4 more since AM-PR17 put
+-- tsteal, numbered 15, under Target special: its empty link keeps its gap). Each entry is the most it
 -- may run over, so the overshoot cannot grow unnoticed, and the case fails too once the stack fits.
-local OFF_TOP = { ["advanced/bars right 768"] = 88 }
-local OFF_TOP_UNLOCKED = { ["advanced/bars right 768"] = 188 }
+local OFF_TOP = { ["advanced/bars right 768"] = 92 }
+local OFF_TOP_UNLOCKED = { ["advanced/bars right 768"] = 192 }
 
 --- Every stack in `spans` (sampleSpans; `unlocked` as it was measured) ends at or under the top edge,
 --- but those its OFF_TOP table names.
@@ -704,7 +705,7 @@ test("presets: advanced stacks follow the mockup", function()
         "cornerRight:pbuffs", "cornerRight:wpn", "cornerLeft:pdebuffs",
         "middle:txtOff", "middle:txtDef", "middle:txtRaid",
         "left:pshort", "left:pcd", "left:pspec",
-        "right:tdeb", "right:tbuff", "right:tcc", "right:tcdp", "right:tcdn", "right:tspec", "right:tsteal",
+        "right:tdeb", "right:tbuff", "right:tcc", "right:tcdp", "right:tcdn", "right:tsteal", "right:tspec",
         "far:ticoD", "far:ticoB", "focus:fdeb", "focus:fbuff",
     }
     local got = {}
@@ -1251,4 +1252,108 @@ test("presets data: the focus stack's snap range holds only the recorded targets
     end
     -- The case measures something: the shared strip does put targets in range somewhere.
     assertTrue(hits > 0, "the case saw a target in range")
+end)
+
+-- ── the bar look and the numbered names (spec section 17.3-4) ─────────────────────────────────
+
+test("presets data: debuff bars color by dispel type", function()
+    local P = NS.PresetData
+    local n = 0
+    for _, name in ipairs(NAMES) do
+        for _, look in ipairs(P.LOOKS) do
+            for _, spec in ipairs(P.Build(name, look, 1920, 1080)) do
+                local o, what = spec.overrides, ("%s/%s %s"):format(name, look, spec.role)
+                if o.style == "bars" and o.auraType == "HARMFUL" then
+                    n = n + 1
+                    -- red under: a debuff bar left to the template's "static" fill
+                    assertEqual(o.bars.colorMode, "dispel", what .. ": Fill > Color by is By dispel type")
+                elseif o.style == "bars" then
+                    assertEqual(o.bars.colorMode, "static", what .. ": a buff bar keeps one color, written")
+                end
+            end
+        end
+    end
+    assertTrue(n > 0, "the case saw debuff bars")
+    -- What is stored after Apply: the template's "static" does not win over it.
+    local env = freshEnv()
+    env.Helpers.SkinPicker = function() return nil end
+    assertTrue(env.Presets.Apply("advanced", "bars", "replace"))
+    for _, c in ipairs(env.Database.GetContainers()) do
+        if c.style == "bars" then
+            assertEqual(c.bars.colorMode, c.auraType == "HARMFUL" and "dispel" or "static", c.name)
+        end
+    end
+end)
+
+test("presets data: bar backgrounds are 50% opaque", function()
+    local P = NS.PresetData
+    local n = 0
+    for _, name in ipairs(NAMES) do
+        for _, look in ipairs(P.LOOKS) do
+            for _, spec in ipairs(P.Build(name, look, 1920, 1080)) do
+                local o, what = spec.overrides, ("%s/%s %s"):format(name, look, spec.role)
+                if o.style == "bars" then
+                    n = n + 1
+                    -- red under: the template's fully opaque background
+                    assertEqual(o.bars.bgAlpha, 0.5, what .. ": Background opacity 50%")
+                else
+                    assertTrue(o.bars == nil, what .. ": no bar fields on a non-bars container")
+                end
+            end
+        end
+    end
+    assertTrue(n > 0, "the case saw bars")
+    local env = freshEnv()
+    env.Helpers.SkinPicker = function() return nil end
+    assertTrue(env.Presets.Apply("healer", "bars", "replace"))
+    for _, c in ipairs(env.Database.GetContainers()) do
+        if c.style == "bars" then assertEqual(c.bars.bgAlpha, 0.5, c.name .. " stored") end
+    end
+end)
+
+-- The owner's numbering (advanced-source.md brackets, spec section 17.4); a role that stands in for
+-- one of the owner's takes its slot, and two that share a slot keep the order listed in TIES.
+local OWNER_RANK = {
+    pbuffs = 1, wpn = 2, pdebuffs = 3, txtOff = 4, txtDef = 5, txtRaid = 6, pshort = 7,
+    pcd = 8, pcdHealer = 8, pspec = 9, tdeb = 10, healTarget = 10, dispelTarget = 10, tbuff = 11,
+    tcc = 12, tcdp = 13, tcd = 13, tcdn = 14, tsteal = 15, tspec = 16, ticoD = 17, ticoB = 18,
+    fdeb = 19, healFocus = 19, dispelFocus = 19, fbuff = 20,
+}
+local TIES = { healTarget = 1, dispelTarget = 2, healFocus = 1, dispelFocus = 2 }
+
+test("presets data: names are numbered 1..N in the owner's order", function()
+    local P = NS.PresetData
+    for _, name in ipairs(NAMES) do
+        for _, look in ipairs(P.LOOKS) do
+            local prev, prevTie
+            for i, spec in ipairs(P.Build(name, look, 1920, 1080)) do
+                local what = ("%s/%s #%d %s"):format(name, look, i, spec.role)
+                local num, rest = spec.overrides.name:match("^%[(%d+)%] (.+)$")
+                -- red under: an unnumbered name, a gap in the numbers, or creation out of the owner's order
+                assertEqual(tonumber(num), i, what .. ": numbered continuously, in creation order")
+                assertTrue(rest ~= nil and not rest:find("^%["), what .. ": the localized name follows")
+                local rank = OWNER_RANK[spec.role]
+                assertTrue(rank ~= nil, what .. ": has a slot in the owner's order")
+                if prev then
+                    assertTrue(rank > prev or (rank == prev and (TIES[spec.role] or 0) > (prevTie or 0)),
+                        what .. ": after the one before in the owner's order")
+                end
+                prev, prevTie = rank, TIES[spec.role]
+            end
+        end
+    end
+    -- Advanced is the owner's own twenty: its numbers are theirs.
+    for i, spec in ipairs(P.Build("advanced", "bars", 1920, 1080)) do
+        assertEqual(OWNER_RANK[spec.role], i, "advanced #" .. i .. " " .. spec.role)
+    end
+    -- Applied, the stored order (containerOrder) is the numbering; Add's suffix follows the name.
+    local env = freshEnv()
+    env.Helpers.SkinPicker = function() return nil end
+    assertTrue(env.Presets.Apply("intermediate", "icons", "replace"))
+    for i, c in ipairs(env.Database.GetContainers()) do
+        assertEqual(c.name:match("^%[(%d+)%] "), tostring(i), "stored #" .. i .. " " .. c.name)
+    end
+    assertTrue(env.Presets.Apply("simple", "bars", "add"))
+    local list = env.Database.GetContainers()
+    assertEqual(list[#list - 2].name, "[1] " .. env.L["Player buffs (all)"] .. " (2)", "Add's suffix after the name")
 end)

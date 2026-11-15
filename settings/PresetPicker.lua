@@ -109,9 +109,10 @@ local LOOK_LABELS = { bars = L["Bars"], icons = L["Icons"] }
 -- The window's session state. `sel` and `look` are what the controls show; `picked` is whether the
 -- player chose anything since it opened; `firstRun` whether this showing is the first-run one (no
 -- confirm); `owns` whether the preview up is the one this window started; `lockedAtOpen` the lock
--- it found, and `lockProfile` the profile it found it in (nil while the window is down).
+-- it found, and `lockProfile` the profile it found it in (nil while the window is down); `open`
+-- whether this showing has not closed yet, so its close prints the unlock hint once.
 local state = { sel = "simple", look = "bars", picked = false, firstRun = false, owns = false,
-    lockedAtOpen = true, lockProfile = nil }
+    lockedAtOpen = true, lockProfile = nil, open = false }
 local closing = false   -- true while this file hides the window itself, so OnHide is not a close
 local holdTarget        -- the one-shot PLAYER_REGEN_ENABLED target, while a start is held
 local pending           -- the open confirm's data ({ run, after }), nil while none is up
@@ -195,6 +196,12 @@ local function dropConfirm()
     if StaticPopup_Hide then StaticPopup_Hide(POPUP) end
 end
 
+--- The line every close of the window by the player earns, once (spec section 17.5): where unlock
+--- mode is, now the window that unlocked the containers is gone.
+local function sayUnlockHint()
+    NS.Print(L["Type /am unlock to enter unlock mode and move your containers."])
+end
+
 --- The line a kept preset earns.
 local function sayApplied(name, look, mode)
     local fmt = mode == "add" and L["Added the %s preset (%s) next to your containers."] or L["Applied the %s preset (%s)."]
@@ -219,7 +226,11 @@ function NS.ConfirmPreset(name, look, mode)
     if NS.Presets.IsPreviewing() then NS.Presets.EndPreview(false) end
     local count = #NS.Database.GetContainers()
     local ask = mode == "add" or count > 0
-    local after = closesWindow and NS.MaybeShowSkinPicker or nil
+    -- The window's close: the unlock hint and the skin picker once the confirm is answered.
+    local after = closesWindow and function()
+        sayUnlockHint()
+        if NS.MaybeShowSkinPicker then NS.MaybeShowSkinPicker() end
+    end or nil
     return confirmThen(name, mode, count, ask, function()
         local ok, msg, gray = NS.Presets.Apply(name, look, mode)
         if not ok then return say(msg, gray) end
@@ -343,7 +354,8 @@ local function pickLook(look)
 end
 
 --- The player's close of any kind: the window down, its confirm with it, test mode off and the lock
---- set to `locked`, the latch set, then the skin picker's turn.
+--- set to `locked`, the latch set, the unlock hint (once per showing: `state.open`), then the skin
+--- picker's turn.
 local function finish(locked)
     local f = Picker.frame
     dropConfirm()
@@ -353,6 +365,8 @@ local function finish(locked)
     closing = false
     state.picked, state.owns = false, false
     NS.Presets.MarkPickerSeen()
+    if state.open then sayUnlockHint() end
+    state.open = false
     if NS.MaybeShowSkinPicker then NS.MaybeShowSkinPicker() end
 end
 
@@ -619,7 +633,7 @@ local function show(firstRun)
     local f = Picker.frame or build()
     if not f:IsShown() then
         state.sel, state.look, state.picked, state.owns = "simple", "bars", false, false
-        state.firstRun = firstRun
+        state.firstRun, state.open = firstRun, true
         place(f)
         openUnlocked()
     else
@@ -674,7 +688,7 @@ function NS.HidePresetPicker(replaced)
     if not (f and f:IsShown()) then return end
     if state.owns and NS.Presets.IsPreviewing() then NS.Presets.EndPreview(false) end
     settle(state.lockedAtOpen, replaced)
-    state.picked, state.owns = false, false
+    state.picked, state.owns, state.open = false, false, false
     closing = true
     f:Hide()
     closing = false

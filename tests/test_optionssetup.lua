@@ -214,7 +214,7 @@ test("options: Reset all settings resets the active profile whole, and nothing e
     for _, c in ipairs(NS2.Database.GetContainers()) do
         names[#names + 1] = c.name
     end
-    assertEqual(table.concat(names, "|"), "Player buffs (all)|Weapon enchants|Player debuffs (all)",
+    assertEqual(table.concat(names, "|"), "[1] Player buffs (all)|[2] Weapon enchants|[3] Player debuffs (all)",
         "exactly the shipped set, the Simple preset, survives")
     assertEqual(table.concat(NS2.db:GetProfiles(), ","), profilesBefore, "the profile list is untouched")
     assertEqual(NS2.db:GetCurrentProfile(), "Default")
