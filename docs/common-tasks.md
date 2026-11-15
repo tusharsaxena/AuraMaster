@@ -48,8 +48,10 @@ Example: a bar option.
 
 1. Add an entry to `NS.Categories.HELPFUL` or `.HARMFUL` in `defaults/Categories.lua` with a `key`
    unique across **both** lists (a container's category states are one map), a `kind` — `token`
-   (with `token`), `flag` (with `field` and `value`), `dispel` (with `types`), `spells` (with
-   `spells = spells({ CLASS = { ids } })`) or `enchant` (matches no aura; a container capability, not
+   (with `token`), `flag` (with `field` and `value`), `dispel` (with `types`), `spells` (no ids on the
+   definition: add its `seed("<key>", "<HELPFUL|HARMFUL>", { CLASS = { ids } })` list to
+   `defaults/Categories_Retail.lua`, the key to `tools/spell-research/sid_seeds.py`'s `SPELL_CATEGORIES` in
+   declared order, and re-run `forever.py` for Forever's list) or `enchant` (matches no aura; a container capability, not
    a filter — `splitCategories` and `excludeCategory`/`includeCategory` skip it categorically) — and
    `label`/`desc`.
 2. That is the whole wiring: `DefaultStates()` backfills the key as `"show"` into every stored
@@ -100,8 +102,30 @@ path it walks, for when something about it has to be changed or debugged.
    `tests/test_filtercompiler_categories.lua` (what the compiler makes of one) or
    `tests/test_pages_general_categories.lua` (the block's widgets).
 
-## Re-derive the CC spell lists
+## Re-validate the Retail seed lists against a new build
 
+Every `spells` list in `defaults/Categories_Retail.lua` is re-checked against the live Retail build on
+wago.tools by `tools/spell-research/retail.py` (issue #27). The slash command `/aura-seeds-validate`
+(`.claude/commands/aura-seeds-validate.md`) runs the whole loop; by hand it is:
+
+1. `python3 tools/spell-research/retail.py status` — `CURRENT` means the newest bundle already covers
+   the live build and there is nothing to do; `NEW <build>` means a run is due.
+2. `python3 tools/spell-research/research.py --bundle docs/spell-research/<date>-retail --date <date>` freezes
+   the build's tables (the coverage gate must pass), then `retail.py derive --bundle ... --date <date>`
+   writes the candidates and flags. The previous bundle defaults to the newest earlier `*-retail` one.
+3. `retail.py check --bundle ...` lists what has no ruling yet: only what is new since the last ruled
+   build, because a ruling is keyed by category and id, not by build. Rule each with `retail.py rule`
+   (one key, or a `key<TAB>ruling<TAB>reason` TSV): `accept`/`reject` for a candidate, `keep`/`remove` for a
+   flag on a shipped id.
+4. `retail.py report` writes the bundle's `RULINGS.md`; `retail.py apply` writes the accepted ids into
+   `defaults/Categories_Retail.lua` and refuses while anything is unruled.
+5. `research.py --replay docs/spell-research/<date>-retail --emit-cast-aura --date <date> > defaults/CastToAura.lua`,
+   roll `tests/test_categories_clients.lua`'s Retail snapshot for any list that grew, write the bundle's
+   `ANALYSIS.md`, and run the green gate plus `python3 -m pytest -q tools/spell-research`.
+
+The first run is `docs/spell-research/2026-11-15-retail/` (build 12.1.5.70783).
+
+## Re-derive the CC spell lists
 `hardCC` (CC Loss of Control), `ccRoot` (CC Root) and `ccSnare` (CC Snare) are not hand-assembled:
 `tools/spell-research/research.py` derives them from
 Blizzard's own DB2 exports for one pinned build. Python 3.8+ and the standard library; the first
@@ -109,9 +133,9 @@ run downloads ~75 MB of CSV into `tools/spell-research/.cache/`.
 
 1. `python3 tools/spell-research/research.py --diff` — what would change against what the addon
    ships today. `--replay docs/spell-research/<date> --diff` re-derives a past run offline.
-2. Read the diff. The generator NEVER writes `defaults/Categories.lua`; each add and each drop is
+2. Read the diff. The generator NEVER writes `defaults/Categories_Retail.lua`; each add and each drop is
    the author's call, which is the whole point of the narrowing rule in Part C of the design.
-3. `--emit --date YYYY-MM-DD` prints the accepted lists in `defaults/Categories.lua`'s own shape,
+3. `--emit --date YYYY-MM-DD` prints the accepted lists in the inline layout the seed lists' bodies use,
    provenance date included. Paste, then update the KNOWN GAPS comment above the category if the
    run reached or lost one of them.
 4. `--bundle docs/spell-research/<date>` freezes the run — `SOURCES.md`, `derived.json`, `DIFF.md`,
@@ -127,7 +151,7 @@ cross-checks every id the file ships against the build.
 `tools/spell-research/research.py` has three modes and they answer different questions. These are
 the prompts to paste; each says which mode, where the data comes from, and what to hand back.
 
-**The one rule that runs through all of them: the tool never writes `defaults/Categories.lua`, and
+**The one rule that runs through all of them: the tool never writes `defaults/Categories_Retail.lua`, and
 neither should the assistant without being told to.** Every add, drop and swap is the author's call
 — that is Part C's narrowing rule and the reason the generator prints rather than edits. A prompt
 that does not say "do not change the file" should still be read that way.
@@ -144,7 +168,7 @@ from, and mixing them silently is how a diff stops meaning anything.
 > Re-derive the CC Loss of Control, CC Root and CC Snare lists with `tools/spell-research/research.py` against the
 > current retail build. Show me the diff against what we ship, freeze the run as a bundle under
 > `docs/spell-research/<today>`, and tell me which sentinels the coverage gate checked. **Do not
-> change `defaults/Categories.lua`** — I accept or reject each add and drop myself. For anything
+> change `defaults/Categories_Retail.lua`** — I accept or reject each add and drop myself. For anything
 > added, say which rule brought it in (mechanic, trigger closure or family bridge); for anything
 > dropped, say whether the spell is gone or just no longer matches.
 
