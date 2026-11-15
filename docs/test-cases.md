@@ -737,11 +737,12 @@ Total.
 - clients: without LibKa0s the default skin stays Ka0s Default
 - clients: without LibKa0s either client gets Retail's seed lists and Retail's cast table
 
-### test_categories_clients.lua (10)
+### test_categories_clients.lua (11)
 
 - categories clients: retail categories unchanged, the same keys in the same order with the same ids
 - categories clients: forever seeds picked, every spells category's ids are the client's own list
 - categories clients: the Forever data covers every shipped spells category exactly once
+- categories clients: the Retail seed file covers every shipped spells category once, aura type matching
 - categories clients: hardCC holds every Polymorph rank on forever
 - categories clients: no Retail-only class key on forever
 - categories clients: empty forever category absent everywhere on forever, present on retail
@@ -2676,7 +2677,7 @@ Total.
 - seed: the v19 step is idempotent and keeps a stored false on an unseeded profile
 - seed: the account latch needs no migration step
 
-### test_presetpicker.lua (50)
+### test_presetpicker.lua (51)
 
 - picker: due on new profile only
 - picker: the latch is a settings row, written through the seam
@@ -2720,6 +2721,7 @@ Total.
 - picker: apply leaves containers locked and test mode off
 - picker: not now, close and escape put the lock back and test mode off
 - picker: /am preset opens unlocked too
+- picker: opening unlocks and turns test mode on, the first-run showing and /am preset alike
 - picker: a hide this addon makes puts the lock back and test mode off
 - picker: a profile switch puts the lock back in the profile it opened on
 - picker: a profile reset under the window keeps the reset's lock
@@ -2794,7 +2796,7 @@ Total.
 
 - prose: no authored file carries a British spelling from localization-§5's published list
 - prose: the gate carries localization-§5's two lists whole, and nothing of its own
-- prose: the exclusions this repository declared suppressed 15 of 267 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (15): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, and 12 more (list bounded)
+- prose: the exclusions this repository declared suppressed 19 of 273 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (19): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, and 16 more (list bounded)
 - prose: no path this repository narrows the gate by is loaded by a TOC
 - prose: every path this repository narrows the gate by is one .pkgmeta keeps out of the zip
 - prose self-test: the carve-out suppresses the named generated folder, and only it
@@ -2964,7 +2966,7 @@ Total.
 | test_containermanager_queue.lua | 13 |
 | test_compat.lua | 37 |
 | test_clients.lua | 9 |
-| test_categories_clients.lua | 10 |
+| test_categories_clients.lua | 11 |
 | test_secrets.lua | 6 |
 | test_bus.lua | 8 |
 | test_state.lua | 2 |
@@ -3053,7 +3055,7 @@ Total.
 | test_presets_apply.lua | 11 |
 | test_presets_preview.lua | 20 |
 | test_presets_seed.lua | 8 |
-| test_presetpicker.lua | 50 |
+| test_presetpicker.lua | 51 |
 | test_pages_presets.lua | 12 |
 | test_perf.lua | 8 |
 | test_debuglogsetup.lua | 9 |
@@ -3071,4 +3073,4 @@ Total.
 | test_skin_switch.lua | 34 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2521** |
+| **Total** | **2523** |
