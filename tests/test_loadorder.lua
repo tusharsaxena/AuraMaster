@@ -58,6 +58,7 @@ test("loadorder: the load-bearing pairs are in order, and the TOC says why", fun
         { "core/Compat.lua", "defaults/Categories.lua" },
         { "core/Compat.lua", "defaults/CastToAura_Forever.lua" },
         { "defaults/Categories_Forever.lua", "defaults/Categories.lua" },
+        { "defaults/Categories_Retail.lua", "defaults/Categories.lua" },
         { "defaults/CastToAura.lua", "defaults/CastToAura_Forever.lua" },
         { "core/SkinSetup.lua", "defaults/Profile.lua" },
         { "defaults/Categories.lua", "defaults/UserCategories.lua" },

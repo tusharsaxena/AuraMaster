@@ -67,6 +67,8 @@ _CATEGORY_LINE = r'^[ \t]*key\s*=\s*"%s"\s*,\s*kind\s*=\s*"spells"'
 _ANY_KEY_LINE = re.compile(r'^[ \t]*key\s*=\s*"')
 _BLOCK_OPEN = re.compile(r"spells\s*=\s*spells\(\{\s*$")
 _BLOCK_CLOSE = re.compile(r"^[ \t]*\}\)")
+# A seed file's list opener (research.SEED_OPEN): `seed("<key>", "<HELPFUL|HARMFUL>", {`.
+_SEED_LINE = r'^seed\("%s"\s*,\s*"(?:HELPFUL|HARMFUL)"\s*,\s*\{[ \t]*$'
 # The widest id a line is laid out for when no neighbor shows a comment column: seven digits
 # and the comma, then the space before `--`.
 _DEFAULT_COMMENT_OFFSET = 9
@@ -220,11 +222,19 @@ class _Lua:
 
     def block(self, category):
         # type: (str) -> Tuple[int, int]
-        """(first line after `spells = spells({`, the `}),` line) of the category's block."""
+        """(first line after `spells = spells({` or `seed("<key>", ..., {`, the closing `})` line) of
+        the category's block."""
+        seed = re.compile(_SEED_LINE % re.escape(category))
+        opened = next((i for i, line in enumerate(self.lines) if seed.match(line)), None)
+        if opened is not None:  # a seed file's list (defaults/Categories_Retail.lua)
+            for j in range(opened + 1, len(self.lines)):
+                if _BLOCK_CLOSE.match(self.lines[j]):
+                    return opened + 1, j
+            raise ValueError("category %r's seed list is never closed" % category)
         head = re.compile(_CATEGORY_LINE % re.escape(category))
         start = next((i for i, line in enumerate(self.lines) if head.match(line)), None)
         if start is None:
-            raise ValueError("no `spells` category %r in Categories.lua" % category)
+            raise ValueError("no `spells` category %r in the categories file" % category)
         for i in range(start + 1, len(self.lines)):
             if _ANY_KEY_LINE.match(self.lines[i]):
                 break

@@ -167,6 +167,35 @@ test("categories clients: the Forever data covers every shipped spells category 
     end
 end)
 
+test("categories clients: the Retail seed file covers every shipped spells category once, aura type matching", function()
+    local NS = T.NS
+    local seeds = NS.CategorySeedsRetail
+    -- The tools (tools/spell-research) read each list's aura type off its `seed("<key>", "<AURA>", {`
+    -- line, so a line that disagrees with where defaults/Categories.lua declares the category would
+    -- send a debuff list's candidates through the buff rules.
+    local f = assert(io.open("defaults/Categories_Retail.lua", "rb"))
+    local text = f:read("*a")
+    f:close()
+    local declared, n = {}, 0
+    for key, aura in text:gmatch('\nseed%("(%w+)", "(%u+)", {') do
+        -- red under: one key seeded twice, the second silently winning
+        assertNil(declared[key], key .. " is seeded once")
+        declared[key], n = aura, n + 1
+    end
+    local master = 0
+    for _, auraType in ipairs({ "HELPFUL", "HARMFUL" }) do
+        for _, row in ipairs(RETAIL_SNAPSHOT[auraType]) do
+            if row[2] then
+                master = master + 1
+                -- red under: a category with no Retail list, or a list under the wrong aura type
+                assertEqual(declared[row[1]], auraType, row[1] .. "'s seed line names its aura type")
+                assertTrue(seeds[row[1]] ~= nil, row[1] .. " is published")
+            end
+        end
+    end
+    assertEqual(n, master, "no seed for a category Categories.lua does not declare")
+end)
+
 test("categories clients: hardCC holds every Polymorph rank on forever", function()
     local NS = T.NS
     local hardCC = NS.Categories.Find("HARMFUL", "hardCC").spells

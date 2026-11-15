@@ -847,7 +847,7 @@ def read_retail(categories_lua: Path) -> tuple[list[dict], dict[int, str]]:
     """Retail's spells categories (sid_db2.shipped_categories) and {id: the name beside it}."""
     cats = sid_db2.shipped_categories(categories_lua)
     names: dict[int, str] = {}
-    for cat in research.read_spells_categories(categories_lua.read_text(encoding="utf-8")):
+    for cat in research.read_categories_file(categories_lua):
         for rec in cat["records"]:
             if rec["comment"] and rec["id"] not in names:
                 names[rec["id"]] = rec["comment"]
@@ -1012,8 +1012,8 @@ def parse_args(argv: list[str] | None) -> argparse.Namespace:
         p.add_argument("--date", type=_date, required=True, help="the run's date, YYYY-MM-DD (never the clock)")
         p.add_argument("--rulings", type=Path, default=RULINGS_PATH)
     derive.add_argument("--replay", action="store_true", help="offline: every table must be in raw/")
-    derive.add_argument("--categories", type=Path, default=research.repo_root() / "defaults" / "Categories.lua",
-                        help="the Retail Categories.lua whose entries are mapped by name (read-only)")
+    derive.add_argument("--categories", type=Path, default=research.repo_root() / "defaults" / "Categories_Retail.lua",
+                        help="the Retail seed file whose entries are mapped by name (read-only)")
     derive.add_argument("--cache-dir", type=Path, default=HERE / ".cache")
     emit.add_argument("--out-root", type=Path, default=research.repo_root(),
                       help="the tree the defaults/ files are written under")
