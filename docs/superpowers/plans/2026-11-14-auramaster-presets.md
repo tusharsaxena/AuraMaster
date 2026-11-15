@@ -215,3 +215,23 @@ Each task keeps the Global Constraints, the gate and the commit rules above.
 - [x] Docs (ARCHITECTURE, settings-panel, module-map, known-limitations, smoke checks: the glow, the focus stack, the corner alignment, the tab's new place), test-cases.md and the README badge. Commit `AM-PR15: Docs and smoke checks for the owner's round-2 feedback`.
 - [ ] An independent review against §16; fixes as `AM-PR15: Review fixes: …`.
 - [ ] A fresh automated-test record, the M5 checkpoint row and the RESUME log line: `AM-PR15: Automated-test record after round-2 feedback`.
+
+## Round 4: owner feedback, round 3 (spec §17)
+
+### Task AM-PR16: The right-hand cluster lined up, Player debuffs attached to Player buffs, equal bar widths
+
+**Files:** `defaults/Presets.lua`, `tests/test_presets_data.lua` and any preset suite whose expectations move, docs/known-limitations.md.
+- [ ] Failing tests first: `presets data: Player debuffs attaches by its top right to Player buffs' top left` (Bars and Icons, every tier, checked through Anchors.AttachPoints after Apply); `presets data: the focus, far and Player debuffs left edges line up`; `presets data: the target column sits 50 left of the focus column`; `presets data: the target stack's base is on the far stack's bottom line and its test-mode top near Player debuffs' top`; `presets data: every bar container is as wide as Player cooldowns`; the placement case at all 15 screens updated (everything on screen, Player buffs' right edge at least 10 in, the snap clearances); the call-out overlap measured and recorded.
+- [ ] Implement per §17.1–2, gate green, commit `AM-PR16: The right-hand cluster lined up, Player debuffs attached to Player buffs, equal bar widths`.
+
+### Task AM-PR17: Bar colors and backgrounds, numbered names, the unlock hint
+
+**Files:** `defaults/Presets.lua`, `settings/PresetPicker.lua`, `locales/enUS.lua`, preset tests, `tests/test_presetpicker.lua`.
+- [ ] Failing tests first: `presets data: debuff bars color by dispel type`; `presets data: bar backgrounds are 50% opaque`; `presets data: names are numbered 1..N in the owner's order` (every tier; continuous; creation order matches); `picker: every close prints the unlock hint once`.
+- [ ] Implement per §17.3–5, gate green, commit `AM-PR17: Bar colors and backgrounds, numbered names, the unlock hint`.
+
+### Task AM-PR18: Docs, smoke checks, review and the automated-test record for round 3
+
+- [ ] Docs (ARCHITECTURE, known-limitations, smoke checks for every §17 item, spec cross-references), test-cases.md and the README badge. Commit `AM-PR18: Docs and smoke checks for the owner's round-3 feedback`.
+- [ ] An independent review against §17; fixes as `AM-PR18: Review fixes: …`.
+- [ ] A fresh automated-test record, the M6 checkpoint row and the RESUME log line: `AM-PR18: Automated-test record after round-3 feedback`.

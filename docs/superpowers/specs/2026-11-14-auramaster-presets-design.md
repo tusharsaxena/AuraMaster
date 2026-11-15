@@ -458,3 +458,62 @@ These record where the build departs from the letter of section 16, each left fo
    the target column (80 on 16:9, 176 on 16:10, 182 to 194 on 5:4 and 4:3 in Bars), and in Icons on
    4:3 and 5:4 the call-outs come within one snap radius of the focus rows at 1080 and 1440
    (docs/known-limitations.md, presets). The owner keeps 520 or names another distance.
+
+## 17. Owner feedback, round 3 (2026-11-15)
+
+The owner previewed Advanced (Bars) again and sent a before/after of the layout they want: they dragged
+the containers to where they should sit. Where this conflicts with §15, §15.1 or §16, this section
+wins. Apply it with the same principles to Simple, Intermediate and Healer, in Bars and in Icons. (The
+owner's screenshots look like a 21:9 screen; every ratio §11 tests must still work.)
+
+**1. Positions: line the right-hand cluster up.** In the owner's "after" layout:
+- **Player debuffs (all) attaches to Player buffs (all):** `attach.mode = "container"`, parent Player
+  buffs (all), this container's **TOPRIGHT** to the parent's **TOPLEFT** (the panel shows "Its Top right
+  joins the Top left of 'Player buffs (all)'"). In Icons too. Weapon enchants stays attached under Player
+  buffs (all). The corner group's head is Player buffs (all), still hung from the top-right corner.
+- **The focus stack's left edge = Player debuffs (all)'s left edge** (kept from §16), below the corner
+  group.
+- **The far stack (Target debuffs (all) / Target buffs (all)) sits under the focus stack**, its left edge
+  on the same line as the focus stack's. Their tops and bottoms stay further apart than 2 x
+  `C.SNAP_RADIUS` (§16.2's rule, now vertical).
+- **The target stack (the `right` column) moves next to that column**, to its left, with a gap of about
+  50 reference units between the target column's right edge and the focus column's left edge. It hangs
+  from the right edge like the focus column, so the gap holds on every screen.
+- **Tops and bottoms line up:** the target stack's base is on the far stack's bottom line, and in test
+  mode its top lines up with the top of Player debuffs (all) as closely as its height allows. The other
+  side stacks (the player stack on the left) keep the same base line.
+- **The call-out block keeps the screen's center.** On narrow screens (16:9 and narrower) the target
+  column can run into it. If it does, narrow the call-out column first, but never below the widest
+  test-mode line at its font size. Whatever overlap is left goes in docs/known-limitations.md with the
+  measured figures.
+- §16.3's "smallest overlap with the target column" rule and §15's corner offsets give way to these
+  alignments. Pick the corner group's distance in from the right edge so the whole cluster (target
+  column, gap, focus/corner column, Player buffs) fits on every tested ratio, with Player buffs' right
+  edge at least 10 reference units in from the screen edge.
+
+**2. Equal bar widths.** In Bars, every bar container in every preset has the same width as Player
+cooldowns: the `left` column's 240 reference units, scaled. Every column that holds bars is 240 wide,
+so the alignments above hold. Icon rows keep filling their column.
+
+**3. Bar look, for all presets:**
+- Every **HARMFUL bars** container sets Fill → Color by to **By dispel type**.
+- Every **bars** container sets the background opacity to **50%**.
+Use the bar schema's real field names (settings/Bars.lua). Write each field explicitly so a skin default
+cannot override it.
+
+**4. Numbered names, as in the owner's profile.** Each container name starts with `[n] `, numbered in
+the owner's order (advanced-source.md brackets): 1 Player buffs (all), 2 Weapon enchants, 3 Player debuffs
+(all), 4 Offensive cooldowns, 5 Defensive cooldowns, 6 Raid cooldowns, 7 Player buffs short, 8 Player
+cooldowns, 9 Player special, 10 Target debuffs (mine), 11 Target buffs (mine), 12 Target crowd control,
+13 Target cooldowns players, 14 Target cooldowns NPCs, 15 Target stealable, 16 Target special,
+17 Target debuffs (all), 18 Target buffs (all), 19 Focus debuffs (mine), 20 Focus buffs (mine). A preset
+with fewer containers numbers **continuously** (1..N, no gaps), keeping that relative order. Roles that
+are not in the owner's profile take the slot of the role they stand in for: Healer's Player cooldowns at
+Player cooldowns; Your heals on target, then Dispellable on target, at Target debuffs (mine); Your heals
+on focus, then Dispellable on focus, at Focus debuffs (mine); Intermediate's merged Target cooldowns at
+Target cooldowns players. **Creation order** (containerOrder) follows the same numbering. The numbers are
+not localized; the names after them stay localized. Add mode's " (2)" suffix still applies after the name.
+
+**5. An unlock hint.** When the preset picker closes, by any route (Apply, Not now, the close control,
+Escape), print one chat line telling the player they can type `/am unlock` to enter unlock mode. It is
+localized, uses the addon's chat prefix, and prints once per close.

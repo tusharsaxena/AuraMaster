@@ -15,3 +15,6 @@ AM-PR12	M4	AuraMaster	Owner rulings on round-1 conflicts: picker spot, lower bas
 AM-PR13	M5	AuraMaster	Call-out glow, own focus stack, corner aligned with it	AM-PR12
 AM-PR14	M5	AuraMaster	Presets tab moves to the General page	AM-PR12
 AM-PR15	M5	AuraMaster	Docs, smoke, review and test record for round 2	AM-PR13 AM-PR14
+AM-PR16	M6	AuraMaster	Right-hand cluster lined up, debuffs attached to buffs, equal bar widths	AM-PR15
+AM-PR17	M6	AuraMaster	Bar colors and backgrounds, numbered names, unlock hint	AM-PR15
+AM-PR18	M6	AuraMaster	Docs, smoke, review and test record for round 3	AM-PR16 AM-PR17
