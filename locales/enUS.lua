@@ -833,6 +833,7 @@ L["Skin picker seen"] = "Skin picker seen"
 L["Preset picker seen"] = "Preset picker seen"
 L["Whether the first-run skin picker was closed on this profile."] = "Whether the first-run skin picker was closed on this profile."
 L["Whether the first-run preset picker was closed on this profile."] = "Whether the first-run preset picker was closed on this profile."
+L["Account-wide: shared by every profile. Whether the first-run preset picker was closed on any profile."] = "Account-wide: shared by every profile. Whether the first-run preset picker was closed on any profile."
 
 -- The container presets (defaults/Presets.lua): container names and the two custom categories Advanced creates.
 L["Player buffs (all)"] = "Player buffs (all)"

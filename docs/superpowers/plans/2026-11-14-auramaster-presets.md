@@ -247,8 +247,8 @@ Each task keeps the Global Constraints, the gate and the commit rules above.
 ### Task AM-PR20: Existing users see the preset picker once
 
 **Files:** `modules/Presets.lua`, `settings/PresetPicker.lua`, `defaults/` global defaults and the schema row, `core/` migrations only if needed, `tests/test_presetpicker.lua`, `tests/test_presets_seed.lua`.
-- [ ] Failing tests first: `picker: an existing profile sees the picker once per account`; `picker: closing it by any route marks it shown for every profile`; `picker: a brand-new install does not see it twice`; `picker: combat holds it until it can show`; `picker: an existing player's containers stay unless they apply and confirm`.
-- [ ] Implement per §18.5, gate green, commit `AM-PR20: Existing users see the preset picker once`.
+- [x] Failing tests first: `picker: an existing profile sees the picker once per account`; `picker: closing it by any route marks it shown for every profile`; `picker: a brand-new install does not see it twice`; `picker: combat holds it until it can show`; `picker: an existing player's containers stay unless they apply and confirm`.
+- [x] Implement per §18.5, gate green, commit `AM-PR20: Existing users see the preset picker once`.
 
 ### Task AM-PR21: Docs, smoke checks, review and the automated-test record for round 4
 

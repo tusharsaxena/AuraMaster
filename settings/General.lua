@@ -253,6 +253,15 @@ NS.RegisterSchemaRows({
         label = L["Preset picker seen"],
         desc  = L["Whether the first-run preset picker was closed on this profile."],
     },
+    -- The account's latch (presets spec section 18.5), in the GLOBAL store: set by the same closes,
+    -- so a player whose profiles predate the presets sees the picker once per account. A page's
+    -- Defaults leaves it alone (settings/OptionsSetup.lua's panel veto); `/am reset` names it.
+    {
+        path = "global.presets.pickerSeen", page = "general", group = H.MASTER_GROUP, type = "bool",
+        skipRender = true, effect = "none",
+        label = L["Preset picker seen"], -- options-ui-§21: no account suffix; the path tells the twins apart
+        desc  = L["Account-wide: shared by every profile. Whether the first-run preset picker was closed on any profile."],
+    },
 })
 
 -- Reset all settings: options-ui-§12's one wording, verbatim, and the same act as Profiles →

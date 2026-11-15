@@ -36,8 +36,14 @@ local PARENT_TITLE = "Ka0s Aura Master"
 -- button back, and settings/Slash.lua's descriptor carries its own applyDefault for exactly that.
 local MINIMAP_PATH = NS.MINIMAP_PATH -- settings/Schema.lua spells it once; it loads first
 
+-- The preset picker's ACCOUNT latch (presets spec section 18.5) is vetoed for the same kind of
+-- reason: it is account-wide, and General's Defaults is a press on one profile's page, so it must
+-- not offer the picker again on every other profile of the account. `/am reset` names it and is
+-- not vetoed.
+local ACCOUNT_PICKER_PATH = "global.presets.pickerSeen"
+
 local function vetoedFromPanelReset(row)
-    return row.path == MINIMAP_PATH
+    return row.path == MINIMAP_PATH or row.path == ACCOUNT_PICKER_PATH
 end
 
 -- The one rule about what a global reset must not touch, named once because it is enforced twice:

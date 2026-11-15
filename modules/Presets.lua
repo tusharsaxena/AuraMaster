@@ -32,6 +32,8 @@ local L = NS.L
 
 local MODES = { replace = true, add = true }
 local PICKER_PATH = "presets.pickerSeen"
+-- The account's latch, in the global store (presets spec section 18.5).
+local ACCOUNT_PICKER_PATH = "global.presets.pickerSeen"
 
 local function debug(fmt, ...)
     if NS.Debug then NS.Debug("Presets", fmt, ...) end
@@ -347,26 +349,39 @@ end
 -- The first-run picker's latch (spec sections 7 and 9)
 -- ---------------------------------------------------------------------------
 --
--- `presets.pickerSeen` is a settings row (settings/General.lua, skipRender, the twin of
--- skin.pickerSeen), so a write goes through the seam and `/am get|set|reset` reaches it;
--- settings/PresetPicker.lua reads and writes it here rather than naming the path itself.
+-- Two latches, each a settings row (settings/General.lua, skipRender), so a write goes through the
+-- seam and `/am get|set|reset` reaches both; settings/PresetPicker.lua reads and writes them here
+-- rather than naming the paths itself.
+--   * `presets.pickerSeen`, the profile's (the twin of skin.pickerSeen): a new, reset or copied
+--     profile is offered the picker once.
+--   * `global.presets.pickerSeen`, the account's (spec section 18.5): a player whose profiles were
+--     made before the presets (the v19 step marked each one seen) is offered it exactly once, on
+--     whatever profile is active. Every close sets both, so a brand-new install's first showing
+--     counts for the account too and nobody sees it twice.
 
---- Whether the active profile has closed the first-run preset picker. True with no profile loaded,
---- so nothing offers a picker before the store exists.
+--- Whether the account has closed the first-run preset picker on any profile.
+local function accountSeen()
+    local g = NS.db and NS.db.global
+    return type(g) == "table" and type(g.presets) == "table" and g.presets.pickerSeen == true
+end
+
+--- Whether the picker is owed nothing: the active profile and the account have both closed it.
+--- True with no profile loaded, so nothing offers a picker before the store exists.
 --- @return boolean
 function Presets.PickerSeen()
     local p = NS.db and NS.db.profile
     if not p then return true end
-    return type(p.presets) == "table" and p.presets.pickerSeen == true
+    return type(p.presets) == "table" and p.presets.pickerSeen == true and accountSeen()
 end
 
---- Record that the active profile has closed the first-run preset picker, through the write seam.
---- The seed's fingerprint goes with it: only a first-run showing reads it.
+--- Record that the player closed the first-run preset picker, on the profile and the account, each
+--- through the write seam. The seed's fingerprint goes with it: only a first-run showing reads it.
 function Presets.MarkPickerSeen()
     local store = profilePresets()
     if not store then return end
     store.seedPrint = nil
     NS.SetByPath(PICKER_PATH, true)
+    NS.SetByPath(ACCOUNT_PICKER_PATH, true)
 end
 
 -- ---------------------------------------------------------------------------

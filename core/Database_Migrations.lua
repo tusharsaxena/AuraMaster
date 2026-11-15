@@ -1157,8 +1157,9 @@ function Database.RetireFonts(t)
 end
 
 --- v19 (presets spec section 9): a profile already `seeded` is marked as having seen the first-run
---- preset picker, so no current player is prompted, and keeps whatever containers it holds (the old
---- starter set included). A profile not yet seeded is left alone: a fresh install climbs the whole
+--- preset picker, so a current player is prompted once per account and not once per profile (the
+--- account latch, `global.presets.pickerSeen`, spec section 18.5, needs no step), and keeps whatever
+--- containers it holds (the old starter set included). A profile not yet seeded is left alone: a fresh install climbs the whole
 --- ladder before its first seeding and must still see the picker. Answers 1 when it marked `p`, 0
 --- otherwise; idempotent.
 function Database.MigrateV19(p)

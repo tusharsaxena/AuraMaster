@@ -130,6 +130,15 @@ NS.defaults.global = {
     -- `hide = false`: the button ships SHOWN. The row's label says shown and this key says
     -- hidden, which is why settings/Schema.lua's seam inverts.
     minimap = { hide = false },
+
+    -- The first-run preset picker's ACCOUNT latch (presets spec section 18.5): true once the picker
+    -- was closed on any profile of this account. Account-wide on purpose: a player whose profiles
+    -- were made before the presets sees the picker exactly once, at the next login, on whatever
+    -- profile is active, never again on another. No migration: an account from before it reads this
+    -- default, false, which is what offers that one showing. The skipRender row
+    -- `global.presets.pickerSeen` (settings/General.lua) addresses it, so it is written through
+    -- NS.SetByPath by modules/Presets.lua's MarkPickerSeen, beside the profile's `presets.pickerSeen`.
+    presets = { pickerSeen = false },
 }
 
 --- The six canonical font leaves (options-ui-§16): white, flags From skin ("@skin": the Skin tab's

@@ -39,12 +39,13 @@ otherwise (`docs/profiles.md`).
 |---|---|---|---|
 | `schemaVersion` | number | `0` | The migration stamp (savedvariables-§1), owned by `NS.RunMigrations`. Defaults to 0, never the current version: AceDB backfills the default onto a legacy account with no stamp, and strips a stored value equal to its default at logout; 0 is safe against both. See Migration path |
 | `minimap` | table | `{ hide = false }` | **LibDBIcon-1.0's own table**, handed straight to `:Register` (launcher-§3). Owned by `core/LauncherSetup.lua`, which hands it to `LibKa0s-Launcher-1.0` as the descriptor's `minimap` field. The CLI row is `global.minimap.shown` (inverted onto `hide` by `settings/Schema.lua`); `hide` and `minimapPos` are storage, not rows. `hide` is the Minimap button row's storage; `minimapPos` is written by LibDBIcon-1.0 when the player drags the button, through the LibKa0s-Launcher seam, and no addon code writes it (named non-setting state, `docs/ARCHITECTURE.md` → Settings Schema). Global, not profile, on purpose: a profile switch must not move the player's buttons. Surviving a reset is a separate guarantee and a property of the setting rather than of the store (launcher-§3): neither `Reset all settings` nor General's **Defaults** button may un-hide a button the player hid, and the second of those would have, so the options descriptor vetoes the row. Nothing seeds it but this declaration (architecture-§5) |
+| `presets` | table | `{ pickerSeen = false }` | The first-run preset picker's **account** latch (presets spec section 18.5): `pickerSeen` is true once the picker was closed on any profile of this account, so a player whose profiles predate the presets (the v19 step marked each one seen) is offered it exactly once, on whatever profile is active. A skipRender row on General (`global.presets.pickerSeen`, `settings/General.lua`), resolved against `db.global` by `settings/Schema.lua`'s `resolveRoot` and `NS.DefaultFor`; written through `NS.SetByPath` by `Presets.MarkPickerSeen`, beside the profile's `presets.pickerSeen`, on every close the player makes. General's Defaults leaves it alone (`vetoedFromPanelReset`, `settings/OptionsSetup.lua`); `/am reset global.presets.pickerSeen` names it. No migration: an account from before it reads the default |
 | `timedSpells` | map | `{}` | `[spellId] = true` for every buff `modules/TimedSpells.lua` has seen carry a duration; account-wide because it is a fact about the game. Learned data, not a setting: written at runtime only by its owner, `modules/TimedSpells.lua` (`TS.Scan` learns, `TS.Forget` behind `/am forgettimed` empties it), and backfilled on load by `NS.RunMigrations`. Named in `docs/ARCHITECTURE.md` → Settings Schema (architecture-§5) |
 
 ## The container template
 
 A container is created at runtime, so it cannot be an AceDB default. `NS.CONTAINER_TEMPLATE`
-(`defaults/Profile.lua:179`) is deep-copied for every new container (`Database.NewContainerData`), and
+(`defaults/Profile.lua:188`) is deep-copied for every new container (`Database.NewContainerData`), and
 every stored container is backfilled from it on load (`Database.PrepareProfile`, below). Each stored
 container also carries its own `id`. The render path reads its fallbacks from the template too: a leaf
 that is missing or garbage when a container is drawn falls back to the template's value for that same
@@ -280,7 +281,7 @@ player's own; **the schema is a live table, not a frozen one**, and each user ca
 it in schema order, `NS.UnregisterSchemaRows(pred)` takes it down again on a profile switch, and
 `NS.Schema` is rebuilt in place so the live reference the options descriptor and the CLI hold stays
 the same table — the rest of this file). It drives the panel,
-`/am list|get|set|reset` and the resets; one write seam, `NS.SetByPath` (`settings/Schema.lua:913`),
+`/am list|get|set|reset` and the resets; one write seam, `NS.SetByPath` (`settings/Schema.lua:921`),
 is where the panel, the CLI, the Defaults buttons and a drag handle all land. It resolves the
 container, validates against it, runs the row's optional `normalize` hook, writes, reacts and
 announces, in that order.
@@ -442,12 +443,12 @@ SavedVariables shape, every default and the migration path: the rest of this fil
 ## How the schema paths map onto this shape
 
 A schema row's `path` is absolute into `profile` (`enabled`, `hideBlizzardBuffs`), absolute into
-`global` — which **one** row is, `global.minimap.shown` — or
+`global` — which **two** rows are, `global.minimap.shown` and `global.presets.pickerSeen` — or
 **container-relative**: `container.bars.width` means `profile.containers[activeId].bars.width`,
 where `activeId` is `NS.State.activeContainerId` or, when nothing is selected, the first container in
-`containerOrder` (`NS.ActiveContainer`, `settings/Schema.lua:199`). `NS.DefaultFor(path)` reads the
-same path out of the template (for `container.` paths) or `NS.defaults.profile` (the rest), and
-`NS.ValidateSchema` fails any row whose path resolves against neither. The panel tree and the row
+`containerOrder` (`NS.ActiveContainer`, `settings/Schema.lua:202`). `NS.DefaultFor(path)` reads the
+same path out of the template (for `container.` paths), `NS.defaults.global` (for `global.` paths) or
+`NS.defaults.profile` (the rest), and `NS.ValidateSchema` fails any row whose path resolves against none of them. The panel tree and the row
 list per page are in `docs/settings-panel.md`.
 
 `global.minimap.shown` is the exception, and it is one branch in each seam rather than a second

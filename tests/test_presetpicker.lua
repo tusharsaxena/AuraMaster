@@ -81,7 +81,9 @@ test("picker: due on new profile only", function()
             containerOrder = { 1 } } },
         global = { schemaVersion = 18 },
     } })
-    assertFalse(migrated.PresetPickerDue(), "a profile migrated from v18 never sees it")
+    assertTrue(migrated.PresetPickerDue(), "a profile migrated from v18 is offered it once (spec section 18.5)")
+    migrated.SetByPath("global.presets.pickerSeen", true)
+    assertFalse(migrated.PresetPickerDue(), "and never once the account has seen it")
     local NS3 = fresh()
     NS3.SetByPath("enabled", false)
     NS3.SyncEnabled()
@@ -151,6 +153,160 @@ test("picker: a profile that has seen it arms the skin picker's start as before"
     end
     assertEqual(armed, 1)
     assertEqual(#calls, 1)
+end)
+
+-- ── existing players see it once per account (spec section 18.5) ────────────────────────────
+
+local ACCOUNT_PATH = "global.presets.pickerSeen"
+
+--- SavedVariables from before the presets: two seeded profiles of the player's own, at schema v18,
+--- and no account latch. The v19 step marks both profiles seen.
+local function existingAccount()
+    local function profile(name, unit)
+        return { seeded = true, nextContainerId = 2,
+            containers = { [1] = { name = name, unit = unit, auraType = "HELPFUL", style = "bars" } },
+            containerOrder = { 1 } }
+    end
+    return {
+        profileKeys = {},
+        profiles = { Default = profile("Mine", "player"), Alt = profile("Alt's", "target") },
+        global = { schemaVersion = 18 },
+    }
+end
+
+--- A relog: the logout strip, then a new environment over what was saved.
+local function relog(NS, m)
+    m.__logout()
+    return fresh({ savedVariables = NS.Database.DeepCopy(NS.db.sv) })
+end
+
+test("picker: an existing profile sees the picker once per account", function()
+    local NS, m = fresh({ savedVariables = existingAccount() })
+    -- red under: a picker keyed on the profile alone, which v19 marked seen on every existing profile
+    assertTrue(NS.db.profile.presets.pickerSeen, "the v19 step still marks the profile")
+    assertTrue(NS.PresetPickerDue(), "the account has never seen it: due once")
+    m.__fireEvent("PLAYER_ENTERING_WORLD")
+    local f = NS.PresetPicker.frame
+    assertTrue(f ~= nil and f:IsShown(), "shown at the next login, on the active profile")
+    f.notNow:__fire("OnClick")
+    assertTrue(NS.GetSetting(ACCOUNT_PATH), "the account latch is set")
+    assertFalse(NS.PresetPickerDue())
+    local again, m2 = relog(NS, m)
+    assertFalse(again.PresetPickerDue(), "never again after a relog")
+    m2.__fireEvent("PLAYER_ENTERING_WORLD")
+    assertTrue(again.PresetPicker.frame == nil or not again.PresetPicker.frame:IsShown())
+    again.db:SetProfile("Alt")
+    assertFalse(again.PresetPickerDue(), "nor on the account's other existing profile")
+end)
+
+test("picker: closing it by any route marks it shown for every profile", function()
+    local routes = {
+        apply = function(f, m)
+            local shown = popups(m)
+            f.apply:__fire("OnClick")
+            if shown[1] then accept(m, shown[1]) end
+        end,
+        ["not now"] = function(f) f.notNow:__fire("OnClick") end,
+        close = function(f) f.close:__fire("OnClick") end,
+        escape = function(f) f:Hide(); f:__fire("OnHide") end,
+    }
+    for route, close in pairs(routes) do
+        local NS, m = fresh({ savedVariables = existingAccount() })
+        local f = NS.MaybeShowPresetPicker()
+        assertTrue(f ~= nil and f:IsShown(), route .. ": shown")
+        close(f, m)
+        assertFalse(f:IsShown(), route .. ": closed")
+        -- red under: a route that sets the profile's latch and not the account's
+        assertTrue(NS.db.global.presets.pickerSeen, route .. ": the account latch is set")
+        NS.db:SetProfile("Alt")
+        assertFalse(NS.PresetPickerDue(), route .. ": the other profile is not offered it")
+        assertTrue(NS.PresetPicker.frame == nil or not NS.PresetPicker.frame:IsShown(), route .. ": down")
+    end
+    -- A hide this addon makes is not the player's close: the account still owes it.
+    local NS = fresh({ savedVariables = existingAccount() })
+    NS.MaybeShowPresetPicker()
+    NS.HidePresetPicker()
+    assertFalse(NS.GetSetting(ACCOUNT_PATH), "this addon's own hide writes no account latch")
+    assertTrue(NS.PresetPickerDue())
+end)
+
+test("picker: a brand-new install does not see it twice", function()
+    local NS, m = fresh()
+    assertFalse(NS.GetSetting(ACCOUNT_PATH), "a new account has not seen it")
+    m.__fireEvent("PLAYER_ENTERING_WORLD")
+    local f = NS.PresetPicker.frame
+    assertTrue(f ~= nil and f:IsShown(), "the first profile shows the first-run picker")
+    f.notNow:__fire("OnClick")
+    -- red under: the first-run close leaving the account latch unset, so the next login shows it again
+    assertTrue(NS.GetSetting(ACCOUNT_PATH), "its close marks the account too")
+    assertTrue(NS.db.profile.presets.pickerSeen, "and the profile")
+    local again, m2 = relog(NS, m)
+    m2.__fireEvent("PLAYER_ENTERING_WORLD")
+    assertFalse(again.PresetPickerDue(), "not offered a second time")
+    assertTrue(again.PresetPicker.frame == nil or not again.PresetPicker.frame:IsShown())
+    again.db:SetProfile("BrandNew")
+    assertTrue(again.PresetPickerDue(), "a profile made later is still offered it (spec section 18.4)")
+end)
+
+test("picker: combat holds it until it can show", function()
+    local NS, m = fresh({ savedVariables = existingAccount() })
+    m.__lockdown = true
+    m.__fireEvent("PLAYER_ENTERING_WORLD")
+    -- red under: an existing account's showing dropped by combat rather than held for its end
+    assertTrue(NS.PresetPicker.frame == nil or not NS.PresetPicker.frame:IsShown(), "nothing in combat")
+    assertFalse(NS.GetSetting(ACCOUNT_PATH), "held, not marked")
+    m.__lockdown = false
+    m.__fireEvent("PLAYER_REGEN_ENABLED")
+    local f = NS.PresetPicker.frame
+    assertTrue(f ~= nil and f:IsShown(), "the combat edge shows it")
+    f.close:__fire("OnClick")
+    assertTrue(NS.GetSetting(ACCOUNT_PATH))
+end)
+
+test("picker: an existing player's containers stay unless they apply and confirm", function()
+    local NS, m = fresh({ savedVariables = existingAccount() })
+    local shown = popups(m)
+    local f = NS.MaybeShowPresetPicker()
+    f.dd.onSelect("advanced")
+    assertTrue(NS.Presets.IsPreviewing(), "a pick previews")
+    f.notNow:__fire("OnClick")
+    assertEqual(NS.Database.GetContainers()[1].name, "Mine", "Not now: the player's own container back")
+    assertEqual(#NS.Database.GetContainers(), 1)
+    -- Opened again on demand: Apply asks, and a Cancel writes nothing.
+    f = NS.ShowPresetPicker()
+    f.dd.onSelect("advanced")
+    f.apply:__fire("OnClick")
+    -- red under: the first-run no-confirm path taken over a profile the seed never wrote
+    assertEqual(#shown, 1, "Replace asks first")
+    assertEqual(shown[1].a1, 1, "naming the player's one container")
+    m.StaticPopupDialogs.AURAMASTER_APPLY_PRESET.OnHide(shown[1], shown[1].data)   -- Cancel
+    f.notNow:__fire("OnClick")
+    assertEqual(NS.Database.GetContainers()[1].name, "Mine", "a Cancel keeps the player's container")
+    f = NS.ShowPresetPicker()
+    f.dd.onSelect("advanced")
+    f.apply:__fire("OnClick")
+    accept(m, shown[2])
+    assertEqual(#NS.Database.GetContainers(), NS.PresetData.Count("advanced"), "Apply and confirm: replaced")
+end)
+
+test("picker: the account latch is a global row, written through the seam", function()
+    local NS = fresh()
+    local row = NS.FindSchemaRow(ACCOUNT_PATH)
+    -- red under: an account latch with no row, or stored in the profile
+    assertTrue(row ~= nil, "a schema row in the global store")
+    assertTrue(row.skipRender == true and row.effect == "none", "drawn by nothing, re-applies nothing")
+    assertEqual(NS.DefaultFor(ACCOUNT_PATH), false, "the default from defaults/Profile.lua's global table")
+    local writes, real = {}, NS.SetByPath
+    NS.SetByPath = function(path, ...) writes[#writes + 1] = path; return real(path, ...) end
+    NS.Presets.MarkPickerSeen()
+    NS.SetByPath = real
+    assertTrue(writes[1] == ACCOUNT_PATH or writes[2] == ACCOUNT_PATH, "MarkPickerSeen writes it through the seam")
+    assertTrue(NS.db.global.presets.pickerSeen, "stored account-wide")
+    assertNil(NS.db.profile.global, "nothing written into the profile")
+    NS.Helpers.RestoreDefaults("general")
+    assertTrue(NS.GetSetting(ACCOUNT_PATH), "a page's Defaults leaves the account latch alone")
+    NS.Slash:OnSlash("reset " .. ACCOUNT_PATH)
+    assertFalse(NS.GetSetting(ACCOUNT_PATH), "`/am reset` names it and brings it back")
 end)
 
 -- ── the window ───────────────────────────────────────────────────────────────────────────────

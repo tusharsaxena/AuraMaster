@@ -2665,7 +2665,7 @@ Total.
 - preview: an in-play restore puts the spell edits back through the seam, exactly
 - preview: a category restore into a profile not in use writes it and syncs nothing
 
-### test_presets_seed.lua (7)
+### test_presets_seed.lua (8)
 
 - seed: new profile gets simple
 - seed: the seeded containers are what applying Simple (Bars) writes
@@ -2674,14 +2674,21 @@ Total.
 - seed: migrated profile marked seen
 - seed: fresh install not marked seen
 - seed: the v19 step is idempotent and keeps a stored false on an unseeded profile
+- seed: the account latch needs no migration step
 
-### test_presetpicker.lua (42)
+### test_presetpicker.lua (48)
 
 - picker: due on new profile only
 - picker: the latch is a settings row, written through the seam
 - picker: shows before skin picker
 - picker: the footer names the General page's Presets tab
 - picker: a profile that has seen it arms the skin picker's start as before
+- picker: an existing profile sees the picker once per account
+- picker: closing it by any route marks it shown for every profile
+- picker: a brand-new install does not see it twice
+- picker: combat holds it until it can show
+- picker: an existing player's containers stay unless they apply and confirm
+- picker: the account latch is a global row, written through the seam
 - picker: the window is a movable, clamped DIALOG, closed by Escape
 - picker: pick previews, close restores, latch set
 - picker: Escape restores like Not now
@@ -3043,8 +3050,8 @@ Total.
 | test_presets_cluster.lua | 9 |
 | test_presets_apply.lua | 11 |
 | test_presets_preview.lua | 20 |
-| test_presets_seed.lua | 7 |
-| test_presetpicker.lua | 42 |
+| test_presets_seed.lua | 8 |
+| test_presetpicker.lua | 48 |
 | test_pages_presets.lua | 12 |
 | test_perf.lua | 8 |
 | test_debuglogsetup.lua | 9 |
@@ -3062,4 +3069,4 @@ Total.
 | test_skin_switch.lua | 34 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2512** |
+| **Total** | **2519** |

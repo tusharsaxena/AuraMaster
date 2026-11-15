@@ -5,8 +5,9 @@ local addonName, NS = ...
 --
 -- WHAT IT PUBLISHES
 --
---   NS.PresetPickerDue()       true while the active profile has not closed the picker and the addon
---                              stands up: what the login and every profile event ask.
+--   NS.PresetPickerDue()       true while the active profile or the account (spec section 18.5) has
+--                              not closed the picker and the addon stands up: what the login and
+--                              every profile event ask.
 --   NS.MaybeShowPresetPicker() the first-run showing, when due; in combat held for
 --                              PLAYER_REGEN_ENABLED (one target at most). Answers the window or nil.
 --   NS.ShowPresetPicker()      `/am preset`: the window on demand, whatever the latch says; refused
@@ -32,7 +33,8 @@ local addonName, NS = ...
 --   NS.PresetPicker            { frame, Placement }: the window once built, for the suites, and
 --                              Placement(w, h), where it opens on a w x h UIParent (below).
 --
--- WHEN. Once per profile, before the skin picker: addon:OnEnterWorld shows it at once (it does not
+-- WHEN. Once per profile, and once per account (spec section 18.5: a player whose profiles predate
+-- the presets sees it once, on whatever profile is active), before the skin picker: addon:OnEnterWorld shows it at once (it does not
 -- wait the skin picker's two seconds) and arms no skin start while it is due; every close calls
 -- NS.MaybeShowSkinPicker, which shows the skin picker only now. A new, reset or copied profile is
 -- offered it again after the profile event (core/AuraMaster.lua's rebuildProfile).
@@ -60,7 +62,8 @@ local addonName, NS = ...
 -- test mode (NS.Presets.BeginPreview); a pick of Empty ends a preview and shows no test mode.
 -- Apply keeps the pick (EndPreview(true, "replace"), or Apply("empty") for Empty); with nothing
 -- picked it keeps what is there. Not now, the close control and Escape restore (EndPreview(false)).
--- Every close the player makes sets the latch, `presets.pickerSeen`, through NS.Presets.
+-- Every close the player makes sets both latches, `presets.pickerSeen` and the account's
+-- `global.presets.pickerSeen`, through NS.Presets.
 --
 -- THE CONFIRM. Replace asks first, naming the count it removes, except on the first-run showing
 -- while the profile still holds exactly what its seed wrote (NS.Presets.SeedUntouched), where

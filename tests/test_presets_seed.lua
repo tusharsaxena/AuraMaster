@@ -146,3 +146,16 @@ test("seed: the v19 step is idempotent and keeps a stored false on an unseeded p
     assertEqual(NS.Database.MigrateV19(unseeded), 0)
     assertFalse(unseeded.presets.pickerSeen)
 end)
+
+test("seed: the account latch needs no migration step", function()
+    local NS = fresh({ savedVariables = {
+        profiles = { Default = { seeded = true, nextContainerId = 1 } },
+        global = { schemaVersion = 18 },
+    } })
+    -- red under: an account from before the latch reading it set, or a new schema step for it
+    assertEqual(NS.SCHEMA_VERSION, 19, "no step added for the account latch")
+    assertFalse(NS.db.global.presets.pickerSeen, "an account from before it reads the default, unset")
+    assertTrue(NS.db.profile.presets.pickerSeen, "while v19 still marks the seeded profile")
+    local fresh2 = fresh()
+    assertFalse(fresh2.db.global.presets.pickerSeen, "a brand-new account starts unset too")
+end)
