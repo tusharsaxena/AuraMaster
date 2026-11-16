@@ -2731,6 +2731,14 @@ Total.
 - picker: after a /reload with the window up, Not now leaves the containers locked
 - picker: every close prints the unlock hint once
 
+### test_presetpicker_titlebar.lua (5)
+
+- preset picker title bar (ka0s): every control has a tooltip, in gtip.title, above it
+- preset picker title bar (ka0s): the close rests in icon.tint and lights close.hot
+- preset picker title bar (azeroth): every control has a tooltip, in gtip.title, above it
+- preset picker title bar (azeroth): the close rests in icon.tint and lights close.hot
+- preset picker title bar: Azeroth's close colors differ from Ka0s Default's, so the cases above can tell them apart
+
 ### test_pages_presets.lua (12)
 
 - presets tab: listed on the General page after Master controls
@@ -3056,6 +3064,7 @@ Total.
 | test_presets_preview.lua | 20 |
 | test_presets_seed.lua | 8 |
 | test_presetpicker.lua | 51 |
+| test_presetpicker_titlebar.lua | 5 |
 | test_pages_presets.lua | 12 |
 | test_perf.lua | 8 |
 | test_debuglogsetup.lua | 9 |
@@ -3073,4 +3082,4 @@ Total.
 | test_skin_switch.lua | 34 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2523** |
+| **Total** | **2528** |
