@@ -862,7 +862,7 @@ Total.
 - handle: a handle first shown under lockdown is placed once; the anchor's clamp still waits
 - handle: a visibility pass that changes nothing re-sets no clamp insets
 - handle: the help mark carries the tooltip and right-click opens the settings on this container
-- handle: where neither the strip's rect nor the tooltip reads, the tooltip shows at the cursor, owned by UIParent, never by the strip or the mark
+- handle: where neither the strip's rect nor the tooltip reads, the tooltip is owned by UIParent at ANCHOR_NONE once per show, never at the cursor, never by the strip or the mark
 - handle: a left-drag that starts on the help mark moves the container as one on the strip does
 - handle: with no media catalog the help mark falls back to Blizzard's information icon
 - handle: with LibKa0s absent a container has no handle at all, and every pass over it is a no-op
@@ -2796,7 +2796,7 @@ Total.
 
 - prose: no authored file carries a British spelling from localization-§5's published list
 - prose: the gate carries localization-§5's two lists whole, and nothing of its own
-- prose: the exclusions this repository declared suppressed 19 of 273 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (19): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, and 16 more (list bounded)
+- prose: the exclusions this repository declared suppressed 19 of 274 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (19): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, and 16 more (list bounded)
 - prose: no path this repository narrows the gate by is loaded by a TOC
 - prose: every path this repository narrows the gate by is one .pkgmeta keeps out of the zip
 - prose self-test: the carve-out suppresses the named generated folder, and only it

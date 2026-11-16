@@ -95,6 +95,22 @@ if not lib then
         end,
         -- `false` for every word, so the host's own `/am debug` fallback answers.
         DebugVerb       = function() return false end,
+        -- The report seam (DebugLog 23, LibKa0s#79). With no console the report the player asked for
+        -- streams to chat with no pointer line; a serialize answers one line. Nothing here calls
+        -- either yet (moving report verbs onto it is adoption); the stub answers the live surface.
+        Report          = function(_, _, _, fn)
+            local n = 0
+            if type(fn) == "function" then
+                fn(function(line)
+                    n = n + 1
+                    if NS.Print then NS.Print(NS.SafeToString(line)) end
+                end)
+            end
+            return n
+        end,
+        Serialize       = function(_, v)
+            return { NS.SafeToString(type(v) == "table" and "<table>" or v) }
+        end,
         ConsoleCheckbox = function()
             return {
                 label   = NS.L["Debug console"],
