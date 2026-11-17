@@ -224,8 +224,11 @@ while it shows, locked or not, and its strip while that runs past its element (F
 wide as the element (batch 11 T11): `Anchors.UpdateHandle` hands the widget a label whose name is
 shortened with "..." to fit between the marks (the TEST tag kept whole), measured through the
 widget's `SetLabel` and `Measure` and cached per name, width, face and scale, and `placeHandle` sets the element's
-width, so `stripOverhang` is 0. Only an element too narrow for both reserves and 40 px of label
-keeps the natural width, `ApplyWidth(element)`, and runs past it. Nothing on screen
+width, so `stripOverhang` is 0. The width it caps at is the block's across, `Anchors.RowSpan`:
+one element, or for an Icons row of a set per-row count (its chain's axis horizontal, `perLine`
+above 1) the whole row, `perLine` elements and the spacing between them, so an icon row's strip
+spans its row as a bar's spans its bar (2026-11-17). Only a width too narrow for both reserves and
+40 px of label keeps the natural width, `ApplyWidth(width)`, and runs past it. Nothing on screen
 marks the point where a container attached to another joins it (batch 11 G6 removed batch 9's join
 pin); the strip's tooltip names the parent's point and the parent (`Anchors.JoinText`). While the
 container is attached to another container or a named frame, its strip name is a warm gray
@@ -575,7 +578,12 @@ from the end, toward the growth, converted from the parent's scale to the child'
 parent's own config (`Style.ElementSize`, its Scale), never the engine's geometry. The slot and the
 preview block are one element across there too, so every hang mode lands in the same place. The
 classification, the seam, the spread and the push read the points in effect, not the moved one. On
-the axis the join runs along, an empty parent still closes the chain up, exactly to its start.
+the axis the join runs along, an empty parent still closes the chain up, exactly to its start, but
+for a parent filling rows of a set count (`Anchors.RowSpan`): its horizontal part is moved to its
+start side for every join, side joins included, with the whole row's width as the size, so a
+follower beside, centered under or at the far end of the row sits where it would beside a full one
+whatever the row shows (the owner, 2026-11-17: Player debuffs joined Top right to Top left of an
+icon row slid with that row's aura count, and sat a strip row low under its overhanging strip).
 
 An empty link adds nothing along the chain (the engine lead, the owner's chain residue, 2026-09-26).
 An engine that holds no aura is the flow layout's 1x1 minimum rect (`AnchorUtil.ApplyFlowLayout` sizes

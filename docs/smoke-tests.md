@@ -3277,7 +3277,7 @@ on Top, 0, -140; **[17] Target debuffs (all)** Bottom left on Top, 589, -822; **
 (mine)** 589, -611. The player stack, bottom up, [07], [08], [09]; the target stack [10] to [15]
 ([16] Target stealable is stored off). Select **[08] Player cooldowns** → attached to [07], its own
 point **Bottom**, the other's **Top**, X and Y 0; **[03] Player debuffs (all)** Top right to Top
-left, X 0; **[05] Defensive cooldowns** Automatic, Y -7; **[18] Target buffs (all)** Bottom left to
+left, X 0; **[05] Defensive cooldowns** and **[06] Raid cooldowns** Automatic, X and Y 0; **[18] Target buffs (all)** Bottom left to
 Top left, its icons 24. Bar colors, Fill → Color by **One color**: [07] and [10] dark gray, [13]
 Target crowd control orange, [14] Target cooldowns, players tan, [02] Weapon enchants purple;
 Player debuffs (all), Target debuffs (mine) and Focus debuffs (mine) **By dispel type**; every
@@ -3286,6 +3286,18 @@ group, the player stack's and target stack's bottom containers at the same three
 enchants purple, Player buffs, short gray where the preset has it. Each preset in **Icons** → every
 icon row's icons about 24, each member flush on the one before it from the side its row starts. No
 Lua error. `/am test` off. Result:
+
+**PRESETS-43. An icon row's side follower stays beside the whole row. Client: WoW Forever, then
+Retail.** On a spare profile: `/am preset advanced` → **Icons** → Replace → unlock → `/am test`.
+**[01] Player buffs (all)**'s drag strip spans its whole row (its Per row count of icons), not one
+icon plus its name, and **[03] Player debuffs (all)** sits left of that whole row, its strip level
+with [01]'s and its icons level with [01]'s, though [01] shows fewer icons than a full row. **[02]
+Weapon enchants** under [01] overlaps nothing of [03]. Select [03] → Layout → Position: Top right
+to Top left of [01], X and Y 0; set the two points to **Right** and **Left** → [03] stays beside
+the whole row, centered on [01]'s first row; set them to **Top left** and **Top right** → [03] moves
+to [01]'s right, as before. Back to Top right / Top left. Lock → `/am test` off: with fewer buffs, or
+none, [03] does not slide toward the screen edge. Apply **Simple**, **Intermediate** and **Healer**
+in Icons → the same for their Player debuffs (all). No Lua error. Result:
 
 ## WoW Forever
 
@@ -3567,3 +3579,8 @@ Open from the picker's opening state (owner, 2026-11-16): the preset picker now 
 soon as it shows, on the first-run showing and on `/am preset`, beside the unlock it already made.
 PRESETS-24 is rewritten for it; re-run it, and make a new profile once to see the first-run window open
 with **Containers: unlocked** and **Test mode: on**.
+
+Open from the owner's 2026-11-17 SmokeTest baseline and its follow-up: PRESETS-42 (Advanced is the
+SmokeTest profile; the owner saw it match in game on 2026-11-17, before the call-outs' Y went to 0)
+and PRESETS-43, new: an Icons row of a set per-row count now spans its whole row with its drag strip,
+and a container joined to its side sits past that whole row, level with it, whatever it shows.

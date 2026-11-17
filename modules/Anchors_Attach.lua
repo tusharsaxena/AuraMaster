@@ -284,20 +284,40 @@ local function toStart(part, start, size, forward)
     return start, frac * size * forward
 end
 
+--- How wide container `cfg`'s block can get across: a container filling rows (its chain's axis)
+--- with a per-row count above one spans that many elements and the gaps between them (its own count
+--- and spacing, as NS.Container.FlowSettings lines them), and whether it is such a row; any other
+--- container one element, whose far edge, where it has one, follows its aura count. Config math
+--- only, so never secret. Allocates nothing.
+--- @return number width, boolean bounded
+function Anchors.RowSpan(cfg)
+    local w = NS.Style.ElementSize(cfg)
+    local root = Anchors.FlowRoot(cfg)
+    local own = cfg.layout or D.layout
+    local perLine = tonumber(own.perLine) or 0
+    if ((root or cfg).layout or D.layout).axis == "vertical" or perLine <= 1 then return w, false end
+    return perLine * w + (perLine - 1) * math.max(0, tonumber(own.spacing) or 0), true
+end
+
 --- The relative point `rel` container `cfg` joins its parent `pcfg` by, moved onto the parent's
 --- start side on each axis the parent is one element across and the join does not run along
 --- (`joinAxis`, nil for a free pair), with the offset that keeps it in place, in the child's scale.
+--- A parent filling rows of a set count (Anchors.RowSpan) is measured across on its WHOLE row, for
+--- every join, its side joins included (the owner, 2026-11-17: an icon row's side follower slid in
+--- and out with its parent's aura count where a bar column's stays put): a follower beside, centered
+--- under or at the far end of such a row sits where it would beside a full one.
 --- @return string relativePoint, number dx, number dy
 local function steadyRelative(rel, joinAxis, pcfg, cfg, growH, growV)
     local acrossH, acrossV = oneAcross(pcfg)
     acrossH, acrossV = acrossH and joinAxis ~= "h", acrossV and joinAxis ~= "v"
-    if not (acrossH or acrossV) then return rel, 0, 0 end
+    local span, row = Anchors.RowSpan(pcfg)
+    if not (acrossH or acrossV or row) then return rel, 0, 0 end
     local v, h = POINT_V[rel], POINT_H[rel]
     local w, ht = NS.Style.ElementSize(pcfg)
     local k = ownScale(pcfg) / ownScale(cfg)
     local dx, dy = 0, 0
-    if acrossH then
-        h, dx = toStart(h, GROW_START[growH], w * k, GROW_SIGN[growH])
+    if acrossH or row then
+        h, dx = toStart(h, GROW_START[growH], (row and span or w) * k, GROW_SIGN[growH])
     end
     if acrossV then
         v, dy = toStart(v, GROW_START[growV], ht * k, GROW_SIGN[growV])
