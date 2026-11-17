@@ -595,5 +595,5 @@ test("skin flip: the ladder walks every stored profile, and a new profile takes 
     local NS = ran({ Default = partial(), Parked = partial() })
     assertEqual(NS.db.sv.profiles.Parked.skin.fullSkinReset, true, "an inactive profile")
     assertEqual(NS.db.global.schemaVersion, NS.SCHEMA_VERSION)
-    assertEqual(NS.SCHEMA_VERSION, 19)
+    assertEqual(NS.SCHEMA_VERSION, 20)
 end)

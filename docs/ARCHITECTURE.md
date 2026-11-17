@@ -605,6 +605,45 @@ Blizzard own. The tiers:
 The Frame strata row's tooltip (Layout → Scale and strata) is the library's `O.StrataTooltip`. A player can still pick Dialog, so the
 tooltip says what Dialog covers.
 
+## Tooltip placement
+
+standalone-windows *Tooltip placement* (WowAddonStandards v2.113.0, LibKa0s#92, AD-92-AM) rules every
+tooltip this addon places itself. There is one such site, and the rest are the library's or the
+client's.
+
+- **The drag strip and its marks** (the "?", the X and the settings gear). The strip is a HUD's drag
+  strip, chrome by the rule, whose library default is `PlaceAttached` above it. The owner's SR2 answer
+  (2026-11-17) keeps this addon's strip tooltips **beside** the strip instead, so the strip's
+  `tooltipPlace`, `NS.AnchorsTooltip.Place` (`modules/Anchors_Tooltip.lua`), calls the library's
+  `PlaceBeside` with the strip as both element and group (a mark places by its strip, `StripOf`).
+  The tooltip then sits `TIP_GAP` right of the strip, or left of it near the screen's right edge, its
+  top level with the strip's. With room on neither side it takes the library's fallback, centered
+  above the strip. The strip's rect goes in through `opts.rect`, read through `NS.Secrets`, and
+  `comparisons = false`. The tooltip is owned by `UIParent` and pinned to `UIParent` alone, because
+  the anchor's restricted tree refuses an anchor (`docs/midnight-quirks.md`). Where the strip's rect
+  reads secret, the hook places nothing and the widget's own attached fallback runs. The cursor pin
+  of 2026-10-03 and the retired `tooltipOwner = "cursor"` are gone.
+- **The library's own sites** follow the rule in the library. These are the preset picker's
+  title-bar marks (`W.HeaderButtons`), every close (`AttachTitleTip`), the launcher's minimap tooltip
+  (`PlaceLauncher`, launcher-§7), the skin picker, the sim panel and the menus.
+
+Left as they are, out of the rule's scope (*What it does not bind*):
+
+- **The aura buttons' tooltips.** The client places them. `Style.Bind(frame, "SetTooltipAnchorPoint",
+  ...)` (`modules/Style.lua`) only hands Blizzard's aura engine the player's Layout → Mouse → Tooltip
+  position. By the owner's ruling (option B, 2026-11-17) the setting keeps its six edge and corner
+  choices and drops "At the cursor" (`C.TOOLTIP_ANCHORS`), and schema v20 moves a saved
+  `ANCHOR_CURSOR` to `ANCHOR_BOTTOMLEFT` (`docs/schema.md`).
+- **The settings pages' row tooltips** (every `tooltip =` in `settings/`). They are on the Settings
+  canvas, which the library's options rows place.
+- **Blizzard's frames** and the Ace libraries' own tooltips (`libs/`).
+- **The frame picker's label** (`modules/FramePicker.lua`). It follows the cursor because it names
+  the frame under it. It is an overlay label in the cursor tier, not a tooltip.
+
+`tests/test_anchors_tooltip.lua` holds the strip to the rule. Its guard case also holds every TOC
+file to no `ANCHOR_CURSOR` (the v20 migration is the one file allowed to name it), no retired
+`tooltipOwner` and no `SetOwner` at an anchor of its own.
+
 ## Taint Notes
 
 No secure template of our own: the only protected machinery is Blizzard's aura engine, and each

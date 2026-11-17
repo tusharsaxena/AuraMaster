@@ -551,9 +551,9 @@ end
 --- DisableUntrustedLayoutScriptsTemplate (modules/Container.lua), and that restriction reaches every
 --- frame anchored under it: the strip and the marks. GameTooltip does not inherit the template, so the
 --- client refuses SetOwner on either ("Anchoring disallowed as dependent object would inherit
---- forbidden aspects: UntrustedLayoutScriptExecution"). Where the strip's rect does not read, it is
---- pinned beside the cursor instead; only where nothing reads does the widget fall back to
---- `tooltipOwner = "cursor"`: ANCHOR_CURSOR depends on nothing under the anchor.
+--- forbidden aspects: UntrustedLayoutScriptExecution"). The placement is LibKa0s-Tooltip-1.0's
+--- PlaceBeside (AD-92-AM); where the strip's rect does not read, the widget's own attached fallback
+--- runs, never the cursor (the retired cursor owner is no longer passed).
 local function tooltipSpec(container)
     -- How to use the strip (issue #22): on the screen, drag it, or drop it on another container to
     -- attach it there; attached to another container, by that parent's name, drag it away until the
@@ -612,7 +612,7 @@ end
 
 --- The close mark's own tooltip: the container's name (a function, read on every hover, so a rename
 --- shows through) and what the click does. Placed beside the strip like the strip's, through the
---- same `tooltipPlace` and `tooltipOwner` (see tooltipSpec).
+--- same `tooltipPlace` (see tooltipSpec).
 local function closeTooltipSpec(container)
     return {
         title = function()
@@ -727,7 +727,6 @@ function Anchors.BuildHandle(container)
         onRightClick = function() openSettings(container) end,
         tooltip      = tooltipSpec(container),
         tooltipPlace = placeTooltip,
-        tooltipOwner = "cursor",
         edge         = NS.Style.DrawEdge,
         number       = NS.Secrets.NumberOr,
         level        = LEVEL.HANDLE,

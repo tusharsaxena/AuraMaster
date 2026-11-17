@@ -153,7 +153,7 @@ backfills it onto every stored container, so it needs no schema step.
 | `expiringThreshold` | `5` | `expiringColor` | `{ 1, 0.25, 0.25, 1 }` |
 | `pandemic` | `false` | `pandemicColor` | `{ 1, 0.85, 0.10, 1 }` |
 
-The profile's `dispelColors` defaults (`C.DEFAULT_DISPEL_COLORS`, `core/Constants.lua:313`): Magic `{0.20, 0.60, 1.00}`, Curse `{0.60, 0.00, 1.00}`, Disease
+The profile's `dispelColors` defaults (`C.DEFAULT_DISPEL_COLORS`, `core/Constants.lua:319`): Magic `{0.20, 0.60, 1.00}`, Curse `{0.60, 0.00, 1.00}`, Disease
 `{0.60, 0.40, 0.00}`, Poison `{0.00, 0.60, 0.00}`,
 Bleed `{0.80, 0.10, 0.10}`, all alpha 1. An aura
 with no dispel type takes the surface's own color instead (feedback #7); schema v5 clears a stored
@@ -933,6 +933,12 @@ The stamp follows savedvariables-§1 as ruled at WowAddonStandards v2.65.0:
   The step keys on `seeded`, not on the stamp: a fresh install climbs the whole ladder before its
   first seeding, so its profile is still unseeded at v19 and sees the picker
   (`tests/test_presets_seed.lua`).
+- **Schema v20** (`Database.MigrateV20`, `core/Database_Migrations.lua`, AD-92-AM, LibKa0s#92, the
+  owner's ruling option B of 2026-11-17) runs over **every** stored profile and logs one
+  `[Migrate] v20 profile '<name>'` line for a profile it moved. "At the cursor" left the aura tooltip
+  position (`C.TOOLTIP_ANCHORS`), so every stored container whose `behavior.tooltipAnchor` is
+  `"ANCHOR_CURSOR"` takes the default, `C.TOOLTIP_ANCHOR_DEFAULT` (`"ANCHOR_BOTTOMLEFT"`). Any other
+  pick stays (`tests/test_migrations.lua`).
 - **Migration lesson (batch 10 F7): a step already pushed is never extended again.** A step's
   version stamp is written once per account, so a half added to a step after any build carrying it
   has been pushed never reaches an install that already ran that build: the owner's v9 install

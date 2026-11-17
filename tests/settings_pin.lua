@@ -9,6 +9,8 @@
 -- AM-PR03 (presets) adds the default profile.presets.pickerSeen, the preset picker's latch; AM-PR08
 -- gives it its row (settings/General.lua, skipRender), the twin of skin.pickerSeen. AM-PR20 adds the
 -- account latch, global.presets.pickerSeen, with its default and its row (presets spec section 18.5).
+-- AD-92-AM (LibKa0s#92, option B) drops "At the cursor" from container.behavior.tooltipAnchor: six
+-- choices where there were seven, and schema v20 moves a stored one to the default.
 --
 -- Not a suite (tests/run.lua does not list it): data the pin suite dofiles.
 return {
@@ -114,7 +116,7 @@ return {
     [[row container.bars.width type=number default=220 min=40 max=600 step=1 values=- session=false]],
     [[row container.behavior.cancelOnRightClick type=bool default=true min=nil max=nil step=nil values=- session=false]],
     [[row container.behavior.clickThrough type=bool default=false min=nil max=nil step=nil values=- session=false]],
-    [[row container.behavior.tooltipAnchor type=string default="ANCHOR_BOTTOMLEFT" min=nil max=nil step=nil values=1|2|3|4|5|6|7 session=false]],
+    [[row container.behavior.tooltipAnchor type=string default="ANCHOR_BOTTOMLEFT" min=nil max=nil step=nil values=1|2|3|4|5|6 session=false]],
     [[row container.behavior.tooltipInCombat type=bool default=true min=nil max=nil step=nil values=- session=false]],
     [[row container.behavior.tooltips type=bool default=true min=nil max=nil step=nil values=- session=false]],
     [[row container.enabled type=bool default=true min=nil max=nil step=nil values=- session=false]],

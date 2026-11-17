@@ -23,8 +23,8 @@ check's number is not reused. Checks with no recorded pass, and checks new or co
 | DIAG-1 to DIAG-22 | Debug, diagnostics, perf | The debug console, bulk `[Set]` lines, `/am diagnostics`, `/am perf`, the event trace, resizing the console, its copy window and the perf panel, the console's Diagnostics link, diagnostics turning logging on, the library's own lines (a slash refusal, a stand-down edge, the launcher's at-enable line) |
 | CONT-1 to CONT-29 | Containers | Create, duplicate, delete, rename, copy; handles, strips, the close mark and the settings mark; test mode (no TEST marker on a locked container, the strip's TEST tag, the docked test-mode strip); unit swaps; empty placeholders |
 | FILT-1 to FILT-67 | Filters and spell categories | Cast by, the category grids, Overrides, the add-a-spell box, aura ids, your own categories, weapon enchants and their names, the help marks' art, where spell lists apply, the Situations tab, its zones and its Unit type gate |
-| LAYOUT-1 to LAYOUT-38 | Layout | Anchor modes, attaching, chains, growth, anchor points, seams, the name label, mouse and tooltips |
-| DRAG-1 to DRAG-18 | Layout | Drag to attach (issue #22): dropping a container on another, the highlight on the target's strip, the side a drop picks, Shift, loops, detaching and its leeway (green hold, snap back, red past it), the growth-conflict popup, combat, a parent holding auras, frame-attached containers, the strip's tooltip, a drop between pulls in a key, a dropped side surviving a growth change, a drag cut short, a before-side drop with the line between the two join dots, the strip edge following the mark |
+| LAYOUT-1 to LAYOUT-39 | Layout | Anchor modes, attaching, chains, growth, anchor points, seams, the name label, mouse and tooltips, the tooltip position with no cursor choice |
+| DRAG-1 to DRAG-19 | Layout | Drag to attach (issue #22): dropping a container on another, the highlight on the target's strip, the side a drop picks, Shift, loops, detaching and its leeway (green hold, snap back, red past it), the growth-conflict popup, combat, a parent holding auras, frame-attached containers, the strip's tooltip, a drop between pulls in a key, a dropped side surviving a growth change, a drag cut short, a before-side drop with the line between the two join dots, the strip edge following the mark, the strip's tooltip through the library's placer |
 | STYLE-1 to STYLE-31 | Bars and Icons style, fonts | Bars and Icons tabs, the spark, borders, dispel colors, pandemic, the font primer |
 | TEXT-1 to TEXT-36 | Text style | Templates and tokens, justify, the icon, dispel type word, backdrop and edge, animation, Size to fit, the glow behind the text |
 | LAYER-1 to LAYER-6 | Frame layering | Bar borders over the fill, the outline and the name label over the auras, the snap highlight over a Dialog container, the strip at low opacity, the Strata tooltip |
@@ -1566,6 +1566,13 @@ cursor is over the container, padding included; off the container it works again
 **Show tooltips** text names this tradeoff, and Click-through on restores mouseover targeting
 everywhere under the container. Result: pass (owner-marked 2026-10-10)
 
+**LAYOUT-39. The aura tooltip position has no cursor choice (AD-92-AM, option B).** Layout → Mouse →
+Tooltip position → the dropdown offers six choices (Below, to the left; Below, to the right; Above,
+to the left; Above, to the right; Left; Right) and no "At the cursor". On a profile saved before this
+build with a container set to At the cursor, `/reload` → that container reads **Below, to the left**,
+and hovering one of its auras opens the tooltip below its left edge. Other containers keep their own
+pick. Retail and Forever. Result:
+
 **Drag to attach** (issue #22). These use the chain from [Before you start](#before-you-start), A, B
 and C, plus two screen containers: D, Icons growing right and down, so its growth differs from the
 chain's, and E, a Text container growing down like A. Unlock first (`/am unlock`), and turn the
@@ -1681,11 +1688,10 @@ of '<A's name>'" line; the frame-attached one as DRAG-10. Rename A → B's toolt
 the next hover. Each tooltip, the strip's and its X's and "?"'s alike, sits beside the strip, its top
 level with the strip's top, a few px to the right of the strip, not at the cursor; drag D until its
 strip is near the right edge of the screen → its tooltip sits to the strip's left instead, and is never
-cut off by the screen's edge. Attach a container under a parent that holds auras (in a dungeon,
-where aura geometry is secret) and hover its strip → its tooltip is not on the strip's top but a little
-right of where the cursor came in, its top just above the cursor, and stays put while the cursor moves
-along the strip (it does not follow it); near the screen's right edge it sits left of the cursor
-instead. No Lua error. Result: pass (owner-marked 2026-10-10)
+cut off by the screen's edge. No Lua error. Result: pass (owner-marked 2026-10-10)
+
+AMENDED by AD-92-AM (LibKa0s#92): the cursor placement for a strip under a parent holding auras is
+retired; DRAG-19 below is the check for it now, and its result is owed.
 
 **DRAG-12. A drop between pulls in a key.** In a Mythic+ key, out of combat between pulls (auras are
 secret there with no combat lockdown), drop E on A's side → E attaches and sits on that side of A at
@@ -1779,6 +1785,18 @@ on A's right edge. Throughout every drag above, E's own strip has the same 2 px 
 would join, green, and red with its parent's past the leeway (DRAG-15); once let go, or once the marks
 hide (move away, Shift, combat), both strips are back to their 1 px gold. No Lua error, no
 `ADDON_ACTION_BLOCKED`. Result: pass (owner-marked 2026-10-10)
+
+**DRAG-19. The strip's tooltip through the library's placer (AD-92-AM).** Unlock, hover a screen
+container's strip, then its "?", its X and its settings gear → each tooltip sits 2 px to the right of
+the strip (a hair closer than before), its top level with the strip's top, never at the cursor and
+never covering the strip; the content is unchanged (the name in gold, the drag hint, the X's and the
+gear's own lines). Drag the container near the screen's right edge → the tooltip sits to the strip's
+left. Make the strip as wide as the screen will allow, or put it at a screen edge with a wide tooltip,
+so there is no room on either side → the tooltip sits centered above the strip. Attach a container
+under a parent that holds auras (in a dungeon, where aura geometry is secret) and hover its strip →
+the tooltip shows, above the strip or wherever the library's fallback puts it, NOT beside the cursor
+and not following it. No Lua error ("Anchoring disallowed" included). Retail and Forever.
+Result:
 
 ## Bars and Icons style, fonts
 

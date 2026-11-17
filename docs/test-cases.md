@@ -186,7 +186,7 @@ Total.
 - user categories: the name cap counts characters, so a non-ASCII name is never cut mid-sequence
 - user categories: a deleted category is gone from the grid and from the union, and Uncategorized is still last
 
-### test_migrations.lua (30)
+### test_migrations.lua (31)
 
 - migrations: NS.SCHEMA_VERSION is the runner's target, the last step's version
 - migrations: a legacy v1 account with NO stamp runs every step
@@ -218,6 +218,7 @@ Total.
 - migrations: v9, v8 and v1 accounts reach v11 with no attach side left and every chain Automatic
 - migrations: on load a stored point that is not one of the nine is read as Automatic, and a known one kept
 - migrations: v18 moves a stored Ka0s Friz Quadrata TT to Ka0s Ubuntu in every profile, Blizzard's Friz kept
+- migrations: v20 moves a stored At the cursor tooltip position to Below, to the left in every profile, other picks kept
 
 ### test_schema.lua (38)
 
@@ -883,14 +884,17 @@ Total.
 - handle: under combat lockdown the right-click is refused in gray and selects nothing (feedback #9)
 - handle: an attached container's name is a desaturated gray, to the screen it keeps the plain color (owner, 2026-09-26)
 
-### test_anchors_tooltip.lua (6)
+### test_anchors_tooltip.lua (9)
 
-- tooltip: it sits a gap right of the strip, its TOPLEFT on the strip's TOPRIGHT, anchored to UIParent
-- tooltip: near the right edge it flips to the strip's left, its TOPRIGHT a gap left of the strip
-- tooltip: a strip rect that reads secret or not at all pins it beside the cursor where it entered, anchored to UIParent
+- tooltip: PlaceBeside puts it TIP_GAP right of the strip, its top level with the strip's, pinned to UIParent
+- tooltip: near the right edge it flips to the strip's left, its TOPRIGHT TIP_GAP left of the strip
+- tooltip: a strip rect that reads secret or not at all is not placed and never pinned at the cursor
 - tooltip: the strip's rect is converted into the tooltip's own units through both scales
-- tooltip: a help or close mark places by the strip it belongs to, not by itself
-- tooltip: the strip, its help mark and its close mark show it beside the strip, owned by UIParent with no anchor
+- tooltip: with room on neither side of the strip it attaches centered above it (the library's fallback)
+- tooltip: a help, close or settings mark places by the strip it belongs to, not by itself
+- tooltip: the strip and each of its marks show it beside the strip, owned by UIParent with no anchor
+- tooltip: BuildHandle hands the widget the beside placement and no retired cursor owner
+- tooltip guard: no addon file places a tooltip at the cursor or owns one at an anchor of its own
 
 ### test_anchors_seam.lua (10)
 
@@ -2834,7 +2838,7 @@ Total.
 
 - prose: no authored file carries a British spelling from localization-§5's published list
 - prose: the gate carries localization-§5's two lists whole, and nothing of its own
-- prose: the exclusions this repository declared suppressed 19 of 276 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (19): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, and 16 more (list bounded)
+- prose: the exclusions this repository declared suppressed 19 of 277 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (19): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, and 16 more (list bounded)
 - prose: no path this repository narrows the gate by is loaded by a TOC
 - prose: every path this repository narrows the gate by is one .pkgmeta keeps out of the zip
 - prose self-test: the carve-out suppresses the named generated folder, and only it
@@ -2983,7 +2987,7 @@ Total.
 | test_database.lua | 56 |
 | test_database_steps.lua | 17 |
 | test_database_categories.lua | 28 |
-| test_migrations.lua | 30 |
+| test_migrations.lua | 31 |
 | test_schema.lua | 38 |
 | test_schema_paths.lua | 38 |
 | test_settings_pin.lua | 1 |
@@ -3011,7 +3015,7 @@ Total.
 | test_lifecycle.lua | 18 |
 | test_anchors.lua | 51 |
 | test_anchors_handle.lua | 29 |
-| test_anchors_tooltip.lua | 6 |
+| test_anchors_tooltip.lua | 9 |
 | test_anchors_seam.lua | 10 |
 | test_anchors_edges.lua | 14 |
 | test_anchors_hang.lua | 11 |
@@ -3114,4 +3118,4 @@ Total.
 | test_skin_switch.lua | 34 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2552** |
+| **Total** | **2556** |

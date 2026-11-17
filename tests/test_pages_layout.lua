@@ -357,11 +357,13 @@ test("layout: the Mouse tab's rows write the selected container's behavior", fun
     P.show("Layout")
     local ws = P.tab("layout", NS.L["Mouse"])
     P.row(ws, "container.behavior.clickThrough"):__fire("OnValueChanged", true)
-    P.row(ws, "container.behavior.tooltipAnchor"):__fire("OnValueChanged", "ANCHOR_CURSOR")
+    -- Re-pinned by AD-92-AM: ANCHOR_CURSOR is no longer a choice (option B), so the row writes
+    -- another of its six.
+    P.row(ws, "container.behavior.tooltipAnchor"):__fire("OnValueChanged", "ANCHOR_TOPRIGHT")
     local b = NS.Database.FindContainer(1).behavior
     -- red under: a Mouse row pointing at another section
     assertTrue(b.clickThrough)
-    assertEqual(b.tooltipAnchor, "ANCHOR_CURSOR")
+    assertEqual(b.tooltipAnchor, "ANCHOR_TOPRIGHT")
     assertFalse(NS.Database.FindContainer(2).behavior.clickThrough)
 end)
 

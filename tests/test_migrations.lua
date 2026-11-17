@@ -737,3 +737,30 @@ test("migrations: v18 moves a stored Ka0s Friz Quadrata TT to Ka0s Ubuntu in eve
     assertEqual(NS.db.global.schemaVersion, NS.SCHEMA_VERSION)
     assertEqual(NS.Database.RetireFonts(NS.db.sv.profiles.Raid), 0, "a second pass moves nothing")
 end)
+
+-- AD-92-AM (LibKa0s#92, the owner's ruling option B of 2026-11-17): "At the cursor" left the aura
+-- tooltip position, and v20 moves a stored ANCHOR_CURSOR to the default, ANCHOR_BOTTOMLEFT, in every
+-- stored profile. red under: no v20 step, one that walks only the active profile, or one that
+-- rewrites a player's other pick.
+test("migrations: v20 moves a stored At the cursor tooltip position to Below, to the left in every profile, other picks kept", function()
+    local function stored()
+        return { containers = {
+            [1] = { name = "Cursor", style = "bars", behavior = { tooltipAnchor = "ANCHOR_CURSOR" } },
+            [2] = { name = "Right", style = "icons", behavior = { tooltipAnchor = "ANCHOR_RIGHT" } },
+        } }
+    end
+    local NS = fresh({ savedVariables = { profiles = { Default = stored(), Raid = stored() },
+        global = { schemaVersion = 19 } } })
+    for _, name in ipairs({ "Default", "Raid" }) do
+        local p = NS.db.sv.profiles[name]
+        assertEqual(p.containers[1].behavior.tooltipAnchor, "ANCHOR_BOTTOMLEFT", name .. ": the cursor pick moved")
+        assertEqual(p.containers[2].behavior.tooltipAnchor, "ANCHOR_RIGHT", name .. ": another pick stays")
+    end
+    assertEqual(NS.db.global.schemaVersion, NS.SCHEMA_VERSION)
+    assertEqual(NS.Database.MigrateV20(NS.db.sv.profiles.Raid), 0, "a second pass moves nothing")
+    assertEqual(NS.Constants.TOOLTIP_ANCHOR_DEFAULT, "ANCHOR_BOTTOMLEFT")
+    for _, v in ipairs(NS.Constants.TOOLTIP_ANCHORS) do
+        assertTrue(v ~= "ANCHOR_CURSOR", "the setting no longer offers the cursor")
+    end
+    assertNil(NS.Constants.TOOLTIP_ANCHOR_LABELS.ANCHOR_CURSOR)
+end)
