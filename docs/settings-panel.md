@@ -760,7 +760,9 @@ mode. The gap across the seam is the child's own gap between consecutive element
 the chain stacks: its Spacing when it fills columns, its Line spacing when it fills rows
 (`Anchors.SeamOffset`, SS-1), upward when the chain grows up; on a Right or Left side it is the
 child's gap across instead, its Spacing when it fills rows and its Line spacing when it fills columns
-(AP-2), and a parent's strip widens only a seam along the chain. The offsets add on top of it as a
+(AP-2), and a parent's strip widens only a seam along the chain. A parent filling rows of a set
+Per row count (an Icons row) is measured across on its whole row, for every pair, so a follower
+beside it stays put whatever the row shows (`Anchors.RowSpan`). The offsets add on top of it as a
 nudge (SS-2). `Container.FlowSettings`, `Preview.Offset` and the
 handle's placement and clamp all read the effective layout. A write that moves a container's flow or
 attachment re-applies every container following it (`Anchors.Followers`). Under Growth, in that mode,
