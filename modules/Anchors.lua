@@ -945,7 +945,7 @@ end
 local function stripLabel(container, handle, cfg)
     local full = handleText(cfg)
     if not (handle.Reserve and cfg) then return full end
-    local w = NS.Style.ElementSize(cfg)
+    local w = Anchors.RowSpan(cfg)
     if not stripCapped(handle, w) then return full end
     local avail = w - handle:Reserve() * 2
     local face, scale = stripFace(handle), stripScale(handle)
@@ -961,8 +961,9 @@ local function stripLabel(container, handle, cfg)
 end
 
 --- The strip goes where Anchors.StripPoints says, moved out past a shown name label (D6). Its width
---- is the element's while that holds a readable label (stripCapped), else its natural width floored
---- at the element. Records how far it runs past the element (`stripOverhang`, 0 when capped), which
+--- is its block's across (Anchors.RowSpan: one element, or a whole row of a set count, so an icon
+--- row's strip spans its row as a bar's spans its bar) while that holds a readable label
+--- (stripCapped), else its natural width floored at it. Records how far it runs past the element (`stripOverhang`, 0 when capped), which
 --- an ahead follower clears (sideRoom).
 --- @return number, number  how far the strip runs past the element along its line, and how far out
 ---                          past the anchor's V0 edge it reaches, its gap included
@@ -974,7 +975,7 @@ local function placeHandle(container, cfg)
     local point, rel, x, y, _, growV = Anchors.StripPoints(cfg)
     local push = labelPush(container, growV)
     handle:SetPoint(point, container.anchor, rel, x, y + push)
-    local w = NS.Style.ElementSize(cfg)
+    local w = Anchors.RowSpan(cfg)
     local overhang = 0
     if handle.Reserve and stripCapped(handle, w) then
         handle:SetWidth(w)

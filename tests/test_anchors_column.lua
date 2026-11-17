@@ -417,3 +417,53 @@ test("column: a follower of a side follower spreads by its own strip, as any aft
     local _, y = placed(NS, 3)
     assertEqual(y, -(spacingOf(NS, 3) + ROW))
 end)
+
+-- ── An icon row's side follower (the owner, 2026-11-17) ─────────────────────────────────────────
+-- Player debuffs (all) joined Top right to Top left (ahead-start) of Player buffs (all), an Icons row
+-- of eleven growing left: it sat one strip row low and slid with its parent's aura count, while the
+-- mirror pair (behind-start) worked. The row's strip, one icon's width too narrow for its name, took
+-- its natural width and ran on toward the growth over the follower (sideRoom pushed it down), and an
+-- ahead join hung from the row's live far edge. Now a row of a set count is its whole row wide for
+-- both (Anchors.RowSpan): the strip spans it, and a side follower sits past it.
+
+--- Containers 1 and 2 Icons rows of `perLine` growing left and down, 2 joined ahead-start of 1.
+local function iconRow(NS, perLine)
+    for id = 1, 2 do
+        local c = cfgOf(NS, id)
+        c.style = "icons"
+        c.layout.axis, c.layout.perLine, c.layout.growH, c.layout.growV = "horizontal", perLine, "left", "down"
+    end
+    join(NS, 2, 1, "ahead-start")
+end
+
+test("column: an ahead follower of an Icons row of a set count sits level beside the whole row, the row's strip spanning it", function()
+    local NS, mocks = fresh()
+    iconRow(NS, 11)
+    local width
+    rawset(inst(NS, 1).handle, "SetWidth", function(_, w) width = w end)
+    settle(NS, mocks, false)
+    local cfg = cfgOf(NS, 1)
+    local w = NS.Style.ElementSize(cfg)
+    local span = 11 * w + 10 * cfg.layout.spacing
+    -- red under: one icon's width, so the strip kept its natural width and ran over the follower
+    assertEqual(width, span, "the strip spans the row")
+    assertEqual(inst(NS, 1).stripOverhang, 0, "and runs past nothing")
+    local x, y, p = placed(NS, 2)
+    -- red under: TOPLEFT, the row's live far edge, and one strip row low (sideRoom)
+    assertEqual(p[1], "TOPRIGHT"); assertEqual(p[3], "TOPRIGHT", "held on the row's start side")
+    local gx = NS.Anchors.SeamOffset(NS.Anchors.EffectiveLayout(cfgOf(NS, 2)), "ahead")
+    assertEqual(x, gx - span - lead(NS, 1), "past the whole row, one gap away")
+    assertEqual(y, -lead(NS, 1), "level with it")
+    settle(NS, mocks, true)
+    x, y = placed(NS, 2)
+    assertEqual(x, gx - span - lead(NS, 1), "locked: the same spot")
+    assertEqual(y, -lead(NS, 1))
+end)
+
+test("column: an Icons row with no set count still hands its ahead follower its live far edge", function()
+    local NS, mocks = fresh()
+    iconRow(NS, 0)
+    settle(NS, mocks, true)
+    local _, _, p = placed(NS, 2)
+    assertEqual(p[3], "TOPLEFT", "no row to measure: the edge its auras reach")
+end)

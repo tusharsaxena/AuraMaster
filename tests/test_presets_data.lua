@@ -30,7 +30,7 @@ local OWNER_BAR_COLOR = {
 
 --- The join a stack member's built attach must be (defaults/Presets.lua memberAttach): a bar centered
 --- on its parent's far side along the growth and an icon row on the side its icons start, both flush
---- (x and y 0); a call-out Automatic, a small gap away.
+--- (x and y 0); a call-out Automatic, flush as well (the owner's 2026-11-17 follow-up).
 local function checkMemberJoin(o, where)
     local a, up = o.attach, o.layout.growV == "up"
     assertEqual(a.mode, "container", where .. ": attached to a container")
@@ -38,7 +38,8 @@ local function checkMemberJoin(o, where)
     if o.style == "text" then
         assertNil(a.childPoint, where .. ": a call-out keeps Automatic")
         assertNil(a.relPoint, where .. ": a call-out keeps Automatic")
-        assertTrue((up and a.y > 0) or (not up and a.y < 0), where .. ": a small gap away from the one before")
+        -- red under: the 6-unit gap, the owner's Y 0 on Defensive and Raid cooldowns
+        assertEqual(a.y, 0, where .. ": flush under the one before")
         return
     end
     -- red under: the pre-baseline gap of 6 reference units and Automatic corners
@@ -1143,14 +1144,12 @@ end)
 
 -- THE FOCUS COLUMN BESIDE THE TARGET COLUMN (spec section 17). The target column now sits 104 left of
 -- the focus column, so the two share nothing across (section 16 had them share 80 to 194 at 1080).
--- One overlap is left, recorded in docs/known-limitations.md (presets): on a 4:3 or 5:4 screen 768
--- tall, unlocked, a focus icon row's drag strip, longer than the narrowed row, overhangs it to the
--- left into the target column. Each entry, by look and screen, unlocked in test mode, is what
+-- On a 4:3 or 5:4 screen 768 tall, unlocked, a focus icon row's drag strip, longer than the narrowed
+-- row, overhung it to the left into the target column until an icon row's strip took its row's width
+-- (Anchors.RowSpan, 2026-11-17), so nothing is left. Each entry, by look and screen, unlocked in test mode, is what
 -- Advanced shares, exactly, and the most any preset may; a screen not named shares nothing where the
 -- heights meet.
-local FOCUS_OVER_RIGHT = {
-    ["icons 1024x768"] = 8, ["icons 960x768"] = 11,
-}
+local FOCUS_OVER_RIGHT = {}
 
 --- Preset `name` in style `look` on a W x H parent, unlocked in test mode: where the focus and the
 --- right stacks' heights meet, they share no more across than FOCUS_OVER_RIGHT records, and Advanced
@@ -1294,13 +1293,14 @@ end)
 -- is never in range ("the focus stack stays clear of the far stack"), nor is Player debuffs (all) above
 -- it. With the target column 50 left of the focus column (spec section 17), nothing is in range on a
 -- 1080 or a 1440-tall screen. What is left is on a 768-tall one, where the layout shrinks and the bars
--- do not, recorded in docs/known-limitations.md (presets): Weapon enchants beside the focus stack's
--- top, and, in Icons unlocked, the target stack's rows and on 5:4 a call-out, which the focus rows'
--- drag strips reach. A target outside OPEN fails.
--- Since the owner's 2026-11-17 baseline lowered the corner group, Player debuffs (all) is in range
--- there too.
+-- do not, recorded in docs/known-limitations.md (presets): in Bars, Player buffs (all) and Weapon
+-- enchants beside the focus stack's top, and since the owner's 2026-11-17 baseline lowered the corner
+-- group, Player debuffs (all). Icons reaches nothing since an icon row's drag strip spans its row
+-- (Anchors.RowSpan) instead of running past it into the target rows and the call-outs. A target
+-- outside OPEN fails.
 local SNAP_OPEN = {
-    [768] = { right = true, cornerRight = true, cornerLeft = true, middle = true },
+    -- red under: the focus rows' overhanging strips, which reached the target rows and a call-out
+    [768] = { cornerRight = true, cornerLeft = true },
     [1080] = {},
     [1440] = {},
 }

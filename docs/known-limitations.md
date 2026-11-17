@@ -294,7 +294,7 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
     strip gap. A follower flows like its chain root (L-6), so above a parent growing down it grows
     down too, and its further elements land over the parent: the before side suits a container that
     shows one aura at a time.
-  - **Overhang.** An Icons container's strip often runs wider than one element, by an amount that follows the length of its name, so for a middle or end
+  - **Overhang.** An Icons container with no set per-row count (or one per row) has a strip that often runs wider than one element, by an amount that follows the length of its name (a row of a set count spans its whole row instead, 2026-11-17), so for a middle or end
     pair the child can land sideways of what the dots showed: by half the difference between the two
     overhangs for the middle pair, by all of it for the end pair (a 36 px icon parent whose strip runs 64
     past its block, under a 36 px icon child whose strip runs 44 past, lands 10 px or 20 px off). The
@@ -341,12 +341,16 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   and whatever the follower's own alignment, so a follower at the parent's bottom end moves too even
   where nothing would meet. A follower on the other side is never pushed, since the parent's strip runs away from it. A
   strip wider than its element still runs over whatever lies beside its column in the direction its
-  lines run; only a narrow element's strip can be (batch 11 T11).
+  lines run; only a narrow element's strip can be (batch 11 T11), and an Icons row of a set count is
+  as wide as its whole row, so its strip spans that (2026-11-17) and pushes no side follower.
 - **A long container name is shortened on its strip.** The strip is as wide as its container's
   element (batch 11 T11), so a name that does not fit between the marks ends in "..." there, the TEST
   tag kept whole after it; the strip's tooltip title and the name label show it whole. An element
   narrower than the marks, the pads and 40 px of label (one icon, for example) keeps the strip's
-  natural width instead, so its name still reads, and that strip runs past the element.
+  natural width instead, so its name still reads, and that strip runs past the element. An Icons
+  row of a set per-row count counts as its whole row's width here (`Anchors.RowSpan`, 2026-11-17),
+  so its strip spans the row and runs past nothing; only an Icons container with no set count, or
+  one per row, keeps the one-icon width.
 - **The strip's X turns a container off at once, with no confirmation.** One left click writes
   `container.enabled = false` (batch 8 CX-3); the tooltip and a chat line point at its Enable this container
   checkbox on the Containers page (`/am set container.enabled true`, with it selected, works too). There is
@@ -384,8 +388,9 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   and once built they are from the last apply; the header says which (batch 10 F8).
 - **A centered or end join on a parent several elements across moves with the parent's aura
   count.** A join on the parent's center or end side is held steady while the parent is empty only on
-  an axis where the parent is exactly one element across (batch 11 T9). Where the parent is several
-  across (a row of icons under a centered follower), its center really does move as auras come and
+  an axis where the parent is exactly one element across (batch 11 T9), or across a row of a set
+  per-row count, which counts as its whole row whatever it shows (2026-11-17). Where the parent is several
+  across otherwise (a column of icons several columns wide, or a row with no set count, under a centered follower), its center really does move as auras come and
   go, and while its engine is empty that center is the middle of the engine's 1x1 rect, half a unit
   behind the parent's start once the lead is taken back, so the follower sits over the parent's start. Pick the start-side point on that parent to keep the follower still.
 - **A container joined to the side of another closes in when that parent is empty** (ruled by the
@@ -399,7 +404,9 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   mode hides it, because a previewing parent is hung by its full placeholder block. A target's
   own-buffs container is empty on almost every hostile target, so a column joined to its side
   collapses onto it for the whole fight. Attach such a column to the screen (or a named frame)
-  where it should sit, rather than to the side of a parent that is often empty.
+  where it should sit, rather than to the side of a parent that is often empty. A side follower of
+  an Icons row of a set per-row count does not close in: it sits past that whole row whatever the
+  row shows (the owner, 2026-11-17), so it stays put, and leaves the row's empty width beside it.
 - **While unlocked (and not in test mode), an empty chain is laid out from a prediction, and still
   collapses where that cannot be made.** The engine cannot say whether it is empty (its frame count
   is a pool that never shrinks, its size is secret), so the addon predicts it from `C_UnitAuras` and
@@ -524,14 +531,13 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   section 18), 21:9 does. On 16:9 and narrower it does not, so the whole cluster moves left until
   Player buffs is 10 in (62.8 at 1920 x 1080), and the narrower the screen, the further the target
   column reaches into the block. Measured unlocked in test mode, where the heights meet, over the
-  stored line width, the target column's overlap across is: 1920 x 1080, 77 in Bars and 53 in Icons;
-  1728 x 1080, 173 and 149; 1440 x 1080, 161 and 163; 1350 x 1080, 150.5 and 171; 2520 x 1080, 14
-  in Bars; 1792 x 768, 9.5 and 55; 1365 x 768, 54 and 100; 1228 x 768, 122.5 and 168; 1024 x 768,
-  114.5 and 186; 960 x 768, 107 and 177; 3360 x 1440, 19 in Bars; 2560 x 1440, 103 in Bars;
-  2304 x 1440, 231 and 127; 1920 x 1440, 216 and 160; 1800 x 1440, 202.5 and 158. The player
-  column's is 8 to 19 in Bars on every screen, and in Icons 11 to 56 where a row's drag strip
-  overhangs it, all at 1350 x 1080 or 768 tall; Player debuffs (all)'s Icons row, with its strip,
-  23 at 1024 x 768 and 29 at 960 x 768. Healer's call-out overlaps no further than Advanced's three. In game each line
+  stored line width, the target column's overlap across is: 1920 x 1080, 77 in Bars;
+  1728 x 1080, 173 and 77 in Icons; 1440 x 1080, 161 and 89; 1350 x 1080, 150.5 and 98; 2520 x 1080, 14
+  in Bars; 1792 x 768, 9.5 in Bars; 1365 x 768, 54 and 28; 1228 x 768, 122.5 and 96; 1024 x 768,
+  114.5 and 114; 960 x 768, 107 and 103; 3360 x 1440, 19 in Bars; 2560 x 1440, 103 in Bars;
+  2304 x 1440, 231 and 55; 1920 x 1440, 216 and 88; 1800 x 1440, 202.5 and 85. The player
+  column's is 8 to 19 in Bars on every screen, and none in Icons since an icon row's drag strip
+  spans its row instead of overhanging it (2026-11-17). Healer's call-out overlaps no further than Advanced's. In game each line
   sizes to fit its widest test-mode line (Size to fit, the template's), so the block is narrower than
   the stored width and the overlap smaller: at 1920 x 1080 at the owner's size it may clear the
   target column. On 4:3 and 5:4 the layout narrows across so the cluster keeps right of the center
@@ -540,18 +546,6 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   the call-out block's overlap with the target column is the recorded one") pins each figure. The
   player can move either. Recorded 2026-11-15 (AM-PR16), re-measured on AM-PR19 and on the owner's
   2026-11-17 baseline, which chose these places, for the owner's call.
-- **In Icons, Player debuffs (all) moves with Player buffs (all)'s row.** Section 17 joins Player
-  debuffs' top right to Player buffs' top left in Icons too. A bar column is one bar wide whatever
-  its count, so in Bars Player debuffs stays on its column, the focus and far stacks' left edge. An
-  Icons row grows left from the right edge and is as wide as its icon count, so Player debuffs'
-  row sits on that column only while Player buffs' row is full (10 icons at 1080 tall); with fewer
-  it starts further right, 120 further with the 5 test-mode buffs at 1920 x 1080, and with none it
-  sits next to the screen edge. Unlocked, Player buffs' drag strip, longer than its row, pushes it
-  further left. `tests/test_presets_cluster.lua` ("presets data: Player debuffs attaches by its top
-  right to Player buffs' top left") checks the join in both looks, and the edges line up in Bars
-  ("presets data: the focus, far and Player debuffs left edges line up"). A Player buffs row growing
-  right, or Player debuffs left on the screen in Icons, would hold the column, each against the
-  owner's words. Recorded 2026-11-15 (AM-PR16) for the owner's call.
 - **Other containers sit within snap range of the focus stack while unlocked.** The focus stack
   stays more than twice the snap radius (24) from the far stack on every screen tested, and since
   the target column moved left of the focus column (presets spec section 17; 104 since the owner's
@@ -559,20 +553,16 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   snap range of a focus container on a 1080 or a 1440-tall screen, locked or unlocked. On a 768-tall
   screen (UI scale off) the layout shrinks and the bars do not, so a drop that barely moves can
   attach a focus container to:
-  - Weapon enchants, 3 from Focus buffs (mine) (Advanced) and Dispellable by you on focus (Healer)
+  - Weapon enchants, 1 to 2 from Focus buffs (mine) (Advanced) and Dispellable by you on focus (Healer)
     in Bars, beside the focus stack's top, on every ratio, locked or unlocked;
+  - Player buffs (all), 1 to 2 from the same focus container in Bars;
   - since the owner's 2026-11-17 baseline lowered the corner group, Player debuffs (all), 4 from
-    Focus buffs (mine) in Bars;
-  - in Icons unlocked, Advanced's target rows, which the focus rows' drag strips reach: Target crowd
-    control and Target cooldowns, players 4 to 11 from Focus debuffs (mine) on every ratio, and on
-    4:3 and 5:4 Target cooldowns, NPCs and Target special (mine) 7 to 23 from the two focus rows;
-  - on 5:4, Offensive cooldowns, 19 from Focus debuffs (mine), in Icons unlocked.
+    Focus buffs (mine) in Bars.
 
-  On 4:3 and 5:4 at 768 tall, unlocked, a focus row's strip also overhangs the target column, 8
-  across on 4:3 and 11 on 5:4. `tests/test_presets_data.lua` ("presets data: the focus stack's snap
-  range holds only the recorded targets", and "presets data: the focus stack stays clear of the far
-  stack beyond twice the snap radius" for the overhang) fails on a target outside these stacks, or on
-  any at 1080 or 1440. A container that snaps on goes back to the screen when dragged away from every
+  Icons reaches nothing: since an icon row's drag strip spans its row (2026-11-17) the focus rows'
+  strips no longer run on into the target rows or a call-out. `tests/test_presets_data.lua`
+  ("presets data: the focus stack's snap range holds only the recorded targets") fails on a target
+  outside these stacks, or on any at 1080 or 1440. A container that snaps on goes back to the screen when dragged away from every
   container, or with Attach to set back to Screen. Recorded 2026-11-15 (AM-PR13 review), re-measured
   on AM-PR16, for the owner's call.
 - **Advanced (Bars)'s target stack runs off the top of a 768-tall screen in test mode.** Since the
@@ -626,12 +616,6 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   close. The profile latch still offers it to a new, reset or copied profile (presets spec section
   9), whatever the account latch says. `/am reset global.presets.pickerSeen` offers it again, at
   the next login, on purpose; General's Defaults does not. Recorded 2026-11-15 (AM-PR21) for the owner's call.
-- **On a 768-tall 5:4 screen, Player debuffs (all)'s drag strip reaches the call-out block in
-  Icons.** At 960 x 768 (UI scale off) the layout narrows across and the call-outs, at the owner's
-  36 since round 4, start 12 under the top edge, beside the corner group. Unlocked in test mode
-  Player debuffs' Icons row, joined to the left end of Player buffs' row, overhangs the block by 4
-  across and 38 down with its drag strip, in Advanced and Healer. Locked, and on every other screen
-  tested, the two are apart. Measured 2026-11-15 (AM-PR19) for the owner's call.
 - **Add mode's containers repeat the preset's numbers.** Since the owner's round 3 every preset
   container's name starts with its number in the owner's order, `[n] ` (presets spec section 17.4),
   counted within the preset being written. Add places a preset's containers next to the player's own

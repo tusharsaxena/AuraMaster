@@ -1093,7 +1093,7 @@ Total.
 - strip: in test mode the outline encloses the whole placeholder block only while unlocked; locked, none
 - strip: the test-mode outline moves no follower: the seam is the same locked and in test mode (SS-3)
 
-### test_anchors_column.lua (19)
+### test_anchors_column.lua (21)
 
 - column: an after follower's strip sits before its own block, like a root's, mirrored by the growth
 - column: a follower's strip stays before it whatever other followers hold its sides
@@ -1114,6 +1114,8 @@ Total.
 - column: an ahead follower stays level when its parent's strip fits its own block, and growing up it is pushed upward
 - column: a behind follower keeps its strip before it, lined up with the edge facing its parent, and is never pushed
 - column: a follower of a side follower spreads by its own strip, as any after follower does
+- column: an ahead follower of an Icons row of a set count sits level beside the whole row, the row's strip spanning it
+- column: an Icons row with no set count still hands its ahead follower its live far edge
 
 ### test_anchors_points.lua (18)
 
@@ -2617,17 +2619,18 @@ Total.
 - presets data: bar backgrounds are 50% opaque
 - presets data: names are numbered 1..N in the owner's order
 
-### test_presets_cluster.lua (9)
+### test_presets_cluster.lua (10)
 
 - presets data: Player debuffs attaches by its top right to Player buffs' top left
-- presets data: the target column sits 50 left of the focus column
+- presets data: the target column sits 104 left of the focus column
 - presets data: the target stack's base is on the far stack's bottom line and its test-mode top near Player debuffs' top
 - presets data: every bar container is as wide as Player cooldowns
 - presets data: the call-out block's overlap with the target column is the recorded one
-- presets data: the player column sits 40 from the call-out column
+- presets data: the player column reaches 14 into the call-out column
 - presets data: the target column mirrors the player column where the cluster fits
 - presets data: the cluster moves left just enough to fit on narrower screens
 - presets data: the call-out block starts at about the picker's top
+- presets data: Advanced on the owner's screen is their SmokeTest profile
 
 ### test_presets_apply.lua (11)
 
@@ -2804,7 +2807,7 @@ Total.
 
 - prose: no authored file carries a British spelling from localization-§5's published list
 - prose: the gate carries localization-§5's two lists whole, and nothing of its own
-- prose: the exclusions this repository declared suppressed 19 of 274 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (19): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, and 16 more (list bounded)
+- prose: the exclusions this repository declared suppressed 19 of 279 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (19): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, and 16 more (list bounded)
 - prose: no path this repository narrows the gate by is loaded by a TOC
 - prose: every path this repository narrows the gate by is one .pkgmeta keeps out of the zip
 - prose self-test: the carve-out suppresses the named generated folder, and only it
@@ -2992,7 +2995,7 @@ Total.
 | test_anchors_close.lua | 6 |
 | test_anchors_label.lua | 23 |
 | test_anchors_strip.lua | 7 |
-| test_anchors_column.lua | 19 |
+| test_anchors_column.lua | 21 |
 | test_anchors_points.lua | 18 |
 | test_anchors_steady.lua | 8 |
 | test_anchors_collapse.lua | 9 |
@@ -3059,7 +3062,7 @@ Total.
 | test_poolsetup.lua | 4 |
 | test_defaults.lua | 31 |
 | test_presets_data.lua | 29 |
-| test_presets_cluster.lua | 9 |
+| test_presets_cluster.lua | 10 |
 | test_presets_apply.lua | 11 |
 | test_presets_preview.lua | 20 |
 | test_presets_seed.lua | 8 |
@@ -3082,4 +3085,4 @@ Total.
 | test_skin_switch.lua | 34 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2528** |
+| **Total** | **2531** |
