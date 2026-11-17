@@ -32,7 +32,7 @@ check's number is not reused. Checks with no recorded pass, and checks new or co
 | SKIN-1 to SKIN-53 | Skins | The skinning rollout: the one-time HUD reset under Ka0s Default, Ka0s Default otherwise unchanged, the Skin tab, each skin on the HUD, the unlock furniture, the settings pages and the tool windows, other addons stock, the font and texture companions and overrides, combat, EllesmereUI on, off and back, the copy, profiles, tooltips and popups, the first-run skin picker; the library follow-ups (each skin's HUD face, Ignore fonts on the HUD, the picker's title, the strings newly in the skin's face); the skin fonts run (the Font outline, From skin flags, `/am skin`, width parity, the HUD size scale, the own faces and glow back, the strips' re-fit) |
 | DEGRADED-1 | Library-absent install | The launcher libraries missing |
 | LOC-1 to LOC-2 | Non-English client | Spell names from the client, adding a spell by its localized name |
-| PRESETS-1 to PRESETS-41 | Presets | Each client: a new profile's Simple seed at the real screen size, the first-run preset picker before the skin picker (Escape, Not now, Empty), each preset in each style, Apply in Replace and Add, Stop preview, leaving the tab, closing the panel, a `/reload`, a profile switch and combat mid-preview, `/am preset` and its confirm, another Ka0s addon's skin picker, the cost of a swap, an existing profile after schema v19; the owner's round 1: the side stacks growing up, the corner group's place, the call-outs' look and place, the picker on the skin picker's spot with the call-outs clear of it, the side stacks' lower base, opened unlocked, its lock and test buttons, Apply locking, Not now putting the lock back; the owner's round 2: the call-outs' glow, the focus stack of its own and its clearance from the far stack, Player debuffs lined up with the focus column, the Presets tab on the General page; the owner's round 3: the right-hand cluster lined up, Player debuffs attached to Player buffs, equal bar widths, debuff bars colored by dispel type over a 50% background, the numbered names, the unlock hint in chat; the owner's round 4: the player stack nearer the center, the target cluster mirroring it, the call-outs at the picker's top, the picker once per account for existing players and never twice for a new one; the owner's round 5: every pick unlocking and turning test mode on, Empty previewing an empty screen |
+| PRESETS-1 to PRESETS-44 | Presets | Each client: a new profile's Simple seed at the real screen size, the first-run preset picker before the skin picker (Escape, Not now, Empty), each preset in each style, Apply in Replace and Add, Stop preview, leaving the tab, closing the panel, a `/reload`, a profile switch and combat mid-preview, `/am preset` and its confirm, another Ka0s addon's skin picker, the cost of a swap, an existing profile after schema v19; the owner's round 1: the side stacks growing up, the corner group's place, the call-outs' look and place, the picker on the skin picker's spot with the call-outs clear of it, the side stacks' lower base, opened unlocked, its lock and test buttons, Apply locking, Not now putting the lock back; the owner's round 2: the call-outs' glow, the focus stack of its own and its clearance from the far stack, Player debuffs lined up with the focus column, the Presets tab on the General page; the owner's round 3: the right-hand cluster lined up, Player debuffs attached to Player buffs, equal bar widths, debuff bars colored by dispel type over a 50% background, the numbered names, the unlock hint in chat; the owner's round 4: the player stack nearer the center, the target cluster mirroring it, the call-outs at the picker's top, the picker once per account for existing players and never twice for a new one; the owner's round 5: every pick unlocking and turning test mode on, Empty previewing an empty screen; the SmokeTest baseline (Advanced), an icon row's side follower; the picker's footer on the library's (LibKa0s#89) |
 | FOREVER-1 to FOREVER-15 | WoW Forever | Each check names its client: the AddOns list and a clean load on Forever, the default skin per client, a rank-1 aura in a buff container, Forever's own spell lists, each Blizzard token and flag row measured on Forever, the gate on an empty category, hiding the Blizzard buff and debuff frames, weapon enchants, a typed cast id rewritten, and the Retail regression |
 
 ## Before you start
@@ -2834,7 +2834,7 @@ Intermediate - 8 containers, Advanced - 20 containers, Healer - 9 containers) wi
 Bars / Icons switch, one line describing the pick, the buttons **Containers: unlocked** and **Test
 mode: off**, **Apply** and **Not now**, and the footer "Change it later on General >
 Presets. The skin picker opens next." (without its second sentence when the skin picker is not due,
-PRESETS-40). Opening it previews nothing: test mode stays off and Simple is
+PRESETS-40) along the window's bottom edge, under a thin rule (PRESETS-44). Opening it previews nothing: test mode stays off and Simple is
 on screen. The skin picker does not show while this window is up. Drag the window → it moves and
 stays on screen. Pick **Intermediate** → its containers replace Simple, test mode turns on, and the
 line "On your screen now, filled with sample auras. Nothing is saved until Apply." appears. Pick
@@ -3299,6 +3299,17 @@ to [01]'s right, as before. Back to Top right / Top left. Lock → `/am test` of
 none, [03] does not slide toward the screen edge. Apply **Simple**, **Intermediate** and **Healer**
 in Icons → the same for their Player debuffs (all). No Lua error. Result:
 
+**PRESETS-44. The picker's footer is the library's. Client: Retail, then WoW Forever.** `/am preset`
+→ along the window's bottom edge a footer about 24 px tall with no band of its own (the window's
+background shows through), a thin rule along its top meeting the window's edges, and the line
+"Change it later on General > Presets." in the muted gray, left-aligned, on one line and not cut
+off (on a new character's first-run showing it reads "... The skin picker opens next.", PRESETS-2:
+whole, or ending in "..." if it does not fit; note which). **Apply** and **Not now** end a small gap
+above the rule, nothing drawn under it. Switch the skin (General → Skin) to **Glass** and to **WoW
+Forever** → the rule and the line take each skin's colors, the footer's height stays the same. The
+window's other text, tooltips and buttons are as before. No Lua error. Close it with **Not now**.
+Result:
+
 ## WoW Forever
 
 Every check here names its client. Most run on a live **WoW Forever** client (1.60.1, interface
@@ -3584,3 +3595,8 @@ Open from the owner's 2026-11-17 SmokeTest baseline and its follow-up: PRESETS-4
 SmokeTest profile; the owner saw it match in game on 2026-11-17, before the call-outs' Y went to 0)
 and PRESETS-43, new: an Icons row of a set per-row count now spans its whole row with its drag strip,
 and a container joined to its side sits past that whole row, level with it, whatever it shows.
+
+Open from the LibKa0s v1.105.0 adoption (Ka0sAddonsCommonTasks `docs/2026-11-17-LIBKA0S_V1_105_ADOPTION/`,
+AD-89-AM): PRESETS-44 is new, and PRESETS-2 now places the footer on the window's bottom edge. The
+picker's footer line is the library's `W.Footer` (24 px, no fill, a hairline in the skin's divider).
+Their `Result:` lines are empty until the owner runs them.

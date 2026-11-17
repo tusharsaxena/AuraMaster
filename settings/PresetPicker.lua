@@ -77,7 +77,8 @@ local addonName, NS = ...
 -- makes take it down (a profile event would otherwise let it write into a profile it never counted).
 --
 -- BUILT FROM THE LIBRARY'S PIECES: the window's shell and close mark through core/CoreSetup.lua's
--- seams (NS.ApplySkin, NS.MakeCloseButton), the dropdown is LibKa0s-Widgets-1.0's, and every
+-- seams (NS.ApplySkin, NS.MakeCloseButton), the dropdown and the footer are LibKa0s-Widgets-1.0's
+-- (the footer W.Footer, FOOTER.HEIGHT tall on the window's bottom edge, LibKa0s#89), and every
 -- button, tab and string is painted through this owner's skin facade (NS.Skin), each member guarded
 -- so the degraded facade draws stock frames. DIALOG strata, as the skin picker (frame-layering-§1);
 -- toplevel, and on show it re-raises any shown StaticPopup, so it never buries a confirm
@@ -489,6 +490,37 @@ local function buildChrome(f)
     f.owner:SetText("Ka0s Aura Master")
 end
 
+-- The footer's height with no library: the figure Widgets publishes (FOOTER.HEIGHT, minor 27).
+local FOOTER_FALLBACK_H = 24
+
+--- The footer's height, read where LibKa0s-Widgets-1.0 publishes it (FOOTER.HEIGHT, skin-invariant:
+--- standalone-windows, *Window chrome geometry*), never copied here.
+local function footerHeight()
+    local F = KW and KW.FOOTER
+    return type(F) == "table" and tonumber(F.HEIGHT) or FOOTER_FALLBACK_H
+end
+
+--- The window's footer (standalone-windows, *The footer*, LibKa0s#89): the library's W.Footer on the
+--- window's bottom edge, no fill under a hairline in the skin's `divider`, its left line the "change
+--- it later" hint in `text.muted`, painted from this addon's skin. Without the library (a degraded
+--- install), a bare frame of the same height with the same `left` line and `SetLeft`, so the layout
+--- and the text read the same.
+local function buildFooter(f)
+    if KW and type(KW.Footer) == "function" then
+        f.footer = KW.Footer(f, { owner = addonName })
+        return
+    end
+    local foot = CreateFrame("Frame", nil, f)
+    foot:SetPoint("BOTTOMLEFT", f, "BOTTOMLEFT", 0, 0)
+    foot:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", 0, 0)
+    foot:SetHeight(FOOTER_FALLBACK_H)
+    foot.left = fontString(foot, "GameFontHighlightSmall", "muted")
+    foot.left:SetPoint("LEFT", foot, "LEFT", 8, 0)
+    foot.left:SetPoint("RIGHT", foot, "RIGHT", -8, 0)
+    foot.SetLeft = function(self, text) self.left:SetText(type(text) == "string" and text or "") end
+    f.footer = foot
+end
+
 local function buildBody(f)
     buildDropdown(f)
     buildSwitch(f)
@@ -502,7 +534,7 @@ local function buildBody(f)
     f.testToggle = textButton(f, "", function() toggleTest() end)
     f.apply = textButton(f, L["Apply"], function() apply() end, { primary = true })
     f.notNow = textButton(f, L["Not now"], function() dismiss() end)
-    f.footer = fontString(f, "GameFontDisableSmall", "disabled")
+    buildFooter(f)
 end
 
 local function build()
@@ -568,8 +600,8 @@ local function layout(f)
     local applyW = WIDTH - 2 * PAD - 90 - 6
     stack(f, y, f.apply, ROW_H, PAD, applyW)
     y = stack(f, y, f.notNow, ROW_H, PAD + applyW + 6, 90)
-    y = stack(f, y, f.footer, 28)
-    f:SetHeight(y + PAD - GAP)
+    -- The body ends a row gap above the footer, which sits on the bottom edge (W.Footer).
+    f:SetHeight(y + footerHeight())
 end
 
 --- The lock and test-mode buttons say what is so now.
@@ -590,7 +622,7 @@ function refresh()
     f.blurb:SetText(BLURBS[state.sel])
     f.status:SetShown(not empty and state.owns and NS.Presets.IsPreviewing())
     paintToggles(f)
-    f.footer:SetText(NS.SkinPickerDue and NS.SkinPickerDue()
+    f.footer:SetLeft(NS.SkinPickerDue and NS.SkinPickerDue()
         and L["Change it later on General > Presets. The skin picker opens next."]
         or L["Change it later on General > Presets."])
     layout(f)
