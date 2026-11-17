@@ -196,7 +196,7 @@ Five starting points for a profile's containers (spec
   moves left, the target column still meets the call-out block (`docs/known-limitations.md`, with the
   measured figures).
 - **Names and the bar look** (spec section 17.3 and 17.4). `Build` writes `[n] ` in front of each
-  role's localized name, `n` its index in the tier's list, so creation order (`containerOrder`) is
+  role's localized name, `n` its index in the tier's list in two digits (`[01]`, so a name sort keeps it), so creation order (`containerOrder`) is
   the numbering: each tier lists its roles in the owner's order (advanced-source.md's brackets), a
   shorter tier numbers 1..N with no gap, and a role the owner's profile lacks stands in the slot of
   the one it replaces. Add mode's " (2)" suffix still follows the whole name. `sizeTo` writes the
