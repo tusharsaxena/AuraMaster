@@ -4,7 +4,7 @@
 ![CurseForge Version](https://img.shields.io/curseforge/v/1698345)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-2531%2F2531_passing-green)
+![Tests](https://img.shields.io/badge/Tests-2541%2F2541_passing-green)
 
 Supports Retail and WoW Forever. Aura Master lets you build your own buff and debuff displays. Each one is a container. You pick
 whose auras it shows (yours, your target's, your focus's or your pet's), whether it shows buffs,
@@ -52,7 +52,9 @@ following that one as it grows: the other container's handle lights up with a gr
 let go, and holding Shift as you drop places it without attaching. To detach one, drag it away until
 the marks turn red and let go; let go sooner and it snaps back. Test mode (`/am test`, or the
 checkbox on General → Master controls) fills every container with sample auras, so you can see what
-you're building without waiting for a real buff. It switches itself off when combat starts.
+you're building without waiting for a real buff. While it is on, an amber "Test mode" strip sits on
+top of each container (or of each chain of attached ones), so the samples never pass for your own
+auras. It switches itself off when combat starts.
 
 **Presets** give you a whole set of containers in one go: Simple (3), Intermediate (8), Advanced (20,
 with cooldown call-outs in the middle of the screen, the full target stack and two special lists you

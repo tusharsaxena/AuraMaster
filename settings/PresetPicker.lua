@@ -525,6 +525,11 @@ local function buildBody(f)
     buildDropdown(f)
     buildSwitch(f)
     f.blurb = fontString(f, "GameFontHighlightSmall")
+    -- What comes after this window, on a first-run showing with the skin picker still due: a body
+    -- line of its own under the blurb, not the footer's, whose one unwrapped line it would overrun
+    -- (W.Footer's left line truncates; the review of AD-89-AM).
+    f.nextHint = fontString(f, "GameFontHighlightSmall", "muted")
+    f.nextHint:SetText(L["The skin picker opens next."])
     -- A row of its own, so the line shows and hides as one frame while a preview is up.
     f.status = CreateFrame("Frame", nil, f)
     f.status.text = fontString(f.status, "GameFontNormalSmall", "accent")
@@ -594,6 +599,7 @@ local function layout(f)
         y = stack(f, y, f.styleIcons, ROW_H, PAD + half, half)
     end
     y = stack(f, y, f.blurb, 44)
+    if f.nextHint:IsShown() then y = stack(f, y, f.nextHint, 14) end
     if f.status:IsShown() then y = stack(f, y, f.status, 28) end
     stack(f, y, f.lockToggle, ROW_H, PAD, half - 3)
     y = stack(f, y, f.testToggle, ROW_H, PAD + half + 3, half - 3)
@@ -622,9 +628,9 @@ function refresh()
     f.blurb:SetText(BLURBS[state.sel])
     f.status:SetShown(not empty and state.owns and NS.Presets.IsPreviewing())
     paintToggles(f)
-    f.footer:SetLeft(NS.SkinPickerDue and NS.SkinPickerDue()
-        and L["Change it later on General > Presets. The skin picker opens next."]
-        or L["Change it later on General > Presets."])
+    f.nextHint:SetShown((NS.SkinPickerDue and NS.SkinPickerDue()) and true or false)
+    -- One short line, so it fits the footer's single unwrapped line whole (284 px on this window).
+    f.footer:SetLeft(L["Change it later on General > Presets."])
     layout(f)
 end
 

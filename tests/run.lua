@@ -141,6 +141,7 @@ Kit.run{
         "test_anchors_close",
         "test_anchors_label",
         "test_anchors_strip",
+        "test_anchors_teststrip",
         "test_anchors_column",
         "test_anchors_points",
         "test_anchors_steady",

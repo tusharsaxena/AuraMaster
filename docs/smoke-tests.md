@@ -21,7 +21,7 @@ check's number is not reused. Checks with no recorded pass, and checks new or co
 | STATE-1 to STATE-5 | Master switch | Enable and disable, visibility, the inert disabled addon |
 | COMBAT-1 to COMBAT-7 | Combat and restrictions | Deferred changes, the settings lock, resets in combat, Mythic+ keys |
 | DIAG-1 to DIAG-22 | Debug, diagnostics, perf | The debug console, bulk `[Set]` lines, `/am diagnostics`, `/am perf`, the event trace, resizing the console, its copy window and the perf panel, the console's Diagnostics link, diagnostics turning logging on, the library's own lines (a slash refusal, a stand-down edge, the launcher's at-enable line) |
-| CONT-1 to CONT-27 | Containers | Create, duplicate, delete, rename, copy; handles, strips and the close mark; test mode (no TEST marker on a locked container, the strip's TEST tag); unit swaps; empty placeholders |
+| CONT-1 to CONT-28 | Containers | Create, duplicate, delete, rename, copy; handles, strips and the close mark; test mode (no TEST marker on a locked container, the strip's TEST tag, the docked test-mode strip); unit swaps; empty placeholders |
 | FILT-1 to FILT-67 | Filters and spell categories | Cast by, the category grids, Overrides, the add-a-spell box, aura ids, your own categories, weapon enchants and their names, the help marks' art, where spell lists apply, the Situations tab, its zones and its Unit type gate |
 | LAYOUT-1 to LAYOUT-38 | Layout | Anchor modes, attaching, chains, growth, anchor points, seams, the name label, mouse and tooltips |
 | DRAG-1 to DRAG-18 | Layout | Drag to attach (issue #22): dropping a container on another, the highlight on the target's strip, the side a drop picks, Shift, loops, detaching and its leeway (green hold, snap back, red past it), the growth-conflict popup, combat, a parent holding auras, frame-attached containers, the strip's tooltip, a drop between pulls in a key, a dropped side surviving a growth change, a drag cut short, a before-side drop with the line between the two join dots, the strip edge following the mark |
@@ -798,6 +798,21 @@ gone), an icon container growing left and a Text container. `/am unlock` → eac
 then the orange **TEST** tag (CONT-17); `/am lock` → the tag goes with the strip and no TEST appears on
 the placeholders. `/am test off` → the placeholders go. Fail: a TEST word on a locked container, a
 strip without its tag, or a Lua error. Result: Owner reported pass, 2026-10-31
+
+**CONT-28. The test-mode strip on each chain (AD-88-AM, LibKa0s#88). Client: Retail, then WoW
+Forever.** Locked, `/am test` → on top of each container that nothing sits on (a screen container, a
+chain's top), just outside its placeholders and as wide as them, an amber strip with an info mark
+and "Test mode - /am test ends it." (shortened with "..." on a one-icon container); it covers no
+placeholder and no name label (turn a container's label on: the strip sits above the label). A
+container attached under another (growing down) shows no strip of its own, and the chain's top
+carries it; on a chain growing up, the strip is on the topmost container and none sits between two
+containers. `/am unlock` → the strip sits above the drag strip, never over it, and the drag strip
+still reads its name and the orange TEST tag; drag a container toward the screen's top edge and drop
+it near the top → its strip moves under its placeholders. Hover the strip → no tooltip, and a click
+on it reaches the world. Set a container's opacity to 30% → its strip stays fully drawn. `/am test
+off` → every strip goes with the placeholders; start combat in test mode → the strips go with it.
+Fail: a strip over a bar or icon, over a label or a drag strip, between two attached containers, a
+strip left after test mode ends, or a Lua error. Result:
 
 ## Filters and spell categories
 
@@ -2832,9 +2847,9 @@ are unlocked (PRESETS-24).
 It shows Ka0s Aura Master under the title, a dropdown (Empty - no containers, Simple - 3 containers,
 Intermediate - 8 containers, Advanced - 20 containers, Healer - 9 containers) with Simple selected, a
 Bars / Icons switch, one line describing the pick, the buttons **Containers: unlocked** and **Test
-mode: off**, **Apply** and **Not now**, and the footer "Change it later on General >
-Presets. The skin picker opens next." (without its second sentence when the skin picker is not due,
-PRESETS-40) along the window's bottom edge, under a thin rule (PRESETS-44). Opening it previews nothing: test mode stays off and Simple is
+mode: off**, **Apply** and **Not now**, the line "The skin picker opens next." under the
+description (not there when the skin picker is not due, PRESETS-40), and the footer "Change it later
+on General > Presets." along the window's bottom edge, under a thin rule (PRESETS-44). Opening it previews nothing: test mode stays off and Simple is
 on screen. The skin picker does not show while this window is up. Drag the window → it moves and
 stays on screen. Pick **Intermediate** → its containers replace Simple, test mode turns on, and the
 line "On your screen now, filled with sample auras. Nothing is saved until Apply." appears. Pick
@@ -3111,7 +3126,8 @@ Dispel colors and Skin, in that order. Open the **Containers** page → its Gene
 tab, General, and no Presets tab. On General → **Presets**, pick **Advanced** → it previews, the
 status line reads "Previewing …", **Stop preview** puts your containers back, and **Apply preset…**
 asks before it keeps (PRESETS-8 to PRESETS-12 run the rest from this tab). On a new profile the
-first-run picker's footer reads "Change it later on General > Presets. The skin picker opens next."
+first-run picker's footer reads "Change it later on General > Presets.", with "The skin picker opens
+next." under its description.
 Result:
 
 The next six check the owner's round-3 feedback (presets spec section 17). The owner's screenshots
@@ -3302,9 +3318,9 @@ in Icons → the same for their Player debuffs (all). No Lua error. Result:
 **PRESETS-44. The picker's footer is the library's. Client: Retail, then WoW Forever.** `/am preset`
 → along the window's bottom edge a footer about 24 px tall with no band of its own (the window's
 background shows through), a thin rule along its top meeting the window's edges, and the line
-"Change it later on General > Presets." in the muted gray, left-aligned, on one line and not cut
-off (on a new character's first-run showing it reads "... The skin picker opens next.", PRESETS-2:
-whole, or ending in "..." if it does not fit; note which). **Apply** and **Not now** end a small gap
+"Change it later on General > Presets." in the muted gray, left-aligned, whole on one line with no
+"..." (the same on a new character's first-run showing, where "The skin picker opens next." is a line
+of its own under the description instead, PRESETS-2). **Apply** and **Not now** end a small gap
 above the rule, nothing drawn under it. Switch the skin (General → Skin) to **Glass** and to **WoW
 Forever** → the rule and the line take each skin's colors, the footer's height stays the same. The
 window's other text, tooltips and buttons are as before. No Lua error. Close it with **Not now**.
@@ -3599,4 +3615,7 @@ and a container joined to its side sits past that whole row, level with it, what
 Open from the LibKa0s v1.105.0 adoption (Ka0sAddonsCommonTasks `docs/2026-11-17-LIBKA0S_V1_105_ADOPTION/`,
 AD-89-AM): PRESETS-44 is new, and PRESETS-2 now places the footer on the window's bottom edge. The
 picker's footer line is the library's `W.Footer` (24 px, no fill, a hairline in the skin's divider).
+From the review of AD-89-AM: the footer keeps its one short line, and "The skin picker opens next."
+moved under the description (PRESETS-2, PRESETS-30 and PRESETS-44 say so). From AD-88-AM: CONT-28 is
+new, the docked test-mode strip on each chain's top.
 Their `Result:` lines are empty until the owner runs them.

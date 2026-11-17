@@ -1139,7 +1139,7 @@ end
 ---   3. else a container-attached one detaches where it was dropped, and a screen one stores its
 ---      position (Anchors.SavePosition), exactly as before issue #22.
 --- A drop that reaches here with no drag of this container live (a stray stop) does nothing.
-function Snap.Drop(container)
+local function drop(container)
     if not container.dragging then return end
     Snap.EndDrag(container)
     local cfg = container:Cfg()
@@ -1153,4 +1153,11 @@ function Snap.Drop(container)
     if attached then return detach(container, cfg) end
     debug("container %s: drop: moved", container.id)
     Anchors.SavePosition(container)
+end
+
+--- The drop (above), then the dropped container's test-mode strip placed again (AD-88-AM): the move
+--- fired no script, so the library has not re-read whether the strip must flip under the block.
+function Snap.Drop(container)
+    drop(container)
+    Anchors.PlaceTestStrip(container)
 end

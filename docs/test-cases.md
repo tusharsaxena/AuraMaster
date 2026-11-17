@@ -1093,6 +1093,17 @@ Total.
 - strip: in test mode the outline encloses the whole placeholder block only while unlocked; locked, none
 - strip: the test-mode outline moves no follower: the seam is the same locked and in test mode (SS-3)
 
+### test_anchors_teststrip.lua (8)
+
+- test strip: a locked test mode docks the library's amber strip on each root's placeholder block
+- test strip: test mode off hides it, and a container never previewed builds none
+- test strip: growing down, an after follower carries none and the chain's root carries it
+- test strip: growing up, the chain's top carries it and a container with an after follower above carries none
+- test strip: it stacks beyond the drag strip unlocked and beyond the name label locked
+- test strip: a pass that moves nothing re-places it and docks nothing
+- test strip: the drop of a drag places it again, and a parked container hides it
+- test strip: a block whose edges read secret shows no strip, and none is docked on it
+
 ### test_anchors_column.lua (21)
 
 - column: an after follower's strip sits before its own block, like a root's, mirrored by the growth
@@ -2680,12 +2691,14 @@ Total.
 - seed: the v19 step is idempotent and keeps a stored false on an unseeded profile
 - seed: the account latch needs no migration step
 
-### test_presetpicker.lua (51)
+### test_presetpicker.lua (53)
 
 - picker: due on new profile only
 - picker: the latch is a settings row, written through the seam
 - picker: shows before skin picker
-- picker: the footer names the General page's Presets tab
+- picker: the footer names the General page's Presets tab, and the body says the skin picker is next
+- picker: every footer line the window can show fits the footer's single line
+- picker: the footer is the library's W.Footer, FOOTER.HEIGHT tall, the buttons ending above it
 - picker: a profile that has seen it arms the skin picker's start as before
 - picker: an existing profile sees the picker once per account
 - picker: closing it by any route marks it shown for every profile
@@ -2807,7 +2820,7 @@ Total.
 
 - prose: no authored file carries a British spelling from localization-§5's published list
 - prose: the gate carries localization-§5's two lists whole, and nothing of its own
-- prose: the exclusions this repository declared suppressed 19 of 279 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (19): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, and 16 more (list bounded)
+- prose: the exclusions this repository declared suppressed 19 of 276 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (19): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, and 16 more (list bounded)
 - prose: no path this repository narrows the gate by is loaded by a TOC
 - prose: every path this repository narrows the gate by is one .pkgmeta keeps out of the zip
 - prose self-test: the carve-out suppresses the named generated folder, and only it
@@ -2995,6 +3008,7 @@ Total.
 | test_anchors_close.lua | 6 |
 | test_anchors_label.lua | 23 |
 | test_anchors_strip.lua | 7 |
+| test_anchors_teststrip.lua | 8 |
 | test_anchors_column.lua | 21 |
 | test_anchors_points.lua | 18 |
 | test_anchors_steady.lua | 8 |
@@ -3066,7 +3080,7 @@ Total.
 | test_presets_apply.lua | 11 |
 | test_presets_preview.lua | 20 |
 | test_presets_seed.lua | 8 |
-| test_presetpicker.lua | 51 |
+| test_presetpicker.lua | 53 |
 | test_presetpicker_titlebar.lua | 5 |
 | test_pages_presets.lua | 12 |
 | test_perf.lua | 8 |
@@ -3085,4 +3099,4 @@ Total.
 | test_skin_switch.lua | 34 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2531** |
+| **Total** | **2541** |

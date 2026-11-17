@@ -775,7 +775,8 @@ end
 
 --- The room, in container `c`'s own units, that its strip and label take on its before side: one
 --- strip row (the strip's height and its gap) for the strip while it shows, one for the label while
---- it shows. The strip and the label are frames under its anchor, in its scale, so no conversion.
+--- it shows. The test-mode strip takes none (SS-3: test mode moves no follower; see
+--- Anchors.CarriesTestStrip). The strip and the label are frames under its anchor, in its scale, so no conversion.
 furnitureRoom = function(c)
     local rows = ((DRAG and c.stripShown) and 1 or 0) + (c.labelShown and 1 or 0)
     return rows * (STRIP_H + STRIP_GAP)
@@ -1061,6 +1062,143 @@ function Anchors.Refit(container)
     handle:SetLabel(stripLabel(container, handle, cfg))
     if InCombatLockdown() then return end
     clampToHandle(container, cfg, placeHandle(container, cfg))
+end
+
+-- ---------------------------------------------------------------------------
+-- The test-mode strip (AD-88-AM, LibKa0s#88)
+-- ---------------------------------------------------------------------------
+-- preview-mode's *Where the strip sits* (WowAddonStandards v2.110.0, a MUST from the re-vendor of
+-- LibKa0s v1.103.0): while test mode fills a container with placeholder auras, the container carries
+-- LibKa0s-Widgets-1.0's mode strip, the amber test flavor (this addon has no simulator, so never the
+-- cyan). The LIBRARY places it (`dock = "hud"`, Widgets minor 27): on the top edge of the placeholder
+-- block (the preview extent, Preview.Extent), outside it and spanning its width, flipped under its
+-- bottom edge while the top would leave the screen, with no mouse and one chrome band over the
+-- block. Nothing here anchors it. It is parented to the anchor, so it scales with the container and
+-- hides with it; it ignores the anchor's alpha as the drag strip does, so a faded container still
+-- reads as a test.
+--
+-- WHICH CONTAINERS. A container whose top edge another container joins carries none, and the chain's
+-- strip sits on the container at its top: growing down, every container but an after follower (whose
+-- top edge is its parent's seam); growing up, every container with no enabled after follower above
+-- it. The seam stays as it is locked (SS-3: test mode moves no follower), so a strip on a seam would
+-- cover the neighbor's first row, the very thing D-14 removed. An after follower is part of its
+-- chain's display (preview-mode: each display the player positions ON ITS OWN carries a strip), as
+-- KickCD's anchored cast bar is part of its grid's (KickCD modules/SimStrip.lua).
+--
+-- THE CLEAR FRAME: the outermost furniture on the block's top edge, which the strip stacks beyond.
+-- While unlocked that is the drag strip (outside the name label, labelPush); locked, the name label
+-- while it shows. Growing up, both sit under the block, and the library's reach comes out at 0. The
+-- strip re-docks only when that frame changes, so a visibility pass that moves nothing allocates
+-- nothing; every other pass only re-places it (`strip:Place()`), as a move of the display needs.
+--
+-- This reverses D-14's reading that a HUD display may go unmarked (WS-01): D-14 removed a TEST word
+-- drawn OVER the placeholders, where it covered a bar's name (image-35); the docked strip sits
+-- outside the block and covers nothing. The drag strip's TEST tag stays: it is lock chrome.
+-- Built lazily, on the first test mode: a container never previewed holds no strip frame. Without
+-- the library's docking there is no strip and no error.
+
+--- Whether the library can build and dock the strip (Widgets minor 27).
+local function canDockStrip()
+    return KW and type(KW.TestStrip) == "function" and type(KW.DockTestStrip) == "function" or false
+end
+
+--- The frame the strip stacks beyond (see above), or false when nothing sits on the block's edge.
+local function stripClear(container)
+    if container.handle and container.stripShown then return container.handle end
+    if container.label and container.labelShown then return container.label end
+    return false
+end
+
+--- Build `container`'s strip, born hidden, or nil without the library's docking.
+local function buildTestStrip(container)
+    if not canDockStrip() then return nil end
+    local strip = KW.TestStrip(container.anchor, {
+        -- The skin owner (skinning-§1): the wash's legibility follows this addon's skin; the amber
+        -- is the library's meaning color under every skin (skinning-§7).
+        owner = NS.name,
+        text  = NS.L["Test mode - /am test ends it."],
+        icon  = NS.Icon and NS.Icon("info") or nil,
+    })
+    if strip and strip.SetIgnoreParentAlpha then strip:SetIgnoreParentAlpha(true) end
+    return strip
+end
+
+--- Whether an enabled container joins `container`'s after side: what sits on its top edge growing up.
+local function hasAfterFollower(container)
+    local CM = NS.ContainerManager
+    for _, inst in pairs(CM and CM.instances or {}) do
+        local c = inst ~= container and inst.Cfg and inst:Cfg()
+        local at = c and c.enabled and c.attach
+        if at and at.mode == "container" and tonumber(at.container) == container.id
+            and ownSide(c) == "after" then
+            return true
+        end
+    end
+    return false
+end
+
+--- Whether `container`, previewing, carries the test-mode strip: whether nothing joins its top edge
+--- (WHICH CONTAINERS, above). Config only, so it reads no geometry.
+--- @return boolean
+function Anchors.CarriesTestStrip(container)
+    local cfg = container and container.Cfg and container:Cfg()
+    if not cfg then return false end
+    local _, growV = NS.Container.Growth(Anchors.EffectiveLayout(cfg) or {})
+    if growV == "down" then return ownSide(cfg) ~= "after" end
+    return not hasAfterFollower(container)
+end
+
+--- Whether any edge the library reads to place the strip (Widgets' placeHud: the top, the bottom and
+--- the effective scale of the block and of the clear frame) reads SECRET. A frame anchored to secret
+--- geometry answers secret numbers even out of combat (docs/midnight-quirks.md), the library's reads
+--- let a secret number through to arithmetic, and that raises; so such a container shows no strip.
+--- A nil edge (an unplaced frame) is not secret: the library keeps the strip on top.
+local function edgesSecret(frame)
+    if not frame then return false end
+    local S = NS.Secrets
+    return S.IsSecret(frame:GetTop()) or S.IsSecret(frame:GetBottom()) or S.IsSecret(frame:GetEffectiveScale())
+end
+
+--- Show `container`'s test-mode strip while `on` (it previews) and it carries one, docked on its placeholder block, and
+--- hide it otherwise. Run from Container:ApplyVisibility after the drag strip and the label, whose
+--- state picks the clear frame.
+function Anchors.UpdateTestStrip(container, on)
+    local extent = container.previewExtent
+    on = (on and extent and Anchors.CarriesTestStrip(container)) and true or false
+    local strip = container.testStrip
+    if on and not strip then
+        strip = buildTestStrip(container)
+        container.testStrip = strip
+    end
+    container.testStripShown = (on and strip) and true or false
+    if not strip then return end
+    local clear = on and stripClear(container)
+    if on and (edgesSecret(extent) or edgesSecret(clear or nil)) then
+        on = false
+        container.testStripShown = false
+    end
+    if on then
+        if container.testStripClear ~= clear or container.testStripTarget ~= extent then
+            container.testStripClear, container.testStripTarget = clear, extent
+            KW.DockTestStrip(strip, { dock = "hud", target = extent, gap = STRIP_GAP, clear = clear or nil })
+        else
+            strip:Place()
+        end
+    end
+    strip:SetShown(on)
+end
+
+--- Re-place a shown test-mode strip after its container MOVES (the drop of a drag): a move fires
+--- no script, so the library cannot see it, and the flip under the block is read again here.
+function Anchors.PlaceTestStrip(container)
+    local strip = container and container.testStripShown and container.testStrip
+    if strip and strip.Place then strip:Place() end
+end
+
+--- Hide `container`'s test-mode strip outright (Container:Park and Destroy).
+function Anchors.HideTestStrip(container)
+    if container.testStrip then container.testStrip:Hide() end
+    container.testStripShown = false
 end
 
 --- Redraw what the widget leaves to this addon after a skin switch: each strip's own edge (the host
