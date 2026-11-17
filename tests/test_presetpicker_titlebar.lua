@@ -164,6 +164,47 @@ test("preset picker title bar: the client's OnHide on the settings click closes 
     f.settings:__fire("OnClick", "LeftButton")
     rawset(f, "Hide", raw)
     -- red under: hideOnSettings's OnHide and the settings click each finishing the close
-    assertEqual(skins, 1, "the skin picker is offered once")
     assertEqual(#lines, 1, "one unlock hint: " .. table.concat(lines, " | "))
+    -- Re-pinned in the AD-86-AM review fixes: the skin picker is MODAL too, so a close made to reach
+    -- the settings offers it not now (it would cover the panel just asked for); it stays due and is
+    -- offered at the next showing. Before, this case pinned one offer.
+    -- red under: the settings mark offering the skin picker over the panel it opens
+    assertEqual(skins, 0, "the skin picker is not offered over the settings")
+end)
+
+test("preset picker title bar: the settings mark leaves the skin picker due, and Not now still offers it", function()
+    local NS, _, f = shown()
+    local skins = 0
+    NS.OpenOptionsPanel = function() end
+    NS.MaybeShowSkinPicker = function() skins = skins + 1 end
+    f.settings:__fire("OnClick", "LeftButton")
+    assertEqual(skins, 0, "no skin picker over the settings (the kit's Hide fires no OnHide)")
+    assertTrue(NS.SkinPickerDue(), "the skin picker is still due: nothing marked it seen")
+    -- red under: the settings click's skip leaking into the next close
+    NS.ShowPresetPicker()
+    assertTrue(f:IsShown(), "the picker opens again")
+    f.notNow:__fire("OnClick")
+    assertEqual(skins, 1, "a Not now close offers the skin picker, as before")
+end)
+
+test("preset picker title bar: a Core with no close still gets both marks on HeaderButtons, not overlapping", function()
+    local NS, m = freshEnv()
+    NS.Helpers.SkinPicker = function() return { spy = true } end
+    rawset(m.DEFAULT_CHAT_FRAME, "AddMessage", function() end)
+    -- The Core-absent stub (core/CoreSetup.lua): MakeCloseButton answers nil.
+    NS.MakeCloseButton = function() return nil end
+    local f = NS.MaybeShowPresetPicker()
+    assertTrue(f ~= nil and f:IsShown(), "the picker shows")
+    local hb = f.headerButtons
+    -- red under: HeaderButtons placing the gear in the corner and a hand-built X on the same point
+    assertTrue(hb.close ~= nil and hb.close == f.close, "the fallback close is HeaderButtons' close")
+    assertEqual(table.concat(hb.order, ","), "settings,close", "left to right settings, close")
+    assertEqual(hb.offsets.close, -6, "the close in the corner")
+    assertTrue(hb.offsets.settings < hb.offsets.close - 18, "the gear inward of the close, not on it")
+    assertEqual(#hb.right, 2, "the title keeps room for both marks")
+    local opened = 0
+    NS.OpenOptionsPanel = function() opened = opened + 1 end
+    f.close:__fire("OnClick")
+    assertFalse(f:IsShown(), "the fallback close still dismisses")
+    assertEqual(opened, 0, "and opens nothing")
 end)

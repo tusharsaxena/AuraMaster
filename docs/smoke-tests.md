@@ -3347,10 +3347,12 @@ lights in the skin's link color (orange under Ka0s Default); move off → gray a
 "Close" above it, and it lights red. Pick **Intermediate** (the preview shows), then click the gear →
 the picker closes as **Not now** does (the preview is restored, test mode off, the lock put back, one
 unlock hint in chat) and Aura Master's settings open, not under the picker; `/am preset` again → it
-opens, so the gear counted as a close (on a new character's first-run showing the skin picker then
-follows, as after any close). Switch the skin to **Glass** and **WoW Forever** → the gear and the X
+opens, so the gear counted as a close. On a new character's first-run showing, the gear opens the
+settings with no skin picker over them (the skin picker is MODAL too and stays due); `/reload` → the
+skin picker is offered then, and a **Not now** close of the picker still offers it at once. Switch the skin to **Glass** and **WoW Forever** → the gear and the X
 take each skin's rest and hover colors. Fail: a blank gear, the gear right of the X, the settings
-opening under a picker still up, a second unlock hint, or a Lua error. Result:
+opening under a picker still up, the skin picker covering the settings the gear opened, a second
+unlock hint, or a Lua error. Result:
 
 ## WoW Forever
 

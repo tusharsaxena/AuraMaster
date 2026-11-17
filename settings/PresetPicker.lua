@@ -36,8 +36,10 @@ local addonName, NS = ...
 -- WHEN. Once per profile, and once per account (spec section 18.5: a player whose profiles predate
 -- the presets sees it once, on whatever profile is active), before the skin picker: addon:OnEnterWorld shows it at once (it does not
 -- wait the skin picker's two seconds) and arms no skin start while it is due; every close calls
--- NS.MaybeShowSkinPicker, which shows the skin picker only now. A new, reset or copied profile is
--- offered it again after the profile event (core/AuraMaster.lua's rebuildProfile).
+-- NS.MaybeShowSkinPicker, which shows the skin picker only now, but the settings mark's: the skin
+-- picker is MODAL too and would cover the panel that close opens, so it stays due for the next
+-- showing. A new, reset or copied profile is offered it again after the profile event
+-- (core/AuraMaster.lua's rebuildProfile).
 --
 -- WHERE IT OPENS (spec section 15.1). Where the LibKa0s skin picker does: centered across, its CENTER
 -- 75% of the way up UIParent (libs/LibKa0s/OptionsSkinPicker.lua place()), the bare CENTER when
@@ -120,6 +122,7 @@ local LOOK_LABELS = { bars = L["Bars"], icons = L["Icons"] }
 local state = { sel = "simple", look = "bars", picked = false, firstRun = false, owns = false,
     lockedAtOpen = true, lockProfile = nil, open = false }
 local closing = false   -- true while this file hides the window itself, so OnHide is not a close
+local toSettings = false -- true while the settings mark closes the window: no skin picker over the panel
 local holdTarget        -- the one-shot PLAYER_REGEN_ENABLED target, while a start is held
 local pending           -- the open confirm's data ({ run, after }), nil while none is up
 
@@ -372,7 +375,7 @@ local function finish(locked)
     NS.Presets.MarkPickerSeen()
     if state.open then sayUnlockHint() end
     state.open = false
-    if NS.MaybeShowSkinPicker then NS.MaybeShowSkinPicker() end
+    if not toSettings and NS.MaybeShowSkinPicker then NS.MaybeShowSkinPicker() end
 end
 
 --- Not now, the close control, Escape: a preview this window started is restored.
@@ -474,11 +477,14 @@ local function buildSwitch(f)
 end
 
 --- The settings mark's click (LibKa0s#86): the picker is a MODAL window that would cover the panel,
---- so it goes down first, the player's close as Not now is (hideOnSettings; the client's OnHide on
---- that Hide is the close, and `state.open` keeps a second one from running where it did), then
---- this addon's settings open through the launcher's registered opener (Core's OpenSettings).
+--- so it goes down first, the player's close as Not now is (hideOnSettings, `hideForSettings` below;
+--- the client's OnHide on that Hide is the close, and `state.open` keeps a second one from running
+--- where it did), then this addon's settings open through the launcher's registered opener (Core's
+--- OpenSettings). That close offers no skin picker: it is MODAL too and would cover the panel the
+--- player asked for, so it stays due (nothing marks it seen) and is offered at the next showing.
 local function openSettingsFromPicker()
     if state.open then dismiss() end
+    toSettings = false
     if KC and type(KC.OpenSettings) == "function" and KC.OpenSettings(addonName) then return end
     if NS.OpenOptionsPanel then NS.OpenOptionsPanel() end
 end
@@ -486,21 +492,30 @@ end
 --- The title marks (standalone-windows, *Title-bar controls*, LibKa0s#86): LibKa0s-Widgets-1.0's
 --- HeaderButtons, left to right settings · close, in the top-right corner on the title band. The
 --- close is still built through core/CoreSetup.lua's one close wrapper (NS.MakeCloseButton, Core's
---- with this folder) and still dismisses; without HeaderButtons (a degraded install) the close
---- alone, placed by hand, as before.
+--- with this folder) and still dismisses; where that answers nil (Core absent, the CoreSetup stub) a
+--- plain "x" button is the close, still HeaderButtons' to place, so it never sits on the gear.
+--- Without HeaderButtons (a degraded install) the close alone, placed by hand, as before.
+local function plainClose(parent, onClick)
+    local btn = textButton(parent, "x", onClick)
+    btn:SetWidth(ROW_H)
+    return btn
+end
+
 local function buildMarks(f)
     if KW and type(KW.HeaderButtons) == "function" then
+        -- The settings mark hides this proxy before it opens the settings: the picker goes down as Not
+        -- now does, flagged so that close offers no skin picker over the panel.
+        local hideForSettings = { Hide = function() toSettings = true; f:Hide() end }
         local hb = KW.HeaderButtons(f, { owner = addonName, frame = f, point = "TOPRIGHT", y = -6,
-            makeClose = function(parent, onClick) return NS.MakeCloseButton(parent, onClick) end,
-            close = function() dismiss() end, hideOnSettings = f, settings = openSettingsFromPicker })
+            makeClose = function(parent, onClick)
+                return NS.MakeCloseButton(parent, onClick) or plainClose(parent, onClick)
+            end,
+            close = function() dismiss() end, hideOnSettings = hideForSettings,
+            settings = openSettingsFromPicker })
         f.close, f.settings = hb.close, hb.settings
-        if f.close then return hb.right end
+        return hb.right
     end
-    f.close = NS.MakeCloseButton(f, function() dismiss() end)
-    if not f.close then
-        f.close = textButton(f, "x", function() dismiss() end)
-        f.close:SetWidth(ROW_H)
-    end
+    f.close = NS.MakeCloseButton(f, function() dismiss() end) or plainClose(f, function() dismiss() end)
     f.close:SetPoint("TOPRIGHT", f, "TOPRIGHT", -6, -6)
     return { f.close }
 end
