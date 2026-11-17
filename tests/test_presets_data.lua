@@ -18,6 +18,57 @@ local CUSTOM = { SPECIAL_PLAYER = true, SPECIAL_TARGET = true }
 -- section 16).
 local UP = { left = true, right = true, far = true, focus = true }
 
+-- THE OWNER'S SMOKETEST BASELINE (their WoW Forever SmokeTest profile, 2026-11-17, on a parent 1200
+-- units tall, in reference units x 0.9): the corner, player and target heads placed by their middle
+-- on the screen's CENTER (`mid` stacks), every stack member flush on the one before it but the
+-- call-outs, and five roles in a bar color of their own.
+local MID = { cornerRight = 441, left = -153, right = -153 }
+local OWNER_BAR_COLOR = {
+    pshort = { 69, 69, 69 }, tspec = { 69, 69, 69 }, tcc = { 255, 128, 64 }, tcdp = { 230, 204, 128 },
+    wpn = { 163, 53, 238 },
+}
+
+--- The join a stack member's built attach must be (defaults/Presets.lua memberAttach): a bar centered
+--- on its parent's far side along the growth and an icon row on the side its icons start, both flush
+--- (x and y 0); a call-out Automatic, a small gap away.
+local function checkMemberJoin(o, where)
+    local a, up = o.attach, o.layout.growV == "up"
+    assertEqual(a.mode, "container", where .. ": attached to a container")
+    assertEqual(a.x, 0, where .. ": flush across")
+    if o.style == "text" then
+        assertNil(a.childPoint, where .. ": a call-out keeps Automatic")
+        assertNil(a.relPoint, where .. ": a call-out keeps Automatic")
+        assertTrue((up and a.y > 0) or (not up and a.y < 0), where .. ": a small gap away from the one before")
+        return
+    end
+    -- red under: the pre-baseline gap of 6 reference units and Automatic corners
+    assertEqual(a.y, 0, where .. ": flush along, the seam leaves the gap")
+    local h = ""
+    if o.style == "icons" then h = (o.layout.growH == "left") and "RIGHT" or "LEFT" end
+    assertEqual(a.childPoint, (up and "BOTTOM" or "TOP") .. h, where .. ": its own point")
+    assertEqual(a.relPoint, (up and "TOP" or "BOTTOM") .. h, where .. ": its parent's point")
+end
+
+--- A `mid` stack's head on a W x H parent (the owner's baseline): by its middle on the screen's
+--- CENTER, MID[stack] reference units up, a bar or a line by its CENTER on its column's middle, an
+--- icon row by the middle of the edge it grows from.
+local function checkMidHead(P, spec, W, H, where)
+    local pos, o = spec.overrides.position, spec.overrides
+    local col = P.Columns(W, H)[spec.stack]
+    local kx = P.ScaleX(W, H)
+    assertEqual(pos.relativePoint, "CENTER", where .. ": from the screen's center")
+    assertEqual(pos.y, math.floor(MID[spec.stack] * P.Scale(H) + 0.5), where .. ": its middle at the owner's height")
+    if o.style == "icons" then
+        local fromRight = o.layout.growH == "left"
+        assertEqual(pos.point, fromRight and "RIGHT" or "LEFT", where .. ": by the edge its row grows from")
+        local x = fromRight and (col.x + col.width) or col.x
+        assertEqual(pos.x, math.floor(x * kx + 0.5), where .. ": on that column edge")
+    else
+        assertEqual(pos.point, "CENTER", where .. ": by its own center")
+        assertEqual(pos.x, math.floor((col.x + col.width / 2) * kx + 0.5), where .. ": on the column's middle")
+    end
+end
+
 -- The 20 containers of docs/superpowers/specs/2026-11-14-presets/advanced-source.md, transcribed:
 -- per role, the categories the source hides, then its filter (without the spell lists), its layout
 -- (without growV, which spec sections 3 and 15 turn away from the stack's head) and its behavior.
@@ -292,7 +343,10 @@ local SCREENS, headRect, sampleSpans, rectGap = PS.SCREENS, PS.headRect, PS.samp
 -- (docs/known-limitations.md, presets).
 local CORNER = { cornerRight = true, cornerLeft = true }
 local SIDE = { left = true, right = true, far = true, focus = true }
-local SHARED_COLUMNS = { ["far|focus"] = true, ["middle|right"] = true }
+-- Since the owner's 2026-11-17 baseline the player column reaches the call-out column too, as the
+-- target column does, mirrored: 14 reference units into its stored 400, which its lines, sized to
+-- fit, do not fill.
+local SHARED_COLUMNS = { ["far|focus"] = true, ["middle|right"] = true, ["left|middle"] = true }
 
 local function columnsShared(a, b)
     local key = (a < b) and (a .. "|" .. b) or (b .. "|" .. a)
@@ -424,7 +478,7 @@ test("presets data: side stacks sit on the lower base", function()
         for _, name in ipairs(NAMES) do
             for _, look in ipairs(P.LOOKS) do
                 for _, spec in ipairs(P.Build(name, look, H * 16 / 9, H)) do
-                    if UP[spec.stack] and not spec.attachTo then
+                    if UP[spec.stack] and not spec.attachTo and not MID[spec.stack] then
                         local where = ("%s/%s %s at %d"):format(name, look, spec.role, H)
                         -- red under: the AM-PR09 base, 640 down
                         local base = baseOf(spec.stack)
@@ -437,16 +491,20 @@ test("presets data: side stacks sit on the lower base", function()
     end
 end)
 
--- The point each up stack's head hangs from: the center line, for the player stack and, since spec
--- section 18, the right-hand cluster's too (the target, far and focus columns).
-local HEAD_POINT = { left = "TOP", right = "TOP", far = "TOP", focus = "TOP" }
+-- The point each up stack's head hangs from: the center line, for the far and focus columns; the
+-- player and target heads are `mid` heads (checkMidHead).
+local HEAD_POINT = { far = "TOP", focus = "TOP" }
 
---- An up stack's spec on a parent `H` tall: a member's gap is above the one before; a head sits on
---- its stack's base by a BOTTOM point.
+--- An up stack's spec on a parent `H` tall (16:9): a member joins the one before (checkMemberJoin);
+--- a head sits on its stack's base by a BOTTOM point, or is a `mid` head.
 local function checkUpHead(P, spec, H, where)
     local o = spec.overrides
     if spec.attachTo then
-        assertTrue(o.attach.y > 0, where .. ": its gap is above the one before")
+        checkMemberJoin(o, where)
+        return
+    end
+    if MID[spec.stack] then
+        checkMidHead(P, spec, H * 16 / 9, H, where)
         return
     end
     assertTrue(o.position.point:find("^BOTTOM") ~= nil, where .. " is placed by a BOTTOM point")
@@ -473,7 +531,8 @@ test("presets data: side stacks grow up from their base", function()
             end
         end
     end
-    -- Applied, each member joins the top of the one before it, from the side its stack's lines start.
+    -- Applied, each member joins the top of the one before it: a bar centered, an icon row from the side
+    -- its stack's lines start (the owner's baseline).
     for _, name in ipairs({ "intermediate", "advanced", "healer" }) do
         for _, look in ipairs(P.LOOKS) do
             for _, e in ipairs(applied(env, name, look)) do
@@ -481,47 +540,62 @@ test("presets data: side stacks grow up from their base", function()
                     local point, rel = env.Anchors.AttachPoints(e.cfg)
                     -- A member flows as its stack's head does (Anchors.EffectiveLayout).
                     local h = (env.Anchors.EffectiveLayout(e.cfg).growH == "left") and "RIGHT" or "LEFT"
+                    if e.cfg.style == "bars" then h = "" end
                     local where = name .. "/" .. look .. " " .. e.spec.role
-                    assertEqual(point, "BOTTOM" .. h, where .. ": its bottom corner")
-                    assertEqual(rel, "TOP" .. h, where .. ": to the top corner of the one before")
+                    assertEqual(point, "BOTTOM" .. h, where .. ": its bottom (center for a bar, a corner for a row)")
+                    assertEqual(rel, "TOP" .. h, where .. ": to the same on the top of the one before")
+                    assertEqual(env.Anchors.AttachEdge(e.cfg), (h == "") and "after-center" or "after-start", where)
                 end
             end
         end
     end
-    -- The tier's first role sits nearest the base: Advanced's player stack starts with its short buffs.
+    -- The tier's first role sits nearest the base: Advanced's player stack starts with its short buffs,
+    -- its target stack with Target special (mine), numbered 10 since the owner's baseline.
     local adv = byRole(P.Build("advanced", "bars", 1920, 1080))
     assertNil(adv.pshort.attachTo, "Player buffs, short is the player stack's base")
     assertEqual(adv.pcd.attachTo, adv.pshort.index, "Player cooldowns sits on it")
+    assertEqual(adv.pspec.attachTo, adv.pcd.index, "Player special (mine) on that")
+    -- red under: Target debuffs (mine) at the base, Target special (mine) last
+    assertNil(adv.tspec.attachTo, "Target special (mine) is the target stack's base")
+    assertEqual(adv.tspec.index, 10, "numbered 10")
+    assertEqual(adv.tdeb.attachTo, adv.tspec.index, "Target debuffs (mine) sits on it")
+    assertEqual(adv.tsteal.attachTo, adv.tcdn.index, "Target stealable ends the stack")
 end)
 
 test("presets data: the corner group ends the cluster, Player buffs at least 10 in", function()
     local P = NS.PresetData
     local S = P.STACKS
     -- Spec section 18: the corner group ends the right-hand cluster, which hangs from the center line,
-    -- the target column mirroring the player column; Player buffs' right edge 1015 right of the
-    -- center line, moved left where that is not at least 10 in from the screen edge (the cluster case
-    -- "the cluster moves left just enough to fit on narrower screens"). red under: section 17's
-    -- place, hung 10 in from the right edge.
-    assertEqual(S.cornerRight.x + S.cornerRight.width, 1015, "Player buffs' right edge, from the center line")
-    assertEqual(S.cornerRight.anchor, "TOP", "the cluster hangs from the center line")
+    -- moved left where Player buffs' right edge is not at least 10 in from the screen edge (the cluster
+    -- case "the cluster moves left just enough to fit on narrower screens"). Since the owner's
+    -- baseline its head is placed by its CENTER at 892.8, 441 from the screen's center (992, 490 on
+    -- their 1200-tall screen), its right edge 1012.8 right of the center line. red under: section 18's
+    -- TOPLEFT on the center line's TOP, 46 down, ending at 1015.
+    assertNear(S.cornerRight.x + S.cornerRight.width, 1012.8, 1e-9, "Player buffs' right edge, from the center line")
+    assertEqual(S.cornerRight.anchor, "CENTER", "the cluster's corner hangs from the screen's center")
     assertEqual(S.cornerRight.width, 240, "as wide as Player cooldowns (spec section 17.2)")
     assertEqual(S.cornerLeft.width, 240, "and Player debuffs")
-    assertEqual(S.cornerRight.x - (S.cornerLeft.x + S.cornerLeft.width), 5, "the gap between the two")
+    assertNear(S.cornerRight.x - (S.cornerLeft.x + S.cornerLeft.width), 2.8, 1e-9, "the gap between the two")
     assertEqual(S.cornerLeft.beside, "cornerRight", "Player debuffs' column joins Player buffs'")
-    assertEqual(S.cornerRight.y, -6 - 40, "40 down, section 15's")
+    assertEqual(S.cornerRight.mid, 441, "its middle 441 over the screen's center, the owner's")
     local simple = byRole(P.Build("simple", "bars", 1920, 1080))
     local pos = simple.pbuffs.overrides.position
-    assertEqual(pos.relativePoint, "TOP")
-    assertEqual(pos.point, "TOPLEFT")
-    -- At 1920 x 1080 the mirror's end, 960 + 1015, is past the edge: moved 65 left, 10 in.
-    assertEqual(P.ClusterShift(1920, 1080), -65, "1920 x 1080 moves the cluster 65 left")
-    assertEqual(pos.x, S.cornerRight.x - 65)
-    assertEqual(960 + pos.x + S.cornerRight.width, 1910, "10 in from the right edge")
-    assertEqual(pos.y, -46)
+    assertEqual(pos.relativePoint, "CENTER")
+    assertEqual(pos.point, "CENTER")
+    -- At 1920 x 1080 the cluster's end, 960 + 1012.8, is past the edge: moved 62.8 left, 10 in.
+    assertNear(P.ClusterShift(1920, 1080), -62.8, 1e-9, "1920 x 1080 moves the cluster 62.8 left")
+    assertEqual(pos.x, math.floor(892.8 - 62.8 + 0.5))
+    assertEqual(960 + pos.x + S.cornerRight.width / 2, 1910, "10 in from the right edge")
+    assertEqual(pos.y, 441)
+    -- On the owner's own screen it lands where they put it.
+    local own = byRole(P.Build("simple", "bars", 3440 / 1.2, 1200)).pbuffs.overrides.position
+    assertEqual(own.x, 992, "the owner's x on their 1200-tall screen")
+    assertEqual(own.y, 490, "the owner's y")
     assertNil(simple.pdebuffs.overrides.position, "Player debuffs is not placed: it joins Player buffs")
     -- Still a corner group: it grows down, and the members hang below their heads.
     assertEqual(simple.wpn.overrides.layout.growV, "down")
-    assertTrue(simple.wpn.overrides.attach.y < 0, "Weapon enchants hangs below Player buffs")
+    checkMemberJoin(simple.wpn.overrides, "Weapon enchants hangs below Player buffs")
+    assertEqual(simple.pdebuffs.overrides.attach.x, 0, "Player debuffs flush beside Player buffs (the seam's gap)")
     assertEqual(simple.wpn.attachTo, simple.pbuffs.index, "Weapon enchants stays under Player buffs")
 end)
 
@@ -689,11 +763,8 @@ test("presets: members chain", function()
                     assertEqual(spec.attachTo, last[spec.stack], name .. " #" .. i .. " attaches to the one above")
                     assertEqual(a.mode, "container")
                     assertNil(spec.overrides.position, name .. " #" .. i .. ": a member is not placed")
-                    if UP[spec.stack] then
-                        assertTrue(a.y > 0, "a small gap above the one before")
-                    else
-                        assertTrue(a.y < 0, "a small gap below the one above")
-                    end
+                    assertEqual(spec.overrides.layout.growV, UP[spec.stack] and "up" or "down", name .. " #" .. i)
+                    checkMemberJoin(spec.overrides, name .. " #" .. i)
                 else
                     assertNil(spec.attachTo, name .. " #" .. i .. " heads its stack")
                     assertTrue(spec.overrides.position ~= nil, "a head is placed")
@@ -709,7 +780,7 @@ test("presets: advanced stacks follow the mockup", function()
         "cornerRight:pbuffs", "cornerRight:wpn", "cornerLeft:pdebuffs",
         "middle:txtOff", "middle:txtDef", "middle:txtRaid",
         "left:pshort", "left:pcd", "left:pspec",
-        "right:tdeb", "right:tbuff", "right:tcc", "right:tcdp", "right:tcdn", "right:tsteal", "right:tspec",
+        "right:tspec", "right:tdeb", "right:tbuff", "right:tcc", "right:tcdp", "right:tcdn", "right:tsteal",
         "far:ticoD", "far:ticoB", "focus:fdeb", "focus:fbuff",
     }
     local got = {}
@@ -726,11 +797,11 @@ test("presets: the layout narrows across only on a narrow screen", function()
         end
     end
     -- 4:3 at 1080: the right-hand cluster, moved left until Player buffs is 10 in (spec section 18),
-    -- is 785 wide with that 10, and keeps its left edge, the target column's, 10 units right of the
+    -- is 836.8 wide with that 10, and keeps its left edge, the target column's, 10 units right of the
     -- center line.
     local kx = P.ScaleX(1440, 1080)
     assertTrue(kx < 1, "4:3 narrows")
-    assertEqual(P.STACKS.right.x, 240, "the target column's reference place, the mirror")
+    assertEqual(P.STACKS.right.x, 186, "the target column's reference place, the mirror (the owner's baseline)")
     local right = P.Columns(1440, 1080).right
     assertNear(720 + right.x * kx, 720 + 10 * kx, 0.001, "the target column ends at the center's margin")
     assertEqual(P.ScaleX(nil, 1080), 1, "an unreadable width does not narrow")
@@ -773,9 +844,12 @@ test("presets: icons variant", function()
             local wantH = rightOfCenter[b.stack] and "left" or "right"
             assertEqual(i.overrides.layout.growH, wantH, role .. " grows away from the edge it sits nearest")
             if not b.attachTo and wantH == "left" then
-                assertEqual(i.overrides.position.point, UP[b.stack] and "BOTTOMRIGHT" or "TOPRIGHT",
-                    role .. " hangs from its column's right edge")
+                -- A `mid` head (the owner's baseline) by the middle of its right edge.
+                local want = MID[b.stack] and "RIGHT" or (UP[b.stack] and "BOTTOMRIGHT" or "TOPRIGHT")
+                assertEqual(i.overrides.position.point, want, role .. " hangs from its column's right edge")
             end
+            -- About the owner's 24, sized so the row fills its column.
+            assertTrue(math.abs(i.overrides.icons.width - 24) <= 3, role .. ": about 24 (" .. i.overrides.icons.width .. ")")
             deepEqual(i.overrides.filter, b.overrides.filter, role .. " keeps its filter")
         end
     end
@@ -989,7 +1063,7 @@ local function checkFocusSpec(specs, spec, head, where)
     assertEqual(o.layout.growV, "up", where .. " grows up")
     if head then
         assertTrue(spec.attachTo ~= nil, where .. " is attached")
-        assertTrue(o.attach.y > 0, where .. ": above the one before")
+        checkMemberJoin(o, where)
         return head
     end
     assertNil(spec.attachTo, where .. " heads the focus stack")
@@ -1067,7 +1141,7 @@ test("presets data: no bars container is laid out horizontally after Apply", fun
     assertTrue(bars > 0, "the case saw bars")
 end)
 
--- THE FOCUS COLUMN BESIDE THE TARGET COLUMN (spec section 17). The target column now sits 50 left of
+-- THE FOCUS COLUMN BESIDE THE TARGET COLUMN (spec section 17). The target column now sits 104 left of
 -- the focus column, so the two share nothing across (section 16 had them share 80 to 194 at 1080).
 -- One overlap is left, recorded in docs/known-limitations.md (presets): on a 4:3 or 5:4 screen 768
 -- tall, unlocked, a focus icon row's drag strip, longer than the narrowed row, overhangs it to the
@@ -1075,7 +1149,7 @@ end)
 -- Advanced shares, exactly, and the most any preset may; a screen not named shares nothing where the
 -- heights meet.
 local FOCUS_OVER_RIGHT = {
-    ["icons 1024x768"] = 4, ["icons 960x768"] = 11,
+    ["icons 1024x768"] = 8, ["icons 960x768"] = 11,
 }
 
 --- Preset `name` in style `look` on a W x H parent, unlocked in test mode: where the focus and the
@@ -1143,15 +1217,20 @@ local function checkColumnHeads(P, name, look, W, H)
     assertTrue(heads.focus ~= nil, where .. ": a focus head")
     -- red under: the far column 570 right of the center line
     for _, stack in ipairs({ "focus", "far" }) do
-        local h, perIcon = heads[stack], P.STACKS[stack].width / 28
+        local h, perIcon = heads[stack], P.STACKS[stack].width * kx / 24 + 1
         if h then
             local slack = (look == "icons") and perIcon or 0.001
             assertTrue(h[1] >= column - 0.001 and h[1] <= column + slack,
                 ("%s: %s's left edge %d, the column's %d"):format(where, stack, h[1], column))
             local right = column + P.STACKS[stack].width * kx
-            local rowSlack = (stack == "far") and perIcon or 0
-            assertTrue(math.abs(h[2] - right) <= 1 + rowSlack,
-                ("%s: %s's right edge %d, the column's %d"):format(where, stack, h[2], right))
+            if stack == "far" then
+                -- The far stack's rows, eight of the owner's 24 (fewer pixels where the column is
+                -- narrower), grow right from the column's left edge and stay inside it.
+                assertTrue(h[2] <= right + 1, ("%s: far's right edge %d, inside the column's %d"):format(where, h[2], right))
+            else
+                assertTrue(math.abs(h[2] - right) <= 1,
+                    ("%s: %s's right edge %d, the column's %d"):format(where, stack, h[2], right))
+            end
         end
     end
     assertTrue(column < W - 475 * kx - 0.5, where .. ": left of section 15's place")
@@ -1173,13 +1252,15 @@ local function checkColumnSpans(env, mocks, name, W, H)
     local where = ("%s/bars at %dx%d"):format(name, W, H)
     assertTrue(left ~= nil, where .. ": Player debuffs shows")
     -- red under: Player debuffs joined a few units off its column
-    assertNear(left, columnLeft(env.PresetData, "cornerLeft", W, H), 0.5, where .. ": Player debuffs on its column")
+    -- Flush beside Player buffs (the owner's x 0): the seam's 2 pixels stand for the 2.8 reference
+    -- units between the columns, so up to 2 pixels off on a 1440-tall screen.
+    assertNear(left, columnLeft(env.PresetData, "cornerLeft", W, H), 2, where .. ": Player debuffs on its column")
     local seen = 0
     for role in pairs(LINED) do
         if own[role] then
             seen = seen + 1
             -- red under: a member attached a few units off its head's left edge
-            assertNear(own[role].left, left, 0.5, where .. ": " .. role .. "'s left edge is Player debuffs'")
+            assertNear(own[role].left, left, 2, where .. ": " .. role .. "'s left edge is Player debuffs' (within the seam's rounding)")
         end
     end
     assertTrue(seen > 0, where .. ": a focus container to measure")
@@ -1216,8 +1297,10 @@ end)
 -- do not, recorded in docs/known-limitations.md (presets): Weapon enchants beside the focus stack's
 -- top, and, in Icons unlocked, the target stack's rows and on 5:4 a call-out, which the focus rows'
 -- drag strips reach. A target outside OPEN fails.
+-- Since the owner's 2026-11-17 baseline lowered the corner group, Player debuffs (all) is in range
+-- there too.
 local SNAP_OPEN = {
-    [768] = { right = true, cornerRight = true, middle = true },
+    [768] = { right = true, cornerRight = true, cornerLeft = true, middle = true },
     [1080] = {},
     [1440] = {},
 }
@@ -1270,7 +1353,17 @@ test("presets data: debuff bars color by dispel type", function()
         for _, look in ipairs(P.LOOKS) do
             for _, spec in ipairs(P.Build(name, look, 1920, 1080)) do
                 local o, what = spec.overrides, ("%s/%s %s"):format(name, look, spec.role)
-                if o.style == "bars" and o.auraType == "HARMFUL" then
+                if o.style == "bars" and OWNER_BAR_COLOR[spec.role] then
+                    -- red under: the owner's colored roles left to the dispel or blue default
+                    local want = OWNER_BAR_COLOR[spec.role]
+                    assertEqual(o.bars.colorMode, "static", what .. ": Fill > Color by is One color")
+                    assertNear(o.bars.barColor.r, want[1] / 255, 1e-9, what .. ": red")
+                    assertNear(o.bars.barColor.g, want[2] / 255, 1e-9, what .. ": green")
+                    assertNear(o.bars.barColor.b, want[3] / 255, 1e-9, what .. ": blue")
+                    assertEqual(o.bars.barColor.a, 1, what .. ": opaque")
+                    assertEqual(o.bars.barColorFromSkin, false, what .. ": the skin does not decide it")
+                    assertEqual(o.bars.useClassColorBar, false, what .. ": nor the class color")
+                elseif o.style == "bars" and o.auraType == "HARMFUL" then
                     n = n + 1
                     -- red under: a debuff bar left to the template's "static" fill
                     assertEqual(o.bars.colorMode, "dispel", what .. ": Fill > Color by is By dispel type")
@@ -1287,7 +1380,11 @@ test("presets data: debuff bars color by dispel type", function()
     assertTrue(env.Presets.Apply("advanced", "bars", "replace"))
     for _, c in ipairs(env.Database.GetContainers()) do
         if c.style == "bars" then
-            assertEqual(c.bars.colorMode, c.auraType == "HARMFUL" and "dispel" or "static", c.name)
+            local role = c.name:match("^%[%d+%] (.+)$")
+            local colored = role == env.L["Player buffs, short"] or role == env.L["Target special (mine)"]
+                or role == env.L["Target crowd control"] or role == env.L["Target cooldowns, players"]
+                or role == env.L["Weapon enchants"]
+            assertEqual(c.bars.colorMode, (c.auraType == "HARMFUL" and not colored) and "dispel" or "static", c.name)
         end
     end
 end)
@@ -1318,12 +1415,13 @@ test("presets data: bar backgrounds are 50% opaque", function()
     end
 end)
 
--- The owner's numbering (advanced-source.md brackets, spec section 17.4); a role that stands in for
+-- The owner's numbering (advanced-source.md brackets, spec section 17.4, Target special (mine) moved
+-- to 10 by their 2026-11-17 SmokeTest baseline); a role that stands in for
 -- one of the owner's takes its slot, and two that share a slot keep the order listed in TIES.
 local OWNER_RANK = {
     pbuffs = 1, wpn = 2, pdebuffs = 3, txtOff = 4, txtDef = 5, txtRaid = 6, pshort = 7,
-    pcd = 8, pcdHealer = 8, pspec = 9, tdeb = 10, healTarget = 10, dispelTarget = 10, tbuff = 11,
-    tcc = 12, tcdp = 13, tcd = 13, tcdn = 14, tsteal = 15, tspec = 16, ticoD = 17, ticoB = 18,
+    pcd = 8, pcdHealer = 8, pspec = 9, tspec = 10, tdeb = 11, healTarget = 11, dispelTarget = 11,
+    tbuff = 12, tcc = 13, tcdp = 14, tcd = 14, tcdn = 15, tsteal = 16, ticoD = 17, ticoB = 18,
     fdeb = 19, healFocus = 19, dispelFocus = 19, fbuff = 20,
 }
 local TIES = { healTarget = 1, dispelTarget = 2, healFocus = 1, dispelFocus = 2 }

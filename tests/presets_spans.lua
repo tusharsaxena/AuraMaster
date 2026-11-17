@@ -20,6 +20,25 @@ for _, h in ipairs({ 768, 1080, 1440 }) do
     for _, ratio in ipairs({ 16 / 9, 16 / 10, 21 / 9, 4 / 3, 5 / 4 }) do SCREENS[#SCREENS + 1] = { h * ratio, h } end
 end
 
+--- The height of one element of container data `o` (overrides or stored): its icon, its bar (the
+--- template's when it states none), or its line.
+local function elementHeight(o)
+    local D = NS.CONTAINER_TEMPLATE
+    if o.style == "icons" then return (o.icons and o.icons.height) or D.icons.height end
+    if o.style == "bars" then return (o.bars and o.bars.height) or D.bars.height end
+    return (o.text and o.text.height) or D.text.height
+end
+
+--- The y (a negative offset from a H-tall parent's top edge) a head placed by `pos` starts its
+--- stack at: its top, or for a head growing up (`up`) its bottom, the column's base. A head hung
+--- from the screen's CENTER (the owner's 2026-11-17 baseline) is placed by the middle of its first
+--- element, `h` tall.
+local function headEdge(pos, H, up, h)
+    if pos.relativePoint ~= "CENTER" then return pos.y end
+    local mid = -H / 2 + pos.y
+    return up and (mid - h / 2) or (mid + h / 2)
+end
+
 --- A head's span on a W x H parent, out of its stored position and size alone: [left, right] and the
 --- y it is placed at (a negative offset from the parent's top edge): its top, or for an up stack's head
 --- its bottom, the column's base. A text head's is its stored width, the column, centered on the
@@ -28,7 +47,8 @@ local function headRect(spec, W, H)
     local o, P = spec.overrides, NS.PresetData
     local pos = o.position
     local ax = (pos.relativePoint == "TOPRIGHT") and W or (W / 2)
-    assertTrue(pos.relativePoint == "TOPRIGHT" or pos.relativePoint == "TOP", "a head hangs from TOP or TOPRIGHT")
+    assertTrue(pos.relativePoint == "TOPRIGHT" or pos.relativePoint == "TOP" or pos.relativePoint == "CENTER",
+        "a head hangs from TOP, TOPRIGHT or CENTER")
     local w
     if o.style == "bars" then
         w = o.bars.width
@@ -39,10 +59,12 @@ local function headRect(spec, W, H)
         assertNear(w, P.STACKS[spec.stack].width * P.ScaleX(W, H), 1, "a text head is its column wide")
     end
     local x = ax + pos.x
-    if pos.point == "TOP" then return x - w / 2, x + w / 2, pos.y end
-    if pos.point:find("RIGHT$") then return x - w, x, pos.y end
-    assertTrue(pos.point == "TOPLEFT" or pos.point == "BOTTOMLEFT", "a head is placed by a corner")
-    return x, x + w, pos.y
+    local y = headEdge(pos, H, o.layout.growV == "up", elementHeight(o))
+    if pos.point == "TOP" or pos.point == "CENTER" then return x - w / 2, x + w / 2, y end
+    if pos.point:find("RIGHT$") then return x - w, x, y end
+    assertTrue(pos.point == "TOPLEFT" or pos.point == "BOTTOMLEFT" or pos.point == "LEFT",
+        "a head is placed by a corner or the middle of an edge")
+    return x, x + w, y
 end
 
 --- The y offset container `id`'s anchor is placed at from what it hangs from, read off the live
@@ -66,7 +88,7 @@ end
 --- added to the span, and so is the room of a member joined beside its parent, top to top (Player
 --- debuffs (all), presets spec section 17); an after member's is already in its offset, between it
 --- and its parent.
-local function spanFrom(parent, c, dy, h, room, point, rel)
+local function spanFrom(parent, c, dy, h, room, point, rel, H)
     local up = c.layout.growV == "up"
     local edge
     if parent then
@@ -74,7 +96,7 @@ local function spanFrom(parent, c, dy, h, room, point, rel)
         edge = (relTop and parent.blockTop or parent.blockBottom) + dy
         if relTop ~= (point:find("^TOP") ~= nil) then room = 0 end
     else
-        edge = c.position.y
+        edge = headEdge(c.position, H, up, elementHeight(c))
     end
     if up then return { top = edge + h, bottom = edge - room, blockTop = edge + h, blockBottom = edge } end
     return { top = edge + room, bottom = edge - h, blockTop = edge, blockBottom = edge - h }
@@ -127,7 +149,8 @@ local function union(whole, span)
 end
 
 --- The x container `c`'s own point sits at on a W-wide parent: a member's, its parent's relative
---- point (`rel`) moved on by its placed `dx`; a head's, its stored position from TOPRIGHT or TOP.
+--- point (`rel`) moved on by its placed `dx`; a head's, its stored position from TOPRIGHT, or TOP or
+--- CENTER (both on the center line).
 local function pointX(parent, c, rel, dx, W)
     if parent then return xOn(parent, hPart(rel)) + dx end
     return ((c.position.relativePoint == "TOPRIGHT") and W or W / 2) + c.position.x
@@ -159,7 +182,7 @@ local function sampleSpans(env, mocks, name, look, W, H, unlocked)
         local shown = c.enabled ~= false
         assertEqual(inst.stripShown == true, shown and unlocked == true, "the strip shows while unlocked")
         local span = spanFrom(parent, c, dy, shown and extent.height or 0, env.AnchorsAttach.furnitureRoom(inst),
-            point, rel)
+            point, rel, H)
         local over = unlocked and (inst.stripOverhang or 0) or 0
         local growH = env.Anchors.EffectiveLayout(c).growH
         spanAcross(span, point, pointX(parent, c, rel, dx, W), (env.Preview.BlockSize(c)), over, growH)
@@ -188,4 +211,5 @@ end
 
 return {
     SCREENS = SCREENS, headRect = headRect, sampleSpans = sampleSpans, rectGap = rectGap,
+    elementHeight = elementHeight,
 }
