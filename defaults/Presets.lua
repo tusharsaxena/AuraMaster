@@ -229,12 +229,10 @@ function P.Columns(parentW, parentH)
     return out
 end
 
--- The gap a call-out leaves from the one before it, in reference units (every other stack member
--- sits flush, memberAttach), and the icon size, ICON_PX square, the owner's in their 2026-11-17
--- baseline, not scaled, as a bar's height is not. An icon role (the far stack's rows) takes it
+-- The icon size, ICON_PX square, the owner's in their 2026-11-17 baseline, not scaled, as a bar's
+-- height is not. An icon role (the far stack's rows) takes it
 -- wherever its row still fits its column (smaller on a screen under about 860 tall); a bars role turned into an Icons row fits as many icons of about that size as its column
 -- holds, sized so the row fills the column (toIcons, sizeTo).
-local GAP = 6
 local ICON_PX = 24
 
 -- THE ROOM AROUND THE CALL-OUTS (spec sections 15, 15.1 and 18.3), in UIParent units: the windows are
@@ -714,19 +712,15 @@ end
 ---   an icon row by the side its icons start (after-start: BOTTOMLEFT to TOPLEFT growing up and
 ---   right, BOTTOMRIGHT to TOPRIGHT growing left), flush, since a row's width follows its count;
 ---   a call-out keeps Automatic, which centers it under a centered parent (Anchors_Attach.lua's
----   defaultToken), GAP below it.
+---   defaultToken), flush (the owner's 2026-11-17 follow-up: Y 0 on Defensive and Raid cooldowns).
 --- Flush is x and y 0: the seam already leaves the member's own spacing, and its drag strip's room
 --- while unlocked (Anchors.SeamOffset, seamRoom). Read off the member's own layout, which flows as
 --- its head's: every member of a stack shares its style family and growth (growthIn, toIcons).
 --- `container` is the writer's to fill with the new id.
-local function memberAttach(o, k)
+local function memberAttach(o)
     local at = { mode = "container", container = 0, frame = "", x = 0, y = 0 }
+    if o.style == "text" then return at end
     local up = o.layout.growV == "up"
-    if o.style == "text" then
-        local gap = math.max(1, round(GAP * k))
-        at.y = up and gap or -gap
-        return at
-    end
     local h = ""
     if o.style == "icons" then h = (o.layout.growH == "left") and "RIGHT" or "LEFT" end
     at.childPoint = (up and "BOTTOM" or "TOP") .. h
@@ -848,7 +842,7 @@ function P.Build(name, look, parentW, parentH, picked)
         local spec = { role = roleKey, stack = stackKey, overrides = o }
         if last[stackKey] then
             spec.attachTo = last[stackKey]
-            o.attach = memberAttach(o, k)
+            o.attach = memberAttach(o)
         elseif stack.beside and first[stack.beside] then
             spec.attachTo = first[stack.beside]
             o.attach = besideAttach()

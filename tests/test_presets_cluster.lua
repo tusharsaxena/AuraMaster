@@ -242,36 +242,35 @@ end)
 -- never below the widest test-mode line at the owner's 36. Each entry, by look and screen, unlocked
 -- in test mode, is how far across the two overlap where their heights meet, Advanced's exactly and
 -- the most any preset may (Healer's call-out overlaps as far across); a screen not named has none.
--- 21:9 at 768 tall in Icons shares 2: a target row's drag strip, longer than its row, overhangs it
--- toward the center line by more than the 28 pixels the 40-unit gap scales to there. Measured over the stored line width, which stands in game only where a
+-- Measured over the stored line width, which stands in game only where a
 -- line cannot be measured: with Size to fit the block is its widest line, narrower. Recorded in
 -- docs/known-limitations.md (presets).
 -- Re-measured on the owner's 2026-11-17 baseline, which moved the target column 54 nearer the center
 -- line (the mirror at 186, 14 into the stored call-out column), so it meets the block on every screen.
+-- Icons re-measured when an icon row's drag strip became its whole row's width (Anchors.RowSpan,
+-- 2026-11-17): it no longer overhangs the row toward the center line, so Icons shares less.
 local CALLOUT_OVER_RIGHT = {
-    ["bars 1792x768"] = 9.5, ["icons 1792x768"] = 55, ["bars 1365x768"] = 54, ["icons 1365x768"] = 100,
-    ["bars 1228x768"] = 122.5, ["icons 1228x768"] = 168, ["bars 1024x768"] = 114.5, ["icons 1024x768"] = 186,
-    ["bars 960x768"] = 107, ["icons 960x768"] = 177,
-    ["bars 2520x1080"] = 14, ["bars 1920x1080"] = 77, ["icons 1920x1080"] = 53, ["bars 1728x1080"] = 173,
-    ["icons 1728x1080"] = 149, ["bars 1440x1080"] = 161, ["icons 1440x1080"] = 163, ["bars 1350x1080"] = 150.5,
-    ["icons 1350x1080"] = 171,
-    ["bars 3360x1440"] = 19, ["bars 2560x1440"] = 103, ["bars 2304x1440"] = 231, ["icons 2304x1440"] = 127,
-    ["bars 1920x1440"] = 216, ["icons 1920x1440"] = 160, ["bars 1800x1440"] = 202.5, ["icons 1800x1440"] = 158,
+    ["bars 1792x768"] = 9.5, ["bars 1365x768"] = 54, ["icons 1365x768"] = 28,
+    ["bars 1228x768"] = 122.5, ["icons 1228x768"] = 96, ["bars 1024x768"] = 114.5, ["icons 1024x768"] = 114,
+    ["bars 960x768"] = 107, ["icons 960x768"] = 103,
+    ["bars 2520x1080"] = 14, ["bars 1920x1080"] = 77, ["bars 1728x1080"] = 173,
+    ["icons 1728x1080"] = 77, ["bars 1440x1080"] = 161, ["icons 1440x1080"] = 89, ["bars 1350x1080"] = 150.5,
+    ["icons 1350x1080"] = 98,
+    ["bars 3360x1440"] = 19, ["bars 2560x1440"] = 103, ["bars 2304x1440"] = 231, ["icons 2304x1440"] = 55,
+    ["bars 1920x1440"] = 216, ["icons 1920x1440"] = 88, ["bars 1800x1440"] = 202.5, ["icons 1800x1440"] = 85,
 }
 
 -- Every other stack the call-out block shares area with, unlocked in test mode (spec section 18.3 put
--- the block's top at the preset picker's, beside the corner group's): Player debuffs (all)'s Icons
--- row, with its drag strip, on a 4:3 or 5:4 768-tall screen, and since the owner's 2026-11-17
--- baseline the player column, mirroring the target column 14 into the stored 400 (its Icons rows'
--- drag strips further on a 768-tall screen). Advanced's exactly, the most any preset may. Recorded in
+-- the block's top at the preset picker's, beside the corner group's): since the owner's 2026-11-17
+-- baseline the player column in Bars, mirroring the target column 14 into the stored 400. Icons
+-- shares nothing since an icon row's drag strip spans its row (Anchors.RowSpan) instead of
+-- overhanging it. Advanced's exactly, the most any preset may. Recorded in
 -- docs/known-limitations.md (presets).
 local CALLOUT_OVER_OTHER = {
-    ["left bars 1792x768"] = 9.5, ["left icons 1792x768"] = 31, ["left bars 1365x768"] = 9.5,
-    ["left icons 1365x768"] = 31, ["left bars 1228x768"] = 9.5, ["left icons 1228x768"] = 31,
-    ["cornerLeft icons 1024x768"] = 23, ["left bars 1024x768"] = 9, ["left icons 1024x768"] = 55,
-    ["cornerLeft icons 960x768"] = 29, ["left bars 960x768"] = 8, ["left icons 960x768"] = 56,
+    ["left bars 1792x768"] = 9.5, ["left bars 1365x768"] = 9.5, ["left bars 1228x768"] = 9.5,
+    ["left bars 1024x768"] = 9, ["left bars 960x768"] = 8,
     ["left bars 2520x1080"] = 14, ["left bars 1920x1080"] = 14, ["left bars 1728x1080"] = 14,
-    ["left bars 1440x1080"] = 12, ["left bars 1350x1080"] = 11, ["left icons 1350x1080"] = 11,
+    ["left bars 1440x1080"] = 12, ["left bars 1350x1080"] = 11,
     ["left bars 3360x1440"] = 19, ["left bars 2560x1440"] = 19, ["left bars 2304x1440"] = 19,
     ["left bars 1920x1440"] = 16, ["left bars 1800x1440"] = 15.5,
 }
@@ -521,7 +520,10 @@ test("presets data: Advanced on the owner's screen is their SmokeTest profile", 
     assertEqual(adv.pdebuffs.overrides.attach.childPoint, "TOPRIGHT")
     assertEqual(adv.pdebuffs.overrides.attach.relPoint, "TOPLEFT")
     assertEqual(adv.pdebuffs.overrides.attach.x, 0, "Player debuffs flush beside Player buffs")
-    assertEqual(adv.txtDef.overrides.attach.y, -7, "a call-out 7 under the one before, the owner's")
+    -- red under: the 6-unit call-out gap (7 on the owner's screen) before their 2026-11-17 follow-up
+    for _, role in ipairs({ "txtDef", "txtRaid" }) do
+        assertEqual(adv[role].overrides.attach.y, 0, role .. ": flush under the one before, the owner's")
+    end
     assertEqual(adv.ticoB.overrides.attach.childPoint, "BOTTOMLEFT")
     assertEqual(adv.ticoB.overrides.attach.relPoint, "TOPLEFT")
     for _, role in ipairs({ "ticoD", "ticoB" }) do
