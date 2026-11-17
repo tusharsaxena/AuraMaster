@@ -325,6 +325,8 @@ if not lib then
         "LabelFont",
         "InlineButtonPair", "SessionCheckbox", "AttachTooltip", "ChoiceGrid", "ResolveId", "IdInput",
         "IdList", "Drawer", "UnnamedCandidates", "SelectTab", "NavRail", "SelectSection",
+        -- The rail's side tabs (LibKa0s v1.100.0, OptionsNav minor 7): no library, no rail.
+        "SideTabs",
         -- Keybindings tab, strata and Reset-all tooltips (OptionsKeybinds 2, OptionsCompose 8 and 11)
         "KeybindingsTab", "KeybindRows", "StrataTooltip", "ResetAllTooltip",
         -- this addon's decorations on the live instance (defined below the `return`)

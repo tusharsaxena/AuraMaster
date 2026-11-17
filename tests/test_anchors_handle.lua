@@ -285,14 +285,15 @@ test("handle: the help mark carries the tooltip and right-click opens the settin
     assertEqual(NS.State.activeContainerId, 2)
 end)
 
-test("handle: where neither the strip's rect nor the tooltip reads, the tooltip shows at the cursor, owned by UIParent, never by the strip or the mark", function()
+test("handle: where neither the strip's rect nor the tooltip reads, the tooltip is owned by UIParent at ANCHOR_NONE once per show, never at the cursor, never by the strip or the mark", function()
     -- Every anchor inherits DisableUntrustedLayoutScriptsTemplate, so the strip and its help mark sit in
     -- a restricted layout chain, and the client refuses GameTooltip:SetOwner on either: "Anchoring
     -- disallowed as dependent object would inherit forbidden aspects: UntrustedLayoutScriptExecution".
     -- The tooltip is placed beside the strip (tests/test_anchors_tooltip.lua); here the mock's strip
     -- answers no rect (so the placement would pin it beside the cursor), and the mock's tooltip scale
-    -- and screen edge do not read, so the placement declines and the widget falls back to the
-    -- cursor-following tooltip.
+    -- and screen edge do not read, so the placement declines. Since LibKa0s v1.105.0 (WidgetsDragHandleTip
+    -- minor 1, LibKa0s#92) the widget then attaches it below the strip, still owned by UIParent at
+    -- ANCHOR_NONE, and never re-owns it at the cursor (`tooltipOwner = "cursor"` is retired).
     -- red under: showTooltip owning the tooltip by the hovered frame (the old SetOwner(owner, "ANCHOR_TOP")).
     local NS, mocks = fresh()
     local inst = NS.ContainerManager.instances[2]
@@ -303,11 +304,10 @@ test("handle: where neither the strip's rect nor the tooltip reads, the tooltip 
     end)
     h:__fire("OnEnter")
     h.help:__fire("OnEnter")
-    assertEqual(#owners, 4, "the strip and the help mark both show the tooltip, each placed then re-owned")
+    assertEqual(#owners, 2, "the strip and the help mark both show the tooltip, each owned once")
     for i, o in ipairs(owners) do
         assertTrue(o.owner == mocks.UIParent, "owner " .. i .. " is UIParent")
-        assertEqual(o.anchor, i % 2 == 1 and "ANCHOR_NONE" or "ANCHOR_CURSOR",
-            "owner " .. i .. ": the placement's, then the cursor fallback")
+        assertEqual(o.anchor, "ANCHOR_NONE", "owner " .. i .. ": the placement's, with no cursor fallback")
     end
 end)
 

@@ -862,7 +862,7 @@ Total.
 - handle: a handle first shown under lockdown is placed once; the anchor's clamp still waits
 - handle: a visibility pass that changes nothing re-sets no clamp insets
 - handle: the help mark carries the tooltip and right-click opens the settings on this container
-- handle: where neither the strip's rect nor the tooltip reads, the tooltip shows at the cursor, owned by UIParent, never by the strip or the mark
+- handle: where neither the strip's rect nor the tooltip reads, the tooltip is owned by UIParent at ANCHOR_NONE once per show, never at the cursor, never by the strip or the mark
 - handle: a left-drag that starts on the help mark moves the container as one on the strip does
 - handle: with no media catalog the help mark falls back to Blizzard's information icon
 - handle: with LibKa0s absent a container has no handle at all, and every pass over it is a no-op
@@ -2734,6 +2734,14 @@ Total.
 - picker: after a /reload with the window up, Not now leaves the containers locked
 - picker: every close prints the unlock hint once
 
+### test_presetpicker_titlebar.lua (5)
+
+- preset picker title bar (ka0s): every control has a tooltip, in gtip.title, above it
+- preset picker title bar (ka0s): the close rests in icon.tint and lights close.hot
+- preset picker title bar (azeroth): every control has a tooltip, in gtip.title, above it
+- preset picker title bar (azeroth): the close rests in icon.tint and lights close.hot
+- preset picker title bar: Azeroth's close colors differ from Ka0s Default's, so the cases above can tell them apart
+
 ### test_pages_presets.lua (12)
 
 - presets tab: listed on the General page after Master controls
@@ -2799,7 +2807,7 @@ Total.
 
 - prose: no authored file carries a British spelling from localization-§5's published list
 - prose: the gate carries localization-§5's two lists whole, and nothing of its own
-- prose: the exclusions this repository declared suppressed 19 of 274 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (19): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, and 16 more (list bounded)
+- prose: the exclusions this repository declared suppressed 19 of 279 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (19): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, and 16 more (list bounded)
 - prose: no path this repository narrows the gate by is loaded by a TOC
 - prose: every path this repository narrows the gate by is one .pkgmeta keeps out of the zip
 - prose self-test: the carve-out suppresses the named generated folder, and only it
@@ -3059,6 +3067,7 @@ Total.
 | test_presets_preview.lua | 20 |
 | test_presets_seed.lua | 8 |
 | test_presetpicker.lua | 51 |
+| test_presetpicker_titlebar.lua | 5 |
 | test_pages_presets.lua | 12 |
 | test_perf.lua | 8 |
 | test_debuglogsetup.lua | 9 |
@@ -3076,4 +3085,4 @@ Total.
 | test_skin_switch.lua | 34 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2526** |
+| **Total** | **2531** |
