@@ -1688,10 +1688,16 @@ of '<A's name>'" line; the frame-attached one as DRAG-10. Rename A → B's toolt
 the next hover. Each tooltip, the strip's and its X's and "?"'s alike, sits beside the strip, its top
 level with the strip's top, a few px to the right of the strip, not at the cursor; drag D until its
 strip is near the right edge of the screen → its tooltip sits to the strip's left instead, and is never
-cut off by the screen's edge. No Lua error. Result: pass (owner-marked 2026-10-10)
+cut off by the screen's edge. ~~Attach a container under a parent that holds auras (in a dungeon,
+where aura geometry is secret) and hover its strip → its tooltip is not on the strip's top but a little
+right of where the cursor came in, its top just above the cursor, and stays put while the cursor moves
+along the strip (it does not follow it); near the screen's right edge it sits left of the cursor
+instead.~~ No Lua error. Result: pass (owner-marked 2026-10-10)
 
-AMENDED by AD-92-AM (LibKa0s#92): the cursor placement for a strip under a parent holding auras is
-retired; DRAG-19 below is the check for it now, and its result is owed.
+AMENDED by AD-92-AM (LibKa0s#92): the struck step is the text the owner passed on 2026-10-10, kept as
+the record. Its cursor placement for a strip under a parent holding auras is retired (the rule says
+never the cursor); DRAG-19 below is the check for that case now, and its result is owed. The result
+above covers the rest of this check, which is unchanged.
 
 **DRAG-12. A drop between pulls in a key.** In a Mythic+ key, out of combat between pulls (auras are
 secret there with no combat lockdown), drop E on A's side → E attaches and sits on that side of A at
@@ -1793,10 +1799,15 @@ never covering the strip; the content is unchanged (the name in gold, the drag h
 gear's own lines). Drag the container near the screen's right edge → the tooltip sits to the strip's
 left. Make the strip as wide as the screen will allow, or put it at a screen edge with a wide tooltip,
 so there is no room on either side → the tooltip sits centered above the strip. Attach a container
-under a parent that holds auras (in a dungeon, where aura geometry is secret) and hover its strip →
-the tooltip shows, above the strip or wherever the library's fallback puts it, NOT beside the cursor
-and not following it. No Lua error ("Anchoring disallowed" included). Retail and Forever.
-Result:
+under a parent that holds auras (in a dungeon, where aura geometry is secret) and hover its strip, its
+"?" and its X → the tooltip SHOWS every time, with its usual lines, beside the PARENT container (the
+nearest container up the chain whose position still reads, normally the chain's screen container):
+2 px right of it, or left of it near the screen's right edge, its top level with that container's
+top. It is NOT beside the cursor and does not follow it. Chain two containers under the parent the
+same way and hover the last one's strip → the same spot, beside the chain's first readable container.
+Attach a container to a named frame (Frame mode, e.g. `PlayerFrame`) under a parent holding auras
+→ hovering its strip shows the tooltip beside that frame. No Lua error ("Anchoring disallowed"
+included). Retail and Forever. Result:
 
 ## Bars and Icons style, fonts
 

@@ -3,8 +3,9 @@
 -- alone (issue #22, the owner's smoke feedback of 2026-10-02, kept by the owner's SR2 answer of
 -- 2026-11-17). Since AD-92-AM (LibKa0s#92) it is placed by LibKa0s-Tooltip-1.0's PlaceBeside, the
 -- strip being both the element and the group, at the library's TIP_GAP, and never at the cursor: a
--- strip whose rect reads secret or not at all is not placed by this hook (the widget's attached
--- fallback runs). Then the strip itself: BuildHandle hands the widget this placement as its
+-- strip whose rect reads secret places beside the nearest container up its stored attach chain whose
+-- anchor reads (the AD-92-AM review fix), and only a strip with nothing readable on its chain is not
+-- placed by this hook. Then the strip itself: BuildHandle hands the widget this placement as its
 -- `tooltipPlace`, for the strip and its marks alike, and no retired `tooltipOwner`.
 --
 -- RE-PINNED by AD-92-AM to standalone-windows *Tooltip placement* (WowAddonStandards v2.113.0): the
@@ -142,6 +143,101 @@ test("tooltip: a strip rect that reads secret or not at all is not placed and ne
     assertNil(Tip.Place(tipOf(200), stripAt{ left = 100, right = 300, top = 500 }))
     assertNil(Tip.Place(nil, stripAt{ left = 100, right = 300, top = 500 }), "no tooltip")
     assertNil(Tip.Place(tipOf(200), nil), "no frame")
+end)
+
+--- Stand in for the live containers: `list` maps an id to { strip = rect|nil, anchor = rect, attach = at }.
+--- Answers the instances by id; each has a strip (its `handle`, a child of its anchor), an anchor
+--- and the stored attach settings its Cfg answers.
+local function liveChain(NS, list)
+    local saved, instances = NS.ContainerManager.instances, {}
+    for id, c in pairs(list) do
+        local anchor = stripAt(c.anchor)
+        local strip = stripAt(c.strip or c.anchor)
+        function strip.GetParent() return anchor end
+        local cfg = { id = id, attach = c.attach or { mode = "screen" } }
+        instances[id] = { id = id, anchor = anchor, handle = strip, Cfg = function() return cfg end }
+    end
+    NS.ContainerManager.instances = instances
+    return instances, function() NS.ContainerManager.instances = saved end
+end
+
+test("tooltip: a strip whose rect reads secret places beside the nearest container up its attach chain that reads", function()
+    -- REVIEW FIX (AD-92-AM): a container attached under a parent holding auras reads secret, and the
+    -- widget's own attached fallback reads the same secret rect, so it left the tooltip unanchored.
+    -- The hook walks the stored attach chain instead (configuration, never a secret read back) to
+    -- the first container whose anchor reads, and places beside that one, never at the cursor.
+    local NS, mocks = fresh()
+    screen(mocks, 1920)
+    noCursor(mocks)
+    local gap = mocks.LibStub("LibKa0s-Tooltip-1.0").TIP_GAP
+    local S = mocks.__SECRET
+    local secret = { left = S, right = S, top = S, bottom = S }
+    local calls, restore = spyBeside(mocks)
+    local inst, done = liveChain(NS, {
+        [1] = { anchor = { left = 100, right = 300, top = 500 } },
+        [2] = { anchor = secret, attach = { mode = "container", container = 1 } },
+        [3] = { anchor = secret, attach = { mode = "container", container = 2 } },
+    })
+    local tip = tipOf(200)
+    -- red under: answering nil (the widget's fallback then leaves the tooltip with no anchor)
+    local ok, placed = pcall(NS.AnchorsTooltip.Place, tip, inst[3].handle)
+    assertTrue(ok, tostring(placed))
+    assertEqual(placed, true, "a two-hop chain places by the first container that reads")
+    assertTrue(calls[#calls].element == inst[1].anchor, "beside container 1's anchor")
+    assertTrue(calls[#calls].group == inst[1].anchor)
+    assertEqual(#tip.points, 1)
+    assertEqual(tip.points[1][1], "TOPLEFT")
+    assertTrue(tip.points[1][2] == mocks.UIParent, "pinned to UIParent")
+    assertEqual(tip.points[1][4], 300 + gap)
+    assertEqual(tip.points[1][5], 500)
+    -- A mark on the secret strip places the same way.
+    local mark = stripAt(secret)
+    function mark.GetParent() return inst[2].handle end
+    inst[2].handle.help = mark
+    local mt = tipOf(200)
+    assertEqual(NS.AnchorsTooltip.Place(mt, mark), true)
+    assertEqual(mt.points[1][4], 300 + gap, "the mark's strip's chain")
+    done()
+    restore()
+end)
+
+test("tooltip: a secret strip attached to a named frame places beside that frame when it reads, and only then answers nil", function()
+    local NS, mocks = fresh()
+    screen(mocks, 1920)
+    noCursor(mocks)
+    local gap = mocks.LibStub("LibKa0s-Tooltip-1.0").TIP_GAP
+    local S = mocks.__SECRET
+    local secret = { left = S, right = S, top = S, bottom = S }
+    local named = stripAt{ left = 400, right = 600, top = 800 }
+    named.GetObjectType = function() return "Frame" end
+    rawset(_G, "AMTestNamedFrame", named)
+    local inst, done = liveChain(NS, {
+        [1] = { anchor = secret, attach = { mode = "frame", frame = "AMTestNamedFrame" } },
+        [2] = { anchor = secret, attach = { mode = "container", container = 1 } },
+    })
+    local tip = tipOf(200)
+    -- red under: answering nil for a chain that ends on a readable named frame
+    assertEqual(NS.AnchorsTooltip.Place(tip, inst[2].handle), true)
+    assertEqual(tip.points[1][4], 600 + gap, "beside the named frame")
+    assertEqual(tip.points[1][5], 800)
+    -- Nothing on the chain reads (the named frame itself secret): nil, nothing anchored, no cursor.
+    local secretNamed = stripAt(secret)
+    secretNamed.GetObjectType = function() return "Frame" end
+    rawset(_G, "AMTestNamedFrame", secretNamed)
+    local none = tipOf(200)
+    local ok, placed = pcall(NS.AnchorsTooltip.Place, none, inst[2].handle)
+    assertTrue(ok, tostring(placed))
+    assertNil(placed)
+    assertEqual(#none.points, 0)
+    -- A loop in the stored settings ends the walk rather than spinning.
+    local loop, undo = liveChain(NS, {
+        [1] = { anchor = secret, attach = { mode = "container", container = 2 } },
+        [2] = { anchor = secret, attach = { mode = "container", container = 1 } },
+    })
+    assertNil(NS.AnchorsTooltip.Place(tipOf(200), loop[1].handle), "a loop answers nil")
+    undo()
+    done()
+    rawset(_G, "AMTestNamedFrame", nil)
 end)
 
 test("tooltip: the strip's rect is converted into the tooltip's own units through both scales", function()

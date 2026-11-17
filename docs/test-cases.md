@@ -884,11 +884,13 @@ Total.
 - handle: under combat lockdown the right-click is refused in gray and selects nothing (feedback #9)
 - handle: an attached container's name is a desaturated gray, to the screen it keeps the plain color (owner, 2026-09-26)
 
-### test_anchors_tooltip.lua (9)
+### test_anchors_tooltip.lua (11)
 
 - tooltip: PlaceBeside puts it TIP_GAP right of the strip, its top level with the strip's, pinned to UIParent
 - tooltip: near the right edge it flips to the strip's left, its TOPRIGHT TIP_GAP left of the strip
 - tooltip: a strip rect that reads secret or not at all is not placed and never pinned at the cursor
+- tooltip: a strip whose rect reads secret places beside the nearest container up its attach chain that reads
+- tooltip: a secret strip attached to a named frame places beside that frame when it reads, and only then answers nil
 - tooltip: the strip's rect is converted into the tooltip's own units through both scales
 - tooltip: with room on neither side of the strip it attaches centered above it (the library's fallback)
 - tooltip: a help, close or settings mark places by the strip it belongs to, not by itself
@@ -3015,7 +3017,7 @@ Total.
 | test_lifecycle.lua | 18 |
 | test_anchors.lua | 51 |
 | test_anchors_handle.lua | 29 |
-| test_anchors_tooltip.lua | 9 |
+| test_anchors_tooltip.lua | 11 |
 | test_anchors_seam.lua | 10 |
 | test_anchors_edges.lua | 14 |
 | test_anchors_hang.lua | 11 |
@@ -3118,4 +3120,4 @@ Total.
 | test_skin_switch.lua | 34 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2556** |
+| **Total** | **2558** |

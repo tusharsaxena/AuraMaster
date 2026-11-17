@@ -389,8 +389,12 @@ or its help mark, both anchored under the anchor, raises "Anchoring disallowed a
 would inherit forbidden aspects: UntrustedLayoutScriptExecution". The handle's tooltip is owned by
 `UIParent` instead, so it depends on nothing under the anchor: placed beside the strip from the strip's
 rect and anchored to `UIParent` alone by LibKa0s-Tooltip-1.0's `PlaceBeside`
-(`modules/Anchors_Tooltip.lua`, AD-92-AM). Where that rect reads secret, the widget's own attached
-fallback places it, never the cursor.
+(`modules/Anchors_Tooltip.lua`, AD-92-AM). Where that rect reads secret, the hook places it beside
+the nearest container up the strip's stored attach chain whose anchor reads (or the named frame the
+chain ends on, when that reads), never the cursor. The widget's own attached fallback cannot stand in
+there: it reads the same secret rect, and its relative point into the restricted tree is refused,
+which leaves a shown tooltip with no anchor, so it never renders. Only a chain whose every link reads
+secret (it ends on a named frame that is itself secret) still has no tooltip.
 
 ## Groups are add-only, and some setters reset a group
 
@@ -988,8 +992,9 @@ does not set the flag.
   anchored under the anchor, the drag handle and its help mark included, and the client refuses
   `GameTooltip:SetOwner` on any of them ("Anchoring disallowed as dependent object would inherit
   forbidden aspects: UntrustedLayoutScriptExecution"). The handle's tooltip is therefore owned by
-  `UIParent` and anchored to `UIParent` beside the strip (`modules/Anchors_Tooltip.lua`), or follows
-  the cursor where the strip's rect reads secret.
+  `UIParent` and anchored to `UIParent` beside the strip (`modules/Anchors_Tooltip.lua`), or, where the
+  strip's rect reads secret, beside the nearest readable container up its stored attach chain (never
+  the cursor).
 - **Anchors stay out of the client's layout cache.** An anchor is movable (a handle drag moves it
   with `StartMoving`), and the client saves a movable frame's position and restores it at login.
   `Container.New` calls `SetDontSavePosition(true)`, so the stored `container.position` is the only

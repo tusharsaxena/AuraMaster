@@ -621,8 +621,16 @@ client's.
   above the strip. The strip's rect goes in through `opts.rect`, read through `NS.Secrets`, and
   `comparisons = false`. The tooltip is owned by `UIParent` and pinned to `UIParent` alone, because
   the anchor's restricted tree refuses an anchor (`docs/midnight-quirks.md`). Where the strip's rect
-  reads secret, the hook places nothing and the widget's own attached fallback runs. The cursor pin
-  of 2026-10-03 and the retired `tooltipOwner = "cursor"` are gone.
+  reads secret (a container attached under a parent holding auras), the hook walks the strip's
+  container's **stored** attach chain, configuration rather than points read back off a secret frame,
+  and places the tooltip beside the anchor of the first container up it whose rect reads, or beside
+  the named frame the chain ends on when that one reads. A chain rooted on the screen always reads at
+  its root, whose anchor hangs from `UIParent` alone. The widget's own attached fallback is no help
+  there: it reads the same secret rect, its relative point into the restricted tree is refused, and the
+  tooltip is left with no anchor, so it never renders (`dhPlaceAttached` in the vendored
+  `WidgetsDragHandleTip.lua`). The hook therefore answers nil only when nothing on the chain reads (a
+  chain ending on a named frame that is itself secret), the one case still left with no tooltip. The
+  cursor pin of 2026-10-03 and the retired `tooltipOwner = "cursor"` are gone.
 - **The library's own sites** follow the rule in the library. These are the preset picker's
   title-bar marks (`W.HeaderButtons`), every close (`AttachTitleTip`), the launcher's minimap tooltip
   (`PlaceLauncher`, launcher-§7), the skin picker, the sim panel and the menus.

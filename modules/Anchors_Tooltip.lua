@@ -27,9 +27,17 @@ local _, NS = ...
 -- converted to screen units by the strip's own effective scale (a container carries its own scale).
 --
 -- WHERE THE STRIP DOES NOT READ (a container attached under a parent holding auras: its whole tree
--- reads secret, docs/midnight-quirks.md) this hook places nothing and answers nil, so the widget's
--- attached fallback runs. The cursor pin this file once used there (the owner's option B,
--- 2026-10-03) is retired: the rule says never the cursor.
+-- reads secret, docs/midnight-quirks.md) the tooltip goes beside the NEAREST CONTAINER UP THE STRIP'S
+-- ATTACH CHAIN WHOSE ANCHOR READS (AD-92-AM review fix), or beside the named frame the chain ends on
+-- when that one reads. The chain comes from the stored attach settings (configuration, never a point
+-- read back off a secret frame); the first anchor that reads is the group and the element, through
+-- the same PlaceBeside and opts.rect. A chain rooted on the screen always reads at its root, whose
+-- anchor hangs from UIParent alone. The widget's own attached fallback is no help there: it reads the
+-- same secret rect, and its relative point into the restricted tree is refused, which leaves the
+-- tooltip with no anchor at all (libs/LibKa0s/WidgetsDragHandleTip.lua, dhPlaceAttached). So this hook
+-- answers nil only when nothing on the chain reads (a chain ending on a named frame that is itself
+-- secret), and only then does the tooltip go unshown. The cursor pin this file once used for an
+-- unreadable strip (the owner's option B, 2026-10-03) is retired: the rule says never the cursor.
 --
 -- LOAD-BEARING POSITION: before modules/Anchors.lua, which binds NS.AnchorsTooltip.Place at file load
 -- as the strip's `tooltipPlace`.
@@ -69,15 +77,58 @@ end
 
 local OPTS = { rect = stripRect, comparisons = false }
 
+--- Whether `frame`'s whole rect reads plain.
+local function reads(frame)
+    return type(frame) == "table" and stripRect(frame) ~= nil
+end
+
+--- The live container whose strip `strip` is, or nil (a strip this addon did not build).
+local function containerOf(strip)
+    local CM = NS.ContainerManager
+    for _, c in pairs(CM and CM.instances or {}) do
+        if c.handle == strip then return c end
+    end
+    return nil
+end
+
+--- The frame the tooltip places by: the strip when its rect reads; else, walking the strip's
+--- container's STORED attach chain (configuration, never a point read off a secret frame), the
+--- anchor of the first container up it whose rect reads, or the named frame the chain ends on when
+--- that one reads. Nil when nothing on the chain reads, or on a loop (the walk stops at 64 hops or at
+--- a container already seen).
+local function hostOf(strip)
+    if reads(strip) then return strip end
+    local c, seen = containerOf(strip), {}
+    while c and not seen[c] do
+        seen[c] = true
+        local cfg = type(c.Cfg) == "function" and c:Cfg() or nil
+        local at = cfg and cfg.attach
+        if not at then return nil end
+        if at.mode == "frame" then
+            local A = NS.Anchors
+            local f = A and A.ResolveFrame and A.ResolveFrame(at.frame)
+            if reads(f) then return f end
+            return nil
+        end
+        if at.mode ~= "container" then return nil end
+        local CM = NS.ContainerManager
+        c = CM and CM.instances and CM.instances[tonumber(at.container)]
+        if c and reads(c.anchor) and not seen[c] then return c.anchor end
+    end
+    return nil
+end
+
 --- The strip's `tooltipPlace`: put `tip` beside the strip `frame` belongs to through the library's
---- PlaceBeside (the strip as element and group), or above it when neither side has room.
---- @return true|nil  true when placed; nil (the widget's attached fallback) when a read was secret
---- or missing, or the Tooltip major is absent
+--- PlaceBeside (the strip as element and group), or above it when neither side has room. A strip that
+--- reads secret places by its nearest readable host up its attach chain (hostOf).
+--- @return true|nil  true when placed; nil (the widget's attached fallback) when nothing on the
+--- chain reads, the tooltip or screen does not read, or the Tooltip major is absent
 function Tip.Place(tip, frame)
     if not (tip and frame) then return nil end
     local Lib = LibStub and LibStub("LibKa0s-Tooltip-1.0", true)
     if not (Lib and Lib.PlaceBeside) then return nil end
-    local strip = Tip.StripOf(frame)
-    if Lib.PlaceBeside(tip, strip, strip, OPTS) then return true end
+    local host = hostOf(Tip.StripOf(frame))
+    if not host then return nil end
+    if Lib.PlaceBeside(tip, host, host, OPTS) then return true end
     return nil
 end

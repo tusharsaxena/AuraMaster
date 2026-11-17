@@ -552,8 +552,9 @@ end
 --- frame anchored under it: the strip and the marks. GameTooltip does not inherit the template, so the
 --- client refuses SetOwner on either ("Anchoring disallowed as dependent object would inherit
 --- forbidden aspects: UntrustedLayoutScriptExecution"). The placement is LibKa0s-Tooltip-1.0's
---- PlaceBeside (AD-92-AM); where the strip's rect does not read, the widget's own attached fallback
---- runs, never the cursor (the retired cursor owner is no longer passed).
+--- PlaceBeside (AD-92-AM); where the strip's rect does not read, beside the nearest container up its
+--- stored attach chain whose anchor reads, never the cursor (the retired cursor owner is no longer
+--- passed).
 local function tooltipSpec(container)
     -- How to use the strip (issue #22): on the screen, drag it, or drop it on another container to
     -- attach it there; attached to another container, by that parent's name, drag it away until the

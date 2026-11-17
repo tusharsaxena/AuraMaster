@@ -526,7 +526,7 @@ LibKa0s-Widgets' `tooltipPlace`, placed by LibKa0s-Tooltip-1.0's `PlaceBeside` s
 room on neither side, centered above it. It is anchored to `UIParent` alone, from the strip's rect read through
 `NS.Secrets` and converted through both effective scales, because nothing may anchor into the
 anchor's restricted tree; where the strip's rect reads secret (a container attached under a parent
-holding auras), the widget's own attached fallback places it, never the cursor. A container can also show its name as a label where the handle sits, locked or unlocked;
+holding auras), beside the nearest container up its stored attach chain whose anchor reads (or the named frame the chain ends on), never the cursor. A container can also show its name as a label where the handle sits, locked or unlocked;
 while unlocked the handle moves out past it (`Anchors.PlaceLabel`, batch 8 D6).
 
 ## Where a container sits
