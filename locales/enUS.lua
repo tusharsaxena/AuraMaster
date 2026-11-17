@@ -41,6 +41,7 @@ L["Attached to '%s'. Drag it away and let go once the marks turn red to detach i
 L["Anchored to '%s', so it cannot be dragged. Right-click for settings."] = "Anchored to '%s', so it cannot be dragged. Right-click for settings."
 L["Set to a named frame, so it cannot be dragged. Right-click for settings."] = "Set to a named frame, so it cannot be dragged. Right-click for settings."
 L["Click to disable this container. Its settings are kept; turn Enable this container back on for it on the Containers page to bring it back."] = "Click to disable this container. Its settings are kept; turn Enable this container back on for it on the Containers page to bring it back."
+L["Click to open this container's settings on the Containers page."] = "Click to open this container's settings on the Containers page."
 L["%s disabled. Turn Enable this container back on for it on the Containers page to bring it back."] = "%s disabled. Turn Enable this container back on for it on the Containers page to bring it back."
 L["Attached — set its offsets in the Layout section."] = "Attached — set its offsets in the Layout section."
 L["Aura Master settings changes will apply when combat ends."] = "Aura Master settings changes will apply when combat ends."

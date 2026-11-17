@@ -4,7 +4,7 @@
 ![CurseForge Version](https://img.shields.io/curseforge/v/1698345)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-2541%2F2541_passing-green)
+![Tests](https://img.shields.io/badge/Tests-2550%2F2550_passing-green)
 
 Supports Retail and WoW Forever. Aura Master lets you build your own buff and debuff displays. Each one is a container. You pick
 whose auras it shows (yours, your target's, your focus's or your pet's), whether it shows buffs,
@@ -47,7 +47,7 @@ small window, **Choose a preset**, opens the first time so you can pick a bigger
 presets below). Already had Aura Master before presets? The window opens once at your next login,
 once for your whole account, and your containers stay as they are unless you apply a preset and
 confirm. The containers start locked. `/am unlock` puts a handle on each one so you can drag it where you want it, and
-`/am lock` puts the handles away again. Drop a container next to another one and it attaches there,
+`/am lock` puts the handles away again. The gear on a handle opens that container's settings. Drop a container next to another one and it attaches there,
 following that one as it grows: the other container's handle lights up with a green edge before you
 let go, and holding Shift as you drop places it without attaching. To detach one, drag it away until
 the marks turn red and let go; let go sooner and it snaps back. Test mode (`/am test`, or the

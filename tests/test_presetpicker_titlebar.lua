@@ -3,20 +3,23 @@
 -- Ka0sAddonsCommonTasks docs/2026-11-16-LIBKA0S_ISSUES_75_PLUS (SR1_SMOKE_ROUND1.md, rulings 3 and
 -- 4; item SR-AM): every title-bar control shows a one-line tooltip on hover, in this owner's
 -- `gtip.title`, above it; at rest it paints the skin's `icon.tint`, and a close X takes `close.hot`
--- under the pointer. The picker's title bar holds one control, the close X, built through
--- NS.MakeCloseButton (core/CoreSetup.lua), so it is LibKa0s-Core-1.0's close with its tooltip and
--- colors; these cases hold this window to them, under Ka0s Default and another skin.
+-- under the pointer. Since AD-86-AM (LibKa0s#86, standalone-windows *Title-bar controls*) the marks
+-- are LibKa0s-Widgets-1.0's HeaderButtons, left to right settings · close: the close is still
+-- LibKa0s-Core-1.0's (MakeCloseButton with three arguments), and the settings mark lights
+-- `text.link` under the pointer and opens Aura Master's settings through the launcher's opener,
+-- closing the picker first as Not now does (the picker's MODAL strata would cover the panel). These
+-- cases hold this window to all of it, under Ka0s Default and another skin.
 
 local freshEnv = dofile("tests/fresh_env.lua")
 
 local T = _G.AM_TEST
-local test, assertEqual, assertTrue = T.test, T.assertEqual, T.assertTrue
+local test, assertEqual, assertTrue, assertFalse = T.test, T.assertEqual, T.assertTrue, T.assertFalse
 
 local OWNER = "AuraMaster"
 
 --- Every control on the picker's title band, by name, so a control added later is held here too.
 local function titleControls(f)
-    return { close = f.close }
+    return { settings = f.settings, close = f.close }
 end
 
 --- A fresh environment wearing skin `skin` (nil: Ka0s Default), the picker shown, and the skin facade.
@@ -73,6 +76,19 @@ for _, skin in ipairs({ "ka0s", "azeroth" }) do
                 name .. ": placed by its bottom, above the control")
         end
         assertEqual(hover(m, f.close).words, "Close", "the close says Close")
+        assertEqual(hover(m, f.settings).words, "Open settings", "the settings mark says Open settings")
+    end)
+
+    test("preset picker title bar (" .. skin .. "): the settings mark rests in icon.tint and lights text.link", function()
+        local _, _, f, S = shown(skin ~= "ka0s" and skin or nil)
+        local btn = f.settings
+        -- red under: a picker with no settings mark (LibKa0s#86)
+        assertTrue(btn ~= nil and btn.icon ~= nil, "the settings mark draws its catalog art")
+        sameColor(artColor(btn), S.Token("icon.tint"), "at rest")
+        btn:__fire("OnEnter")
+        sameColor(artColor(btn), S.Token("text.link"), "under the pointer")
+        btn:__fire("OnLeave")
+        sameColor(artColor(btn), S.Token("icon.tint"), "back at rest")
     end)
 
     test("preset picker title bar (" .. skin .. "): the close rests in icon.tint and lights close.hot", function()
@@ -97,4 +113,57 @@ test("preset picker title bar: Azeroth's close colors differ from Ka0s Default's
         differs = differs or kd.rest[i] ~= S2.Token("icon.tint")[i] or kd.hot[i] ~= S2.Token("close.hot")[i]
     end
     assertTrue(differs, "the second skin pins something the first does not")
+end)
+
+test("preset picker title bar: the marks are HeaderButtons', left to right settings · close, in the corner", function()
+    local NS, _, f = shown()
+    local hb = f.headerButtons
+    -- red under: the close placed by hand, alone (the picker before AD-86-AM)
+    assertTrue(type(hb) == "table", "the window's marks are W.HeaderButtons'")
+    assertEqual(table.concat(hb.order, ","), "settings,close", "left to right settings, close")
+    assertTrue(hb.close == f.close and hb.settings == f.settings, "the window keeps both marks")
+    assertEqual(hb.optOut, nil, "the picker does not opt out of the settings mark")
+    assertEqual(hb.offsets.close, -6, "the close PAD in from the corner")
+    assertEqual(hb.offsets.settings, -30, "the settings mark one 18 px slot and a 6 px gap inward")
+    assertTrue(NS.Icon("settings") ~= nil, "the vendored catalog carries the settings art")
+end)
+
+test("preset picker title bar: the settings mark closes the picker as Not now does, then opens the settings", function()
+    local NS, _, f = shown()
+    local before = {}
+    for _, c in ipairs(NS.Database.GetContainers()) do before[#before + 1] = c.id end
+    f.dd.onSelect("intermediate")
+    assertTrue(NS.Presets.IsPreviewing(), "a pick previews")
+    local opened, upAtOpen = 0, nil
+    NS.OpenOptionsPanel = function()
+        opened = opened + 1
+        upAtOpen = f:IsShown()
+    end
+    f.settings:__fire("OnClick", "LeftButton")
+    -- red under: a settings mark that opens nothing, or the panel under a picker still up
+    assertEqual(opened, 1, "the launcher's opener ran once")
+    assertEqual(upAtOpen, false, "the picker was down before the panel opened")
+    assertFalse(f:IsShown(), "the picker is down")
+    assertFalse(NS.Presets.IsPreviewing(), "its preview restored, as Not now")
+    local after = {}
+    for _, c in ipairs(NS.Database.GetContainers()) do after[#after + 1] = c.id end
+    assertEqual(table.concat(after, ","), table.concat(before, ","), "the player's containers kept")
+    assertTrue(NS.Presets.PickerSeen(), "a close the player made: the latch is set")
+end)
+
+test("preset picker title bar: the client's OnHide on the settings click closes the picker once", function()
+    local NS, m, f = shown()
+    local lines = {}
+    rawset(m.DEFAULT_CHAT_FRAME, "AddMessage", function(_, msg) lines[#lines + 1] = tostring(msg) end)
+    local skins = 0
+    NS.OpenOptionsPanel = function() end
+    NS.MaybeShowSkinPicker = function() skins = skins + 1 end
+    -- The client fires OnHide inside Hide; the kit's frame does not, so this case does it the client's way.
+    local raw, hide = rawget(f, "Hide"), f.Hide
+    rawset(f, "Hide", function(self) hide(self); self:__fire("OnHide") end)
+    f.settings:__fire("OnClick", "LeftButton")
+    rawset(f, "Hide", raw)
+    -- red under: hideOnSettings's OnHide and the settings click each finishing the close
+    assertEqual(skins, 1, "the skin picker is offered once")
+    assertEqual(#lines, 1, "one unlock hint: " .. table.concat(lines, " | "))
 end)

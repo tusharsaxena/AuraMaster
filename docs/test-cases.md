@@ -1057,6 +1057,13 @@ Total.
 - close: in combat the X still disables the container, raising nothing and moving no anchor
 - close: the X's tooltip names the container (following a rename) and says how to turn it back on
 
+### test_anchors_settings.lua (4)
+
+- settings mark: it sits immediately left of the X, the catalog settings art at the close mark's size
+- settings mark: a left click opens the Containers page on THIS container, as a right click on the strip does
+- settings mark: a right click opens the settings too, like the strip, the ? and the X
+- settings mark: its tooltip names the container (following a rename) and says what the click opens
+
 ### test_anchors_label.lua (23)
 
 - label: the template carries label = { show = false, justifyH = AUTO, x = 0, y = 0, font = gold Ka0s Prototype 12 From skin }
@@ -2747,13 +2754,18 @@ Total.
 - picker: after a /reload with the window up, Not now leaves the containers locked
 - picker: every close prints the unlock hint once
 
-### test_presetpicker_titlebar.lua (5)
+### test_presetpicker_titlebar.lua (10)
 
 - preset picker title bar (ka0s): every control has a tooltip, in gtip.title, above it
+- preset picker title bar (ka0s): the settings mark rests in icon.tint and lights text.link
 - preset picker title bar (ka0s): the close rests in icon.tint and lights close.hot
 - preset picker title bar (azeroth): every control has a tooltip, in gtip.title, above it
+- preset picker title bar (azeroth): the settings mark rests in icon.tint and lights text.link
 - preset picker title bar (azeroth): the close rests in icon.tint and lights close.hot
 - preset picker title bar: Azeroth's close colors differ from Ka0s Default's, so the cases above can tell them apart
+- preset picker title bar: the marks are HeaderButtons', left to right settings · close, in the corner
+- preset picker title bar: the settings mark closes the picker as Not now does, then opens the settings
+- preset picker title bar: the client's OnHide on the settings click closes the picker once
 
 ### test_pages_presets.lua (12)
 
@@ -3006,6 +3018,7 @@ Total.
 | test_enchantreset.lua | 23 |
 | test_redraw.lua | 14 |
 | test_anchors_close.lua | 6 |
+| test_anchors_settings.lua | 4 |
 | test_anchors_label.lua | 23 |
 | test_anchors_strip.lua | 7 |
 | test_anchors_teststrip.lua | 8 |
@@ -3081,7 +3094,7 @@ Total.
 | test_presets_preview.lua | 20 |
 | test_presets_seed.lua | 8 |
 | test_presetpicker.lua | 53 |
-| test_presetpicker_titlebar.lua | 5 |
+| test_presetpicker_titlebar.lua | 10 |
 | test_pages_presets.lua | 12 |
 | test_perf.lua | 8 |
 | test_debuglogsetup.lua | 9 |
@@ -3099,4 +3112,4 @@ Total.
 | test_skin_switch.lua | 34 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2541** |
+| **Total** | **2550** |

@@ -21,7 +21,7 @@ check's number is not reused. Checks with no recorded pass, and checks new or co
 | STATE-1 to STATE-5 | Master switch | Enable and disable, visibility, the inert disabled addon |
 | COMBAT-1 to COMBAT-7 | Combat and restrictions | Deferred changes, the settings lock, resets in combat, Mythic+ keys |
 | DIAG-1 to DIAG-22 | Debug, diagnostics, perf | The debug console, bulk `[Set]` lines, `/am diagnostics`, `/am perf`, the event trace, resizing the console, its copy window and the perf panel, the console's Diagnostics link, diagnostics turning logging on, the library's own lines (a slash refusal, a stand-down edge, the launcher's at-enable line) |
-| CONT-1 to CONT-28 | Containers | Create, duplicate, delete, rename, copy; handles, strips and the close mark; test mode (no TEST marker on a locked container, the strip's TEST tag, the docked test-mode strip); unit swaps; empty placeholders |
+| CONT-1 to CONT-29 | Containers | Create, duplicate, delete, rename, copy; handles, strips, the close mark and the settings mark; test mode (no TEST marker on a locked container, the strip's TEST tag, the docked test-mode strip); unit swaps; empty placeholders |
 | FILT-1 to FILT-67 | Filters and spell categories | Cast by, the category grids, Overrides, the add-a-spell box, aura ids, your own categories, weapon enchants and their names, the help marks' art, where spell lists apply, the Situations tab, its zones and its Unit type gate |
 | LAYOUT-1 to LAYOUT-38 | Layout | Anchor modes, attaching, chains, growth, anchor points, seams, the name label, mouse and tooltips |
 | DRAG-1 to DRAG-18 | Layout | Drag to attach (issue #22): dropping a container on another, the highlight on the target's strip, the side a drop picks, Shift, loops, detaching and its leeway (green hold, snap back, red past it), the growth-conflict popup, combat, a parent holding auras, frame-attached containers, the strip's tooltip, a drop between pulls in a key, a dropped side surviving a growth change, a drag cut short, a before-side drop with the line between the two join dots, the strip edge following the mark |
@@ -32,7 +32,7 @@ check's number is not reused. Checks with no recorded pass, and checks new or co
 | SKIN-1 to SKIN-53 | Skins | The skinning rollout: the one-time HUD reset under Ka0s Default, Ka0s Default otherwise unchanged, the Skin tab, each skin on the HUD, the unlock furniture, the settings pages and the tool windows, other addons stock, the font and texture companions and overrides, combat, EllesmereUI on, off and back, the copy, profiles, tooltips and popups, the first-run skin picker; the library follow-ups (each skin's HUD face, Ignore fonts on the HUD, the picker's title, the strings newly in the skin's face); the skin fonts run (the Font outline, From skin flags, `/am skin`, width parity, the HUD size scale, the own faces and glow back, the strips' re-fit) |
 | DEGRADED-1 | Library-absent install | The launcher libraries missing |
 | LOC-1 to LOC-2 | Non-English client | Spell names from the client, adding a spell by its localized name |
-| PRESETS-1 to PRESETS-44 | Presets | Each client: a new profile's Simple seed at the real screen size, the first-run preset picker before the skin picker (Escape, Not now, Empty), each preset in each style, Apply in Replace and Add, Stop preview, leaving the tab, closing the panel, a `/reload`, a profile switch and combat mid-preview, `/am preset` and its confirm, another Ka0s addon's skin picker, the cost of a swap, an existing profile after schema v19; the owner's round 1: the side stacks growing up, the corner group's place, the call-outs' look and place, the picker on the skin picker's spot with the call-outs clear of it, the side stacks' lower base, opened unlocked, its lock and test buttons, Apply locking, Not now putting the lock back; the owner's round 2: the call-outs' glow, the focus stack of its own and its clearance from the far stack, Player debuffs lined up with the focus column, the Presets tab on the General page; the owner's round 3: the right-hand cluster lined up, Player debuffs attached to Player buffs, equal bar widths, debuff bars colored by dispel type over a 50% background, the numbered names, the unlock hint in chat; the owner's round 4: the player stack nearer the center, the target cluster mirroring it, the call-outs at the picker's top, the picker once per account for existing players and never twice for a new one; the owner's round 5: every pick unlocking and turning test mode on, Empty previewing an empty screen; the SmokeTest baseline (Advanced), an icon row's side follower; the picker's footer on the library's (LibKa0s#89) |
+| PRESETS-1 to PRESETS-44 | Presets | Each client: a new profile's Simple seed at the real screen size, the first-run preset picker before the skin picker (Escape, Not now, Empty), each preset in each style, Apply in Replace and Add, Stop preview, leaving the tab, closing the panel, a `/reload`, a profile switch and combat mid-preview, `/am preset` and its confirm, another Ka0s addon's skin picker, the cost of a swap, an existing profile after schema v19; the owner's round 1: the side stacks growing up, the corner group's place, the call-outs' look and place, the picker on the skin picker's spot with the call-outs clear of it, the side stacks' lower base, opened unlocked, its lock and test buttons, Apply locking, Not now putting the lock back; the owner's round 2: the call-outs' glow, the focus stack of its own and its clearance from the far stack, Player debuffs lined up with the focus column, the Presets tab on the General page; the owner's round 3: the right-hand cluster lined up, Player debuffs attached to Player buffs, equal bar widths, debuff bars colored by dispel type over a 50% background, the numbered names, the unlock hint in chat; the owner's round 4: the player stack nearer the center, the target cluster mirroring it, the call-outs at the picker's top, the picker once per account for existing players and never twice for a new one; the owner's round 5: every pick unlocking and turning test mode on, Empty previewing an empty screen; the SmokeTest baseline (Advanced), an icon row's side follower; the picker's footer on the library's (LibKa0s#89); the picker's title marks, settings and close (LibKa0s#86) |
 | FOREVER-1 to FOREVER-15 | WoW Forever | Each check names its client: the AddOns list and a clean load on Forever, the default skin per client, a rank-1 aura in a buff container, Forever's own spell lists, each Blizzard token and flag row measured on Forever, the gate on an empty category, hiding the Blizzard buff and debuff frames, weapon enchants, a typed cast id rewritten, and the Retail regression |
 
 ## Before you start
@@ -813,6 +813,19 @@ on it reaches the world. Set a container's opacity to 30% → its strip stays fu
 off` → every strip goes with the placeholders; start combat in test mode → the strips go with it.
 Fail: a strip over a bar or icon, over a label or a drag strip, between two attached containers, a
 strip left after test mode ends, or a Lua error. Result:
+
+**CONT-29. The drag strip's settings mark (AD-86-AM, LibKa0s#86). Client: Retail, then WoW Forever.**
+`/am unlock` → every strip shows, right to left, the "?", the X and a gray gear immediately left of the
+X, all three the same size; the name stays centered and does not run under the gear, even for a long
+name with the orange TEST tag (shortened with "..." where it does not fit, CONT-16), and a one-icon
+container's strip keeps the width of its name and its marks. Hover the gear → it brightens, and the
+tooltip names the container and says a click opens its settings on the Containers page; rename the
+container and hover again → the new name. Close the panel and left-click a strip's gear → the panel
+opens on Containers with that container in the band's picker; right-click the gear → the same. A
+left-drag starting on the gear moves the container as the strip does. In combat, the gear prints the
+gray "cannot open settings during combat" line and nothing opens, with no Lua error and no taint.
+Switch the skin to **Glass** → the gear takes the skin's mark colors as the X and "?" do. Fail: a
+blank gear, a label under a mark, a gear that disables the container, or a Lua error. Result:
 
 ## Filters and spell categories
 
@@ -3326,6 +3339,19 @@ Forever** → the rule and the line take each skin's colors, the footer's height
 window's other text, tooltips and buttons are as before. No Lua error. Close it with **Not now**.
 Result:
 
+**PRESETS-45. The picker's title marks (AD-86-AM, LibKa0s#86). Client: Retail, then WoW Forever.**
+`/am preset` → in the title bar's top-right corner, left to right, a gray gear and the close X, the
+same size, level with each other and with the title "Choose a preset", the title not running under
+them. Hover the gear → "Open settings" above it, in the skin's tooltip title color, and the gear
+lights in the skin's link color (orange under Ka0s Default); move off → gray again. Hover the X →
+"Close" above it, and it lights red. Pick **Intermediate** (the preview shows), then click the gear →
+the picker closes as **Not now** does (the preview is restored, test mode off, the lock put back, one
+unlock hint in chat) and Aura Master's settings open, not under the picker; `/am preset` again → it
+opens, so the gear counted as a close (on a new character's first-run showing the skin picker then
+follows, as after any close). Switch the skin to **Glass** and **WoW Forever** → the gear and the X
+take each skin's rest and hover colors. Fail: a blank gear, the gear right of the X, the settings
+opening under a picker still up, a second unlock hint, or a Lua error. Result:
+
 ## WoW Forever
 
 Every check here names its client. Most run on a live **WoW Forever** client (1.60.1, interface
@@ -3617,5 +3643,7 @@ AD-89-AM): PRESETS-44 is new, and PRESETS-2 now places the footer on the window'
 picker's footer line is the library's `W.Footer` (24 px, no fill, a hairline in the skin's divider).
 From the review of AD-89-AM: the footer keeps its one short line, and "The skin picker opens next."
 moved under the description (PRESETS-2, PRESETS-30 and PRESETS-44 say so). From AD-88-AM: CONT-28 is
-new, the docked test-mode strip on each chain's top.
+new, the docked test-mode strip on each chain's top. From AD-86-AM (LibKa0s#86): PRESETS-45 is new,
+the picker's title marks on the library's `W.HeaderButtons` (settings, then close), and CONT-29 is
+new, the drag strip's settings mark left of the X.
 Their `Result:` lines are empty until the owner runs them.

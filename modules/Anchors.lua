@@ -625,6 +625,21 @@ local function closeTooltipSpec(container)
     }
 end
 
+--- The settings mark's tooltip (AD-86-AM, LibKa0s#86): the container's name, read on every hover so
+--- a rename follows, and what the click opens. Without it the mark would show the strip's own
+--- tooltip, whose body is the drag hint.
+local function settingsTooltipSpec(container)
+    return {
+        title = function()
+            local cfg = container:Cfg()
+            return cfg and cfg.name or NS.L["Container"]
+        end,
+        body = {
+            NS.L["Click to open this container's settings on the Containers page."],
+        },
+    }
+end
+
 --- The widget's canDrag, asked at every OnDragStart immediately before it calls StartMoving
 --- (libs/LibKa0s/WidgetsDragHandle.lua, dhSetDragScripts), so it both answers the gate and, on a yes,
 --- begins the drag (issue #22, D9). A screen container drags as it always has; a container-attached
@@ -701,6 +716,12 @@ function Anchors.BuildHandle(container)
         closeIcon    = NS.Icon and NS.Icon("close") or nil,
         onClose      = function() disableContainer(container) end,
         closeTooltip = closeTooltipSpec(container),
+        -- The settings mark (DragHandle minor 14, LibKa0s#86, standalone-windows *Title-bar
+        -- controls*): left of the X, opening the Containers page on THIS container, the right
+        -- click's page, rather than the panel's last page through the launcher's opener.
+        settings     = function() openSettings(container) end,
+        settingsIcon = NS.Icon and NS.Icon("settings") or nil,
+        settingsTooltip = settingsTooltipSpec(container),
         canDrag      = function() return beginDrag(container) end,
         onDragStop   = function() Anchors.Snap.Drop(container) end,
         onRightClick = function() openSettings(container) end,

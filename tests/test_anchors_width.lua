@@ -13,7 +13,8 @@ local test, assertEqual, assertTrue =
 local fresh = dofile("tests/fresh_env.lua")
 
 local PX = 6   -- what one character measures in the stand-in measurer
-local RESERVE2 = 94   -- the widget's reserve on both sides of the label, the close mark included
+local RESERVE2 = 130  -- the widget's reserve on both sides of the label, the close and settings marks
+                      -- included (94 until AD-86-AM's settings mark, LibKa0s#86: 2 * (29 + 18 + 18))
 local SLACK = 2       -- the px the widget adds to a measured label (LibKa0s v1.82.0, DRAG_HANDLE.FIT_SLACK)
 
 --- The text a label draws, its color escapes removed (the client does not measure them either).
@@ -63,7 +64,7 @@ test("width: a long name on a wide Bars container gives a strip exactly as wide 
     local rec, inst, cfg = stripOf(NS, mocks, 1, LONG)
     local w = NS.Style.ElementSize(cfg)
     assertEqual(cfg.style, "bars")
-    -- red under: handle:ApplyWidth(w), which takes the natural width (#LONG * 6 + 2 + 94 = 324 > 220)
+    -- red under: handle:ApplyWidth(w), which takes the natural width (#LONG * 6 + 2 + 130 = 360 > 220)
     assertEqual(rec.width, w, "the strip is the bar's width")
     local text = plain(rec.text)
     assertTrue(#text * PX <= w - RESERVE2, "the label fits between the marks: " .. text)
@@ -93,9 +94,11 @@ end)
 test("width: a name that fits is drawn whole, the strip still the bar's width", function()
     local NS, mocks = fresh()
     NS.State.testMode = true
-    local rec, _, cfg = stripOf(NS, mocks, 1, "Target CC")
+    -- "Target" since AD-86-AM's settings mark (LibKa0s#86): the 220 px bar keeps 90 px of label
+    -- between the marks, which "Target CC  TEST" with the measure's slack no longer fits (re-pinned).
+    local rec, _, cfg = stripOf(NS, mocks, 1, "Target")
     assertEqual(rec.width, NS.Style.ElementSize(cfg))
-    assertEqual(plain(rec.text), "Target CC  " .. NS.L["TEST"], "nothing shortened")
+    assertEqual(plain(rec.text), "Target  " .. NS.L["TEST"], "nothing shortened")
 end)
 
 test("width: the full name stays the strip's tooltip title", function()

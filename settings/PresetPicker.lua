@@ -473,19 +473,44 @@ local function buildSwitch(f)
     end
 end
 
+--- The settings mark's click (LibKa0s#86): the picker is a MODAL window that would cover the panel,
+--- so it goes down first, the player's close as Not now is (hideOnSettings; the client's OnHide on
+--- that Hide is the close, and `state.open` keeps a second one from running where it did), then
+--- this addon's settings open through the launcher's registered opener (Core's OpenSettings).
+local function openSettingsFromPicker()
+    if state.open then dismiss() end
+    if KC and type(KC.OpenSettings) == "function" and KC.OpenSettings(addonName) then return end
+    if NS.OpenOptionsPanel then NS.OpenOptionsPanel() end
+end
+
+--- The title marks (standalone-windows, *Title-bar controls*, LibKa0s#86): LibKa0s-Widgets-1.0's
+--- HeaderButtons, left to right settings · close, in the top-right corner on the title band. The
+--- close is still built through core/CoreSetup.lua's one close wrapper (NS.MakeCloseButton, Core's
+--- with this folder) and still dismisses; without HeaderButtons (a degraded install) the close
+--- alone, placed by hand, as before.
+local function buildMarks(f)
+    if KW and type(KW.HeaderButtons) == "function" then
+        local hb = KW.HeaderButtons(f, { owner = addonName, frame = f, point = "TOPRIGHT", y = -6,
+            makeClose = function(parent, onClick) return NS.MakeCloseButton(parent, onClick) end,
+            close = function() dismiss() end, hideOnSettings = f, settings = openSettingsFromPicker })
+        f.close, f.settings = hb.close, hb.settings
+        if f.close then return hb.right end
+    end
+    f.close = NS.MakeCloseButton(f, function() dismiss() end)
+    if not f.close then
+        f.close = textButton(f, "x", function() dismiss() end)
+        f.close:SetWidth(ROW_H)
+    end
+    f.close:SetPoint("TOPRIGHT", f, "TOPRIGHT", -6, -6)
+    return { f.close }
+end
+
 local function buildChrome(f)
     f.title = fontString(f, "GameFontNormal", "heading")
     f.title:SetText(L["Choose a preset"])
-    f.close = NS.MakeCloseButton(f, function() dismiss() end)
-    if f.close then
-        f.close:SetPoint("TOPRIGHT", f, "TOPRIGHT", -6, -6)
-    else
-        f.close = textButton(f, "x", function() dismiss() end)
-        f.close:SetWidth(ROW_H)
-        f.close:SetPoint("TOPRIGHT", f, "TOPRIGHT", -6, -6)
-    end
+    local right = buildMarks(f)
     f.title:SetPoint("TOPLEFT", f, "TOPLEFT", PAD, -10)
-    paint("Header", f, { title = f.title, right = { f.close } })
+    paint("Header", f, { title = f.title, right = right })
     f.owner = fontString(f, "GameFontNormal", "heading")
     f.owner:SetText("Ka0s Aura Master")
 end
