@@ -130,6 +130,10 @@ end
 -- base, so the tier's first role sits nearest the unit frames, as in the owner's own profile. The
 -- `center` stack (the call-outs) hangs by its top from the center line and has no stored `y`:
 -- calloutLayout below puts its test-mode block's top at the preset picker's (spec section 18.3). A
+-- `mid` stack (the corner, player and target columns, the owner's SmokeTest baseline, 2026-11-17)
+-- has no stored `y` either: its head is placed by its own CENTER on the screen's CENTER, `mid` units
+-- above it (below it when negative), its first element's middle at that height and its column's
+-- middle across (place). A
 -- `beside` stack's head is not placed: it joins the head of the stack it
 -- names by its TOPRIGHT to that head's TOPLEFT (besideAttach), so it takes that head's flow.
 -- THE BASE, 740 down (340 above the bottom at 1080 tall), the owner's ruling (spec section 15.1)
@@ -145,36 +149,46 @@ local SIDE_BASE = -740
 -- stack (which keeps its base) that the two stay more than twice C.SNAP_RADIUS apart in test mode,
 -- locked or unlocked, so a drag near the far stack does not snap the focus stack back onto it.
 local FOCUS_BASE = -550
+-- THE OWNER'S SMOKETEST BASELINE (2026-11-17): their WoW Forever SmokeTest profile, on a parent
+-- 1200 units tall (3440 x 1440 at UI scale 1.2), moved into reference units (x 0.9). Player buffs
+-- (all) placed CENTER on CENTER at 992, 490 (CORNER_MID_X, CORNER_MID); Player buffs, short and
+-- Target special (mine), the player and target stacks' heads, at -340, -170 and 340, -170 (SIDE_MID,
+-- the mirror's middle MIRROR + COL_W / 2 from the center line). The far and focus stacks and the
+-- call-outs kept the places this file gave them.
+local SIDE_MID, CORNER_MID, CORNER_MID_X = -153, 441, 892.8
 -- THE PLAYER COLUMN AND ITS MIRROR (spec section 18). The player stack's column (`left`) ends
--- MIRROR left of the center line, 40 from the call-out column's left edge (80 before section 18);
--- the target stack's (`right`) starts MIRROR right of it, so the two mirror each other.
-local MIRROR = 240
+-- MIRROR left of the center line, 14 from the call-out column's left edge (40 before the owner's
+-- 2026-11-17 baseline, 80 before section 18); the target stack's (`right`) starts MIRROR right of
+-- it, so the two mirror each other.
+local MIRROR = 186
 -- THE RIGHT-HAND CLUSTER (spec sections 17 and 18, the owner's layouts). Every column that holds bars
 -- is COL_W wide, Player cooldowns' (section 17.2), so the edges below line up. From the center line
 -- out: the target stack at the mirror; TARGET_GAP right of it the focus stack and, under it, the far
 -- stack, on Player debuffs (all)'s left edge; and Player debuffs joined by its top right to Player
 -- buffs (all)'s left side, CORNER_GAP between, with Weapon enchants under Player buffs. All of it
--- hangs from the center line (`cluster`), so the gaps hold on every screen, and ends 1015 right of
--- it. Where Player buffs' right edge would then sit nearer the screen's right edge than EDGE_IN
+-- hangs from the center line (`cluster`), so the gaps hold on every screen, and ends 1012.8 right of
+-- it (the owner's 2026-11-17 baseline moved the target column in, TARGET_GAP 104 where it was 50,
+-- and Player buffs (all) to CORNER_MID_X, CORNER_GAP 2.8 where it was 5). Where Player buffs' right edge would then sit nearer the screen's right edge than EDGE_IN
 -- (16:9 and narrower), the whole cluster moves left just enough to keep it EDGE_IN in
 -- (P.ClusterShift): at 1920 x 1080 by 65, so its left edge is 175 right of the center line as in
 -- section 17, and the target column still meets the call-out block (docs/known-limitations.md,
 -- presets).
-local COL_W, CORNER_GAP, TARGET_GAP = 240, 5, 50
-local CORNER_Y = -46
+local COL_W, TARGET_GAP = 240, 104
 local TARGET_X = MIRROR
 local FOCUS_X = TARGET_X + COL_W + TARGET_GAP
-local CORNER_RIGHT_X = FOCUS_X + COL_W + CORNER_GAP
+local CORNER_RIGHT_X = CORNER_MID_X - COL_W / 2
+local CORNER_GAP = CORNER_RIGHT_X - (FOCUS_X + COL_W)
+P.CORNER_GAP = CORNER_GAP
 P.STACKS = {
-    cornerRight = { anchor = "TOP", x = CORNER_RIGHT_X, y = CORNER_Y, width = COL_W, iconsGrowH = "left",
+    cornerRight = { anchor = "CENTER", x = CORNER_RIGHT_X, mid = CORNER_MID, width = COL_W, iconsGrowH = "left",
         cluster = true },
-    cornerLeft  = { anchor = "TOP", x = FOCUS_X, y = CORNER_Y, width = COL_W, iconsGrowH = "left",
+    cornerLeft  = { anchor = "TOP", x = FOCUS_X, width = COL_W, iconsGrowH = "left",
         beside = "cornerRight", cluster = true },
     focus       = { anchor = "TOP", x = FOCUS_X, y = FOCUS_BASE, width = COL_W, iconsGrowH = "left", up = true,
         cluster = true },
     far         = { anchor = "TOP", x = FOCUS_X, y = SIDE_BASE, width = COL_W, iconsGrowH = "left", up = true,
         cluster = true },
-    right       = { anchor = "TOP", x = TARGET_X, y = SIDE_BASE, width = COL_W, iconsGrowH = "left", up = true,
+    right       = { anchor = "CENTER", x = TARGET_X, mid = SIDE_MID, width = COL_W, iconsGrowH = "left", up = true,
         cluster = true },
     -- THE CALL-OUT COLUMN, 400 wide (480 before section 17), narrowed so the target column meets it
     -- less: its line sizes to fit its widest test-mode line (Size to fit, the template's), which is
@@ -183,7 +197,7 @@ P.STACKS = {
     -- cuts a line. It could go narrower, down to that line's width (section 17); 400 keeps a margin
 -- because the harness cannot measure text and the estimate needs an in-game check.
     middle      = { anchor = "TOP",      x = -200, width = 400, iconsGrowH = "right", center = true },
-    left        = { anchor = "TOP",      x = -MIRROR - COL_W, y = SIDE_BASE, width = COL_W, iconsGrowH = "right",
+    left        = { anchor = "CENTER",   x = -MIRROR - COL_W, mid = SIDE_MID, width = COL_W, iconsGrowH = "right",
         up = true },
 }
 do
@@ -215,10 +229,13 @@ function P.Columns(parentW, parentH)
     return out
 end
 
--- The gap a stack member leaves from the container before it, in reference units, and the icon a
--- bars role turned into an Icons row is sized near (a column fits floor(width / ICON_REF) of them).
+-- The gap a call-out leaves from the one before it, in reference units (every other stack member
+-- sits flush, memberAttach), and the icon size, ICON_PX square, the owner's in their 2026-11-17
+-- baseline, not scaled, as a bar's height is not. An icon role (the far stack's rows) takes it
+-- wherever its row still fits its column (smaller on a screen under about 860 tall); a bars role turned into an Icons row fits as many icons of about that size as its column
+-- holds, sized so the row fills the column (toIcons, sizeTo).
 local GAP = 6
-local ICON_REF = 28
+local ICON_PX = 24
 
 -- THE ROOM AROUND THE CALL-OUTS (spec sections 15, 15.1 and 18.3), in UIParent units: the windows are
 -- not scaled with the layout, so neither is this. The LibKa0s skin picker is centered `skinShare` of
@@ -314,6 +331,15 @@ local function calloutLook(color)
         label = { show = false },
     }
 end
+-- THE OWNER'S BAR COLORS (their 2026-11-17 SmokeTest baseline): five roles keep Fill > Color by at
+-- One color, in a color of their own, so they read apart from the blue buff bars and the
+-- dispel-colored debuff bars beside them. `barColor` on a role, written by sizeTo in every preset
+-- that has the role, on a bars container alone (an Icons row has no fill).
+local BAR_GRAY = rgb(69 / 255, 69 / 255, 69 / 255)        -- Player buffs, short; Target special (mine)
+local BAR_ORANGE = rgb(1, 128 / 255, 64 / 255)            -- Target crowd control
+local BAR_TAN = rgb(230 / 255, 204 / 255, 128 / 255)      -- Target cooldowns, players
+local BAR_PURPLE = rgb(163 / 255, 53 / 255, 238 / 255)    -- Weapon enchants
+
 -- The owner's three call-out colors.
 local LOOK_OFF = calloutLook(rgb(0.1, 1, 0.1))
 local LOOK_DEF = calloutLook(rgb(1, 0.125, 0.125))
@@ -327,13 +353,15 @@ local LOOK_RAID = calloutLook(rgb(1, 0.486, 0.04))
 -- type but those; `onlyNamed` (implied by showOnly) marks a role that shows only some categories, so
 -- it also hides every custom category of its aura type the player already has, as the source hid the
 -- owner's in each of them; `filter` and `layout` the fields that differ from the base above; `look`
--- the appearance a call-out carries (calloutLook).
+-- the appearance a call-out carries (calloutLook); `barColor` the owner's own fill for a bars
+-- container (One color, never by dispel type).
 
 local CONTAINERS = {
     -- Simple's three (Advanced 1 to 3): the corner, where Blizzard puts buffs.
     pbuffs = { name = L["Player buffs (all)"], unit = "player", auraType = "HELPFUL", style = "bars",
         hide = HIDE_ENCHANTS },
     wpn = { onlyNamed = true, name = L["Weapon enchants"], unit = "player", auraType = "HELPFUL", style = "bars",
+        barColor = BAR_PURPLE,
         hide = except({ ALL_BUFFS }, { "weaponEnchants" }) },
     pdebuffs = { name = L["Player debuffs (all)"], unit = "player", auraType = "HARMFUL", style = "bars",
         hide = HIDE_ENCHANTS },
@@ -351,6 +379,7 @@ local CONTAINERS = {
 
     -- The player stack.
     pshort = { name = L["Player buffs, short"], unit = "player", auraType = "HELPFUL", style = "bars",
+        barColor = BAR_GRAY,
         hide = HIDE_ENCHANTS, filter = MINE_SHORT },
     pcd = { onlyNamed = true, name = L["Player cooldowns"], unit = "player", auraType = "HELPFUL", style = "bars",
         hide = { "SPECIAL_PLAYER", "bigDefensive", "cancelable", "castable", "externals", "groupBuffs",
@@ -367,9 +396,11 @@ local CONTAINERS = {
     tbuff = { name = L["Target buffs (mine)"], unit = "target", auraType = "HELPFUL", style = "bars",
         hide = HIDE_ENCHANTS, filter = MINE_SHORT },
     tcc = { onlyNamed = true, name = L["Target crowd control"], unit = "target", auraType = "HARMFUL", style = "bars",
+        barColor = BAR_ORANGE,
         hide = except({ ALL_DEBUFFS, HIDE_ENCHANTS }, { "hardCC", "ccRoot" }),
         filter = { durationMode = "timed", maxDuration = 30, zones = NO_PVP } },
     tcdp = { onlyNamed = true, name = L["Target cooldowns, players"], unit = "target", auraType = "HELPFUL", style = "bars",
+        barColor = BAR_TAN,
         hide = { "SPECIAL_PLAYER", "bigDefensive", "cancelable", "castable", "externals", "groupBuffs",
             "healing", "important", "racials", "stances", "stealable", "uncategorized", "weaponEnchants" },
         filter = { durationMode = "timed", maxDuration = 30, unitFilter = { kind = "player" }, zones = NO_PVP } },
@@ -379,6 +410,7 @@ local CONTAINERS = {
             "weaponEnchants" },
         filter = { durationMode = "timed", unitFilter = { kind = "npc" }, zones = NO_PVP } },
     tspec = { onlyNamed = true, name = L["Target special (mine)"], unit = "target", auraType = "HARMFUL", style = "bars",
+        barColor = BAR_GRAY,
         hide = except({ ALL_BUFFS, ALL_DEBUFFS }, { "SPECIAL_TARGET" }),
         filter = { castBy = "mine" } },
     tsteal = { onlyNamed = true, name = L["Target stealable"], unit = "target", auraType = "HELPFUL", style = "bars",
@@ -441,8 +473,8 @@ CONTAINERS.pcdHealer = {
 -- containers keeps the relative order and numbers 1..N, and a role the owner's profile lacks takes
 -- the slot of the one it stands in for (Healer's Player cooldowns at Player cooldowns, its target and
 -- focus roles at Target and Focus debuffs (mine), Intermediate's Target cooldowns at Target
--- cooldowns, players). Advanced's Target stealable (15) is created before Target special (16), so it
--- sits under it in the target stack.
+-- cooldowns, players). Since the owner's 2026-11-17 baseline Advanced's Target special (mine) is 10,
+-- the target stack's head, nearest the unit frames, and Target stealable (16, stored off) ends it.
 local SIMPLE = { { "cornerRight", "pbuffs" }, { "cornerRight", "wpn" }, { "cornerLeft", "pdebuffs" } }
 
 --- `SIMPLE` followed by `more`.
@@ -464,8 +496,8 @@ local TIERS = {
     advanced = simplePlus({
         { "middle", "txtOff" }, { "middle", "txtDef" }, { "middle", "txtRaid" },
         { "left", "pshort" }, { "left", "pcd" }, { "left", "pspec" },
-        { "right", "tdeb" }, { "right", "tbuff" }, { "right", "tcc" }, { "right", "tcdp" },
-        { "right", "tcdn" }, { "right", "tsteal" }, { "right", "tspec" },
+        { "right", "tspec" }, { "right", "tdeb" }, { "right", "tbuff" }, { "right", "tcc" },
+        { "right", "tcdp" }, { "right", "tcdn" }, { "right", "tsteal" },
         { "far", "ticoD" }, { "far", "ticoB" },
         { "focus", "fdeb" }, { "focus", "fbuff" },
     }),
@@ -578,50 +610,81 @@ local function growthIn(o, stack)
     if stack.up then o.layout.growV = "up" end
 end
 
+--- `stack`'s column width at scale `kx`, between its two edges, each rounded as `place` rounds a
+--- head's offset.
+local function columnWidth(stack, kx)
+    return round((stack.x + stack.width) * kx) - round(stack.x * kx)
+end
+
 --- The Icons variant of a bars role (spec section 3.2): an icon row growing away from the nearest
---- screen edge, as many icons per line as the column fits. Text and icon roles are unchanged.
-local function toIcons(o, stack)
+--- screen edge, as many icons of about ICON_PX per line as the column fits. Text and icon roles are
+--- unchanged.
+local function toIcons(o, stack, kx)
     if o.style ~= "bars" then return end
     o.style = "icons"
     o.layout.axis = "horizontal"
     o.layout.growH = stack.iconsGrowH
-    o.layout.perLine = math.max(1, math.floor(stack.width / ICON_REF))
+    o.layout.perLine = math.max(1, round(columnWidth(stack, kx) / ICON_PX))
+    o.fillsColumn = true
 end
 
 -- THE BAR LOOK (spec section 17.3), on every bars container, both fields written so neither the
 -- template nor a skin decides them: the background 50% opaque (bars.bgAlpha, Background opacity), and
--- Fill > Color by (bars.colorMode) By dispel type on a debuff bar, One color on a buff bar.
+-- Fill > Color by (bars.colorMode) By dispel type on a debuff bar, One color on a buff bar; a role
+-- with a `barColor` One color in that color, debuff or buff, its skin and class companions off.
 local BAR_BG_ALPHA = 0.5
 
---- The column width, scaled: a bar's width, or an icon row's icon size (its line fills the column). A
+--- The column width, scaled: a bar's width (an icon is ICON_PX, whatever the column). A
 --- text line's stored width is the column too, which stands when Size to fit is off or cannot measure;
 --- with it on (the template's) a call-out line is as wide as its content, centered on the center
 --- line its head hangs from (place): the line is justified CENTER and its template one piece
 --- (calloutLook). The width runs between the column's two edges, each rounded as `place` rounds a
 --- head's offset, so a corner column ends on the screen's right edge at any scale.
-local function sizeTo(o, stack, kx)
-    local w = round((stack.x + stack.width) * kx) - round(stack.x * kx)
+local function sizeTo(o, stack, kx, barColor)
+    local w = columnWidth(stack, kx)
     if o.style == "bars" then
         o.bars = { width = w, bgAlpha = BAR_BG_ALPHA, colorMode = (o.auraType == "HARMFUL") and "dispel" or "static" }
+        if barColor then
+            o.bars.colorMode = "static"
+            o.bars.barColor, o.bars.barColorFromSkin, o.bars.useClassColorBar = copy(barColor), false, false
+        end
     elseif o.style == "text" then
         o.text = o.text or {}
         o.text.width = w
     elseif o.style == "icons" then
         local perLine = (o.layout.perLine > 0) and o.layout.perLine or 1
-        local px = math.max(1, math.floor(w / perLine) - o.layout.spacing)
+        local fits = math.max(1, math.floor(w / perLine) - o.layout.spacing)
+        local px = o.fillsColumn and fits or math.min(ICON_PX, fits)
         o.icons = { width = px, height = px }
     end
+    o.fillsColumn = nil
 end
 
 --- A head's screen placement, `kx` across and `k` down. A row growing left hangs by its right corner
 --- from the column's right edge, so it fills toward the screen; every other head by its left corner
 --- from the left edge. That is the top corner, but for an up stack's head, which sits on the column's
 --- base by its bottom corner. The center stack's head hangs by its TOP from the center line, `top`
---- units down (calloutLayout).
+--- units down (calloutLayout), and a `mid` stack's by its middle from the screen's (the owner's
+--- 2026-11-17 baseline).
 local function place(o, stack, kx, k, top)
     o.attach = { mode = "screen", container = 0, frame = "" }
     if stack.center then
         o.position = { point = "TOP", relativePoint = stack.anchor, x = 0, y = -top }
+        return
+    end
+    if stack.mid then
+        -- The owner's baseline: a bar or a line by its CENTER on the column's middle; an icon row by
+        -- the middle of the edge it grows from, on that column edge, so it fills its column.
+        local y = round(stack.mid * k)
+        if o.style == "icons" then
+            local fromRight = o.layout.growH == "left"
+            local x = fromRight and (stack.x + stack.width) or stack.x
+            o.position = { point = fromRight and "RIGHT" or "LEFT", relativePoint = stack.anchor,
+                x = round(x * kx), y = y }
+        else
+            o.position = { point = "CENTER", relativePoint = stack.anchor,
+                x = round((stack.x + stack.width / 2) * kx), y = y }
+        end
         return
     end
     local left = o.layout.growH == "left"
@@ -637,35 +700,38 @@ end
 --- so it takes that head's flow (Anchors.EffectiveLayout) and sits on its left. The join is one of the
 --- nine sides under that flow (behind-start for a bars column, ahead-start for a row growing left), so
 --- its seam already leaves the container's own gap across (Anchors.SeamOffset: its line spacing
---- between columns, its spacing along a row); the nudge makes up the rest of `gap`, the pixels between
---- the two columns as they are rounded. `container` is the writer's to fill with the new id.
-local function besideAttach(o, gap)
-    local lay = o.layout
-    local seam = (lay.axis == "horizontal") and lay.spacing or lay.lineSpacing
+--- between columns, its spacing along a row), and it adds none of its own (x and y 0, the owner's
+--- 2026-11-17 baseline). `container` is the writer's to fill with the new id.
+local function besideAttach()
     return { mode = "container", container = 0, frame = "", childPoint = "TOPRIGHT", relPoint = "TOPLEFT",
-        x = -math.max(0, gap - seam), y = 0 }
+        x = 0, y = 0 }
 end
 
---- The pixels between a `beside` stack's column and the column of the stack it names (in `cols`,
---- P.Columns'), each edge rounded as `place` rounds a head's offset.
-local function besideGap(stack, kx, cols)
-    local to = cols[stack.beside]
-    return round(to.x * kx) - round((stack.x + stack.width) * kx)
-end
-
---- A stack member's attachment to the container before it. Its join points are left Automatic
---- (modules/Anchors_Attach.lua), so they follow the stack's growth: below the parent growing down,
---- above it growing up (bottom-left to top-left, bottom-right to top-right for a row growing left),
---- from the side its lines start; a centered call-out joins its parent's center. The gap is away from
---- the parent, along the growth. `container` is the writer's to fill with the new id.
-local function memberAttach(k, up)
-    local gap = math.max(1, round(GAP * k))
-    if up then
-        return { mode = "container", container = 0, frame = "",
-            point = "BOTTOMLEFT", relativePoint = "TOPLEFT", x = 0, y = gap }
+--- A stack member's attachment to the container before it, the owner's (their 2026-11-17 SmokeTest
+--- baseline), on the parent's far side along the stack's growth (above it growing up, below it
+--- growing down):
+---   a bar joins centered by two explicit points (after-center: BOTTOM to TOP growing up), flush;
+---   an icon row by the side its icons start (after-start: BOTTOMLEFT to TOPLEFT growing up and
+---   right, BOTTOMRIGHT to TOPRIGHT growing left), flush, since a row's width follows its count;
+---   a call-out keeps Automatic, which centers it under a centered parent (Anchors_Attach.lua's
+---   defaultToken), GAP below it.
+--- Flush is x and y 0: the seam already leaves the member's own spacing, and its drag strip's room
+--- while unlocked (Anchors.SeamOffset, seamRoom). Read off the member's own layout, which flows as
+--- its head's: every member of a stack shares its style family and growth (growthIn, toIcons).
+--- `container` is the writer's to fill with the new id.
+local function memberAttach(o, k)
+    local at = { mode = "container", container = 0, frame = "", x = 0, y = 0 }
+    local up = o.layout.growV == "up"
+    if o.style == "text" then
+        local gap = math.max(1, round(GAP * k))
+        at.y = up and gap or -gap
+        return at
     end
-    return { mode = "container", container = 0, frame = "",
-        point = "TOPLEFT", relativePoint = "BOTTOMLEFT", x = 0, y = -gap }
+    local h = ""
+    if o.style == "icons" then h = (o.layout.growH == "left") and "RIGHT" or "LEFT" end
+    at.childPoint = (up and "BOTTOM" or "TOP") .. h
+    at.relPoint = (up and "TOP" or "BOTTOM") .. h
+    return at
 end
 
 -- ---------------------------------------------------------------------------
@@ -773,19 +839,19 @@ function P.Build(name, look, parentW, parentH, picked)
     local specs, last, first, callouts, cols = {}, {}, {}, {}, P.Columns(parentW, parentH)
     for i, entry in ipairs(tier) do
         local stackKey, roleKey = entry[1], entry[2]
-        local stack = cols[stackKey]
-        local o = overridesFor(CONTAINERS[roleKey], withCustom, picked)
+        local stack, role = cols[stackKey], CONTAINERS[roleKey]
+        local o = overridesFor(role, withCustom, picked)
         o.name = ("[%02d] %s"):format(i, o.name) -- the owner's numbering, two digits so a name sort keeps it (not localized, spec 17.4)
-        if look == "icons" then toIcons(o, stack) end
+        if look == "icons" then toIcons(o, stack, kx) end
         growthIn(o, stack)
-        sizeTo(o, stack, kx)
+        sizeTo(o, stack, kx, role.barColor)
         local spec = { role = roleKey, stack = stackKey, overrides = o }
         if last[stackKey] then
             spec.attachTo = last[stackKey]
-            o.attach = memberAttach(k, stack.up)
+            o.attach = memberAttach(o, k)
         elseif stack.beside and first[stack.beside] then
             spec.attachTo = first[stack.beside]
-            o.attach = besideAttach(o, besideGap(stack, kx, cols))
+            o.attach = besideAttach()
         else
             place(o, stack, kx, k, 0)
         end
