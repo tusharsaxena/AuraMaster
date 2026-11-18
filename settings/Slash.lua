@@ -135,8 +135,8 @@ NS.COMMANDS = {
 --- path here is container-relative (`container.bars.width`) and resolves against the SELECTED
 --- container, so `/am containers` and `/am select` are how a player AIMS get, set and reset at the
 --- container they mean -- they are part of reading and repairing settings, not features. Neither
---- draws, hides, creates or deletes anything: `containers` prints a list, and `select` moves one
---- integer of session state. slash-commands-§2's list is what a refusal may never be turned on, not a ceiling on
+--- draws, hides, creates or deletes anything: `containers` writes a report to the debug console
+--- (D:Report), and `select` moves one integer of session state. slash-commands-§2's list is what a refusal may never be turned on, not a ceiling on
 --- what stays live.
 ---
 --- AND `diagnostics`, the third, for the same reason `debug` is live: it is a diagnostic, not a
