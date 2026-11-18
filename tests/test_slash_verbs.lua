@@ -554,19 +554,52 @@ end)
 
 -- ── the container verbs ───────────────────────────────────────────────────────────────────────
 
-test("slash verbs: /am containers marks the selection and a disabled container, and says when there are none", function()
+--- The console's buffered lines from `from` on, each with its `HH:MM:SS | [Tag] ` prefix taken off.
+local function consoleSince(NS2, from)
+    local out = {}
+    local buf = NS2.DebugLog.buffer
+    for i = from + 1, #buf do out[#out + 1] = (buf[i]:gsub("^%d%d:%d%d:%d%d | %[[^%]]*%] ", "")) end
+    return out
+end
+
+-- A REPORT (debug-logging-§15, owner ruling of 2026-11-08, LibKa0s#79): the list goes to the debug
+-- console through D:Report, ungated, the console revealed, and chat gets exactly one pointer line.
+test("slash verbs: /am containers writes its list to the debug console, marking the selection and a disabled container", function()
     local NS2, mocks = fresh()
     local lines = capture(mocks)
     NS2.SetByPath("container.enabled", false, 2)
     NS2.Slash:OnSlash("select 3")
+    assertFalse(NS2.DebugLog:IsEnabled(), "logging starts off")
+    assertFalse(NS2.DebugLog:IsShown(), "the console starts hidden")
+    local before = #NS2.DebugLog.buffer
     local p = slash(NS2, lines, "containers")
-    assertEqual(p[1], "Containers")
-    assertEqual(p[2], "    Player buffs  #1 - Player - Buffs - Bars")
+    local n = 1 + #NS2.Database.GetContainers()
+    -- red under: the list printed to chat line by line (the pre-#79 runContainers), or a second
+    -- chat line beside the pointer (falsified by restoring the print loop: p grows to n lines)
+    assertEqual(dump(p), ("{containers: %d lines written to the debug console. Use Copy to share it.}"):format(n))
+    local c = consoleSince(NS2, before)
+    assertEqual(#c, n, dump(c))
+    assertEqual(c[1], "/am containers")
+    assertEqual(c[2], "    Player buffs  #1 - Player - Buffs - Bars")
     -- red under: describe ignoring `enabled`
-    assertEqual(p[3], "    Player debuffs  #2 - Player - Debuffs - Icons - disabled")
-    assertEqual(p[4], "  > Target debuffs (mine)  #3 - Target - Debuffs - Icons")
+    assertEqual(c[3], "    Player debuffs  #2 - Player - Debuffs - Icons - disabled")
+    assertEqual(c[4], "  > Target debuffs (mine)  #3 - Target - Debuffs - Icons")
+    -- red under: the report written through the gated sink (NS.Debug), which drops every line while
+    -- logging is off, so the console would hold no list above
+    assertFalse(NS2.DebugLog:IsEnabled(), "the report leaves logging off")
+    -- red under: a report that never reveals the console
+    assertTrue(NS2.DebugLog:IsShown(), "the report reveals the console")
+end)
+
+test("slash verbs: /am containers with none says so in chat and writes nothing to the console", function()
+    local NS2, mocks = fresh()
+    local lines = capture(mocks)
     deleteAll(NS2)
+    local before = #NS2.DebugLog.buffer
+    -- red under: the empty answer written as a one-line report, or a pointer printed for nothing
     assertEqual(dump(slash(NS2, lines, "containers")), "{No containers yet — /am new creates one}")
+    assertEqual(#NS2.DebugLog.buffer, before, "nothing written to the console")
+    assertFalse(NS2.DebugLog:IsShown(), "the console stays hidden")
 end)
 
 test("slash verbs: /am select matches a name in any case, and a miss moves nothing", function()
@@ -784,6 +817,22 @@ test("slash verbs: without the library a bare /am still runs config, help prints
     p = slash(NS2, lines, "frob")
     assertEqual(p[1], "Unknown command 'frob'")
     assertEqual(#p, 1 + 1 + #NS2.COMMANDS, "then the help")
+end)
+
+test("slash verbs: without the library /am containers streams its list to chat, with no pointer", function()
+    local NS2, mocks = degraded()
+    local lines = capture(mocks)
+    -- Spend the degraded printer's one-time library note, so the lines below stand alone.
+    slash(NS2, lines, "version")
+    NS2.Slash:OnSlash("select 2")
+    local p = slash(NS2, lines, "containers")
+    -- red under: a stub Report that writes nothing (the list lost), or one that prints a pointer
+    assertEqual(#p, #NS2.Database.GetContainers(), dump(p))
+    local marked = {}
+    for _, l in ipairs(p) do if l:find("^  > ") then marked[#marked + 1] = l end end
+    assertEqual(#marked, 1, dump(p))
+    assertTrue(marked[1]:find(NS2.ActiveContainer().name .. "  #2 ", 1, true) ~= nil, marked[1])
+    for _, l in ipairs(p) do assertFalse(l:find("debug console", 1, true) ~= nil, "a pointer: " .. l) end
 end)
 
 test("slash verbs: without the library the host verbs keep working", function()

@@ -104,14 +104,14 @@ test("slash: /am new with a word it does not know creates nothing and says why",
 end)
 
 test("slash: /am select takes an id or a name; /am containers marks the selection", function()
-    local NS2, mocks = fresh()
+    local NS2 = fresh()
     NS2.Slash:OnSlash("select player debuffs")
     assertEqual(NS2.State.activeContainerId, 2)
     NS2.Slash:OnSlash("select 3")
     assertEqual(NS2.State.activeContainerId, 3)
-    local lines = capture(mocks)
+    -- Re-pinned for LibKa0s#79: the list is a report, so it is read off the debug console.
     NS2.Slash:OnSlash("containers")
-    assertTrue(said(lines, "Target debuffs (mine)"))
+    assertTrue(NS2.DebugLog:FindLine("> Target debuffs (mine)") ~= nil, "the selection is marked")
 end)
 
 test("slash: /am set writes the selected container through the seam", function()

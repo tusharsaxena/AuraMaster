@@ -361,7 +361,7 @@ on those edges.
 | `/am reset path` | Reset one setting to its default |
 | `/am resetall` | Reset every setting to defaults (a profile reset) |
 | `/am profile [name]` | List profiles, current marked; with a name, switch to that existing profile (quotes stripped, case kept; an unknown name is refused, never created; refused in combat). The behavior is `LibKa0s-Slash-1.0`'s `CliProfile` (`docs/profiles.md`); answers while disabled |
-| `/am containers` | List your containers; the selected one is marked |
+| `/am containers` | List your containers in the debug console; the selected one is marked. A report (debug-logging-§15): one chat pointer line, written with logging off; none yet is one chat line (`docs/debug.md`) |
 | `/am select id-or-name` | Choose the container settings apply to |
 | `/am new [unit] [type] [style]` | Create a container (`player`/`target`/`focus`/`pet`, `buffs`/`debuffs`/`enchants`, `bars`/`icons`/`text`) |
 | `/am delete id-or-name` | Delete a container |

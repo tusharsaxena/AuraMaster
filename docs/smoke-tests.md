@@ -167,6 +167,15 @@ Result: pass (owner-marked 2026-10-10)
 **SLASH-5. List containers.** `/am containers` → one line per container in creation order (not by
 name), the selected one marked `>`. Result: pass (owner-marked 2026-10-10)
 
+**SLASH-5a. Containers is a report (LibKa0s#79, amends SLASH-5).** With `/am debug off` and the
+console closed, `/am containers` → the debug console opens with an `/am containers` header and one
+line per container in creation order, the selected one marked with a green `>` and a disabled one
+ending ` - disabled`; chat shows exactly one line, `containers: N lines written to the debug console.
+Use Copy to share it.`, where N is the container count plus one. Copy pastes the lines as plain words,
+with no `|c` codes. Logging is still off afterwards (the title bar reads Debug Off). Delete every
+container (or use a fresh profile with none), then `/am containers` → only `No containers yet — /am
+new creates one` in chat, and the console does not open. Result: pending
+
 **SLASH-6. New from chat.** `/am new target debuffs icons` → `Created …` naming a
 target/debuffs/icons container, which appears on screen, becomes the selected one, and whose Layout →
 Growth → Fill reads Rows. `/am new text` → a Text container whose Fill reads Columns. `/am new

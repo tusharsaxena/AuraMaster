@@ -1805,7 +1805,7 @@ Total.
 - slash: /am profile in combat refuses and switches nothing
 - slash: /am profile answers while disabled, and the switch re-reads the new profile's enabled flag
 
-### test_slash_verbs.lua (60)
+### test_slash_verbs.lua (62)
 
 - slash verbs: /am help prints the alias header, then one row per NS.COMMANDS verb in order
 - slash verbs: the landing page's rows are /am help's rows without the chat indent
@@ -1841,7 +1841,8 @@ Total.
 - slash verbs: a right-click cancels /am pick, says so, and attaches nothing
 - slash verbs: /am perf prints every line the harness returns, tagged, and hands it the rest of the line
 - slash verbs: a bare /am debug toggles the window and leaves the flag; /am debug ON is read in any case
-- slash verbs: /am containers marks the selection and a disabled container, and says when there are none
+- slash verbs: /am containers writes its list to the debug console, marking the selection and a disabled container
+- slash verbs: /am containers with none says so in chat and writes nothing to the console
 - slash verbs: /am select matches a name in any case, and a miss moves nothing
 - slash verbs: /am new reads its words in any case, and a later word overrides an earlier one
 - slash verbs: /am delete matches a name in any case and names what it deleted; a miss deletes nothing
@@ -1856,6 +1857,7 @@ Total.
 - slash verbs: without the library each schema verb names what is missing, and writes nothing
 - slash verbs: without the library /am set on a composed row or a writeThrough path prints the one line and writes nothing
 - slash verbs: without the library a bare /am still runs config, help prints the list, aliases route, and an unknown verb says so
+- slash verbs: without the library /am containers streams its list to chat, with no pointer
 - slash verbs: without the library the host verbs keep working
 - slash verbs: without the library the stub's CliProfile and ProfileSwitch name what is missing and switch nothing
 - slash verbs: while disabled every feature verb refuses on ONE line naming /am enable, and acts on nothing
@@ -3058,7 +3060,7 @@ Total.
 | test_layers.lua | 8 |
 | test_disabled.lua | 18 |
 | test_slash.lua | 35 |
-| test_slash_verbs.lua | 60 |
+| test_slash_verbs.lua | 62 |
 | test_diagnostics.lua | 50 |
 | test_diagnostics_situations.lua | 4 |
 | test_bulklog.lua | 20 |
@@ -3120,4 +3122,4 @@ Total.
 | test_skin_switch.lua | 34 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2558** |
+| **Total** | **2560** |
