@@ -250,10 +250,11 @@ end
 
 --- The TEST tag the unlocked drag strip's label carries after the name (modules/Anchors.lua's
 --- handleParts): the localized TEST in the skin's `sem.warn` (Ka0s Default's orange, ff8000;
---- decision D5), read at each call so a skin switch reaches the next label. A locked test mode draws
---- no TEST over the placeholders: the owner removed that marker (D-14 of Ka0sAddonsCommonTasks
---- docs/2026-10-30-SKIN_FONTS_AND_FEEDBACK, image-35, where it covered a bar's name), and the
---- standard's test-mode marker is a MAY for a HUD display (preview-mode, WS-01).
+--- decision D5), read at each call so a skin switch reaches the next label. Nothing draws a TEST
+--- over the placeholders: the owner removed that marker (D-14 of Ka0sAddonsCommonTasks
+--- docs/2026-10-30-SKIN_FONTS_AND_FEEDBACK, image-35, where it covered a bar's name). The test mode's
+--- marker is the library's strip, docked outside the block (Anchors.UpdateTestStrip, AD-88-AM;
+--- preview-mode's *Where the strip sits*, v2.110.0), and this tag is the drag strip's lock chrome.
 function Preview.TestTag()
     return (NS.SkinEscape("sem.warn") or "") .. NS.L["TEST"] .. "|r"
 end

@@ -388,8 +388,13 @@ anchor chain. `GameTooltip` does not inherit the template, so `GameTooltip:SetOw
 or its help mark, both anchored under the anchor, raises "Anchoring disallowed as dependent object
 would inherit forbidden aspects: UntrustedLayoutScriptExecution". The handle's tooltip is owned by
 `UIParent` instead, so it depends on nothing under the anchor: placed beside the strip from the strip's
-rect, read and anchored to `UIParent` alone (`modules/Anchors_Tooltip.lua`), or with `ANCHOR_CURSOR`
-where that rect reads secret.
+rect and anchored to `UIParent` alone by LibKa0s-Tooltip-1.0's `PlaceBeside`
+(`modules/Anchors_Tooltip.lua`, AD-92-AM). Where that rect reads secret, the hook places it beside
+the nearest container up the strip's stored attach chain whose anchor reads (or the named frame the
+chain ends on, when that reads), never the cursor. The widget's own attached fallback cannot stand in
+there: it reads the same secret rect, and its relative point into the restricted tree is refused,
+which leaves a shown tooltip with no anchor, so it never renders. Only a chain whose every link reads
+secret (it ends on a named frame that is itself secret) still has no tooltip.
 
 ## Groups are add-only, and some setters reset a group
 
@@ -959,7 +964,7 @@ smoke, 2026-10-15).
   string's shadow in the glow color at −2d, look the same as eight.
 
 **What this addon does.** A Text container with Glow on builds `C.TEXT_GLOW_TWINS` twin engines
-(`core/Constants.lua:356`: 4 under shadow pairing, `C.TEXT_GLOW_PAIRED`, else 8) beside its main
+(`core/Constants.lua:362`: 4 under shadow pairing, `C.TEXT_GLOW_PAIRED`, else 8) beside its main
 (`modules/Container_Twins.lua`). Each takes the main's unit, groups, view, enchant slots and flow
 through the same calls in the same order, hangs from a holder of ours at Thickness × its ring
 direction plus Offset X and Y, and sits three frame levels below the main, written before its first
@@ -987,8 +992,9 @@ does not set the flag.
   anchored under the anchor, the drag handle and its help mark included, and the client refuses
   `GameTooltip:SetOwner` on any of them ("Anchoring disallowed as dependent object would inherit
   forbidden aspects: UntrustedLayoutScriptExecution"). The handle's tooltip is therefore owned by
-  `UIParent` and anchored to `UIParent` beside the strip (`modules/Anchors_Tooltip.lua`), or follows
-  the cursor where the strip's rect reads secret.
+  `UIParent` and anchored to `UIParent` beside the strip (`modules/Anchors_Tooltip.lua`), or, where the
+  strip's rect reads secret, beside the nearest readable container up its stored attach chain (never
+  the cursor).
 - **Anchors stay out of the client's layout cache.** An anchor is movable (a handle drag moves it
   with `StartMoving`), and the client saves a movable frame's position and restores it at login.
   `Container.New` calls `SetDontSavePosition(true)`, so the stored `container.position` is the only

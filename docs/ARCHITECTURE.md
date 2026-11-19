@@ -99,7 +99,7 @@ Five starting points for a profile's containers (spec
 |---|---|
 | `defaults/Presets.lua` | `NS.PresetData`: the data (the seven stacks in a 1080-tall reference space, the containers by role, each preset's stacks) and the pure builder. `Build(name, look, W, H, picked)` answers the specs in creation order, a stack's head placed on `UIParent` (the corner, player and target heads by their CENTER on its CENTER, the owner's 2026-11-17 SmokeTest baseline) and every member attached to the one before it, flush by explicit points (a bar centered, an icon row from the side it starts; a call-out Automatic, flush under); `Realize(specs, keys, create)` walks them through a writer, filling each member's `attach.container` with the id its parent took. `CalloutRect(name, look, W, H)` answers the call-out block's unlocked test-mode rectangle, and `ROOM` the room around it (the spot both pickers open on, 75% up, the skin picker's and the preset picker's sizes, the margin). Writes each name as `[n] <name>`, `n` its place in creation order, the owner's numbering (spec section 17.4; not localized, the name after it is), and on every bars container the bar look of section 17.3 (`bars.bgAlpha` 0.5; `bars.colorMode` `"dispel"` on a HARMFUL one, `"static"` otherwise, both written so neither the template nor a skin decides), the owner's own One color fill (`bars.barColor`) on five roles (Player buffs, short and Target special (mine) gray, Target crowd control orange, Target cooldowns, players tan, Weapon enchants purple), and icons of the owner's 24. Carries no spell ids and no appearance media but that bar look and the call-outs' look (spec section 15) |
 | `modules/Presets.lua` | `NS.Presets`, the one writer: `Apply(name, look, mode)` through `ContainerManager.Create` / `.Delete` and `Categories.CreateUserCategory` (Advanced's two custom categories, reused by name on a re-apply, `ResolveCustom`); the preview (`BeginPreview`, `EndPreview`, `IsPreviewing`, `Previewed`, `RestoreStaleSnapshots`, `RestoreStaleSnapshot`, `OnCombatStart`, `OnCombatEnd`); the picker latches, the profile's and the account's (`PickerSeen`, `MarkPickerSeen`); the untouched-seed record (`RecordSeed`, `SeedUntouched`, `Fingerprint`); `OwnContainerCount`, `ParentSize` |
-| `settings/PresetPicker.lua` | The first-run window (`NS.PresetPickerDue`, `NS.MaybeShowPresetPicker`, `NS.ShowPresetPicker`, `NS.HidePresetPicker`, `NS.PresetPickerHolding`, `NS.RefreshPresetPicker`; `NS.PresetPicker.Placement(W, H)`, where it opens), with its lock and test-mode buttons, and the preset confirm, one StaticPopup behind two entry points: `NS.ConfirmPreset(name, look, mode)` applies (`/am preset <name>`, the tab with no preview of its own), `NS.ConfirmPreview(name, look, mode)` keeps the preview on screen while it asks, then keeps it (the tab). An answer decides what it writes when it is given, and the confirm goes down unanswered with the window and with every `NS.HidePresetPicker` (a profile event, the stand-down). Every close the player makes of the window prints the unlock hint once (spec section 17.5, `sayUnlockHint`) |
+| `settings/PresetPicker.lua` | The first-run window (`NS.PresetPickerDue`, `NS.MaybeShowPresetPicker`, `NS.ShowPresetPicker`, `NS.HidePresetPicker`, `NS.PresetPickerHolding`, `NS.RefreshPresetPicker`; `NS.PresetPicker.Placement(W, H)`, where it opens), with its lock and test-mode buttons, its title marks on the library's `W.HeaderButtons` (standalone-windows, *Title-bar controls*, LibKa0s#86: left to right settings · close in the top-right corner, the close through `NS.MakeCloseButton`; the settings mark hides the picker first, a close as Not now is, since its MODAL strata would cover the panel, then opens the settings through the launcher's registered opener, Core's `OpenSettings`, and offers no skin picker on that close, since the skin picker is MODAL too and would cover the panel: it stays due for the next showing; where `NS.MakeCloseButton` answers nil (Core absent) a plain "x" is the close, still placed by HeaderButtons beside the gear; without the library the close alone, as before) and its footer line on the library's `W.Footer` (24 px, `FOOTER.HEIGHT`, on the window's bottom edge under a hairline, the body ending a row gap above it; standalone-windows, *The footer*, LibKa0s#89: its one line is "Change it later on General > Presets.", short enough for the footer's unwrapped line, and "The skin picker opens next." is a body line under the blurb while the skin picker is due), and the preset confirm, one StaticPopup behind two entry points: `NS.ConfirmPreset(name, look, mode)` applies (`/am preset <name>`, the tab with no preview of its own), `NS.ConfirmPreview(name, look, mode)` keeps the preview on screen while it asks, then keeps it (the tab). An answer decides what it writes when it is given, and the confirm goes down unanswered with the window and with every `NS.HidePresetPicker` (a profile event, the stand-down). Every close the player makes of the window prints the unlock hint once (spec section 17.5, `sayUnlockHint`) |
 | `settings/GeneralPresets.lua` | The General page's **Presets** tab, its second tab after Master controls: `NS.RenderPresetsTab`, and `NS.PresetsTabLeft`, its `onLeave` |
 
 - **Its own profile key**, `presets` (`docs/schema.md`): `pickerSeen` (default false, a skipRender
@@ -335,9 +335,18 @@ help` prints the list.
 `/am test` is the test mode's verb (preview-mode): unlocking no longer previews, so the placeholders
 have a switch of their own, shared with the Master controls *Test mode* checkbox and the launcher
 menu's *Test mode* entry. While it is on and unlocked, each strip reads its name and then an orange
-TEST. Locked, the placeholders carry no TEST of their own: the owner removed that marker (D-14 of
-Ka0sAddonsCommonTasks `docs/2026-10-30-SKIN_FONTS_AND_FEEDBACK/`, image-35), and preview-mode's
-on-display marker is a MAY for a HUD display such as an aura container (WS-01).
+TEST. Nothing draws a TEST over the placeholders: the owner removed that marker (D-14 of
+Ka0sAddonsCommonTasks `docs/2026-10-30-SKIN_FONTS_AND_FEEDBACK/`, image-35, where it covered a bar's
+name). The test mode's marker is LibKa0s-Widgets-1.0's amber mode strip (`Anchors.UpdateTestStrip`,
+AD-88-AM, LibKa0s#88; preview-mode's *Where the strip sits*, v2.110.0, which retired WS-01's HUD
+exemption): docked by the library (`dock = "hud"`) on the top edge of the placeholder block, outside
+it, stacked beyond the drag strip unlocked or the name label locked, and flipped under the block
+when the top would leave the screen. It takes no mouse. A container whose top edge another joins
+carries none, so the strip sits on the top of each chain (growing down, every container but an after
+follower; growing up, every container with no enabled after follower above it), and the seam does
+not move (SS-3). It is placed again after a drop (`Snap.Drop`). A block whose edges read secret (a
+container on a frame that holds an aura engine) shows none: the library's placement does arithmetic
+on those edges.
 
 | Command | What it does |
 |---|---|
@@ -352,7 +361,7 @@ on-display marker is a MAY for a HUD display such as an aura container (WS-01).
 | `/am reset path` | Reset one setting to its default |
 | `/am resetall` | Reset every setting to defaults (a profile reset) |
 | `/am profile [name]` | List profiles, current marked; with a name, switch to that existing profile (quotes stripped, case kept; an unknown name is refused, never created; refused in combat). The behavior is `LibKa0s-Slash-1.0`'s `CliProfile` (`docs/profiles.md`); answers while disabled |
-| `/am containers` | List your containers; the selected one is marked |
+| `/am containers` | List your containers in the debug console; the selected one is marked. A report (debug-logging-§15): one chat pointer line, written with logging off; none yet is one chat line (`docs/debug.md`) |
 | `/am select id-or-name` | Choose the container settings apply to |
 | `/am new [unit] [type] [style]` | Create a container (`player`/`target`/`focus`/`pet`, `buffs`/`debuffs`/`enchants`, `bars`/`icons`/`text`) |
 | `/am delete id-or-name` | Delete a container |
@@ -530,6 +539,13 @@ Every surface Aura Master draws paints through the `LibKa0s-Skin-1.0` facade wit
   the frame picker) repaints from tokens on `OnLooksChanged`
   (`modules/Anchors.lua`, `Anchors_Snap.lua`, `Container.lua`, `FramePicker.lua`, `Preview.lua`); the
   strip's library parts follow the `owner` handed to `KW.DragHandle`.
+- **The drag strip's marks** are, right to left, the "?", the close X and, since AD-86-AM
+  (LibKa0s#86, DragHandle minor 14's opt-in `spec.settings`), a settings gear left of the X. The gear
+  opens the Containers page on that container (`openSettings`, the strip's right click), not the
+  panel's last page through the launcher's opener, and its tooltip names the container. It grows the
+  widget's reserve by one mark's frame on each side (`handle:Reserve()`, 47 to 65 px), so a
+  capped strip keeps 36 px less label and shortens a long name sooner; a one-icon strip too narrow for
+  the marks and a readable label keeps its natural width (`stripCapped`), so every strip has room.
 - **Settings and tools.** The library paints the pages, the composed rows, the debug console, its
   copy window, the perf panel and the close marks for the owner already named. What this addon
   acquires itself, the `AuraMasterDropdown` widgets, the hand-built buttons, edit boxes and label,
@@ -588,6 +604,53 @@ Blizzard own. The tiers:
 
 The Frame strata row's tooltip (Layout → Scale and strata) is the library's `O.StrataTooltip`. A player can still pick Dialog, so the
 tooltip says what Dialog covers.
+
+## Tooltip placement
+
+standalone-windows *Tooltip placement* (WowAddonStandards v2.113.0, LibKa0s#92, AD-92-AM) rules every
+tooltip this addon places itself. There is one such site, and the rest are the library's or the
+client's.
+
+- **The drag strip and its marks** (the "?", the X and the settings gear). The strip is a HUD's drag
+  strip, chrome by the rule, whose library default is `PlaceAttached` above it. The owner's SR2 answer
+  (2026-11-17) keeps this addon's strip tooltips **beside** the strip instead, so the strip's
+  `tooltipPlace`, `NS.AnchorsTooltip.Place` (`modules/Anchors_Tooltip.lua`), calls the library's
+  `PlaceBeside` with the strip as both element and group (a mark places by its strip, `StripOf`).
+  The tooltip then sits `TIP_GAP` right of the strip, or left of it near the screen's right edge, its
+  top level with the strip's. With room on neither side it takes the library's fallback, centered
+  above the strip. The strip's rect goes in through `opts.rect`, read through `NS.Secrets`, and
+  `comparisons = false`. The tooltip is owned by `UIParent` and pinned to `UIParent` alone, because
+  the anchor's restricted tree refuses an anchor (`docs/midnight-quirks.md`). Where the strip's rect
+  reads secret (a container attached under a parent holding auras), the hook walks the strip's
+  container's **stored** attach chain, configuration rather than points read back off a secret frame,
+  and places the tooltip beside the anchor of the first container up it whose rect reads, or beside
+  the named frame the chain ends on when that one reads. A chain rooted on the screen always reads at
+  its root, whose anchor hangs from `UIParent` alone. The widget's own attached fallback is no help
+  there: it reads the same secret rect, its relative point into the restricted tree is refused, and the
+  tooltip is left with no anchor, so it never renders (`dhPlaceAttached` in the vendored
+  `WidgetsDragHandleTip.lua`). The hook therefore answers nil only when nothing on the chain reads (a
+  chain ending on a named frame that is itself secret), the one case still left with no tooltip. The
+  cursor pin of 2026-10-03 and the retired `tooltipOwner = "cursor"` are gone.
+- **The library's own sites** follow the rule in the library. These are the preset picker's
+  title-bar marks (`W.HeaderButtons`), every close (`AttachTitleTip`), the launcher's minimap tooltip
+  (`PlaceLauncher`, launcher-§7), the skin picker, the sim panel and the menus.
+
+Left as they are, out of the rule's scope (*What it does not bind*):
+
+- **The aura buttons' tooltips.** The client places them. `Style.Bind(frame, "SetTooltipAnchorPoint",
+  ...)` (`modules/Style.lua`) only hands Blizzard's aura engine the player's Layout → Mouse → Tooltip
+  position. By the owner's ruling (option B, 2026-11-17) the setting keeps its six edge and corner
+  choices and drops "At the cursor" (`C.TOOLTIP_ANCHORS`), and schema v20 moves a saved
+  `ANCHOR_CURSOR` to `ANCHOR_BOTTOMLEFT` (`docs/schema.md`).
+- **The settings pages' row tooltips** (every `tooltip =` in `settings/`). They are on the Settings
+  canvas, which the library's options rows place.
+- **Blizzard's frames** and the Ace libraries' own tooltips (`libs/`).
+- **The frame picker's label** (`modules/FramePicker.lua`). It follows the cursor because it names
+  the frame under it. It is an overlay label in the cursor tier, not a tooltip.
+
+`tests/test_anchors_tooltip.lua` holds the strip to the rule. Its guard case also holds every TOC
+file to no `ANCHOR_CURSOR` (the v20 migration is the one file allowed to name it), no retired
+`tooltipOwner` and no `SetOwner` at an anchor of its own.
 
 ## Taint Notes
 

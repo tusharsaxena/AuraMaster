@@ -1,6 +1,6 @@
 local _, NS = ...
 
--- core/Database_Migrations.lua — the frozen schema step bodies, Database.MigrateV2 .. MigrateV19,
+-- core/Database_Migrations.lua — the frozen schema step bodies, Database.MigrateV2 .. MigrateV20,
 -- with their private helpers and id tables. Peeled out of core/Database.lua, which keeps the ladder
 -- that calls them (SCHEMA_STEPS, climbLadder, NS.RunMigrations), AceDB init and the registry helpers.
 --
@@ -1168,6 +1168,23 @@ function Database.MigrateV19(p)
     if p.presets.pickerSeen == true then return 0 end
     p.presets.pickerSeen = true
     return 1
+end
+
+--- v20 (AD-92-AM, LibKa0s#92, the owner's ruling option B of 2026-11-17): "At the cursor" left the
+--- aura tooltip position (C.TOOLTIP_ANCHORS), so every stored container whose
+--- `behavior.tooltipAnchor` is still "ANCHOR_CURSOR" takes the default, C.TOOLTIP_ANCHOR_DEFAULT
+--- ("ANCHOR_BOTTOMLEFT"). Any other value stays. Answers how many moved; idempotent.
+function Database.MigrateV20(p)
+    if type(p) ~= "table" or type(p.containers) ~= "table" then return 0 end
+    local moved = 0
+    for _, c in pairs(p.containers) do
+        local b = type(c) == "table" and c.behavior
+        if type(b) == "table" and b.tooltipAnchor == "ANCHOR_CURSOR" then
+            b.tooltipAnchor = NS.Constants.TOOLTIP_ANCHOR_DEFAULT
+            moved = moved + 1
+        end
+    end
+    return moved
 end
 
 --- Without the library, the same writes by hand: the record gates, a path through a missing table is

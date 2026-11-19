@@ -21,10 +21,10 @@ check's number is not reused. Checks with no recorded pass, and checks new or co
 | STATE-1 to STATE-5 | Master switch | Enable and disable, visibility, the inert disabled addon |
 | COMBAT-1 to COMBAT-7 | Combat and restrictions | Deferred changes, the settings lock, resets in combat, Mythic+ keys |
 | DIAG-1 to DIAG-22 | Debug, diagnostics, perf | The debug console, bulk `[Set]` lines, `/am diagnostics`, `/am perf`, the event trace, resizing the console, its copy window and the perf panel, the console's Diagnostics link, diagnostics turning logging on, the library's own lines (a slash refusal, a stand-down edge, the launcher's at-enable line) |
-| CONT-1 to CONT-27 | Containers | Create, duplicate, delete, rename, copy; handles, strips and the close mark; test mode (no TEST marker on a locked container, the strip's TEST tag); unit swaps; empty placeholders |
+| CONT-1 to CONT-29 | Containers | Create, duplicate, delete, rename, copy; handles, strips, the close mark and the settings mark; test mode (no TEST marker on a locked container, the strip's TEST tag, the docked test-mode strip); unit swaps; empty placeholders |
 | FILT-1 to FILT-67 | Filters and spell categories | Cast by, the category grids, Overrides, the add-a-spell box, aura ids, your own categories, weapon enchants and their names, the help marks' art, where spell lists apply, the Situations tab, its zones and its Unit type gate |
-| LAYOUT-1 to LAYOUT-38 | Layout | Anchor modes, attaching, chains, growth, anchor points, seams, the name label, mouse and tooltips |
-| DRAG-1 to DRAG-18 | Layout | Drag to attach (issue #22): dropping a container on another, the highlight on the target's strip, the side a drop picks, Shift, loops, detaching and its leeway (green hold, snap back, red past it), the growth-conflict popup, combat, a parent holding auras, frame-attached containers, the strip's tooltip, a drop between pulls in a key, a dropped side surviving a growth change, a drag cut short, a before-side drop with the line between the two join dots, the strip edge following the mark |
+| LAYOUT-1 to LAYOUT-39 | Layout | Anchor modes, attaching, chains, growth, anchor points, seams, the name label, mouse and tooltips, the tooltip position with no cursor choice |
+| DRAG-1 to DRAG-19 | Layout | Drag to attach (issue #22): dropping a container on another, the highlight on the target's strip, the side a drop picks, Shift, loops, detaching and its leeway (green hold, snap back, red past it), the growth-conflict popup, combat, a parent holding auras, frame-attached containers, the strip's tooltip, a drop between pulls in a key, a dropped side surviving a growth change, a drag cut short, a before-side drop with the line between the two join dots, the strip edge following the mark, the strip's tooltip through the library's placer |
 | STYLE-1 to STYLE-31 | Bars and Icons style, fonts | Bars and Icons tabs, the spark, borders, dispel colors, pandemic, the font primer |
 | TEXT-1 to TEXT-36 | Text style | Templates and tokens, justify, the icon, dispel type word, backdrop and edge, animation, Size to fit, the glow behind the text |
 | LAYER-1 to LAYER-6 | Frame layering | Bar borders over the fill, the outline and the name label over the auras, the snap highlight over a Dialog container, the strip at low opacity, the Strata tooltip |
@@ -32,7 +32,7 @@ check's number is not reused. Checks with no recorded pass, and checks new or co
 | SKIN-1 to SKIN-53 | Skins | The skinning rollout: the one-time HUD reset under Ka0s Default, Ka0s Default otherwise unchanged, the Skin tab, each skin on the HUD, the unlock furniture, the settings pages and the tool windows, other addons stock, the font and texture companions and overrides, combat, EllesmereUI on, off and back, the copy, profiles, tooltips and popups, the first-run skin picker; the library follow-ups (each skin's HUD face, Ignore fonts on the HUD, the picker's title, the strings newly in the skin's face); the skin fonts run (the Font outline, From skin flags, `/am skin`, width parity, the HUD size scale, the own faces and glow back, the strips' re-fit) |
 | DEGRADED-1 | Library-absent install | The launcher libraries missing |
 | LOC-1 to LOC-2 | Non-English client | Spell names from the client, adding a spell by its localized name |
-| PRESETS-1 to PRESETS-41 | Presets | Each client: a new profile's Simple seed at the real screen size, the first-run preset picker before the skin picker (Escape, Not now, Empty), each preset in each style, Apply in Replace and Add, Stop preview, leaving the tab, closing the panel, a `/reload`, a profile switch and combat mid-preview, `/am preset` and its confirm, another Ka0s addon's skin picker, the cost of a swap, an existing profile after schema v19; the owner's round 1: the side stacks growing up, the corner group's place, the call-outs' look and place, the picker on the skin picker's spot with the call-outs clear of it, the side stacks' lower base, opened unlocked, its lock and test buttons, Apply locking, Not now putting the lock back; the owner's round 2: the call-outs' glow, the focus stack of its own and its clearance from the far stack, Player debuffs lined up with the focus column, the Presets tab on the General page; the owner's round 3: the right-hand cluster lined up, Player debuffs attached to Player buffs, equal bar widths, debuff bars colored by dispel type over a 50% background, the numbered names, the unlock hint in chat; the owner's round 4: the player stack nearer the center, the target cluster mirroring it, the call-outs at the picker's top, the picker once per account for existing players and never twice for a new one; the owner's round 5: every pick unlocking and turning test mode on, Empty previewing an empty screen |
+| PRESETS-1 to PRESETS-44 | Presets | Each client: a new profile's Simple seed at the real screen size, the first-run preset picker before the skin picker (Escape, Not now, Empty), each preset in each style, Apply in Replace and Add, Stop preview, leaving the tab, closing the panel, a `/reload`, a profile switch and combat mid-preview, `/am preset` and its confirm, another Ka0s addon's skin picker, the cost of a swap, an existing profile after schema v19; the owner's round 1: the side stacks growing up, the corner group's place, the call-outs' look and place, the picker on the skin picker's spot with the call-outs clear of it, the side stacks' lower base, opened unlocked, its lock and test buttons, Apply locking, Not now putting the lock back; the owner's round 2: the call-outs' glow, the focus stack of its own and its clearance from the far stack, Player debuffs lined up with the focus column, the Presets tab on the General page; the owner's round 3: the right-hand cluster lined up, Player debuffs attached to Player buffs, equal bar widths, debuff bars colored by dispel type over a 50% background, the numbered names, the unlock hint in chat; the owner's round 4: the player stack nearer the center, the target cluster mirroring it, the call-outs at the picker's top, the picker once per account for existing players and never twice for a new one; the owner's round 5: every pick unlocking and turning test mode on, Empty previewing an empty screen; the SmokeTest baseline (Advanced), an icon row's side follower; the picker's footer on the library's (LibKa0s#89); the picker's title marks, settings and close (LibKa0s#86) |
 | FOREVER-1 to FOREVER-15 | WoW Forever | Each check names its client: the AddOns list and a clean load on Forever, the default skin per client, a rank-1 aura in a buff container, Forever's own spell lists, each Blizzard token and flag row measured on Forever, the gate on an empty category, hiding the Blizzard buff and debuff frames, weapon enchants, a typed cast id rewritten, and the Retail regression |
 
 ## Before you start
@@ -166,6 +166,15 @@ Result: pass (owner-marked 2026-10-10)
 
 **SLASH-5. List containers.** `/am containers` → one line per container in creation order (not by
 name), the selected one marked `>`. Result: pass (owner-marked 2026-10-10)
+
+**SLASH-5a. Containers is a report (LibKa0s#79, amends SLASH-5).** With `/am debug off` and the
+console closed, `/am containers` → the debug console opens with an `/am containers` header and one
+line per container in creation order, the selected one marked with a green `>` and a disabled one
+ending ` - disabled`; chat shows exactly one line, `containers: N lines written to the debug console.
+Use Copy to share it.`, where N is the container count plus one. Copy pastes the lines as plain words,
+with no `|c` codes. Logging is still off afterwards (the title bar reads Debug Off). Delete every
+container (or use a fresh profile with none), then `/am containers` → only `No containers yet — /am
+new creates one` in chat, and the console does not open. Result: pending
 
 **SLASH-6. New from chat.** `/am new target debuffs icons` → `Created …` naming a
 target/debuffs/icons container, which appears on screen, becomes the selected one, and whose Layout →
@@ -798,6 +807,34 @@ gone), an icon container growing left and a Text container. `/am unlock` → eac
 then the orange **TEST** tag (CONT-17); `/am lock` → the tag goes with the strip and no TEST appears on
 the placeholders. `/am test off` → the placeholders go. Fail: a TEST word on a locked container, a
 strip without its tag, or a Lua error. Result: Owner reported pass, 2026-10-31
+
+**CONT-28. The test-mode strip on each chain (AD-88-AM, LibKa0s#88). Client: Retail, then WoW
+Forever.** Locked, `/am test` → on top of each container that nothing sits on (a screen container, a
+chain's top), just outside its placeholders and as wide as them, an amber strip with an info mark
+and "Test mode - /am test ends it." (shortened with "..." on a one-icon container); it covers no
+placeholder and no name label (turn a container's label on: the strip sits above the label). A
+container attached under another (growing down) shows no strip of its own, and the chain's top
+carries it; on a chain growing up, the strip is on the topmost container and none sits between two
+containers. `/am unlock` → the strip sits above the drag strip, never over it, and the drag strip
+still reads its name and the orange TEST tag; drag a container toward the screen's top edge and drop
+it near the top → its strip moves under its placeholders. Hover the strip → no tooltip, and a click
+on it reaches the world. Set a container's opacity to 30% → its strip stays fully drawn. `/am test
+off` → every strip goes with the placeholders; start combat in test mode → the strips go with it.
+Fail: a strip over a bar or icon, over a label or a drag strip, between two attached containers, a
+strip left after test mode ends, or a Lua error. Result:
+
+**CONT-29. The drag strip's settings mark (AD-86-AM, LibKa0s#86). Client: Retail, then WoW Forever.**
+`/am unlock` → every strip shows, right to left, the "?", the X and a gray gear immediately left of the
+X, all three the same size; the name stays centered and does not run under the gear, even for a long
+name with the orange TEST tag (shortened with "..." where it does not fit, CONT-16), and a one-icon
+container's strip keeps the width of its name and its marks. Hover the gear → it brightens, and the
+tooltip names the container and says a click opens its settings on the Containers page; rename the
+container and hover again → the new name. Close the panel and left-click a strip's gear → the panel
+opens on Containers with that container in the band's picker; right-click the gear → the same. A
+left-drag starting on the gear moves the container as the strip does. In combat, the gear prints the
+gray "cannot open settings during combat" line and nothing opens, with no Lua error and no taint.
+Switch the skin to **Glass** → the gear takes the skin's mark colors as the X and "?" do. Fail: a
+blank gear, a label under a mark, a gear that disables the container, or a Lua error. Result:
 
 ## Filters and spell categories
 
@@ -1538,6 +1575,13 @@ cursor is over the container, padding included; off the container it works again
 **Show tooltips** text names this tradeoff, and Click-through on restores mouseover targeting
 everywhere under the container. Result: pass (owner-marked 2026-10-10)
 
+**LAYOUT-39. The aura tooltip position has no cursor choice (AD-92-AM, option B).** Layout → Mouse →
+Tooltip position → the dropdown offers six choices (Below, to the left; Below, to the right; Above,
+to the left; Above, to the right; Left; Right) and no "At the cursor". On a profile saved before this
+build with a container set to At the cursor, `/reload` → that container reads **Below, to the left**,
+and hovering one of its auras opens the tooltip below its left edge. Other containers keep their own
+pick. Retail and Forever. Result:
+
 **Drag to attach** (issue #22). These use the chain from [Before you start](#before-you-start), A, B
 and C, plus two screen containers: D, Icons growing right and down, so its growth differs from the
 chain's, and E, a Text container growing down like A. Unlock first (`/am unlock`), and turn the
@@ -1653,11 +1697,16 @@ of '<A's name>'" line; the frame-attached one as DRAG-10. Rename A → B's toolt
 the next hover. Each tooltip, the strip's and its X's and "?"'s alike, sits beside the strip, its top
 level with the strip's top, a few px to the right of the strip, not at the cursor; drag D until its
 strip is near the right edge of the screen → its tooltip sits to the strip's left instead, and is never
-cut off by the screen's edge. Attach a container under a parent that holds auras (in a dungeon,
+cut off by the screen's edge. ~~Attach a container under a parent that holds auras (in a dungeon,
 where aura geometry is secret) and hover its strip → its tooltip is not on the strip's top but a little
 right of where the cursor came in, its top just above the cursor, and stays put while the cursor moves
 along the strip (it does not follow it); near the screen's right edge it sits left of the cursor
-instead. No Lua error. Result: pass (owner-marked 2026-10-10)
+instead.~~ No Lua error. Result: pass (owner-marked 2026-10-10)
+
+AMENDED by AD-92-AM (LibKa0s#92): the struck step is the text the owner passed on 2026-10-10, kept as
+the record. Its cursor placement for a strip under a parent holding auras is retired (the rule says
+never the cursor); DRAG-19 below is the check for that case now, and its result is owed. The result
+above covers the rest of this check, which is unchanged.
 
 **DRAG-12. A drop between pulls in a key.** In a Mythic+ key, out of combat between pulls (auras are
 secret there with no combat lockdown), drop E on A's side → E attaches and sits on that side of A at
@@ -1751,6 +1800,23 @@ on A's right edge. Throughout every drag above, E's own strip has the same 2 px 
 would join, green, and red with its parent's past the leeway (DRAG-15); once let go, or once the marks
 hide (move away, Shift, combat), both strips are back to their 1 px gold. No Lua error, no
 `ADDON_ACTION_BLOCKED`. Result: pass (owner-marked 2026-10-10)
+
+**DRAG-19. The strip's tooltip through the library's placer (AD-92-AM).** Unlock, hover a screen
+container's strip, then its "?", its X and its settings gear → each tooltip sits 2 px to the right of
+the strip (a hair closer than before), its top level with the strip's top, never at the cursor and
+never covering the strip; the content is unchanged (the name in gold, the drag hint, the X's and the
+gear's own lines). Drag the container near the screen's right edge → the tooltip sits to the strip's
+left. Make the strip as wide as the screen will allow, or put it at a screen edge with a wide tooltip,
+so there is no room on either side → the tooltip sits centered above the strip. Attach a container
+under a parent that holds auras (in a dungeon, where aura geometry is secret) and hover its strip, its
+"?" and its X → the tooltip SHOWS every time, with its usual lines, beside the PARENT container (the
+nearest container up the chain whose position still reads, normally the chain's screen container):
+2 px right of it, or left of it near the screen's right edge, its top level with that container's
+top. It is NOT beside the cursor and does not follow it. Chain two containers under the parent the
+same way and hover the last one's strip → the same spot, beside the chain's first readable container.
+Attach a container to a named frame (Frame mode, e.g. `PlayerFrame`) under a parent holding auras
+→ hovering its strip shows the tooltip beside that frame. No Lua error ("Anchoring disallowed"
+included). Retail and Forever. Result:
 
 ## Bars and Icons style, fonts
 
@@ -2832,9 +2898,9 @@ are unlocked (PRESETS-24).
 It shows Ka0s Aura Master under the title, a dropdown (Empty - no containers, Simple - 3 containers,
 Intermediate - 8 containers, Advanced - 20 containers, Healer - 9 containers) with Simple selected, a
 Bars / Icons switch, one line describing the pick, the buttons **Containers: unlocked** and **Test
-mode: off**, **Apply** and **Not now**, and the footer "Change it later on General >
-Presets. The skin picker opens next." (without its second sentence when the skin picker is not due,
-PRESETS-40). Opening it previews nothing: test mode stays off and Simple is
+mode: off**, **Apply** and **Not now**, the line "The skin picker opens next." under the
+description (not there when the skin picker is not due, PRESETS-40), and the footer "Change it later
+on General > Presets." along the window's bottom edge, under a thin rule (PRESETS-44). Opening it previews nothing: test mode stays off and Simple is
 on screen. The skin picker does not show while this window is up. Drag the window → it moves and
 stays on screen. Pick **Intermediate** → its containers replace Simple, test mode turns on, and the
 line "On your screen now, filled with sample auras. Nothing is saved until Apply." appears. Pick
@@ -3111,7 +3177,8 @@ Dispel colors and Skin, in that order. Open the **Containers** page → its Gene
 tab, General, and no Presets tab. On General → **Presets**, pick **Advanced** → it previews, the
 status line reads "Previewing …", **Stop preview** puts your containers back, and **Apply preset…**
 asks before it keeps (PRESETS-8 to PRESETS-12 run the rest from this tab). On a new profile the
-first-run picker's footer reads "Change it later on General > Presets. The skin picker opens next."
+first-run picker's footer reads "Change it later on General > Presets.", with "The skin picker opens
+next." under its description.
 Result:
 
 The next six check the owner's round-3 feedback (presets spec section 17). The owner's screenshots
@@ -3298,6 +3365,32 @@ the whole row, centered on [01]'s first row; set them to **Top left** and **Top 
 to [01]'s right, as before. Back to Top right / Top left. Lock → `/am test` off: with fewer buffs, or
 none, [03] does not slide toward the screen edge. Apply **Simple**, **Intermediate** and **Healer**
 in Icons → the same for their Player debuffs (all). No Lua error. Result:
+
+**PRESETS-44. The picker's footer is the library's. Client: Retail, then WoW Forever.** `/am preset`
+→ along the window's bottom edge a footer about 24 px tall with no band of its own (the window's
+background shows through), a thin rule along its top meeting the window's edges, and the line
+"Change it later on General > Presets." in the muted gray, left-aligned, whole on one line with no
+"..." (the same on a new character's first-run showing, where "The skin picker opens next." is a line
+of its own under the description instead, PRESETS-2). **Apply** and **Not now** end a small gap
+above the rule, nothing drawn under it. Switch the skin (General → Skin) to **Glass** and to **WoW
+Forever** → the rule and the line take each skin's colors, the footer's height stays the same. The
+window's other text, tooltips and buttons are as before. No Lua error. Close it with **Not now**.
+Result:
+
+**PRESETS-45. The picker's title marks (AD-86-AM, LibKa0s#86). Client: Retail, then WoW Forever.**
+`/am preset` → in the title bar's top-right corner, left to right, a gray gear and the close X, the
+same size, level with each other and with the title "Choose a preset", the title not running under
+them. Hover the gear → "Open settings" above it, in the skin's tooltip title color, and the gear
+lights in the skin's link color (orange under Ka0s Default); move off → gray again. Hover the X →
+"Close" above it, and it lights red. Pick **Intermediate** (the preview shows), then click the gear →
+the picker closes as **Not now** does (the preview is restored, test mode off, the lock put back, one
+unlock hint in chat) and Aura Master's settings open, not under the picker; `/am preset` again → it
+opens, so the gear counted as a close. On a new character's first-run showing, the gear opens the
+settings with no skin picker over them (the skin picker is MODAL too and stays due); `/reload` → the
+skin picker is offered then, and a **Not now** close of the picker still offers it at once. Switch the skin to **Glass** and **WoW Forever** → the gear and the X
+take each skin's rest and hover colors. Fail: a blank gear, the gear right of the X, the settings
+opening under a picker still up, the skin picker covering the settings the gear opened, a second
+unlock hint, or a Lua error. Result:
 
 ## WoW Forever
 
@@ -3584,3 +3677,13 @@ Open from the owner's 2026-11-17 SmokeTest baseline and its follow-up: PRESETS-4
 SmokeTest profile; the owner saw it match in game on 2026-11-17, before the call-outs' Y went to 0)
 and PRESETS-43, new: an Icons row of a set per-row count now spans its whole row with its drag strip,
 and a container joined to its side sits past that whole row, level with it, whatever it shows.
+
+Open from the LibKa0s v1.105.0 adoption (Ka0sAddonsCommonTasks `docs/2026-11-17-LIBKA0S_V1_105_ADOPTION/`,
+AD-89-AM): PRESETS-44 is new, and PRESETS-2 now places the footer on the window's bottom edge. The
+picker's footer line is the library's `W.Footer` (24 px, no fill, a hairline in the skin's divider).
+From the review of AD-89-AM: the footer keeps its one short line, and "The skin picker opens next."
+moved under the description (PRESETS-2, PRESETS-30 and PRESETS-44 say so). From AD-88-AM: CONT-28 is
+new, the docked test-mode strip on each chain's top. From AD-86-AM (LibKa0s#86): PRESETS-45 is new,
+the picker's title marks on the library's `W.HeaderButtons` (settings, then close), and CONT-29 is
+new, the drag strip's settings mark left of the X.
+Their `Result:` lines are empty until the owner runs them.

@@ -36,8 +36,10 @@ local addonName, NS = ...
 -- WHEN. Once per profile, and once per account (spec section 18.5: a player whose profiles predate
 -- the presets sees it once, on whatever profile is active), before the skin picker: addon:OnEnterWorld shows it at once (it does not
 -- wait the skin picker's two seconds) and arms no skin start while it is due; every close calls
--- NS.MaybeShowSkinPicker, which shows the skin picker only now. A new, reset or copied profile is
--- offered it again after the profile event (core/AuraMaster.lua's rebuildProfile).
+-- NS.MaybeShowSkinPicker, which shows the skin picker only now, but the settings mark's: the skin
+-- picker is MODAL too and would cover the panel that close opens, so it stays due for the next
+-- showing. A new, reset or copied profile is offered it again after the profile event
+-- (core/AuraMaster.lua's rebuildProfile).
 --
 -- WHERE IT OPENS (spec section 15.1). Where the LibKa0s skin picker does: centered across, its CENTER
 -- 75% of the way up UIParent (libs/LibKa0s/OptionsSkinPicker.lua place()), the bare CENTER when
@@ -77,7 +79,8 @@ local addonName, NS = ...
 -- makes take it down (a profile event would otherwise let it write into a profile it never counted).
 --
 -- BUILT FROM THE LIBRARY'S PIECES: the window's shell and close mark through core/CoreSetup.lua's
--- seams (NS.ApplySkin, NS.MakeCloseButton), the dropdown is LibKa0s-Widgets-1.0's, and every
+-- seams (NS.ApplySkin, NS.MakeCloseButton), the dropdown and the footer are LibKa0s-Widgets-1.0's
+-- (the footer W.Footer, FOOTER.HEIGHT tall on the window's bottom edge, LibKa0s#89), and every
 -- button, tab and string is painted through this owner's skin facade (NS.Skin), each member guarded
 -- so the degraded facade draws stock frames. DIALOG strata, as the skin picker (frame-layering-§1);
 -- toplevel, and on show it re-raises any shown StaticPopup, so it never buries a confirm
@@ -119,6 +122,7 @@ local LOOK_LABELS = { bars = L["Bars"], icons = L["Icons"] }
 local state = { sel = "simple", look = "bars", picked = false, firstRun = false, owns = false,
     lockedAtOpen = true, lockProfile = nil, open = false }
 local closing = false   -- true while this file hides the window itself, so OnHide is not a close
+local toSettings = false -- true while the settings mark closes the window: no skin picker over the panel
 local holdTarget        -- the one-shot PLAYER_REGEN_ENABLED target, while a start is held
 local pending           -- the open confirm's data ({ run, after }), nil while none is up
 
@@ -371,7 +375,7 @@ local function finish(locked)
     NS.Presets.MarkPickerSeen()
     if state.open then sayUnlockHint() end
     state.open = false
-    if NS.MaybeShowSkinPicker then NS.MaybeShowSkinPicker() end
+    if not toSettings and NS.MaybeShowSkinPicker then NS.MaybeShowSkinPicker() end
 end
 
 --- Not now, the close control, Escape: a preview this window started is restored.
@@ -472,27 +476,100 @@ local function buildSwitch(f)
     end
 end
 
+--- The settings mark's click (LibKa0s#86): the picker is a MODAL window that would cover the panel,
+--- so it goes down first, the player's close as Not now is (hideOnSettings, `hideForSettings` below;
+--- the client's OnHide on that Hide is the close, and `state.open` keeps a second one from running
+--- where it did), then this addon's settings open through the launcher's registered opener (Core's
+--- OpenSettings). That close offers no skin picker: it is MODAL too and would cover the panel the
+--- player asked for, so it stays due (nothing marks it seen) and is offered at the next showing.
+local function openSettingsFromPicker()
+    if state.open then dismiss() end
+    toSettings = false
+    if KC and type(KC.OpenSettings) == "function" and KC.OpenSettings(addonName) then return end
+    if NS.OpenOptionsPanel then NS.OpenOptionsPanel() end
+end
+
+--- The title marks (standalone-windows, *Title-bar controls*, LibKa0s#86): LibKa0s-Widgets-1.0's
+--- HeaderButtons, left to right settings · close, in the top-right corner on the title band. The
+--- close is still built through core/CoreSetup.lua's one close wrapper (NS.MakeCloseButton, Core's
+--- with this folder) and still dismisses; where that answers nil (Core absent, the CoreSetup stub) a
+--- plain "x" button is the close, still HeaderButtons' to place, so it never sits on the gear.
+--- Without HeaderButtons (a degraded install) the close alone, placed by hand, as before.
+local function plainClose(parent, onClick)
+    local btn = textButton(parent, "x", onClick)
+    btn:SetWidth(ROW_H)
+    return btn
+end
+
+local function buildMarks(f)
+    if KW and type(KW.HeaderButtons) == "function" then
+        -- The settings mark hides this proxy before it opens the settings: the picker goes down as Not
+        -- now does, flagged so that close offers no skin picker over the panel.
+        local hideForSettings = { Hide = function() toSettings = true; f:Hide() end }
+        local hb = KW.HeaderButtons(f, { owner = addonName, frame = f, point = "TOPRIGHT", y = -6,
+            makeClose = function(parent, onClick)
+                return NS.MakeCloseButton(parent, onClick) or plainClose(parent, onClick)
+            end,
+            close = function() dismiss() end, hideOnSettings = hideForSettings,
+            settings = openSettingsFromPicker })
+        f.close, f.settings = hb.close, hb.settings
+        return hb.right
+    end
+    f.close = NS.MakeCloseButton(f, function() dismiss() end) or plainClose(f, function() dismiss() end)
+    f.close:SetPoint("TOPRIGHT", f, "TOPRIGHT", -6, -6)
+    return { f.close }
+end
+
 local function buildChrome(f)
     f.title = fontString(f, "GameFontNormal", "heading")
     f.title:SetText(L["Choose a preset"])
-    f.close = NS.MakeCloseButton(f, function() dismiss() end)
-    if f.close then
-        f.close:SetPoint("TOPRIGHT", f, "TOPRIGHT", -6, -6)
-    else
-        f.close = textButton(f, "x", function() dismiss() end)
-        f.close:SetWidth(ROW_H)
-        f.close:SetPoint("TOPRIGHT", f, "TOPRIGHT", -6, -6)
-    end
+    local right = buildMarks(f)
     f.title:SetPoint("TOPLEFT", f, "TOPLEFT", PAD, -10)
-    paint("Header", f, { title = f.title, right = { f.close } })
+    paint("Header", f, { title = f.title, right = right })
     f.owner = fontString(f, "GameFontNormal", "heading")
     f.owner:SetText("Ka0s Aura Master")
+end
+
+-- The footer's height with no library: the figure Widgets publishes (FOOTER.HEIGHT, minor 27).
+local FOOTER_FALLBACK_H = 24
+
+--- The footer's height, read where LibKa0s-Widgets-1.0 publishes it (FOOTER.HEIGHT, skin-invariant:
+--- standalone-windows, *Window chrome geometry*), never copied here.
+local function footerHeight()
+    local F = KW and KW.FOOTER
+    return type(F) == "table" and tonumber(F.HEIGHT) or FOOTER_FALLBACK_H
+end
+
+--- The window's footer (standalone-windows, *The footer*, LibKa0s#89): the library's W.Footer on the
+--- window's bottom edge, no fill under a hairline in the skin's `divider`, its left line the "change
+--- it later" hint in `text.muted`, painted from this addon's skin. Without the library (a degraded
+--- install), a bare frame of the same height with the same `left` line and `SetLeft`, so the layout
+--- and the text read the same.
+local function buildFooter(f)
+    if KW and type(KW.Footer) == "function" then
+        f.footer = KW.Footer(f, { owner = addonName })
+        return
+    end
+    local foot = CreateFrame("Frame", nil, f)
+    foot:SetPoint("BOTTOMLEFT", f, "BOTTOMLEFT", 0, 0)
+    foot:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", 0, 0)
+    foot:SetHeight(FOOTER_FALLBACK_H)
+    foot.left = fontString(foot, "GameFontHighlightSmall", "muted")
+    foot.left:SetPoint("LEFT", foot, "LEFT", 8, 0)
+    foot.left:SetPoint("RIGHT", foot, "RIGHT", -8, 0)
+    foot.SetLeft = function(self, text) self.left:SetText(type(text) == "string" and text or "") end
+    f.footer = foot
 end
 
 local function buildBody(f)
     buildDropdown(f)
     buildSwitch(f)
     f.blurb = fontString(f, "GameFontHighlightSmall")
+    -- What comes after this window, on a first-run showing with the skin picker still due: a body
+    -- line of its own under the blurb, not the footer's, whose one unwrapped line it would overrun
+    -- (W.Footer's left line truncates; the review of AD-89-AM).
+    f.nextHint = fontString(f, "GameFontHighlightSmall", "muted")
+    f.nextHint:SetText(L["The skin picker opens next."])
     -- A row of its own, so the line shows and hides as one frame while a preview is up.
     f.status = CreateFrame("Frame", nil, f)
     f.status.text = fontString(f.status, "GameFontNormalSmall", "accent")
@@ -502,7 +579,7 @@ local function buildBody(f)
     f.testToggle = textButton(f, "", function() toggleTest() end)
     f.apply = textButton(f, L["Apply"], function() apply() end, { primary = true })
     f.notNow = textButton(f, L["Not now"], function() dismiss() end)
-    f.footer = fontString(f, "GameFontDisableSmall", "disabled")
+    buildFooter(f)
 end
 
 local function build()
@@ -562,14 +639,15 @@ local function layout(f)
         y = stack(f, y, f.styleIcons, ROW_H, PAD + half, half)
     end
     y = stack(f, y, f.blurb, 44)
+    if f.nextHint:IsShown() then y = stack(f, y, f.nextHint, 14) end
     if f.status:IsShown() then y = stack(f, y, f.status, 28) end
     stack(f, y, f.lockToggle, ROW_H, PAD, half - 3)
     y = stack(f, y, f.testToggle, ROW_H, PAD + half + 3, half - 3)
     local applyW = WIDTH - 2 * PAD - 90 - 6
     stack(f, y, f.apply, ROW_H, PAD, applyW)
     y = stack(f, y, f.notNow, ROW_H, PAD + applyW + 6, 90)
-    y = stack(f, y, f.footer, 28)
-    f:SetHeight(y + PAD - GAP)
+    -- The body ends a row gap above the footer, which sits on the bottom edge (W.Footer).
+    f:SetHeight(y + footerHeight())
 end
 
 --- The lock and test-mode buttons say what is so now.
@@ -590,9 +668,9 @@ function refresh()
     f.blurb:SetText(BLURBS[state.sel])
     f.status:SetShown(not empty and state.owns and NS.Presets.IsPreviewing())
     paintToggles(f)
-    f.footer:SetText(NS.SkinPickerDue and NS.SkinPickerDue()
-        and L["Change it later on General > Presets. The skin picker opens next."]
-        or L["Change it later on General > Presets."])
+    f.nextHint:SetShown((NS.SkinPickerDue and NS.SkinPickerDue()) and true or false)
+    -- One short line, so it fits the footer's single unwrapped line whole (284 px on this window).
+    f.footer:SetLeft(L["Change it later on General > Presets."])
     layout(f)
 end
 

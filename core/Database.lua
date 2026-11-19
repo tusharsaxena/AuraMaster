@@ -542,6 +542,15 @@ local SCHEMA_STEPS = {
             end
         end)
     end },
+    { to = 20, apply = function(db)
+        -- "At the cursor" left the aura tooltip position (AD-92-AM, option B): Database.MigrateV20.
+        eachProfile(db, function(p, name)
+            local n = Database.MigrateV20(p)
+            if n > 0 and NS.DebugLog then
+                NS.DebugLog.DebugAtEnable("Migrate", "v20 profile '%s': %s tooltip position(s) moved from At the cursor to Below, to the left", name, n)
+            end
+        end)
+    end },
 }
 
 --- Current schema version: the last step's `to`, or 0 (the defaults' "never migrated" stamp).

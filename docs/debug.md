@@ -10,6 +10,25 @@ Debug On/Off label (DebugLog 16); a click runs the same report, `NS.DebugLog:Run
 Running the report, by either form or the link, also **turns debug logging on for the session**
 (debug-logging-§14, DebugLogDiagnostics 2), as `/am debug on` would; a `/reload` turns it off again.
 
+## Reports
+
+A **report** is a multi-line read-out a player asks for by name (debug-logging-§15, the owner's
+ruling of 2026-11-08, LibKa0s#79). Every report goes to the debug console, never to chat, and chat
+gets exactly one pointer line. Aura Master has two:
+
+| Verb | Writes | Chat pointer |
+|---|---|---|
+| `/am diagnostics` (and `/am debug diagnostics`) | the diagnostic report, below | `Diagnostic report written to the debug console: N lines. Use Copy to share it.` |
+| `/am containers` | an `/am containers` header, then one line per container, the selected one marked `>` | `containers: N lines written to the debug console. Use Copy to share it.` |
+
+`/am containers` writes through the library's `NS.DebugLog:Report` (DebugLog 23). The lines land
+whether or not logging is on, the flag is never changed, and the console opens if it is hidden. N
+counts the header. With no containers the verb answers `No containers yet — /am new creates one` in
+chat and writes nothing. Without LibKa0s the stub prints the list in chat with no pointer. The
+pointer goes through `NS.L` (the descriptor's `L.REPORT_WRITTEN`, `core/DebugLogSetup.lua`).
+
+The reserved `/am list`, the help index, acknowledgments and refusals stay in chat.
+
 ## What the report does
 
 It turns logging on when it is off, writes a one-shot report of what the addon sees and what it drew

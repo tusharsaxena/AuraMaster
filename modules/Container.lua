@@ -925,7 +925,9 @@ function ContainerClass:ApplyVisibility()
     -- Before the strip, which moves out past a shown label (D6).
     self:ApplyLabelShown(cfg, show)
     NS.Anchors.UpdateHandle(self, unlocked)
-    -- After the strip and the label: a follower's own seam makes their room (batch 10 F2).
+    -- The test-mode strip (AD-88-AM), after the drag strip and the label it stacks beyond.
+    NS.Anchors.UpdateTestStrip(self, show and previewing and cfg ~= nil)
+    -- After the strips and the label: a follower's own seam makes their room (batch 10 F2).
     NS.Anchors.RefreshSeam(self)
     NS.Anchors.PlaceAttached(self)
     return show, previewing, deferred
@@ -982,6 +984,7 @@ function ContainerClass:Park()
     NS.Preview.Hide(self)
     if self.handle then self.handle:Hide() end
     if self.label then self.label:Hide() end
+    NS.Anchors.HideTestStrip(self)
     self.hangMode, self.stripShown, self.labelShown = "engine", false, false   -- re-evaluated by the next visibility pass
     self.watchEmpty, self.predictedEmpty = false, nil
     self.parked = true
@@ -1007,6 +1010,7 @@ function ContainerClass:Destroy()
     if self.outline then self.outline:Hide() end
     if self.handle then self.handle:Hide() end
     if self.label then self.label:Hide() end
+    NS.Anchors.HideTestStrip(self)
     self.hangMode, self.stripShown, self.labelShown = "engine", false, false
     self.watchEmpty, self.predictedEmpty = false, nil
     self.anchor:Hide()

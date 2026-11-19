@@ -95,9 +95,9 @@ if not lib then
         end,
         -- `false` for every word, so the host's own `/am debug` fallback answers.
         DebugVerb       = function() return false end,
-        -- The report seam (DebugLog 23, LibKa0s#79). With no console the report the player asked for
-        -- streams to chat with no pointer line; a serialize answers one line. Nothing here calls
-        -- either yet (moving report verbs onto it is adoption); the stub answers the live surface.
+        -- The report seam (DebugLog 23, LibKa0s#79), which `/am containers` writes through
+        -- (settings/Slash.lua). With no console the report the player asked for streams to chat
+        -- with no pointer line (debug-logging-§15); a serialize answers one line.
         Report          = function(_, _, _, fn)
             local n = 0
             if type(fn) == "function" then
@@ -168,10 +168,12 @@ NS.DebugLog = lib:New({
     print        = function(line) NS.Print(line) end,
     safeToString = function(v) return NS.SafeToString(v) end,
 
-    -- The one chat line a report prints, through our locale. A plain table the library rawgets from,
-    -- never NS.L itself: its key-echo fallback would answer every other key with the key.
+    -- The one chat line each kind of report prints, through our locale: the diagnostics report's and
+    -- every other report's pointer (`/am containers`, D:Report). A plain table the library rawgets
+    -- from, never NS.L itself: its key-echo fallback would answer every other key with the key.
     L = {
-        DIAG_WRITTEN = NS.L["Diagnostic report written to the debug console: %s lines. Use Copy to share it."],
+        DIAG_WRITTEN   = NS.L["Diagnostic report written to the debug console: %s lines. Use Copy to share it."],
+        REPORT_WRITTEN = NS.L["%s: %d lines written to the debug console. Use Copy to share it."],
     },
 
     -- The report's sections (modules/Diagnostics.lua, which loads after this file), fetched per run.

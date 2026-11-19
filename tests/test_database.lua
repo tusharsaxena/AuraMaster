@@ -863,9 +863,10 @@ test("v12: the v12 step is on the ladder, below v13's skin reset, v14's Font fla
     -- the skin (the owner's rulings of 2026-11-01, tests/test_skin_flip.lua), v17 the defaults moved
     -- back off it (SF-AM-1..3, tests/test_defaults_v17.lua), v18 a stored Ka0s Friz Quadrata TT
     -- to Ka0s Ubuntu (R3-FRIZ), v19 every seeded profile marked as having seen the preset picker
-    -- (AM-PR04, tests/test_presets_seed.lua)
-    assertEqual(NS.Database.CurrentSchemaVersion(), 19)
-    assertEqual(NS.db.global.schemaVersion, 19)
+    -- (AM-PR04, tests/test_presets_seed.lua), v20 a stored At the cursor tooltip position to the
+    -- default (AD-92-AM, tests/test_migrations.lua)
+    assertEqual(NS.Database.CurrentSchemaVersion(), 20)
+    assertEqual(NS.db.global.schemaVersion, 20)
 end)
 
 test("v3: RunMigrations migrates every stored profile, the inactive one included", function()

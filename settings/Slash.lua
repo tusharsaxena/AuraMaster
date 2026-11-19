@@ -65,7 +65,7 @@ NS.COMMANDS = {
     -- NS.OnProfileChanged's, fired by AceDB (core/AuraMaster.lua).
     {"profile",       L["List profiles, or switch to one: profile <name>"],
         function(rest) cli:CliProfile(rest) end},
-    {"containers",    L["List your containers; the selected one is marked"],
+    {"containers",    L["List your containers in the debug console; the selected one is marked"],
         function() runContainers() end},
     {"select",        L["Choose the container settings apply to — /am select id or name"],
         function(rest) runSelect(rest) end},
@@ -135,8 +135,8 @@ NS.COMMANDS = {
 --- path here is container-relative (`container.bars.width`) and resolves against the SELECTED
 --- container, so `/am containers` and `/am select` are how a player AIMS get, set and reset at the
 --- container they mean -- they are part of reading and repairing settings, not features. Neither
---- draws, hides, creates or deletes anything: `containers` prints a list, and `select` moves one
---- integer of session state. slash-commands-§2's list is what a refusal may never be turned on, not a ceiling on
+--- draws, hides, creates or deletes anything: `containers` writes a report to the debug console
+--- (D:Report), and `select` moves one integer of session state. slash-commands-§2's list is what a refusal may never be turned on, not a ceiling on
 --- what stays live.
 ---
 --- AND `diagnostics`, the third, for the same reason `debug` is live: it is a diagnostic, not a
@@ -269,15 +269,20 @@ function runResetAll()
     end
 end
 
+--- `/am containers` is a REPORT (debug-logging-§15, the owner's ruling of 2026-11-08, LibKa0s#79):
+--- the list goes to the debug console through the library's D:Report, written whether or not
+--- logging is on, the console revealed, and chat gets the one pointer line. The header is the
+--- library's `/am containers`. With no containers the short answer stays in chat and the body writes
+--- nothing, so no report is written. Without the library the stub streams the list to chat.
 function runContainers()
     local list = NS.Database.GetContainers()
-    local count = #list
-    if count == 0 then return print(L["No containers yet — /am new creates one"]) end
+    if #list == 0 then return print(L["No containers yet — /am new creates one"]) end
     local _, activeId = NS.ActiveContainer()
-    print(L["Containers"])
-    for _, c in ipairs(list) do
-        printf("  %s %s", c.id == activeId and "|cff33ff99>|r" or " ", describe(c))
-    end
+    NS.DebugLog:Report("Containers", "containers", function(out)
+        for _, c in ipairs(list) do
+            out(("  %s %s"):format(c.id == activeId and "|cff33ff99>|r" or " ", describe(c)))
+        end
+    end)
 end
 
 function runSelect(rest)

@@ -126,20 +126,90 @@ test("picker: shows before skin picker", function()
     assertFalse(f:IsShown(), "a second loading screen shows nothing")
 end)
 
-test("picker: the footer names the General page's Presets tab", function()
+test("picker: the footer names the General page's Presets tab, and the body says the skin picker is next", function()
     local NS, m = fresh()
     -- The paint recorder, so the window's font strings keep their text (tests/_kit/mock_paint.lua).
     local restore = dofile("tests/_kit/mock_paint.lua")(m)
     m.__fireEvent("PLAYER_ENTERING_WORLD")
     local f = NS.PresetPicker.frame
     -- red under: the footer still sending the player to Containers > General > Presets (spec 16.4)
-    assertEqual(f.footer:GetText(), NS.L["Change it later on General > Presets. The skin picker opens next."])
+    -- (the line is the library footer's left text since LibKa0s#89, `f.footer.left`)
+    assertEqual(f.footer.left:GetText(), NS.L["Change it later on General > Presets."])
+    -- red under: the second sentence riding the footer's one unwrapped line, cut to "..." (the
+    -- review of AD-89-AM): it is a body line of its own, shown while the skin picker is due
+    assertTrue(f.nextHint:IsShown(), "the first-run showing says what opens next")
+    assertEqual(f.nextHint:GetText(), NS.L["The skin picker opens next."])
     f.notNow:__fire("OnClick")
     NS.SkinPickerDue = function() return false end
     NS.ShowPresetPicker()
-    assertEqual(f.footer:GetText(), NS.L["Change it later on General > Presets."], "with the skin picker no longer due")
+    assertEqual(f.footer.left:GetText(), NS.L["Change it later on General > Presets."], "with the skin picker no longer due")
+    assertFalse(f.nextHint:IsShown(), "and no next-window line")
     NS.HidePresetPicker()
     restore()
+end)
+
+-- The footer's left line is one line with word wrap off, LEFT+8 to RIGHT-8 (FOOTER.PAD): 284 px on
+-- this 300 px window. The mock measures no glyphs, so the budget is a character count: 45 characters
+-- of GameFontHighlightSmall (about 5.5 px each at its 10 pt, wider than its average) is under 250 px.
+test("picker: every footer line the window can show fits the footer's single line", function()
+    local NS, m = fresh()
+    local restore = dofile("tests/_kit/mock_paint.lua")(m)
+    local seen = {}
+    for _, due in ipairs({ true, false }) do
+        NS.SkinPickerDue = function() return due end
+        NS.ShowPresetPicker()
+        seen[#seen + 1] = NS.PresetPicker.frame.footer.left:GetText()
+        NS.HidePresetPicker()
+    end
+    restore()
+    for _, line in ipairs(seen) do
+        -- red under: the 65-character two-sentence line of a first-run showing (about 330-360 px)
+        assertTrue(#line > 0 and #line <= 45, "the footer line is " .. #line .. " characters: " .. line)
+    end
+end)
+
+-- LibKa0s#89 (standalone-windows, *The footer* and *Window chrome geometry*, WowAddonStandards
+-- v2.110.0): the window's footer line is the library's W.Footer, 24 px, on its bottom edge, painted
+-- from this addon's skin, and the body ends above it.
+test("picker: the footer is the library's W.Footer, FOOTER.HEIGHT tall, the buttons ending above it", function()
+    local NS, m = fresh()
+    local W = m.LibStub("LibKa0s-Widgets-1.0")
+    local built, real = {}, W.Footer
+    W.Footer = function(parent, opts)
+        local foot = real(parent, opts)
+        built[#built + 1] = { parent = parent, opts = opts, foot = foot }
+        return foot
+    end
+    local heights, rows = {}, {}
+    local mk = m.CreateFrame
+    m.CreateFrame = function(kind, name, ...)
+        local f = mk(kind, name, ...)
+        if name == "AuraMasterPresetPicker" then
+            rawset(f, "SetHeight", function(self, h) heights[#heights + 1] = h; return self end)
+        end
+        return f
+    end
+    m.__fireEvent("PLAYER_ENTERING_WORLD")
+    m.CreateFrame = mk
+    local f = NS.PresetPicker.frame
+    for _, key in ipairs({ "apply", "notNow" }) do
+        rawset(f[key], "SetPoint", function(self, _, _, _, _, y) rows[key] = -y; return self end)
+    end
+    NS.RefreshPresetPicker()
+    W.Footer = real
+    -- red under: the hand-built GameFontDisableSmall line stacked as the window's last row
+    assertEqual(#built, 1, "one footer, the library's")
+    assertTrue(built[1].parent == f, "across the window's bottom edge")
+    assertTrue(f.footer == built[1].foot, "the window's footer is it")
+    assertEqual(built[1].opts.owner, "AuraMaster", "painted from this addon's skin")
+    assertTrue(f.footer.line ~= nil, "with the library's hairline")
+    assertEqual(W.FOOTER.HEIGHT, 24, "the standard's footer height")
+    local h = heights[#heights]
+    local bottom = rows.notNow + 22   -- the buttons' row is ROW_H tall
+    assertEqual(rows.apply, rows.notNow, "Apply and Not now share the last row")
+    -- the body ends FOOTER.HEIGHT above the bottom edge, plus the window's own row gap
+    assertEqual(h - bottom, W.FOOTER.HEIGHT + 8, "the buttons end a gap above the footer")
+    NS.HidePresetPicker()
 end)
 
 test("picker: a profile that has seen it arms the skin picker's start as before", function()

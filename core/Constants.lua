@@ -287,13 +287,19 @@ C.JUSTIFY_LABELS = { LEFT = "Left", CENTER = "Center", RIGHT = "Right" }
 -- justify in effect; a reset writes it back.
 C.LABEL_JUSTIFY_AUTO = "AUTO"
 
+-- The aura buttons' tooltip position: the client places that tooltip (SetTooltipAnchorPoint,
+-- modules/Style.lua), so standalone-windows *Tooltip placement* does not bind it, and these stay the
+-- player's six edge and corner choices. "At the cursor" is gone by the owner's ruling (option B,
+-- 2026-11-17, AD-92-AM): schema v20 (Database.MigrateV20) moves a saved one to the default,
+-- C.TOOLTIP_ANCHOR_DEFAULT.
 C.TOOLTIP_ANCHORS = { "ANCHOR_BOTTOMLEFT", "ANCHOR_BOTTOMRIGHT", "ANCHOR_TOPLEFT", "ANCHOR_TOPRIGHT",
-    "ANCHOR_LEFT", "ANCHOR_RIGHT", "ANCHOR_CURSOR" }
+    "ANCHOR_LEFT", "ANCHOR_RIGHT" }
 C.TOOLTIP_ANCHOR_LABELS = {
     ANCHOR_BOTTOMLEFT = "Below, to the left", ANCHOR_BOTTOMRIGHT = "Below, to the right",
     ANCHOR_TOPLEFT = "Above, to the left", ANCHOR_TOPRIGHT = "Above, to the right",
-    ANCHOR_LEFT = "Left", ANCHOR_RIGHT = "Right", ANCHOR_CURSOR = "At the cursor",
+    ANCHOR_LEFT = "Left", ANCHOR_RIGHT = "Right",
 }
+C.TOOLTIP_ANCHOR_DEFAULT = "ANCHOR_BOTTOMLEFT"
 
 -- The TEST tag, the panel's muted gold and the strip name of an attached container are skin tokens
 -- now (core/SkinSetup.lua: `sem.warn`, `am.goldMuted`, `am.attachedName`), read where they are drawn.

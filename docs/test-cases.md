@@ -186,7 +186,7 @@ Total.
 - user categories: the name cap counts characters, so a non-ASCII name is never cut mid-sequence
 - user categories: a deleted category is gone from the grid and from the union, and Uncategorized is still last
 
-### test_migrations.lua (30)
+### test_migrations.lua (31)
 
 - migrations: NS.SCHEMA_VERSION is the runner's target, the last step's version
 - migrations: a legacy v1 account with NO stamp runs every step
@@ -218,6 +218,7 @@ Total.
 - migrations: v9, v8 and v1 accounts reach v11 with no attach side left and every chain Automatic
 - migrations: on load a stored point that is not one of the nine is read as Automatic, and a known one kept
 - migrations: v18 moves a stored Ka0s Friz Quadrata TT to Ka0s Ubuntu in every profile, Blizzard's Friz kept
+- migrations: v20 moves a stored At the cursor tooltip position to Below, to the left in every profile, other picks kept
 
 ### test_schema.lua (38)
 
@@ -883,14 +884,19 @@ Total.
 - handle: under combat lockdown the right-click is refused in gray and selects nothing (feedback #9)
 - handle: an attached container's name is a desaturated gray, to the screen it keeps the plain color (owner, 2026-09-26)
 
-### test_anchors_tooltip.lua (6)
+### test_anchors_tooltip.lua (11)
 
-- tooltip: it sits a gap right of the strip, its TOPLEFT on the strip's TOPRIGHT, anchored to UIParent
-- tooltip: near the right edge it flips to the strip's left, its TOPRIGHT a gap left of the strip
-- tooltip: a strip rect that reads secret or not at all pins it beside the cursor where it entered, anchored to UIParent
+- tooltip: PlaceBeside puts it TIP_GAP right of the strip, its top level with the strip's, pinned to UIParent
+- tooltip: near the right edge it flips to the strip's left, its TOPRIGHT TIP_GAP left of the strip
+- tooltip: a strip rect that reads secret or not at all is not placed and never pinned at the cursor
+- tooltip: a strip whose rect reads secret places beside the nearest container up its attach chain that reads
+- tooltip: a secret strip attached to a named frame places beside that frame when it reads, and only then answers nil
 - tooltip: the strip's rect is converted into the tooltip's own units through both scales
-- tooltip: a help or close mark places by the strip it belongs to, not by itself
-- tooltip: the strip, its help mark and its close mark show it beside the strip, owned by UIParent with no anchor
+- tooltip: with room on neither side of the strip it attaches centered above it (the library's fallback)
+- tooltip: a help, close or settings mark places by the strip it belongs to, not by itself
+- tooltip: the strip and each of its marks show it beside the strip, owned by UIParent with no anchor
+- tooltip: BuildHandle hands the widget the beside placement and no retired cursor owner
+- tooltip guard: no addon file places a tooltip at the cursor or owns one at an anchor of its own
 
 ### test_anchors_seam.lua (10)
 
@@ -1057,6 +1063,13 @@ Total.
 - close: in combat the X still disables the container, raising nothing and moving no anchor
 - close: the X's tooltip names the container (following a rename) and says how to turn it back on
 
+### test_anchors_settings.lua (4)
+
+- settings mark: it sits immediately left of the X, the catalog settings art at the close mark's size
+- settings mark: a left click opens the Containers page on THIS container, as a right click on the strip does
+- settings mark: a right click opens the settings too, like the strip, the ? and the X
+- settings mark: its tooltip names the container (following a rename) and says what the click opens
+
 ### test_anchors_label.lua (23)
 
 - label: the template carries label = { show = false, justifyH = AUTO, x = 0, y = 0, font = gold Ka0s Prototype 12 From skin }
@@ -1092,6 +1105,17 @@ Total.
 - strip: the tooltip of a container joined to another names the parent's point and the parent
 - strip: in test mode the outline encloses the whole placeholder block only while unlocked; locked, none
 - strip: the test-mode outline moves no follower: the seam is the same locked and in test mode (SS-3)
+
+### test_anchors_teststrip.lua (8)
+
+- test strip: a locked test mode docks the library's amber strip on each root's placeholder block
+- test strip: test mode off hides it, and a container never previewed builds none
+- test strip: growing down, an after follower carries none and the chain's root carries it
+- test strip: growing up, the chain's top carries it and a container with an after follower above carries none
+- test strip: it stacks beyond the drag strip unlocked and beyond the name label locked
+- test strip: a pass that moves nothing re-places it and docks nothing
+- test strip: the drop of a drag places it again, and a parked container hides it
+- test strip: a block whose edges read secret shows no strip, and none is docked on it
 
 ### test_anchors_column.lua (21)
 
@@ -1781,7 +1805,7 @@ Total.
 - slash: /am profile in combat refuses and switches nothing
 - slash: /am profile answers while disabled, and the switch re-reads the new profile's enabled flag
 
-### test_slash_verbs.lua (60)
+### test_slash_verbs.lua (62)
 
 - slash verbs: /am help prints the alias header, then one row per NS.COMMANDS verb in order
 - slash verbs: the landing page's rows are /am help's rows without the chat indent
@@ -1817,7 +1841,8 @@ Total.
 - slash verbs: a right-click cancels /am pick, says so, and attaches nothing
 - slash verbs: /am perf prints every line the harness returns, tagged, and hands it the rest of the line
 - slash verbs: a bare /am debug toggles the window and leaves the flag; /am debug ON is read in any case
-- slash verbs: /am containers marks the selection and a disabled container, and says when there are none
+- slash verbs: /am containers writes its list to the debug console, marking the selection and a disabled container
+- slash verbs: /am containers with none says so in chat and writes nothing to the console
 - slash verbs: /am select matches a name in any case, and a miss moves nothing
 - slash verbs: /am new reads its words in any case, and a later word overrides an earlier one
 - slash verbs: /am delete matches a name in any case and names what it deleted; a miss deletes nothing
@@ -1832,6 +1857,7 @@ Total.
 - slash verbs: without the library each schema verb names what is missing, and writes nothing
 - slash verbs: without the library /am set on a composed row or a writeThrough path prints the one line and writes nothing
 - slash verbs: without the library a bare /am still runs config, help prints the list, aliases route, and an unknown verb says so
+- slash verbs: without the library /am containers streams its list to chat, with no pointer
 - slash verbs: without the library the host verbs keep working
 - slash verbs: without the library the stub's CliProfile and ProfileSwitch name what is missing and switch nothing
 - slash verbs: while disabled every feature verb refuses on ONE line naming /am enable, and acts on nothing
@@ -2680,12 +2706,14 @@ Total.
 - seed: the v19 step is idempotent and keeps a stored false on an unseeded profile
 - seed: the account latch needs no migration step
 
-### test_presetpicker.lua (51)
+### test_presetpicker.lua (53)
 
 - picker: due on new profile only
 - picker: the latch is a settings row, written through the seam
 - picker: shows before skin picker
-- picker: the footer names the General page's Presets tab
+- picker: the footer names the General page's Presets tab, and the body says the skin picker is next
+- picker: every footer line the window can show fits the footer's single line
+- picker: the footer is the library's W.Footer, FOOTER.HEIGHT tall, the buttons ending above it
 - picker: a profile that has seen it arms the skin picker's start as before
 - picker: an existing profile sees the picker once per account
 - picker: closing it by any route marks it shown for every profile
@@ -2734,13 +2762,20 @@ Total.
 - picker: after a /reload with the window up, Not now leaves the containers locked
 - picker: every close prints the unlock hint once
 
-### test_presetpicker_titlebar.lua (5)
+### test_presetpicker_titlebar.lua (12)
 
 - preset picker title bar (ka0s): every control has a tooltip, in gtip.title, above it
+- preset picker title bar (ka0s): the settings mark rests in icon.tint and lights text.link
 - preset picker title bar (ka0s): the close rests in icon.tint and lights close.hot
 - preset picker title bar (azeroth): every control has a tooltip, in gtip.title, above it
+- preset picker title bar (azeroth): the settings mark rests in icon.tint and lights text.link
 - preset picker title bar (azeroth): the close rests in icon.tint and lights close.hot
 - preset picker title bar: Azeroth's close colors differ from Ka0s Default's, so the cases above can tell them apart
+- preset picker title bar: the marks are HeaderButtons', left to right settings · close, in the corner
+- preset picker title bar: the settings mark closes the picker as Not now does, then opens the settings
+- preset picker title bar: the client's OnHide on the settings click closes the picker once
+- preset picker title bar: the settings mark leaves the skin picker due, and Not now still offers it
+- preset picker title bar: a Core with no close still gets both marks on HeaderButtons, not overlapping
 
 ### test_pages_presets.lua (12)
 
@@ -2807,7 +2842,7 @@ Total.
 
 - prose: no authored file carries a British spelling from localization-§5's published list
 - prose: the gate carries localization-§5's two lists whole, and nothing of its own
-- prose: the exclusions this repository declared suppressed 19 of 279 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (19): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, and 16 more (list bounded)
+- prose: the exclusions this repository declared suppressed 19 of 277 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (19): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, and 16 more (list bounded)
 - prose: no path this repository narrows the gate by is loaded by a TOC
 - prose: every path this repository narrows the gate by is one .pkgmeta keeps out of the zip
 - prose self-test: the carve-out suppresses the named generated folder, and only it
@@ -2956,7 +2991,7 @@ Total.
 | test_database.lua | 56 |
 | test_database_steps.lua | 17 |
 | test_database_categories.lua | 28 |
-| test_migrations.lua | 30 |
+| test_migrations.lua | 31 |
 | test_schema.lua | 38 |
 | test_schema_paths.lua | 38 |
 | test_settings_pin.lua | 1 |
@@ -2984,7 +3019,7 @@ Total.
 | test_lifecycle.lua | 18 |
 | test_anchors.lua | 51 |
 | test_anchors_handle.lua | 29 |
-| test_anchors_tooltip.lua | 6 |
+| test_anchors_tooltip.lua | 11 |
 | test_anchors_seam.lua | 10 |
 | test_anchors_edges.lua | 14 |
 | test_anchors_hang.lua | 11 |
@@ -2993,8 +3028,10 @@ Total.
 | test_enchantreset.lua | 23 |
 | test_redraw.lua | 14 |
 | test_anchors_close.lua | 6 |
+| test_anchors_settings.lua | 4 |
 | test_anchors_label.lua | 23 |
 | test_anchors_strip.lua | 7 |
+| test_anchors_teststrip.lua | 8 |
 | test_anchors_column.lua | 21 |
 | test_anchors_points.lua | 18 |
 | test_anchors_steady.lua | 8 |
@@ -3023,7 +3060,7 @@ Total.
 | test_layers.lua | 8 |
 | test_disabled.lua | 18 |
 | test_slash.lua | 35 |
-| test_slash_verbs.lua | 60 |
+| test_slash_verbs.lua | 62 |
 | test_diagnostics.lua | 50 |
 | test_diagnostics_situations.lua | 4 |
 | test_bulklog.lua | 20 |
@@ -3066,8 +3103,8 @@ Total.
 | test_presets_apply.lua | 11 |
 | test_presets_preview.lua | 20 |
 | test_presets_seed.lua | 8 |
-| test_presetpicker.lua | 51 |
-| test_presetpicker_titlebar.lua | 5 |
+| test_presetpicker.lua | 53 |
+| test_presetpicker_titlebar.lua | 12 |
 | test_pages_presets.lua | 12 |
 | test_perf.lua | 8 |
 | test_debuglogsetup.lua | 9 |
@@ -3085,4 +3122,4 @@ Total.
 | test_skin_switch.lua | 34 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2531** |
+| **Total** | **2560** |
