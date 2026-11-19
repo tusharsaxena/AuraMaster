@@ -418,14 +418,15 @@ never read back off an engine frame; the anchor is sized to one element from con
 anchor chain. `GameTooltip` does not inherit the template, so `GameTooltip:SetOwner` on the drag handle
 or its help mark, both anchored under the anchor, raises "Anchoring disallowed as dependent object
 would inherit forbidden aspects: UntrustedLayoutScriptExecution". The handle's tooltip is owned by
-`UIParent` instead, so it depends on nothing under the anchor: placed beside the strip from the strip's
-rect and anchored to `UIParent` alone by LibKa0s-Tooltip-1.0's `PlaceBeside`
-(`modules/Anchors_Tooltip.lua`, AD-92-AM). Where that rect reads secret, the hook places it beside
-the nearest container up the strip's stored attach chain whose anchor reads (or the named frame the
-chain ends on, when that reads), never the cursor. The widget's own attached fallback cannot stand in
-there: it reads the same secret rect, and its relative point into the restricted tree is refused,
-which leaves a shown tooltip with no anchor, so it never renders. Only a chain whose every link reads
-secret (it ends on a named frame that is itself secret) still has no tooltip.
+`UIParent` instead, so it depends on nothing under the anchor: since LibKa0s v1.107.0 the library
+places it centered above the strip from the strip's rect, by absolute points on `UIParent`
+(WidgetsDragHandleTip minor 2, LibKa0s-Tooltip-1.0's `PlaceAttached`), and this addon passes no
+placement of its own (AF-STRIP-AM retired the beside hook, `modules/Anchors_Tooltip.lua`). Where that
+rect reads secret (a container attached under a parent holding auras), the library's fallback is a
+relative point into the restricted tree, which is refused and leaves the shown tooltip with no anchor,
+so it never renders. Through v1.106.0 the retired hook placed it beside the nearest readable container
+up the strip's stored attach chain instead; the library has no such fallback, so that strip shows no
+tooltip (`docs/known-limitations.md`).
 
 ## Groups are add-only, and some setters reset a group
 
@@ -1023,9 +1024,9 @@ does not set the flag.
   anchored under the anchor, the drag handle and its help mark included, and the client refuses
   `GameTooltip:SetOwner` on any of them ("Anchoring disallowed as dependent object would inherit
   forbidden aspects: UntrustedLayoutScriptExecution"). The handle's tooltip is therefore owned by
-  `UIParent` and anchored to `UIParent` beside the strip (`modules/Anchors_Tooltip.lua`), or, where the
-  strip's rect reads secret, beside the nearest readable container up its stored attach chain (never
-  the cursor).
+  `UIParent` and pinned to `UIParent` centered above the strip by the library (LibKa0s v1.107.0,
+  AF-STRIP-AM), never the cursor; where the strip's rect reads secret it has no anchor and does not
+  show.
 - **Anchors stay out of the client's layout cache.** An anchor is movable (a handle drag moves it
   with `StartMoving`), and the client saves a movable frame's position and restores it at login.
   `Container.New` calls `SetDontSavePosition(true)`, so the stored `container.position` is the only

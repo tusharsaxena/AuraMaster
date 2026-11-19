@@ -21,7 +21,7 @@ check's number is not reused. Checks with no recorded pass, and checks new or co
 | STATE-1 to STATE-5 | Master switch | Enable and disable, visibility, the inert disabled addon |
 | COMBAT-1 to COMBAT-7 | Combat and restrictions | Deferred changes, the settings lock, resets in combat, Mythic+ keys |
 | DIAG-1 to DIAG-22 | Debug, diagnostics, perf | The debug console, bulk `[Set]` lines, `/am diagnostics`, `/am perf`, the event trace, resizing the console, its copy window and the perf panel, the console's Diagnostics link, diagnostics turning logging on, the library's own lines (a slash refusal, a stand-down edge, the launcher's at-enable line) |
-| CONT-1 to CONT-30 | Containers | Create, duplicate, delete, rename, copy; handles, strips, the close mark and the settings mark, their order and tints; test mode (no TEST marker on a locked container, the strip's TEST tag, the docked test-mode strip); unit swaps; empty placeholders |
+| CONT-1 to CONT-31 | Containers | Create, duplicate, delete, rename, copy; handles, strips, the close mark and the settings mark, their order and tints; test mode (no TEST marker on a locked container, the strip's TEST tag, the docked test-mode strip); unit swaps; empty placeholders |
 | FILT-1 to FILT-67 | Filters and spell categories | Cast by, the category grids, Overrides, the add-a-spell box, aura ids, your own categories, weapon enchants and their names, the help marks' art, where spell lists apply, the Situations tab, its zones and its Unit type gate |
 | LAYOUT-1 to LAYOUT-39 | Layout | Anchor modes, attaching, chains, growth, anchor points, seams, the name label, mouse and tooltips, the tooltip position with no cursor choice |
 | DRAG-1 to DRAG-20 | Layout | Drag to attach (issue #22): dropping a container on another, the highlight on the target's strip, the side a drop picks, Shift, loops, detaching and its leeway (green hold, snap back, red past it), the growth-conflict popup, combat, a parent holding auras, frame-attached containers, the strip's tooltip, a drop between pulls in a key, a dropped side surviving a growth change, a drag cut short, a before-side drop with the line between the two join dots, the strip edge following the mark, the strip's tooltip through the library's placer, then above the strip |
@@ -850,6 +850,21 @@ follow the header marks' colors in each. Clicks are unchanged: the gear opens th
 Containers page, the X disables it (CONT-14), right-click on any mark opens the settings. Fail: a
 mark order other than ? · gear · X, a mark that brightens to white, a label under a mark, or a Lua
 error. Result:
+
+**CONT-31. Every strip's three marks, each with its own words (AF-STRIP-AM; the owner's ruling of
+2026-11-19: all three marks on every strip). Client: Retail, then WoW Forever.** `/am unlock` with
+several containers, one of them attached to another and one attached to a named frame → every strip
+carries the "?", the gear and the X, none missing. Hover each mark of one strip → each tooltip opens
+centered above the strip (DRAG-20): the "?" shows the strip's own lines (the name and the drag hint),
+the gear names the container and says a click opens its settings on the Containers page, and the X
+names the container and says a click disables it, its settings are kept, and Enable this container on
+the Containers page brings it back. Neither the gear nor the X shows the drag hint. Click the gear →
+the panel opens on Containers with that container selected. Close the panel, click the X → that
+container and its strip go and one chat line says how to bring it back; on the Containers page tick
+**Enable this container** for it → it returns at the same position with every setting as before
+(its style, filters and layout unchanged). Fail: a strip with fewer than three marks, a mark showing
+another mark's or the drag hint's words, a close that changes or loses a setting, or a Lua error.
+Result:
 
 ## Filters and spell categories
 
@@ -3721,4 +3736,7 @@ Open from the adoption feedback run (Ka0sAddonsCommonTasks `docs/2026-11-19-ADOP
 AF-RV-AM, LibKa0s v1.107.0): CONT-30 is new, the strip's marks reading ? · settings · close in the
 window header's tints and packed closer, and DRAG-20 is new, every strip tooltip centered above the
 strip. They supersede the order in CONT-13 and CONT-29 and the beside placement in CONT-9, DRAG-11 and
-DRAG-19. Their `Result:` lines are empty until the owner runs them.
+DRAG-19. Their `Result:` lines are empty until the owner runs them. From AF-STRIP-AM: CONT-31 is new,
+every strip's three marks with their own tooltips and the X's restore path; the addon's beside-the-strip
+tooltip hook is retired, so a strip whose position reads secret shows no tooltip (DRAG-20,
+`docs/known-limitations.md`).

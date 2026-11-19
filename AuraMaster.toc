@@ -129,10 +129,7 @@ modules\Style_TextGlow.lua
 # NS.AnchorsAttach at file load. Anchors_Attach binds NS.CONTAINER_TEMPLATE (defaults\Profile.lua) at
 # file load.
 modules\Anchors_Attach.lua
-# LOAD-BEARING: Anchors_Tooltip before Anchors, which binds NS.AnchorsTooltip.Place at file load as
-# the drag strip's tooltipPlace (issue #22). Anchors also binds NS.CONTAINER_TEMPLATE
-# (defaults\Profile.lua) at file load.
-modules\Anchors_Tooltip.lua
+# LOAD-BEARING: Anchors binds NS.CONTAINER_TEMPLATE (defaults\Profile.lua) at file load.
 modules\Anchors.lua
 # LOAD-BEARING: Anchors_SnapRect after Anchors_Attach, whose flow growth it binds from
 # NS.AnchorsAttach at file load, and before Anchors_Snap, which binds NS.AnchorsSnapRect at file load.
