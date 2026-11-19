@@ -35,7 +35,9 @@ end
 --- 2 * (29 + 18). The widget answers it as handle:Reserve(). It is 130 since AD-86-AM (LibKa0s#86,
 --- DragHandle minor 14): the strip carries a settings mark left of the X, and the widget grows the
 --- reserve by its frame (HELP_HIT + CLOSE_GAP, 18) on BOTH sides again: 2 * (29 + 18 + 18), re-pinned.
-local RESERVE2 = 130
+--- It is 114 since AF-RV-AM (LibKa0s v1.107.0, DragHandle minor 15): the marks pack closer, each
+--- further mark's frame 14 wide where it was 18, so 2 * (29 + 14 + 14), re-pinned again.
+local RESERVE2 = 114
 --- The px the widget adds to a measured label (LibKa0s v1.82.0, WidgetsDragHandle minor 8's
 --- DRAG_HANDLE.FIT_SLACK, ruling D-12), so an exact fit never truncates: every natural width is
 --- label + SLACK + RESERVE2.
@@ -68,12 +70,16 @@ test("handle: a dark strip with a 1px gold edge, a gold label and the catalog he
     -- label face. The kit hands a texture back as its frame, so both land on `help` in order.
     local help = h.help
     local sizes = help.__rec.SetSize
-    assertEqual(table.concat(sizes[1], ","), "18,18", "the click target: the strip's full height")
+    -- 14 wide since DragHandle minor 15 (AF-RV-AM, LibKa0s v1.107.0: the marks pack closer), and
+    -- still the strip's full height.
+    assertEqual(table.concat(sizes[1], ","), "14,18", "the click target: the strip's full height")
     assertEqual(table.concat(sizes[2], ","), "8,8", "the art inside it")
     local points = help.__rec.SetPoint
     local p = points[1]
-    assertEqual(p[1], "RIGHT"); assertTrue(p[2] == h); assertEqual(p[3], "RIGHT")
-    assertEqual(p[4], -4); assertEqual(p[5], 0)
+    -- Since DragHandle minor 15 the "?" is the leftmost mark, against the gear (order ? · settings ·
+    -- close); the X holds the corner (test_anchors_close.lua).
+    assertEqual(p[1], "RIGHT"); assertTrue(p[2] == h.settings, "the ? sits against the gear"); assertEqual(p[3], "LEFT")
+    assertEqual(p[4], 0); assertEqual(p[5], 0)
     assertEqual(points[2][1], "CENTER", "the art is centered in its gutter, not stretched over it")
     assertTrue(NS.Icon("help") ~= nil, "the vendored catalog carries the help mark")
     assertEqual(last(help, "SetTexture")[1], NS.Icon("help"))

@@ -99,7 +99,7 @@ or want that case to actually compare:
 
 ```sh
 git clone https://github.com/tusharsaxena/LibKa0s.git ../LibKa0s
-git -C ../LibKa0s rev-parse --short v1.106.0   # verify: prints a commit (the tag on CLAUDE.md's Bundles line)
+git -C ../LibKa0s rev-parse --short v1.107.0   # verify: prints a commit (the tag on CLAUDE.md's Bundles line)
 ```
 
 ### Not dependencies of this repo

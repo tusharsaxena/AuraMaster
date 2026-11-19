@@ -13,8 +13,9 @@ local test, assertEqual, assertTrue =
 local fresh = dofile("tests/fresh_env.lua")
 
 local PX = 6   -- what one character measures in the stand-in measurer
-local RESERVE2 = 130  -- the widget's reserve on both sides of the label, the close and settings marks
-                      -- included (94 until AD-86-AM's settings mark, LibKa0s#86: 2 * (29 + 18 + 18))
+local RESERVE2 = 114  -- the widget's reserve on both sides of the label, the close and settings marks
+                      -- included (94 until AD-86-AM's settings mark, LibKa0s#86: 2 * (29 + 18 + 18) = 130;
+                      -- 114 since AF-RV-AM, DragHandle minor 15's 14px frames: 2 * (29 + 14 + 14))
 local SLACK = 2       -- the px the widget adds to a measured label (LibKa0s v1.82.0, DRAG_HANDLE.FIT_SLACK)
 
 --- The text a label draws, its color escapes removed (the client does not measure them either).

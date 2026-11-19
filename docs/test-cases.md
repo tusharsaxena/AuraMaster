@@ -894,7 +894,7 @@ Total.
 - tooltip: the strip's rect is converted into the tooltip's own units through both scales
 - tooltip: with room on neither side of the strip it attaches centered above it (the library's fallback)
 - tooltip: a help, close or settings mark places by the strip it belongs to, not by itself
-- tooltip: the strip and each of its marks show it beside the strip, owned by UIParent with no anchor
+- tooltip: the strip and each of its marks show it centered above the strip, owned by UIParent with no anchor
 - tooltip: BuildHandle hands the widget the beside placement and no retired cursor owner
 - tooltip guard: no addon file places a tooltip at the cursor or owns one at an anchor of its own
 
@@ -1056,7 +1056,7 @@ Total.
 
 ### test_anchors_close.lua (6)
 
-- close: the X sits immediately left of the help mark, the catalog close glyph at the help mark's size
+- close: the X holds the strip's corner, right of the gear and the ?, the catalog close glyph at the help mark's size
 - close: with no media catalog the X falls back to the library's Blizzard stop button
 - close: a left click disables THIS container through the write seam and says how to bring it back
 - close: a right click on the X opens the settings like the strip and the ?, and disables nothing

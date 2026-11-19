@@ -1,0 +1,20 @@
+Delta: LibKa0s v1.106.0 -> v1.106.0 (span: v1.106.0)
+
+Written 2026-11-19 by AF-RV-AM, beside `../2026-11-19-v1.107.0/`. A records-only back-fill: the one tag this addon vendored without a bundle. No code, library or kit file moved because of it.
+
+## Listing
+
+```sh
+horizon=$(ls -1 docs/revendor | sort | head -1 | cut -c1-10)
+# the audit's walk over libs/LibKa0s and tests/_kit, plus the CLAUDE.md commits that roll the line
+grep -vxF -f recorded.txt vendored.txt
+```
+
+Output:
+
+```
+v1.30.0
+v1.106.0
+```
+
+v1.30.0 is the base of the store's first bundle (`../2026-09-12-v1.31.0/`, line 1 `LibKa0s v1.30.0 → v1.31.0`), vendored before the store began, so it is outside the audit's scope and not recorded here. v1.106.0 was vendored by 6917790 ("Re-vendor LibKa0s v1.106.0 (Widgets minor 28: the HUD dock guards its measurements, RangeMaster#17)"), base v1.105.0, a payload-only re-vendor that kept no bundle.

@@ -312,7 +312,7 @@ local function hover(mocks, frame)
     return owners, points
 end
 
-test("tooltip: the strip and each of its marks show it beside the strip, owned by UIParent with no anchor", function()
+test("tooltip: the strip and each of its marks show it centered above the strip, owned by UIParent with no anchor", function()
     local NS, mocks = fresh()
     screen(mocks, 1920)
     noCursor(mocks)
@@ -335,14 +335,19 @@ test("tooltip: the strip and each of its marks show it beside the strip, owned b
     rawset(mocks.GameTooltip, "GetEffectiveScale", function() return 1 end)
     for i, frame in ipairs(marks) do
         local owners, points = hover(mocks, frame)
-        -- red under: BuildHandle passing no tooltipPlace (the widget's attached placement, BOTTOM)
-        assertEqual(#owners, 1, "frame " .. i .. ": owned once, the placement held")
+        -- LibKa0s v1.107.0 (WidgetsDragHandleTip minor 2, AF-LK-02, the owner's ruling of 2026-11-19):
+        -- the strip's tooltip, and its marks', always takes the library's attached placement, centered
+        -- above the strip; a host `tooltipPlace` is no longer read. Through minor 1 this addon's hook
+        -- put it beside the strip (TOPLEFT at the strip's right edge + TIP_GAP).
+        -- red under: a payload before WidgetsDragHandleTip minor 2 with the beside hook still passed
+        assertEqual(#owners, 1, "frame " .. i .. ": owned once")
         assertTrue(owners[1].owner == mocks.UIParent)
         assertEqual(owners[1].anchor, "ANCHOR_NONE")
         assertEqual(#points, 1)
-        assertEqual(points[1][1], "TOPLEFT")
+        assertEqual(points[1][1], "BOTTOM", "frame " .. i .. ": above the strip")
         assertTrue(points[1][2] == mocks.UIParent, "anchored to UIParent, never into the strip's tree")
-        assertEqual(points[1][4], 300 + gap)
+        assertEqual(points[1][4], 200, "centered on the strip")
+        assertEqual(points[1][5], 500 + gap, "TIP_GAP over the strip's top")
     end
 end)
 

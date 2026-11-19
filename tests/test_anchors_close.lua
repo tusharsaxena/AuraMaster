@@ -50,7 +50,7 @@ local function captureChat(mocks)
     return lines
 end
 
-test("close: the X sits immediately left of the help mark, the catalog close glyph at the help mark's size", function()
+test("close: the X holds the strip's corner, right of the gear and the ?, the catalog close glyph at the help mark's size", function()
     local NS, mocks = fresh()
     local inst = NS.ContainerManager.instances[1]
     local h = recordedHandle(mocks, NS, inst)
@@ -61,8 +61,16 @@ test("close: the X sits immediately left of the help mark, the catalog close gly
     local hs, cs = h.help.__rec.SetSize, h.close.__rec.SetSize
     assertEqual(table.concat(cs[1], ","), table.concat(hs[1], ","), "the same click target as the ?")
     assertEqual(table.concat(cs[2], ","), table.concat(hs[2], ","), "the same art size as the ?")
+    -- LibKa0s v1.107.0 (DragHandle minor 15, AF-RV-AM): the marks read ? · settings · close left to
+    -- right, the X in the corner where the "?" sat, the gear against the X and the "?" against the gear.
+    -- red under: a payload before minor 15 (the X anchored to the "?", the gear to the X)
     local p = h.close.__rec.SetPoint[1]
-    assertEqual(p[1], "RIGHT"); assertTrue(p[2] == h.help, "anchored to the help mark"); assertEqual(p[3], "LEFT")
+    assertEqual(p[1], "RIGHT"); assertTrue(p[2] == h, "the X in the strip's corner"); assertEqual(p[3], "RIGHT")
+    assertEqual(p[4], -6, "the corner inset (HELP_INSET)")
+    local g = h.settings.__rec.SetPoint[1]
+    assertEqual(g[1], "RIGHT"); assertTrue(g[2] == h.close, "the gear against the X"); assertEqual(g[3], "LEFT")
+    local q = h.help.__rec.SetPoint[1]
+    assertTrue(q[2] == h.settings, "the ? against the gear")
 end)
 
 test("close: with no media catalog the X falls back to the library's Blizzard stop button", function()

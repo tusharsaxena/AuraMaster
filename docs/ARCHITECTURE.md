@@ -539,13 +539,17 @@ Every surface Aura Master draws paints through the `LibKa0s-Skin-1.0` facade wit
   the frame picker) repaints from tokens on `OnLooksChanged`
   (`modules/Anchors.lua`, `Anchors_Snap.lua`, `Container.lua`, `FramePicker.lua`, `Preview.lua`); the
   strip's library parts follow the `owner` handed to `KW.DragHandle`.
-- **The drag strip's marks** are, right to left, the "?", the close X and, since AD-86-AM
-  (LibKa0s#86, DragHandle minor 14's opt-in `spec.settings`), a settings gear left of the X. The gear
-  opens the Containers page on that container (`openSettings`, the strip's right click), not the
-  panel's last page through the launcher's opener, and its tooltip names the container. It grows the
-  widget's reserve by one mark's frame on each side (`handle:Reserve()`, 47 to 65 px), so a
-  capped strip keeps 36 px less label and shortens a long name sooner; a one-icon strip too narrow for
-  the marks and a readable label keeps its natural width (`stripCapped`), so every strip has room.
+- **The drag strip's marks** read, left to right, the "?", the settings gear and the close X, the X
+  in the strip's corner (LibKa0s v1.107.0, DragHandle minor 15, AF-RV-AM; standalone-windows, *The
+  drag strip's marks*). Through v1.106.0 they read gear, X, "?". The gear arrived with AD-86-AM
+  (LibKa0s#86, DragHandle minor 14) and opens the Containers page on that container (`openSettings`,
+  the strip's right click), not the panel's last page through the launcher's opener, and its tooltip
+  names the container. The X disables that container (`disableContainer`, CX-3). The marks wear the
+  window header's tints (`icon.tint` at rest, `text.link` under the pointer, `close.hot` for the X).
+  Each further mark grows the widget's reserve by one mark's 14 px frame on each side
+  (`handle:Reserve()`, 57 px a side with all three; 65 through v1.106.0's 18 px frames), so a
+  capped strip shortens a long name sooner; a one-icon strip too narrow for the marks and a readable
+  label keeps its natural width (`stripCapped`), so every strip has room.
 - **Settings and tools.** The library paints the pages, the composed rows, the debug console, its
   copy window, the perf panel and the close marks for the owner already named. What this addon
   acquires itself, the `AuraMasterDropdown` widgets, the hand-built buttons, edit boxes and label,
