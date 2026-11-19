@@ -695,7 +695,7 @@ white box at the corner the flow starts from. Change a container's Width and gro
 container it is attached to → no Lua error (none naming `Backdrop.lua`), and the outline and handle
 look the same. Run this after a `/reload` and again after Profiles → Reset Profile. Result: pass (owner-marked 2026-10-10)
 
-**CONT-9. The handle's tooltip.** Hover a screen container's strip or its "?" → beside the strip
+**CONT-9. The handle's tooltip.** *(Superseded by DRAG-20 and CONT-31 (AF-RV-AM, AF-STRIP-AM): the mark order and tooltip placement below are the pre-v1.107.0 behavior; run DRAG-20 and CONT-31 for today's.)* Hover a screen container's strip or its "?" → beside the strip
 (its top level with the strip's top, a few px to the strip's right, or to its left when the strip is
 near the screen's right edge, as DRAG-11), the name and "Drag to move. Drop it on another container to
 attach it there; hold Shift to place it without attaching. Right-click for settings.", in the usual gold. B (attached to A) and a container
@@ -724,7 +724,7 @@ picker, on the section you last left, not General. In combat, the right-click pr
 "cannot open settings during combat — Blizzard's category-switch is protected" line, nothing opens,
 and the picker is unchanged afterwards. Result: pass (owner-marked 2026-10-10)
 
-**CONT-13. The close mark.** `/am unlock` → every strip shows a gray X immediately left of the "?",
+**CONT-13. The close mark.** *(Superseded by CONT-30 (AF-RV-AM, AF-STRIP-AM): the mark order and tooltip placement below are the pre-v1.107.0 behavior; run CONT-30 for today's.)* `/am unlock` → every strip shows a gray X immediately left of the "?",
 the same size, turning white on hover; the name stays centered and does not run under the X, even for
 a long name with the orange TEST tag. Hover the X → the tooltip names the container and says a click
 disables it, its settings are kept, and Enabled on the Containers page brings it back. No "Anchoring
@@ -823,7 +823,7 @@ off` → every strip goes with the placeholders; start combat in test mode → t
 Fail: a strip over a bar or icon, over a label or a drag strip, between two attached containers, a
 strip left after test mode ends, or a Lua error. Result:
 
-**CONT-29. The drag strip's settings mark (AD-86-AM, LibKa0s#86). Client: Retail, then WoW Forever.**
+**CONT-29. The drag strip's settings mark (AD-86-AM, LibKa0s#86). Client: Retail, then WoW Forever.** *(Superseded by CONT-30 (AF-RV-AM, AF-STRIP-AM): the mark order and tooltip placement below are the pre-v1.107.0 behavior; run CONT-30 for today's.)*
 `/am unlock` → every strip shows, right to left, the "?", the X and a gray gear immediately left of the
 X, all three the same size; the name stays centered and does not run under the gear, even for a long
 name with the orange TEST tag (shortened with "..." where it does not fit, CONT-16), and a one-icon
@@ -1718,7 +1718,7 @@ try to drag it by its strip → it does not move, its name is gray, and its tool
 tooltip reads "Set to a named frame, so it cannot be dragged. Right-click for settings.", never the
 screen line's "Drag to move". Result: pass (owner-marked 2026-10-10)
 
-**DRAG-11. The strip's tooltip.** Hover D's strip → "Drag to move. Drop it on another container to
+**DRAG-11. The strip's tooltip.** *(Superseded by DRAG-20 (AF-RV-AM, AF-STRIP-AM): the mark order and tooltip placement below are the pre-v1.107.0 behavior; run DRAG-20 for today's.)* Hover D's strip → "Drag to move. Drop it on another container to
 attach it there; hold Shift to place it without attaching. Right-click for settings."; hover B's →
 "Attached to '<A's name>'. Drag it away and let go once the marks turn red to detach it; let go sooner
 and it snaps back. Drop it on another container to attach it there; hold Shift to drop it without
@@ -1831,7 +1831,7 @@ would join, green, and red with its parent's past the leeway (DRAG-15); once let
 hide (move away, Shift, combat), both strips are back to their 1 px gold. No Lua error, no
 `ADDON_ACTION_BLOCKED`. Result: pass (owner-marked 2026-10-10)
 
-**DRAG-19. The strip's tooltip through the library's placer (AD-92-AM).** Unlock, hover a screen
+**DRAG-19. The strip's tooltip through the library's placer (AD-92-AM).** *(Superseded by DRAG-20 (AF-RV-AM, AF-STRIP-AM): the mark order and tooltip placement below are the pre-v1.107.0 behavior; run DRAG-20 for today's.)* Unlock, hover a screen
 container's strip, then its "?", its X and its settings gear → each tooltip sits 2 px to the right of
 the strip (a hair closer than before), its top level with the strip's top, never at the cursor and
 never covering the strip; the content is unchanged (the name in gold, the drag hint, the X's and the
