@@ -463,8 +463,6 @@ end
 -- Anchors.UpdateHandle and Container:Park already tolerate.
 local KW   = LibStub and LibStub("LibKa0s-Widgets-1.0", true)
 local DRAG = KW and KW.DRAG_HANDLE
--- Where the strip's tooltip sits (modules/Anchors_Tooltip.lua, loaded first): beside the strip.
-local placeTooltip = NS.AnchorsTooltip.Place
 
 -- The strip's height, the gap it leaves and what it keeps clear each side of its label are the
 -- widget's numbers (`lib.DRAG_HANDLE`), read through DRAG rather than copied back here: a copy is a
@@ -546,15 +544,15 @@ end
 --- own, through the `{ entry, r, g, b }` shape (tokenLine): `gtip.title`, gold inside the white body
 --- band under Ka0s Default (skinning-§7: the lines an addon writes take the skin).
 ---
---- PLACED BESIDE THE STRIP (`tooltipPlace`, modules/Anchors_Tooltip.lua), owned by UIParent and
---- anchored to UIParent alone, never by or to the hovered frame. The anchor inherits
+--- PLACED BY THE LIBRARY, CENTERED ABOVE THE STRIP (LibKa0s v1.107.0, WidgetsDragHandleTip minor 2;
+--- the owner's ruling of 2026-11-19, AF-STRIP-AM), owned by UIParent and pinned to UIParent by
+--- absolute points, never by or to the hovered frame. The anchor inherits
 --- DisableUntrustedLayoutScriptsTemplate (modules/Container.lua), and that restriction reaches every
 --- frame anchored under it: the strip and the marks. GameTooltip does not inherit the template, so the
 --- client refuses SetOwner on either ("Anchoring disallowed as dependent object would inherit
---- forbidden aspects: UntrustedLayoutScriptExecution"). The placement is LibKa0s-Tooltip-1.0's
---- PlaceBeside (AD-92-AM); where the strip's rect does not read, beside the nearest container up its
---- stored attach chain whose anchor reads, never the cursor (the retired cursor owner is no longer
---- passed).
+--- forbidden aspects: UntrustedLayoutScriptExecution"). This addon passes no placement of its own:
+--- its beside-the-strip `tooltipPlace` hook (the Anchors_Tooltip file, AD-92-AM) was deleted in
+--- AF-STRIP-AM, since the library no longer reads one.
 local function tooltipSpec(container)
     -- How to use the strip (issue #22): on the screen, drag it, or drop it on another container to
     -- attach it there; attached to another container, by that parent's name, drag it away until the
@@ -612,8 +610,8 @@ local function disableContainer(container)
 end
 
 --- The close mark's own tooltip: the container's name (a function, read on every hover, so a rename
---- shows through) and what the click does. Placed beside the strip like the strip's, through the
---- same `tooltipPlace` (see tooltipSpec).
+--- shows through), what the click does and how to bring the container back. Placed above the strip
+--- like the strip's (see tooltipSpec).
 local function closeTooltipSpec(container)
     return {
         title = function()
@@ -727,7 +725,6 @@ function Anchors.BuildHandle(container)
         onDragStop   = function() Anchors.Snap.Drop(container) end,
         onRightClick = function() openSettings(container) end,
         tooltip      = tooltipSpec(container),
-        tooltipPlace = placeTooltip,
         edge         = NS.Style.DrawEdge,
         number       = NS.Secrets.NumberOr,
         level        = LEVEL.HANDLE,

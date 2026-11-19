@@ -21,10 +21,10 @@ check's number is not reused. Checks with no recorded pass, and checks new or co
 | STATE-1 to STATE-5 | Master switch | Enable and disable, visibility, the inert disabled addon |
 | COMBAT-1 to COMBAT-7 | Combat and restrictions | Deferred changes, the settings lock, resets in combat, Mythic+ keys |
 | DIAG-1 to DIAG-22 | Debug, diagnostics, perf | The debug console, bulk `[Set]` lines, `/am diagnostics`, `/am perf`, the event trace, resizing the console, its copy window and the perf panel, the console's Diagnostics link, diagnostics turning logging on, the library's own lines (a slash refusal, a stand-down edge, the launcher's at-enable line) |
-| CONT-1 to CONT-29 | Containers | Create, duplicate, delete, rename, copy; handles, strips, the close mark and the settings mark; test mode (no TEST marker on a locked container, the strip's TEST tag, the docked test-mode strip); unit swaps; empty placeholders |
+| CONT-1 to CONT-31 | Containers | Create, duplicate, delete, rename, copy; handles, strips, the close mark and the settings mark, their order and tints; test mode (no TEST marker on a locked container, the strip's TEST tag, the docked test-mode strip); unit swaps; empty placeholders |
 | FILT-1 to FILT-67 | Filters and spell categories | Cast by, the category grids, Overrides, the add-a-spell box, aura ids, your own categories, weapon enchants and their names, the help marks' art, where spell lists apply, the Situations tab, its zones and its Unit type gate |
 | LAYOUT-1 to LAYOUT-39 | Layout | Anchor modes, attaching, chains, growth, anchor points, seams, the name label, mouse and tooltips, the tooltip position with no cursor choice |
-| DRAG-1 to DRAG-19 | Layout | Drag to attach (issue #22): dropping a container on another, the highlight on the target's strip, the side a drop picks, Shift, loops, detaching and its leeway (green hold, snap back, red past it), the growth-conflict popup, combat, a parent holding auras, frame-attached containers, the strip's tooltip, a drop between pulls in a key, a dropped side surviving a growth change, a drag cut short, a before-side drop with the line between the two join dots, the strip edge following the mark, the strip's tooltip through the library's placer |
+| DRAG-1 to DRAG-20 | Layout | Drag to attach (issue #22): dropping a container on another, the highlight on the target's strip, the side a drop picks, Shift, loops, detaching and its leeway (green hold, snap back, red past it), the growth-conflict popup, combat, a parent holding auras, frame-attached containers, the strip's tooltip, a drop between pulls in a key, a dropped side surviving a growth change, a drag cut short, a before-side drop with the line between the two join dots, the strip edge following the mark, the strip's tooltip through the library's placer, then above the strip |
 | STYLE-1 to STYLE-31 | Bars and Icons style, fonts | Bars and Icons tabs, the spark, borders, dispel colors, pandemic, the font primer |
 | TEXT-1 to TEXT-36 | Text style | Templates and tokens, justify, the icon, dispel type word, backdrop and edge, animation, Size to fit, the glow behind the text |
 | LAYER-1 to LAYER-6 | Frame layering | Bar borders over the fill, the outline and the name label over the auras, the snap highlight over a Dialog container, the strip at low opacity, the Strata tooltip |
@@ -695,7 +695,7 @@ white box at the corner the flow starts from. Change a container's Width and gro
 container it is attached to → no Lua error (none naming `Backdrop.lua`), and the outline and handle
 look the same. Run this after a `/reload` and again after Profiles → Reset Profile. Result: pass (owner-marked 2026-10-10)
 
-**CONT-9. The handle's tooltip.** Hover a screen container's strip or its "?" → beside the strip
+**CONT-9. The handle's tooltip.** *(Superseded by DRAG-20 and CONT-31 (AF-RV-AM, AF-STRIP-AM): the mark order and tooltip placement below are the pre-v1.107.0 behavior; run DRAG-20 and CONT-31 for today's.)* Hover a screen container's strip or its "?" → beside the strip
 (its top level with the strip's top, a few px to the strip's right, or to its left when the strip is
 near the screen's right edge, as DRAG-11), the name and "Drag to move. Drop it on another container to
 attach it there; hold Shift to place it without attaching. Right-click for settings.", in the usual gold. B (attached to A) and a container
@@ -724,7 +724,7 @@ picker, on the section you last left, not General. In combat, the right-click pr
 "cannot open settings during combat — Blizzard's category-switch is protected" line, nothing opens,
 and the picker is unchanged afterwards. Result: pass (owner-marked 2026-10-10)
 
-**CONT-13. The close mark.** `/am unlock` → every strip shows a gray X immediately left of the "?",
+**CONT-13. The close mark.** *(Superseded by CONT-30 (AF-RV-AM, AF-STRIP-AM): the mark order and tooltip placement below are the pre-v1.107.0 behavior; run CONT-30 for today's.)* `/am unlock` → every strip shows a gray X immediately left of the "?",
 the same size, turning white on hover; the name stays centered and does not run under the X, even for
 a long name with the orange TEST tag. Hover the X → the tooltip names the container and says a click
 disables it, its settings are kept, and Enabled on the Containers page brings it back. No "Anchoring
@@ -823,7 +823,7 @@ off` → every strip goes with the placeholders; start combat in test mode → t
 Fail: a strip over a bar or icon, over a label or a drag strip, between two attached containers, a
 strip left after test mode ends, or a Lua error. Result:
 
-**CONT-29. The drag strip's settings mark (AD-86-AM, LibKa0s#86). Client: Retail, then WoW Forever.**
+**CONT-29. The drag strip's settings mark (AD-86-AM, LibKa0s#86). Client: Retail, then WoW Forever.** *(Superseded by CONT-30 (AF-RV-AM, AF-STRIP-AM): the mark order and tooltip placement below are the pre-v1.107.0 behavior; run CONT-30 for today's.)*
 `/am unlock` → every strip shows, right to left, the "?", the X and a gray gear immediately left of the
 X, all three the same size; the name stays centered and does not run under the gear, even for a long
 name with the orange TEST tag (shortened with "..." where it does not fit, CONT-16), and a one-icon
@@ -835,6 +835,36 @@ left-drag starting on the gear moves the container as the strip does. In combat,
 gray "cannot open settings during combat" line and nothing opens, with no Lua error and no taint.
 Switch the skin to **Glass** → the gear takes the skin's mark colors as the X and "?" do. Fail: a
 blank gear, a label under a mark, a gear that disables the container, or a Lua error. Result:
+
+**CONT-30. The strip's marks read ? · settings · close, in the header's tints (AF-RV-AM, LibKa0s
+v1.107.0). Client: Retail, then WoW Forever.** `/am unlock` → every drag strip shows, left to right,
+the "?", the gear and the X, with the X in the strip's right corner where the "?" used to sit (CONT-13
+and CONT-29 describe the old order, X and gear left of the "?"). The three sit closer together than
+before, with no dead gap between them, and all three are the same size. At rest all three are the
+same gray as the preset picker's title marks (`/am preset`). Hover the "?" or the gear → it turns the
+picker's gold-orange hover color, as the picker's gear does; hover the X → it turns red, as the
+picker's X does. The "?" lights on hover on every strip. The name stays centered and does not run
+under the "?", even for a long name with the orange TEST tag, and a one-icon container's strip is a
+little narrower than before. Switch the skin to **Glass**, then back to **Ka0s Default** → the marks
+follow the header marks' colors in each. Clicks are unchanged: the gear opens that container on the
+Containers page, the X disables it (CONT-14), right-click on any mark opens the settings. Fail: a
+mark order other than ? · gear · X, a mark that brightens to white, a label under a mark, or a Lua
+error. Result:
+
+**CONT-31. Every strip's three marks, each with its own words (AF-STRIP-AM; the owner's ruling of
+2026-11-19: all three marks on every strip). Client: Retail, then WoW Forever.** `/am unlock` with
+several containers, one of them attached to another and one attached to a named frame → every strip
+carries the "?", the gear and the X, none missing. Hover each mark of one strip → each tooltip opens
+centered above the strip (DRAG-20): the "?" shows the strip's own lines (the name and the drag hint),
+the gear names the container and says a click opens its settings on the Containers page, and the X
+names the container and says a click disables it, its settings are kept, and Enable this container on
+the Containers page brings it back. Neither the gear nor the X shows the drag hint. Click the gear →
+the panel opens on Containers with that container selected. Close the panel, click the X → that
+container and its strip go and one chat line says how to bring it back; on the Containers page tick
+**Enable this container** for it → it returns at the same position with every setting as before
+(its style, filters and layout unchanged). Fail: a strip with fewer than three marks, a mark showing
+another mark's or the drag hint's words, a close that changes or loses a setting, or a Lua error.
+Result:
 
 ## Filters and spell categories
 
@@ -1688,7 +1718,7 @@ try to drag it by its strip → it does not move, its name is gray, and its tool
 tooltip reads "Set to a named frame, so it cannot be dragged. Right-click for settings.", never the
 screen line's "Drag to move". Result: pass (owner-marked 2026-10-10)
 
-**DRAG-11. The strip's tooltip.** Hover D's strip → "Drag to move. Drop it on another container to
+**DRAG-11. The strip's tooltip.** *(Superseded by DRAG-20 (AF-RV-AM, AF-STRIP-AM): the mark order and tooltip placement below are the pre-v1.107.0 behavior; run DRAG-20 for today's.)* Hover D's strip → "Drag to move. Drop it on another container to
 attach it there; hold Shift to place it without attaching. Right-click for settings."; hover B's →
 "Attached to '<A's name>'. Drag it away and let go once the marks turn red to detach it; let go sooner
 and it snaps back. Drop it on another container to attach it there; hold Shift to drop it without
@@ -1801,7 +1831,7 @@ would join, green, and red with its parent's past the leeway (DRAG-15); once let
 hide (move away, Shift, combat), both strips are back to their 1 px gold. No Lua error, no
 `ADDON_ACTION_BLOCKED`. Result: pass (owner-marked 2026-10-10)
 
-**DRAG-19. The strip's tooltip through the library's placer (AD-92-AM).** Unlock, hover a screen
+**DRAG-19. The strip's tooltip through the library's placer (AD-92-AM).** *(Superseded by DRAG-20 (AF-RV-AM, AF-STRIP-AM): the mark order and tooltip placement below are the pre-v1.107.0 behavior; run DRAG-20 for today's.)* Unlock, hover a screen
 container's strip, then its "?", its X and its settings gear → each tooltip sits 2 px to the right of
 the strip (a hair closer than before), its top level with the strip's top, never at the cursor and
 never covering the strip; the content is unchanged (the name in gold, the drag hint, the X's and the
@@ -1817,6 +1847,20 @@ same way and hover the last one's strip → the same spot, beside the chain's fi
 Attach a container to a named frame (Frame mode, e.g. `PlayerFrame`) under a parent holding auras
 → hovering its strip shows the tooltip beside that frame. No Lua error ("Anchoring disallowed"
 included). Retail and Forever. Result:
+
+**DRAG-20. The strip's tooltip opens above the strip (AF-RV-AM, LibKa0s v1.107.0; the owner's ruling
+of 2026-11-19). Client: Retail, then WoW Forever.** This replaces the beside placement DRAG-11, DRAG-19
+and CONT-9 describe. Unlock, hover a screen container's strip, then its "?", its gear and its X → each
+tooltip opens centered above the strip, a couple of px over its top edge, as the Drop Watcher window's
+title marks do, never beside the strip and never at the cursor; the lines are unchanged (the name in
+gold, the drag hint, the gear's and the X's own lines). Drag the container to the top of the screen
+so there is no room above → the tooltip opens centered below the strip. Hover an aura in a container
+→ its tooltip is where it was (the client's placement, Layout → tooltip position), not above the
+strip. Attach a container under a parent that holds auras (in a dungeon, where aura geometry is
+secret) and hover its strip → note whether a tooltip shows and where; DRAG-19's fallback beside the
+parent container is gone with the library's ruling, so a missing tooltip there is the expected
+regression to report (LibKa0s#99), not a pass or a fail of this check. No Lua error ("Anchoring disallowed"
+included). Result:
 
 ## Bars and Icons style, fonts
 
@@ -3687,3 +3731,12 @@ new, the docked test-mode strip on each chain's top. From AD-86-AM (LibKa0s#86):
 the picker's title marks on the library's `W.HeaderButtons` (settings, then close), and CONT-29 is
 new, the drag strip's settings mark left of the X.
 Their `Result:` lines are empty until the owner runs them.
+
+Open from the adoption feedback run (Ka0sAddonsCommonTasks `docs/2026-11-19-ADOPTION_FEEDBACK/`,
+AF-RV-AM, LibKa0s v1.107.0): CONT-30 is new, the strip's marks reading ? · settings · close in the
+window header's tints and packed closer, and DRAG-20 is new, every strip tooltip centered above the
+strip. They supersede the order in CONT-13 and CONT-29 and the beside placement in CONT-9, DRAG-11 and
+DRAG-19. Their `Result:` lines are empty until the owner runs them. From AF-STRIP-AM: CONT-31 is new,
+every strip's three marks with their own tooltips and the X's restore path; the addon's beside-the-strip
+tooltip hook is retired, so a strip whose position reads secret shows no tooltip (DRAG-20,
+`docs/known-limitations.md`).

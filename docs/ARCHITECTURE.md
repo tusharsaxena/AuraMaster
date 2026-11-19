@@ -61,8 +61,6 @@ anything that prints, `core/SkinSetup.lua` after it and before every frame build
 `modules/Style_Text.lua` before `modules/Style_TextGlow.lua` (which decorates `NS.Style.Text` at file
 load),
 `modules/Anchors_Attach.lua` before `modules/Anchors.lua` (which binds `NS.AnchorsAttach` at file load),
-`modules/Anchors_Tooltip.lua` before `modules/Anchors.lua` (which binds `NS.AnchorsTooltip.Place` at file
-load as the strip's `tooltipPlace`),
 `modules/Anchors_SnapRect.lua` after `modules/Anchors_Attach.lua` (it binds `FlowGrowth` at file load) and
 before `modules/Anchors_Snap.lua`,
 `modules/Anchors_Snap.lua` after all three (it binds `NS.AnchorsAttach`'s pair table and
@@ -81,7 +79,7 @@ Text container's twin engines, right after it by convention only, resolving its 
 `modules/ContainerManager.lua` (the registry and
 the deferred apply), `modules/Style.lua` with `Style_Border.lua`, `Style_Bars.lua`, `Style_Icons.lua`, `Style_Text.lua`,
 `Style_TextGlow.lua` and `modules/TextTemplate.lua`, placement in `modules/Anchors.lua` with
-`Anchors_Attach.lua`, `Anchors_Snap.lua`, `Anchors_SnapRect.lua` and `Anchors_Tooltip.lua`,
+`Anchors_Attach.lua`, `Anchors_Snap.lua` and `Anchors_SnapRect.lua`,
 `modules/EmptyWatch.lua`, `modules/FontPrimer.lua` and `modules/Preview.lua` (the session-only test
 mode). How they place, attach, preview, unlock and drag a container: `docs/data-flow.md` →
 [*Placement, preview and drag in brief*](data-flow.md#placement-preview-and-drag-in-brief).
@@ -539,13 +537,17 @@ Every surface Aura Master draws paints through the `LibKa0s-Skin-1.0` facade wit
   the frame picker) repaints from tokens on `OnLooksChanged`
   (`modules/Anchors.lua`, `Anchors_Snap.lua`, `Container.lua`, `FramePicker.lua`, `Preview.lua`); the
   strip's library parts follow the `owner` handed to `KW.DragHandle`.
-- **The drag strip's marks** are, right to left, the "?", the close X and, since AD-86-AM
-  (LibKa0s#86, DragHandle minor 14's opt-in `spec.settings`), a settings gear left of the X. The gear
-  opens the Containers page on that container (`openSettings`, the strip's right click), not the
-  panel's last page through the launcher's opener, and its tooltip names the container. It grows the
-  widget's reserve by one mark's frame on each side (`handle:Reserve()`, 47 to 65 px), so a
-  capped strip keeps 36 px less label and shortens a long name sooner; a one-icon strip too narrow for
-  the marks and a readable label keeps its natural width (`stripCapped`), so every strip has room.
+- **The drag strip's marks** read, left to right, the "?", the settings gear and the close X, the X
+  in the strip's corner (LibKa0s v1.107.0, DragHandle minor 15, AF-RV-AM; standalone-windows, *The
+  drag strip's marks*). Through v1.106.0 they read gear, X, "?". The gear arrived with AD-86-AM
+  (LibKa0s#86, DragHandle minor 14) and opens the Containers page on that container (`openSettings`,
+  the strip's right click), not the panel's last page through the launcher's opener, and its tooltip
+  names the container. The X disables that container (`disableContainer`, CX-3). The marks wear the
+  window header's tints (`icon.tint` at rest, `text.link` under the pointer, `close.hot` for the X).
+  Each further mark grows the widget's reserve by one mark's 14 px frame on each side
+  (`handle:Reserve()`, 57 px a side with all three; 65 through v1.106.0's 18 px frames), so a
+  capped strip shortens a long name sooner; a one-icon strip too narrow for the marks and a readable
+  label keeps its natural width (`stripCapped`), so every strip has room.
 - **Settings and tools.** The library paints the pages, the composed rows, the debug console, its
   copy window, the perf panel and the close marks for the owner already named. What this addon
   acquires itself, the `AuraMasterDropdown` widgets, the hand-built buttons, edit boxes and label,
@@ -607,30 +609,28 @@ tooltip says what Dialog covers.
 
 ## Tooltip placement
 
-standalone-windows *Tooltip placement* (WowAddonStandards v2.113.0, LibKa0s#92, AD-92-AM) rules every
-tooltip this addon places itself. There is one such site, and the rest are the library's or the
-client's.
+standalone-windows *Tooltip placement* and *The drag strip's marks* (WowAddonStandards v2.115.0,
+LibKa0s#92, AD-92-AM, AF-STRIP-AM) rule every tooltip this addon shows. Since AF-STRIP-AM it places
+none itself: the strip's are the library's and the auras' are the client's.
 
-- **The drag strip and its marks** (the "?", the X and the settings gear). The strip is a HUD's drag
-  strip, chrome by the rule, whose library default is `PlaceAttached` above it. The owner's SR2 answer
-  (2026-11-17) keeps this addon's strip tooltips **beside** the strip instead, so the strip's
-  `tooltipPlace`, `NS.AnchorsTooltip.Place` (`modules/Anchors_Tooltip.lua`), calls the library's
-  `PlaceBeside` with the strip as both element and group (a mark places by its strip, `StripOf`).
-  The tooltip then sits `TIP_GAP` right of the strip, or left of it near the screen's right edge, its
-  top level with the strip's. With room on neither side it takes the library's fallback, centered
-  above the strip. The strip's rect goes in through `opts.rect`, read through `NS.Secrets`, and
-  `comparisons = false`. The tooltip is owned by `UIParent` and pinned to `UIParent` alone, because
-  the anchor's restricted tree refuses an anchor (`docs/midnight-quirks.md`). Where the strip's rect
-  reads secret (a container attached under a parent holding auras), the hook walks the strip's
-  container's **stored** attach chain, configuration rather than points read back off a secret frame,
-  and places the tooltip beside the anchor of the first container up it whose rect reads, or beside
-  the named frame the chain ends on when that one reads. A chain rooted on the screen always reads at
-  its root, whose anchor hangs from `UIParent` alone. The widget's own attached fallback is no help
-  there: it reads the same secret rect, its relative point into the restricted tree is refused, and the
-  tooltip is left with no anchor, so it never renders (`dhPlaceAttached` in the vendored
-  `WidgetsDragHandleTip.lua`). The hook therefore answers nil only when nothing on the chain reads (a
-  chain ending on a named frame that is itself secret), the one case still left with no tooltip. The
-  cursor pin of 2026-10-03 and the retired `tooltipOwner = "cursor"` are gone.
+- **The drag strip and its marks** (the "?", the settings gear and the X). The strip is a HUD's drag
+  strip, chrome by the rule, and from LibKa0s v1.107.0 (WidgetsDragHandleTip minor 2) its tooltip,
+  and each mark's, always opens centered above the strip through LibKa0s-Tooltip-1.0's
+  `PlaceAttached`, below it only without room above. The owner ruled that placement for every strip on
+  2026-11-19 (Ka0sAddonsCommonTasks `docs/2026-11-19-ADOPTION_FEEDBACK/`, *Strip tooltip*), which
+  overrules the SR2 answer of 2026-11-17 that had kept this addon's strip tooltips beside the strip.
+  The library no longer reads a host `tooltipPlace`, so this addon's beside hook
+  (`modules/Anchors_Tooltip.lua`, AD-92-AM) was deleted with its file in AF-STRIP-AM. The tooltip is
+  owned by `UIParent` at `ANCHOR_NONE` and pinned by absolute points on `UIParent`, which the anchor's
+  restricted tree accepts (`docs/midnight-quirks.md`). Each mark carries its own words: the "?" the
+  strip's drag hint (`tooltipSpec`), the gear `settingsTooltipSpec` and the X `closeTooltipSpec`,
+  which says the container's settings are kept and where to turn it back on.
+  What the retired hook did that the library does not: where the strip's rect reads secret (a
+  container attached under a parent holding auras), the hook placed the tooltip beside the first
+  readable container up the stored attach chain. The library's fallback is a relative point into the
+  restricted tree, which the client refuses, so that strip's tooltip has no anchor and does not show
+  (`docs/known-limitations.md`, DRAG-20). The cursor pin of 2026-10-03 and the retired
+  `tooltipOwner = "cursor"` stay gone.
 - **The library's own sites** follow the rule in the library. These are the preset picker's
   title-bar marks (`W.HeaderButtons`), every close (`AttachTitleTip`), the launcher's minimap tooltip
   (`PlaceLauncher`, launcher-§7), the skin picker, the sim panel and the menus.

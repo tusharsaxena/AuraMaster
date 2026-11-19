@@ -520,13 +520,12 @@ block reads secret; never one of it where no rect of it reads but the one-elemen
 its rest did not read before the lift, before the cursor has moved past `C.SNAP_RADIUS`, nor then any other
 container's either; DD-16R), wins over both, and Shift suppresses only that.
 The tick and the drop classify alike (`classify`); combat started mid-drag attaches nothing. The handle's close mark (X) turns that container off through the write
-seam. The strip's tooltip, and its marks', sits beside the strip: to its right, or to its left when
-the strip is too close to the right edge of the screen for it to fit (`modules/Anchors_Tooltip.lua`,
-LibKa0s-Widgets' `tooltipPlace`, placed by LibKa0s-Tooltip-1.0's `PlaceBeside` since AD-92-AM); with
-room on neither side, centered above it. It is anchored to `UIParent` alone, from the strip's rect read through
-`NS.Secrets` and converted through both effective scales, because nothing may anchor into the
-anchor's restricted tree; where the strip's rect reads secret (a container attached under a parent
-holding auras), beside the nearest container up its stored attach chain whose anchor reads (or the named frame the chain ends on), never the cursor. A container can also show its name as a label where the handle sits, locked or unlocked;
+seam. The strip's tooltip, and its marks', opens centered above the strip, below it only without
+room above (LibKa0s v1.107.0's WidgetsDragHandleTip minor 2, the library's `PlaceAttached`; this addon
+passes no placement since AF-STRIP-AM). It is pinned to `UIParent` by absolute points, because nothing
+may anchor into the anchor's restricted tree, and never at the cursor; where the strip's rect reads
+secret (a container attached under a parent holding auras) it has no anchor and does not show
+(`docs/known-limitations.md`). A container can also show its name as a label where the handle sits, locked or unlocked;
 while unlocked the handle moves out past it (`Anchors.PlaceLabel`, batch 8 D6).
 
 ## Where a container sits

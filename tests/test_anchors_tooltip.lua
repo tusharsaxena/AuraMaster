@@ -1,47 +1,21 @@
--- tests/test_anchors_tooltip.lua — modules/Anchors_Tooltip.lua: the drag strip's tooltip sits beside
--- the strip, to its right, or to its left near the right edge of the screen, anchored to UIParent
--- alone (issue #22, the owner's smoke feedback of 2026-10-02, kept by the owner's SR2 answer of
--- 2026-11-17). Since AD-92-AM (LibKa0s#92) it is placed by LibKa0s-Tooltip-1.0's PlaceBeside, the
--- strip being both the element and the group, at the library's TIP_GAP, and never at the cursor: a
--- strip whose rect reads secret places beside the nearest container up its stored attach chain whose
--- anchor reads (the AD-92-AM review fix), and only a strip with nothing readable on its chain is not
--- placed by this hook. Then the strip itself: BuildHandle hands the widget this placement as its
--- `tooltipPlace`, for the strip and its marks alike, and no retired `tooltipOwner`.
+-- tests/test_anchors_tooltip.lua — the drag strip's tooltip and its marks' (AF-STRIP-AM, LibKa0s
+-- v1.107.0, the owner's rulings of 2026-11-19, *Strip marks* and *Strip tooltip*): the strip's own
+-- tooltip, and its "?"'s, gear's and X's, open centered above the strip through the library's
+-- attached placement (WidgetsDragHandleTip minor 2), owned by UIParent at ANCHOR_NONE and pinned to
+-- UIParent alone, never at the cursor. The addon passes no placement of its own: its `tooltipPlace`
+-- hook (the Anchors_Tooltip file, which put the tooltip beside the strip since issue #22 and
+-- AD-92-AM) was deleted in AF-STRIP-AM. BuildHandle hands the widget all three marks' wiring: the
+-- close handler and its own tooltip, the settings opener and its own tooltip, so no mark falls back to
+-- the strip's drag hint.
 --
--- RE-PINNED by AD-92-AM to standalone-windows *Tooltip placement* (WowAddonStandards v2.113.0): the
--- gap is TIP_GAP (2) where it was this file's own GAP (4), and the cursor pin the owner chose for an
--- unreadable strip (option B, 2026-10-03) is gone, as the rule's "never the cursor" asks.
+-- Standalone-windows *The drag strip's marks* and *Tooltip placement* (WowAddonStandards v2.115.0).
+-- An aura's tooltip is not this file's: it stays the client's (Layout's tooltip position, wave C
+-- option B), and the guard below keeps every TOC file off the cursor.
 
 local T = _G.AM_TEST
 local test, assertEqual, assertTrue, assertNil = T.test, T.assertEqual, T.assertTrue, T.assertNil
 local fresh = dofile("tests/fresh_env.lua")
 local HR = dofile("tests/handle_recorder.lua")
-
---- A frame-shaped table answering the given geometry: `rect` = { left, bottom, right, top, scale }.
---- `bottom` defaults to 10 below `top`, a strip's height.
-local function stripAt(rect)
-    return {
-        GetLeft = function() return rect.left end,
-        GetBottom = function()
-            if rect.bottom ~= nil then return rect.bottom end
-            return type(rect.top) == "number" and rect.top - 10 or rect.top
-        end,
-        GetRight = function() return rect.right end,
-        GetTop = function() return rect.top end,
-        GetEffectiveScale = function() return rect.scale or 1 end,
-    }
-end
-
---- A tooltip stand-in `width` x `height` (80 by default) at `scale`, recording its anchoring.
-local function tipOf(width, scale, height)
-    local tip = { points = {}, cleared = 0 }
-    function tip.GetWidth() return width end
-    function tip.GetHeight() return height or 80 end
-    function tip.GetEffectiveScale() return scale or 1 end
-    function tip.ClearAllPoints(self) self.cleared = self.cleared + 1 end
-    function tip.SetPoint(self, ...) self.points[#self.points + 1] = { ... } end
-    return tip
-end
 
 --- Give the mock's UIParent a `width` x `height` screen at `scale` (the kit answers none of them).
 local function screen(mocks, width, scale, height)
@@ -55,252 +29,6 @@ local function noCursor(mocks)
     mocks.GetCursorPosition = function() error("the strip's tooltip read the cursor") end
 end
 
---- Record every PlaceBeside call the hook makes (element, group, opts), passing it through.
-local function spyBeside(mocks)
-    local Lib = mocks.LibStub("LibKa0s-Tooltip-1.0")
-    local real, calls = Lib.PlaceBeside, {}
-    Lib.PlaceBeside = function(tip, element, group, opts)
-        calls[#calls + 1] = { element = element, group = group, opts = opts }
-        return real(tip, element, group, opts)
-    end
-    return calls, function() Lib.PlaceBeside = real end
-end
-
-test("tooltip: PlaceBeside puts it TIP_GAP right of the strip, its top level with the strip's, pinned to UIParent", function()
-    local NS, mocks = fresh()
-    screen(mocks, 1920)
-    noCursor(mocks)
-    local calls, restore = spyBeside(mocks)
-    local gap = mocks.LibStub("LibKa0s-Tooltip-1.0").TIP_GAP
-    local strip = stripAt{ left = 100, right = 300, top = 500 }
-    local tip = tipOf(200)
-    -- red under: the hook's own arithmetic (no PlaceBeside call), or a tooltip still at the cursor
-    assertEqual(NS.AnchorsTooltip.Place(tip, strip), true)
-    restore()
-    assertEqual(#calls, 1, "the library's body placer, once")
-    assertTrue(calls[1].element == strip, "the element is the strip")
-    assertTrue(calls[1].group == strip, "the group is the strip: beside the strip, the owner's ruling")
-    assertEqual(type(calls[1].opts.rect), "function", "the strip's rect is read through the secret guard")
-    assertEqual(calls[1].opts.comparisons, false, "no comparison tooltips on a strip")
-    assertEqual(#tip.points, 1)
-    local p = tip.points[1]
-    assertEqual(p[1], "TOPLEFT")
-    -- red under: anchoring to the strip, which the client refuses under the restricted anchor
-    assertTrue(p[2] == mocks.UIParent, "anchored to UIParent, never to the strip")
-    assertEqual(p[3], "BOTTOMLEFT")
-    assertEqual(gap, 2)
-    -- red under: the retired 4 px gap of this file's own
-    assertEqual(p[4], 300 + gap)
-    assertEqual(p[5], 500)
-end)
-
-test("tooltip: near the right edge it flips to the strip's left, its TOPRIGHT TIP_GAP left of the strip", function()
-    local NS, mocks = fresh()
-    screen(mocks, 1920)
-    noCursor(mocks)
-    local gap = mocks.LibStub("LibKa0s-Tooltip-1.0").TIP_GAP
-    local tip = tipOf(200)
-    -- 1800 + gap + 200 passes 1920: the right side would run off the screen.
-    assertEqual(NS.AnchorsTooltip.Place(tip, stripAt{ left = 1600, right = 1800, top = 700 }), true)
-    local p = tip.points[1]
-    -- red under: always placing on the right
-    assertEqual(p[1], "TOPRIGHT")
-    assertTrue(p[2] == mocks.UIParent)
-    assertEqual(p[3], "BOTTOMLEFT")
-    assertEqual(p[4], 1600 - gap)
-    assertEqual(p[5], 700)
-    -- Exactly fitting stays right: right + gap + 200 = 1920.
-    local fits = tipOf(200)
-    NS.AnchorsTooltip.Place(fits, stripAt{ left = 1516, right = 1920 - 200 - gap, top = 700 })
-    assertEqual(fits.points[1][1], "TOPLEFT", "a tooltip that just fits stays on the right")
-end)
-
-test("tooltip: a strip rect that reads secret or not at all is not placed and never pinned at the cursor", function()
-    local NS, mocks = fresh()
-    screen(mocks, 1920)
-    noCursor(mocks)
-    local Tip = NS.AnchorsTooltip
-    local reads = {
-        { left = 100, right = mocks.__SECRET, top = 500 },
-        { left = mocks.__SECRET, right = 300, top = 500 },
-        { left = 100, right = 300, top = mocks.__SECRET },
-        { left = 100, right = 300, top = 500, bottom = mocks.__SECRET },
-        { left = 100, right = 300, top = 500, scale = mocks.__SECRET },
-        { left = 100, right = nil, top = 500 },
-    }
-    for i, rect in ipairs(reads) do
-        local tip = tipOf(200)
-        -- red under: arithmetic on the secret (it raises), the cursor read (noCursor raises), or a
-        -- point written from either
-        local ok, placed = pcall(Tip.Place, tip, stripAt(rect))
-        assertTrue(ok, "read " .. i .. " does not raise: " .. tostring(placed))
-        assertNil(placed, "read " .. i .. ": not placed, so the widget's attached fallback runs")
-        assertEqual(#tip.points, 0, "read " .. i .. ": nothing anchored, at the cursor or anywhere")
-    end
-    -- The tooltip's own size, and the screen, unreadable: nil too, whatever the strip.
-    assertNil(Tip.Place(tipOf(mocks.__SECRET), stripAt{ left = 100, right = 300, top = 500 }))
-    rawset(mocks.UIParent, "GetWidth", nil)
-    assertNil(Tip.Place(tipOf(200), stripAt{ left = 100, right = 300, top = 500 }))
-    assertNil(Tip.Place(nil, stripAt{ left = 100, right = 300, top = 500 }), "no tooltip")
-    assertNil(Tip.Place(tipOf(200), nil), "no frame")
-end)
-
---- Stand in for the live containers: `list` maps an id to { strip = rect|nil, anchor = rect, attach = at }.
---- Answers the instances by id; each has a strip (its `handle`, a child of its anchor), an anchor
---- and the stored attach settings its Cfg answers.
-local function liveChain(NS, list)
-    local saved, instances = NS.ContainerManager.instances, {}
-    for id, c in pairs(list) do
-        local anchor = stripAt(c.anchor)
-        local strip = stripAt(c.strip or c.anchor)
-        function strip.GetParent() return anchor end
-        local cfg = { id = id, attach = c.attach or { mode = "screen" } }
-        instances[id] = { id = id, anchor = anchor, handle = strip, Cfg = function() return cfg end }
-    end
-    NS.ContainerManager.instances = instances
-    return instances, function() NS.ContainerManager.instances = saved end
-end
-
-test("tooltip: a strip whose rect reads secret places beside the nearest container up its attach chain that reads", function()
-    -- REVIEW FIX (AD-92-AM): a container attached under a parent holding auras reads secret, and the
-    -- widget's own attached fallback reads the same secret rect, so it left the tooltip unanchored.
-    -- The hook walks the stored attach chain instead (configuration, never a secret read back) to
-    -- the first container whose anchor reads, and places beside that one, never at the cursor.
-    local NS, mocks = fresh()
-    screen(mocks, 1920)
-    noCursor(mocks)
-    local gap = mocks.LibStub("LibKa0s-Tooltip-1.0").TIP_GAP
-    local S = mocks.__SECRET
-    local secret = { left = S, right = S, top = S, bottom = S }
-    local calls, restore = spyBeside(mocks)
-    local inst, done = liveChain(NS, {
-        [1] = { anchor = { left = 100, right = 300, top = 500 } },
-        [2] = { anchor = secret, attach = { mode = "container", container = 1 } },
-        [3] = { anchor = secret, attach = { mode = "container", container = 2 } },
-    })
-    local tip = tipOf(200)
-    -- red under: answering nil (the widget's fallback then leaves the tooltip with no anchor)
-    local ok, placed = pcall(NS.AnchorsTooltip.Place, tip, inst[3].handle)
-    assertTrue(ok, tostring(placed))
-    assertEqual(placed, true, "a two-hop chain places by the first container that reads")
-    assertTrue(calls[#calls].element == inst[1].anchor, "beside container 1's anchor")
-    assertTrue(calls[#calls].group == inst[1].anchor)
-    assertEqual(#tip.points, 1)
-    assertEqual(tip.points[1][1], "TOPLEFT")
-    assertTrue(tip.points[1][2] == mocks.UIParent, "pinned to UIParent")
-    assertEqual(tip.points[1][4], 300 + gap)
-    assertEqual(tip.points[1][5], 500)
-    -- A mark on the secret strip places the same way.
-    local mark = stripAt(secret)
-    function mark.GetParent() return inst[2].handle end
-    inst[2].handle.help = mark
-    local mt = tipOf(200)
-    assertEqual(NS.AnchorsTooltip.Place(mt, mark), true)
-    assertEqual(mt.points[1][4], 300 + gap, "the mark's strip's chain")
-    done()
-    restore()
-end)
-
-test("tooltip: a secret strip attached to a named frame places beside that frame when it reads, and only then answers nil", function()
-    local NS, mocks = fresh()
-    screen(mocks, 1920)
-    noCursor(mocks)
-    local gap = mocks.LibStub("LibKa0s-Tooltip-1.0").TIP_GAP
-    local S = mocks.__SECRET
-    local secret = { left = S, right = S, top = S, bottom = S }
-    local named = stripAt{ left = 400, right = 600, top = 800 }
-    named.GetObjectType = function() return "Frame" end
-    rawset(_G, "AMTestNamedFrame", named)
-    local inst, done = liveChain(NS, {
-        [1] = { anchor = secret, attach = { mode = "frame", frame = "AMTestNamedFrame" } },
-        [2] = { anchor = secret, attach = { mode = "container", container = 1 } },
-    })
-    local tip = tipOf(200)
-    -- red under: answering nil for a chain that ends on a readable named frame
-    assertEqual(NS.AnchorsTooltip.Place(tip, inst[2].handle), true)
-    assertEqual(tip.points[1][4], 600 + gap, "beside the named frame")
-    assertEqual(tip.points[1][5], 800)
-    -- Nothing on the chain reads (the named frame itself secret): nil, nothing anchored, no cursor.
-    local secretNamed = stripAt(secret)
-    secretNamed.GetObjectType = function() return "Frame" end
-    rawset(_G, "AMTestNamedFrame", secretNamed)
-    local none = tipOf(200)
-    local ok, placed = pcall(NS.AnchorsTooltip.Place, none, inst[2].handle)
-    assertTrue(ok, tostring(placed))
-    assertNil(placed)
-    assertEqual(#none.points, 0)
-    -- A loop in the stored settings ends the walk rather than spinning.
-    local loop, undo = liveChain(NS, {
-        [1] = { anchor = secret, attach = { mode = "container", container = 2 } },
-        [2] = { anchor = secret, attach = { mode = "container", container = 1 } },
-    })
-    assertNil(NS.AnchorsTooltip.Place(tipOf(200), loop[1].handle), "a loop answers nil")
-    undo()
-    done()
-    rawset(_G, "AMTestNamedFrame", nil)
-end)
-
-test("tooltip: the strip's rect is converted into the tooltip's own units through both scales", function()
-    local NS, mocks = fresh()
-    -- A container at scale 0.5 under a UI at 1; the tooltip at 2. The strip's right edge is
-    -- 600 * 0.5 = 300 screen pixels, which is 150 in the tooltip's units; its top 1000 * 0.5 / 2.
-    screen(mocks, 1920)
-    local gap = mocks.LibStub("LibKa0s-Tooltip-1.0").TIP_GAP
-    local tip = tipOf(100, 2, 40)
-    assertEqual(NS.AnchorsTooltip.Place(tip, stripAt{ left = 200, right = 600, top = 1000, scale = 0.5 }), true)
-    local p = tip.points[1]
-    -- red under: the strip's own units passed straight through (600 + gap, 1000)
-    assertEqual(p[1], "TOPLEFT")
-    assertEqual(p[4], (300 + gap) / 2)
-    assertEqual(p[5], 250)
-    -- The edge test runs in screen units: the tooltip is 100 * 2 = 200 wide, so a strip whose right
-    -- edge is 1800 cannot take it after it on a 1920 screen.
-    local near = tipOf(100, 2, 40)
-    NS.AnchorsTooltip.Place(near, stripAt{ left = 1600, right = 1800, top = 1000, scale = 1 })
-    assertEqual(near.points[1][1], "TOPRIGHT")
-    assertEqual(near.points[1][4], (1600 - gap) / 2)
-    assertEqual(near.points[1][5], 500)
-end)
-
-test("tooltip: with room on neither side of the strip it attaches centered above it (the library's fallback)", function()
-    local NS, mocks = fresh()
-    screen(mocks, 1920)
-    noCursor(mocks)
-    local gap = mocks.LibStub("LibKa0s-Tooltip-1.0").TIP_GAP
-    local tip = tipOf(200)
-    -- A strip spanning the screen: neither 0 - gap - 200 >= 0 nor 1920 + gap + 200 <= 1920.
-    -- red under: a hook that answers nil here (the widget's unguarded relative point, refused in game)
-    assertEqual(NS.AnchorsTooltip.Place(tip, stripAt{ left = 0, right = 1920, top = 500 }), true)
-    local p = tip.points[1]
-    assertEqual(p[1], "BOTTOM", "attached above the strip")
-    assertTrue(p[2] == mocks.UIParent, "still pinned to UIParent")
-    assertEqual(p[4], 960, "centered on the strip")
-    assertEqual(p[5], 500 + gap)
-end)
-
-test("tooltip: a help, close or settings mark places by the strip it belongs to, not by itself", function()
-    local NS, mocks = fresh()
-    screen(mocks, 1920)
-    local gap = mocks.LibStub("LibKa0s-Tooltip-1.0").TIP_GAP
-    local strip = stripAt{ left = 100, right = 300, top = 500 }
-    for _, key in ipairs{ "help", "close", "settings" } do
-        local mark = stripAt{ left = 270, right = 288, top = 500 }
-        function mark.GetParent() return strip end
-        strip[key] = mark
-        local tip = tipOf(200)
-        assertEqual(NS.AnchorsTooltip.Place(tip, mark), true)
-        -- red under: placing off the mark's own right edge (288 + gap); the settings mark (AD-86-AM)
-        -- not redirected
-        assertEqual(tip.points[1][4], 300 + gap, key .. " places by the strip")
-        assertTrue(NS.AnchorsTooltip.StripOf(mark) == strip, key .. "'s strip")
-        strip[key] = nil
-    end
-    assertTrue(NS.AnchorsTooltip.StripOf(strip) == strip, "the strip is its own strip")
-    local stray = stripAt{ left = 0, right = 10, top = 10 }
-    function stray.GetParent() return strip end
-    assertTrue(NS.AnchorsTooltip.StripOf(stray) == stray, "a child that is not a mark is not redirected")
-end)
-
 --- Hover `frame` and record GameTooltip's owners and points.
 local function hover(mocks, frame)
     local owners, points = {}, {}
@@ -312,7 +40,7 @@ local function hover(mocks, frame)
     return owners, points
 end
 
-test("tooltip: the strip and each of its marks show it beside the strip, owned by UIParent with no anchor", function()
+test("tooltip: the strip and each of its marks show it centered above the strip, owned by UIParent with no anchor", function()
     local NS, mocks = fresh()
     screen(mocks, 1920)
     noCursor(mocks)
@@ -335,18 +63,80 @@ test("tooltip: the strip and each of its marks show it beside the strip, owned b
     rawset(mocks.GameTooltip, "GetEffectiveScale", function() return 1 end)
     for i, frame in ipairs(marks) do
         local owners, points = hover(mocks, frame)
-        -- red under: BuildHandle passing no tooltipPlace (the widget's attached placement, BOTTOM)
-        assertEqual(#owners, 1, "frame " .. i .. ": owned once, the placement held")
+        -- LibKa0s v1.107.0 (WidgetsDragHandleTip minor 2, AF-LK-02, the owner's ruling of 2026-11-19):
+        -- the strip's tooltip, and its marks', always takes the library's attached placement, centered
+        -- above the strip. Through v1.106.0 this addon's retired hook put it beside the strip (TOPLEFT
+        -- at the strip's right edge + TIP_GAP).
+        -- red under: a payload before WidgetsDragHandleTip minor 2 with a beside hook passed
+        assertEqual(#owners, 1, "frame " .. i .. ": owned once")
         assertTrue(owners[1].owner == mocks.UIParent)
         assertEqual(owners[1].anchor, "ANCHOR_NONE")
         assertEqual(#points, 1)
-        assertEqual(points[1][1], "TOPLEFT")
+        assertEqual(points[1][1], "BOTTOM", "frame " .. i .. ": above the strip")
         assertTrue(points[1][2] == mocks.UIParent, "anchored to UIParent, never into the strip's tree")
-        assertEqual(points[1][4], 300 + gap)
+        assertEqual(points[1][4], 200, "centered on the strip")
+        assertEqual(points[1][5], 500 + gap, "TIP_GAP over the strip's top")
     end
 end)
 
-test("tooltip: BuildHandle hands the widget the beside placement and no retired cursor owner", function()
+test("tooltip: a strip whose rect reads secret, or not at all, raises nothing, reads no cursor and is never anchored into the strip's tree", function()
+    -- AF-STRIP-AM's known limitation (docs/known-limitations.md, DRAG-20): a container attached under
+    -- a parent holding auras can read its strip's rect as secret in an instance or in combat. The
+    -- library then has no absolute point to write and falls back to a relative point on the strip,
+    -- which the client refuses for a restricted tree; the mock raises on that point, as the client
+    -- does. The hover must not raise, must not read the cursor, owns the tooltip once at UIParent /
+    -- ANCHOR_NONE, and lands no point relative to the strip or any of its marks.
+    -- red under: a placement that reads the cursor, does arithmetic on a secret edge, or anchors
+    -- GameTooltip into the strip's tree without the client refusing it
+    local SECRET = 63.5
+    for _, rect in ipairs{ "secret", "unread" } do
+        local NS, mocks = fresh()
+        screen(mocks, 1920)
+        noCursor(mocks)
+        mocks.issecretvalue = function(v) return v == SECRET end
+        local inst = NS.ContainerManager.instances[1]
+        local h = HR.recordedHandle(mocks, NS, inst)
+        local edge = rect == "secret" and SECRET or nil
+        for _, k in ipairs{ "GetLeft", "GetBottom", "GetRight", "GetTop" } do
+            rawset(h, k, function() return edge end)
+        end
+        rawset(h, "GetEffectiveScale", function() return 1 end)
+        local tree = { [h] = true }
+        local marks = { h }
+        for _, key in ipairs{ "help", "close", "settings" } do
+            if h[key] then
+                rawset(h[key], "GetParent", function() return h end)
+                marks[#marks + 1] = h[key]
+                tree[h[key]] = true
+            end
+        end
+        assertEqual(#marks, 4, rect .. ": the strip, its ?, its X and its settings mark")
+        rawset(mocks.GameTooltip, "GetWidth", function() return 200 end)
+        rawset(mocks.GameTooltip, "GetHeight", function() return 80 end)
+        rawset(mocks.GameTooltip, "GetEffectiveScale", function() return 1 end)
+        for i, frame in ipairs(marks) do
+            local owners, points = {}, {}
+            rawset(mocks.GameTooltip, "SetOwner", function(_, owner, anchor)
+                owners[#owners + 1] = { owner = owner, anchor = anchor }
+            end)
+            rawset(mocks.GameTooltip, "SetPoint", function(_, point, rel, ...)
+                if tree[rel] then error("restricted: the client refuses an anchor into this tree") end
+                points[#points + 1] = { point, rel, ... }
+            end)
+            local ok, err = pcall(frame.__fire, frame, "OnEnter")
+            local label = rect .. " frame " .. i
+            assertTrue(ok, label .. ": the hover raised: " .. tostring(err))
+            assertEqual(#owners, 1, label .. ": owned once")
+            assertTrue(owners[1].owner == mocks.UIParent, label .. ": owned by UIParent")
+            assertEqual(owners[1].anchor, "ANCHOR_NONE", label)
+            for _, p in ipairs(points) do
+                assertTrue(not tree[p[2]], label .. ": a point relative to the strip landed")
+            end
+        end
+    end
+end)
+
+test("tooltip: BuildHandle wires all three marks, each with its own tooltip, and passes no placement", function()
     local NS, mocks = fresh()
     local KW = mocks.LibStub("LibKa0s-Widgets-1.0")
     local real, spec = KW.DragHandle, nil
@@ -354,10 +144,27 @@ test("tooltip: BuildHandle hands the widget the beside placement and no retired 
     NS.Anchors.BuildHandle(NS.ContainerManager.instances[1])
     KW.DragHandle = real
     assertTrue(spec ~= nil, "the strip was built")
-    assertTrue(spec.tooltipPlace == NS.AnchorsTooltip.Place, "the beside placement is the strip's tooltipPlace")
+    -- red under: the strip `tooltipPlace` hook still passed (AF-STRIP-AM; unread since
+    -- WidgetsDragHandleTip minor 2, so the library places the strip's tooltip above it)
+    assertNil(spec.tooltipPlace, "no host placement for the strip's tooltip")
     -- red under: `tooltipOwner = "cursor"` still passed (retired at WidgetsDragHandle minor 14)
     assertNil(spec.tooltipOwner)
     assertNil(spec.tooltipAnchor)
+    -- The marks (the owner's ruling: all three on every strip, ? · settings · close).
+    assertTrue(spec.settings ~= false, "the settings mark is not opted out")
+    assertEqual(type(spec.settings), "function", "the gear opens this container's own settings")
+    assertEqual(type(spec.onClose), "function", "the X has a close handler, so the widget builds it")
+    -- Each mark's own words, so neither falls back to the strip's drag hint (spec.tooltip).
+    for _, key in ipairs{ "closeTooltip", "settingsTooltip" } do
+        local d = spec[key]
+        assertTrue(type(d) == "table" and d ~= spec.tooltip, key .. " is the mark's own descriptor")
+        assertEqual(type(d.title), "function", key .. ": the container's name, read on every hover")
+        assertTrue(type(d.body) == "table" and type(d.body[1]) == "string", key .. ": a line saying what the click does")
+    end
+    -- The X's tooltip says how to bring the container back (the close keeps its settings).
+    local body = spec.closeTooltip.body[1]
+    assertTrue(body:find("Containers page", 1, true) ~= nil, "the X's tooltip names where to turn it back on")
+    assertTrue(body:find("settings are kept", 1, true) ~= nil, "the X's tooltip says its settings are kept")
 end)
 
 test("tooltip guard: no addon file places a tooltip at the cursor or owns one at an anchor of its own", function()
@@ -378,9 +185,12 @@ test("tooltip guard: no addon file places a tooltip at the cursor or owns one at
         end
         assertTrue(not src:find("tooltipOwner%s*="), path .. " passes the retired tooltipOwner")
         assertTrue(not src:find(":SetOwner%([^)]*\"ANCHOR_[A-Z_]*\""), path .. " owns a tooltip at an anchor")
+        -- red under: a strip `tooltipPlace` hook back in any file (AF-STRIP-AM: retired at
+        -- WidgetsDragHandleTip minor 2, and the standard's *The drag strip's marks* calls one dead code)
+        assertTrue(not src:find("tooltipPlace%s*="), path .. " passes the retired tooltipPlace")
     end
-    local f = assert(io.open("modules/Anchors_Tooltip.lua", "r"))
-    local hook = f:read("*a")
-    f:close()
-    assertTrue(not hook:find("GetCursorPosition", 1, true), "the strip's placement never reads the cursor")
+    -- The hook's file is gone (AF-STRIP-AM): nothing in the TOC places the strip's tooltip.
+    for _, path in ipairs(files) do
+        assertTrue(path ~= "modules/Anchors_Tooltip.lua", "the retired hook's file is still loaded")
+    end
 end)
