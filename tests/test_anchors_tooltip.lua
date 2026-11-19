@@ -79,6 +79,63 @@ test("tooltip: the strip and each of its marks show it centered above the strip,
     end
 end)
 
+test("tooltip: a strip whose rect reads secret, or not at all, raises nothing, reads no cursor and is never anchored into the strip's tree", function()
+    -- AF-STRIP-AM's known limitation (docs/known-limitations.md, DRAG-20): a container attached under
+    -- a parent holding auras can read its strip's rect as secret in an instance or in combat. The
+    -- library then has no absolute point to write and falls back to a relative point on the strip,
+    -- which the client refuses for a restricted tree; the mock raises on that point, as the client
+    -- does. The hover must not raise, must not read the cursor, owns the tooltip once at UIParent /
+    -- ANCHOR_NONE, and lands no point relative to the strip or any of its marks.
+    -- red under: a placement that reads the cursor, does arithmetic on a secret edge, or anchors
+    -- GameTooltip into the strip's tree without the client refusing it
+    local SECRET = 63.5
+    for _, rect in ipairs{ "secret", "unread" } do
+        local NS, mocks = fresh()
+        screen(mocks, 1920)
+        noCursor(mocks)
+        mocks.issecretvalue = function(v) return v == SECRET end
+        local inst = NS.ContainerManager.instances[1]
+        local h = HR.recordedHandle(mocks, NS, inst)
+        local edge = rect == "secret" and SECRET or nil
+        for _, k in ipairs{ "GetLeft", "GetBottom", "GetRight", "GetTop" } do
+            rawset(h, k, function() return edge end)
+        end
+        rawset(h, "GetEffectiveScale", function() return 1 end)
+        local tree = { [h] = true }
+        local marks = { h }
+        for _, key in ipairs{ "help", "close", "settings" } do
+            if h[key] then
+                rawset(h[key], "GetParent", function() return h end)
+                marks[#marks + 1] = h[key]
+                tree[h[key]] = true
+            end
+        end
+        assertEqual(#marks, 4, rect .. ": the strip, its ?, its X and its settings mark")
+        rawset(mocks.GameTooltip, "GetWidth", function() return 200 end)
+        rawset(mocks.GameTooltip, "GetHeight", function() return 80 end)
+        rawset(mocks.GameTooltip, "GetEffectiveScale", function() return 1 end)
+        for i, frame in ipairs(marks) do
+            local owners, points = {}, {}
+            rawset(mocks.GameTooltip, "SetOwner", function(_, owner, anchor)
+                owners[#owners + 1] = { owner = owner, anchor = anchor }
+            end)
+            rawset(mocks.GameTooltip, "SetPoint", function(_, point, rel, ...)
+                if tree[rel] then error("restricted: the client refuses an anchor into this tree") end
+                points[#points + 1] = { point, rel, ... }
+            end)
+            local ok, err = pcall(frame.__fire, frame, "OnEnter")
+            local label = rect .. " frame " .. i
+            assertTrue(ok, label .. ": the hover raised: " .. tostring(err))
+            assertEqual(#owners, 1, label .. ": owned once")
+            assertTrue(owners[1].owner == mocks.UIParent, label .. ": owned by UIParent")
+            assertEqual(owners[1].anchor, "ANCHOR_NONE", label)
+            for _, p in ipairs(points) do
+                assertTrue(not tree[p[2]], label .. ": a point relative to the strip landed")
+            end
+        end
+    end
+end)
+
 test("tooltip: BuildHandle wires all three marks, each with its own tooltip, and passes no placement", function()
     local NS, mocks = fresh()
     local KW = mocks.LibStub("LibKa0s-Widgets-1.0")
