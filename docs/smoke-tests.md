@@ -1859,7 +1859,7 @@ so there is no room above → the tooltip opens centered below the strip. Hover 
 strip. Attach a container under a parent that holds auras (in a dungeon, where aura geometry is
 secret) and hover its strip → note whether a tooltip shows and where; DRAG-19's fallback beside the
 parent container is gone with the library's ruling, so a missing tooltip there is the expected
-regression to report, not a pass or a fail of this check. No Lua error ("Anchoring disallowed"
+regression to report (LibKa0s#99), not a pass or a fail of this check. No Lua error ("Anchoring disallowed"
 included). Result:
 
 ## Bars and Icons style, fonts

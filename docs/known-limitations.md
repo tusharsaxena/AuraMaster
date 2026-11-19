@@ -267,7 +267,7 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   does not render; the strip's marks still work. Through LibKa0s v1.106.0 this addon's own placement
   hook put that tooltip beside the nearest readable container up the chain; the library no longer
   reads a host placement, so the hook is gone. It ends when the library's strip tooltip gains a
-  fallback a restricted strip can use (a host-supplied rect, for example).
+  fallback a restricted strip can use (a host-supplied rect, for example), LibKa0s#99.
 - **A container wider than its parent aligns backwards by thirds** (issue #22, addendum A7). The
   pair a drop picks comes from the dragged container's center over the parent's side cut in thirds,
   so the pair picked can differ from the flush edge the child rests on. For a child more than about a
