@@ -24,7 +24,7 @@ check's number is not reused. Checks with no recorded pass, and checks new or co
 | CONT-1 to CONT-31 | Containers | Create, duplicate, delete, rename, copy; handles, strips, the close mark and the settings mark, their order and tints; test mode (no TEST marker on a locked container, the strip's TEST tag, the docked test-mode strip); unit swaps; empty placeholders |
 | FILT-1 to FILT-67 | Filters and spell categories | Cast by, the category grids, Overrides, the add-a-spell box, aura ids, your own categories, weapon enchants and their names, the help marks' art, where spell lists apply, the Situations tab, its zones and its Unit type gate |
 | LAYOUT-1 to LAYOUT-39 | Layout | Anchor modes, attaching, chains, growth, anchor points, seams, the name label, mouse and tooltips, the tooltip position with no cursor choice |
-| DRAG-1 to DRAG-20 | Layout | Drag to attach (issue #22): dropping a container on another, the highlight on the target's strip, the side a drop picks, Shift, loops, detaching and its leeway (green hold, snap back, red past it), the growth-conflict popup, combat, a parent holding auras, frame-attached containers, the strip's tooltip, a drop between pulls in a key, a dropped side surviving a growth change, a drag cut short, a before-side drop with the line between the two join dots, the strip edge following the mark, the strip's tooltip through the library's placer, then above the strip |
+| DRAG-1 to DRAG-21 | Layout | Drag to attach (issue #22): dropping a container on another, the highlight on the target's strip, the side a drop picks, Shift, loops, detaching and its leeway (green hold, snap back, red past it), the growth-conflict popup, combat, a parent holding auras, frame-attached containers, the strip's tooltip, a drop between pulls in a key, a dropped side surviving a growth change, a drag cut short, a before-side drop with the line between the two join dots, the strip edge following the mark, the strip's tooltip through the library's placer, then above the strip, then above the nearest readable container for a secret strip |
 | STYLE-1 to STYLE-31 | Bars and Icons style, fonts | Bars and Icons tabs, the spark, borders, dispel colors, pandemic, the font primer |
 | TEXT-1 to TEXT-36 | Text style | Templates and tokens, justify, the icon, dispel type word, backdrop and edge, animation, Size to fit, the glow behind the text |
 | LAYER-1 to LAYER-6 | Frame layering | Bar borders over the fill, the outline and the name label over the auras, the snap highlight over a Dialog container, the strip at low opacity, the Strata tooltip |
@@ -1856,11 +1856,17 @@ title marks do, never beside the strip and never at the cursor; the lines are un
 gold, the drag hint, the gear's and the X's own lines). Drag the container to the top of the screen
 so there is no room above → the tooltip opens centered below the strip. Hover an aura in a container
 → its tooltip is where it was (the client's placement, Layout → tooltip position), not above the
-strip. Attach a container under a parent that holds auras (in a dungeon, where aura geometry is
-secret) and hover its strip → note whether a tooltip shows and where; DRAG-19's fallback beside the
-parent container is gone with the library's ruling, so a missing tooltip there is the expected
-regression to report (LibKa0s#99), not a pass or a fail of this check. No Lua error ("Anchoring disallowed"
+strip. A strip whose position reads secret is DRAG-21's. No Lua error ("Anchoring disallowed"
 included). Result:
+
+**DRAG-21. A strip whose position reads secret shows its tooltip above its container (SD-AM-99, LibKa0s
+v1.108.0, LibKa0s#99; the owner's ruling R-3 of 2026-11-20). Client: Retail, then WoW Forever.** In a
+dungeon (where aura geometry is secret), attach container B under a parent A that holds auras, `/am
+unlock`, and hover B's strip, then its "?", its gear and its X → each tooltip shows, centered above the
+nearest container up the chain whose position reads (A, or the frame A hangs from), never at the
+cursor and never missing; the lines are DRAG-20's. Out of the dungeon, hover B's strip again → the
+tooltip is back above B's own strip. No Lua error ("Anchoring disallowed" included). Fail: no tooltip
+on a secret strip, a tooltip at the cursor, or a Lua error. Result:
 
 ## Bars and Icons style, fonts
 
@@ -3770,11 +3776,13 @@ window header's tints and packed closer, and DRAG-20 is new, every strip tooltip
 strip. They supersede the order in CONT-13 and CONT-29 and the beside placement in CONT-9, DRAG-11 and
 DRAG-19. Their `Result:` lines are empty until the owner runs them. From AF-STRIP-AM: CONT-31 is new,
 every strip's three marks with their own tooltips and the X's restore path; the addon's beside-the-strip
-tooltip hook is retired, so a strip whose position reads secret shows no tooltip (DRAG-20,
-`docs/known-limitations.md`).
+tooltip hook is retired, so a strip whose position reads secret showed no tooltip until LibKa0s
+v1.108.0 (DRAG-21).
 
 Open from the skin-defaults run (Ka0sAddonsCommonTasks `docs/2026-11-20-LIBKA0S_94_97_99_100/`,
 SD-RV-AM, LibKa0s v1.108.0): SKIN-54 is new, a strip's edge following a skin switch and the spark's
 color rows. From SD-SK-AM: SKIN-55 is new, a new container's colors following the skin with the bar
 border and the text glow kept off it, and SKIN-56, an upgraded profile's one move (schema v21) keeping
-picks and the presets' colors. Their `Result:` lines are empty until the owner runs them.
+picks and the presets' colors. From SD-AM-99 (LibKa0s#99): DRAG-21 is new, a strip whose position
+reads secret showing its tooltip above its nearest readable container; DRAG-20 no longer asks for that
+case. Their `Result:` lines are empty until the owner runs them.

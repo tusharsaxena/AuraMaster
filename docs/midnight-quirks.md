@@ -422,11 +422,10 @@ would inherit forbidden aspects: UntrustedLayoutScriptExecution". The handle's t
 places it centered above the strip from the strip's rect, by absolute points on `UIParent`
 (WidgetsDragHandleTip minor 2, LibKa0s-Tooltip-1.0's `PlaceAttached`), and this addon passes no
 placement of its own (AF-STRIP-AM retired the beside hook, `modules/Anchors_Tooltip.lua`). Where that
-rect reads secret (a container attached under a parent holding auras), the library's fallback is a
-relative point into the restricted tree, which is refused and leaves the shown tooltip with no anchor,
-so it never renders. Through v1.106.0 the retired hook placed it beside the nearest readable container
-up the strip's stored attach chain instead; the library has no such fallback, so that strip shows no
-tooltip (`docs/known-limitations.md`).
+rect reads secret (a container attached under a parent holding auras), a relative point into the
+restricted tree would be refused and leave the shown tooltip with no anchor. Since LibKa0s v1.108.0
+(WidgetsDragHandleTip minor 3, LibKa0s#99) the library instead places it above the strip's nearest
+ancestor whose rect reads, by the same absolute point on `UIParent`, and hides it when none reads.
 
 ## Groups are add-only, and some setters reset a group
 
@@ -1025,8 +1024,8 @@ does not set the flag.
   `GameTooltip:SetOwner` on any of them ("Anchoring disallowed as dependent object would inherit
   forbidden aspects: UntrustedLayoutScriptExecution"). The handle's tooltip is therefore owned by
   `UIParent` and pinned to `UIParent` centered above the strip by the library (LibKa0s v1.107.0,
-  AF-STRIP-AM), never the cursor; where the strip's rect reads secret it has no anchor and does not
-  show.
+  AF-STRIP-AM), never the cursor; where the strip's rect reads secret it opens above the nearest
+  readable ancestor instead (LibKa0s v1.108.0, LibKa0s#99), and is hidden only when none reads.
 - **Anchors stay out of the client's layout cache.** An anchor is movable (a handle drag moves it
   with `StartMoving`), and the client saves a movable frame's position and restores it at login.
   `Container.New` calls `SetDontSavePosition(true)`, so the stored `container.position` is the only

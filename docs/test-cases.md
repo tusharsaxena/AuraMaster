@@ -884,10 +884,11 @@ Total.
 - handle: under combat lockdown the right-click is refused in gray and selects nothing (feedback #9)
 - handle: an attached container's name is a desaturated gray, to the screen it keeps the plain color (owner, 2026-09-26)
 
-### test_anchors_tooltip.lua (4)
+### test_anchors_tooltip.lua (5)
 
 - tooltip: the strip and each of its marks show it centered above the strip, owned by UIParent with no anchor
 - tooltip: a strip whose rect reads secret, or not at all, raises nothing, reads no cursor and is never anchored into the strip's tree
+- tooltip: a strip whose rect reads secret shows its tooltip above its nearest readable container (LibKa0s#99, SD-AM-99)
 - tooltip: BuildHandle wires all three marks, each with its own tooltip, and passes no placement
 - tooltip guard: no addon file places a tooltip at the cursor or owns one at an anchor of its own
 
@@ -2842,7 +2843,7 @@ Total.
 
 - prose: no authored file carries a British spelling from localization-§5's published list
 - prose: the gate carries localization-§5's two lists whole, and nothing of its own
-- prose: the exclusions this repository declared suppressed 19 of 276 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (19): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, and 16 more (list bounded)
+- prose: the exclusions this repository declared suppressed 19 of 277 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (19): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, and 16 more (list bounded)
 - prose: no path this repository narrows the gate by is loaded by a TOC
 - prose: every path this repository narrows the gate by is one .pkgmeta keeps out of the zip
 - prose self-test: the carve-out suppresses the named generated folder, and only it
@@ -3031,7 +3032,7 @@ Total.
 | test_lifecycle.lua | 18 |
 | test_anchors.lua | 51 |
 | test_anchors_handle.lua | 29 |
-| test_anchors_tooltip.lua | 4 |
+| test_anchors_tooltip.lua | 5 |
 | test_anchors_seam.lua | 10 |
 | test_anchors_edges.lua | 14 |
 | test_anchors_hang.lua | 11 |
@@ -3135,4 +3136,4 @@ Total.
 | test_skin_switch.lua | 46 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2569** |
+| **Total** | **2570** |

@@ -524,8 +524,8 @@ seam. The strip's tooltip, and its marks', opens centered above the strip, below
 room above (LibKa0s v1.107.0's WidgetsDragHandleTip minor 2, the library's `PlaceAttached`; this addon
 passes no placement since AF-STRIP-AM). It is pinned to `UIParent` by absolute points, because nothing
 may anchor into the anchor's restricted tree, and never at the cursor; where the strip's rect reads
-secret (a container attached under a parent holding auras) it has no anchor and does not show
-(`docs/known-limitations.md`). A container can also show its name as a label where the handle sits, locked or unlocked;
+secret (a container attached under a parent holding auras) it opens above the strip's nearest
+readable ancestor (LibKa0s v1.108.0, WidgetsDragHandleTip minor 3, LibKa0s#99). A container can also show its name as a label where the handle sits, locked or unlocked;
 while unlocked the handle moves out past it (`Anchors.PlaceLabel`, batch 8 D6).
 
 ## Where a container sits

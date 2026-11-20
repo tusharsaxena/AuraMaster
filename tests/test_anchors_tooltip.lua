@@ -80,11 +80,11 @@ test("tooltip: the strip and each of its marks show it centered above the strip,
 end)
 
 test("tooltip: a strip whose rect reads secret, or not at all, raises nothing, reads no cursor and is never anchored into the strip's tree", function()
-    -- AF-STRIP-AM's known limitation (docs/known-limitations.md, DRAG-20): a container attached under
-    -- a parent holding auras can read its strip's rect as secret in an instance or in combat. The
-    -- library then has no absolute point to write and falls back to a relative point on the strip,
-    -- which the client refuses for a restricted tree; the mock raises on that point, as the client
-    -- does. The hover must not raise, must not read the cursor, owns the tooltip once at UIParent /
+    -- A container attached under a parent holding auras can read its strip's rect as secret in an
+    -- instance or in combat. Here the strip's parents read nothing either, so the library (from
+    -- WidgetsDragHandleTip minor 3, LibKa0s#99) finds no readable ancestor and hides the tooltip;
+    -- the case above has one. A relative point on the strip is what the client refuses for a
+    -- restricted tree; the mock raises on that point, as the client does. The hover must not raise, must not read the cursor, owns the tooltip once at UIParent /
     -- ANCHOR_NONE, and lands no point relative to the strip or any of its marks.
     -- red under: a placement that reads the cursor, does arithmetic on a secret edge, or anchors
     -- GameTooltip into the strip's tree without the client refusing it
@@ -132,6 +132,56 @@ test("tooltip: a strip whose rect reads secret, or not at all, raises nothing, r
             for _, p in ipairs(points) do
                 assertTrue(not tree[p[2]], label .. ": a point relative to the strip landed")
             end
+        end
+    end
+end)
+
+test("tooltip: a strip whose rect reads secret shows its tooltip above its nearest readable container (LibKa0s#99, SD-AM-99)", function()
+    -- LibKa0s v1.108.0 (WidgetsDragHandleTip minor 3, the owner's ruling R-3 of 2026-11-20): where the
+    -- strip's rect reads secret (a container attached under a parent holding auras), the library walks
+    -- the strip's ancestors and places the tooltip above the nearest one whose rect reads, by an
+    -- absolute point on UIParent, so nothing anchors into the restricted tree. Secret all the way up,
+    -- the tooltip is hidden. Retires AF-STRIP-AM's known limitation (docs/known-limitations.md).
+    -- red under: WidgetsDragHandleTip minor 2 (no ancestor walk: no point on UIParent at all)
+    local SECRET = 63.5
+    for _, readable in ipairs{ true, false } do
+        local NS, mocks = fresh()
+        screen(mocks, 1920)
+        noCursor(mocks)
+        local gap = mocks.LibStub("LibKa0s-Tooltip-1.0").TIP_GAP
+        mocks.issecretvalue = function(v) return v == SECRET end
+        local h = HR.recordedHandle(mocks, NS, NS.ContainerManager.instances[1])
+        for _, k in ipairs{ "GetLeft", "GetBottom", "GetRight", "GetTop" } do
+            rawset(h, k, function() return SECRET end)
+        end
+        rawset(h, "GetEffectiveScale", function() return 1 end)
+        -- The strip's parent: the readable container frame it hangs from, or another secret one.
+        local parent = mocks.CreateFrame("Frame", nil, mocks.UIParent)
+        local rect = readable and { GetLeft = 100, GetBottom = 300, GetRight = 400, GetTop = 500 } or
+            { GetLeft = SECRET, GetBottom = SECRET, GetRight = SECRET, GetTop = SECRET }
+        for k, v in pairs(rect) do rawset(parent, k, function() return v end) end
+        rawset(parent, "GetEffectiveScale", function() return 1 end)
+        rawset(parent, "GetParent", function() return mocks.UIParent end)
+        rawset(h, "GetParent", function() return parent end)
+        rawset(mocks.GameTooltip, "GetWidth", function() return 200 end)
+        rawset(mocks.GameTooltip, "GetHeight", function() return 80 end)
+        rawset(mocks.GameTooltip, "GetEffectiveScale", function() return 1 end)
+        local hidden = false
+        rawset(mocks.GameTooltip, "Hide", function() hidden = true end)
+        local owners, points = hover(mocks, h)
+        local label = readable and "a readable parent" or "secret all the way up"
+        assertEqual(#owners, 1, label .. ": owned once")
+        assertTrue(owners[1].owner == mocks.UIParent, label .. ": owned by UIParent")
+        if readable then
+            assertEqual(#points, 1, label .. ": one point")
+            assertEqual(points[1][1], "BOTTOM", label .. ": above the container")
+            assertTrue(points[1][2] == mocks.UIParent, label .. ": on UIParent, never into the strip's tree")
+            assertEqual(points[1][4], 250, label .. ": centered on the container")
+            assertEqual(points[1][5], 500 + gap, label .. ": TIP_GAP over the container's top")
+            assertTrue(not hidden, label .. ": shown")
+        else
+            assertEqual(#points, 0, label .. ": no point")
+            assertTrue(hidden, label .. ": hidden, no error")
         end
     end
 end)

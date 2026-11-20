@@ -634,12 +634,12 @@ none itself: the strip's are the library's and the auras' are the client's.
   restricted tree accepts (`docs/midnight-quirks.md`). Each mark carries its own words: the "?" the
   strip's drag hint (`tooltipSpec`), the gear `settingsTooltipSpec` and the X `closeTooltipSpec`,
   which says the container's settings are kept and where to turn it back on.
-  What the retired hook did that the library does not: where the strip's rect reads secret (a
-  container attached under a parent holding auras), the hook placed the tooltip beside the first
-  readable container up the stored attach chain. The library's fallback is a relative point into the
-  restricted tree, which the client refuses, so that strip's tooltip has no anchor and does not show
-  (`docs/known-limitations.md`, DRAG-20). The cursor pin of 2026-10-03 and the retired
-  `tooltipOwner = "cursor"` stay gone.
+  Where the strip's rect reads secret (a container attached under a parent holding auras), the
+  library places the tooltip above the strip's nearest ancestor whose rect reads, by the same absolute
+  point on `UIParent`, and hides it when none reads (LibKa0s v1.108.0, WidgetsDragHandleTip minor 3,
+  LibKa0s#99, the owner's ruling R-3; SD-AM-99, DRAG-21). The retired hook's beside-the-container
+  fallback is not needed. The cursor pin of 2026-10-03 and the retired `tooltipOwner = "cursor"` stay
+  gone.
 - **The library's own sites** follow the rule in the library. These are the preset picker's
   title-bar marks (`W.HeaderButtons`), every close (`AttachTitleTip`), the launcher's minimap tooltip
   (`PlaceLauncher`, launcher-§7), the skin picker, the sim panel and the menus.
