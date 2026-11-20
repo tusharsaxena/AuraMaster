@@ -2926,13 +2926,14 @@ Total.
 
 ### test_skin_values.lua (3)
 
-- skin values: every host row carries its file, substring, why and cause id
+- skin values: every host row carries its file, substring, why and a cause id or kit row category
 - skin values: no typed value outside the kit's categories and the host's rows
 - skin values: the check is falsifiable, a planted value of each shape is reported
 
-### test_skin_switch.lua (34)
+### test_skin_switch.lua (35)
 
 - skin switch: the check is falsifiable, a surface that redraws a literal is reported
+- skin switch: the check is falsifiable, a bar whose texture never moves is reported
 - skin switch: a bar's fill changes
 - skin switch: a bar's background changes
 - skin switch: a bar's border, Show border on changes
@@ -3112,7 +3113,7 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | test_skin_values.lua | 3 |
-| test_skin_switch.lua | 34 |
+| test_skin_switch.lua | 35 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2553** |
+| **Total** | **2554** |

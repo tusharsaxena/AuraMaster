@@ -29,7 +29,7 @@ check's number is not reused. Checks with no recorded pass, and checks new or co
 | TEXT-1 to TEXT-36 | Text style | Templates and tokens, justify, the icon, dispel type word, backdrop and edge, animation, Size to fit, the glow behind the text |
 | LAYER-1 to LAYER-6 | Frame layering | Bar borders over the fill, the outline and the name label over the auras, the snap highlight over a Dialog container, the strip at low opacity, the Strata tooltip |
 | SETLAYOUT-1 to SETLAYOUT-9 | Settings layout (item 020) | Every settings page item 020 moved, regrouped or relabeled, read as `docs/settings-panel.md` describes, with no setting lost, moved or reset; the confirm buttons' ellipsis |
-| SKIN-1 to SKIN-53 | Skins | The skinning rollout: the one-time HUD reset under Ka0s Default, Ka0s Default otherwise unchanged, the Skin tab, each skin on the HUD, the unlock furniture, the settings pages and the tool windows, other addons stock, the font and texture companions and overrides, combat, EllesmereUI on, off and back, the copy, profiles, tooltips and popups, the first-run skin picker; the library follow-ups (each skin's HUD face, Ignore fonts on the HUD, the picker's title, the strings newly in the skin's face); the skin fonts run (the Font outline, From skin flags, `/am skin`, width parity, the HUD size scale, the own faces and glow back, the strips' re-fit) |
+| SKIN-1 to SKIN-54 | Skins | The skinning rollout: the one-time HUD reset under Ka0s Default, Ka0s Default otherwise unchanged, the Skin tab, each skin on the HUD, the unlock furniture, the settings pages and the tool windows, other addons stock, the font and texture companions and overrides, combat, EllesmereUI on, off and back, the copy, profiles, tooltips and popups, the first-run skin picker; the library follow-ups (each skin's HUD face, Ignore fonts on the HUD, the picker's title, the strings newly in the skin's face); the skin fonts run (the Font outline, From skin flags, `/am skin`, width parity, the HUD size scale, the own faces and glow back, the strips' re-fit); the LibKa0s v1.108.0 re-vendor (the strip edge on a switch, the spark's row) |
 | DEGRADED-1 | Library-absent install | The launcher libraries missing |
 | LOC-1 to LOC-2 | Non-English client | Spell names from the client, adding a spell by its localized name |
 | PRESETS-1 to PRESETS-44 | Presets | Each client: a new profile's Simple seed at the real screen size, the first-run preset picker before the skin picker (Escape, Not now, Empty), each preset in each style, Apply in Replace and Add, Stop preview, leaving the tab, closing the panel, a `/reload`, a profile switch and combat mid-preview, `/am preset` and its confirm, another Ka0s addon's skin picker, the cost of a swap, an existing profile after schema v19; the owner's round 1: the side stacks growing up, the corner group's place, the call-outs' look and place, the picker on the skin picker's spot with the call-outs clear of it, the side stacks' lower base, opened unlocked, its lock and test buttons, Apply locking, Not now putting the lock back; the owner's round 2: the call-outs' glow, the focus stack of its own and its clearance from the far stack, Player debuffs lined up with the focus column, the Presets tab on the General page; the owner's round 3: the right-hand cluster lined up, Player debuffs attached to Player buffs, equal bar widths, debuff bars colored by dispel type over a 50% background, the numbered names, the unlock hint in chat; the owner's round 4: the player stack nearer the center, the target cluster mirroring it, the call-outs at the picker's top, the picker once per account for existing players and never twice for a new one; the owner's round 5: every pick unlocking and turning test mode on, Empty previewing an empty screen; the SmokeTest baseline (Advanced), an icon row's side follower; the picker's footer on the library's (LibKa0s#89); the picker's title marks, settings and close (LibKa0s#86) |
@@ -2884,6 +2884,15 @@ starts. Fail: the picker opening over a hidden HUD with test mode off, an eye th
 close that leaves test mode other than it was before the picker, or the checkbox disagreeing with the
 HUD. Result:
 
+**SKIN-54. The LibKa0s v1.108.0 re-vendor on the HUD's furniture (SD-RV-AM). Client: Retail, then WoW Forever.**
+Pick Ka0s Default, `/am unlock`, and note a strip's gold edge. Pick WoW Midnight, then High Contrast, then
+back → each time every strip's edge changes to that skin's handle edge at once, with no `/reload`, and the
+label and marks stay readable. Open a bars container's Bars → General → Spark: the Spark color row has its
+swatch and **Use class color** only, and no **Use the skin's color** row (the spark is game art, owner
+U-11). Open any font block (Bars → Name text) → its **Use the skin's color** and **Use the skin's shadow**
+rows each show once. Fail: a strip edge left in the previous skin's color, a Spark skin-color row, a
+companion row shown twice, or a Lua error. Result:
+
 ## Presets
 
 Container presets (`docs/superpowers/specs/2026-11-14-auramaster-presets-design.md`): Empty, Simple
@@ -3740,3 +3749,7 @@ DRAG-19. Their `Result:` lines are empty until the owner runs them. From AF-STRI
 every strip's three marks with their own tooltips and the X's restore path; the addon's beside-the-strip
 tooltip hook is retired, so a strip whose position reads secret shows no tooltip (DRAG-20,
 `docs/known-limitations.md`).
+
+Open from the skin-defaults run (Ka0sAddonsCommonTasks `docs/2026-11-20-LIBKA0S_94_97_99_100/`,
+SD-RV-AM, LibKa0s v1.108.0): SKIN-54 is new, a strip's edge following a skin switch and the spark's
+color rows. Its `Result:` line is empty until the owner runs it.

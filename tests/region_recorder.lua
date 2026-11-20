@@ -12,7 +12,7 @@
 -- Any PascalCase method exists, is logged in call order on `__log`, and answers the region itself, as
 -- the kit's stub does. The few answers production branches on are real: IsShown tracks Show, Hide and
 -- SetShown; SetFont answers true (a font the client accepted); GetStatusBarTexture answers one
--- recorder of its own (the bar's moving edge); CreateTexture answers a new recorder each call, so a
+-- recorder of its own (the bar's moving edge, which has no GetStatusBarTexture); CreateTexture answers a new recorder each call, so a
 -- border's four strips (modules/Style_Border.lua's ApplyBorder) are four regions, and CreateLine does the same
 -- (the drag highlight's line, modules/Anchors_Snap.lua), each with its frame on `parent`; GetWidth and GetHeight
 -- answer 0, a real number (fidelity rule 2). SetBackdrop does what Blizzard's does to a frame's size
@@ -32,8 +32,13 @@ local STATE = {
 local ANSWERS = {
     IsShown = function(self) return self.__shown end,
     SetFont = function() return true end,
+    -- The edge is a Texture, with no fill of its own: a recorder's edge answering one too would hand
+    -- the kit's skin-switch spy (revision 58 walks GetStatusBarTexture) a new region at every level.
     GetStatusBarTexture = function(self)
-        self.__edge = self.__edge or new()
+        if not self.__edge then
+            self.__edge = new()
+            self.__edge.__absent.GetStatusBarTexture = true
+        end
         return self.__edge
     end,
     CreateTexture = function(self)
