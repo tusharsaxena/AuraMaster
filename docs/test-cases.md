@@ -884,10 +884,11 @@ Total.
 - handle: under combat lockdown the right-click is refused in gray and selects nothing (feedback #9)
 - handle: an attached container's name is a desaturated gray, to the screen it keeps the plain color (owner, 2026-09-26)
 
-### test_anchors_tooltip.lua (4)
+### test_anchors_tooltip.lua (5)
 
 - tooltip: the strip and each of its marks show it centered above the strip, owned by UIParent with no anchor
 - tooltip: a strip whose rect reads secret, or not at all, raises nothing, reads no cursor and is never anchored into the strip's tree
+- tooltip: a strip whose rect reads secret shows its tooltip above its nearest readable container (LibKa0s#99, SD-AM-99)
 - tooltip: BuildHandle wires all three marks, each with its own tooltip, and passes no placement
 - tooltip guard: no addon file places a tooltip at the cursor or owns one at an anchor of its own
 
@@ -2142,13 +2143,20 @@ Total.
 
 ### test_defaults_v17.lua (7)
 
-- v17: the text glow's color does not follow the skin by default (SF-AM-1)
+- v17: the text glow's color does not follow the skin by default (SF-AM-1, OVERRIDE, owner U-10)
 - v17: MigrateV17 moves an old default and keeps a pick
-- v17: a bar has a dark background and a black border whatever the skin (SF-AM-2)
+- v17: a bar has a black border whatever the skin, its background the skin's (SF-AM-2, U-9)
 - v17: MigrateV17 moves a bar's old background and border defaults, not a pick
-- v17: bar fill, Text font and icon border colors stay off the skin by default (SF-AM-3)
+- v17: bar fill, Text font and icon border colors follow the skin by default again (R-2 over SF-AM-3, U-8)
 - v17: a new profile keeps the new defaults through the one-time follow step
 - v17: MigrateV17 moves the old fill, text font and icon border defaults
+
+### test_defaults_r2.lua (4)
+
+- r2: the six companions default to follow the skin; the border and the glow stay off (U-9, U-10)
+- r2: FollowDefaults moves a false at the old default, keeps a picked color, and records it once
+- r2: FollowDefaults goes through Skin.ResetToSkin, and writes the same with the library absent
+- r2: v21 walks every stored profile, and a new profile's load records the step
 
 ### test_skin_border.lua (10)
 
@@ -2835,7 +2843,7 @@ Total.
 
 - prose: no authored file carries a British spelling from localization-§5's published list
 - prose: the gate carries localization-§5's two lists whole, and nothing of its own
-- prose: the exclusions this repository declared suppressed 19 of 276 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (19): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, and 16 more (list bounded)
+- prose: the exclusions this repository declared suppressed 19 of 277 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (19): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, and 16 more (list bounded)
 - prose: no path this repository narrows the gate by is loaded by a TOC
 - prose: every path this repository narrows the gate by is one .pkgmeta keeps out of the zip
 - prose self-test: the carve-out suppresses the named generated folder, and only it
@@ -2926,13 +2934,14 @@ Total.
 
 ### test_skin_values.lua (3)
 
-- skin values: every host row carries its file, substring, why and cause id
+- skin values: every host row carries its file, substring, why and a cause id or kit row category
 - skin values: no typed value outside the kit's categories and the host's rows
 - skin values: the check is falsifiable, a planted value of each shape is reported
 
-### test_skin_switch.lua (34)
+### test_skin_switch.lua (46)
 
 - skin switch: the check is falsifiable, a surface that redraws a literal is reported
+- skin switch: the check is falsifiable, a bar whose texture never moves is reported
 - skin switch: a bar's fill changes
 - skin switch: a bar's background changes
 - skin switch: a bar's border, Show border on changes
@@ -2945,6 +2954,8 @@ Total.
 - skin switch: an icon's time changes
 - skin switch: an icon's stacks changes
 - skin switch: the icon beside a text line's border changes
+- skin switch: a bar's gloss changes
+- skin switch: a text line's pieces changes
 - skin switch: a text line's glow changes
 - skin switch: a text line's glow changes with the Scope ignored
 - skin switch: the name label changes
@@ -2959,6 +2970,8 @@ Total.
 - skin switch: the unlocked outline changes with the Scope ignored
 - skin switch: the frame picker's outline and name changes
 - skin switch: the frame picker's outline and name changes with the Scope ignored
+- skin switch: the preset picker window changes
+- skin switch: the preset picker window changes with the Scope ignored
 - skin switch: the drag-to-attach mark changes
 - skin switch: the drag-to-attach mark changes with the Scope ignored
 - skin switch: the Unit dropdown's values changes
@@ -2966,6 +2979,13 @@ Total.
 - skin switch: a plan warning's line changes
 - skin switch: the Filters section's link changes
 - skin switch: a settings tooltip's line changes
+- skin switch: the Aura type dropdown's values changes
+- skin switch: the Style dropdown's values changes
+- skin switch: a spell category's (yours) mark changes
+- skin switch: the Layout page's attached note changes
+- skin switch: the Layout and Text pages' gray changes
+- skin switch: the Text page's gold changes
+- skin switch: the add box's not-an-aura tag changes
 
 ### test_client_globals.lua (3)
 
@@ -3012,7 +3032,7 @@ Total.
 | test_lifecycle.lua | 18 |
 | test_anchors.lua | 51 |
 | test_anchors_handle.lua | 29 |
-| test_anchors_tooltip.lua | 4 |
+| test_anchors_tooltip.lua | 5 |
 | test_anchors_seam.lua | 10 |
 | test_anchors_edges.lua | 14 |
 | test_anchors_hang.lua | 11 |
@@ -3067,6 +3087,7 @@ Total.
 | test_skin_hud.lua | 12 |
 | test_skin_flip.lua | 31 |
 | test_defaults_v17.lua | 7 |
+| test_defaults_r2.lua | 4 |
 | test_skin_border.lua | 10 |
 | test_skin_fix.lua | 7 |
 | test_skin_flags.lua | 7 |
@@ -3112,7 +3133,7 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | test_skin_values.lua | 3 |
-| test_skin_switch.lua | 34 |
+| test_skin_switch.lua | 46 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2553** |
+| **Total** | **2570** |

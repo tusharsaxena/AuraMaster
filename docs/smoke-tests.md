@@ -24,12 +24,12 @@ check's number is not reused. Checks with no recorded pass, and checks new or co
 | CONT-1 to CONT-31 | Containers | Create, duplicate, delete, rename, copy; handles, strips, the close mark and the settings mark, their order and tints; test mode (no TEST marker on a locked container, the strip's TEST tag, the docked test-mode strip); unit swaps; empty placeholders |
 | FILT-1 to FILT-67 | Filters and spell categories | Cast by, the category grids, Overrides, the add-a-spell box, aura ids, your own categories, weapon enchants and their names, the help marks' art, where spell lists apply, the Situations tab, its zones and its Unit type gate |
 | LAYOUT-1 to LAYOUT-39 | Layout | Anchor modes, attaching, chains, growth, anchor points, seams, the name label, mouse and tooltips, the tooltip position with no cursor choice |
-| DRAG-1 to DRAG-20 | Layout | Drag to attach (issue #22): dropping a container on another, the highlight on the target's strip, the side a drop picks, Shift, loops, detaching and its leeway (green hold, snap back, red past it), the growth-conflict popup, combat, a parent holding auras, frame-attached containers, the strip's tooltip, a drop between pulls in a key, a dropped side surviving a growth change, a drag cut short, a before-side drop with the line between the two join dots, the strip edge following the mark, the strip's tooltip through the library's placer, then above the strip |
+| DRAG-1 to DRAG-21 | Layout | Drag to attach (issue #22): dropping a container on another, the highlight on the target's strip, the side a drop picks, Shift, loops, detaching and its leeway (green hold, snap back, red past it), the growth-conflict popup, combat, a parent holding auras, frame-attached containers, the strip's tooltip, a drop between pulls in a key, a dropped side surviving a growth change, a drag cut short, a before-side drop with the line between the two join dots, the strip edge following the mark, the strip's tooltip through the library's placer, then above the strip, then above the nearest readable container for a secret strip |
 | STYLE-1 to STYLE-31 | Bars and Icons style, fonts | Bars and Icons tabs, the spark, borders, dispel colors, pandemic, the font primer |
 | TEXT-1 to TEXT-36 | Text style | Templates and tokens, justify, the icon, dispel type word, backdrop and edge, animation, Size to fit, the glow behind the text |
 | LAYER-1 to LAYER-6 | Frame layering | Bar borders over the fill, the outline and the name label over the auras, the snap highlight over a Dialog container, the strip at low opacity, the Strata tooltip |
 | SETLAYOUT-1 to SETLAYOUT-9 | Settings layout (item 020) | Every settings page item 020 moved, regrouped or relabeled, read as `docs/settings-panel.md` describes, with no setting lost, moved or reset; the confirm buttons' ellipsis |
-| SKIN-1 to SKIN-53 | Skins | The skinning rollout: the one-time HUD reset under Ka0s Default, Ka0s Default otherwise unchanged, the Skin tab, each skin on the HUD, the unlock furniture, the settings pages and the tool windows, other addons stock, the font and texture companions and overrides, combat, EllesmereUI on, off and back, the copy, profiles, tooltips and popups, the first-run skin picker; the library follow-ups (each skin's HUD face, Ignore fonts on the HUD, the picker's title, the strings newly in the skin's face); the skin fonts run (the Font outline, From skin flags, `/am skin`, width parity, the HUD size scale, the own faces and glow back, the strips' re-fit) |
+| SKIN-1 to SKIN-56 | Skins | The skinning rollout: the one-time HUD reset under Ka0s Default, Ka0s Default otherwise unchanged, the Skin tab, each skin on the HUD, the unlock furniture, the settings pages and the tool windows, other addons stock, the font and texture companions and overrides, combat, EllesmereUI on, off and back, the copy, profiles, tooltips and popups, the first-run skin picker; the library follow-ups (each skin's HUD face, Ignore fonts on the HUD, the picker's title, the strings newly in the skin's face); the skin fonts run (the Font outline, From skin flags, `/am skin`, width parity, the HUD size scale, the own faces and glow back, the strips' re-fit); the LibKa0s v1.108.0 re-vendor (the strip edge on a switch, the spark's row); the option defaults following the skin and the one move of an upgraded profile (R-2) |
 | DEGRADED-1 | Library-absent install | The launcher libraries missing |
 | LOC-1 to LOC-2 | Non-English client | Spell names from the client, adding a spell by its localized name |
 | PRESETS-1 to PRESETS-44 | Presets | Each client: a new profile's Simple seed at the real screen size, the first-run preset picker before the skin picker (Escape, Not now, Empty), each preset in each style, Apply in Replace and Add, Stop preview, leaving the tab, closing the panel, a `/reload`, a profile switch and combat mid-preview, `/am preset` and its confirm, another Ka0s addon's skin picker, the cost of a swap, an existing profile after schema v19; the owner's round 1: the side stacks growing up, the corner group's place, the call-outs' look and place, the picker on the skin picker's spot with the call-outs clear of it, the side stacks' lower base, opened unlocked, its lock and test buttons, Apply locking, Not now putting the lock back; the owner's round 2: the call-outs' glow, the focus stack of its own and its clearance from the far stack, Player debuffs lined up with the focus column, the Presets tab on the General page; the owner's round 3: the right-hand cluster lined up, Player debuffs attached to Player buffs, equal bar widths, debuff bars colored by dispel type over a 50% background, the numbered names, the unlock hint in chat; the owner's round 4: the player stack nearer the center, the target cluster mirroring it, the call-outs at the picker's top, the picker once per account for existing players and never twice for a new one; the owner's round 5: every pick unlocking and turning test mode on, Empty previewing an empty screen; the SmokeTest baseline (Advanced), an icon row's side follower; the picker's footer on the library's (LibKa0s#89); the picker's title marks, settings and close (LibKa0s#86) |
@@ -1856,11 +1856,17 @@ title marks do, never beside the strip and never at the cursor; the lines are un
 gold, the drag hint, the gear's and the X's own lines). Drag the container to the top of the screen
 so there is no room above → the tooltip opens centered below the strip. Hover an aura in a container
 → its tooltip is where it was (the client's placement, Layout → tooltip position), not above the
-strip. Attach a container under a parent that holds auras (in a dungeon, where aura geometry is
-secret) and hover its strip → note whether a tooltip shows and where; DRAG-19's fallback beside the
-parent container is gone with the library's ruling, so a missing tooltip there is the expected
-regression to report (LibKa0s#99), not a pass or a fail of this check. No Lua error ("Anchoring disallowed"
+strip. A strip whose position reads secret is DRAG-21's. No Lua error ("Anchoring disallowed"
 included). Result:
+
+**DRAG-21. A strip whose position reads secret shows its tooltip above its container (SD-AM-99, LibKa0s
+v1.108.0, LibKa0s#99; the owner's ruling R-3 of 2026-11-20). Client: Retail, then WoW Forever.** In a
+dungeon (where aura geometry is secret), attach container B under a parent A that holds auras, `/am
+unlock`, and hover B's strip, then its "?", its gear and its X → each tooltip shows, centered above the
+nearest container up the chain whose position reads (A, or the frame A hangs from), never at the
+cursor and never missing; the lines are DRAG-20's. Out of the dungeon, hover B's strip again → the
+tooltip is back above B's own strip. No Lua error ("Anchoring disallowed" included). Fail: no tooltip
+on a secret strip, a tooltip at the cursor, or a Lua error. Result:
 
 ## Bars and Icons style, fonts
 
@@ -2884,6 +2890,38 @@ starts. Fail: the picker opening over a hidden HUD with test mode off, an eye th
 close that leaves test mode other than it was before the picker, or the checkbox disagreeing with the
 HUD. Result:
 
+**SKIN-54. The LibKa0s v1.108.0 re-vendor on the HUD's furniture (SD-RV-AM). Client: Retail, then WoW Forever.**
+Pick Ka0s Default, `/am unlock`, and note a strip's gold edge. Pick WoW Midnight, then High Contrast, then
+back → each time every strip's edge changes to that skin's handle edge at once, with no `/reload`, and the
+label and marks stay readable. Open a bars container's Bars → General → Spark: the Spark color row has its
+swatch and **Use class color** only, and no **Use the skin's color** row (the spark is game art, owner
+U-11). Open any font block (Bars → Name text) → its **Use the skin's color** and **Use the skin's shadow**
+rows each show once. Fail: a strip edge left in the previous skin's color, a Spark skin-color row, a
+companion row shown twice, or a Lua error. Result:
+
+**SKIN-55. A new container's colors follow the skin (SD-SK-AM, the owner's ruling R-2; U-8, U-9, U-10). Client: Retail, then WoW Forever.**
+Pick WoW Midnight. Create one container of each style (`/am config` → Containers → New, then Style:
+Bars, Icons, Text) with test mode on. Bars → General → Fill → **Use the skin's color** is ticked and the
+fill draws Midnight's bar color; Background and border → Background → **Use the skin's color** is ticked
+and the background is Midnight's; the Border's **Use the skin's color** is **unticked** and the border is
+black (U-9). Bars → Icon → Icon border (Show border on): **Use the skin's color** ticked. Icons → Border:
+**Use the skin's color** ticked. Text → Font: **Use the skin's color** ticked and the line draws the skin's
+HUD text color; Text → Font → Glow: **Use the skin's color** unticked and, with Glow on, the glow is black
+(U-10). Pick Ka0s Default → every one of them looks exactly as before this build (blue fill, dark
+background, black borders, white text). Fail: a companion in the wrong state, a color that does not move
+with the skin while its companion is ticked, or a Lua error. Result:
+
+**SKIN-56. An upgraded profile moves once, and keeps picks (SD-SK-AM, schema v21). Client: Retail, then WoW Forever.**
+On the previous build, in one profile, keep a bars container on its default colors, set a second bars
+container's fill to red, and apply the Advanced preset in Add mode (its role bars are gray, orange, tan and
+purple; its call-out lines green, red and orange). Pick WoW Midnight and log in on this build →
+`/am debug` shows one `[Migrate] v21 profile '<name>'` line. The default container's fill and background
+now follow Midnight (their **Use the skin's color** ticked); the red fill stays red with its box unticked;
+the role bars keep their four colors and the call-outs their three; every bar border stays black. Untick
+the default container's fill **Use the skin's color**, `/reload` → it stays unticked (the move ran once).
+Fail: a picked or preset color recolored, no v21 line, a companion ticked again after the reload, or a
+Lua error. Result:
+
 ## Presets
 
 Container presets (`docs/superpowers/specs/2026-11-14-auramaster-presets-design.md`): Empty, Simple
@@ -3738,5 +3776,13 @@ window header's tints and packed closer, and DRAG-20 is new, every strip tooltip
 strip. They supersede the order in CONT-13 and CONT-29 and the beside placement in CONT-9, DRAG-11 and
 DRAG-19. Their `Result:` lines are empty until the owner runs them. From AF-STRIP-AM: CONT-31 is new,
 every strip's three marks with their own tooltips and the X's restore path; the addon's beside-the-strip
-tooltip hook is retired, so a strip whose position reads secret shows no tooltip (DRAG-20,
-`docs/known-limitations.md`).
+tooltip hook is retired, so a strip whose position reads secret showed no tooltip until LibKa0s
+v1.108.0 (DRAG-21).
+
+Open from the skin-defaults run (Ka0sAddonsCommonTasks `docs/2026-11-20-LIBKA0S_94_97_99_100/`,
+SD-RV-AM, LibKa0s v1.108.0): SKIN-54 is new, a strip's edge following a skin switch and the spark's
+color rows. From SD-SK-AM: SKIN-55 is new, a new container's colors following the skin with the bar
+border and the text glow kept off it, and SKIN-56, an upgraded profile's one move (schema v21) keeping
+picks and the presets' colors. From SD-AM-99 (LibKa0s#99): DRAG-21 is new, a strip whose position
+reads secret showing its tooltip above its nearest readable container; DRAG-20 no longer asks for that
+case. Their `Result:` lines are empty until the owner runs them.

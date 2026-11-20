@@ -259,15 +259,6 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   start now re-places every such container, parents first (`Snap.RefreshUnread`), out of combat. One
   whose parent's engine is laying out secret auras right now (in an instance, in combat) still reads
   nothing, so it is no target and a hold on it shows a lone dot, until that changes.
-- **A strip whose position reads secret shows no tooltip** (AF-STRIP-AM, LibKa0s v1.107.0, the owner's
-  ruling of 2026-11-19). A container attached under a parent holding auras (in an instance, or wherever
-  aura geometry is secret) can read its strip's position as a secret value. The library places every
-  strip tooltip centered above the strip from that position, and with nothing to read its fallback is a
-  point into the anchor's restricted tree, which the client refuses, so the tooltip has no anchor and
-  does not render; the strip's marks still work. Through LibKa0s v1.106.0 this addon's own placement
-  hook put that tooltip beside the nearest readable container up the chain; the library no longer
-  reads a host placement, so the hook is gone. It ends when the library's strip tooltip gains a
-  fallback a restricted strip can use (a host-supplied rect, for example), LibKa0s#99.
 - **A container wider than its parent aligns backwards by thirds** (issue #22, addendum A7). The
   pair a drop picks comes from the dragged container's center over the parent's side cut in thirds,
   so the pair picked can differ from the flush edge the child rests on. For a child more than about a

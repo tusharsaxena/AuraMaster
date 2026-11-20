@@ -20,8 +20,9 @@ local function rgba(...)
 end
 
 --- A template-shaped config on `NS`, `over` merged on.
--- The companions that default OFF since the smoke feedback (SF-AM-1..3); this suite reads the followed
--- arm, so its configs turn them on first and a test's own `over` still wins.
+-- The companions that default OFF (the bar border, SF-AM-2, U-9; the text glow, SF-AM-1, U-10), and those
+-- that did until R-2 (SF-AM-3, U-8); this suite reads the followed arm, so its configs turn them on
+-- first and a test's own `over` still wins.
 local FOLLOWED = {
     bars = { barColorFromSkin = true, bgColorFromSkin = true, borderColorFromSkin = true,
         iconBorderColorFromSkin = true },
@@ -78,7 +79,8 @@ test("skin flip: every listed companion is a bool row defaulting on, in the temp
             assertEqual(v, true, path .. " in the template")
         end
     end
-    assertEqual(n, 5 + 3 * 7, "the bars' 4, the icons' 1, the text's 1 and 3 per font block")
+    -- red under: the Text line's font color left out again (its exclusion went with SF-AM-3, U-8)
+    assertEqual(n, 6 + 3 * 7, "the bars' 4, the icons' 1, the text's 1 and 3 per font block")
 end)
 
 test("skin flip: no swatch carries disabledIf, and a class color has no companion", function()
@@ -487,7 +489,8 @@ test("skin flip: v16 sets every listed companion in every profile and keeps each
         assertEqual(c1.bars.barTextureFromSkin, true, name .. " a stored false moves")
         assertEqual(c1.bars.name.fontFromSkin, true, name .. " the player's face follows (the ruling)")
         assertEqual(c1.bars.name.fontColorFromSkin, true, name .. " an absent one is written")
-        assertEqual(c2.text.font.fontColorFromSkin, false, name .. " off by default since SF-AM-3: a stored false stays")
+        -- v16 leaves it; v21 then puts it back on the skin, its swatch still the template's white (R-2)
+        assertEqual(c2.text.font.fontColorFromSkin, true, name .. " a stored false at the old default follows (v21)")
         assertTrue(c2.text.glowColorFromSkin ~= true, name .. " v17 moved the old default off the skin")
         assertEqual(c1.bars.name.fontFlags, "@skin", name .. " Font flags: on S.FontFlags")
         assertEqual(c1.bars.barColor.r, 0.3, name .. " a one-key color keeps its key (the backfill fills the rest)")
@@ -595,5 +598,5 @@ test("skin flip: the ladder walks every stored profile, and a new profile takes 
     local NS = ran({ Default = partial(), Parked = partial() })
     assertEqual(NS.db.sv.profiles.Parked.skin.fullSkinReset, true, "an inactive profile")
     assertEqual(NS.db.global.schemaVersion, NS.SCHEMA_VERSION)
-    assertEqual(NS.SCHEMA_VERSION, 20)
+    assertEqual(NS.SCHEMA_VERSION, 21)
 end)

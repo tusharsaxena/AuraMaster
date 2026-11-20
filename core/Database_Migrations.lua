@@ -1,6 +1,6 @@
 local _, NS = ...
 
--- core/Database_Migrations.lua — the frozen schema step bodies, Database.MigrateV2 .. MigrateV20,
+-- core/Database_Migrations.lua — the frozen schema step bodies, Database.MigrateV2 .. MigrateV20 and FollowDefaults (v21),
 -- with their private helpers and id tables. Peeled out of core/Database.lua, which keeps the ladder
 -- that calls them (SCHEMA_STEPS, climbLadder, NS.RunMigrations), AceDB init and the registry helpers.
 --
@@ -1097,10 +1097,7 @@ local FOLLOW_LEAVES = {
 }
 for _, block in ipairs(Database.FLAG_BLOCKS) do
     for _, leaf in ipairs({ "fontFromSkin", "fontColorFromSkin", "fontShadowFromSkin", "fontFlags" }) do
-        -- text.font.fontColorFromSkin is off by default (SF-AM-3), so the one-time step skips it.
-        if not (block == "text.font" and leaf == "fontColorFromSkin") then
-            FOLLOW_LEAVES[#FOLLOW_LEAVES + 1] = block .. "." .. leaf
-        end
+        FOLLOW_LEAVES[#FOLLOW_LEAVES + 1] = block .. "." .. leaf
     end
 end
 Database.SKIN_FOLLOW_LEAVES = FOLLOW_LEAVES
@@ -1185,6 +1182,80 @@ function Database.MigrateV20(p)
         end
     end
     return moved
+end
+
+-- ---------------------------------------------------------------------------
+-- Schema v21: the option defaults follow the skin (the owner's ruling R-2 of 2026-11-20)
+-- ---------------------------------------------------------------------------
+--
+-- R-2 (Ka0sAddonsCommonTasks docs/2026-11-20-LIBKA0S_94_97_99_100/, skinning-§9 "Every option default
+-- follows the skin") flips these companions' defaults back on (U-8, U-9), superseding SF-AM-3 and
+-- SF-AM-2's background. A profile that never stored one follows at once. A stored container holds
+-- each companion explicitly, though: the template is copied into it, and v17 wrote `false` over the
+-- old `true`. So the one move: a stored `false` whose swatch is still the template's color is this
+-- addon's write, not a pick, and goes back on the skin through Skin.ResetToSkin. A `false` beside a
+-- color of the player's (or a preset's: the role bars and the call-outs, presets spec sections 15
+-- and 17, owner U-12) stays. Not listed: the bar border's color (SF-AM-2, owner U-9) and the text
+-- glow's (SF-AM-1, owner U-10), which stay off the skin. Recorded per profile in
+-- `skin.defaultsFollow`, apart from `skin.fullSkinReset`, which v16 already wrote everywhere.
+Database.FOLLOW_DEFAULTS = {
+    { path = "bars.barColorFromSkin", swatch = "bars.barColor" },
+    { path = "bars.bgColorFromSkin", swatch = "bars.bgColor" },
+    { path = "bars.iconBorderColorFromSkin", swatch = "bars.iconBorderColor" },
+    { path = "icons.borderColorFromSkin", swatch = "icons.borderColor" },
+    { path = "text.iconBorderColorFromSkin", swatch = "text.iconBorderColor" },
+    { path = "text.font.fontColorFromSkin", swatch = "text.font.fontColor" },
+}
+
+local CHANNELS = { "r", "g", "b", "a" }
+
+--- True when the stored color `c` draws the template's `want`: absent (the backfill fills it), or
+--- every channel equal, a channel it lacks taking the template's.
+local function templateColor(c, want)
+    if c == nil then return true end
+    if type(c) ~= "table" or type(want) ~= "table" then return false end
+    for _, k in ipairs(CHANNELS) do
+        local v = c[k]
+        if v == nil then v = want[k] end
+        if type(v) ~= "number" or math.abs(v - (want[k] or 1)) > 1e-6 then return false end
+    end
+    return true
+end
+
+--- The value at the dotted `path` in `t`, or nil.
+local function valueAt(t, path)
+    local parent, leaf = pickParent(t, path)
+    return parent and parent[leaf]
+end
+
+--- Move one profile's addon-written option defaults onto the skin, once (R-2): run by the ladder's
+--- v21 over every stored profile and by every Database.PrepareProfile, so a new, copied or reset
+--- profile takes it too. Through LibKa0s-Skin-1.0's ResetToSkin, or the companions set directly
+--- without it. Answers whether it ran and how many companions moved.
+function Database.FollowDefaults(p)
+    if type(p) ~= "table" then return false, 0 end
+    if type(p.skin) == "table" and p.skin.defaultsFollow == true then return false, 0 end
+    local Skin = LibStub and LibStub("LibKa0s-Skin-1.0", true)
+    local resetToSkin = Skin and type(Skin.ResetToSkin) == "function" and Skin.ResetToSkin or nil
+    local moved = 0
+    for _, c in pairs(type(p.containers) == "table" and p.containers or {}) do
+        if type(c) == "table" then
+            local keys = {}
+            for _, m in ipairs(Database.FOLLOW_DEFAULTS) do
+                local parent, leaf = pickParent(c, m.path)
+                if parent and parent[leaf] == false
+                    and templateColor(valueAt(c, m.swatch), valueAt(NS.CONTAINER_TEMPLATE, m.swatch)) then
+                    keys[#keys + 1] = m.path
+                    if not resetToSkin then parent[leaf] = true end
+                end
+            end
+            if resetToSkin and #keys > 0 then resetToSkin(c, keys) end
+            moved = moved + #keys
+        end
+    end
+    if type(p.skin) ~= "table" then p.skin = {} end
+    p.skin.defaultsFollow = true
+    return true, moved
 end
 
 --- Without the library, the same writes by hand: the record gates, a path through a missing table is

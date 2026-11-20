@@ -49,6 +49,7 @@ local function env(tokens)
             return color(name)
         end)
         NS.ApplySkinChoice("ka0s", other)
+        return color
     end
     return NS, mocks, switch
 end
@@ -71,10 +72,16 @@ end
 test("skin surfaces: a skin switch repaints each strip's own edge in the new skin's handle.edge", function()
     local NS, _, switch = env({ "handle.edge" })
     local strip = NS.ContainerManager.instances[1].handle
-    assertEqual(stripEdge(strip), "1 " .. joined(NS.Skin.Color("handle.edge")), "built: Ka0s Default's gold")
-    switch()
-    -- red under: no Anchors.Reskin listener (the widget repaints its fill and label, never a host edge)
-    assertEqual(stripEdge(strip), "1 " .. joined(NS.Skin.Color("handle.edge")), "switched: the new skin's edge")
+    local built = "1 " .. joined(NS.Skin.Color("handle.edge"))
+    assertEqual(stripEdge(strip), built, "built: Ka0s Default's gold")
+    local real = switch()
+    -- From LibKa0s v1.108.0 (WidgetsDragHandle minor 16, SD-LK-97.5) the widget calls this addon's
+    -- `spec.edge` painter again on a switch with the new skin's `handle.edge`, after Anchors.Reskin's
+    -- own repaint, so the strip ends on the skin's real token rather than the facade's sentinel.
+    -- red under: neither the library nor Anchors.Reskin repainting the host edge (the built gold stays)
+    local switched = "1 " .. joined(real("handle.edge"))
+    assertTrue(switched ~= built, "the probe skin's edge differs from Ka0s Default's: " .. switched)
+    assertEqual(stripEdge(strip), switched, "switched: the new skin's edge")
 end)
 
 test("skin surfaces: the strip label's attached gray and TEST tag are the new skin's", function()

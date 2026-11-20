@@ -1,20 +1,24 @@
 -- tests/skin_gate.lua — this addon's facts for the kit's two skin suites (kit revision 50,
--- skinning-§1): the rows of the typed-value gate, and the painted surfaces of the switch test, which
--- flips Ka0s Default against a probe skin and reads what each surface's drawing setters were given.
+-- skinning-§1; revision 58, skinning-§9): the rows of the typed-value gate, and the painted surfaces of
+-- the switch test, which flips Ka0s Default against a probe skin and reads what each surface's drawing
+-- setters were given, each family on its own (texture, color, font, shadow).
 --
 -- Not a suite (tests/run.lua calls it) and not part of the vendored kit. A surface drawn off a button
 -- has no listener in a mock, so its `paint` dresses again, the pass modules/ContainerManager.lua's
 -- one OnLooksChanged listener runs in the client. A surface marked `scope = "panel"` is what Ignore
--- settings panel keeps stock. A HUD surface's `companion` writes its "Use the skin's ..." row.
+-- settings panel keeps stock. A HUD surface's `companion` writes its "Use the skin's ..." row. A
+-- surface that paints a data fill or skin art on a Texture says `expect = "texture"`; one a ruling keeps
+-- fixed in a family says `hold`, the ruling cited beside it.
 
--- A channel a stored color lacks: the load backfill fills it, so no player sees this value.
+-- A channel a stored color lacks: the load backfill fills it, so no player sees this value. The kit's
+-- row category for it (owner U-6, 2026-11-20), not a borrowed cause id.
 local PARTIAL = "a channel a stored color lacks, which the load backfill fills: no look of its own"
 
 local ROWS = {
     { file = "core/Compat.lua", substring = "expiring.r or 1", cause = "D5",
       why = "the running-out tint: a warning tint carries its meaning, the owner's ruling on D5" },
-    { file = "core/Compat.lua", substring = "normal.r or 1", cause = "A7", why = PARTIAL },
-    { file = "modules/Style.lua", substring = "fallback.r or 1", cause = "A7", why = PARTIAL },
+    { file = "core/Compat.lua", substring = "normal.r or 1", category = "unreachable default", why = PARTIAL },
+    { file = "modules/Style.lua", substring = "fallback.r or 1", category = "unreachable default", why = PARTIAL },
     { file = "core/Compat.lua", substring = "region:SetVertexColor(c.r or 1", cause = "MC",
       why = "a dispel type's color off the client's palette: the color is the information" },
     { file = "modules/Style.lua", substring = "map[name] = _G.CreateColor", cause = "MC",
@@ -57,35 +61,96 @@ return function(Kit, NS, mocks)
         t[leaf] = v
     end
 
+    --- `fn()` with Style.Fetch answering a path of each key's own. The harness loads no LibSharedMedia,
+    --- so every media key draws the one fallback path, and a fill whose texture follows the skin would
+    --- read the same as one that never does (skinning-§9: the probe sees a bar texture move only where
+    --- the harness resolves each skin's key to a path of its own). Style.Fetch is read per dress, so the
+    --- stand-in reaches every element surface's draws and nothing outside them.
+    local function withMedia(fn, ...)
+        local real = NS.Style.Fetch
+        NS.Style.Fetch = function(mediaType, key, fallback)
+            if type(key) == "string" and key ~= "" then return "LSM\\" .. mediaType .. "\\" .. key end
+            return fallback
+        end
+        local got = { pcall(fn, ...) }
+        NS.Style.Fetch = real
+        if not got[1] then error(got[2], 0) end
+        return unpack(got, 2)
+    end
+
+    --- A recorder the library takes for a region of `kind` (its GetObjectType).
+    local function typed(kind)
+        local r = R()
+        r.__answer.GetObjectType = function() return kind end
+        return r
+    end
+
+    --- The gloss's carrier: a clear StatusBar recorder whose lazily made regions (the gloss, under a
+    --- skin that draws one) are typed Textures and handed back by GetRegions for the spy to walk.
+    local function glossCarrier()
+        local bar, made = typed("StatusBar"), {}
+        bar.__answer.GetAlpha = function() return 0 end
+        bar.__answer.CreateTexture = function(self, _, layer)
+            local tex = typed("Texture")
+            tex.parent, tex.__layer = self, layer
+            made[#made + 1] = tex
+            return tex
+        end
+        bar.__answer.GetRegions = function() return unpack(made) end
+        return bar
+    end
+
     --- A surface on an element dressed from the template with `over` on it: dressed once, its regions
     --- swapped for recorders and dressed again, as the style suites do, so every region's drawing is
     --- its own. `pick(am)` answers what the surface drew; `follow` is its companion's path.
     --- `note(am, obj)`, for a surface the base skin draws nothing on, writes what it drew on `obj`.
-    local function element(name, over, follow, pick, note)
+    local function element(name, over, follow, pick, note, facts)
         local frame, config
         local function dress(o)
-            NS.Style.Element(frame, config, false)
+            withMedia(NS.Style.Element, frame, config, false)
             if note then note(frame.__am, o) end
         end
-        return {
+        local surface = {
             name = name,
             companion = function(on) set(over, follow, on) end,
             build = function()
                 config = NS.Database.Merge(NS.Database.DeepCopy(NS.CONTAINER_TEMPLATE), over)
                 frame = R()
-                NS.Style.Element(frame, config, false)
+                withMedia(NS.Style.Element, frame, config, false)
                 for k, v in pairs(frame.__am) do
                     if type(v) == "table" and k ~= "chain" then frame.__am[k] = R() end
                 end
+                if facts and facts.swap then facts.swap(frame.__am) end
                 local drew = pick(frame.__am)
                 dress(drew[1])
                 return unpack(pick(frame.__am))
             end,
             paint = dress,
         }
+        for k, v in pairs(facts or {}) do
+            if k ~= "swap" then surface[k] = v end
+        end
+        return surface
     end
 
     local function region(key) return function(am) return { am[key] } end end
+    --- Every font string of a Text line's chain (modules/Style_Text.lua's `piece1`, `piece2`, ...).
+    local function pieces(am)
+        local out, i = {}, 1
+        while rawget(am, "piece" .. i) do
+            out[#out + 1] = am["piece" .. i]
+            i = i + 1
+        end
+        return out
+    end
+    --- The first id the cast-to-aura data rewrites, for CastAura's suggestion tag.
+    local function castId()
+        local t = NS.CastToAura and NS.CastToAura.REWRITE or {}
+        local ids = {}
+        for id in pairs(t) do ids[#ids + 1] = id end
+        table.sort(ids)
+        return ids[1]
+    end
     local function strips(key) return function(am) return BS.strips(am[key]) end end
     local ICONS, TEXT = { style = "icons" }, { style = "text" }
     local function over(base, extra)
@@ -103,8 +168,10 @@ return function(Kit, NS, mocks)
     local pending   -- the strip whose tooltip a surface fires, or the frame picker to stop
 
     local surfaces = {
-        element("a bar's fill", {}, "bars.barColorFromSkin", region("fill")),
-        element("a bar's background", {}, "bars.bgColorFromSkin", region("bg")),
+        element("a bar's fill", {}, "bars.barColorFromSkin", region("fill"), nil, { expect = "texture" }),
+        element("a bar's background", {}, "bars.bgColorFromSkin", region("bg"), nil, { expect = "texture" }),
+        -- The followed arm: the border's color defaults off the skin, dark in every skin (SF-AM-2,
+        -- OVERRIDE, owner U-9 of 2026-11-20), and follows once the player ticks its companion.
         element("a bar's border, Show border on", { bars = { borderShow = true } },
             "bars.borderColorFromSkin", strips("border")),
         element("a bar's border, Show border off", { bars = { borderShow = false } }, "bars.borderStyleFromSkin", function(am)
@@ -120,9 +187,17 @@ return function(Kit, NS, mocks)
         element("an icon's stacks", over(ICONS, {}), "icons.stacks.fontColorFromSkin", region("stacks")),
         element("the icon beside a text line's border", over(TEXT, { text = { icon = "LEFT", iconBorderShow = true } }),
             "text.iconBorderColorFromSkin", strips("iconBorder")),
+        -- The gloss's carrier, am.sheen, a clear StatusBar over the fill (modules/Style_Bars.lua),
+        -- dressed by the bar's own paint (NS.Skin.BarGloss under the texture's companion) and then
+        -- repainted by the library on a switch.
+        element("a bar's gloss", {}, "bars.barTextureFromSkin", region("sheen"), nil,
+            { clear = true, swap = function(am) am.sheen = glossCarrier() end }),
+        element("a text line's pieces", over(TEXT, {}), "text.font.fontColorFromSkin", pieces),
         drawn(R, "a text line's glow", function(o)
             local s = NS.Database.DeepCopy(NS.CONTAINER_TEMPLATE.text)
-            s.glowColorFromSkin = true   -- off by default (SF-AM-1); the probe wants the followed arm
+            -- Off by default, black in every skin (SF-AM-1, OVERRIDE, owner U-10 of 2026-11-20); the
+            -- probe wants the followed arm.
+            s.glowColorFromSkin = true
             NS.Style.Text.GlowFont(o, s, 1)
         end),
         drawn(R, "the name label", function(o)
@@ -183,6 +258,15 @@ return function(Kit, NS, mocks)
             end
             return unpack(objects)
         end },
+        { name = "the preset picker window", build = function()
+            -- The window, its title, blurb, hint and status lines, its two buttons and its footer: the
+            -- library's primitives under this addon's owner (settings/PresetPicker.lua), which repaint
+            -- themselves on a switch.
+            NS.ShowPresetPicker()
+            local f = NS.PresetPicker.frame
+            pending = "picker"
+            return f, f.title, f.blurb, f.nextHint, f.status.text, f.apply, f.notNow, f.footer
+        end },
         drawn(R, "the drag-to-attach mark", function(o)
             local c = NS.Anchors.Snap.COLOR.attach
             o:SetColorTexture(c.r, c.g, c.b, c.a)
@@ -196,18 +280,37 @@ return function(Kit, NS, mocks)
         drawn(R, "a plan warning's line", function(o) o:SetText(NS.PanelEscape("am.planWarn")) end, "panel"),
         drawn(R, "the Filters section's link", function(o) o:SetText(NS.PanelEscape("am.link")) end, "panel"),
         drawn(R, "a settings tooltip's line", function(o) o:SetTextColor(NS.PanelTipLine()) end, "panel"),
+        drawn(R, "the Aura type dropdown's values", function(o)
+            for _, e in ipairs(NS.FindSchemaRow("container.auraType").values) do
+                if e.value == "HARMFUL" then o:SetText(e.text) end
+            end
+        end, "panel"),
+        drawn(R, "the Style dropdown's values", function(o)
+            for _, e in ipairs(NS.FindSchemaRow("container.style").values) do
+                if e.value == "icons" then o:SetText(e.text) end
+            end
+        end, "panel"),
+        drawn(R, "a spell category's (yours) mark", function(o)
+            o:SetText(NS.GeneralSpells.MarkedName({ key = "user:gate", name = "Gate", userCategory = true,
+                auraType = "HELPFUL" }))
+        end, "panel"),
+        drawn(R, "the Layout page's attached note", function(o) o:SetText(NS.PanelEscape("am.goldMuted")) end, "panel"),
+        drawn(R, "the Layout and Text pages' gray", function(o) o:SetText(NS.PanelEscape("text.disabled")) end, "panel"),
+        drawn(R, "the Text page's gold", function(o) o:SetText(NS.PanelEscape("text.heading")) end, "panel"),
+        drawn(R, "the add box's not-an-aura tag", function(o) o:SetText(NS.CastAura.SuggestTag(castId())) end, "panel"),
     }
 
     Kit.skinSwitch = {
         owner = "AuraMaster",
         skin = function() return mocks.LibStub("LibKa0s-Skin-1.0") end,
         surfaces = surfaces,
-        -- What a surface left up: test mode, the unlock and the frame picker.
+        -- What a surface left up: test mode, the unlock, the frame picker and the preset picker.
         reset = function()
             if NS.State.testMode then NS.Preview.SetTestMode(false) end
             if NS.GetSetting("locked") == false then NS.SetByPath("locked", true) end
             local overlay = mocks.__globals.AuraMasterFramePicker
             if overlay and pending == overlay then overlay:__fire("OnKeyDown", "ESCAPE") end
+            if pending == "picker" then NS.HidePresetPicker() end
             pending = nil
             mocks.__fireTimers()
         end,

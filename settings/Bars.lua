@@ -66,9 +66,12 @@ NS.RegisterSchemaRows({
     { path = P .. "sparkWidth", page = PAGE, group = G_GENERAL, subgroup = L["Spark"], type = "number", min = 1, max = 32, step = 1,
       label = L["Spark width (px)"], desc = L["How wide the spark is."] },
 })
+-- `colorFromSkin = false`: no "Use the skin's color" companion (OptionsCompose minor 20 emits one by
+-- default). The spark is a desaturated additive highlight on game art, under the A6 Leave, and no skin
+-- token describes it (owner U-11, 2026-11-20).
 NS.RegisterSchemaRows(H.ColorPair({
     prefix = P, page = PAGE, group = G_GENERAL, subgroup = L["Spark"], key = "sparkColor",
-    companionKey = "useClassColorSpark", label = L["Spark color"], classColor = UNIT,
+    companionKey = "useClassColorSpark", label = L["Spark color"], classColor = UNIT, colorFromSkin = false,
 }))
 -- Off: a live bar's spark rides a clip frame bounded by the elapsed region, which a timeless aura
 -- leaves empty (modules/Style_Bars.lua's wireSpark).
