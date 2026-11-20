@@ -331,7 +331,8 @@ local function calloutLook(color)
 end
 -- THE OWNER'S BAR COLORS (their 2026-11-17 SmokeTest baseline): five roles keep Fill > Color by at
 -- One color, in a color of their own, so they read apart from the blue buff bars and the
--- dispel-colored debuff bars beside them. `barColor` on a role, written by sizeTo in every preset
+-- dispel-colored debuff bars beside them. They keep their hues in every skin (OVERRIDE, owner U-12 of
+-- 2026-11-20; presets spec section 20), so schema v21 leaves them off the skin. `barColor` on a role, written by sizeTo in every preset
 -- that has the role, on a bars container alone (an Icons row has no fill).
 local BAR_GRAY = rgb(69 / 255, 69 / 255, 69 / 255)        -- Player buffs, short; Target special (mine)
 local BAR_ORANGE = rgb(1, 128 / 255, 64 / 255)            -- Target crowd control

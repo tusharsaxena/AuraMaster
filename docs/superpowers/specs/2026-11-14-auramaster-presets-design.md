@@ -607,3 +607,12 @@ the account latch's reach, are in docs/known-limitations.md (presets).
    and every container leaves the screen until Apply (which keeps the empty profile) or Not now / the
    close control / Escape (which restore the player's own containers). This replaces the earlier
    behavior, where Empty ended the preview and put the player's containers back on screen.
+
+## 20. Owner ruling U-12 (2026-11-20)
+
+The role bar colors stay in every skin. The four colors the presets write on a role's bars (gray,
+orange, tan and purple; `defaults/Presets.lua`'s `BAR_GRAY`, `BAR_ORANGE`, `BAR_TAN` and `BAR_PURPLE`, with
+`barColorFromSkin = false`) are an owner override: the roles read apart from the buff and debuff bars
+beside them, a meaning use, so no skin recolors them (owner ruling U-12 of 2026-11-20,
+Ka0sAddonsCommonTasks `docs/2026-11-20-LIBKA0S_94_97_99_100/SD_RULE.md`). Schema v21 keeps them: it moves
+only a `false` whose swatch is still the template's blue (`docs/schema.md`).

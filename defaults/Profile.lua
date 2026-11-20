@@ -58,6 +58,9 @@ NS.defaults.profile = {
         -- The record of the one step onto the skin (core/Database.lua's Database.FollowSkin): no schema
         -- row, so no Defaults path walks it and a companion turned off afterwards stays off.
         fullSkinReset = false,
+        -- The record of the one move onto the skin's option defaults (owner ruling R-2 of 2026-11-20,
+        -- core/Database_Migrations.lua's Database.FollowDefaults): no schema row, for the same reason.
+        defaultsFollow = false,
     },
 
     -- Profile-wide since schema v2 (core/Database_Migrations.lua's MigrateV2 lifted them off the
@@ -162,14 +165,6 @@ local function font(size)
     }
 end
 
---- The Text container's font: the six leaves with the color's companion off (SF-AM-3), so the
---- stored color draws under every skin until the player ticks Use the skin's color.
-local function textFont(size)
-    local t = font(size)
-    t.fontColorFromSkin = false
-    return t
-end
-
 --- The name label's font: the six leaves, gold at 12 (the strip's own look).
 local function labelFont()
     local t = font(12)
@@ -265,13 +260,16 @@ NS.CONTAINER_TEMPLATE = {
         -- Every color and border has a companion too (schema v16). Class colors come first and have
         -- none. A skin's None `bar.borderStyle` leaves Show border and the stored style the player's,
         -- so this block ships off; a skin's real style wins over both (modules/Style_Border.lua).
+        -- The fill, background and icon-border colors follow the skin by default: the owner's ruling
+        -- R-2 of 2026-11-20 supersedes SF-AM-2's background and SF-AM-3 (U-8, U-9). The bar border's
+        -- color stays off the skin, dark in every skin (SF-AM-2, OVERRIDE, owner U-9 of 2026-11-20).
         barTexture = "Ka0s Default", barTextureFromSkin = true, barAlpha = 1.0,
-        barColor = color(0.20, 0.55, 0.95, 1), barColorFromSkin = false, useClassColorBar = false,
+        barColor = color(0.20, 0.55, 0.95, 1), barColorFromSkin = true, useClassColorBar = false,
         colorMode = "static",   -- "dispel" tints by the profile's dispelColors (schema v2)
         drain = "left", smooth = false,
 
         bgTexture = "Ka0s Default", bgTextureFromSkin = true, bgAlpha = 1.0, bgColor = color(0, 0, 0, 0.5),
-        bgColorFromSkin = false, useClassColorBg = false,
+        bgColorFromSkin = true, useClassColorBg = false,
         bgColorMode = "static",   -- "dispel" tints the background as colorMode does the fill (feedback #7)
 
         borderShow = true, borderStyle = "Solid", borderStyleFromSkin = true, borderSize = 1,
@@ -279,7 +277,7 @@ NS.CONTAINER_TEMPLATE = {
 
         icon = "LEFT", iconSize = 0, iconGap = 1, iconZoom = 0.08,
         iconBorderShow = false, iconBorderStyle = "Solid", iconBorderStyleFromSkin = true, iconBorderSize = 1,
-        iconBorderColor = color(0, 0, 0, 1), iconBorderColorFromSkin = false, useClassColorIconBorder = false,
+        iconBorderColor = color(0, 0, 0, 1), iconBorderColorFromSkin = true, useClassColorIconBorder = false,
 
         spark = true, sparkWidth = 8, sparkColor = color(1, 1, 1, 0.9), useClassColorSpark = false,
         sparkTimeless = true,   -- false: no spark on an aura without a duration (modules/Style_Bars.lua)
@@ -298,7 +296,7 @@ NS.CONTAINER_TEMPLATE = {
         width = 32, height = 32, zoom = 0.08,
 
         borderShow = true, borderStyle = "Solid", borderStyleFromSkin = true, borderSize = 1,
-        borderColor = color(0, 0, 0, 1), borderColorFromSkin = false, useClassColorBorder = false,
+        borderColor = color(0, 0, 0, 1), borderColorFromSkin = true, useClassColorBorder = false,
         dispelBorder = true,
 
         cooldown = true, cooldownReverse = false, cooldownEdge = true,
@@ -323,12 +321,12 @@ NS.CONTAINER_TEMPLATE = {
         autoSize = true,
         template = "$spellname$[ x$stacks$][ - $remainingduration$]",
         justifyH = "LEFT", justifyV = "MIDDLE", x = 2, y = 0,
-        font = textFont(12),
+        font = font(12),   -- its color follows the skin like every font's (R-2 supersedes SF-AM-3, U-8)
         timeFormat = "blizzard",
 
         icon = "NONE", iconSize = 0, iconGap = 2, iconZoom = 0.08,
         iconBorderShow = false, iconBorderStyle = "Solid", iconBorderStyleFromSkin = true, iconBorderSize = 1,
-        iconBorderColor = color(0, 0, 0, 1), iconBorderColorFromSkin = false, useClassColorIconBorder = false,
+        iconBorderColor = color(0, 0, 0, 1), iconBorderColorFromSkin = true, useClassColorIconBorder = false,
 
         anim = "none", animSpeed = 1.0, animIntensity = 0.3, animBounce = 3,
 
@@ -345,6 +343,8 @@ NS.CONTAINER_TEMPLATE = {
         -- shadow and never replaces them. glowIntensity scales the color's alpha; glowThickness is the
         -- ring's radius in px, glowX/glowY shift the whole ring. Off, yet set to the look it should
         -- have when turned on: full intensity, 2 px, down and to the right by 1 (owner, 2026-11-14).
+        -- The glow's color stays black in every skin, off the skin (SF-AM-1, OVERRIDE, owner U-10 of
+        -- 2026-11-20).
         glow = false,
         glowColor = color(0, 0, 0, 1), glowColorFromSkin = false, useClassColorGlow = false,
         glowIntensity = 1, glowThickness = 2,
