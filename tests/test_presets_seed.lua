@@ -112,7 +112,7 @@ test("seed: migrated profile marked seen", function()
         global = { schemaVersion = 18 },
     } })
     assertEqual(NS.db.global.schemaVersion, NS.Database.CurrentSchemaVersion())
-    assertEqual(NS.SCHEMA_VERSION, 21)
+    assertEqual(NS.SCHEMA_VERSION, 22)
     local p = NS.db.profile
     -- red under: no v19 step, or one keyed on something other than `seeded`
     assertTrue(p.presets.pickerSeen, "the active profile, already seeded, is marked seen")
@@ -153,7 +153,7 @@ test("seed: the account latch needs no migration step", function()
         global = { schemaVersion = 18 },
     } })
     -- red under: an account from before the latch reading it set, or a new schema step for it
-    assertEqual(NS.SCHEMA_VERSION, 21, "no step added for the account latch (v20 is AD-92-AM's tooltip position, v21 R-2's colors)")
+    assertEqual(NS.SCHEMA_VERSION, 22, "no step added for the account latch (v20 is AD-92-AM's tooltip position, v21 retired, v22 the six colors)")
     assertFalse(NS.db.global.presets.pickerSeen, "an account from before it reads the default, unset")
     assertTrue(NS.db.profile.presets.pickerSeen, "while v19 still marks the seeded profile")
     local fresh2 = fresh()

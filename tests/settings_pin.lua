@@ -11,10 +11,9 @@
 -- account latch, global.presets.pickerSeen, with its default and its row (presets spec section 18.5).
 -- AD-92-AM (LibKa0s#92, option B) drops "At the cursor" from container.behavior.tooltipAnchor: six
 -- choices where there were seven, and schema v20 moves a stored one to the default.
--- SD-SK-AM (the owner's ruling R-2 of 2026-11-20, U-8, U-9) flips six color companions' defaults to
--- follow the skin (the bar fill and background, the three icon borders, the Text line's font color),
--- and schema v21 moves the values this addon wrote at the old defaults, recorded in the new default
--- profile.skin.defaultsFollow.
+-- The owner's override of 2026-11-22 holds six color companions' defaults off the skin (the bar fill
+-- and background, the three icon borders, the Text line's font color; SF-AM-2, SF-AM-3), over the
+-- flip of 2026-11-20 (SD-SK-AM).
 --
 -- Not a suite (tests/run.lua does not list it): data the pin suite dofiles.
 return {
@@ -31,12 +30,12 @@ return {
     [[row container.auraType type=string default="HELPFUL" min=nil max=nil step=nil values=1|2 session=false]],
     [[row container.bars.barAlpha type=number default=1 min=0 max=1 step=0.05 values=- session=false]],
     [[row container.bars.barColor type=color default={a=1,b=0.95,g=0.55,r=0.2} min=nil max=nil step=nil values=- session=false]],
-    [[row container.bars.barColorFromSkin type=bool default=true min=nil max=nil step=nil values=- session=false]],
+    [[row container.bars.barColorFromSkin type=bool default=false min=nil max=nil step=nil values=- session=false]],
     [[row container.bars.barTexture type=string default="Ka0s Default" min=nil max=nil step=nil values=fn session=false]],
     [[row container.bars.barTextureFromSkin type=bool default=true min=nil max=nil step=nil values=- session=false]],
     [[row container.bars.bgAlpha type=number default=1 min=0 max=1 step=0.05 values=- session=false]],
     [[row container.bars.bgColor type=color default={a=0.5,b=0,g=0,r=0} min=nil max=nil step=nil values=- session=false]],
-    [[row container.bars.bgColorFromSkin type=bool default=true min=nil max=nil step=nil values=- session=false]],
+    [[row container.bars.bgColorFromSkin type=bool default=false min=nil max=nil step=nil values=- session=false]],
     [[row container.bars.bgColorMode type=string default="static" min=nil max=nil step=nil values=1|2 session=false]],
     [[row container.bars.bgTexture type=string default="Ka0s Default" min=nil max=nil step=nil values=fn session=false]],
     [[row container.bars.bgTextureFromSkin type=bool default=true min=nil max=nil step=nil values=- session=false]],
@@ -54,7 +53,7 @@ return {
     [[row container.bars.height type=number default=18 min=6 max=80 step=1 values=- session=false]],
     [[row container.bars.icon type=string default="LEFT" min=nil max=nil step=nil values=1|2|3 session=false]],
     [[row container.bars.iconBorderColor type=color default={a=1,b=0,g=0,r=0} min=nil max=nil step=nil values=- session=false]],
-    [[row container.bars.iconBorderColorFromSkin type=bool default=true min=nil max=nil step=nil values=- session=false]],
+    [[row container.bars.iconBorderColorFromSkin type=bool default=false min=nil max=nil step=nil values=- session=false]],
     [[row container.bars.iconBorderShow type=bool default=false min=nil max=nil step=nil values=- session=false]],
     [[row container.bars.iconBorderSize type=number default=1 min=0 max=16 step=1 values=- session=false]],
     [[row container.bars.iconBorderStyle type=string default="Solid" min=nil max=nil step=nil values=fn session=false]],
@@ -183,7 +182,7 @@ return {
     [[row container.filter.zones.scenario type=bool default=true min=nil max=nil step=nil values=- session=false]],
     [[row container.icons.blizzardNumbers type=bool default=false min=nil max=nil step=nil values=- session=false]],
     [[row container.icons.borderColor type=color default={a=1,b=0,g=0,r=0} min=nil max=nil step=nil values=- session=false]],
-    [[row container.icons.borderColorFromSkin type=bool default=true min=nil max=nil step=nil values=- session=false]],
+    [[row container.icons.borderColorFromSkin type=bool default=false min=nil max=nil step=nil values=- session=false]],
     [[row container.icons.borderShow type=bool default=true min=nil max=nil step=nil values=- session=false]],
     [[row container.icons.borderSize type=number default=1 min=0 max=16 step=1 values=- session=false]],
     [[row container.icons.borderStyle type=string default="Solid" min=nil max=nil step=nil values=fn session=false]],
@@ -276,7 +275,7 @@ return {
     [[row container.text.expiringThreshold type=number default=5 min=1 max=60 step=1 values=- session=false]],
     [[row container.text.font.font type=string default="Ka0s Prototype" min=nil max=nil step=nil values=fn session=false]],
     [[row container.text.font.fontColor type=color default={a=1,b=1,g=1,r=1} min=nil max=nil step=nil values=- session=false]],
-    [[row container.text.font.fontColorFromSkin type=bool default=true min=nil max=nil step=nil values=- session=false]],
+    [[row container.text.font.fontColorFromSkin type=bool default=false min=nil max=nil step=nil values=- session=false]],
     [[row container.text.font.fontFlags type=string default="@skin" min=nil max=nil step=nil values=|@skin|MONOCHROME|OUTLINE|OUTLINE, MONOCHROME|THICKOUTLINE session=false]],
     [[row container.text.font.fontFromSkin type=bool default=true min=nil max=nil step=nil values=- session=false]],
     [[row container.text.font.fontShadow type=bool default=false min=nil max=nil step=nil values=- session=false]],
@@ -293,7 +292,7 @@ return {
     [[row container.text.height type=number default=16 min=8 max=80 step=1 values=- session=false]],
     [[row container.text.icon type=string default="NONE" min=nil max=nil step=nil values=1|2|3 session=false]],
     [[row container.text.iconBorderColor type=color default={a=1,b=0,g=0,r=0} min=nil max=nil step=nil values=- session=false]],
-    [[row container.text.iconBorderColorFromSkin type=bool default=true min=nil max=nil step=nil values=- session=false]],
+    [[row container.text.iconBorderColorFromSkin type=bool default=false min=nil max=nil step=nil values=- session=false]],
     [[row container.text.iconBorderShow type=bool default=false min=nil max=nil step=nil values=- session=false]],
     [[row container.text.iconBorderSize type=number default=1 min=0 max=16 step=1 values=- session=false]],
     [[row container.text.iconBorderStyle type=string default="Solid" min=nil max=nil step=nil values=fn session=false]],
@@ -373,7 +372,6 @@ return {
     [[default profile.presets.pickerSeen=false]],
     [[default profile.scale=1]],
     [[default profile.seeded=false]],
-    [[default profile.skin.defaultsFollow=false]],
     [[default profile.skin.font=""]],
     [[default profile.skin.fullSkinReset=false]],
     [[default profile.skin.ignoreFonts=false]],
@@ -403,7 +401,7 @@ return {
     [[default container.bars.barColor.b=0.95]],
     [[default container.bars.barColor.g=0.55]],
     [[default container.bars.barColor.r=0.2]],
-    [[default container.bars.barColorFromSkin=true]],
+    [[default container.bars.barColorFromSkin=false]],
     [[default container.bars.barTexture="Ka0s Default"]],
     [[default container.bars.barTextureFromSkin=true]],
     [[default container.bars.bgAlpha=1]],
@@ -411,7 +409,7 @@ return {
     [[default container.bars.bgColor.b=0]],
     [[default container.bars.bgColor.g=0]],
     [[default container.bars.bgColor.r=0]],
-    [[default container.bars.bgColorFromSkin=true]],
+    [[default container.bars.bgColorFromSkin=false]],
     [[default container.bars.bgColorMode="static"]],
     [[default container.bars.bgTexture="Ka0s Default"]],
     [[default container.bars.bgTextureFromSkin=true]],
@@ -438,7 +436,7 @@ return {
     [[default container.bars.iconBorderColor.b=0]],
     [[default container.bars.iconBorderColor.g=0]],
     [[default container.bars.iconBorderColor.r=0]],
-    [[default container.bars.iconBorderColorFromSkin=true]],
+    [[default container.bars.iconBorderColorFromSkin=false]],
     [[default container.bars.iconBorderShow=false]],
     [[default container.bars.iconBorderSize=1]],
     [[default container.bars.iconBorderStyle="Solid"]],
@@ -587,7 +585,7 @@ return {
     [[default container.icons.borderColor.b=0]],
     [[default container.icons.borderColor.g=0]],
     [[default container.icons.borderColor.r=0]],
-    [[default container.icons.borderColorFromSkin=true]],
+    [[default container.icons.borderColorFromSkin=false]],
     [[default container.icons.borderShow=true]],
     [[default container.icons.borderSize=1]],
     [[default container.icons.borderStyle="Solid"]],
@@ -701,7 +699,7 @@ return {
     [[default container.text.font.fontColor.b=1]],
     [[default container.text.font.fontColor.g=1]],
     [[default container.text.font.fontColor.r=1]],
-    [[default container.text.font.fontColorFromSkin=true]],
+    [[default container.text.font.fontColorFromSkin=false]],
     [[default container.text.font.fontFlags="@skin"]],
     [[default container.text.font.fontFromSkin=true]],
     [[default container.text.font.fontShadow=false]],
@@ -724,7 +722,7 @@ return {
     [[default container.text.iconBorderColor.b=0]],
     [[default container.text.iconBorderColor.g=0]],
     [[default container.text.iconBorderColor.r=0]],
-    [[default container.text.iconBorderColorFromSkin=true]],
+    [[default container.text.iconBorderColorFromSkin=false]],
     [[default container.text.iconBorderShow=false]],
     [[default container.text.iconBorderSize=1]],
     [[default container.text.iconBorderStyle="Solid"]],

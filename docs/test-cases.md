@@ -2143,20 +2143,23 @@ Total.
 
 ### test_defaults_v17.lua (7)
 
-- v17: the text glow's color does not follow the skin by default (SF-AM-1, OVERRIDE, owner U-10)
+- v17: the text glow's color does not follow the skin by default (SF-AM-1)
 - v17: MigrateV17 moves an old default and keeps a pick
-- v17: a bar has a black border whatever the skin, its background the skin's (SF-AM-2, U-9)
+- v17: a bar has a dark background and a black border whatever the skin (SF-AM-2)
 - v17: MigrateV17 moves a bar's old background and border defaults, not a pick
-- v17: bar fill, Text font and icon border colors follow the skin by default again (R-2 over SF-AM-3, U-8)
+- v17: bar fill, Text font and icon border colors stay off the skin by default (SF-AM-3)
 - v17: a new profile keeps the new defaults through the one-time follow step
 - v17: MigrateV17 moves the old fill, text font and icon border defaults
 
-### test_defaults_r2.lua (4)
+### test_defaults_v22.lua (7)
 
-- r2: the six companions default to follow the skin; the border and the glow stay off (U-9, U-10)
-- r2: FollowDefaults moves a false at the old default, keeps a picked color, and records it once
-- r2: FollowDefaults goes through Skin.ResetToSkin, and writes the same with the library absent
-- r2: v21 walks every stored profile, and a new profile's load records the step
+- v22: the six colors default off the skin, in the template and on the rows (owner 2026-11-22)
+- v22: every preset, in each look, stores the six off the skin
+- v22: a default bar draws blue on a dark background under WoW Forever's skin
+- v22: an account still at v20 is never put on the skin, in any profile
+- v22: a profile v21 moved gets its six back, active or parked
+- v22: only what v21 could have written moves back, and once
+- v22: a profile v21 never reached keeps the player's ticks
 
 ### test_skin_border.lua (10)
 
@@ -2843,7 +2846,7 @@ Total.
 
 - prose: no authored file carries a British spelling from localization-§5's published list
 - prose: the gate carries localization-§5's two lists whole, and nothing of its own
-- prose: the exclusions this repository declared suppressed 19 of 277 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (19): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, and 16 more (list bounded)
+- prose: the exclusions this repository declared suppressed 19 of 278 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (19): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, and 16 more (list bounded)
 - prose: no path this repository narrows the gate by is loaded by a TOC
 - prose: every path this repository narrows the gate by is one .pkgmeta keeps out of the zip
 - prose self-test: the carve-out suppresses the named generated folder, and only it
@@ -3087,7 +3090,7 @@ Total.
 | test_skin_hud.lua | 12 |
 | test_skin_flip.lua | 31 |
 | test_defaults_v17.lua | 7 |
-| test_defaults_r2.lua | 4 |
+| test_defaults_v22.lua | 7 |
 | test_skin_border.lua | 10 |
 | test_skin_fix.lua | 7 |
 | test_skin_flags.lua | 7 |
@@ -3136,4 +3139,4 @@ Total.
 | test_skin_switch.lua | 46 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2570** |
+| **Total** | **2573** |
