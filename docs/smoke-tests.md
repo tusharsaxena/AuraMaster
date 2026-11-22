@@ -2908,14 +2908,14 @@ Pick WoW Forever. General → Presets → preview **Advanced** in Bars → the p
 role bars gray, orange, tan and purple, the typed debuffs their dispel colors, every background and
 border dark. Create a container of each style → **Use the skin's color** is unticked on Fill,
 Background, the three icon borders and the Text font, and the text is white. Switch skins → none of
-those colors moves. Fail: a brown default bar, a ticked box among them, or a Lua error. Result:
+those colors moves. Fail: a brown default bar, a ticked box among them, or a Lua error. Result: Forever: owner reported "works as expected", 2026-11-23; Retail: owed
 
 **SKIN-58. A profile v21 moved gets its colors back (schema v22). Client: WoW Forever, then Retail.**
 With profiles last saved on schema v21, log in on this build → the active profile's default bars are
 blue on a dark background, and picked colors are as they were. Switch to each other profile → the same.
 Tick one Fill **Use the skin's color**, `/reload` → it stays ticked. On an account still at v20 (Retail)
 → no color changes at login. Fail: a profile still on the skin's colors, a pick recolored, the tick
-undone, or a Lua error. Result:
+undone, or a Lua error. Result: Forever: owner reported "works as expected", 2026-11-23; Retail: owed
 
 ## Presets
 
@@ -3780,4 +3780,5 @@ color rows. SKIN-55 and SKIN-56 (SD-SK-AM) were retired on 2026-11-22 by the own
 adds SKIN-57, the default colors staying the addon's own, and SKIN-58, schema v22's restore keeping
 picks and the presets' colors. From SD-AM-99 (LibKa0s#99): DRAG-21 is new, a strip whose position
 reads secret showing its tooltip above its nearest readable container; DRAG-20 no longer asks for that
-case. Their `Result:` lines are empty until the owner runs them.
+case. Their `Result:` lines are empty until the owner runs them, but for SKIN-57 and SKIN-58, which the
+owner reported working on WoW Forever on 2026-11-23: their Retail halves are owed.
