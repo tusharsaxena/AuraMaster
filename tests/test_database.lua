@@ -559,10 +559,8 @@ test("database v2: RunMigrations logs one [Migrate] line per profile, and a seco
     -- red under: logging once for the whole step, or not at all per profile. 2 profiles x the 14
     -- steps a v1 profile now climbs (v2 to v16), less v16's on the active one, which the load already
     -- put on the skin: that step logs a profile only when it ran. Plus v19's on the active one, the
-    -- only seeded profile of the two (v17, v18 and v19 log a profile only when they changed it), and
-    -- v17's on the active one, whose containers hold the template's companions, on since R-2 (v21,
-    -- already recorded there by the load, does not run again).
-    assertEqual(perProfile, 31, table.concat(lines, " | "))
+    -- only seeded profile of the two (v17, v18 and v19 log a profile only when they changed it).
+    assertEqual(perProfile, 30, table.concat(lines, " | "))
     assertEqual(NS.db.sv.profiles.Other.containers[1].layout.strata, "HIGH")
     local before = #lines
     NS.db.sv.profiles.Other.containers[1].layout.strata = "MEDIUM"
@@ -866,10 +864,10 @@ test("v12: the v12 step is on the ladder, below v13's skin reset, v14's Font fla
     -- back off it (SF-AM-1..3, tests/test_defaults_v17.lua), v18 a stored Ka0s Friz Quadrata TT
     -- to Ka0s Ubuntu (R3-FRIZ), v19 every seeded profile marked as having seen the preset picker
     -- (AM-PR04, tests/test_presets_seed.lua), v20 a stored At the cursor tooltip position to the
-    -- default (AD-92-AM, tests/test_migrations.lua), v21 the option defaults this addon wrote put back
-    -- on the skin (R-2, tests/test_defaults_r2.lua)
-    assertEqual(NS.Database.CurrentSchemaVersion(), 21)
-    assertEqual(NS.db.global.schemaVersion, 21)
+    -- default (AD-92-AM, tests/test_migrations.lua), v21 retired, v22 the six colors it
+    -- moved back off the skin (owner 2026-11-22, tests/test_defaults_v22.lua)
+    assertEqual(NS.Database.CurrentSchemaVersion(), 22)
+    assertEqual(NS.db.global.schemaVersion, 22)
 end)
 
 test("v3: RunMigrations migrates every stored profile, the inactive one included", function()

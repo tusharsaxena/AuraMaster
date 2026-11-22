@@ -614,5 +614,5 @@ The role bar colors stay in every skin. The four colors the presets write on a r
 orange, tan and purple; `defaults/Presets.lua`'s `BAR_GRAY`, `BAR_ORANGE`, `BAR_TAN` and `BAR_PURPLE`, with
 `barColorFromSkin = false`) are an owner override: the roles read apart from the buff and debuff bars
 beside them, a meaning use, so no skin recolors them (owner ruling U-12 of 2026-11-20,
-Ka0sAddonsCommonTasks `docs/2026-11-20-LIBKA0S_94_97_99_100/SD_RULE.md`). Schema v21 keeps them: it moves
-only a `false` whose swatch is still the template's blue (`docs/schema.md`).
+Ka0sAddonsCommonTasks `docs/2026-11-20-LIBKA0S_94_97_99_100/SD_RULE.md`). Every other bar keeps the template's blue in every skin
+too (the owner's override of 2026-11-22, schema v22, `docs/schema.md`).

@@ -298,10 +298,9 @@ test("defaults: every leaf of the container template is edited by a settings row
 end)
 
 test("defaults: every profile default is a settings row, a spell set or the registry's own bookkeeping", function()
-    -- skin.fullSkinReset and skin.defaultsFollow have no row on purpose: a row would let a Defaults
-    -- path walk the record. presets.pickerSeen is a row (settings/General.lua), like skin.pickerSeen.
-    local BOOKKEEPING = set({ "containers", "containerOrder", "nextContainerId", "seeded", "skin.fullSkinReset",
-        "skin.defaultsFollow" })
+    -- skin.fullSkinReset has no row on purpose: a row would let a Defaults path walk the record.
+    -- presets.pickerSeen is a row (settings/General.lua), like skin.pickerSeen.
+    local BOOKKEEPING = set({ "containers", "containerOrder", "nextContainerId", "seeded", "skin.fullSkinReset" })
     local orphans = {}
     for _, leaf in ipairs(leaves(NS.defaults.profile, "")) do
         local k = leaf[1]

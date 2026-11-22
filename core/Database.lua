@@ -2,7 +2,7 @@ local _, NS = ...
 
 -- core/Database.lua — AceDB, the schema migration runner, and the pure data helpers over the
 -- container registry. Called from core/AuraMaster.lua's OnInitialize and headlessly by the harness.
--- The step bodies the ladder runs (Database.MigrateV2 .. MigrateV20, FollowSkin, FollowDefaults) are core/Database_Migrations.lua.
+-- The step bodies the ladder runs (Database.MigrateV2 .. MigrateV20, FollowSkin, RestoreOwnColors) are core/Database_Migrations.lua.
 --
 -- NOTHING HERE TOUCHES A FRAME. The registry's CRUD with its messages and live instances is
 -- modules/ContainerManager.lua; this file only knows what a container looks like on disk.
@@ -276,7 +276,6 @@ function Database.PrepareProfile(p)
     if (p.nextContainerId or 1) <= maxId then p.nextContainerId = maxId + 1 end
     rebuildOrder(p)
     Database.FollowSkin(p)
-    Database.FollowDefaults(p)
     -- The seed as written, for the first-run picker's no-confirm Replace (modules/Presets.lua).
     if seeded > 0 and NS.Presets and NS.Presets.RecordSeed then NS.Presets.RecordSeed(p) end
     return seeded
@@ -552,13 +551,15 @@ local SCHEMA_STEPS = {
             end
         end)
     end },
-    { to = 21, apply = function(db)
-        -- The option defaults follow the skin (the owner's ruling R-2, U-8, U-9): the values this
-        -- addon wrote at the old defaults move once, a pick stays: Database.FollowDefaults.
+    -- Retired (owner, 2026-11-22): v21 put six colors on the skin. The stamp alone climbs, so an
+    -- account that has not run it yet is never moved; v22 repairs one that has.
+    { to = 21, apply = function() end },
+    { to = 22, apply = function(db)
+        -- The six colors v21 put on the skin go back to their own: Database.RestoreOwnColors.
         eachProfile(db, function(p, name)
-            local ran, n = Database.FollowDefaults(p)
-            if ran and n > 0 and NS.DebugLog then
-                NS.DebugLog.DebugAtEnable("Migrate", "v21 profile '%s': %s color(s) put back on the skin", name, n)
+            local n = Database.RestoreOwnColors(p)
+            if n > 0 and NS.DebugLog then
+                NS.DebugLog.DebugAtEnable("Migrate", "v22 profile '%s': %s color(s) back off the skin", name, n)
             end
         end)
     end },

@@ -29,7 +29,7 @@ check's number is not reused. Checks with no recorded pass, and checks new or co
 | TEXT-1 to TEXT-36 | Text style | Templates and tokens, justify, the icon, dispel type word, backdrop and edge, animation, Size to fit, the glow behind the text |
 | LAYER-1 to LAYER-6 | Frame layering | Bar borders over the fill, the outline and the name label over the auras, the snap highlight over a Dialog container, the strip at low opacity, the Strata tooltip |
 | SETLAYOUT-1 to SETLAYOUT-9 | Settings layout (item 020) | Every settings page item 020 moved, regrouped or relabeled, read as `docs/settings-panel.md` describes, with no setting lost, moved or reset; the confirm buttons' ellipsis |
-| SKIN-1 to SKIN-56 | Skins | The skinning rollout: the one-time HUD reset under Ka0s Default, Ka0s Default otherwise unchanged, the Skin tab, each skin on the HUD, the unlock furniture, the settings pages and the tool windows, other addons stock, the font and texture companions and overrides, combat, EllesmereUI on, off and back, the copy, profiles, tooltips and popups, the first-run skin picker; the library follow-ups (each skin's HUD face, Ignore fonts on the HUD, the picker's title, the strings newly in the skin's face); the skin fonts run (the Font outline, From skin flags, `/am skin`, width parity, the HUD size scale, the own faces and glow back, the strips' re-fit); the LibKa0s v1.108.0 re-vendor (the strip edge on a switch, the spark's row); the option defaults following the skin and the one move of an upgraded profile (R-2) |
+| SKIN-1 to SKIN-58 | Skins | The skinning rollout: the one-time HUD reset under Ka0s Default, Ka0s Default otherwise unchanged, the Skin tab, each skin on the HUD, the unlock furniture, the settings pages and the tool windows, other addons stock, the font and texture companions and overrides, combat, EllesmereUI on, off and back, the copy, profiles, tooltips and popups, the first-run skin picker; the library follow-ups (each skin's HUD face, Ignore fonts on the HUD, the picker's title, the strings newly in the skin's face); the skin fonts run (the Font outline, From skin flags, `/am skin`, width parity, the HUD size scale, the own faces and glow back, the strips' re-fit); the LibKa0s v1.108.0 re-vendor (the strip edge on a switch, the spark's row); the six colors kept off the skin and v21's move undone (owner 2026-11-22) |
 | DEGRADED-1 | Library-absent install | The launcher libraries missing |
 | LOC-1 to LOC-2 | Non-English client | Spell names from the client, adding a spell by its localized name |
 | PRESETS-1 to PRESETS-44 | Presets | Each client: a new profile's Simple seed at the real screen size, the first-run preset picker before the skin picker (Escape, Not now, Empty), each preset in each style, Apply in Replace and Add, Stop preview, leaving the tab, closing the panel, a `/reload`, a profile switch and combat mid-preview, `/am preset` and its confirm, another Ka0s addon's skin picker, the cost of a swap, an existing profile after schema v19; the owner's round 1: the side stacks growing up, the corner group's place, the call-outs' look and place, the picker on the skin picker's spot with the call-outs clear of it, the side stacks' lower base, opened unlocked, its lock and test buttons, Apply locking, Not now putting the lock back; the owner's round 2: the call-outs' glow, the focus stack of its own and its clearance from the far stack, Player debuffs lined up with the focus column, the Presets tab on the General page; the owner's round 3: the right-hand cluster lined up, Player debuffs attached to Player buffs, equal bar widths, debuff bars colored by dispel type over a 50% background, the numbered names, the unlock hint in chat; the owner's round 4: the player stack nearer the center, the target cluster mirroring it, the call-outs at the picker's top, the picker once per account for existing players and never twice for a new one; the owner's round 5: every pick unlocking and turning test mode on, Empty previewing an empty screen; the SmokeTest baseline (Advanced), an icon row's side follower; the picker's footer on the library's (LibKa0s#89); the picker's title marks, settings and close (LibKa0s#86) |
@@ -2899,28 +2899,23 @@ U-11). Open any font block (Bars → Name text) → its **Use the skin's color**
 rows each show once. Fail: a strip edge left in the previous skin's color, a Spark skin-color row, a
 companion row shown twice, or a Lua error. Result:
 
-**SKIN-55. A new container's colors follow the skin (SD-SK-AM, the owner's ruling R-2; U-8, U-9, U-10). Client: Retail, then WoW Forever.**
-Pick WoW Midnight. Create one container of each style (`/am config` → Containers → New, then Style:
-Bars, Icons, Text) with test mode on. Bars → General → Fill → **Use the skin's color** is ticked and the
-fill draws Midnight's bar color; Background and border → Background → **Use the skin's color** is ticked
-and the background is Midnight's; the Border's **Use the skin's color** is **unticked** and the border is
-black (U-9). Bars → Icon → Icon border (Show border on): **Use the skin's color** ticked. Icons → Border:
-**Use the skin's color** ticked. Text → Font: **Use the skin's color** ticked and the line draws the skin's
-HUD text color; Text → Font → Glow: **Use the skin's color** unticked and, with Glow on, the glow is black
-(U-10). Pick Ka0s Default → every one of them looks exactly as before this build (blue fill, dark
-background, black borders, white text). Fail: a companion in the wrong state, a color that does not move
-with the skin while its companion is ticked, or a Lua error. Result:
+**SKIN-55.** Retired 2026-11-22: it checked six colors following the skin, which the owner overrode (SKIN-57).
 
-**SKIN-56. An upgraded profile moves once, and keeps picks (SD-SK-AM, schema v21). Client: Retail, then WoW Forever.**
-On the previous build, in one profile, keep a bars container on its default colors, set a second bars
-container's fill to red, and apply the Advanced preset in Add mode (its role bars are gray, orange, tan and
-purple; its call-out lines green, red and orange). Pick WoW Midnight and log in on this build →
-`/am debug` shows one `[Migrate] v21 profile '<name>'` line. The default container's fill and background
-now follow Midnight (their **Use the skin's color** ticked); the red fill stays red with its box unticked;
-the role bars keep their four colors and the call-outs their three; every bar border stays black. Untick
-the default container's fill **Use the skin's color**, `/reload` → it stays unticked (the move ran once).
-Fail: a picked or preset color recolored, no v21 line, a companion ticked again after the reload, or a
-Lua error. Result:
+**SKIN-56.** Retired 2026-11-22: it checked schema v21's move, which is retired (SKIN-58).
+
+**SKIN-57. The default colors stay the addon's own (owner, 2026-11-22; SF-AM-2, SF-AM-3). Client: WoW Forever, then Retail.**
+Pick WoW Forever. General → Presets → preview **Advanced** in Bars → the plain buff bars are blue, the
+role bars gray, orange, tan and purple, the typed debuffs their dispel colors, every background and
+border dark. Create a container of each style → **Use the skin's color** is unticked on Fill,
+Background, the three icon borders and the Text font, and the text is white. Switch skins → none of
+those colors moves. Fail: a brown default bar, a ticked box among them, or a Lua error. Result:
+
+**SKIN-58. A profile v21 moved gets its colors back (schema v22). Client: WoW Forever, then Retail.**
+With profiles last saved on schema v21, log in on this build → the active profile's default bars are
+blue on a dark background, and picked colors are as they were. Switch to each other profile → the same.
+Tick one Fill **Use the skin's color**, `/reload` → it stays ticked. On an account still at v20 (Retail)
+→ no color changes at login. Fail: a profile still on the skin's colors, a pick recolored, the tick
+undone, or a Lua error. Result:
 
 ## Presets
 
@@ -3781,8 +3776,8 @@ v1.108.0 (DRAG-21).
 
 Open from the skin-defaults run (Ka0sAddonsCommonTasks `docs/2026-11-20-LIBKA0S_94_97_99_100/`,
 SD-RV-AM, LibKa0s v1.108.0): SKIN-54 is new, a strip's edge following a skin switch and the spark's
-color rows. From SD-SK-AM: SKIN-55 is new, a new container's colors following the skin with the bar
-border and the text glow kept off it, and SKIN-56, an upgraded profile's one move (schema v21) keeping
+color rows. SKIN-55 and SKIN-56 (SD-SK-AM) were retired on 2026-11-22 by the owner's override, which
+adds SKIN-57, the default colors staying the addon's own, and SKIN-58, schema v22's restore keeping
 picks and the presets' colors. From SD-AM-99 (LibKa0s#99): DRAG-21 is new, a strip whose position
 reads secret showing its tooltip above its nearest readable container; DRAG-20 no longer asks for that
 case. Their `Result:` lines are empty until the owner runs them.
