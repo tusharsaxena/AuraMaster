@@ -21,11 +21,14 @@ local UP = { left = true, right = true, far = true, focus = true }
 -- THE OWNER'S SMOKETEST BASELINE (their WoW Forever SmokeTest profile, 2026-11-17, on a parent 1200
 -- units tall, in reference units x 0.9): the corner, player and target heads placed by their middle
 -- on the screen's CENTER (`mid` stacks), every stack member flush on the one before it but the
--- call-outs, and five roles in a bar color of their own.
+-- call-outs, and the roles in a bar color of their own. Since the owner's 2026-11-23 feedback Player
+-- buffs, short keeps the template's blue and every cooldown role is tan, Target cooldowns, players'
+-- (presets restack spec section 3).
 local MID = { cornerRight = 441, left = -153, right = -153 }
+local TAN = { 230, 204, 128 }
 local OWNER_BAR_COLOR = {
-    pshort = { 69, 69, 69 }, tspec = { 69, 69, 69 }, tcc = { 255, 128, 64 }, tcdp = { 230, 204, 128 },
-    wpn = { 163, 53, 238 },
+    tspec = { 69, 69, 69 }, tcc = { 255, 128, 64 }, tcdp = TAN, tcdn = TAN, tcd = TAN, pcd = TAN,
+    pcdHealer = TAN, wpn = { 163, 53, 238 },
 }
 
 --- The join a stack member's built attach must be (defaults/Presets.lua memberAttach): a bar centered
@@ -550,17 +553,33 @@ test("presets data: side stacks grow up from their base", function()
             end
         end
     end
-    -- The tier's first role sits nearest the base: Advanced's player stack starts with its short buffs,
-    -- its target stack with Target special (mine), numbered 10 since the owner's baseline.
+    -- The tier's first role sits nearest the base. Since the owner's 2026-11-23 restack, top to
+    -- bottom: [09] Player buffs, short, [08] Player cooldowns, [07] Player special (mine); and [15]
+    -- Target buffs (mine), [14] Target debuffs (mine), [13] Target cooldowns, NPCs, [12] Target
+    -- cooldowns, players, [11] Target crowd control, [10] Target special (mine), stealable last.
     local adv = byRole(P.Build("advanced", "bars", 1920, 1080))
-    assertNil(adv.pshort.attachTo, "Player buffs, short is the player stack's base")
-    assertEqual(adv.pcd.attachTo, adv.pshort.index, "Player cooldowns sits on it")
-    assertEqual(adv.pspec.attachTo, adv.pcd.index, "Player special (mine) on that")
-    -- red under: Target debuffs (mine) at the base, Target special (mine) last
+    -- red under: the pre-restack player tower, Player buffs, short at the base
+    assertNil(adv.pspec.attachTo, "Player special (mine) is the player stack's base")
+    assertEqual(adv.pspec.index, 7, "numbered 07")
+    assertEqual(adv.pcd.attachTo, adv.pspec.index, "Player cooldowns sits on it")
+    assertEqual(adv.pcd.index, 8, "numbered 08")
+    assertEqual(adv.pshort.attachTo, adv.pcd.index, "Player buffs, short on that")
+    assertEqual(adv.pshort.index, 9, "numbered 09")
     assertNil(adv.tspec.attachTo, "Target special (mine) is the target stack's base")
     assertEqual(adv.tspec.index, 10, "numbered 10")
-    assertEqual(adv.tdeb.attachTo, adv.tspec.index, "Target debuffs (mine) sits on it")
-    assertEqual(adv.tsteal.attachTo, adv.tcdn.index, "Target stealable ends the stack")
+    -- red under: the pre-restack target tower, Target debuffs (mine) on Target special (mine)
+    local chain = { "tspec", "tcc", "tcdp", "tcdn", "tdeb", "tbuff", "tsteal" }
+    for i = 2, #chain do
+        assertEqual(adv[chain[i]].attachTo, adv[chain[i - 1]].index, chain[i] .. " sits on " .. chain[i - 1])
+        assertEqual(adv[chain[i]].index, 9 + i, chain[i] .. " numbered " .. (9 + i))
+    end
+    -- Intermediate the same way: its cooldowns under its short buffs, its target cooldowns under its
+    -- target debuffs (presets restack spec section 3).
+    local int = byRole(P.Build("intermediate", "bars", 1920, 1080))
+    assertNil(int.pcd.attachTo, "Intermediate: Player cooldowns is the player stack's base")
+    assertEqual(int.pshort.attachTo, int.pcd.index, "Intermediate: Player buffs, short on it")
+    assertNil(int.tcd.attachTo, "Intermediate: Target cooldowns is the target stack's base")
+    assertEqual(int.tdeb.attachTo, int.tcd.index, "Intermediate: Target debuffs (mine) on it")
 end)
 
 test("presets data: the corner group ends the cluster, Player buffs at least 10 in", function()
@@ -780,8 +799,8 @@ test("presets: advanced stacks follow the mockup", function()
     local want = {
         "cornerRight:pbuffs", "cornerRight:wpn", "cornerLeft:pdebuffs",
         "middle:txtOff", "middle:txtDef", "middle:txtRaid",
-        "left:pshort", "left:pcd", "left:pspec",
-        "right:tspec", "right:tdeb", "right:tbuff", "right:tcc", "right:tcdp", "right:tcdn", "right:tsteal",
+        "left:pspec", "left:pcd", "left:pshort",
+        "right:tspec", "right:tcc", "right:tcdp", "right:tcdn", "right:tdeb", "right:tbuff", "right:tsteal",
         "far:ticoD", "far:ticoB", "focus:fdeb", "focus:fbuff",
     }
     local got = {}
@@ -1363,6 +1382,10 @@ test("presets data: debuff bars color by dispel type", function()
                     assertEqual(o.bars.barColor.a, 1, what .. ": opaque")
                     assertEqual(o.bars.barColorFromSkin, false, what .. ": the skin does not decide it")
                     assertEqual(o.bars.useClassColorBar, false, what .. ": nor the class color")
+                elseif o.style == "bars" and spec.role == "pshort" then
+                    -- red under: the gray it had before the owner's 2026-11-23 feedback
+                    assertNil(o.bars.barColor, what .. ": the template's blue, as Player cooldowns had")
+                    assertEqual(o.bars.colorMode, "static", what .. ": One color")
                 elseif o.style == "bars" and o.auraType == "HARMFUL" then
                     n = n + 1
                     -- red under: a debuff bar left to the template's "static" fill
@@ -1381,7 +1404,7 @@ test("presets data: debuff bars color by dispel type", function()
     for _, c in ipairs(env.Database.GetContainers()) do
         if c.style == "bars" then
             local role = c.name:match("^%[%d+%] (.+)$")
-            local colored = role == env.L["Player buffs, short"] or role == env.L["Target special (mine)"]
+            local colored = role == env.L["Target special (mine)"]
                 or role == env.L["Target crowd control"] or role == env.L["Target cooldowns, players"]
                 or role == env.L["Weapon enchants"]
             assertEqual(c.bars.colorMode, (c.auraType == "HARMFUL" and not colored) and "dispel" or "static", c.name)
@@ -1416,12 +1439,13 @@ test("presets data: bar backgrounds are 50% opaque", function()
 end)
 
 -- The owner's numbering (advanced-source.md brackets, spec section 17.4, Target special (mine) moved
--- to 10 by their 2026-11-17 SmokeTest baseline); a role that stands in for
+-- to 10 by their 2026-11-17 SmokeTest baseline, both towers restacked by their 2026-11-23 feedback,
+-- presets restack spec section 3); a role that stands in for
 -- one of the owner's takes its slot, and two that share a slot keep the order listed in TIES.
 local OWNER_RANK = {
-    pbuffs = 1, wpn = 2, pdebuffs = 3, txtOff = 4, txtDef = 5, txtRaid = 6, pshort = 7,
-    pcd = 8, pcdHealer = 8, pspec = 9, tspec = 10, tdeb = 11, healTarget = 11, dispelTarget = 11,
-    tbuff = 12, tcc = 13, tcdp = 14, tcd = 14, tcdn = 15, tsteal = 16, ticoD = 17, ticoB = 18,
+    pbuffs = 1, wpn = 2, pdebuffs = 3, txtOff = 4, txtDef = 5, txtRaid = 6, pspec = 7,
+    pcd = 8, pcdHealer = 8, pshort = 9, tspec = 10, tcc = 11, tcdp = 12, tcd = 12, tcdn = 13,
+    tdeb = 14, healTarget = 14, dispelTarget = 14, tbuff = 15, tsteal = 16, ticoD = 17, ticoB = 18,
     fdeb = 19, healFocus = 19, dispelFocus = 19, fbuff = 20,
 }
 local TIES = { healTarget = 1, dispelTarget = 2, healFocus = 1, dispelFocus = 2 }

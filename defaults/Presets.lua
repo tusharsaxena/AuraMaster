@@ -151,8 +151,9 @@ local SIDE_BASE = -740
 local FOCUS_BASE = -550
 -- THE OWNER'S SMOKETEST BASELINE (2026-11-17): their WoW Forever SmokeTest profile, on a parent
 -- 1200 units tall (3440 x 1440 at UI scale 1.2), moved into reference units (x 0.9). Player buffs
--- (all) placed CENTER on CENTER at 992, 490 (CORNER_MID_X, CORNER_MID); Player buffs, short and
--- Target special (mine), the player and target stacks' heads, at -340, -170 and 340, -170 (SIDE_MID,
+-- (all) placed CENTER on CENTER at 992, 490 (CORNER_MID_X, CORNER_MID); the player and target
+-- stacks' heads (Player special (mine) since the 2026-11-23 restack, and Target special (mine)) at
+-- -340, -170 and 340, -170 (SIDE_MID,
 -- the mirror's middle MIRROR + COL_W / 2 from the center line). The far and focus stacks and the
 -- call-outs kept the places this file gave them.
 local SIDE_MID, CORNER_MID, CORNER_MID_X = -153, 441, 892.8
@@ -329,14 +330,17 @@ local function calloutLook(color)
         label = { show = false },
     }
 end
--- THE OWNER'S BAR COLORS (their 2026-11-17 SmokeTest baseline): five roles keep Fill > Color by at
--- One color, in a color of their own, so they read apart from the blue buff bars and the
--- dispel-colored debuff bars beside them. They keep their hues in every skin (OVERRIDE, owner U-12 of
--- 2026-11-20; presets spec section 20), so no skin recolors them. `barColor` on a role, written by sizeTo in every preset
--- that has the role, on a bars container alone (an Icons row has no fill).
-local BAR_GRAY = rgb(69 / 255, 69 / 255, 69 / 255)        -- Player buffs, short; Target special (mine)
+-- THE OWNER'S BAR COLORS (their 2026-11-17 SmokeTest baseline, recolored by their 2026-11-23
+-- feedback, presets restack spec section 3): these roles keep Fill > Color by at One color, in a
+-- color of their own, so they read apart from the blue buff bars and the dispel-colored debuff bars
+-- beside them. They keep their hues in every skin (OVERRIDE, owner U-12 of 2026-11-20; presets spec
+-- section 20), so no skin recolors them. `barColor` on a role, written by sizeTo in every preset
+-- that has the role, on a bars container alone (an Icons row has no fill). Player buffs, short left
+-- the gray on 2026-11-23 for the template's blue; every cooldown role took Target cooldowns,
+-- players' tan.
+local BAR_GRAY = rgb(69 / 255, 69 / 255, 69 / 255)        -- Target special (mine)
 local BAR_ORANGE = rgb(1, 128 / 255, 64 / 255)            -- Target crowd control
-local BAR_TAN = rgb(230 / 255, 204 / 255, 128 / 255)      -- Target cooldowns, players
+local BAR_TAN = rgb(230 / 255, 204 / 255, 128 / 255)      -- Player and target cooldowns
 local BAR_PURPLE = rgb(163 / 255, 53 / 255, 238 / 255)    -- Weapon enchants
 
 -- The owner's three call-out colors.
@@ -378,9 +382,9 @@ local CONTAINERS = {
 
     -- The player stack.
     pshort = { name = L["Player buffs, short"], unit = "player", auraType = "HELPFUL", style = "bars",
-        barColor = BAR_GRAY,
         hide = HIDE_ENCHANTS, filter = MINE_SHORT },
     pcd = { onlyNamed = true, name = L["Player cooldowns"], unit = "player", auraType = "HELPFUL", style = "bars",
+        barColor = BAR_TAN,
         hide = { "SPECIAL_PLAYER", "bigDefensive", "cancelable", "castable", "externals", "groupBuffs",
             "healing", "important", "racials", "stances", "stealable", "support", "uncategorized",
             "weaponEnchants" },
@@ -404,6 +408,7 @@ local CONTAINERS = {
             "healing", "important", "racials", "stances", "stealable", "uncategorized", "weaponEnchants" },
         filter = { durationMode = "timed", maxDuration = 30, unitFilter = { kind = "player" }, zones = NO_PVP } },
     tcdn = { onlyNamed = true, name = L["Target cooldowns, NPCs"], unit = "target", auraType = "HELPFUL", style = "bars",
+        barColor = BAR_TAN,
         hide = { "SPECIAL_PLAYER", "activeMitigation", "defensives", "groupBuffs", "healing", "movement",
             "offensiveCDs", "racials", "raidCDs", "stances", "support", "uncategorized", "utility",
             "weaponEnchants" },
@@ -455,6 +460,7 @@ end
 -- none; the union keeps the wider of the two).
 CONTAINERS.tcd = {
     name = L["Target cooldowns"], unit = "target", auraType = "HELPFUL", style = "bars", onlyNamed = true,
+    barColor = BAR_TAN,   -- both its sources are tan (presets restack spec section 3)
     hide = intersect(CONTAINERS.tcdp.hide, CONTAINERS.tcdn.hide),
     filter = { durationMode = "timed" },
 }
@@ -462,6 +468,7 @@ CONTAINERS.tcd = {
 -- Healer's Player cooldowns: Advanced's, with Healing and Raid cooldowns shown as well (spec 3.1).
 CONTAINERS.pcdHealer = {
     name = CONTAINERS.pcd.name, unit = "player", auraType = "HELPFUL", style = "bars", onlyNamed = true,
+    barColor = BAR_TAN,
     hide = except({ CONTAINERS.pcd.hide }, { "healing", "raidCDs" }),
     filter = TIMED_30,
 }
@@ -474,6 +481,11 @@ CONTAINERS.pcdHealer = {
 -- focus roles at Target and Focus debuffs (mine), Intermediate's Target cooldowns at Target
 -- cooldowns, players). Since the owner's 2026-11-17 baseline Advanced's Target special (mine) is 10,
 -- the target stack's head, nearest the unit frames, and Target stealable (16, stored off) ends it.
+-- THE OWNER'S 2026-11-23 RESTACK (presets restack spec section 3), both towers, top to bottom: Player
+-- buffs, short, Player cooldowns, Player special (mine); Target buffs (mine), Target debuffs (mine),
+-- Target cooldowns, NPCs, Target cooldowns, players, Target crowd control, Target special (mine).
+-- Intermediate's same roles keep that relative order. core/Database_PresetRestack.lua (schema v23)
+-- carries it into a profile an older build wrote, and holds the pre-restack order frozen.
 local SIMPLE = { { "cornerRight", "pbuffs" }, { "cornerRight", "wpn" }, { "cornerLeft", "pdebuffs" } }
 
 --- `SIMPLE` followed by `more`.
@@ -488,15 +500,15 @@ local TIERS = {
     empty = {},
     simple = SIMPLE,
     intermediate = simplePlus({
-        { "left", "pshort" }, { "left", "pcd" },
-        { "right", "tdeb" }, { "right", "tcd" },
+        { "left", "pcd" }, { "left", "pshort" },
+        { "right", "tcd" }, { "right", "tdeb" },
         { "focus", "fdeb" },
     }),
     advanced = simplePlus({
         { "middle", "txtOff" }, { "middle", "txtDef" }, { "middle", "txtRaid" },
-        { "left", "pshort" }, { "left", "pcd" }, { "left", "pspec" },
-        { "right", "tspec" }, { "right", "tdeb" }, { "right", "tbuff" }, { "right", "tcc" },
-        { "right", "tcdp" }, { "right", "tcdn" }, { "right", "tsteal" },
+        { "left", "pspec" }, { "left", "pcd" }, { "left", "pshort" },
+        { "right", "tspec" }, { "right", "tcc" }, { "right", "tcdp" }, { "right", "tcdn" },
+        { "right", "tdeb" }, { "right", "tbuff" }, { "right", "tsteal" },
         { "far", "ticoD" }, { "far", "ticoB" },
         { "focus", "fdeb" }, { "focus", "fbuff" },
     }),

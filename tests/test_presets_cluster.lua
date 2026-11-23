@@ -495,7 +495,7 @@ test("presets data: Advanced on the owner's screen is their SmokeTest profile", 
     end
     local HEADS = {
         pbuffs = { "CENTER", "CENTER", 992, 490 }, txtOff = { "TOP", "TOP", 0, -140 },
-        pshort = { "CENTER", "CENTER", -340, -170 }, tspec = { "CENTER", "CENTER", 340, -170 },
+        pspec = { "CENTER", "CENTER", -340, -170 }, tspec = { "CENTER", "CENTER", 340, -170 },
         ticoD = { "BOTTOMLEFT", "TOP", 589, -822 }, fdeb = { "BOTTOMLEFT", "TOP", 589, -611 },
     }
     for role, want in pairs(HEADS) do
@@ -508,11 +508,12 @@ test("presets data: Advanced on the owner's screen is their SmokeTest profile", 
         assertEqual(pos.x, want[3], role .. " x")
         assertEqual(pos.y, want[4], role .. " y")
     end
-    -- The chains: each member on the one before it, as the profile attaches them.
+    -- The chains: each member on the one before it, as the profile attaches them, both towers in the
+    -- owner's 2026-11-23 order (presets restack spec section 3).
     local CHAIN = {
-        wpn = "pbuffs", pdebuffs = "pbuffs", txtDef = "txtOff", txtRaid = "txtDef", pcd = "pshort",
-        pspec = "pcd", tdeb = "tspec", tbuff = "tdeb", tcc = "tbuff", tcdp = "tcc", tcdn = "tcdp",
-        tsteal = "tcdn", ticoB = "ticoD", fbuff = "fdeb",
+        wpn = "pbuffs", pdebuffs = "pbuffs", txtDef = "txtOff", txtRaid = "txtDef", pcd = "pspec",
+        pshort = "pcd", tcc = "tspec", tcdp = "tcc", tcdn = "tcdp", tdeb = "tcdn", tbuff = "tdeb",
+        tsteal = "tbuff", ticoB = "ticoD", fbuff = "fdeb",
     }
     for role, parent in pairs(CHAIN) do
         assertEqual(adv[role].attachTo, adv[parent].index, role .. " on " .. parent)
@@ -542,4 +543,5 @@ test("presets data: Advanced on the owner's screen is their SmokeTest profile", 
         assertEqual(adv[role].overrides.bars.colorMode, "static", role .. ": One color, though a debuff bar")
     end
     assertNil(adv.pspec.overrides.bars.barColor, "Player special (mine) keeps the template's blue")
+    assertNil(adv.pshort.overrides.bars.barColor, "and Player buffs, short, since 2026-11-23")
 end)
