@@ -21,7 +21,7 @@ check's number is not reused. Checks with no recorded pass, and checks new or co
 | STATE-1 to STATE-5 | Master switch | Enable and disable, visibility, the inert disabled addon |
 | COMBAT-1 to COMBAT-7 | Combat and restrictions | Deferred changes, the settings lock, resets in combat, Mythic+ keys |
 | DIAG-1 to DIAG-22 | Debug, diagnostics, perf | The debug console, bulk `[Set]` lines, `/am diagnostics`, `/am perf`, the event trace, resizing the console, its copy window and the perf panel, the console's Diagnostics link, diagnostics turning logging on, the library's own lines (a slash refusal, a stand-down edge, the launcher's at-enable line) |
-| CONT-1 to CONT-31 | Containers | Create, duplicate, delete, rename, copy; handles, strips, the close mark and the settings mark, their order and tints; test mode (no TEST marker on a locked container, the strip's TEST tag, the docked test-mode strip); unit swaps; empty placeholders |
+| CONT-1 to CONT-32 | Containers | Create, duplicate, delete, rename, copy; handles, strips, the close mark and the settings mark, their order and tints, the strip's right-click; test mode (no TEST marker on a locked container, the strip's TEST tag, the docked test-mode strip); unit swaps; empty placeholders |
 | FILT-1 to FILT-67 | Filters and spell categories | Cast by, the category grids, Overrides, the add-a-spell box, aura ids, your own categories, weapon enchants and their names, the help marks' art, where spell lists apply, the Situations tab, its zones and its Unit type gate |
 | LAYOUT-1 to LAYOUT-39 | Layout | Anchor modes, attaching, chains, growth, anchor points, seams, the name label, mouse and tooltips, the tooltip position with no cursor choice |
 | DRAG-1 to DRAG-21 | Layout | Drag to attach (issue #22): dropping a container on another, the highlight on the target's strip, the side a drop picks, Shift, loops, detaching and its leeway (green hold, snap back, red past it), the growth-conflict popup, combat, a parent holding auras, frame-attached containers, the strip's tooltip, a drop between pulls in a key, a dropped side surviving a growth change, a drag cut short, a before-side drop with the line between the two join dots, the strip edge following the mark, the strip's tooltip through the library's placer, then above the strip, then above the nearest readable container for a secret strip |
@@ -864,6 +864,19 @@ container and its strip go and one chat line says how to bring it back; on the C
 **Enable this container** for it → it returns at the same position with every setting as before
 (its style, filters and layout unchanged). Fail: a strip with fewer than three marks, a mark showing
 another mark's or the drag hint's words, a close that changes or loses a setting, or a Lua error.
+Result:
+
+**CONT-32. A right-click anywhere on a strip opens what its gear opens (SRC-AM-01; LibKa0s
+v1.111.0, WidgetsDragHandle minor 17; standalone-windows *A right-click opens what the gear opens*).
+Client: Retail, then WoW Forever.** The strip no longer passes its own right-click handler: the
+library runs the gear's action instead, so this re-checks CONT-12 through the new path. Close the
+panel, `/am unlock` with several containers, one of them attached to another. Click one strip's gear
+→ the panel opens on Containers with that container selected; close it. Right-click the same strip on
+its name band, then its "?", then its gear, then its X → each opens the same page on the same
+container, and the X's right-click disables nothing (only its left click does, CONT-31). Right-click
+another container's strip with the panel still open → the band's picker switches to that container.
+In combat, a right-click does what the gear's click does there: the gray combat line, nothing opens.
+Fail: a right-click that opens nothing, another page or another container, or a disabled container.
 Result:
 
 ## Filters and spell categories
@@ -3853,3 +3866,8 @@ picks and the presets' colors. From SD-AM-99 (LibKa0s#99): DRAG-21 is new, a str
 reads secret showing its tooltip above its nearest readable container; DRAG-20 no longer asks for that
 case. Their `Result:` lines are empty until the owner runs them, but for SKIN-57 and SKIN-58, which the
 owner reported working on WoW Forever on 2026-11-23: their Retail halves are owed.
+
+Open from the strip right-click run (Ka0sAddonsCommonTasks `docs/2026-11-23-STRIP_RIGHT_CLICK/`,
+SRC-AM-01, LibKa0s v1.111.0, standard v2.118.0): CONT-32 is new, a right-click on a strip or any of
+its marks opening the gear's page, now through the library rather than the strip's own handler. Its
+`Result:` line is empty until the owner runs it.

@@ -1057,12 +1057,13 @@ Total.
 - close: in combat the X still disables the container, raising nothing and moving no anchor
 - close: the X's tooltip names the container (following a rename) and says how to turn it back on
 
-### test_anchors_settings.lua (4)
+### test_anchors_settings.lua (5)
 
 - settings mark: it sits immediately left of the X, the catalog settings art at the close mark's size
 - settings mark: a left click opens the Containers page on THIS container, as a right click on the strip does
 - settings mark: a right click opens the settings too, like the strip, the ? and the X
 - settings mark: its tooltip names the container (following a rename) and says what the click opens
+- settings mark: the strip passes no onRightClick, so its right click is the gear's own action
 
 ### test_anchors_label.lua (23)
 
@@ -2617,7 +2618,7 @@ Total.
 - defaults: userCategoryOrder is reconciled the way containerOrder is
 - defaults: the RAID-token row says it means castable OR dispellable, as Blizzard defines it
 
-### test_presets_data.lua (29)
+### test_presets_data.lua (27)
 
 - presets: counts
 - presets: advanced matches its source
@@ -2625,6 +2626,7 @@ Total.
 - presets: placement at 768/1080/1440 x 16:9, 16:10, 21:9, 4:3, 5:4
 - presets data: side stacks sit on the lower base
 - presets data: side stacks grow up from their base
+- presets data: both towers in the owner's 2026-11-23 order
 - presets data: the corner group ends the cluster, Player buffs at least 10 in
 - presets data: the call-outs are centered and colored like the owner's
 - presets data: the call-out block takes the largest font that fits under the picker's top
@@ -2645,15 +2647,15 @@ Total.
 - presets data: the focus stack stays clear of the far stack beyond twice the snap radius
 - presets data: the focus, far and Player debuffs left edges line up
 - presets data: the focus stack's snap range holds only the recorded targets
-- presets data: debuff bars color by dispel type
-- presets data: bar backgrounds are 50% opaque
-- presets data: names are numbered 1..N in the owner's order
 
-### test_presets_cluster.lua (10)
+### test_presets_cluster.lua (13)
 
 - presets data: Player debuffs attaches by its top right to Player buffs' top left
 - presets data: the target column sits 104 left of the focus column
 - presets data: the target stack's base is on the far stack's bottom line and its test-mode top near Player debuffs' top
+- presets data: bars are 240 wide on every screen
+- presets data: the far pair hangs Target debuffs (all) under Target buffs (all)
+- presets data: Realize refuses a forward attach whose parent took another id
 - presets data: every bar container is as wide as Player cooldowns
 - presets data: the call-out block's overlap with the target column is the recorded one
 - presets data: the player column reaches 14 into the call-out column
@@ -2661,6 +2663,29 @@ Total.
 - presets data: the cluster moves left just enough to fit on narrower screens
 - presets data: the call-out block starts at about the picker's top
 - presets data: Advanced on the owner's screen is their SmokeTest profile
+
+### test_presets_look.lua (4)
+
+- presets data: debuff bars color by dispel type
+- presets data: Player buffs, short keeps the template's blue
+- presets data: bar backgrounds are 50% opaque
+- presets data: names are numbered 1..N in the owner's order
+
+### test_database_restack.lua (13)
+
+- v23: the frozen names are the v22 builder's, and the new order the current builder's
+- v23: a v22 Advanced, Intermediate, Healer and Simple become what the presets build now
+- v23: the frozen v22 placement is the v22 builder's on every screen
+- v23: a head the player moved stays where they put it
+- v23: the far pair re-anchors only while it is the v22 pair
+- v23 alone is the step a v23 build ran; v24 finishes from there
+- v23: a profile the current presets built is left as it is
+- v23: what the player changed stays, field by field
+- v23: a width written on another screen, or with no screen to read, stays
+- v23: a tower the player rebuilt keeps its order and its numbers
+- v23: an untouched seed stays untouched for the first-run picker
+- v23: the ladder runs it over every stored profile on the parent's size
+- v24: an account a v23 build already stamped runs v24 alone
 
 ### test_presets_apply.lua (11)
 
@@ -2846,7 +2871,7 @@ Total.
 
 - prose: no authored file carries a British spelling from localization-§5's published list
 - prose: the gate carries localization-§5's two lists whole, and nothing of its own
-- prose: the exclusions this repository declared suppressed 19 of 278 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (19): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, and 16 more (list bounded)
+- prose: the exclusions this repository declared suppressed 19 of 282 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (19): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, and 16 more (list bounded)
 - prose: no path this repository narrows the gate by is loaded by a TOC
 - prose: every path this repository narrows the gate by is one .pkgmeta keeps out of the zip
 - prose self-test: the carve-out suppresses the named generated folder, and only it
@@ -3044,7 +3069,7 @@ Total.
 | test_enchantreset.lua | 23 |
 | test_redraw.lua | 14 |
 | test_anchors_close.lua | 6 |
-| test_anchors_settings.lua | 4 |
+| test_anchors_settings.lua | 5 |
 | test_anchors_label.lua | 23 |
 | test_anchors_strip.lua | 7 |
 | test_anchors_teststrip.lua | 8 |
@@ -3115,8 +3140,10 @@ Total.
 | test_envsetup.lua | 4 |
 | test_poolsetup.lua | 4 |
 | test_defaults.lua | 31 |
-| test_presets_data.lua | 29 |
-| test_presets_cluster.lua | 10 |
+| test_presets_data.lua | 27 |
+| test_presets_cluster.lua | 13 |
+| test_presets_look.lua | 4 |
+| test_database_restack.lua | 13 |
 | test_presets_apply.lua | 11 |
 | test_presets_preview.lua | 20 |
 | test_presets_seed.lua | 8 |
@@ -3139,4 +3166,4 @@ Total.
 | test_skin_switch.lua | 46 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2573** |
+| **Total** | **2592** |
