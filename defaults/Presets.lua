@@ -84,7 +84,10 @@ local FALLBACK_RATIO = 16 / 9
 --- in reference units (0 or less). At its reference place (spec section 18) the target column mirrors
 --- the player column across the center line; where Player buffs (all)'s right edge would then end
 --- nearer the screen's right edge than EDGE_IN (16:9 and narrower), the whole cluster moves left just
---- enough to keep it EDGE_IN in. A width that cannot be read is taken at FALLBACK_RATIO.
+--- enough to keep it EDGE_IN in. A width that cannot be read is taken at FALLBACK_RATIO. Since the
+--- owner's 2026-11-23 feedback a column is as wide on every screen (presets restack spec section 3):
+--- Player buffs' middle is placed by the scale and its half-width is not, so its right edge is
+--- measured that way (identical at 1080 tall, where the scale is 1).
 --- @param parentW number|nil
 --- @param parentH number|nil
 --- @return number
@@ -92,8 +95,9 @@ function P.ClusterShift(parentW, parentH)
     if type(parentW) ~= "number" or parentW ~= parentW or parentW <= 0 then
         parentW = ((P.Scale(parentH) == 1) and P.REF_H or parentH) * FALLBACK_RATIO
     end
-    local half = parentW / (2 * P.ScaleX(parentW, parentH))
-    return math.min(0, half - EDGE_IN - CLUSTER_RIGHT)
+    local corner = P.STACKS.cornerRight
+    local half = (parentW / 2 - EDGE_IN - corner.width / 2) / P.ScaleX(parentW, parentH)
+    return math.min(0, half - (corner.x + corner.width / 2))
 end
 
 -- The two custom categories Advanced creates (spec section 3): empty, for the player to fill. The
@@ -184,11 +188,11 @@ P.STACKS = {
     cornerRight = { anchor = "CENTER", x = CORNER_RIGHT_X, mid = CORNER_MID, width = COL_W, iconsGrowH = "left",
         cluster = true },
     cornerLeft  = { anchor = "TOP", x = FOCUS_X, width = COL_W, iconsGrowH = "left",
-        beside = "cornerRight", cluster = true },
+        beside = "cornerRight", cluster = true, leftOf = "cornerRight" },
     focus       = { anchor = "TOP", x = FOCUS_X, y = FOCUS_BASE, width = COL_W, iconsGrowH = "left", up = true,
-        cluster = true },
+        cluster = true, leftOf = "cornerRight" },
     far         = { anchor = "TOP", x = FOCUS_X, y = SIDE_BASE, width = COL_W, iconsGrowH = "left", up = true,
-        cluster = true },
+        cluster = true, leftOf = "cornerRight" },
     right       = { anchor = "CENTER", x = TARGET_X, mid = SIDE_MID, width = COL_W, iconsGrowH = "left", up = true,
         cluster = true },
     -- THE CALL-OUT COLUMN, 400 wide (480 before section 17), narrowed so the target column meets it
@@ -215,17 +219,29 @@ do
 end
 
 --- The columns on a `parentW` x `parentH` parent: [stack] = a copy of its P.STACKS entry, every
---- `cluster` column's `x` moved by P.ClusterShift, so the right-hand cluster moves as one.
+--- `cluster` column's `x` moved by P.ClusterShift, so the right-hand cluster moves as one. A `leftOf`
+--- column (Player debuffs', the focus and far stacks') keeps its right edge CORNER_GAP (scaled) left
+--- of that column's left edge as placed: the other column's middle scaled, its width not (presets
+--- restack spec section 3), so Player debuffs and the focus and far stacks share a left edge on every
+--- screen. At 1080 tall (the scale 1) that is its reference place.
 --- @param parentW number|nil
 --- @param parentH number|nil
 --- @return table
 function P.Columns(parentW, parentH)
     local shift, out = P.ClusterShift(parentW, parentH), {}
+    local kx = P.ScaleX(parentW, parentH)
     for key, stack in pairs(P.STACKS) do
         local c = {}
         for f, v in pairs(stack) do c[f] = v end
         if c.cluster then c.x = c.x + shift end
         out[key] = c
+    end
+    for _, c in pairs(out) do
+        local other = c.leftOf and out[c.leftOf]
+        if other then
+            local otherLeft = (other.x + other.width / 2) * kx - other.width / 2
+            c.x = (otherLeft - P.CORNER_GAP * kx - c.width) / kx
+        end
     end
     return out
 end
@@ -621,21 +637,22 @@ local function growthIn(o, stack)
     if stack.up then o.layout.growV = "up" end
 end
 
---- `stack`'s column width at scale `kx`, between its two edges, each rounded as `place` rounds a
---- head's offset.
-local function columnWidth(stack, kx)
-    return round((stack.x + stack.width) * kx) - round(stack.x * kx)
+--- `stack`'s column width: its reference width on every screen, not scaled (the owner's 2026-11-23
+--- feedback, "dont do dynamic resizing basis screen width"; presets restack spec section 3), so a bar
+--- is 240 wide at 768, 1080 and 1440 tall alike. Bar height was never scaled.
+local function columnWidth(stack)
+    return stack.width
 end
 
 --- The Icons variant of a bars role (spec section 3.2): an icon row growing away from the nearest
 --- screen edge, as many icons of about ICON_PX per line as the column fits. Text and icon roles are
 --- unchanged.
-local function toIcons(o, stack, kx)
+local function toIcons(o, stack)
     if o.style ~= "bars" then return end
     o.style = "icons"
     o.layout.axis = "horizontal"
     o.layout.growH = stack.iconsGrowH
-    o.layout.perLine = math.max(1, round(columnWidth(stack, kx) / ICON_PX))
+    o.layout.perLine = math.max(1, round(columnWidth(stack) / ICON_PX))
     o.fillsColumn = true
 end
 
@@ -645,14 +662,13 @@ end
 -- with a `barColor` One color in that color, debuff or buff, its skin and class companions off.
 local BAR_BG_ALPHA = 0.5
 
---- The column width, scaled: a bar's width (an icon is ICON_PX, whatever the column). A
---- text line's stored width is the column too, which stands when Size to fit is off or cannot measure;
---- with it on (the template's) a call-out line is as wide as its content, centered on the center
---- line its head hangs from (place): the line is justified CENTER and its template one piece
---- (calloutLook). The width runs between the column's two edges, each rounded as `place` rounds a
---- head's offset, so a corner column ends on the screen's right edge at any scale.
-local function sizeTo(o, stack, kx, barColor)
-    local w = columnWidth(stack, kx)
+--- The column width (columnWidth, not scaled): a bar's width (an icon is ICON_PX, whatever the
+--- column). A text line's stored width is the column too, which stands when Size to fit is off or
+--- cannot measure; with it on (the template's) a call-out line is as wide as its content, centered on
+--- the center line its head hangs from (place): the line is justified CENTER and its template one
+--- piece (calloutLook).
+local function sizeTo(o, stack, barColor)
+    local w = columnWidth(stack)
     if o.style == "bars" then
         o.bars = { width = w, bgAlpha = BAR_BG_ALPHA, colorMode = (o.auraType == "HARMFUL") and "dispel" or "static" }
         if barColor then
@@ -676,7 +692,9 @@ end
 --- from the left edge. That is the top corner, but for an up stack's head, which sits on the column's
 --- base by its bottom corner. The center stack's head hangs by its TOP from the center line, `top`
 --- units down (calloutLayout), and a `mid` stack's by its middle from the screen's (the owner's
---- 2026-11-17 baseline).
+--- 2026-11-17 baseline). A column's edge it is placed by is where the column's place on the screen
+--- (its left edge for a side column, its middle for a `mid` one) puts it, scaled, plus the column's
+--- own width, which is not (presets restack spec section 3).
 local function place(o, stack, kx, k, top)
     o.attach = { mode = "screen", container = 0, frame = "" }
     if stack.center then
@@ -689,9 +707,9 @@ local function place(o, stack, kx, k, top)
         local y = round(stack.mid * k)
         if o.style == "icons" then
             local fromRight = o.layout.growH == "left"
-            local x = fromRight and (stack.x + stack.width) or stack.x
+            local half = fromRight and stack.width / 2 or -stack.width / 2
             o.position = { point = fromRight and "RIGHT" or "LEFT", relativePoint = stack.anchor,
-                x = round(x * kx), y = y }
+                x = round((stack.x + stack.width / 2) * kx + half), y = y }
         else
             o.position = { point = "CENTER", relativePoint = stack.anchor,
                 x = round((stack.x + stack.width / 2) * kx), y = y }
@@ -699,10 +717,9 @@ local function place(o, stack, kx, k, top)
         return
     end
     local left = o.layout.growH == "left"
-    local x = left and (stack.x + stack.width) or stack.x
     o.position = {
         point = (stack.up and "BOTTOM" or "TOP") .. (left and "RIGHT" or "LEFT"), relativePoint = stack.anchor,
-        x = round(x * kx), y = round(stack.y * k),
+        x = round(stack.x * kx) + (left and stack.width or 0), y = round(stack.y * k),
     }
 end
 
@@ -849,9 +866,9 @@ function P.Build(name, look, parentW, parentH, picked)
         local stack, role = cols[stackKey], CONTAINERS[roleKey]
         local o = overridesFor(role, withCustom, picked)
         o.name = ("[%02d] %s"):format(i, o.name) -- the owner's numbering, two digits so a name sort keeps it (not localized, spec 17.4)
-        if look == "icons" then toIcons(o, stack, kx) end
+        if look == "icons" then toIcons(o, stack) end
         growthIn(o, stack)
-        sizeTo(o, stack, kx, role.barColor)
+        sizeTo(o, stack, role.barColor)
         local spec = { role = roleKey, stack = stackKey, overrides = o }
         if last[stackKey] then
             spec.attachTo = last[stackKey]

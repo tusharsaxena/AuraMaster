@@ -20,6 +20,31 @@ for _, h in ipairs({ 768, 1080, 1440 }) do
     for _, ratio in ipairs({ 16 / 9, 16 / 10, 21 / 9, 4 / 3, 5 / 4 }) do SCREENS[#SCREENS + 1] = { h * ratio, h } end
 end
 
+--- Whether the layout's columns fit side by side on a W x H parent. Since the owner's 2026-11-23
+--- feedback a column is 240 wide on every screen and only its place scales (presets restack spec
+--- section 3), so where the horizontal scale is under 1 (every 768-tall screen; 4:3 and 5:4 at 1080
+--- tall) the gaps narrow and the widths do not: the target column meets the focus column and the
+--- call-outs, recorded in docs/known-limitations.md (presets). A case that measures how the columns
+--- line up measures it on the screens that fit; on the others it holds the layout on the screen.
+local function fits(W, H)
+    return NS.PresetData.ScaleX(W, H) >= 1 - 1e-9
+end
+
+--- Column `stack`'s edges on a W x H parent, from the center line, as defaults/Presets.lua places a
+--- head: a `mid` column by its middle (scaled) and its half-width (not); any other by its left edge
+--- (scaled, P.Columns) and its width (not). Unrounded.
+--- @return number left, number right
+local function columnEdges(stack, W, H)
+    local P = NS.PresetData
+    local c, kx = P.Columns(W, H)[stack], P.ScaleX(W, H)
+    if c.mid then
+        local m = (c.x + c.width / 2) * kx
+        return m - c.width / 2, m + c.width / 2
+    end
+    local l = c.x * kx
+    return l, l + c.width
+end
+
 --- The height of one element of container data `o` (overrides or stored): its icon, its bar (the
 --- template's when it states none), or its line.
 local function elementHeight(o)
@@ -56,7 +81,8 @@ local function headRect(spec, W, H)
         w = o.layout.perLine * (o.icons.width + o.layout.spacing)
     else
         w = o.text.width
-        assertNear(w, P.STACKS[spec.stack].width * P.ScaleX(W, H), 1, "a text head is its column wide")
+        -- red under: the column scaled by the screen (presets restack spec section 3)
+        assertNear(w, P.STACKS[spec.stack].width, 1, "a text head is its column wide")
     end
     local x = ax + pos.x
     local y = headEdge(pos, H, o.layout.growV == "up", elementHeight(o))
@@ -211,5 +237,5 @@ end
 
 return {
     SCREENS = SCREENS, headRect = headRect, sampleSpans = sampleSpans, rectGap = rectGap,
-    elementHeight = elementHeight,
+    elementHeight = elementHeight, fits = fits, columnEdges = columnEdges,
 }
