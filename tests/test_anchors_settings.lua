@@ -99,3 +99,21 @@ test("settings mark: its tooltip names the container (following a rename) and sa
     -- red under: the mark falling back to the strip's own tooltip (its body is the drag hint)
     assertEqual(lines[2], NS.L["Click to open this container's settings on the Containers page."])
 end)
+
+test("settings mark: the strip passes no onRightClick, so its right click is the gear's own action", function()
+    -- standalone-windows *The drag strip's marks*, "A right-click opens what the gear opens"
+    -- (standard v2.118.0, DragHandle minor 17): the widget runs `settings` on a right click when the
+    -- host passes no `onRightClick`, so a second copy of the opener is one that can drift from it.
+    local NS, mocks = fresh()
+    local KW = mocks.LibStub("LibKa0s-Widgets-1.0")
+    local real, seen = KW.DragHandle, nil
+    KW.DragHandle = function(parent, spec) seen = spec; return real(parent, spec) end
+    local inst = NS.ContainerManager.instances[2]
+    local ok, err = pcall(NS.Anchors.BuildHandle, inst)
+    KW.DragHandle = real
+    assertTrue(ok, err)
+    assertTrue(seen ~= nil, "BuildHandle built its strip through the library's DragHandle")
+    -- red under: BuildHandle still passing its own onRightClick beside `settings`
+    assertEqual(seen.onRightClick, nil, "no host right-click handler")
+    assertEqual(type(seen.settings), "function", "the gear's action is the one the right click runs")
+end)

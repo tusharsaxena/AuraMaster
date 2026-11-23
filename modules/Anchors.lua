@@ -717,13 +717,14 @@ function Anchors.BuildHandle(container)
         closeTooltip = closeTooltipSpec(container),
         -- The settings mark (DragHandle minor 14, LibKa0s#86, standalone-windows *Title-bar
         -- controls*): left of the X, opening the Containers page on THIS container, the right
-        -- click's page, rather than the panel's last page through the launcher's opener.
+        -- click's page, rather than the panel's last page through the launcher's opener. It is also
+        -- the right click's action on the strip and every mark: with no `onRightClick` the widget runs
+        -- `settings` (DragHandle minor 17, standalone-windows *A right-click opens what the gear opens*).
         settings     = function() openSettings(container) end,
         settingsIcon = NS.Icon and NS.Icon("settings") or nil,
         settingsTooltip = settingsTooltipSpec(container),
         canDrag      = function() return beginDrag(container) end,
         onDragStop   = function() Anchors.Snap.Drop(container) end,
-        onRightClick = function() openSettings(container) end,
         tooltip      = tooltipSpec(container),
         edge         = NS.Style.DrawEdge,
         number       = NS.Secrets.NumberOr,
