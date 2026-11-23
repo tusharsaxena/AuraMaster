@@ -176,6 +176,16 @@ local function resize(byName, W, H, notes)
     return n
 end
 
+--- The id of the container `c` hangs from: an attach to a container, or to a container's frame typed
+--- by its global name (modules/Container.lua's AuraMasterAnchor<id>); nil for any other.
+local function hangsFrom(c)
+    local at = type(c) == "table" and c.attach
+    if type(at) ~= "table" then return nil end
+    if at.mode == "container" then return tonumber(at.container) end
+    if at.mode == "frame" and type(at.frame) == "string" then return tonumber(at.frame:match("^AuraMasterAnchor(%d+)$")) end
+    return nil
+end
+
 --- Tower `tower`'s members in `p`, bottom up, while its old chain is whole; nil and why otherwise.
 local function chainOf(p, byName, tower)
     local members, ids = {}, {}
@@ -191,8 +201,8 @@ local function chainOf(p, byName, tower)
         end
     end
     for _, c in pairs(p.containers) do
-        local at = type(c) == "table" and c.attach
-        if type(at) == "table" and at.mode == "container" and ids[tonumber(at.container)] then
+        local parent = hangsFrom(c)
+        if parent and ids[parent] then
             local inside = false
             for k = 2, #members do inside = inside or members[k] == c end
             if not inside then return nil, "another container is attached to it" end

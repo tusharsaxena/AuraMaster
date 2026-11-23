@@ -204,6 +204,14 @@ test("v23: a tower the player rebuilt keeps its order and its numbers", function
             p.containerOrder[#p.containerOrder + 1] = id
         end,
         -- red under: identity by position or by role name alone
+        -- red under: a check that reads `container` alone, missing a frame typed by its global name
+        byFrame = function(p)
+            local id = p.nextContainerId
+            p.containers[id] = NS.Database.Merge(copy(NS.CONTAINER_TEMPLATE), { id = id, name = "Mine",
+                attach = { mode = "frame", container = 0,
+                    frame = "AuraMasterAnchor" .. byName(p, "[08] " .. L["Player cooldowns"]).id } })
+            p.containerOrder[#p.containerOrder + 1] = id
+        end,
         renamed = function(p) byName(p, "[09] " .. L["Player special (mine)"]).name = "[09] Procs" end,
         twice = function(p)
             local id = p.nextContainerId
