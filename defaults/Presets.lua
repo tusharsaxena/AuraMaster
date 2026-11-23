@@ -723,6 +723,19 @@ local function place(o, stack, kx, k, top)
     }
 end
 
+--- Where a fresh apply on a `parentW` x `parentH` parent places the head of stack `stackKey` in style
+--- `style`, its row growing `growH`: a new position table (`place`'s), or nil for the call-outs' stack
+--- (placed by its measured block) or a stack that is no head. For core/Database_PresetRestack.lua
+--- (schema v23), which moves a head still at the v22 builder's place to this one.
+--- @return table|nil
+function P.HeadPlace(stackKey, style, growH, parentW, parentH)
+    local stack = P.Columns(parentW, parentH)[stackKey]
+    if not stack or stack.center or stack.beside then return nil end
+    local o = { style = style, layout = { growH = growH } }
+    place(o, stack, P.ScaleX(parentW, parentH), P.Scale(parentH), 0)
+    return o.position
+end
+
 --- A `beside` stack's head's attachment to the head of the stack it names (spec section 17): its TOP
 --- RIGHT to that head's TOP LEFT, two explicit points (the panel's "Its Top right joins the Top left"),
 --- so it takes that head's flow (Anchors.EffectiveLayout) and sits on its left. The join is one of the

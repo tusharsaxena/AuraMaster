@@ -3504,7 +3504,8 @@ build → no Lua error; the player tower now reads, top to bottom, [09] Player b
 [08] Player cooldowns (tan), [07] Player special (mine), standing where the tower stood (its bottom
 bar where [07] Player buffs, short was); the target tower [15] Target buffs (mine) down to [10]
 Target special (mine), [13] Target cooldowns, NPCs tan; every preset bar 240 wide where it was 266
-or 267. Each container kept its spells: open **[09] Player buffs, short** → its whitelist and filters
+or 267; the focus and far stacks' bottom containers moved right onto Player debuffs (all)'s left
+edge (589 to 629 on a 1200-tall UI), where you had not moved them. Each container kept its spells: open **[09] Player buffs, short** → its whitelist and filters
 are the ones Player buffs, short had. A container you had recolored, resized or moved off its tower
 keeps what you gave it (`/am debug on`, `/reload`: the `[Migrate] v23 profile` line counts what was
 left as you set it). The hand-built Default profile is unchanged. Fail: a container that lost its
@@ -3520,7 +3521,8 @@ now [07] Player special (mine), is anchored where [07] Player buffs, short was (
 attached it to). **DefaultBackupv2** (rearranged by hand): its order and numbers stay, only [08]
 Player cooldowns turns tan. **SmokeTest** (Target stealable renamed [15]): the player tower
 restacks, the target tower keeps its order and numbers, [15] Target cooldowns, NPCs turns tan, the
-widths go to 240 but Target stealable's. Switch through **SmokeTest2** to **SmokeTest5** → each
+widths go to 240 but Target stealable's, and its focus and far stacks move onto Player debuffs (all)'s
+left edge (589 to 629); in Default they hang from the frames you picked and stay. Switch through **SmokeTest2** to **SmokeTest5** → each
 restacked, recolored and resized as Appendix A of the restack spec lists. Fail: any difference from
 that appendix, or a Lua error. Result:
 

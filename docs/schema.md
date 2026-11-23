@@ -962,7 +962,10 @@ The stamp follows savedvariables-§1 as ruled at WowAddonStandards v2.65.0:
   at the old horizontal scale (`min(H / 1080, W / 1693.6)`; 1 where the parent cannot be read); and a
   tower's order and numbers (Advanced's player and target towers, Intermediate's two) only while its
   whole old chain is there, each role once by name, each member's `attach` on the one before it,
-  nothing else attached to any of them. A restacked tower's slots keep their `attach` and `position`
+  nothing else attached to any of them; and a stack head still placed on the screen exactly where the
+  v22 builder's own arithmetic (frozen in the file) put it on this parent moves to where a fresh apply
+  puts it now (`NS.PresetData.HeadPlace`; the focus and far heads 589 to 629 on the owner's screen),
+  before the restack, so a tower's new head takes that place. A restacked tower's slots keep their `attach` and `position`
   (the head's place, each member's points and offsets), the roles move between them with their ids,
   spells and settings, `name` takes the new number, and `containerOrder` is refilled where it held the
   chain in order. An untouched seed (`presets.seedPrint`) is re-recorded. The old names, colors and

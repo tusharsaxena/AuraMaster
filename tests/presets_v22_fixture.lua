@@ -1,6 +1,6 @@
 -- tests/presets_v22_fixture.lua -- what the schema-v22 builder (defaults/Presets.lua before the owner's
--- 2026-11-23 restack) wrote for each preset in Bars, on a 1920 x 1080 parent and on the owner's 3440 x
--- 1440 at UI scale 1.2 (a parent 1200 tall): the fields core/Database_PresetRestack.lua reads and
+-- 2026-11-23 restack) wrote for each preset in Bars, on a 1920 x 1080 parent, on the owner's 3440 x
+-- 1440 at UI scale 1.2 (a parent 1200 tall) and on 2560 x 1440: the fields core/Database_PresetRestack.lua reads and
 -- writes. Generated from that build (APR-03), never edited by hand. Not a suite.
 return {
     ["simple@1080"] = {
@@ -98,5 +98,53 @@ return {
         { attach = { childPoint = "BOTTOM", container = 6, frame = "", mode = "container", relPoint = "TOP", x = 0, y = 0 }, bars = { colorMode = "dispel", width = 266 }, id = 7, name = "[07] Dispellable by you on target", style = "bars" },
         { attach = { container = 0, frame = "", mode = "screen" }, bars = { colorMode = "static", width = 267 }, id = 8, name = "[08] Your heals on focus", position = { point = "BOTTOMLEFT", relativePoint = "TOP", x = 589, y = -611 }, style = "bars" },
         { attach = { childPoint = "BOTTOM", container = 8, frame = "", mode = "container", relPoint = "TOP", x = 0, y = 0 }, bars = { colorMode = "dispel", width = 267 }, id = 9, name = "[09] Dispellable by you on focus", style = "bars" },
+    },
+    ["simple@1440"] = {
+        { attach = { container = 0, frame = "", mode = "screen" }, bars = { colorMode = "static", width = 320 }, id = 1, name = "[01] Player buffs (all)", position = { point = "CENTER", relativePoint = "CENTER", x = 1107, y = 588 }, style = "bars" },
+        { attach = { childPoint = "TOP", container = 1, frame = "", mode = "container", relPoint = "BOTTOM", x = 0, y = 0 }, bars = { barColor = { a = 1, b = 0.93333333333333335, g = 0.20784313725490197, r = 0.63921568627450975 }, barColorFromSkin = false, colorMode = "static", useClassColorBar = false, width = 320 }, id = 2, name = "[02] Weapon enchants", style = "bars" },
+        { attach = { childPoint = "TOPRIGHT", container = 1, frame = "", mode = "container", relPoint = "TOPLEFT", x = 0, y = 0 }, bars = { colorMode = "dispel", width = 320 }, id = 3, name = "[03] Player debuffs (all)", style = "bars" },
+    },
+    ["intermediate@1440"] = {
+        { attach = { container = 0, frame = "", mode = "screen" }, bars = { colorMode = "static", width = 320 }, id = 1, name = "[01] Player buffs (all)", position = { point = "CENTER", relativePoint = "CENTER", x = 1107, y = 588 }, style = "bars" },
+        { attach = { childPoint = "TOP", container = 1, frame = "", mode = "container", relPoint = "BOTTOM", x = 0, y = 0 }, bars = { barColor = { a = 1, b = 0.93333333333333335, g = 0.20784313725490197, r = 0.63921568627450975 }, barColorFromSkin = false, colorMode = "static", useClassColorBar = false, width = 320 }, id = 2, name = "[02] Weapon enchants", style = "bars" },
+        { attach = { childPoint = "TOPRIGHT", container = 1, frame = "", mode = "container", relPoint = "TOPLEFT", x = 0, y = 0 }, bars = { colorMode = "dispel", width = 320 }, id = 3, name = "[03] Player debuffs (all)", style = "bars" },
+        { attach = { container = 0, frame = "", mode = "screen" }, bars = { barColor = { a = 1, b = 0.27058823529411763, g = 0.27058823529411763, r = 0.27058823529411763 }, barColorFromSkin = false, colorMode = "static", useClassColorBar = false, width = 320 }, id = 4, name = "[04] Player buffs, short", position = { point = "CENTER", relativePoint = "CENTER", x = -408, y = -204 }, style = "bars" },
+        { attach = { childPoint = "BOTTOM", container = 4, frame = "", mode = "container", relPoint = "TOP", x = 0, y = 0 }, bars = { colorMode = "static", width = 320 }, id = 5, name = "[05] Player cooldowns", style = "bars" },
+        { attach = { container = 0, frame = "", mode = "screen" }, bars = { colorMode = "dispel", width = 320 }, id = 6, name = "[06] Target debuffs (mine)", position = { point = "CENTER", relativePoint = "CENTER", x = 324, y = -204 }, style = "bars" },
+        { attach = { childPoint = "BOTTOM", container = 6, frame = "", mode = "container", relPoint = "TOP", x = 0, y = 0 }, bars = { colorMode = "static", width = 320 }, id = 7, name = "[07] Target cooldowns", style = "bars" },
+        { attach = { container = 0, frame = "", mode = "screen" }, bars = { colorMode = "dispel", width = 320 }, id = 8, name = "[08] Focus debuffs (mine)", position = { point = "BOTTOMLEFT", relativePoint = "TOP", x = 623, y = -733 }, style = "bars" },
+    },
+    ["advanced@1440"] = {
+        { attach = { container = 0, frame = "", mode = "screen" }, bars = { colorMode = "static", width = 320 }, id = 1, name = "[01] Player buffs (all)", position = { point = "CENTER", relativePoint = "CENTER", x = 1107, y = 588 }, style = "bars" },
+        { attach = { childPoint = "TOP", container = 1, frame = "", mode = "container", relPoint = "BOTTOM", x = 0, y = 0 }, bars = { barColor = { a = 1, b = 0.93333333333333335, g = 0.20784313725490197, r = 0.63921568627450975 }, barColorFromSkin = false, colorMode = "static", useClassColorBar = false, width = 320 }, id = 2, name = "[02] Weapon enchants", style = "bars" },
+        { attach = { childPoint = "TOPRIGHT", container = 1, frame = "", mode = "container", relPoint = "TOPLEFT", x = 0, y = 0 }, bars = { colorMode = "dispel", width = 320 }, id = 3, name = "[03] Player debuffs (all)", style = "bars" },
+        { attach = { container = 0, frame = "", mode = "screen" }, id = 4, name = "[04] Offensive cooldowns", position = { point = "TOP", relativePoint = "TOP", x = 0, y = -200 }, style = "text" },
+        { attach = { container = 4, frame = "", mode = "container", x = 0, y = 0 }, id = 5, name = "[05] Defensive cooldowns", style = "text" },
+        { attach = { container = 5, frame = "", mode = "container", x = 0, y = 0 }, id = 6, name = "[06] Raid cooldowns", style = "text" },
+        { attach = { container = 0, frame = "", mode = "screen" }, bars = { barColor = { a = 1, b = 0.27058823529411763, g = 0.27058823529411763, r = 0.27058823529411763 }, barColorFromSkin = false, colorMode = "static", useClassColorBar = false, width = 320 }, id = 7, name = "[07] Player buffs, short", position = { point = "CENTER", relativePoint = "CENTER", x = -408, y = -204 }, style = "bars" },
+        { attach = { childPoint = "BOTTOM", container = 7, frame = "", mode = "container", relPoint = "TOP", x = 0, y = 0 }, bars = { colorMode = "static", width = 320 }, id = 8, name = "[08] Player cooldowns", style = "bars" },
+        { attach = { childPoint = "BOTTOM", container = 8, frame = "", mode = "container", relPoint = "TOP", x = 0, y = 0 }, bars = { colorMode = "static", width = 320 }, id = 9, name = "[09] Player special (mine)", style = "bars" },
+        { attach = { container = 0, frame = "", mode = "screen" }, bars = { barColor = { a = 1, b = 0.27058823529411763, g = 0.27058823529411763, r = 0.27058823529411763 }, barColorFromSkin = false, colorMode = "static", useClassColorBar = false, width = 320 }, id = 10, name = "[10] Target special (mine)", position = { point = "CENTER", relativePoint = "CENTER", x = 324, y = -204 }, style = "bars" },
+        { attach = { childPoint = "BOTTOM", container = 10, frame = "", mode = "container", relPoint = "TOP", x = 0, y = 0 }, bars = { colorMode = "dispel", width = 320 }, id = 11, name = "[11] Target debuffs (mine)", style = "bars" },
+        { attach = { childPoint = "BOTTOM", container = 11, frame = "", mode = "container", relPoint = "TOP", x = 0, y = 0 }, bars = { colorMode = "static", width = 320 }, id = 12, name = "[12] Target buffs (mine)", style = "bars" },
+        { attach = { childPoint = "BOTTOM", container = 12, frame = "", mode = "container", relPoint = "TOP", x = 0, y = 0 }, bars = { barColor = { a = 1, b = 0.25098039215686274, g = 0.50196078431372548, r = 1 }, barColorFromSkin = false, colorMode = "static", useClassColorBar = false, width = 320 }, id = 13, name = "[13] Target crowd control", style = "bars" },
+        { attach = { childPoint = "BOTTOM", container = 13, frame = "", mode = "container", relPoint = "TOP", x = 0, y = 0 }, bars = { barColor = { a = 1, b = 0.50196078431372548, g = 0.80000000000000004, r = 0.90196078431372551 }, barColorFromSkin = false, colorMode = "static", useClassColorBar = false, width = 320 }, id = 14, name = "[14] Target cooldowns, players", style = "bars" },
+        { attach = { childPoint = "BOTTOM", container = 14, frame = "", mode = "container", relPoint = "TOP", x = 0, y = 0 }, bars = { colorMode = "static", width = 320 }, id = 15, name = "[15] Target cooldowns, NPCs", style = "bars" },
+        { attach = { childPoint = "BOTTOM", container = 15, frame = "", mode = "container", relPoint = "TOP", x = 0, y = 0 }, bars = { colorMode = "static", width = 320 }, id = 16, name = "[16] Target stealable", style = "bars" },
+        { attach = { container = 0, frame = "", mode = "screen" }, id = 17, name = "[17] Target debuffs (all)", position = { point = "BOTTOMLEFT", relativePoint = "TOP", x = 623, y = -987 }, style = "icons" },
+        { attach = { childPoint = "BOTTOMLEFT", container = 17, frame = "", mode = "container", relPoint = "TOPLEFT", x = 0, y = 0 }, id = 18, name = "[18] Target buffs (all)", style = "icons" },
+        { attach = { container = 0, frame = "", mode = "screen" }, bars = { colorMode = "dispel", width = 320 }, id = 19, name = "[19] Focus debuffs (mine)", position = { point = "BOTTOMLEFT", relativePoint = "TOP", x = 623, y = -733 }, style = "bars" },
+        { attach = { childPoint = "BOTTOM", container = 19, frame = "", mode = "container", relPoint = "TOP", x = 0, y = 0 }, bars = { colorMode = "static", width = 320 }, id = 20, name = "[20] Focus buffs (mine)", style = "bars" },
+    },
+    ["healer@1440"] = {
+        { attach = { container = 0, frame = "", mode = "screen" }, bars = { colorMode = "static", width = 320 }, id = 1, name = "[01] Player buffs (all)", position = { point = "CENTER", relativePoint = "CENTER", x = 1107, y = 588 }, style = "bars" },
+        { attach = { childPoint = "TOP", container = 1, frame = "", mode = "container", relPoint = "BOTTOM", x = 0, y = 0 }, bars = { barColor = { a = 1, b = 0.93333333333333335, g = 0.20784313725490197, r = 0.63921568627450975 }, barColorFromSkin = false, colorMode = "static", useClassColorBar = false, width = 320 }, id = 2, name = "[02] Weapon enchants", style = "bars" },
+        { attach = { childPoint = "TOPRIGHT", container = 1, frame = "", mode = "container", relPoint = "TOPLEFT", x = 0, y = 0 }, bars = { colorMode = "dispel", width = 320 }, id = 3, name = "[03] Player debuffs (all)", style = "bars" },
+        { attach = { container = 0, frame = "", mode = "screen" }, id = 4, name = "[04] Raid cooldowns", position = { point = "TOP", relativePoint = "TOP", x = 0, y = -200 }, style = "text" },
+        { attach = { container = 0, frame = "", mode = "screen" }, bars = { colorMode = "static", width = 320 }, id = 5, name = "[05] Player cooldowns", position = { point = "CENTER", relativePoint = "CENTER", x = -408, y = -204 }, style = "bars" },
+        { attach = { container = 0, frame = "", mode = "screen" }, bars = { colorMode = "static", width = 320 }, id = 6, name = "[06] Your heals on target", position = { point = "CENTER", relativePoint = "CENTER", x = 324, y = -204 }, style = "bars" },
+        { attach = { childPoint = "BOTTOM", container = 6, frame = "", mode = "container", relPoint = "TOP", x = 0, y = 0 }, bars = { colorMode = "dispel", width = 320 }, id = 7, name = "[07] Dispellable by you on target", style = "bars" },
+        { attach = { container = 0, frame = "", mode = "screen" }, bars = { colorMode = "static", width = 320 }, id = 8, name = "[08] Your heals on focus", position = { point = "BOTTOMLEFT", relativePoint = "TOP", x = 623, y = -733 }, style = "bars" },
+        { attach = { childPoint = "BOTTOM", container = 8, frame = "", mode = "container", relPoint = "TOP", x = 0, y = 0 }, bars = { colorMode = "dispel", width = 320 }, id = 9, name = "[09] Dispellable by you on focus", style = "bars" },
     },
 }

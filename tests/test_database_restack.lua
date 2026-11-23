@@ -70,9 +70,13 @@ local function checkAsBuilt(p, name, W, H, where)
             assertEqual(c.attach.mode, "container", what .. ": attached")
             assertEqual(tonumber(c.attach.container), p.containerOrder[spec.attachTo], what .. ": to the new one below it")
             assertEqual(c.attach.childPoint, o.attach.childPoint, what .. ": by the same point")
-        elseif spec.stack == "left" or spec.stack == "right" then
-            -- A tower's new head takes the old head's place, which is where the new builder puts it.
+        elseif spec.stack ~= "middle" then
+            -- A stack's head is where the new builder puts it: a tower's new head takes the old head's
+            -- place, and a place still the v22 builder's moves to the new one (the focus and far heads
+            -- by Player debuffs' left edge, the cluster's shift). red under: the v22 place, 589 on the
+            -- owner's screen where the new one is 629
             assertEqual(c.attach.mode, "screen", what .. ": the head is placed")
+            assertEqual(c.position.point, o.position.point, what .. ": by the same point")
             assertEqual(c.position.x, o.position.x, what .. ": at the tower's place")
             assertEqual(c.position.y, o.position.y, what .. ": at the tower's height")
         end
@@ -110,7 +114,7 @@ test("v23: the frozen names are the v22 builder's, and the new order the current
 end)
 
 test("v23: a v22 Advanced, Intermediate, Healer and Simple become what the presets build now", function()
-    for _, scr in ipairs({ { "1080", 1920, 1080 }, { "1200", OWN_W, OWN_H } }) do
+    for _, scr in ipairs({ { "1080", 1920, 1080 }, { "1200", OWN_W, OWN_H }, { "1440", 2560, 1440 } }) do
         for _, name in ipairs({ "simple", "intermediate", "advanced", "healer" }) do
             local where = name .. "@" .. scr[1]
             local p = oldProfile(where)
@@ -135,6 +139,46 @@ test("v23: a v22 Advanced, Intermediate, Healer and Simple become what the prese
     NS.Database.RestackPresets(p, 1920, 1080)
     assertEqual(short.name, "[09] " .. NS.L["Player buffs, short"], "renumbered, the same table")
     assertEqual(next(short.filter.whitelist), 9007, "with its spells")
+end)
+
+test("v23: the frozen v22 placement is the v22 builder's on every screen", function()
+    local R = NS.Database.PRESET_RESTACK
+    local n = 0
+    for key, list in pairs(FIXTURE) do
+        local W, H = 1920, 1080
+        if key:find("@1200") then W, H = OWN_W, OWN_H elseif key:find("@1440") then W, H = 2560, 1440 end
+        for _, c in ipairs(list) do
+            local stack = R.HeadStack(c.name)
+            if stack and c.attach.mode == "screen" then
+                n = n + 1
+                local want = R.OldPlace(stack, c.style, "right", W, H)
+                -- red under: a frozen layout that drifted from the v22 arithmetic
+                for _, f in ipairs({ "point", "relativePoint", "x", "y" }) do
+                    assertEqual(want[f], c.position[f], key .. " " .. c.name .. " " .. f)
+                end
+            end
+        end
+    end
+    assertTrue(n > 0, "the case saw heads")
+end)
+
+test("v23: a head the player moved stays where they put it", function()
+    local L = NS.L
+    local p = oldProfile("advanced@1200")
+    local fdeb, far = byName(p, "[19] " .. L["Focus debuffs (mine)"]), byName(p, "[17] " .. L["Target debuffs (all)"])
+    assertEqual(fdeb.position.x, 589, "the v22 place on the owner's screen")
+    fdeb.position.x = 600
+    local _, notes = NS.Database.RestackPresets(p, OWN_W, OWN_H)
+    -- red under: a step that writes the new place over the player's own
+    assertEqual(fdeb.position.x, 600, "a moved head stays")
+    assertEqual(far.position.x, 629, "an unmoved one goes to the new place")
+    local noted = false
+    for _, note in ipairs(notes) do noted = noted or (note.field == "place" and note.name == fdeb.name) end
+    assertTrue(noted, "the kept place is noted")
+    -- No screen to read: the v22 place was 1080's, so a 589 is the player's.
+    local q = oldProfile("advanced@1200")
+    NS.Database.RestackPresets(q, nil, nil)
+    assertEqual(byName(q, "[19] " .. L["Focus debuffs (mine)"]).position.x, 589, "no parent: left alone")
 end)
 
 test("v23: a profile the current presets built is left as it is", function()

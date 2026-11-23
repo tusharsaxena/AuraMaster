@@ -35,6 +35,7 @@ local ROLE = {
     tsteal = "Target stealable", tcd = "Target cooldowns", fdeb = "Focus debuffs (mine)",
     fbuff = "Focus buffs (mine)", healTarget = "Your heals on target", dispelTarget = "Dispellable by you on target",
     healFocus = "Your heals on focus", dispelFocus = "Dispellable by you on focus",
+    ticoD = "Target debuffs (all)",
 }
 
 -- Every bars role the v22 builder numbered, in any preset: { number, role }.
@@ -70,6 +71,28 @@ local RECOLOR = {
 -- under twice its layout's reach plus the edge room (2 x 846.8), and its column width.
 local OLD_REF_H, OLD_SPAN, OLD_COL, NEW_COL = 1080, 1693.6, 240, 240
 
+-- THE V22 PLACES. Each stack's head as the v22 builder placed it, in its reference units (its x the
+-- column's left edge from the center line, `mid` a head placed by its middle on the screen's CENTER,
+-- `y` an up stack's base from the center line's TOP), and the old names of the roles that headed it.
+-- The scale and the cluster's shift are the v22 builder's: k = H / 1080 (1 unreadable), kx = min(k,
+-- W / 1693.6), and the cluster moved left by max(0, 1012.8 - (W / (2 kx) - 10)), its width taken at
+-- 16:9 where it cannot be read. A head still at that place moves to where a fresh apply puts it now
+-- (NS.PresetData.HeadPlace); one the player moved stays.
+local OLD_STACKS = {
+    cornerRight = { anchor = "CENTER", x = 772.8, mid = 441, cluster = true },
+    left = { anchor = "CENTER", x = -426, mid = -153 },
+    right = { anchor = "CENTER", x = 186, mid = -153, cluster = true },
+    focus = { anchor = "TOP", x = 530, y = -550, up = true, cluster = true },
+    far = { anchor = "TOP", x = 530, y = -740, up = true, cluster = true },
+}
+local OLD_CLUSTER_RIGHT, OLD_EDGE = 1012.8, 10
+local HEADS = {
+    { 1, "pbuffs", "cornerRight" },
+    { 4, "pshort", "left" }, { 6, "tdeb", "right" }, { 8, "fdeb", "focus" },
+    { 7, "pshort", "left" }, { 10, "tspec", "right" }, { 17, "ticoD", "far" }, { 19, "fdeb", "focus" },
+    { 5, "pcd", "left" }, { 6, "healTarget", "right" }, { 8, "healFocus", "focus" },
+}
+
 local function nameOf(entry)
     return ("[%02d] %s"):format(entry[1], L[ROLE[entry[2]]])
 end
@@ -82,6 +105,36 @@ local function oldWidths(W, H)
     if type(H) == "number" and H == H and H > 0 then kx = H / OLD_REF_H end
     if type(W) == "number" and W == W and W > 0 then kx = math.min(kx, W / OLD_SPAN) end
     return { [math.floor(OLD_COL * kx)] = true, [math.ceil(OLD_COL * kx)] = true }
+end
+
+local function round(v) return math.floor(v + 0.5) end
+
+local function readable(v) return type(v) == "number" and v == v and v > 0 end
+
+--- The v22 builder's scales on a `W` x `H` parent: k down, kx across, and the cluster's shift.
+local function oldScales(W, H)
+    local k = readable(H) and H / OLD_REF_H or 1
+    if not readable(W) then W = ((k == 1) and OLD_REF_H or H) * 16 / 9 end
+    local kx = math.min(k, W / OLD_SPAN)
+    return k, kx, math.min(0, W / (2 * kx) - OLD_EDGE - OLD_CLUSTER_RIGHT)
+end
+
+--- Where the v22 builder placed stack `stackKey`'s head in style `style`, growing `growH`.
+local function oldPlace(stackKey, style, growH, W, H)
+    local s = OLD_STACKS[stackKey]
+    local k, kx, shift = oldScales(W, H)
+    local x = s.x + (s.cluster and shift or 0)
+    local right = growH == "left"
+    if s.mid then
+        local y = round(s.mid * k)
+        if style == "icons" then
+            return { point = right and "RIGHT" or "LEFT", relativePoint = s.anchor,
+                x = round((right and (x + OLD_COL) or x) * kx), y = y }
+        end
+        return { point = "CENTER", relativePoint = s.anchor, x = round((x + OLD_COL / 2) * kx), y = y }
+    end
+    return { point = (s.up and "BOTTOM" or "TOP") .. (right and "RIGHT" or "LEFT"), relativePoint = s.anchor,
+        x = round((right and (x + OLD_COL) or x) * kx), y = round(s.y * k) }
 end
 
 local CHANNELS = { "r", "g", "b", "a" }
@@ -186,6 +239,42 @@ local function hangsFrom(c)
     return nil
 end
 
+local PLACE_FIELDS = { "point", "relativePoint", "x", "y" }
+
+--- Whether stored position `pos` is `want` exactly.
+local function samePlace(pos, want)
+    if type(pos) ~= "table" then return false end
+    for _, f in ipairs(PLACE_FIELDS) do
+        if pos[f] ~= want[f] then return false end
+    end
+    return true
+end
+
+--- Every stack head of an old preset still placed on the screen at the v22 builder's place for this
+--- parent moves to where a fresh apply puts it now. Run before the restack, on the head's position
+--- table, which the restack hands to the tower's new head with the slot.
+local function replaceHeads(byName, W, H, notes)
+    local n, Data = 0, NS.PresetData
+    if not (Data and Data.HeadPlace) then return 0 end
+    for _, entry in ipairs(HEADS) do
+        for _, c in ipairs(byName[nameOf(entry)] or {}) do
+            local at, growH = c.attach, type(c.layout) == "table" and c.layout.growH or "right"
+            if type(at) == "table" and at.mode == "screen" then
+                local new = Data.HeadPlace(entry[3], c.style, growH, W, H)
+                if new and samePlace(c.position, oldPlace(entry[3], c.style, growH, W, H)) then
+                    if not samePlace(c.position, new) then
+                        for _, f in ipairs(PLACE_FIELDS) do c.position[f] = new[f] end
+                        n = n + 1
+                    end
+                elseif new and not samePlace(c.position, new) then
+                    notes[#notes + 1] = { c = c, field = "place", why = "not the old preset place" }
+                end
+            end
+        end
+    end
+    return n
+end
+
 --- Tower `tower`'s members in `p`, bottom up, while its old chain is whole; nil and why otherwise.
 local function chainOf(p, byName, tower)
     local members, ids = {}, {}
@@ -277,7 +366,8 @@ function Database.RestackPresets(p, W, H)
     end
     local seeded = seedMatched(p)
     local byName = indexByName(p)
-    local n = recolor(byName, notes) + resize(byName, W, H, notes) + restackAll(p, byName, notes)
+    local n = recolor(byName, notes) + resize(byName, W, H, notes) + replaceHeads(byName, W, H, notes)
+        + restackAll(p, byName, notes)
     if seeded and n > 0 then p.presets.seedPrint = NS.Presets.Fingerprint(p.containers, p.containerOrder) end
     -- Each note names its container as it ends the step (a restack renames).
     for _, note in ipairs(notes) do note.name, note.c = note.c.name, nil end
@@ -290,6 +380,13 @@ Database.PRESET_RESTACK = {
         local out = {}
         for _, entry in ipairs(BARS) do out[#out + 1] = nameOf(entry) end
         return out
+    end,
+    OldPlace = oldPlace,
+    HeadStack = function(name)
+        for _, entry in ipairs(HEADS) do
+            if nameOf(entry) == name then return entry[3] end
+        end
+        return nil
     end,
     Towers = function()
         local out = {}
