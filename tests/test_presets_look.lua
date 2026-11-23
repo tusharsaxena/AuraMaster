@@ -40,10 +40,6 @@ test("presets data: debuff bars color by dispel type", function()
                     assertEqual(o.bars.barColor.a, 1, what .. ": opaque")
                     assertEqual(o.bars.barColorFromSkin, false, what .. ": the skin does not decide it")
                     assertEqual(o.bars.useClassColorBar, false, what .. ": nor the class color")
-                elseif o.style == "bars" and spec.role == "pshort" then
-                    -- red under: the gray it had before the owner's 2026-11-23 feedback
-                    assertNil(o.bars.barColor, what .. ": the template's blue, as Player cooldowns had")
-                    assertEqual(o.bars.colorMode, "static", what .. ": One color")
                 elseif o.style == "bars" and o.auraType == "HARMFUL" then
                     n = n + 1
                     -- red under: a debuff bar left to the template's "static" fill
@@ -68,6 +64,25 @@ test("presets data: debuff bars color by dispel type", function()
             assertEqual(c.bars.colorMode, (c.auraType == "HARMFUL" and not colored) and "dispel" or "static", c.name)
         end
     end
+end)
+
+test("presets data: Player buffs, short keeps the template's blue", function()
+    local P = NS.PresetData
+    local n = 0
+    for _, name in ipairs(NAMES) do
+        for _, look in ipairs(P.LOOKS) do
+            for _, spec in ipairs(P.Build(name, look, 1920, 1080)) do
+                local o, what = spec.overrides, ("%s/%s %s"):format(name, look, spec.role)
+                if o.style == "bars" and spec.role == "pshort" then
+                    n = n + 1
+                    -- red under: the gray it had before the owner's 2026-11-23 feedback
+                    assertNil(o.bars.barColor, what .. ": the template's blue, as Player cooldowns had")
+                    assertEqual(o.bars.colorMode, "static", what .. ": One color")
+                end
+            end
+        end
+    end
+    assertTrue(n > 0, "the case saw Player buffs, short")
 end)
 
 test("presets data: bar backgrounds are 50% opaque", function()

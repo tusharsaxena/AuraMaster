@@ -6,7 +6,7 @@ Two SavedVariables globals (`AuraMasterDB`, `AuraMasterPerfDB`, `AuraMaster.toc:
 
 ## `AuraMasterDB` — the AceDB database
 
-Created by `NS.InitDB` (`core/Database.lua:291`) as `AceDB:New("AuraMasterDB", NS.defaults, true)`:
+Created by `NS.InitDB` (`core/Database.lua:292`) as `AceDB:New("AuraMasterDB", NS.defaults, true)`:
 the third argument puts every character on the shared `Default` profile until the player chooses
 otherwise (`docs/profiles.md`).
 
@@ -626,7 +626,7 @@ compare with the rest of the seam.
 
 ## Migration path
 
-The account-wide ladder is `SCHEMA_STEPS` in `core/Database.lua:362`: one `{ to = N, apply = fn }`
+The account-wide ladder is `SCHEMA_STEPS` in `core/Database.lua:363`: one `{ to = N, apply = fn }`
 row per stored-shape change, applied in order by `NS.RunMigrations` while
 `global.schemaVersion < to`, each logging one `[Migrate]` debug line. The ladder runs at
 `OnInitialize`, before logging can be on, so its summary lines go through the console's at-enable
@@ -958,7 +958,7 @@ The stamp follows savedvariables-§1 as ruled at WowAddonStandards v2.65.0:
   While a step exists only in local, unpushed commits it may still grow; once the branch carrying it
   has been pushed, a new stored-shape change takes a new step with the next version, even when the
   earlier step is unreleased.
-- **An additive change needs no step.** `Database.PrepareProfile` (`core/Database.lua:268`) runs after
+- **An additive change needs no step.** `Database.PrepareProfile` (`core/Database.lua:269`) runs after
   the ladder on every `InitDB` and on every profile change: it backfills every stored container from
   the template with `== nil` tests (a stored `false` survives, savedvariables-§5), normalizes string
   ids to numbers, rebuilds `containerOrder` to exactly the ids that exist, raises `nextContainerId`

@@ -402,6 +402,20 @@ local function checkColumns(a, b, what)
     assertTrue(columnsShared(a.stack, b.stack), what .. " (only the recorded columns may share)")
 end
 
+--- Player buffs' head on a W x H parent, its right edge `r`: at the cluster's place, the mirror's end
+--- or moved left, and at least 10 in (spec sections 17 and 18). Since 2026-11-23 a bar is 240 wide on
+--- every screen (presets restack spec section 3): the head's middle is placed by the scale, its
+--- half-width not. red under: the scaled half-width (the corner off the edge under 1080 tall)
+local function checkCornerEdge(P, r, W, H, where)
+    local col = P.Columns(W, H).cornerRight
+    local edge = W / 2 + (col.x + col.width / 2) * P.ScaleX(W, H) + col.width / 2
+    assertNear(r, edge, 1, where .. " ends the cluster")
+    assertTrue(r <= W - 10 + 0.5, where .. ": at least 10 in (" .. (W - r) .. ")")
+    if P.ClusterShift(W, H) < 0 then
+        assertNear(W - r, 10, 1, where .. ": moved left just enough, 10 in")
+    end
+end
+
 test("presets: placement at 768/1080/1440 x 16:9, 16:10, 21:9, 4:3, 5:4", function()
     local P = NS.PresetData
     local env, mocks = freshEnv()
@@ -420,26 +434,15 @@ test("presets: placement at 768/1080/1440 x 16:9, 16:10, 21:9, 4:3, 5:4", functi
                         assertTrue(r <= W + 0.001, where .. ": right edge on screen (" .. r .. ")")
                         assertTrue(y <= 0, where .. ": head or base below the top edge")
                         assertTrue(y >= -0.7 * H, where .. ": above 70% of the height")
-                        if spec.stack == "cornerRight" then
-                            -- Spec section 18: at the cluster's place, the mirror's end or moved left.
-                            -- Since 2026-11-23 a bar is 240 wide on every screen (presets restack spec
-                            -- section 3): the head's middle is placed by the scale, its half-width not.
-                            -- red under: the scaled half-width (the corner off the edge under 1080 tall)
-                            local col = P.Columns(W, H).cornerRight
-                            local edge = W / 2 + (col.x + col.width / 2) * P.ScaleX(W, H) + col.width / 2
-                            assertNear(r, edge, 1, where .. " ends the cluster")
-                            -- Spec section 17: Player buffs' right edge at least 10 in from the edge.
-                            assertTrue(r <= W - 10 + 0.5, where .. ": at least 10 in (" .. (W - r) .. ")")
-                            if P.ClusterShift(W, H) < 0 then
-                                assertNear(W - r, 10, 1, where .. ": moved left just enough, 10 in")
-                            end
-                        end
+                        if spec.stack == "cornerRight" then checkCornerEdge(P, r, W, H, where) end
                         heads[#heads + 1] = { l = l, r = r, stack = spec.stack }
                         placedY[spec.stack] = y
                     end
                 end
                 -- Where the 240-wide columns do not fit (PS.fits) they meet: recorded, not checked.
-                for i = 1, fits(W, H) and #heads or 0 do
+                local pairsOf = #heads
+                if not fits(W, H) then pairsOf = 0 end
+                for i = 1, pairsOf do
                     for j = i + 1, #heads do
                         local a, b = heads[i], heads[j]
                         checkColumns(a, b, ("%s/%s: %s and %s share a column at %dx%d"):format(name, look,
@@ -557,6 +560,10 @@ test("presets data: side stacks grow up from their base", function()
             end
         end
     end
+end)
+
+test("presets data: both towers in the owner's 2026-11-23 order", function()
+    local P = NS.PresetData
     -- The tier's first role sits nearest the base. Since the owner's 2026-11-23 restack, top to
     -- bottom: [09] Player buffs, short, [08] Player cooldowns, [07] Player special (mine); and [15]
     -- Target buffs (mine), [14] Target debuffs (mine), [13] Target cooldowns, NPCs, [12] Target

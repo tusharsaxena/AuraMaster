@@ -79,6 +79,7 @@ core\AuraMaster.lua
 core\Database.lua
 # Conventional: the frozen schema step bodies; SCHEMA_STEPS reaches them at call time.
 core\Database_Migrations.lua
+core\Database_PresetRestack.lua
 
 # Defaults
 # LOAD-BEARING: the generated WoW Forever seed lists before Categories, which picks them on Forever

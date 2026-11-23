@@ -213,6 +213,7 @@ Kit.run{
         "test_presets_data",
         "test_presets_cluster",
         "test_presets_look",
+        "test_database_restack",
         "test_presets_apply",
         "test_presets_preview",
         "test_presets_seed",
