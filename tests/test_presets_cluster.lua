@@ -177,7 +177,11 @@ test("presets data: the target stack's base is on the far stack's bottom line an
                 local heads, where = headsOf(P, name, look, W, H), ("%s/%s at %dx%d"):format(name, look, W, H)
                 -- Since the owner's 2026-11-17 baseline the player and target bases sit higher than the
                 -- far stack's, each head's middle 153 under the screen's center; still one line.
-                if heads.far then assertTrue(heads.right[3] > heads.far[3], where .. ": over the far stack's base") end
+                -- The far pair's head sits by its top `lift` over the far base (the owner's second
+                -- 2026-11-23 change), so the base is that less the lift.
+                if heads.far then
+                    assertTrue(heads.right[3] > heads.far[3] - P.STACKS.far.lift, where .. ": over the far stack's base")
+                end
                 assertNear(heads.right[3], heads.left[3], 0.5, where .. ": the player stack's base (half an icon's rounding)")
             end
         end
@@ -221,6 +225,77 @@ test("presets data: bars are 240 wide on every screen", function()
         end
     end
     assertTrue(n > 0, "the case saw bars")
+end)
+
+-- THE FAR PAIR (the owner's second 2026-11-23 change): "[18] Target buffs all: anchored to the
+-- screen, at about the position it shows today. [17] Target debuffs all: anchored to [18], its
+-- BOTTOMLEFT to this container's TOPLEFT", flush (the seam leaves the gap the towers use). The pair
+-- now grows down from [18]'s top, where its top showed (two rows of the owner's 24 over the base, as
+-- the two sample rows filled it), so a filling [18] pushes [17] down and nothing runs into it.
+test("presets data: the far pair hangs Target debuffs (all) under Target buffs (all)", function()
+    local P = NS.PresetData
+    for _, scr in ipairs({ { 1920, 1080 }, { 3440 / 1.2, 1200 }, { 1366, 768 }, { 2560, 1440 } }) do
+        local W, H = scr[1], scr[2]
+        for _, look in ipairs(P.LOOKS) do
+            local adv, where = {}, ("advanced/%s at %dx%d"):format(look, W, H)
+            for i, spec in ipairs(P.Build("advanced", look, W, H)) do
+                spec.index = i
+                adv[spec.role] = spec
+            end
+            local B, D = adv.ticoB, adv.ticoD
+            -- red under: [17] the head and [18] above it, as before
+            assertEqual(D.index, 17, where .. ": Target debuffs (all) keeps 17")
+            assertEqual(B.index, 18, where .. ": Target buffs (all) keeps 18")
+            assertEqual(B.attachTo, nil, where .. ": [18] is placed on the screen")
+            assertEqual(B.overrides.attach.mode, "screen", where)
+            local pos = B.overrides.position
+            assertEqual(pos.point, "TOPLEFT", where .. ": by its top left")
+            assertEqual(pos.relativePoint, "TOP", where)
+            assertEqual(pos.x, math.floor(P.Columns(W, H).far.x * P.ScaleX(W, H) + 0.5), where .. ": on the far column")
+            assertEqual(pos.y, math.floor(-740 * P.Scale(H) + 0.5) + 48, where .. ": two rows over the base, where its top showed")
+            assertEqual(B.overrides.layout.growV, "down", where .. ": the pair grows down")
+            assertEqual(D.overrides.layout.growV, "down", where)
+            assertEqual(D.attachTo, 18, where .. ": [17] hangs from [18]")
+            local at = D.overrides.attach
+            assertEqual(at.mode, "container", where)
+            assertEqual(at.childPoint, "TOPLEFT", where .. ": its top left")
+            assertEqual(at.relPoint, "BOTTOMLEFT", where .. ": to [18]'s bottom left")
+            assertEqual(at.x, 0, where .. ": flush")
+            assertEqual(at.y, 0, where .. ": flush")
+        end
+    end
+    -- Applied, [17] stores [18]'s id, and the display order is still the numbering.
+    local env, mocks = env1()
+    local c = appliedByRole(env, "advanced", "bars", 1920, 1080)
+    assertEqual(tonumber(c.ticoD.attach.container), c.ticoB.id, "stored: [17] on [18]'s id")
+    assertTrue(c.ticoD.id < c.ticoB.id, "[17] created first")
+    -- In test mode, locked, [17]'s top meets [18]'s bottom, and the pair's bottom is the base (740
+    -- down at 1080), where [17]'s was.
+    local _, each = sampleSpans(env, mocks, "advanced", "bars", 1920, 1080)
+    local own = {}
+    for _, e in ipairs(each) do own[e.role] = e.span end
+    assertNear(own.ticoD.top, own.ticoB.bottom, 0.5, "[17] under [18], flush")
+    assertNear(own.ticoD.bottom, -740, 0.5, "the pair ends on the base")
+end)
+
+test("presets data: Realize refuses a forward attach whose parent took another id", function()
+    local P = NS.PresetData
+    local specs = P.Build("advanced", "bars", 1920, 1080)
+    local next = 100
+    -- red under: a forward link left on a placeholder, or on a guessed id the writer did not hand out
+    local made, msg = P.Realize(specs, nil, function()
+        next = next + ((next == 116) and 2 or 1)
+        return next
+    end)
+    assertEqual(made, nil, "refused")
+    assertTrue(type(msg) == "string", "with a reason")
+    local ids, seen = {}, 0
+    assertTrue(P.Realize(P.Build("advanced", "bars", 1920, 1080), nil, function(o)
+        seen = seen + 1
+        ids[seen] = o
+        return 200 + seen
+    end) == #specs, "consecutive ids realize every spec")
+    assertEqual(ids[17].attach.container, 218, "[17] on the id [18] took")
 end)
 
 test("presets data: every bar container is as wide as Player cooldowns", function()
@@ -563,7 +638,9 @@ test("presets data: Advanced on the owner's screen is their SmokeTest profile", 
         -- The focus and far heads on Player debuffs' left edge, 629 since the bars are 240 on every
         -- screen (presets restack spec section 3): Player buffs' middle stays at 992, its half-width
         -- and Player debuffs' are 120 where they were 133. red under: the scaled columns' 589
-        ticoD = { "BOTTOMLEFT", "TOP", 629, -822 }, fdeb = { "BOTTOMLEFT", "TOP", 629, -611 },
+        -- Since the owner's second 2026-11-23 change [18] Target buffs (all) heads the far pair, by
+        -- its top left where its top showed, two rows (48) over the base. red under: [17] the head
+        ticoB = { "TOPLEFT", "TOP", 629, -774 }, fdeb = { "BOTTOMLEFT", "TOP", 629, -611 },
     }
     for role, want in pairs(HEADS) do
         local s = adv[role]
@@ -580,7 +657,7 @@ test("presets data: Advanced on the owner's screen is their SmokeTest profile", 
     local CHAIN = {
         wpn = "pbuffs", pdebuffs = "pbuffs", txtDef = "txtOff", txtRaid = "txtDef", pcd = "pspec",
         pshort = "pcd", tcc = "tspec", tcdp = "tcc", tcdn = "tcdp", tdeb = "tcdn", tbuff = "tdeb",
-        tsteal = "tbuff", ticoB = "ticoD", fbuff = "fdeb",
+        tsteal = "tbuff", ticoD = "ticoB", fbuff = "fdeb",
     }
     for role, parent in pairs(CHAIN) do
         assertEqual(adv[role].attachTo, adv[parent].index, role .. " on " .. parent)
@@ -592,8 +669,8 @@ test("presets data: Advanced on the owner's screen is their SmokeTest profile", 
     for _, role in ipairs({ "txtDef", "txtRaid" }) do
         assertEqual(adv[role].overrides.attach.y, 0, role .. ": flush under the one before, the owner's")
     end
-    assertEqual(adv.ticoB.overrides.attach.childPoint, "BOTTOMLEFT")
-    assertEqual(adv.ticoB.overrides.attach.relPoint, "TOPLEFT")
+    assertEqual(adv.ticoD.overrides.attach.childPoint, "TOPLEFT")
+    assertEqual(adv.ticoD.overrides.attach.relPoint, "BOTTOMLEFT")
     for _, role in ipairs({ "ticoD", "ticoB" }) do
         assertEqual(adv[role].overrides.icons.width, 24, role .. ": the owner's 24")
         assertEqual(adv[role].overrides.icons.height, 24, role)

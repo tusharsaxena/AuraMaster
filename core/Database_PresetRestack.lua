@@ -35,8 +35,12 @@ local ROLE = {
     tsteal = "Target stealable", tcd = "Target cooldowns", fdeb = "Focus debuffs (mine)",
     fbuff = "Focus buffs (mine)", healTarget = "Your heals on target", dispelTarget = "Dispellable by you on target",
     healFocus = "Your heals on focus", dispelFocus = "Dispellable by you on focus",
-    ticoD = "Target debuffs (all)",
+    ticoD = "Target debuffs (all)", ticoB = "Target buffs (all)",
 }
+-- THE FAR PAIR (the owner's second 2026-11-23 change): v22 placed [17] Target debuffs (all) on the
+-- screen and hung [18] Target buffs (all) on it, BOTTOMLEFT to TOPLEFT, both growing up; now [18] is
+-- placed and [17] hangs under it, TOPLEFT to BOTTOMLEFT, both growing down.
+local PAIR_UNDER, PAIR_HEAD = { 17, "ticoD" }, { 18, "ticoB" }
 
 -- Every bars role the v22 builder numbered, in any preset: { number, role }.
 local BARS = {
@@ -92,7 +96,7 @@ local OLD_CLUSTER_RIGHT, OLD_EDGE = 1012.8, 10
 local HEADS = {
     { 1, "pbuffs", "cornerRight" },
     { 4, "pshort", "left" }, { 6, "tdeb", "right" }, { 8, "fdeb", "focus" },
-    { 7, "pshort", "left" }, { 10, "tspec", "right" }, { 17, "ticoD", "far" }, { 19, "fdeb", "focus" },
+    { 7, "pshort", "left" }, { 10, "tspec", "right" }, { 19, "fdeb", "focus" },
     { 5, "pcd", "left" }, { 6, "healTarget", "right" }, { 8, "healFocus", "focus" },
 }
 
@@ -256,26 +260,80 @@ end
 --- Every stack head of an old preset still placed on the screen at the v22 builder's place for this
 --- parent moves to where a fresh apply puts it now. Run before the restack, on the head's position
 --- table, which the restack hands to the tower's new head with the slot.
+--- One head `c` of stack `stack`: moved when still at the v22 place, noted when at neither place.
+local function replaceHead(c, stack, W, H, notes)
+    local at = c.attach
+    if type(at) ~= "table" or at.mode ~= "screen" then return 0 end
+    local growH = type(c.layout) == "table" and c.layout.growH or "right"
+    local new = NS.PresetData.HeadPlace(stack, c.style, growH, W, H)
+    if not new or samePlace(c.position, new) then return 0 end
+    if not samePlace(c.position, oldPlace(stack, c.style, growH, W, H)) then
+        notes[#notes + 1] = { c = c, field = "place", why = "not the old preset place" }
+        return 0
+    end
+    for _, f in ipairs(PLACE_FIELDS) do c.position[f] = new[f] end
+    return 1
+end
+
 local function replaceHeads(byName, W, H, notes)
     local n, Data = 0, NS.PresetData
     if not (Data and Data.HeadPlace) then return 0 end
     for _, entry in ipairs(HEADS) do
-        for _, c in ipairs(byName[nameOf(entry)] or {}) do
-            local at, growH = c.attach, type(c.layout) == "table" and c.layout.growH or "right"
-            if type(at) == "table" and at.mode == "screen" then
-                local new = Data.HeadPlace(entry[3], c.style, growH, W, H)
-                if new and samePlace(c.position, oldPlace(entry[3], c.style, growH, W, H)) then
-                    if not samePlace(c.position, new) then
-                        for _, f in ipairs(PLACE_FIELDS) do c.position[f] = new[f] end
-                        n = n + 1
-                    end
-                elseif new and not samePlace(c.position, new) then
-                    notes[#notes + 1] = { c = c, field = "place", why = "not the old preset place" }
-                end
-            end
-        end
+        for _, c in ipairs(byName[nameOf(entry)] or {}) do n = n + replaceHead(c, entry[3], W, H, notes) end
     end
     return n
+end
+
+local function growHOf(c)
+    return type(c.layout) == "table" and c.layout.growH or "right"
+end
+
+--- Whether `D` and `B` are still the far pair as v22 wrote it on this parent, and nothing else of the
+--- profile `p` hangs from either.
+--- Whether `B`'s attach is v22's link onto `D`: BOTTOMLEFT to TOPLEFT, flush.
+local function oldLink(B, D)
+    local ba = B.attach
+    if type(ba) ~= "table" or ba.mode ~= "container" or tonumber(ba.container) ~= D.id then return false end
+    return ba.childPoint == "BOTTOMLEFT" and ba.relPoint == "TOPLEFT" and (ba.x or 0) == 0 and (ba.y or 0) == 0
+end
+
+local function growsUp(c)
+    return type(c.layout) == "table" and c.layout.growV == "up"
+end
+
+--- Whether nothing of `p` but `B` hangs from `D` or `B`.
+local function pairAlone(p, D, B)
+    for _, c in pairs(p.containers) do
+        local parent = hangsFrom(c)
+        if c ~= B and (parent == D.id or parent == B.id) then return false end
+    end
+    return true
+end
+
+local function oldPair(p, D, B, W, H)
+    local da = D.attach
+    if type(da) ~= "table" or da.mode ~= "screen" then return false end
+    if not samePlace(D.position, oldPlace("far", D.style, growHOf(D), W, H)) then return false end
+    return oldLink(B, D) and growsUp(D) and growsUp(B) and pairAlone(p, D, B)
+end
+
+--- Re-anchor the far pair while it is v22's: [18] placed where a fresh apply puts it, [17] under it.
+local function reanchorPair(p, byName, W, H, notes)
+    local D, B = only(byName, nameOf(PAIR_UNDER)), only(byName, nameOf(PAIR_HEAD))
+    local Data = NS.PresetData
+    if not (D and B and Data and Data.HeadPlace) then return 0 end
+    if not oldPair(p, D, B, W, H) then
+        notes[#notes + 1] = { c = D, field = "pair", why = "not the old preset pair" }
+        return 0
+    end
+    local new = Data.HeadPlace("far", B.style, growHOf(B), W, H)
+    if not new then return 0 end
+    B.attach = { mode = "screen", container = 0, frame = "" }
+    B.position = Database.DeepCopy(new)
+    D.attach = { mode = "container", container = B.id, frame = "", childPoint = "TOPLEFT", relPoint = "BOTTOMLEFT",
+        x = 0, y = 0 }
+    D.layout.growV, B.layout.growV = "down", "down"
+    return 2
 end
 
 --- Tower `tower`'s members in `p`, bottom up, while its old chain is whole; nil and why otherwise.
@@ -369,8 +427,8 @@ function Database.RestackPresets(p, W, H)
     end
     local seeded = seedMatched(p)
     local byName = indexByName(p)
-    local n = recolor(byName, notes) + resize(byName, W, H, notes) + replaceHeads(byName, W, H, notes)
-        + restackAll(p, byName, notes)
+    local n = recolor(byName, notes) + resize(byName, W, H, notes) + reanchorPair(p, byName, W, H, notes)
+        + replaceHeads(byName, W, H, notes) + restackAll(p, byName, notes)
     if seeded and n > 0 then p.presets.seedPrint = NS.Presets.Fingerprint(p.containers, p.containerOrder) end
     -- Each note names its container as it ends the step (a restack renames).
     for _, note in ipairs(notes) do note.name, note.c = note.c.name, nil end

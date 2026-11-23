@@ -148,7 +148,8 @@ test("v23: the frozen v22 placement is the v22 builder's on every screen", funct
         local W, H = 1920, 1080
         if key:find("@1200") then W, H = OWN_W, OWN_H elseif key:find("@1440") then W, H = 2560, 1440 end
         for _, c in ipairs(list) do
-            local stack = R.HeadStack(c.name)
+            -- The far pair's v22 head, which the pair re-anchor matches, as well as the HEADS list.
+            local stack = R.HeadStack(c.name) or ((c.name == "[17] " .. NS.L["Target debuffs (all)"]) and "far")
             if stack and c.attach.mode == "screen" then
                 n = n + 1
                 local want = R.OldPlace(stack, c.style, "right", W, H)
@@ -165,7 +166,8 @@ end)
 test("v23: a head the player moved stays where they put it", function()
     local L = NS.L
     local p = oldProfile("advanced@1200")
-    local fdeb, far = byName(p, "[19] " .. L["Focus debuffs (mine)"]), byName(p, "[17] " .. L["Target debuffs (all)"])
+    -- The far pair's head is [18] since the owner's second 2026-11-23 change.
+    local fdeb, far = byName(p, "[19] " .. L["Focus debuffs (mine)"]), byName(p, "[18] " .. L["Target buffs (all)"])
     assertEqual(fdeb.position.x, 589, "the v22 place on the owner's screen")
     fdeb.position.x = 600
     local _, notes = NS.Database.RestackPresets(p, OWN_W, OWN_H)
@@ -179,6 +181,46 @@ test("v23: a head the player moved stays where they put it", function()
     local q = oldProfile("advanced@1200")
     NS.Database.RestackPresets(q, nil, nil)
     assertEqual(byName(q, "[19] " .. L["Focus debuffs (mine)"]).position.x, 589, "no parent: left alone")
+end)
+
+test("v23: the far pair re-anchors only while it is the v22 pair", function()
+    local L = NS.L
+    local function pair(p)
+        return byName(p, "[17] " .. L["Target debuffs (all)"]), byName(p, "[18] " .. L["Target buffs (all)"])
+    end
+    -- The v22 pair on the owner's screen: [17] on the screen, [18] on it; after, the other way round.
+    local p = oldProfile("advanced@1200")
+    local D, B = pair(p)
+    NS.Database.RestackPresets(p, OWN_W, OWN_H)
+    assertEqual(B.attach.mode, "screen", "[18] on the screen")
+    assertEqual(B.position.point, "TOPLEFT", "[18] by its top left")
+    assertEqual(B.position.y, -774, "where its top showed")
+    assertEqual(D.attach.mode, "container", "[17] attached")
+    assertEqual(tonumber(D.attach.container), B.id, "to [18]")
+    assertEqual(D.attach.childPoint, "TOPLEFT")
+    assertEqual(D.attach.relPoint, "BOTTOMLEFT")
+    -- red under: a re-anchor that ignores the player's own place or their extra
+    local edits = {
+        moved = function(q) pair(q).position.x = 600 end,
+        extra = function(q)
+            local id = q.nextContainerId
+            q.containers[id] = NS.Database.Merge(copy(NS.CONTAINER_TEMPLATE), { id = id, name = "Mine",
+                attach = { mode = "container", container = select(2, pair(q)).id } })
+            q.containerOrder[#q.containerOrder + 1] = id
+        end,
+        unhooked = function(q) select(2, pair(q)).attach = { mode = "screen", container = 0, frame = "" } end,
+    }
+    for what, edit in pairs(edits) do
+        local q = oldProfile("advanced@1200")
+        edit(q)
+        local _, notes = NS.Database.RestackPresets(q, OWN_W, OWN_H)
+        local d, b = pair(q)
+        assertTrue(d.attach.mode == "screen", what .. ": [17] stays where the player has it")
+        assertTrue(b.attach.mode ~= "container" or tonumber(b.attach.container) == d.id, what .. ": [18] keeps its anchor")
+        local noted = false
+        for _, note in ipairs(notes) do noted = noted or note.field == "pair" end
+        assertTrue(noted, what .. ": noted")
+    end
 end)
 
 test("v23: a profile the current presets built is left as it is", function()

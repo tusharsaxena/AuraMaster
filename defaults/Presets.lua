@@ -191,7 +191,11 @@ P.STACKS = {
         beside = "cornerRight", cluster = true, leftOf = "cornerRight" },
     focus       = { anchor = "TOP", x = FOCUS_X, y = FOCUS_BASE, width = COL_W, iconsGrowH = "left", up = true,
         cluster = true, leftOf = "cornerRight" },
-    far         = { anchor = "TOP", x = FOCUS_X, y = SIDE_BASE, width = COL_W, iconsGrowH = "left", up = true,
+    -- THE FAR PAIR (the owner's second 2026-11-23 change): [18] Target buffs (all) heads it, on the
+    -- screen by its top left where its top showed (`lift`, two rows of the owner's 24 over the base,
+    -- as the two sample rows filled it; not scaled, as a row is not), and [17] Target debuffs (all)
+    -- hangs under it (`under` in TIERS), so the pair grows down from there.
+    far         = { anchor = "TOP", x = FOCUS_X, y = SIDE_BASE, lift = 48, width = COL_W, iconsGrowH = "left",
         cluster = true, leftOf = "cornerRight" },
     right       = { anchor = "CENTER", x = TARGET_X, mid = SIDE_MID, width = COL_W, iconsGrowH = "left", up = true,
         cluster = true },
@@ -527,7 +531,7 @@ local TIERS = {
         { "left", "pspec" }, { "left", "pcd" }, { "left", "pshort" },
         { "right", "tspec" }, { "right", "tcc" }, { "right", "tcdp" }, { "right", "tcdn" },
         { "right", "tdeb" }, { "right", "tbuff" }, { "right", "tsteal" },
-        { "far", "ticoD" }, { "far", "ticoB" },
+        { "far", "ticoD", under = "ticoB" }, { "far", "ticoB" },
         { "focus", "fdeb" }, { "focus", "fbuff" },
     }),
     healer = simplePlus({
@@ -721,7 +725,7 @@ local function place(o, stack, kx, k, top)
     local left = o.layout.growH == "left"
     o.position = {
         point = (stack.up and "BOTTOM" or "TOP") .. (left and "RIGHT" or "LEFT"), relativePoint = stack.anchor,
-        x = round(stack.x * kx) + (left and stack.width or 0), y = round(stack.y * k),
+        x = round(stack.x * kx) + (left and stack.width or 0), y = round(stack.y * k) + (stack.lift or 0),
     }
 end
 
@@ -871,11 +875,46 @@ end
 --- @param parentH number|nil
 --- @param picked table|nil
 --- @return table
+--- A tier's `under` entries (a role hung under a later one of its stack, the far pair's [17] under
+--- [18]): [i] = the index it hangs from, and [that index] = true in `heads`, a head placed on the
+--- screen though created after the role it holds.
+local function underLinks(tier)
+    local at, under, heads = {}, {}, {}
+    for i, e in ipairs(tier) do at[e[2]] = i end
+    for i, e in ipairs(tier) do
+        if e.under then
+            under[i] = at[e.under]
+            heads[at[e.under]] = true
+        end
+    end
+    return under, heads
+end
+
+--- Link spec `i` (role overrides `o`, in `stack`) into its stack: hung under a later head, a member
+--- on the one before it, a `beside` head joined to another head, or a head placed on the screen.
+local function link(spec, o, stack, i, st)
+    local key = spec.stack
+    if st.under[i] then
+        spec.attachTo = st.under[i]
+        o.attach = memberAttach(o)
+    elseif st.last[key] and not st.heads[i] then
+        spec.attachTo = st.last[key]
+        o.attach = memberAttach(o)
+    elseif stack.beside and st.first[stack.beside] then
+        spec.attachTo = st.first[stack.beside]
+        o.attach = besideAttach()
+    else
+        place(o, stack, st.kx, st.k, 0)
+    end
+end
+
 function P.Build(name, look, parentW, parentH, picked)
     local tier = TIERS[name]
     if not (tier and IS_LOOK[look]) then return {} end
     local k, kx, withCustom = P.Scale(parentH), P.ScaleX(parentW, parentH), CREATES_CUSTOM[name] == true
     local specs, last, first, callouts, cols = {}, {}, {}, {}, P.Columns(parentW, parentH)
+    local under, heads = underLinks(tier)
+    local st = { under = under, heads = heads, last = last, first = first, kx = kx, k = k }
     for i, entry in ipairs(tier) do
         local stackKey, roleKey = entry[1], entry[2]
         local stack, role = cols[stackKey], CONTAINERS[roleKey]
@@ -885,15 +924,7 @@ function P.Build(name, look, parentW, parentH, picked)
         growthIn(o, stack)
         sizeTo(o, stack, role.barColor)
         local spec = { role = roleKey, stack = stackKey, overrides = o }
-        if last[stackKey] then
-            spec.attachTo = last[stackKey]
-            o.attach = memberAttach(o)
-        elseif stack.beside and first[stack.beside] then
-            spec.attachTo = first[stack.beside]
-            o.attach = besideAttach()
-        else
-            place(o, stack, kx, k, 0)
-        end
+        link(spec, o, stack, i, st)
         first[stackKey] = first[stackKey] or i
         if stack.center then callouts[#callouts + 1] = spec end
         if withCustom then spec.customKeys = copy(CUSTOM_ORDER) end
@@ -950,13 +981,25 @@ end
 --- @param create function
 --- @return number|nil created, string|nil message, boolean|nil gray
 function P.Realize(specs, keys, create)
-    local ids = {}
+    local ids, promised = {}, {}
     for i, spec in ipairs(specs) do
         local o = spec.overrides
         rekey(o.filter.categories, keys or {})
-        if spec.attachTo then o.attach.container = ids[spec.attachTo] end
+        local to = spec.attachTo
+        if to and to < i then
+            o.attach.container = ids[to]
+        elseif to then
+            -- A forward link (the far pair's [17] under [18]): both writers hand out consecutive ids
+            -- (the profile's counter), so [18]'s is the one before this spec's plus their distance.
+            -- Checked when [18] is created; a writer that broke the sequence refuses the preset.
+            promised[to] = (ids[i - 1] or 0) + (to - i + 1)
+            o.attach.container = promised[to]
+        end
         local id, msg, gray = create(o)
         if not id then return nil, msg, gray end
+        if promised[i] and promised[i] ~= id then
+            return nil, "a preset container took id " .. tostring(id) .. ", not the " .. tostring(promised[i]) .. " its member was linked to"
+        end
         ids[i] = id
     end
     return #ids

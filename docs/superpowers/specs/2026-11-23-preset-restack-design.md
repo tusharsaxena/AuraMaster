@@ -114,7 +114,18 @@ is the player's and is left as it is. Per field:
    edge); on 2560 x 1440 the cluster's heads follow the new shift too. A head the player moved stays.
    It runs before the restack, on the head slot's position table, so a restacked tower's new head
    takes the moved place.
-5. **The untouched-seed record.** A profile whose `presets.seedPrint` matched its registry before the
+5. **The special roles' #393939** (APR-07, the owner's second 2026-11-23 change). Player special
+   (mine) from the template's blue and Target special (mine) from gray (454545) to #393939, by the
+   fill rule of item 1.
+6. **The far pair** (APR-08, the same change). v22 placed [17] Target debuffs (all) on the screen
+   and hung [18] Target buffs (all) on it (BOTTOMLEFT to TOPLEFT, flush, both growing up). Now [18] is
+   placed by its top left where its top showed (two rows of 24 over the far base, `STACKS.far.lift`)
+   and [17] hangs under it, its TOPLEFT on [18]'s BOTTOMLEFT, flush, both growing down; [17] keeps
+   its number, so the preset's [17] links forward to [18] (`P.Realize` checks the id it promised).
+   The pair re-anchors only while both are there once by name, [17] still on the screen at the v22
+   builder's own computed place, [18] still on it by the v22 points with no offset, both still
+   growing up, and nothing else hangs from either; [18] then takes `NS.PresetData.HeadPlace`'s place.
+7. **The untouched-seed record.** A profile whose `presets.seedPrint` matched its registry before the
    step is re-recorded after it, so a still-untouched seed stays untouched for the first-run picker.
 
 Identity is always the exact old name; never a position, an id or a count. The step is idempotent:
@@ -170,6 +181,14 @@ Reading it against the rule (section 4):
 - **Forever SmokeTest**: Target stealable renamed [15] and attached by hand, so the target tower kept
   its order and numbers while its fills and widths moved; the player tower restacked.
 - **SmokeTest2 to SmokeTest4** (Simple): the widths alone.
+- **The far pair** (APR-08) re-anchored in Retail SmokeTest and Forever SmokeTest and SmokeTest5:
+  [18] Target buffs (all) placed TOPLEFT at 629, -774, [17] hung under it. Forever Default and
+  DefaultBackupV3 hang [17] from a frame the owner picked, and DefaultBackupv2 has the pair the other
+  way round already, so all three keep theirs.
+- **#393939** (APR-07): Target special (mine) turned from gray in every Advanced-built profile;
+  Player special (mine) from blue where it was still blue. Forever Default's Player special (mine)
+  was already #393939 by hand, and DefaultBackupv2's pair of special roles carry the owner's own
+  gray and numbering, so they stay.
 - **Heads re-placed** (APR-06): the focus and far heads, 589 to 629, in Retail SmokeTest and Forever
   SmokeTest and SmokeTest5. Player buffs (all) the owner had dragged (Forever Default, DefaultBackupV3,
   DefaultBackupv2, SmokeTest2) stays; in SmokeTest3 and SmokeTest4 it was already where both builders
@@ -178,23 +197,23 @@ Reading it against the rule (section 4):
 | Client | Profile | Containers | v22 preset names | What v23 did | Containers changed | Left alone (the player had changed it) |
 | --- | --- | --- | --- | --- | --- | --- |
 | Retail, account 1 | Default | 20 | 0 | unchanged | 0 | - |
-| Retail, account 1 | SmokeTest | 20 | 20 | heads re-placed, recolored, resized, restacked | 16 | - |
+| Retail, account 1 | SmokeTest | 20 | 20 | far pair re-anchored, heads re-placed, recolored, resized, restacked | 17 | - |
 | Retail, account 2 | Default | 4 | 0 | unchanged | 0 | - |
-| WoW Forever | Default | 20 | 20 | recolored, resized, restacked | 9 | `[01] Player buffs (all)` place (not the old preset place) |
+| WoW Forever | Default | 20 | 20 | recolored, resized, restacked | 10 | `[07] Player special (mine)` color (not the old preset fill); `[17] Target debuffs (all)` pair (not the old preset pair); `[01] Player buffs (all)` place (not the old preset place) |
 | WoW Forever | DefaultBackup | 20 | 0 | unchanged | 0 | - |
-| WoW Forever | DefaultBackupV3 | 20 | 20 | recolored, resized, restacked | 9 | `[01] Player buffs (all)` place (not the old preset place) |
-| WoW Forever | DefaultBackupv2 | 20 | 13 | recolored | 1 | `[07] Player buffs, short` color (not the old preset fill); `[01] Player buffs (all)` place (not the old preset place); `[07] Player buffs, short` tower (a member is not on the one before it) |
-| WoW Forever | SmokeTest | 20 | 19 | heads re-placed, recolored, resized, restacked | 15 | `[10] Target special (mine)` tower (a role is missing or named twice) |
+| WoW Forever | DefaultBackupV3 | 20 | 20 | recolored, resized, restacked | 10 | `[17] Target debuffs (all)` pair (not the old preset pair); `[01] Player buffs (all)` place (not the old preset place) |
+| WoW Forever | DefaultBackupv2 | 20 | 13 | recolored | 1 | `[07] Player buffs, short` color (not the old preset fill); `[09] Player special (mine)` color (not the old preset fill); `[17] Target debuffs (all)` pair (not the old preset pair); `[01] Player buffs (all)` place (not the old preset place); `[07] Player buffs, short` tower (a member is not on the one before it) |
+| WoW Forever | SmokeTest | 20 | 19 | far pair re-anchored, heads re-placed, recolored, resized, restacked | 16 | `[10] Target special (mine)` tower (a role is missing or named twice) |
 | WoW Forever | SmokeTest2 | 3 | 3 | resized | 3 | `[01] Player buffs (all)` place (not the old preset place) |
 | WoW Forever | SmokeTest3 | 3 | 3 | resized | 3 | - |
 | WoW Forever | SmokeTest4 | 3 | 3 | resized | 3 | - |
-| WoW Forever | SmokeTest5 | 20 | 20 | heads re-placed, recolored, resized, restacked | 16 | - |
+| WoW Forever | SmokeTest5 | 20 | 20 | far pair re-anchored, heads re-placed, recolored, resized, restacked | 17 | - |
 
 #### Retail, account 1
 
 **Default** (20 containers): unchanged; no container carries a v22 preset name (a hand-built profile).
 
-**SmokeTest** (20 containers, 16 changed; containerOrder refilled to 4,5,6,7,8,9,12,11,10,13,16,17,18,14,15,19,20,21,22,23).
+**SmokeTest** (20 containers, 17 changed; containerOrder refilled to 4,5,6,7,8,9,12,11,10,13,16,17,18,14,15,19,20,21,22,23).
 
 | id | before: name | slot | fill | width | head place | after: name | slot | fill | width | head place |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -206,16 +225,16 @@ Reading it against the rule (section 4):
 | 9 | [06] Raid cooldowns | 3@7 | (text) | - | - | [06] Raid cooldowns | 3@7 | (text) | - | - |
 | 10 | [07] Player buffs, short | 1@10 | gray | 266 | CENTER -340,-170 | **[09] Player buffs, short** | **3@12** | **blue** | **240** | **-** |
 | 11 | [08] Player cooldowns | 2@10 | blue | 266 | - | [08] Player cooldowns | **2@12** | **tan** | **240** | - |
-| 12 | [09] Player special (mine) | 3@10 | blue | 266 | - | **[07] Player special (mine)** | **1@12** | blue | **240** | **CENTER -340,-170** |
-| 13 | [10] Target special (mine) | 1@13 | gray | 266 | CENTER 340,-170 | [10] Target special (mine) | 1@13 | gray | **240** | CENTER 340,-170 |
+| 12 | [09] Player special (mine) | 3@10 | blue | 266 | - | **[07] Player special (mine)** | **1@12** | **#393939** | **240** | **CENTER -340,-170** |
+| 13 | [10] Target special (mine) | 1@13 | gray | 266 | CENTER 340,-170 | [10] Target special (mine) | 1@13 | **#393939** | **240** | CENTER 340,-170 |
 | 14 | [11] Target debuffs (mine) | 2@13 | dispel | 266 | - | **[14] Target debuffs (mine)** | **5@13** | dispel | **240** | - |
 | 15 | [12] Target buffs (mine) | 3@13 | blue | 266 | - | **[15] Target buffs (mine)** | **6@13** | blue | **240** | - |
 | 16 | [13] Target crowd control | 4@13 | orange | 266 | - | **[11] Target crowd control** | **2@13** | orange | **240** | - |
 | 17 | [14] Target cooldowns, players | 5@13 | tan | 266 | - | **[12] Target cooldowns, players** | **3@13** | tan | **240** | - |
 | 18 | [15] Target cooldowns, NPCs | 6@13 | blue | 266 | - | **[13] Target cooldowns, NPCs** | **4@13** | **tan** | **240** | - |
 | 19 | [16] Target stealable | 7@13 | blue | 266 | - | [16] Target stealable | 7@13 | blue | **240** | - |
-| 20 | [17] Target debuffs (all) | 1@20 | (icons) | - | BOTTOMLEFT 589,-822 | [17] Target debuffs (all) | 1@20 | (icons) | - | **BOTTOMLEFT 629,-822** |
-| 21 | [18] Target buffs (all) | 2@20 | (icons) | - | - | [18] Target buffs (all) | 2@20 | (icons) | - | - |
+| 20 | [17] Target debuffs (all) | 1@20 | (icons) | - | BOTTOMLEFT 589,-822 | [17] Target debuffs (all) | **2@21** | (icons) | - | **-** |
+| 21 | [18] Target buffs (all) | 2@20 | (icons) | - | - | [18] Target buffs (all) | **1@21** | (icons) | - | **TOPLEFT 629,-774** |
 | 22 | [19] Focus debuffs (mine) | 1@22 | dispel | 267 | BOTTOMLEFT 589,-611 | [19] Focus debuffs (mine) | 1@22 | dispel | **240** | **BOTTOMLEFT 629,-611** |
 | 23 | [20] Focus buffs (mine) | 2@22 | blue | 267 | - | [20] Focus buffs (mine) | 2@22 | blue | **240** | - |
 
@@ -225,7 +244,7 @@ Reading it against the rule (section 4):
 
 #### WoW Forever
 
-**Default** (20 containers, 9 changed; containerOrder refilled to 4,5,6,7,8,9,12,11,10,13,16,17,18,14,15,19,20,21,22,23).
+**Default** (20 containers, 10 changed; containerOrder refilled to 4,5,6,7,8,9,12,11,10,13,16,17,18,14,15,19,20,21,22,23).
 
 | id | before: name | slot | fill | width | head place | after: name | slot | fill | width | head place |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -238,7 +257,7 @@ Reading it against the rule (section 4):
 | 10 | [07] Player buffs, short | 1@10 | gray | 240 | - | **[09] Player buffs, short** | **3@12** | **blue** | 240 | - |
 | 11 | [08] Player cooldowns | 2@10 | blue | 240 | - | [08] Player cooldowns | **2@12** | **tan** | 240 | - |
 | 12 | [09] Player special (mine) | 3@10 | #393939 | 240 | - | **[07] Player special (mine)** | **1@12** | #393939 | 240 | - |
-| 13 | [10] Target special (mine) | 1@13 | gray | 240 | - | [10] Target special (mine) | 1@13 | gray | 240 | - |
+| 13 | [10] Target special (mine) | 1@13 | gray | 240 | - | [10] Target special (mine) | 1@13 | **#393939** | 240 | - |
 | 14 | [11] Target debuffs (mine) | 2@13 | dispel | 240 | - | **[14] Target debuffs (mine)** | **5@13** | dispel | 240 | - |
 | 15 | [12] Target buffs (mine) | 3@13 | blue | 240 | - | **[15] Target buffs (mine)** | **6@13** | blue | 240 | - |
 | 16 | [13] Target crowd control | 4@13 | orange | 240 | - | **[11] Target crowd control** | **2@13** | orange | 240 | - |
@@ -250,11 +269,13 @@ Reading it against the rule (section 4):
 | 22 | [19] Focus debuffs (mine) | 1@22 | dispel | 240 | - | [19] Focus debuffs (mine) | 1@22 | dispel | 240 | - |
 | 23 | [20] Focus buffs (mine) | 2@22 | blue | 240 | - | [20] Focus buffs (mine) | 2@22 | blue | 240 | - |
 
+- Left alone: `[07] Player special (mine)`, color (not the old preset fill).
+- Left alone: `[17] Target debuffs (all)`, pair (not the old preset pair).
 - Left alone: `[01] Player buffs (all)`, place (not the old preset place).
 
 **DefaultBackup** (20 containers): unchanged; no container carries a v22 preset name (a hand-built profile).
 
-**DefaultBackupV3** (20 containers, 9 changed; containerOrder refilled to 4,5,6,7,8,9,12,11,10,13,16,17,18,14,15,19,20,21,22,23).
+**DefaultBackupV3** (20 containers, 10 changed; containerOrder refilled to 4,5,6,7,8,9,12,11,10,13,16,17,18,14,15,19,20,21,22,23).
 
 | id | before: name | slot | fill | width | head place | after: name | slot | fill | width | head place |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -266,8 +287,8 @@ Reading it against the rule (section 4):
 | 9 | [06] Raid cooldowns | 3@7 | (text) | - | - | [06] Raid cooldowns | 3@7 | (text) | - | - |
 | 10 | [07] Player buffs, short | 1@10 | gray | 240 | - | **[09] Player buffs, short** | **3@12** | **blue** | 240 | - |
 | 11 | [08] Player cooldowns | 2@10 | blue | 240 | - | [08] Player cooldowns | **2@12** | **tan** | 240 | - |
-| 12 | [09] Player special (mine) | 3@10 | blue | 240 | - | **[07] Player special (mine)** | **1@12** | blue | 240 | - |
-| 13 | [10] Target special (mine) | 1@13 | gray | 240 | - | [10] Target special (mine) | 1@13 | gray | 240 | - |
+| 12 | [09] Player special (mine) | 3@10 | blue | 240 | - | **[07] Player special (mine)** | **1@12** | **#393939** | 240 | - |
+| 13 | [10] Target special (mine) | 1@13 | gray | 240 | - | [10] Target special (mine) | 1@13 | **#393939** | 240 | - |
 | 14 | [11] Target debuffs (mine) | 2@13 | dispel | 240 | - | **[14] Target debuffs (mine)** | **5@13** | dispel | 240 | - |
 | 15 | [12] Target buffs (mine) | 3@13 | blue | 240 | - | **[15] Target buffs (mine)** | **6@13** | blue | 240 | - |
 | 16 | [13] Target crowd control | 4@13 | orange | 240 | - | **[11] Target crowd control** | **2@13** | orange | 240 | - |
@@ -279,6 +300,7 @@ Reading it against the rule (section 4):
 | 22 | [19] Focus debuffs (mine) | 1@22 | dispel | 240 | - | [19] Focus debuffs (mine) | 1@22 | dispel | 240 | - |
 | 23 | [20] Focus buffs (mine) | 2@22 | blue | 240 | - | [20] Focus buffs (mine) | 2@22 | blue | 240 | - |
 
+- Left alone: `[17] Target debuffs (all)`, pair (not the old preset pair).
 - Left alone: `[01] Player buffs (all)`, place (not the old preset place).
 
 **DefaultBackupv2** (20 containers, 1 changed; containerOrder kept).
@@ -307,10 +329,12 @@ Reading it against the rule (section 4):
 | 23 | [20] Focus buffs (mine) | 2@22 | blue | 240 | - | [20] Focus buffs (mine) | 2@22 | blue | 240 | - |
 
 - Left alone: `[07] Player buffs, short`, color (not the old preset fill).
+- Left alone: `[09] Player special (mine)`, color (not the old preset fill).
+- Left alone: `[17] Target debuffs (all)`, pair (not the old preset pair).
 - Left alone: `[01] Player buffs (all)`, place (not the old preset place).
 - Left alone: `[07] Player buffs, short`, tower (a member is not on the one before it).
 
-**SmokeTest** (20 containers, 15 changed; containerOrder refilled to 4,5,6,7,8,9,12,11,10,13,14,15,16,17,18,19,20,21,22,23).
+**SmokeTest** (20 containers, 16 changed; containerOrder refilled to 4,5,6,7,8,9,12,11,10,13,14,15,16,17,18,19,20,21,22,23).
 
 | id | before: name | slot | fill | width | head place | after: name | slot | fill | width | head place |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -322,16 +346,16 @@ Reading it against the rule (section 4):
 | 9 | [06] Raid cooldowns | 3@7 | (text) | - | - | [06] Raid cooldowns | 3@7 | (text) | - | - |
 | 10 | [07] Player buffs, short | 1@10 | gray | 266 | CENTER -340,-170 | **[09] Player buffs, short** | **3@12** | **blue** | **240** | **-** |
 | 11 | [08] Player cooldowns | 2@10 | blue | 266 | - | [08] Player cooldowns | **2@12** | **tan** | **240** | - |
-| 12 | [09] Player special (mine) | 3@10 | blue | 266 | - | **[07] Player special (mine)** | **1@12** | blue | **240** | **CENTER -340,-170** |
+| 12 | [09] Player special (mine) | 3@10 | blue | 266 | - | **[07] Player special (mine)** | **1@12** | **#393939** | **240** | **CENTER -340,-170** |
 | 13 | [11] Target debuffs (mine) | 2@19 | dispel | 266 | - | [11] Target debuffs (mine) | 2@19 | dispel | **240** | - |
 | 14 | [12] Target buffs (mine) | 3@19 | blue | 266 | - | [12] Target buffs (mine) | 3@19 | blue | **240** | - |
 | 15 | [13] Target crowd control | 4@19 | orange | 266 | - | [13] Target crowd control | 4@19 | orange | **240** | - |
 | 16 | [14] Target cooldowns, players | 5@19 | tan | 266 | - | [14] Target cooldowns, players | 5@19 | tan | **240** | - |
 | 17 | [15] Target cooldowns, NPCs | 6@19 | blue | 266 | - | [15] Target cooldowns, NPCs | 6@19 | **tan** | **240** | - |
 | 18 | [15] Target stealable | 7@19 | blue | 266 | - | [15] Target stealable | 7@19 | blue | 266 | - |
-| 19 | [10] Target special (mine) | 1@19 | gray | 266 | CENTER 340,-170 | [10] Target special (mine) | 1@19 | gray | **240** | CENTER 340,-170 |
-| 20 | [17] Target debuffs (all) | 1@20 | (icons) | - | BOTTOMLEFT 589,-822 | [17] Target debuffs (all) | 1@20 | (icons) | - | **BOTTOMLEFT 629,-822** |
-| 21 | [18] Target buffs (all) | 2@20 | (icons) | - | - | [18] Target buffs (all) | 2@20 | (icons) | - | - |
+| 19 | [10] Target special (mine) | 1@19 | gray | 266 | CENTER 340,-170 | [10] Target special (mine) | 1@19 | **#393939** | **240** | CENTER 340,-170 |
+| 20 | [17] Target debuffs (all) | 1@20 | (icons) | - | BOTTOMLEFT 589,-822 | [17] Target debuffs (all) | **2@21** | (icons) | - | **-** |
+| 21 | [18] Target buffs (all) | 2@20 | (icons) | - | - | [18] Target buffs (all) | **1@21** | (icons) | - | **TOPLEFT 629,-774** |
 | 22 | [19] Focus debuffs (mine) | 1@22 | dispel | 267 | BOTTOMLEFT 589,-611 | [19] Focus debuffs (mine) | 1@22 | dispel | **240** | **BOTTOMLEFT 629,-611** |
 | 23 | [20] Focus buffs (mine) | 2@22 | blue | 267 | - | [20] Focus buffs (mine) | 2@22 | blue | **240** | - |
 
@@ -363,7 +387,7 @@ Reading it against the rule (section 4):
 | 2 | [02] Weapon enchants | 2@1 | purple | 266 | - | [02] Weapon enchants | 2@1 | purple | **240** | - |
 | 3 | [03] Player debuffs (all) | 2@1 | dispel | 267 | - | [03] Player debuffs (all) | 2@1 | dispel | **240** | - |
 
-**SmokeTest5** (20 containers, 16 changed; containerOrder refilled to 4,5,6,7,8,9,12,11,10,13,16,17,18,14,15,19,20,21,22,23).
+**SmokeTest5** (20 containers, 17 changed; containerOrder refilled to 4,5,6,7,8,9,12,11,10,13,16,17,18,14,15,19,20,21,22,23).
 
 | id | before: name | slot | fill | width | head place | after: name | slot | fill | width | head place |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -375,16 +399,16 @@ Reading it against the rule (section 4):
 | 9 | [06] Raid cooldowns | 3@7 | (text) | - | - | [06] Raid cooldowns | 3@7 | (text) | - | - |
 | 10 | [07] Player buffs, short | 1@10 | gray | 266 | CENTER -340,-170 | **[09] Player buffs, short** | **3@12** | **blue** | **240** | **-** |
 | 11 | [08] Player cooldowns | 2@10 | blue | 266 | - | [08] Player cooldowns | **2@12** | **tan** | **240** | - |
-| 12 | [09] Player special (mine) | 3@10 | blue | 266 | - | **[07] Player special (mine)** | **1@12** | blue | **240** | **CENTER -340,-170** |
-| 13 | [10] Target special (mine) | 1@13 | gray | 266 | CENTER 340,-170 | [10] Target special (mine) | 1@13 | gray | **240** | CENTER 340,-170 |
+| 12 | [09] Player special (mine) | 3@10 | blue | 266 | - | **[07] Player special (mine)** | **1@12** | **#393939** | **240** | **CENTER -340,-170** |
+| 13 | [10] Target special (mine) | 1@13 | gray | 266 | CENTER 340,-170 | [10] Target special (mine) | 1@13 | **#393939** | **240** | CENTER 340,-170 |
 | 14 | [11] Target debuffs (mine) | 2@13 | dispel | 266 | - | **[14] Target debuffs (mine)** | **5@13** | dispel | **240** | - |
 | 15 | [12] Target buffs (mine) | 3@13 | blue | 266 | - | **[15] Target buffs (mine)** | **6@13** | blue | **240** | - |
 | 16 | [13] Target crowd control | 4@13 | orange | 266 | - | **[11] Target crowd control** | **2@13** | orange | **240** | - |
 | 17 | [14] Target cooldowns, players | 5@13 | tan | 266 | - | **[12] Target cooldowns, players** | **3@13** | tan | **240** | - |
 | 18 | [15] Target cooldowns, NPCs | 6@13 | blue | 266 | - | **[13] Target cooldowns, NPCs** | **4@13** | **tan** | **240** | - |
 | 19 | [16] Target stealable | 7@13 | blue | 266 | - | [16] Target stealable | 7@13 | blue | **240** | - |
-| 20 | [17] Target debuffs (all) | 1@20 | (icons) | - | BOTTOMLEFT 589,-822 | [17] Target debuffs (all) | 1@20 | (icons) | - | **BOTTOMLEFT 629,-822** |
-| 21 | [18] Target buffs (all) | 2@20 | (icons) | - | - | [18] Target buffs (all) | 2@20 | (icons) | - | - |
+| 20 | [17] Target debuffs (all) | 1@20 | (icons) | - | BOTTOMLEFT 589,-822 | [17] Target debuffs (all) | **2@21** | (icons) | - | **-** |
+| 21 | [18] Target buffs (all) | 2@20 | (icons) | - | - | [18] Target buffs (all) | **1@21** | (icons) | - | **TOPLEFT 629,-774** |
 | 22 | [19] Focus debuffs (mine) | 1@22 | dispel | 267 | BOTTOMLEFT 589,-611 | [19] Focus debuffs (mine) | 1@22 | dispel | **240** | **BOTTOMLEFT 629,-611** |
 | 23 | [20] Focus buffs (mine) | 2@22 | blue | 267 | - | [20] Focus buffs (mine) | 2@22 | blue | **240** | - |
 

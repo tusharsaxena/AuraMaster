@@ -198,7 +198,20 @@ local function sampleSpans(env, mocks, name, look, W, H, unlocked)
     local specs, p = env.PresetData.Build(name, look, W, H), env.db.profile
     assertEqual(#p.containerOrder, #specs, "one container per spec, in creation order")
     local spanOf, out, each = {}, {}, {}
-    for i, id in ipairs(p.containerOrder) do
+    -- Parents first: since the owner's second 2026-11-23 change [17] hangs from [18], created after it.
+    local at, seq, done = {}, {}, {}
+    for i, id in ipairs(p.containerOrder) do at[id] = i end
+    local function visit(i)
+        if done[i] then return end
+        done[i] = true
+        local c = p.containers[p.containerOrder[i]]
+        local parent = (c.attach.mode == "container") and at[tonumber(c.attach.container)]
+        if parent then visit(parent) end
+        seq[#seq + 1] = i
+    end
+    for i = 1, #p.containerOrder do visit(i) end
+    for _, i in ipairs(seq) do
+        local id = p.containerOrder[i]
         local c = p.containers[id]
         local extent = env.Preview.Extent({ Cfg = function() return c end, anchor = mocks.CreateFrame("Frame") })
         local parent = (c.attach.mode == "container") and spanOf[tonumber(c.attach.container)]

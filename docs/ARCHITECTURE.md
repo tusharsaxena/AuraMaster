@@ -209,7 +209,11 @@ where the player has not changed it.
   at 1080 tall. Where the scale is under 1 the columns overlap (`docs/known-limitations.md`). The
   player tower's head is now Player special (mine), [07]; the target tower's order is Target special
   (mine), crowd control, cooldowns players, cooldowns NPCs, debuffs, buffs, stealable, [10] to [16];
-  Intermediate's player and target heads are its cooldowns.
+  Intermediate's player and target heads are its cooldowns. The far pair (the owner's second change
+  that day) is headed by [18] Target buffs (all), placed by its top left `STACKS.far.lift` (48) over
+  the far base, and [17] Target debuffs (all) hangs under it, TOPLEFT on BOTTOMLEFT, both growing
+  down; a TIERS entry's `under` names the later head, and `P.Realize` links that forward reference
+  through the consecutive ids both writers hand out, refusing a writer that breaks them.
 - **Names and the bar look** (spec section 17.3 and 17.4). `Build` writes `[n] ` in front of each
   role's localized name, `n` its index in the tier's list in two digits (`[01]`, so a name sort keeps it), so creation order (`containerOrder`) is
   the numbering: each tier lists its roles in the owner's order (advanced-source.md's brackets), a

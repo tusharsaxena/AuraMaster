@@ -966,7 +966,11 @@ The stamp follows savedvariables-§1 as ruled at WowAddonStandards v2.65.0:
   nothing else attached to any of them; and a stack head still placed on the screen exactly where the
   v22 builder's own arithmetic (frozen in the file) put it on this parent moves to where a fresh apply
   puts it now (`NS.PresetData.HeadPlace`; the focus and far heads 589 to 629 on the owner's screen),
-  before the restack, so a tower's new head takes that place. A restacked tower's slots keep their `attach` and `position`
+  before the restack, so a tower's new head takes that place; and the far pair (Advanced's [17]
+  Target debuffs (all) on the screen with [18] Target buffs (all) hung on it, both growing up) turns
+  round, [18] placed where a fresh apply puts it and [17] hung under it TOPLEFT on BOTTOMLEFT, both
+  growing down, only while both are there once, [17] at the v22 place, [18] on it by the v22 points,
+  and nothing else hangs from either. A restacked tower's slots keep their `attach` and `position`
   (the head's place, each member's points and offsets), the roles move between them with their ids,
   spells and settings, `name` takes the new number, and `containerOrder` is refilled where it held the
   chain in order. An untouched seed (`presets.seedPrint`) is re-recorded. The old names, colors and

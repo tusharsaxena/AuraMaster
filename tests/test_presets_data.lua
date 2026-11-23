@@ -15,8 +15,9 @@ local NS = T.NS
 local NAMES = { "empty", "simple", "intermediate", "advanced", "healer" }
 local CUSTOM = { SPECIAL_PLAYER = true, SPECIAL_TARGET = true }
 -- The side stacks, which grow up from their base (spec section 15), the focus stack among them (spec
--- section 16).
-local UP = { left = true, right = true, far = true, focus = true }
+-- section 16). The far pair grows down from [18] Target buffs (all)'s top since the owner's second
+-- 2026-11-23 change ("presets data: the far pair hangs Target debuffs (all) under Target buffs (all)").
+local UP = { left = true, right = true, focus = true }
 
 -- THE OWNER'S SMOKETEST BASELINE (their WoW Forever SmokeTest profile, 2026-11-17, on a parent 1200
 -- units tall, in reference units x 0.9): the corner, player and target heads placed by their middle
@@ -783,7 +784,10 @@ test("presets: members chain", function()
                 assertTrue(a.mode ~= "frame", name .. " #" .. i .. ": never a frame")
                 assertTrue(a.frame == nil or a.frame == "", name .. " #" .. i .. ": no frame name")
                 local beside = P.STACKS[spec.stack].beside
-                if not last[spec.stack] and beside and last[beside] then
+                if spec.stack == "far" then
+                    -- The far pair, [17] under [18]: tests/test_presets_cluster.lua's own case.
+                    assertTrue(spec.role == "ticoD" or spec.role == "ticoB", name .. " #" .. i)
+                elseif not last[spec.stack] and beside and last[beside] then
                     -- Player debuffs (all) joins Player buffs (all)'s left side (spec section 17).
                     assertEqual(spec.role, "pdebuffs", name .. " #" .. i)
                     assertEqual(specs[spec.attachTo].role, "pbuffs", name .. " #" .. i .. " joins Player buffs")

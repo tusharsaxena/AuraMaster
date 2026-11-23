@@ -3477,7 +3477,9 @@ cooldowns** (tan, Target cooldowns, players' color), **[07] Player special (mine
 bottom, its title bar under its bars as before. The target stack right of center, top to bottom:
 **[15] Target buffs (mine)** (blue), **[14] Target debuffs (mine)** (dispel colors), **[13] Target
 cooldowns, NPCs** (tan), **[12] Target cooldowns, players** (tan), **[11] Target crowd control**
-(orange), **[10] Target special (mine)** (#393939, the same dark gray) at the bottom. Every bar 240 wide (hover the edges in
+(orange), **[10] Target special (mine)** (#393939, the same dark gray) at the bottom. At the bottom right, **[18] Target buffs (all)** above **[17] Target debuffs (all)**, as before;
+in unlock mode **[17]** → Layout reads attached to **[18]**, its Top left to the Bottom left, and
+**[18]** placed on the screen. Every bar 240 wide (hover the edges in
 unlock mode, or Bars → Width reads 240), the same height as before. Pick **Intermediate** → its player
 stack: **[05] Player buffs, short** (blue) over **[04] Player cooldowns** (tan); its target stack:
 **[07] Target debuffs (mine)** over **[06] Target cooldowns** (tan). Pick **Healer** → **[05] Player
@@ -3490,7 +3492,9 @@ error. Result:
 Containers → the list reads [01] to [20] in order, [07] Player special (mine), [08] Player cooldowns,
 [09] Player buffs, short, [10] Target special (mine), [11] Target crowd control, [12] Target
 cooldowns, players, [13] Target cooldowns, NPCs, [14] Target debuffs (mine), [15] Target buffs (mine),
-[16] Target stealable (off). **[08] Player cooldowns** → Layout → attached to **[07]**; **[09]** to
+[16] Target stealable (off), [17] Target debuffs (all), [18] Target buffs (all). **[17]** → Layout →
+attached to **[18]**, Top left to Bottom left, flush; **[18]** on the screen; add debuffs and buffs
+on a target dummy → [18] grows down and pushes [17] down, nothing overlaps. **[08] Player cooldowns** → Layout → attached to **[07]**; **[09]** to
 **[08]**; **[11]** to **[10]**, and up the target tower to **[16]** on **[15]**. Bars → Width 240 on
 every bars container. `/reload` → the same. On a screen other than 1920 x 1080 (or at another UI
 scale) the bars are still 240 wide and the stacks still sit where the screen puts them; the focus and
@@ -3501,9 +3505,10 @@ a width other than 240, or a Lua error. Result:
 **PRESETS-48. An existing Advanced profile after the upgrade (schema v23). Client: Retail.** On the
 SmokeTest profile (built by Advanced before this change and not rearranged since), log in on the new
 build → no Lua error; the player tower now reads, top to bottom, [09] Player buffs, short (blue),
-[08] Player cooldowns (tan), [07] Player special (mine), standing where the tower stood (its bottom
+[08] Player cooldowns (tan), [07] Player special (mine) (#393939), standing where the tower stood (its bottom
 bar where [07] Player buffs, short was); the target tower [15] Target buffs (mine) down to [10]
-Target special (mine), [13] Target cooldowns, NPCs tan; every preset bar 240 wide where it was 266
+Target special (mine) (#393939), [13] Target cooldowns, NPCs tan; the far pair turned round, [18]
+Target buffs (all) on the screen where its top was and [17] Target debuffs (all) under it; every preset bar 240 wide where it was 266
 or 267; the focus and far stacks' bottom containers moved right onto Player debuffs (all)'s left
 edge (589 to 629 on a 1200-tall UI), where you had not moved them. Each container kept its spells: open **[09] Player buffs, short** → its whitelist and filters
 are the ones Player buffs, short had. A container you had recolored, resized or moved off its tower
@@ -3522,7 +3527,9 @@ attached it to). **DefaultBackupv2** (rearranged by hand): its order and numbers
 Player cooldowns turns tan. **SmokeTest** (Target stealable renamed [15]): the player tower
 restacks, the target tower keeps its order and numbers, [15] Target cooldowns, NPCs turns tan, the
 widths go to 240 but Target stealable's, and its focus and far stacks move onto Player debuffs (all)'s
-left edge (589 to 629); in Default they hang from the frames you picked and stay. Switch through **SmokeTest2** to **SmokeTest5** → each
+left edge (589 to 629), [10] Target special (mine) and [07] Player special (mine) #393939, and the far
+pair turns round as PRESETS-48 says; in Default they hang from the frames you picked and stay, as
+does Default's far pair. Switch through **SmokeTest2** to **SmokeTest5** → each
 restacked, recolored and resized as Appendix A of the restack spec lists. Fail: any difference from
 that appendix, or a Lua error. Result:
 
