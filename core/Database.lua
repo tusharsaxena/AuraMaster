@@ -2,7 +2,8 @@ local _, NS = ...
 
 -- core/Database.lua — AceDB, the schema migration runner, and the pure data helpers over the
 -- container registry. Called from core/AuraMaster.lua's OnInitialize and headlessly by the harness.
--- The step bodies the ladder runs (Database.MigrateV2 .. MigrateV20, FollowSkin, RestoreOwnColors) are core/Database_Migrations.lua.
+-- The step bodies the ladder runs (Database.MigrateV2 .. MigrateV20, FollowSkin, RestoreOwnColors) are core/Database_Migrations.lua;
+-- v23's and v24's (RestackPresets, TurnFarPair) are core/Database_PresetRestack.lua.
 --
 -- NOTHING HERE TOUCHES A FRAME. The registry's CRUD with its messages and live instances is
 -- modules/ContainerManager.lua; this file only knows what a container looks like on disk.
@@ -560,6 +561,31 @@ local SCHEMA_STEPS = {
             local n = Database.RestoreOwnColors(p)
             if n > 0 and NS.DebugLog then
                 NS.DebugLog.DebugAtEnable("Migrate", "v22 profile '%s': %s color(s) back off the skin", name, n)
+            end
+        end)
+    end },
+    { to = 23, apply = function(db)
+        -- The owner's 2026-11-23 preset restack, recolor and 240-wide bars, carried into what an older
+        -- preset wrote and the player has not changed: Database.RestackPresets. It reads the parent's
+        -- size for the widths the old builder wrote on it, as the first-run seeding does.
+        local W, H
+        if NS.Presets and NS.Presets.ParentSize then W, H = NS.Presets.ParentSize() end
+        eachProfile(db, function(p, name)
+            local n, notes = Database.RestackPresets(p, W, H)
+            if (n > 0 or #notes > 0) and NS.DebugLog then
+                NS.DebugLog.DebugAtEnable("Migrate", "v23 profile '%s': %s preset field(s) restacked, recolored or resized, %s left as the player set them", name, n, #notes)
+            end
+        end)
+    end },
+    { to = 24, apply = function(db)
+        -- The owner's second 2026-11-23 change (the special roles' #393939, the far pair turned
+        -- round), its own step because a client may already have stamped v23: Database.TurnFarPair.
+        local W, H
+        if NS.Presets and NS.Presets.ParentSize then W, H = NS.Presets.ParentSize() end
+        eachProfile(db, function(p, name)
+            local n, notes = Database.TurnFarPair(p, W, H)
+            if (n > 0 or #notes > 0) and NS.DebugLog then
+                NS.DebugLog.DebugAtEnable("Migrate", "v24 profile '%s': %s preset field(s) recolored or re-anchored, %s left as the player set them", name, n, #notes)
             end
         end)
     end },

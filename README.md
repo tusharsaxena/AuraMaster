@@ -62,7 +62,9 @@ fill yourself) or Healer (9, with your heals and what you can dispel on your tar
 bars or as icons, placed for your screen size and clear of your action bars and unit frames. Picking
 one shows it on your real screen, filled with sample auras, and nothing is saved until you press
 Apply: close the window, press Escape, leave the tab or get pulled into combat and your own
-containers come back. Each container's name starts with a number, `[01]`, `[02]` and so on, so
+containers come back. Every bar is 240 wide whatever your screen size; only where the stacks sit
+follows it. When an update rearranges a preset, the containers you made from it follow, except for
+anything you've changed yourself. Each container's name starts with a number, `[01]`, `[02]` and so on, so
 they're easy to tell apart and sort, and closing the picker reminds you in chat that `/am unlock`
 lets you move them. They live on General → **Presets**, where you also choose whether a
 preset replaces your containers or goes next to them. `/am preset` opens the picker again, and

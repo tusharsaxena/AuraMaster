@@ -32,7 +32,7 @@ check's number is not reused. Checks with no recorded pass, and checks new or co
 | SKIN-1 to SKIN-58 | Skins | The skinning rollout: the one-time HUD reset under Ka0s Default, Ka0s Default otherwise unchanged, the Skin tab, each skin on the HUD, the unlock furniture, the settings pages and the tool windows, other addons stock, the font and texture companions and overrides, combat, EllesmereUI on, off and back, the copy, profiles, tooltips and popups, the first-run skin picker; the library follow-ups (each skin's HUD face, Ignore fonts on the HUD, the picker's title, the strings newly in the skin's face); the skin fonts run (the Font outline, From skin flags, `/am skin`, width parity, the HUD size scale, the own faces and glow back, the strips' re-fit); the LibKa0s v1.108.0 re-vendor (the strip edge on a switch, the spark's row); the six colors kept off the skin and v21's move undone (owner 2026-11-22) |
 | DEGRADED-1 | Library-absent install | The launcher libraries missing |
 | LOC-1 to LOC-2 | Non-English client | Spell names from the client, adding a spell by its localized name |
-| PRESETS-1 to PRESETS-44 | Presets | Each client: a new profile's Simple seed at the real screen size, the first-run preset picker before the skin picker (Escape, Not now, Empty), each preset in each style, Apply in Replace and Add, Stop preview, leaving the tab, closing the panel, a `/reload`, a profile switch and combat mid-preview, `/am preset` and its confirm, another Ka0s addon's skin picker, the cost of a swap, an existing profile after schema v19; the owner's round 1: the side stacks growing up, the corner group's place, the call-outs' look and place, the picker on the skin picker's spot with the call-outs clear of it, the side stacks' lower base, opened unlocked, its lock and test buttons, Apply locking, Not now putting the lock back; the owner's round 2: the call-outs' glow, the focus stack of its own and its clearance from the far stack, Player debuffs lined up with the focus column, the Presets tab on the General page; the owner's round 3: the right-hand cluster lined up, Player debuffs attached to Player buffs, equal bar widths, debuff bars colored by dispel type over a 50% background, the numbered names, the unlock hint in chat; the owner's round 4: the player stack nearer the center, the target cluster mirroring it, the call-outs at the picker's top, the picker once per account for existing players and never twice for a new one; the owner's round 5: every pick unlocking and turning test mode on, Empty previewing an empty screen; the SmokeTest baseline (Advanced), an icon row's side follower; the picker's footer on the library's (LibKa0s#89); the picker's title marks, settings and close (LibKa0s#86) |
+| PRESETS-1 to PRESETS-50 | Presets | Each client: a new profile's Simple seed at the real screen size, the first-run preset picker before the skin picker (Escape, Not now, Empty), each preset in each style, Apply in Replace and Add, Stop preview, leaving the tab, closing the panel, a `/reload`, a profile switch and combat mid-preview, `/am preset` and its confirm, another Ka0s addon's skin picker, the cost of a swap, an existing profile after schema v19; the owner's round 1: the side stacks growing up, the corner group's place, the call-outs' look and place, the picker on the skin picker's spot with the call-outs clear of it, the side stacks' lower base, opened unlocked, its lock and test buttons, Apply locking, Not now putting the lock back; the owner's round 2: the call-outs' glow, the focus stack of its own and its clearance from the far stack, Player debuffs lined up with the focus column, the Presets tab on the General page; the owner's round 3: the right-hand cluster lined up, Player debuffs attached to Player buffs, equal bar widths, debuff bars colored by dispel type over a 50% background, the numbered names, the unlock hint in chat; the owner's round 4: the player stack nearer the center, the target cluster mirroring it, the call-outs at the picker's top, the picker once per account for existing players and never twice for a new one; the owner's round 5: every pick unlocking and turning test mode on, Empty previewing an empty screen; the SmokeTest baseline (Advanced), an icon row's side follower; the picker's footer on the library's (LibKa0s#89); the picker's title marks, settings and close (LibKa0s#86); the owner's 2026-11-23 restack: the towers' new order and colors in the preview, a fresh Advanced and Intermediate, bars 240 on every screen, an existing profile after schema v23 on each client |
 | FOREVER-1 to FOREVER-15 | WoW Forever | Each check names its client: the AddOns list and a clean load on Forever, the default skin per client, a rank-1 aura in a buff container, Forever's own spell lists, each Blizzard token and flag row measured on Forever, the gate on an empty category, hiding the Blizzard buff and debuff frames, weapon enchants, a typed cast id rewritten, and the Retail regression |
 
 ## Before you start
@@ -3468,6 +3468,77 @@ skin picker is offered then, and a **Not now** close of the picker still offers 
 take each skin's rest and hover colors. Fail: a blank gear, the gear right of the X, the settings
 opening under a picker still up, the skin picker covering the settings the gear opened, a second
 unlock hint, or a Lua error. Result:
+
+
+**PRESETS-46. The restacked towers in the preview (the owner's 2026-11-23 feedback). Client: Retail,
+then WoW Forever.** `/am preset`, pick **Advanced** in **Bars** → the player stack left of center, top
+to bottom: **[09] Player buffs, short** (blue, as Player cooldowns' bars were), **[08] Player
+cooldowns** (tan, Target cooldowns, players' color), **[07] Player special (mine)** (#393939, a dark gray) at the
+bottom, its title bar under its bars as before. The target stack right of center, top to bottom:
+**[15] Target buffs (mine)** (blue), **[14] Target debuffs (mine)** (dispel colors), **[13] Target
+cooldowns, NPCs** (tan), **[12] Target cooldowns, players** (tan), **[11] Target crowd control**
+(orange), **[10] Target special (mine)** (#393939, the same dark gray) at the bottom. At the bottom right, **[18] Target buffs (all)** above **[17] Target debuffs (all)**, as before;
+in unlock mode **[17]** → Layout reads attached to **[18]**, its Top left to the Bottom left, and
+**[18]** placed on the screen. Every bar 240 wide (hover the edges in
+unlock mode, or Bars → Width reads 240), the same height as before. Pick **Intermediate** → its player
+stack: **[05] Player buffs, short** (blue) over **[04] Player cooldowns** (tan); its target stack:
+**[07] Target debuffs (mine)** over **[06] Target cooldowns** (tan). Pick **Healer** → **[05] Player
+cooldowns** tan. Close with **Not now** → your own containers come back. Fail: a tower in the old
+order, a gray Player buffs, short, a blue cooldown bar, a bar wider or narrower than 240, or a Lua
+error. Result:
+
+**PRESETS-47. A fresh Advanced apply. Client: Retail, then WoW Forever.** On a spare profile,
+`/am preset advanced bars` → confirm → the twenty containers as PRESETS-46 shows them, now stored:
+Containers → the list reads [01] to [20] in order, [07] Player special (mine), [08] Player cooldowns,
+[09] Player buffs, short, [10] Target special (mine), [11] Target crowd control, [12] Target
+cooldowns, players, [13] Target cooldowns, NPCs, [14] Target debuffs (mine), [15] Target buffs (mine),
+[16] Target stealable (off), [17] Target debuffs (all), [18] Target buffs (all). **[17]** → Layout →
+attached to **[18]**, Top left to Bottom left, flush; **[18]** on the screen; add debuffs and buffs
+on a target dummy → [18] grows down and pushes [17] down, nothing overlaps. **[08] Player cooldowns** → Layout → attached to **[07]**; **[09]** to
+**[08]**; **[11]** to **[10]**, and up the target tower to **[16]** on **[15]**. Bars → Width 240 on
+every bars container. `/reload` → the same. On a screen other than 1920 x 1080 (or at another UI
+scale) the bars are still 240 wide and the stacks still sit where the screen puts them; the focus and
+far stacks line up with Player debuffs (all)'s left edge (this supersedes PRESETS-42's 266-wide bars
+and its focus and far stacks at 589). Fail: a wrong order, a member attached to the wrong container,
+a width other than 240, or a Lua error. Result:
+
+**PRESETS-48. An existing Advanced profile after the upgrade (schema v23 and v24). Client: Retail.** On the
+SmokeTest profile (built by Advanced before this change and not rearranged since), log in on the new
+build → no Lua error; the player tower now reads, top to bottom, [09] Player buffs, short (blue),
+[08] Player cooldowns (tan), [07] Player special (mine) (#393939), standing where the tower stood (its bottom
+bar where [07] Player buffs, short was); the target tower [15] Target buffs (mine) down to [10]
+Target special (mine) (#393939), [13] Target cooldowns, NPCs tan; the far pair turned round, [18]
+Target buffs (all) on the screen where its top was and [17] Target debuffs (all) under it; every preset bar 240 wide where it was 266
+or 267; the focus and far stacks' bottom containers moved right onto Player debuffs (all)'s left
+edge (589 to 629 on a 1200-tall UI), where you had not moved them. Each container kept its spells: open **[09] Player buffs, short** → its whitelist and filters
+are the ones Player buffs, short had. A container you had recolored, resized or moved off its tower
+keeps what you gave it (`/am debug on`, `/reload`: the `[Migrate] v23 profile` and `v24 profile` lines count what was
+left as you set it). The hand-built Default profile is unchanged. Fail: a container that lost its
+spells or settings, a tower left half-restacked, a changed field you had set yourself, or a Lua
+error. Result:
+
+**PRESETS-49. An existing profile after the upgrade (schema v23 and v24). Client: WoW Forever.** Also on a client that ran the
+first v23 build (stamped 23): the special colors and the far pair still change, from v24. Log in on the
+new build with the Forever account → no Lua error. **Default** (the owner's, Player special (mine)'s
+own dark color and the 240 widths set by hand): the towers restacked as PRESETS-48, Player special
+(mine) keeps its own dark color (already #393939), [10] Target special (mine) turns #393939, [08] Player cooldowns and [13] Target cooldowns, NPCs tan, [09]
+Player buffs, short blue, Target stealable 240, every other width as it was; the player tower's head,
+now [07] Player special (mine), is anchored where [07] Player buffs, short was (the frame you
+attached it to). **DefaultBackupv2** (rearranged by hand): its order and numbers stay, only [08]
+Player cooldowns turns tan. **SmokeTest** (Target stealable renamed [15]): the player tower
+restacks, the target tower keeps its order and numbers, [15] Target cooldowns, NPCs turns tan, the
+widths go to 240 but Target stealable's, and its focus and far stacks move onto Player debuffs (all)'s
+left edge (589 to 629), [10] Target special (mine) and [07] Player special (mine) #393939, and the far
+pair turns round as PRESETS-48 says; in Default they hang from the frames you picked and stay, as
+does Default's far pair. Switch through **SmokeTest2** to **SmokeTest5** → each
+restacked, recolored and resized as Appendix A of the restack spec lists. Fail: any difference from
+that appendix, or a Lua error. Result:
+
+**PRESETS-50. A preset applied over an upgraded profile. Client: Retail, then WoW Forever.** On the
+profile PRESETS-48 or PRESETS-49 upgraded, `/am preset advanced bars add` → confirm → twenty more
+containers, each named with a " (2)" suffix, in the new order and colors; `/reload` → the upgrade
+does not run again and none of the twenty changes. Fail: the step touching the added containers or
+the upgraded ones a second time, or a Lua error. Result:
 
 ## WoW Forever
 

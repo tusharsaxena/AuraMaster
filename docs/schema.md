@@ -6,7 +6,7 @@ Two SavedVariables globals (`AuraMasterDB`, `AuraMasterPerfDB`, `AuraMaster.toc:
 
 ## `AuraMasterDB` — the AceDB database
 
-Created by `NS.InitDB` (`core/Database.lua:291`) as `AceDB:New("AuraMasterDB", NS.defaults, true)`:
+Created by `NS.InitDB` (`core/Database.lua:292`) as `AceDB:New("AuraMasterDB", NS.defaults, true)`:
 the third argument puts every character on the shared `Default` profile until the player chooses
 otherwise (`docs/profiles.md`).
 
@@ -626,7 +626,7 @@ compare with the rest of the seam.
 
 ## Migration path
 
-The account-wide ladder is `SCHEMA_STEPS` in `core/Database.lua:362`: one `{ to = N, apply = fn }`
+The account-wide ladder is `SCHEMA_STEPS` in `core/Database.lua:363`: one `{ to = N, apply = fn }`
 row per stored-shape change, applied in order by `NS.RunMigrations` while
 `global.schemaVersion < to`, each logging one `[Migrate]` debug line. The ladder runs at
 `OnInitialize`, before logging can be on, so its summary lines go through the console's at-enable
@@ -951,6 +951,36 @@ The stamp follows savedvariables-§1 as ruled at WowAddonStandards v2.65.0:
   beside the template's color (absent, or every channel equal, a missing channel the template's) goes
   off, and the record is cleared, so it runs once. A companion on beside a color of its own stays; a
   profile without the record is untouched (`tests/test_defaults_v22.lua`).
+- **Schema v23** (`Database.RestackPresets`, `core/Database_PresetRestack.lua`, the owner's 2026-11-23
+  preset feedback) runs over **every** stored profile on the parent's size (`Presets.ParentSize`), and
+  logs one `[Migrate] v23 profile '<name>'` line for a profile it changed or noted. A container is a
+  preset role only by the exact name the v22 builder wrote (`[NN] <name>`), and a field changes only
+  while it still holds that builder's value: Player buffs, short's fill gray to the template's blue
+  and the cooldown roles' (Player cooldowns in every preset, Target cooldowns, NPCs, Intermediate's
+  Target cooldowns) the template's blue to tan, only while One color, off the skin and the class color,
+  in the old color exactly; a preset bar's `bars.width` to 240 only while it is `floor` or `ceil` of 240
+  at the old horizontal scale (`min(H / 1080, W / 1693.6)`; 1 where the parent cannot be read); and a
+  tower's order and numbers (Advanced's player and target towers, Intermediate's two) only while its
+  whole old chain is there, each role once by name, each member's `attach` on the one before it,
+  nothing else attached to any of them; and a stack head still placed on the screen exactly where the
+  v22 builder's own arithmetic (frozen in the file) put it on this parent moves to where a fresh apply
+  puts it now (`NS.PresetData.HeadPlace`; the focus and far heads 589 to 629 on the owner's screen),
+  before the restack, so a tower's new head takes that place ([17] Target debuffs (all), the far
+  head, to the far column's base as placed since APR-02, frozen: v24 turns that pair round). A restacked tower's slots keep their `attach` and `position`
+  (the head's place, each member's points and offsets), the roles move between them with their ids,
+  spells and settings, `name` takes the new number, and `containerOrder` is refilled where it held the
+  chain in order. An untouched seed (`presets.seedPrint`) is re-recorded. The old names, colors and
+  scale are frozen in the file (`tests/test_database_restack.lua`, against `tests/presets_v22_fixture.lua`).
+  v23 is fixed as it first ran (66a4833): a client may already have stamped it.
+- **Schema v24** (`Database.TurnFarPair`, the same file, the owner's second 2026-11-23 change) runs over
+  **every** stored profile after v23, so a profile from v22 runs both and one a v23 build stamped runs
+  it alone, and logs one `[Migrate] v24 profile '<name>'` line for a profile it changed or noted.
+  Under v23's rule: Player special (mine) (by the name v23 leaves, [07] restacked or [09] where its
+  tower stayed) from the template's blue and [10] Target special (mine) from gray to #393939, by the
+  fill rule; and the far pair, [17] Target debuffs (all) on the screen with [18] Target buffs (all)
+  hung on it by BOTTOMLEFT to TOPLEFT, both growing up, turns round, [18] placed where a fresh apply
+  puts it and [17] hung under it, TOPLEFT on BOTTOMLEFT, both growing down, only while both are there
+  once, [17] at the v22 place or v23's move of it, and nothing else hangs from either.
 - **Migration lesson (batch 10 F7): a step already pushed is never extended again.** A step's
   version stamp is written once per account, so a half added to a step after any build carrying it
   has been pushed never reaches an install that already ran that build: the owner's v9 install
@@ -958,7 +988,7 @@ The stamp follows savedvariables-§1 as ruled at WowAddonStandards v2.65.0:
   While a step exists only in local, unpushed commits it may still grow; once the branch carrying it
   has been pushed, a new stored-shape change takes a new step with the next version, even when the
   earlier step is unreleased.
-- **An additive change needs no step.** `Database.PrepareProfile` (`core/Database.lua:268`) runs after
+- **An additive change needs no step.** `Database.PrepareProfile` (`core/Database.lua:269`) runs after
   the ladder on every `InitDB` and on every profile change: it backfills every stored container from
   the template with `== nil` tests (a stored `false` survives, savedvariables-§5), normalizes string
   ids to numbers, rebuilds `containerOrder` to exactly the ids that exist, raises `nextContainerId`

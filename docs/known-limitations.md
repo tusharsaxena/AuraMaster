@@ -523,6 +523,18 @@ the rest are trade-offs the owner accepted, each marked where it was ruled on. S
   (`tests/test_presets_data.lua`, "presets: placement"). The target column no longer runs under a
   corner column on any ratio. The player can move any stack, or cap a container's auras. Recorded
   2026-11-15 (AM-PR16) for the owner's call.
+- **The 240-wide columns do not fit a screen whose scale is under 1.** Since the owner's 2026-11-23
+  ruling ("dont do dynamic resizing basis screen width"; presets restack spec section 3) a preset's
+  bars are 240 wide on every screen and only the columns' places scale. Where the horizontal scale is
+  under 1 (every 768-tall parent; 4:3 and 5:4 at 1080 tall) the gaps narrow and the widths do not: the
+  target column runs under the call-out block (up to its whole 240 at 1024 x 768) and meets the focus
+  column, the player column reaches further into the block, the focus stack ends 47 from the far stack
+  unlocked (one under twice the snap radius), and a focus drag there can snap to the target column or a
+  call-out. Every head stays on the screen and Player buffs (all) 10 in from the right edge. The
+  measured overlaps are the recorded tables in `tests/test_presets_cluster.lua` and
+  `tests/test_presets_data.lua` (`PS.fits`). The figures below for the call-out block and the focus
+  stack were measured before the change; the tables hold today's. A player on such a screen can move
+  a stack or narrow its bars. Recorded 2026-11-23 for the owner's call.
 - **The player and target columns meet the call-out block.** The call-outs keep the screen's center
   (presets spec section 17). Since the owner's 2026-11-17 SmokeTest baseline the target column
   mirrors the player column 186 right of the center line, each column's middle 306 from it, which

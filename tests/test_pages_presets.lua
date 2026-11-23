@@ -132,7 +132,7 @@ test("presets tab: apply replace confirms and keeps", function()
     assertFalse(NS.Presets.IsPreviewing(), "kept: the snapshot is dropped")
     assertFalse(NS.State.testMode, "test mode off")
     assertEqual(#NS.Database.GetContainers(), 8)
-    assertEqual(NS.Database.GetContainers()[4].name, "[04] " .. NS.L["Player buffs, short"])
+    assertEqual(NS.Database.GetContainers()[4].name, "[04] " .. NS.L["Player cooldowns"])
 end)
 
 test("presets tab: add keeps player containers", function()

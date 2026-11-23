@@ -84,7 +84,10 @@ local FALLBACK_RATIO = 16 / 9
 --- in reference units (0 or less). At its reference place (spec section 18) the target column mirrors
 --- the player column across the center line; where Player buffs (all)'s right edge would then end
 --- nearer the screen's right edge than EDGE_IN (16:9 and narrower), the whole cluster moves left just
---- enough to keep it EDGE_IN in. A width that cannot be read is taken at FALLBACK_RATIO.
+--- enough to keep it EDGE_IN in. A width that cannot be read is taken at FALLBACK_RATIO. Since the
+--- owner's 2026-11-23 feedback a column is as wide on every screen (presets restack spec section 3):
+--- Player buffs' middle is placed by the scale and its half-width is not, so its right edge is
+--- measured that way (identical at 1080 tall, where the scale is 1).
 --- @param parentW number|nil
 --- @param parentH number|nil
 --- @return number
@@ -92,8 +95,9 @@ function P.ClusterShift(parentW, parentH)
     if type(parentW) ~= "number" or parentW ~= parentW or parentW <= 0 then
         parentW = ((P.Scale(parentH) == 1) and P.REF_H or parentH) * FALLBACK_RATIO
     end
-    local half = parentW / (2 * P.ScaleX(parentW, parentH))
-    return math.min(0, half - EDGE_IN - CLUSTER_RIGHT)
+    local corner = P.STACKS.cornerRight
+    local half = (parentW / 2 - EDGE_IN - corner.width / 2) / P.ScaleX(parentW, parentH)
+    return math.min(0, half - (corner.x + corner.width / 2))
 end
 
 -- The two custom categories Advanced creates (spec section 3): empty, for the player to fill. The
@@ -151,8 +155,9 @@ local SIDE_BASE = -740
 local FOCUS_BASE = -550
 -- THE OWNER'S SMOKETEST BASELINE (2026-11-17): their WoW Forever SmokeTest profile, on a parent
 -- 1200 units tall (3440 x 1440 at UI scale 1.2), moved into reference units (x 0.9). Player buffs
--- (all) placed CENTER on CENTER at 992, 490 (CORNER_MID_X, CORNER_MID); Player buffs, short and
--- Target special (mine), the player and target stacks' heads, at -340, -170 and 340, -170 (SIDE_MID,
+-- (all) placed CENTER on CENTER at 992, 490 (CORNER_MID_X, CORNER_MID); the player and target
+-- stacks' heads (Player special (mine) since the 2026-11-23 restack, and Target special (mine)) at
+-- -340, -170 and 340, -170 (SIDE_MID,
 -- the mirror's middle MIRROR + COL_W / 2 from the center line). The far and focus stacks and the
 -- call-outs kept the places this file gave them.
 local SIDE_MID, CORNER_MID, CORNER_MID_X = -153, 441, 892.8
@@ -183,11 +188,15 @@ P.STACKS = {
     cornerRight = { anchor = "CENTER", x = CORNER_RIGHT_X, mid = CORNER_MID, width = COL_W, iconsGrowH = "left",
         cluster = true },
     cornerLeft  = { anchor = "TOP", x = FOCUS_X, width = COL_W, iconsGrowH = "left",
-        beside = "cornerRight", cluster = true },
+        beside = "cornerRight", cluster = true, leftOf = "cornerRight" },
     focus       = { anchor = "TOP", x = FOCUS_X, y = FOCUS_BASE, width = COL_W, iconsGrowH = "left", up = true,
-        cluster = true },
-    far         = { anchor = "TOP", x = FOCUS_X, y = SIDE_BASE, width = COL_W, iconsGrowH = "left", up = true,
-        cluster = true },
+        cluster = true, leftOf = "cornerRight" },
+    -- THE FAR PAIR (the owner's second 2026-11-23 change): [18] Target buffs (all) heads it, on the
+    -- screen by its top left where its top showed (`lift`, two rows of the owner's 24 over the base,
+    -- as the two sample rows filled it; not scaled, as a row is not), and [17] Target debuffs (all)
+    -- hangs under it (`under` in TIERS), so the pair grows down from there.
+    far         = { anchor = "TOP", x = FOCUS_X, y = SIDE_BASE, lift = 48, width = COL_W, iconsGrowH = "left",
+        cluster = true, leftOf = "cornerRight" },
     right       = { anchor = "CENTER", x = TARGET_X, mid = SIDE_MID, width = COL_W, iconsGrowH = "left", up = true,
         cluster = true },
     -- THE CALL-OUT COLUMN, 400 wide (480 before section 17), narrowed so the target column meets it
@@ -214,17 +223,29 @@ do
 end
 
 --- The columns on a `parentW` x `parentH` parent: [stack] = a copy of its P.STACKS entry, every
---- `cluster` column's `x` moved by P.ClusterShift, so the right-hand cluster moves as one.
+--- `cluster` column's `x` moved by P.ClusterShift, so the right-hand cluster moves as one. A `leftOf`
+--- column (Player debuffs', the focus and far stacks') keeps its right edge CORNER_GAP (scaled) left
+--- of that column's left edge as placed: the other column's middle scaled, its width not (presets
+--- restack spec section 3), so Player debuffs and the focus and far stacks share a left edge on every
+--- screen. At 1080 tall (the scale 1) that is its reference place.
 --- @param parentW number|nil
 --- @param parentH number|nil
 --- @return table
 function P.Columns(parentW, parentH)
     local shift, out = P.ClusterShift(parentW, parentH), {}
+    local kx = P.ScaleX(parentW, parentH)
     for key, stack in pairs(P.STACKS) do
         local c = {}
         for f, v in pairs(stack) do c[f] = v end
         if c.cluster then c.x = c.x + shift end
         out[key] = c
+    end
+    for _, c in pairs(out) do
+        local other = c.leftOf and out[c.leftOf]
+        if other then
+            local otherLeft = (other.x + other.width / 2) * kx - other.width / 2
+            c.x = (otherLeft - P.CORNER_GAP * kx - c.width) / kx
+        end
     end
     return out
 end
@@ -329,14 +350,18 @@ local function calloutLook(color)
         label = { show = false },
     }
 end
--- THE OWNER'S BAR COLORS (their 2026-11-17 SmokeTest baseline): five roles keep Fill > Color by at
--- One color, in a color of their own, so they read apart from the blue buff bars and the
--- dispel-colored debuff bars beside them. They keep their hues in every skin (OVERRIDE, owner U-12 of
--- 2026-11-20; presets spec section 20), so no skin recolors them. `barColor` on a role, written by sizeTo in every preset
--- that has the role, on a bars container alone (an Icons row has no fill).
-local BAR_GRAY = rgb(69 / 255, 69 / 255, 69 / 255)        -- Player buffs, short; Target special (mine)
+-- THE OWNER'S BAR COLORS (their 2026-11-17 SmokeTest baseline, recolored by their 2026-11-23
+-- feedback, presets restack spec section 3): these roles keep Fill > Color by at One color, in a
+-- color of their own, so they read apart from the blue buff bars and the dispel-colored debuff bars
+-- beside them. They keep their hues in every skin (OVERRIDE, owner U-12 of 2026-11-20; presets spec
+-- section 20), so no skin recolors them. `barColor` on a role, written by sizeTo in every preset
+-- that has the role, on a bars container alone (an Icons row has no fill). Player buffs, short left
+-- the gray on 2026-11-23 for the template's blue; every cooldown role took Target cooldowns,
+-- players' tan.
+-- The owner's second 2026-11-23 change: both special roles #393939 (Target special (mine) was 454545).
+local BAR_DARK = rgb(0x39 / 255, 0x39 / 255, 0x39 / 255)  -- Player special (mine); Target special (mine)
 local BAR_ORANGE = rgb(1, 128 / 255, 64 / 255)            -- Target crowd control
-local BAR_TAN = rgb(230 / 255, 204 / 255, 128 / 255)      -- Target cooldowns, players
+local BAR_TAN = rgb(230 / 255, 204 / 255, 128 / 255)      -- Player and target cooldowns
 local BAR_PURPLE = rgb(163 / 255, 53 / 255, 238 / 255)    -- Weapon enchants
 
 -- The owner's three call-out colors.
@@ -378,14 +403,15 @@ local CONTAINERS = {
 
     -- The player stack.
     pshort = { name = L["Player buffs, short"], unit = "player", auraType = "HELPFUL", style = "bars",
-        barColor = BAR_GRAY,
         hide = HIDE_ENCHANTS, filter = MINE_SHORT },
     pcd = { onlyNamed = true, name = L["Player cooldowns"], unit = "player", auraType = "HELPFUL", style = "bars",
+        barColor = BAR_TAN,
         hide = { "SPECIAL_PLAYER", "bigDefensive", "cancelable", "castable", "externals", "groupBuffs",
             "healing", "important", "racials", "stances", "stealable", "support", "uncategorized",
             "weaponEnchants" },
         filter = TIMED_30 },
     pspec = { onlyNamed = true, name = L["Player special (mine)"], unit = "player", auraType = "HELPFUL", style = "bars",
+        barColor = BAR_DARK,
         hide = except({ ALL_BUFFS }, { "SPECIAL_PLAYER", "stances", "utility" }),
         filter = { castBy = "mine" } },
 
@@ -404,12 +430,13 @@ local CONTAINERS = {
             "healing", "important", "racials", "stances", "stealable", "uncategorized", "weaponEnchants" },
         filter = { durationMode = "timed", maxDuration = 30, unitFilter = { kind = "player" }, zones = NO_PVP } },
     tcdn = { onlyNamed = true, name = L["Target cooldowns, NPCs"], unit = "target", auraType = "HELPFUL", style = "bars",
+        barColor = BAR_TAN,
         hide = { "SPECIAL_PLAYER", "activeMitigation", "defensives", "groupBuffs", "healing", "movement",
             "offensiveCDs", "racials", "raidCDs", "stances", "support", "uncategorized", "utility",
             "weaponEnchants" },
         filter = { durationMode = "timed", unitFilter = { kind = "npc" }, zones = NO_PVP } },
     tspec = { onlyNamed = true, name = L["Target special (mine)"], unit = "target", auraType = "HARMFUL", style = "bars",
-        barColor = BAR_GRAY,
+        barColor = BAR_DARK,
         hide = except({ ALL_BUFFS, ALL_DEBUFFS }, { "SPECIAL_TARGET" }),
         filter = { castBy = "mine" } },
     tsteal = { onlyNamed = true, name = L["Target stealable"], unit = "target", auraType = "HELPFUL", style = "bars",
@@ -455,6 +482,7 @@ end
 -- none; the union keeps the wider of the two).
 CONTAINERS.tcd = {
     name = L["Target cooldowns"], unit = "target", auraType = "HELPFUL", style = "bars", onlyNamed = true,
+    barColor = BAR_TAN,   -- both its sources are tan (presets restack spec section 3)
     hide = intersect(CONTAINERS.tcdp.hide, CONTAINERS.tcdn.hide),
     filter = { durationMode = "timed" },
 }
@@ -462,6 +490,7 @@ CONTAINERS.tcd = {
 -- Healer's Player cooldowns: Advanced's, with Healing and Raid cooldowns shown as well (spec 3.1).
 CONTAINERS.pcdHealer = {
     name = CONTAINERS.pcd.name, unit = "player", auraType = "HELPFUL", style = "bars", onlyNamed = true,
+    barColor = BAR_TAN,
     hide = except({ CONTAINERS.pcd.hide }, { "healing", "raidCDs" }),
     filter = TIMED_30,
 }
@@ -474,6 +503,11 @@ CONTAINERS.pcdHealer = {
 -- focus roles at Target and Focus debuffs (mine), Intermediate's Target cooldowns at Target
 -- cooldowns, players). Since the owner's 2026-11-17 baseline Advanced's Target special (mine) is 10,
 -- the target stack's head, nearest the unit frames, and Target stealable (16, stored off) ends it.
+-- THE OWNER'S 2026-11-23 RESTACK (presets restack spec section 3), both towers, top to bottom: Player
+-- buffs, short, Player cooldowns, Player special (mine); Target buffs (mine), Target debuffs (mine),
+-- Target cooldowns, NPCs, Target cooldowns, players, Target crowd control, Target special (mine).
+-- Intermediate's same roles keep that relative order. core/Database_PresetRestack.lua (schema v23)
+-- carries it into a profile an older build wrote, and holds the pre-restack order frozen.
 local SIMPLE = { { "cornerRight", "pbuffs" }, { "cornerRight", "wpn" }, { "cornerLeft", "pdebuffs" } }
 
 --- `SIMPLE` followed by `more`.
@@ -488,16 +522,16 @@ local TIERS = {
     empty = {},
     simple = SIMPLE,
     intermediate = simplePlus({
-        { "left", "pshort" }, { "left", "pcd" },
-        { "right", "tdeb" }, { "right", "tcd" },
+        { "left", "pcd" }, { "left", "pshort" },
+        { "right", "tcd" }, { "right", "tdeb" },
         { "focus", "fdeb" },
     }),
     advanced = simplePlus({
         { "middle", "txtOff" }, { "middle", "txtDef" }, { "middle", "txtRaid" },
-        { "left", "pshort" }, { "left", "pcd" }, { "left", "pspec" },
-        { "right", "tspec" }, { "right", "tdeb" }, { "right", "tbuff" }, { "right", "tcc" },
-        { "right", "tcdp" }, { "right", "tcdn" }, { "right", "tsteal" },
-        { "far", "ticoD" }, { "far", "ticoB" },
+        { "left", "pspec" }, { "left", "pcd" }, { "left", "pshort" },
+        { "right", "tspec" }, { "right", "tcc" }, { "right", "tcdp" }, { "right", "tcdn" },
+        { "right", "tdeb" }, { "right", "tbuff" }, { "right", "tsteal" },
+        { "far", "ticoD", under = "ticoB" }, { "far", "ticoB" },
         { "focus", "fdeb" }, { "focus", "fbuff" },
     }),
     healer = simplePlus({
@@ -609,21 +643,22 @@ local function growthIn(o, stack)
     if stack.up then o.layout.growV = "up" end
 end
 
---- `stack`'s column width at scale `kx`, between its two edges, each rounded as `place` rounds a
---- head's offset.
-local function columnWidth(stack, kx)
-    return round((stack.x + stack.width) * kx) - round(stack.x * kx)
+--- `stack`'s column width: its reference width on every screen, not scaled (the owner's 2026-11-23
+--- feedback, "dont do dynamic resizing basis screen width"; presets restack spec section 3), so a bar
+--- is 240 wide at 768, 1080 and 1440 tall alike. Bar height was never scaled.
+local function columnWidth(stack)
+    return stack.width
 end
 
 --- The Icons variant of a bars role (spec section 3.2): an icon row growing away from the nearest
 --- screen edge, as many icons of about ICON_PX per line as the column fits. Text and icon roles are
 --- unchanged.
-local function toIcons(o, stack, kx)
+local function toIcons(o, stack)
     if o.style ~= "bars" then return end
     o.style = "icons"
     o.layout.axis = "horizontal"
     o.layout.growH = stack.iconsGrowH
-    o.layout.perLine = math.max(1, round(columnWidth(stack, kx) / ICON_PX))
+    o.layout.perLine = math.max(1, round(columnWidth(stack) / ICON_PX))
     o.fillsColumn = true
 end
 
@@ -633,14 +668,13 @@ end
 -- with a `barColor` One color in that color, debuff or buff, its skin and class companions off.
 local BAR_BG_ALPHA = 0.5
 
---- The column width, scaled: a bar's width (an icon is ICON_PX, whatever the column). A
---- text line's stored width is the column too, which stands when Size to fit is off or cannot measure;
---- with it on (the template's) a call-out line is as wide as its content, centered on the center
---- line its head hangs from (place): the line is justified CENTER and its template one piece
---- (calloutLook). The width runs between the column's two edges, each rounded as `place` rounds a
---- head's offset, so a corner column ends on the screen's right edge at any scale.
-local function sizeTo(o, stack, kx, barColor)
-    local w = columnWidth(stack, kx)
+--- The column width (columnWidth, not scaled): a bar's width (an icon is ICON_PX, whatever the
+--- column). A text line's stored width is the column too, which stands when Size to fit is off or
+--- cannot measure; with it on (the template's) a call-out line is as wide as its content, centered on
+--- the center line its head hangs from (place): the line is justified CENTER and its template one
+--- piece (calloutLook).
+local function sizeTo(o, stack, barColor)
+    local w = columnWidth(stack)
     if o.style == "bars" then
         o.bars = { width = w, bgAlpha = BAR_BG_ALPHA, colorMode = (o.auraType == "HARMFUL") and "dispel" or "static" }
         if barColor then
@@ -664,7 +698,9 @@ end
 --- from the left edge. That is the top corner, but for an up stack's head, which sits on the column's
 --- base by its bottom corner. The center stack's head hangs by its TOP from the center line, `top`
 --- units down (calloutLayout), and a `mid` stack's by its middle from the screen's (the owner's
---- 2026-11-17 baseline).
+--- 2026-11-17 baseline). A column's edge it is placed by is where the column's place on the screen
+--- (its left edge for a side column, its middle for a `mid` one) puts it, scaled, plus the column's
+--- own width, which is not (presets restack spec section 3).
 local function place(o, stack, kx, k, top)
     o.attach = { mode = "screen", container = 0, frame = "" }
     if stack.center then
@@ -677,9 +713,9 @@ local function place(o, stack, kx, k, top)
         local y = round(stack.mid * k)
         if o.style == "icons" then
             local fromRight = o.layout.growH == "left"
-            local x = fromRight and (stack.x + stack.width) or stack.x
+            local half = fromRight and stack.width / 2 or -stack.width / 2
             o.position = { point = fromRight and "RIGHT" or "LEFT", relativePoint = stack.anchor,
-                x = round(x * kx), y = y }
+                x = round((stack.x + stack.width / 2) * kx + half), y = y }
         else
             o.position = { point = "CENTER", relativePoint = stack.anchor,
                 x = round((stack.x + stack.width / 2) * kx), y = y }
@@ -687,11 +723,23 @@ local function place(o, stack, kx, k, top)
         return
     end
     local left = o.layout.growH == "left"
-    local x = left and (stack.x + stack.width) or stack.x
     o.position = {
         point = (stack.up and "BOTTOM" or "TOP") .. (left and "RIGHT" or "LEFT"), relativePoint = stack.anchor,
-        x = round(x * kx), y = round(stack.y * k),
+        x = round(stack.x * kx) + (left and stack.width or 0), y = round(stack.y * k) + (stack.lift or 0),
     }
+end
+
+--- Where a fresh apply on a `parentW` x `parentH` parent places the head of stack `stackKey` in style
+--- `style`, its row growing `growH`: a new position table (`place`'s), or nil for the call-outs' stack
+--- (placed by its measured block) or a stack that is no head. For core/Database_PresetRestack.lua
+--- (schema v23), which moves a head still at the v22 builder's place to this one.
+--- @return table|nil
+function P.HeadPlace(stackKey, style, growH, parentW, parentH)
+    local stack = P.Columns(parentW, parentH)[stackKey]
+    if not stack or stack.center or stack.beside then return nil end
+    local o = { style = style, layout = { growH = growH } }
+    place(o, stack, P.ScaleX(parentW, parentH), P.Scale(parentH), 0)
+    return o.position
 end
 
 --- A `beside` stack's head's attachment to the head of the stack it names (spec section 17): its TOP
@@ -827,29 +875,56 @@ end
 --- @param parentH number|nil
 --- @param picked table|nil
 --- @return table
+--- A tier's `under` entries (a role hung under a later one of its stack, the far pair's [17] under
+--- [18]): [i] = the index it hangs from, and [that index] = true in `heads`, a head placed on the
+--- screen though created after the role it holds.
+local function underLinks(tier)
+    local at, under, heads = {}, {}, {}
+    for i, e in ipairs(tier) do at[e[2]] = i end
+    for i, e in ipairs(tier) do
+        if e.under then
+            under[i] = at[e.under]
+            heads[at[e.under]] = true
+        end
+    end
+    return under, heads
+end
+
+--- Link spec `i` (role overrides `o`, in `stack`) into its stack: hung under a later head, a member
+--- on the one before it, a `beside` head joined to another head, or a head placed on the screen.
+local function link(spec, o, stack, i, st)
+    local key = spec.stack
+    if st.under[i] then
+        spec.attachTo = st.under[i]
+        o.attach = memberAttach(o)
+    elseif st.last[key] and not st.heads[i] then
+        spec.attachTo = st.last[key]
+        o.attach = memberAttach(o)
+    elseif stack.beside and st.first[stack.beside] then
+        spec.attachTo = st.first[stack.beside]
+        o.attach = besideAttach()
+    else
+        place(o, stack, st.kx, st.k, 0)
+    end
+end
+
 function P.Build(name, look, parentW, parentH, picked)
     local tier = TIERS[name]
     if not (tier and IS_LOOK[look]) then return {} end
     local k, kx, withCustom = P.Scale(parentH), P.ScaleX(parentW, parentH), CREATES_CUSTOM[name] == true
     local specs, last, first, callouts, cols = {}, {}, {}, {}, P.Columns(parentW, parentH)
+    local under, heads = underLinks(tier)
+    local st = { under = under, heads = heads, last = last, first = first, kx = kx, k = k }
     for i, entry in ipairs(tier) do
         local stackKey, roleKey = entry[1], entry[2]
         local stack, role = cols[stackKey], CONTAINERS[roleKey]
         local o = overridesFor(role, withCustom, picked)
         o.name = ("[%02d] %s"):format(i, o.name) -- the owner's numbering, two digits so a name sort keeps it (not localized, spec 17.4)
-        if look == "icons" then toIcons(o, stack, kx) end
+        if look == "icons" then toIcons(o, stack) end
         growthIn(o, stack)
-        sizeTo(o, stack, kx, role.barColor)
+        sizeTo(o, stack, role.barColor)
         local spec = { role = roleKey, stack = stackKey, overrides = o }
-        if last[stackKey] then
-            spec.attachTo = last[stackKey]
-            o.attach = memberAttach(o)
-        elseif stack.beside and first[stack.beside] then
-            spec.attachTo = first[stack.beside]
-            o.attach = besideAttach()
-        else
-            place(o, stack, kx, k, 0)
-        end
+        link(spec, o, stack, i, st)
         first[stackKey] = first[stackKey] or i
         if stack.center then callouts[#callouts + 1] = spec end
         if withCustom then spec.customKeys = copy(CUSTOM_ORDER) end
@@ -906,13 +981,25 @@ end
 --- @param create function
 --- @return number|nil created, string|nil message, boolean|nil gray
 function P.Realize(specs, keys, create)
-    local ids = {}
+    local ids, promised = {}, {}
     for i, spec in ipairs(specs) do
         local o = spec.overrides
         rekey(o.filter.categories, keys or {})
-        if spec.attachTo then o.attach.container = ids[spec.attachTo] end
+        local to = spec.attachTo
+        if to and to < i then
+            o.attach.container = ids[to]
+        elseif to then
+            -- A forward link (the far pair's [17] under [18]): both writers hand out consecutive ids
+            -- (the profile's counter), so [18]'s is the one before this spec's plus their distance.
+            -- Checked when [18] is created; a writer that broke the sequence refuses the preset.
+            promised[to] = (ids[i - 1] or 0) + (to - i + 1)
+            o.attach.container = promised[to]
+        end
         local id, msg, gray = create(o)
         if not id then return nil, msg, gray end
+        if promised[i] and promised[i] ~= id then
+            return nil, "a preset container took id " .. tostring(id) .. ", not the " .. tostring(promised[i]) .. " its member was linked to"
+        end
         ids[i] = id
     end
     return #ids

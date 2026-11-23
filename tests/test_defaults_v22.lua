@@ -104,7 +104,7 @@ test("v22: a profile v21 moved gets its six back, active or parked", function()
         for _, path in ipairs(OWN) do assertEqual(at(p.containers[1], path), false, name .. " " .. path) end
         assertNil(p.skin.defaultsFollow, name .. " the retired record is cleared")
     end
-    assertEqual(NS.db.global.schemaVersion, 22)
+    assertEqual(NS.db.global.schemaVersion, NS.SCHEMA_VERSION)
 end)
 
 test("v22: only what v21 could have written moves back, and once", function()
