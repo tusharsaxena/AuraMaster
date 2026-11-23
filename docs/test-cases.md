@@ -2108,7 +2108,7 @@ Total.
 - skin hud: v13 runs once, so a player's later pick survives the next load
 - skin hud: the v13 body seeds each companion before ResetToSkin, and sets them itself without it
 
-### test_skin_flip.lua (31)
+### test_skin_flip.lua (32)
 
 - skin flip: every listed companion is a bool row defaulting on, in the template and on the row
 - skin flip: no swatch carries disabledIf, and a class color has no companion
@@ -2131,6 +2131,7 @@ Total.
 - skin flip: a shadow follows the skin and goes when the skin's goes, on a string already drawn
 - skin flip: with the shadow's companion off the stored shadow draws under every skin
 - skin flip: the shadow lands on a font object where the client has CreateFont
+- skin flip: [FB-AM-01] High Contrast draws a bar's text with a 1 px shadow
 - skin flip: a skin switch re-dresses a shown container through the one listener
 - skin flip: with no library a followed value is the stored one, the owner tokens included
 - skin flip: v16 sets every listed companion in every profile and keeps each stored value
@@ -3113,7 +3114,7 @@ Total.
 | test_skinsetup.lua | 19 |
 | test_skin_surfaces.lua | 7 |
 | test_skin_hud.lua | 12 |
-| test_skin_flip.lua | 31 |
+| test_skin_flip.lua | 32 |
 | test_defaults_v17.lua | 7 |
 | test_defaults_v22.lua | 7 |
 | test_skin_border.lua | 10 |
@@ -3166,4 +3167,4 @@ Total.
 | test_skin_switch.lua | 46 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2592** |
+| **Total** | **2593** |
