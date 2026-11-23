@@ -951,6 +951,22 @@ The stamp follows savedvariables-§1 as ruled at WowAddonStandards v2.65.0:
   beside the template's color (absent, or every channel equal, a missing channel the template's) goes
   off, and the record is cleared, so it runs once. A companion on beside a color of its own stays; a
   profile without the record is untouched (`tests/test_defaults_v22.lua`).
+- **Schema v23** (`Database.RestackPresets`, `core/Database_PresetRestack.lua`, the owner's 2026-11-23
+  preset feedback) runs over **every** stored profile on the parent's size (`Presets.ParentSize`), and
+  logs one `[Migrate] v23 profile '<name>'` line for a profile it changed or noted. A container is a
+  preset role only by the exact name the v22 builder wrote (`[NN] <name>`), and a field changes only
+  while it still holds that builder's value: Player buffs, short's fill gray to the template's blue
+  and the cooldown roles' (Player cooldowns in every preset, Target cooldowns, NPCs, Intermediate's
+  Target cooldowns) the template's blue to tan, only while One color, off the skin and the class color,
+  in the old color exactly; a preset bar's `bars.width` to 240 only while it is `floor` or `ceil` of 240
+  at the old horizontal scale (`min(H / 1080, W / 1693.6)`; 1 where the parent cannot be read); and a
+  tower's order and numbers (Advanced's player and target towers, Intermediate's two) only while its
+  whole old chain is there, each role once by name, each member's `attach` on the one before it,
+  nothing else attached to any of them. A restacked tower's slots keep their `attach` and `position`
+  (the head's place, each member's points and offsets), the roles move between them with their ids,
+  spells and settings, `name` takes the new number, and `containerOrder` is refilled where it held the
+  chain in order. An untouched seed (`presets.seedPrint`) is re-recorded. The old names, colors and
+  scale are frozen in the file (`tests/test_database_restack.lua`, against `tests/presets_v22_fixture.lua`).
 - **Migration lesson (batch 10 F7): a step already pushed is never extended again.** A step's
   version stamp is written once per account, so a half added to a step after any build carrying it
   has been pushed never reaches an install that already ran that build: the owner's v9 install
