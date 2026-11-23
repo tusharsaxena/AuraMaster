@@ -72,7 +72,10 @@ end)
 local COMPAT_READERS = { "GetSpellInfo", "GetSpellName", "GetSpellTexture", "GetSpellCooldown",
                          "GetSpecialization", "GetSpecializationInfo",
                          "IsForever", "IsRetail", "ClientKey", "ForClient",
-                         "RegionalNames", "UnitCharacterName", "CharacterKey", "RealmKey" }
+                         "RegionalNames", "UnitCharacterName", "CharacterKey", "RealmKey",
+                         -- LibKa0s v1.110.0 (Compat minor 6): no bag or bank reader here.
+                         "ContainerGroups", "CONTAINER_PATTERNS_BY_CLIENT", "CanViewCharacterBank",
+                         "NumPurchasedBankTabs", "UnreadyBankContainers", "BankerKind" }
 
 test("parity: the Compat arms carry every LibKa0s-Compat-1.0 member the addon wires", function()
     local NS2 = loadDegraded()
@@ -88,6 +91,10 @@ test("parity: the Compat arms carry every LibKa0s-Compat-1.0 member the addon wi
         -- LibKa0s v1.94.0 (Compat minor 4) added character identity. No caller here: AceDB keys the
         -- profile store itself, and nothing in this addon names a character or a realm.
         "RegionalNames", "UnitCharacterName", "CharacterKey", "RealmKey",
+        -- LibKa0s v1.110.0 (Compat minor 6) added the container-group and bank-readiness reader. No
+        -- caller here: this addon reads no bag or bank.
+        "ContainerGroups", "CONTAINER_PATTERNS_BY_CLIENT", "CanViewCharacterBank", "NumPurchasedBankTabs",
+        "UnreadyBankContainers", "BankerKind",
     })
     T.assertSurfaceParity(NS2.Secrets, "LibKa0s-Compat-1.0", COMPAT_READERS)
 end)
