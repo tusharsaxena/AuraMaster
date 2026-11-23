@@ -60,11 +60,14 @@ local TOWERS = {
 }
 
 local function rgb(r, g, b) return { r = r / 255, g = g / 255, b = b / 255, a = 1 } end
-local GRAY, TAN = rgb(69, 69, 69), rgb(230, 204, 128)
+local GRAY, TAN, DARK = rgb(69, 69, 69), rgb(230, 204, 128), rgb(0x39, 0x39, 0x39)
 -- The recolored roles, { number, role }, and the fill each goes from and to (nil: the template's).
+-- The special roles' #393939 is the owner's second change of 2026-11-23.
 local RECOLOR = {
     { from = GRAY, to = nil, roles = { { 7, "pshort" }, { 4, "pshort" } } },
     { from = nil, to = TAN, roles = { { 8, "pcd" }, { 5, "pcd" }, { 15, "tcdn" }, { 7, "tcd" } } },
+    { from = nil, to = DARK, roles = { { 9, "pspec" } } },
+    { from = GRAY, to = DARK, roles = { { 10, "tspec" } } },
 }
 
 -- The v22 builder's horizontal scale: the parent's height over 1080, narrowed where the width is

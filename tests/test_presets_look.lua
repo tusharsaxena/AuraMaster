@@ -14,10 +14,12 @@ local NAMES = { "empty", "simple", "intermediate", "advanced", "healer" }
 
 -- THE ROLES' OWN BAR COLORS (the owner's 2026-11-17 SmokeTest baseline): these roles keep Fill > Color
 -- by at One color, in a color of their own. Since the owner's 2026-11-23 feedback Player buffs, short
--- keeps the template's blue and every cooldown role is tan, Target cooldowns, players'.
-local TAN = { 230, 204, 128 }
+-- keeps the template's blue and every cooldown role is tan, Target cooldowns, players'. Both special
+-- roles are the owner's #393939 (their second 2026-11-23 change; Target special (mine) was 454545).
+-- red under: Player special (mine) left blue, Target special (mine) left at 454545
+local TAN, DARK = { 230, 204, 128 }, { 0x39, 0x39, 0x39 }
 local OWNER_BAR_COLOR = {
-    tspec = { 69, 69, 69 }, tcc = { 255, 128, 64 }, tcdp = TAN, tcdn = TAN, tcd = TAN, pcd = TAN,
+    tspec = DARK, pspec = DARK, tcc = { 255, 128, 64 }, tcdp = TAN, tcdn = TAN, tcd = TAN, pcd = TAN,
     pcdHealer = TAN, wpn = { 163, 53, 238 },
 }
 

@@ -3473,11 +3473,11 @@ unlock hint, or a Lua error. Result:
 **PRESETS-46. The restacked towers in the preview (the owner's 2026-11-23 feedback). Client: Retail,
 then WoW Forever.** `/am preset`, pick **Advanced** in **Bars** → the player stack left of center, top
 to bottom: **[09] Player buffs, short** (blue, as Player cooldowns' bars were), **[08] Player
-cooldowns** (tan, Target cooldowns, players' color), **[07] Player special (mine)** (blue) at the
+cooldowns** (tan, Target cooldowns, players' color), **[07] Player special (mine)** (#393939, a dark gray) at the
 bottom, its title bar under its bars as before. The target stack right of center, top to bottom:
 **[15] Target buffs (mine)** (blue), **[14] Target debuffs (mine)** (dispel colors), **[13] Target
 cooldowns, NPCs** (tan), **[12] Target cooldowns, players** (tan), **[11] Target crowd control**
-(orange), **[10] Target special (mine)** (gray) at the bottom. Every bar 240 wide (hover the edges in
+(orange), **[10] Target special (mine)** (#393939, the same dark gray) at the bottom. Every bar 240 wide (hover the edges in
 unlock mode, or Bars → Width reads 240), the same height as before. Pick **Intermediate** → its player
 stack: **[05] Player buffs, short** (blue) over **[04] Player cooldowns** (tan); its target stack:
 **[07] Target debuffs (mine)** over **[06] Target cooldowns** (tan). Pick **Healer** → **[05] Player
@@ -3515,7 +3515,7 @@ error. Result:
 **PRESETS-49. An existing profile after the upgrade (schema v23). Client: WoW Forever.** Log in on the
 new build with the Forever account → no Lua error. **Default** (the owner's, Player special (mine)'s
 own dark color and the 240 widths set by hand): the towers restacked as PRESETS-48, Player special
-(mine) keeps its own dark color, [08] Player cooldowns and [13] Target cooldowns, NPCs tan, [09]
+(mine) keeps its own dark color (already #393939), [10] Target special (mine) turns #393939, [08] Player cooldowns and [13] Target cooldowns, NPCs tan, [09]
 Player buffs, short blue, Target stealable 240, every other width as it was; the player tower's head,
 now [07] Player special (mine), is anchored where [07] Player buffs, short was (the frame you
 attached it to). **DefaultBackupv2** (rearranged by hand): its order and numbers stay, only [08]

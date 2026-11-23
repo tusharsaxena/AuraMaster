@@ -611,6 +611,8 @@ test("presets data: Advanced on the owner's screen is their SmokeTest profile", 
     for _, role in ipairs({ "tcc", "tspec" }) do
         assertEqual(adv[role].overrides.bars.colorMode, "static", role .. ": One color, though a debuff bar")
     end
-    assertNil(adv.pspec.overrides.bars.barColor, "Player special (mine) keeps the template's blue")
+    -- red under: the template's blue the owner's 2026-11-23 second change replaced with #393939
+    assertNear(adv.pspec.overrides.bars.barColor.r, 0x39 / 255, 1e-9, "Player special (mine) #393939")
+    assertNear(adv.tspec.overrides.bars.barColor.g, 0x39 / 255, 1e-9, "Target special (mine) #393939")
     assertNil(adv.pshort.overrides.bars.barColor, "and Player buffs, short, since 2026-11-23")
 end)

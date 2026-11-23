@@ -957,7 +957,8 @@ The stamp follows savedvariables-§1 as ruled at WowAddonStandards v2.65.0:
   preset role only by the exact name the v22 builder wrote (`[NN] <name>`), and a field changes only
   while it still holds that builder's value: Player buffs, short's fill gray to the template's blue
   and the cooldown roles' (Player cooldowns in every preset, Target cooldowns, NPCs, Intermediate's
-  Target cooldowns) the template's blue to tan, only while One color, off the skin and the class color,
+  Target cooldowns) the template's blue to tan, Player special (mine)'s the template's blue and Target
+  special (mine)'s gray to #393939 (the owner's second 2026-11-23 change), only while One color, off the skin and the class color,
   in the old color exactly; a preset bar's `bars.width` to 240 only while it is `floor` or `ceil` of 240
   at the old horizontal scale (`min(H / 1080, W / 1693.6)`; 1 where the parent cannot be read); and a
   tower's order and numbers (Advanced's player and target towers, Intermediate's two) only while its

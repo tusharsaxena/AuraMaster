@@ -61,7 +61,8 @@ tcdn 13, tdeb 14 and its Healer stand-ins, tbuff 15).
 **Colors.** `BAR_GRAY` leaves Player buffs, short (it keeps the template's blue, One color, written as
 every buff bar's fill mode); `BAR_TAN` goes on Player cooldowns (Advanced's, Intermediate's and Healer's
 `pcdHealer`: "Player cooldowns containers", plural), Target cooldowns, NPCs and Intermediate's merged
-Target cooldowns (both its sources are now tan). Target special (mine) keeps gray, Target crowd control
+Target cooldowns (both its sources are now tan). Target special (mine) keeps gray (#393939 since the owner's second change that day, Player special
+(mine) too, APR-07), Target crowd control
 orange, Weapon enchants purple. All stay off the skin (section 20 of the presets design, ruling U-12).
 
 **Width.** Every column's width is used as is, no longer scaled (`columnWidth` answers `stack.width`):

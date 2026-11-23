@@ -354,7 +354,8 @@ end
 -- that has the role, on a bars container alone (an Icons row has no fill). Player buffs, short left
 -- the gray on 2026-11-23 for the template's blue; every cooldown role took Target cooldowns,
 -- players' tan.
-local BAR_GRAY = rgb(69 / 255, 69 / 255, 69 / 255)        -- Target special (mine)
+-- The owner's second 2026-11-23 change: both special roles #393939 (Target special (mine) was 454545).
+local BAR_DARK = rgb(0x39 / 255, 0x39 / 255, 0x39 / 255)  -- Player special (mine); Target special (mine)
 local BAR_ORANGE = rgb(1, 128 / 255, 64 / 255)            -- Target crowd control
 local BAR_TAN = rgb(230 / 255, 204 / 255, 128 / 255)      -- Player and target cooldowns
 local BAR_PURPLE = rgb(163 / 255, 53 / 255, 238 / 255)    -- Weapon enchants
@@ -406,6 +407,7 @@ local CONTAINERS = {
             "weaponEnchants" },
         filter = TIMED_30 },
     pspec = { onlyNamed = true, name = L["Player special (mine)"], unit = "player", auraType = "HELPFUL", style = "bars",
+        barColor = BAR_DARK,
         hide = except({ ALL_BUFFS }, { "SPECIAL_PLAYER", "stances", "utility" }),
         filter = { castBy = "mine" } },
 
@@ -430,7 +432,7 @@ local CONTAINERS = {
             "weaponEnchants" },
         filter = { durationMode = "timed", unitFilter = { kind = "npc" }, zones = NO_PVP } },
     tspec = { onlyNamed = true, name = L["Target special (mine)"], unit = "target", auraType = "HARMFUL", style = "bars",
-        barColor = BAR_GRAY,
+        barColor = BAR_DARK,
         hide = except({ ALL_BUFFS, ALL_DEBUFFS }, { "SPECIAL_TARGET" }),
         filter = { castBy = "mine" } },
     tsteal = { onlyNamed = true, name = L["Target stealable"], unit = "target", auraType = "HELPFUL", style = "bars",
