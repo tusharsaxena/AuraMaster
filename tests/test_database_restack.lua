@@ -1,4 +1,5 @@
--- tests/test_database_restack.lua -- schema v23 (Database.RestackPresets, core/Database_PresetRestack.lua):
+-- tests/test_database_restack.lua -- schema v23 and v24 (Database.RestackPresets and TurnFarPair,
+-- core/Database_PresetRestack.lua):
 -- the owner's 2026-11-23 preset feedback carried into a profile the v22 builder wrote, where the
 -- player has not changed it (presets restack spec section 4). The "before" is the v22 builder's own
 -- output, frozen in tests/presets_v22_fixture.lua; the "after" is the current builder's.
@@ -13,6 +14,14 @@ local FIXTURE = dofile("tests/presets_v22_fixture.lua")
 local OWN_W, OWN_H = 3440 / 1.2, 1200
 
 local copy = NS.Database.DeepCopy
+
+--- v23 then v24 over `p`, as a profile from v22 climbs them: the changed count and the notes of both.
+local function migrate(p, W, H)
+    local a, na = NS.Database.RestackPresets(p, W, H)
+    local b, nb = NS.Database.TurnFarPair(p, W, H)
+    for _, note in ipairs(nb) do na[#na + 1] = note end
+    return a + b, na
+end
 
 --- A stored profile holding fixture `key`'s containers, as an Apply of the v22 builder left it: each
 --- the template with the fixture's fields over it, its id the fixture's (creation order), and a
@@ -120,7 +129,7 @@ test("v23: a v22 Advanced, Intermediate, Healer and Simple become what the prese
             local p = oldProfile(where)
             local before = {}
             for id, c in pairs(p.containers) do before[id] = next(c.filter.whitelist) end
-            local n = NS.Database.RestackPresets(p, scr[2], scr[3])
+            local n = migrate(p, scr[2], scr[3])
             -- red under: no step, or one that misses a field
             if name ~= "simple" then assertTrue(n > 0, where .. ": changed") end
             checkAsBuilt(p, name, scr[2], scr[3], where)
@@ -130,7 +139,7 @@ test("v23: a v22 Advanced, Intermediate, Healer and Simple become what the prese
                 assertEqual(next(c.filter.whitelist), before[id], where .. " " .. c.name .. ": its own spells")
             end
             -- Once: a second run changes nothing.
-            assertEqual(NS.Database.RestackPresets(p, scr[2], scr[3]), 0, where .. ": idempotent")
+            assertEqual(migrate(p, scr[2], scr[3]), 0, where .. ": idempotent")
         end
     end
     -- The roles keep their identity: Player buffs, short is the same container, now on top.
@@ -170,7 +179,7 @@ test("v23: a head the player moved stays where they put it", function()
     local fdeb, far = byName(p, "[19] " .. L["Focus debuffs (mine)"]), byName(p, "[18] " .. L["Target buffs (all)"])
     assertEqual(fdeb.position.x, 589, "the v22 place on the owner's screen")
     fdeb.position.x = 600
-    local _, notes = NS.Database.RestackPresets(p, OWN_W, OWN_H)
+    local _, notes = migrate(p, OWN_W, OWN_H)
     -- red under: a step that writes the new place over the player's own
     assertEqual(fdeb.position.x, 600, "a moved head stays")
     assertEqual(far.position.x, 629, "an unmoved one goes to the new place")
@@ -191,7 +200,7 @@ test("v23: the far pair re-anchors only while it is the v22 pair", function()
     -- The v22 pair on the owner's screen: [17] on the screen, [18] on it; after, the other way round.
     local p = oldProfile("advanced@1200")
     local D, B = pair(p)
-    NS.Database.RestackPresets(p, OWN_W, OWN_H)
+    migrate(p, OWN_W, OWN_H)
     assertEqual(B.attach.mode, "screen", "[18] on the screen")
     assertEqual(B.position.point, "TOPLEFT", "[18] by its top left")
     assertEqual(B.position.y, -774, "where its top showed")
@@ -213,7 +222,7 @@ test("v23: the far pair re-anchors only while it is the v22 pair", function()
     for what, edit in pairs(edits) do
         local q = oldProfile("advanced@1200")
         edit(q)
-        local _, notes = NS.Database.RestackPresets(q, OWN_W, OWN_H)
+        local _, notes = migrate(q, OWN_W, OWN_H)
         local d, b = pair(q)
         assertTrue(d.attach.mode == "screen", what .. ": [17] stays where the player has it")
         assertTrue(b.attach.mode ~= "container" or tonumber(b.attach.container) == d.id, what .. ": [18] keeps its anchor")
@@ -221,6 +230,31 @@ test("v23: the far pair re-anchors only while it is the v22 pair", function()
         for _, note in ipairs(notes) do noted = noted or note.field == "pair" end
         assertTrue(noted, what .. ": noted")
     end
+end)
+
+-- v23 AS IT FIRST RAN (66a4833): a client may already have stamped it, so it never changes again.
+-- The special roles keep their v22 fills, and [17] Target debuffs (all) moves on the screen to the
+-- far column as placed since APR-02 (629 on the owner's screen), [18] still hung on it; v24 turns
+-- the pair round from there.
+test("v23 alone is the step a v23 build ran; v24 finishes from there", function()
+    local L = NS.L
+    local p = oldProfile("advanced@1200")
+    NS.Database.RestackPresets(p, OWN_W, OWN_H)
+    local D, B = byName(p, "[17] " .. L["Target debuffs (all)"]), byName(p, "[18] " .. L["Target buffs (all)"])
+    -- red under: a v23 that grew the pair or the specials after a build stamped it
+    assertEqual(D.attach.mode, "screen", "v23: [17] still the head")
+    assertEqual(D.position.point, "BOTTOMLEFT")
+    assertEqual(D.position.x, 629, "v23 moved it onto Player debuffs' edge")
+    assertEqual(D.position.y, -822)
+    assertEqual(tonumber(B.attach.container), D.id, "[18] still on it")
+    local pspec, tspec = byName(p, "[07] " .. L["Player special (mine)"]), byName(p, "[10] " .. L["Target special (mine)"])
+    assertTrue(sameRGB(pspec.bars.barColor, NS.CONTAINER_TEMPLATE.bars.barColor), "v23: Player special still blue")
+    assertTrue(sameRGB(tspec.bars.barColor, { r = 69 / 255, g = 69 / 255, b = 69 / 255 }), "v23: Target special still gray")
+    -- A profile stamped 23 by that build runs v24 alone, and ends where both steps end.
+    local n = NS.Database.TurnFarPair(p, OWN_W, OWN_H)
+    assertTrue(n > 0, "v24 changed it")
+    checkAsBuilt(p, "advanced", OWN_W, OWN_H, "v23 then v24")
+    assertEqual(NS.Database.TurnFarPair(p, OWN_W, OWN_H), 0, "v24 once")
 end)
 
 test("v23: a profile the current presets built is left as it is", function()
@@ -235,7 +269,8 @@ test("v23: a profile the current presets built is left as it is", function()
         end)
         -- red under: an old name the new presets reuse ([08] Player cooldowns, [10] Target special
         -- (mine), [05] Player cooldowns) read as the old role and changed again
-        assertEqual(NS.Database.RestackPresets(p, OWN_W, OWN_H), 0, name)
+        assertEqual(migrate(p, OWN_W, OWN_H), 0, name)
+        assertEqual(NS.Database.TurnFarPair(p, OWN_W, OWN_H), 0, name .. ": v24 alone")
     end
 end)
 
@@ -358,7 +393,37 @@ test("v23: the ladder runs it over every stored profile on the parent's size", f
         -- red under: no v23 step, or one that walks the active profile alone
         assertTrue(byName(p, "[09] " .. NS.L["Player buffs, short"]) ~= nil, name .. ": restacked")
         assertEqual(byName(p, "[08] " .. NS.L["Player cooldowns"]).bars.width, 240, name .. ": 266 to 240")
+        -- and v24 after it: the far pair turned round
+        assertEqual(byName(p, "[18] " .. NS.L["Target buffs (all)"]).attach.mode, "screen", name .. ": v24 ran")
     end
-    assertEqual(NSx.db.global.schemaVersion, 23)
+    assertEqual(NSx.db.global.schemaVersion, 24)
     assertNear(OWN_H / 1080 * 240, 266.67, 0.01, "the owner's screen wrote 266 and 267")
+end)
+
+test("v24: an account a v23 build already stamped runs v24 alone", function()
+    local saved = { global = { schemaVersion = 23 }, profiles = {} }
+    for _, name in ipairs({ "Default", "Parked" }) do
+        -- What the v23 build left: v22's profile through the step as it first ran.
+        local p = oldProfile("advanced@1200")
+        NS.Database.RestackPresets(p, OWN_W, OWN_H)
+        p.seeded, p.presets = true, { pickerSeen = true }
+        saved.profiles[name] = p
+    end
+    local NSx = fresh({ savedVariables = saved, before = function(m)
+        rawset(m.UIParent, "GetWidth", function() return OWN_W end)
+        rawset(m.UIParent, "GetHeight", function() return OWN_H end)
+    end })
+    for _, name in ipairs({ "Default", "Parked" }) do
+        local p = NSx.db.sv.profiles[name]
+        -- red under: the second change folded into v23, which a stamped account never runs again
+        local B = byName(p, "[18] " .. NS.L["Target buffs (all)"])
+        assertEqual(B.attach.mode, "screen", name .. ": [18] on the screen")
+        assertEqual(B.position.y, -774, name .. ": where its top showed")
+        assertEqual(tonumber(byName(p, "[17] " .. NS.L["Target debuffs (all)"]).attach.container), B.id, name)
+        local tspec = byName(p, "[10] " .. NS.L["Target special (mine)"])
+        assertNear(tspec.bars.barColor.r, 0x39 / 255, 1e-6, name .. ": #393939")
+        -- v23 did not run twice: the tower it restacked is as it left it.
+        assertTrue(byName(p, "[07] " .. NS.L["Player special (mine)"]) ~= nil, name)
+    end
+    assertEqual(NSx.db.global.schemaVersion, 24)
 end)

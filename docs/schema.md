@@ -957,8 +957,7 @@ The stamp follows savedvariables-§1 as ruled at WowAddonStandards v2.65.0:
   preset role only by the exact name the v22 builder wrote (`[NN] <name>`), and a field changes only
   while it still holds that builder's value: Player buffs, short's fill gray to the template's blue
   and the cooldown roles' (Player cooldowns in every preset, Target cooldowns, NPCs, Intermediate's
-  Target cooldowns) the template's blue to tan, Player special (mine)'s the template's blue and Target
-  special (mine)'s gray to #393939 (the owner's second 2026-11-23 change), only while One color, off the skin and the class color,
+  Target cooldowns) the template's blue to tan, only while One color, off the skin and the class color,
   in the old color exactly; a preset bar's `bars.width` to 240 only while it is `floor` or `ceil` of 240
   at the old horizontal scale (`min(H / 1080, W / 1693.6)`; 1 where the parent cannot be read); and a
   tower's order and numbers (Advanced's player and target towers, Intermediate's two) only while its
@@ -966,15 +965,22 @@ The stamp follows savedvariables-§1 as ruled at WowAddonStandards v2.65.0:
   nothing else attached to any of them; and a stack head still placed on the screen exactly where the
   v22 builder's own arithmetic (frozen in the file) put it on this parent moves to where a fresh apply
   puts it now (`NS.PresetData.HeadPlace`; the focus and far heads 589 to 629 on the owner's screen),
-  before the restack, so a tower's new head takes that place; and the far pair (Advanced's [17]
-  Target debuffs (all) on the screen with [18] Target buffs (all) hung on it, both growing up) turns
-  round, [18] placed where a fresh apply puts it and [17] hung under it TOPLEFT on BOTTOMLEFT, both
-  growing down, only while both are there once, [17] at the v22 place, [18] on it by the v22 points,
-  and nothing else hangs from either. A restacked tower's slots keep their `attach` and `position`
+  before the restack, so a tower's new head takes that place ([17] Target debuffs (all), the far
+  head, to the far column's base as placed since APR-02, frozen: v24 turns that pair round). A restacked tower's slots keep their `attach` and `position`
   (the head's place, each member's points and offsets), the roles move between them with their ids,
   spells and settings, `name` takes the new number, and `containerOrder` is refilled where it held the
   chain in order. An untouched seed (`presets.seedPrint`) is re-recorded. The old names, colors and
   scale are frozen in the file (`tests/test_database_restack.lua`, against `tests/presets_v22_fixture.lua`).
+  v23 is fixed as it first ran (66a4833): a client may already have stamped it.
+- **Schema v24** (`Database.TurnFarPair`, the same file, the owner's second 2026-11-23 change) runs over
+  **every** stored profile after v23, so a profile from v22 runs both and one a v23 build stamped runs
+  it alone, and logs one `[Migrate] v24 profile '<name>'` line for a profile it changed or noted.
+  Under v23's rule: Player special (mine) (by the name v23 leaves, [07] restacked or [09] where its
+  tower stayed) from the template's blue and [10] Target special (mine) from gray to #393939, by the
+  fill rule; and the far pair, [17] Target debuffs (all) on the screen with [18] Target buffs (all)
+  hung on it by BOTTOMLEFT to TOPLEFT, both growing up, turns round, [18] placed where a fresh apply
+  puts it and [17] hung under it, TOPLEFT on BOTTOMLEFT, both growing down, only while both are there
+  once, [17] at the v22 place or v23's move of it, and nothing else hangs from either.
 - **Migration lesson (batch 10 F7): a step already pushed is never extended again.** A step's
   version stamp is written once per account, so a half added to a step after any build carrying it
   has been pushed never reaches an install that already ran that build: the owner's v9 install

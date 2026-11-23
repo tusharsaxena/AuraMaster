@@ -1,6 +1,6 @@
 local _, NS = ...
 
--- core/Database_PresetRestack.lua -- schema v23: the owner's 2026-11-23 preset feedback carried into a
+-- core/Database_PresetRestack.lua -- schema v23 and v24: the owner's 2026-11-23 preset feedback carried into a
 -- profile an older build's preset wrote (spec docs/superpowers/specs/2026-11-23-preset-restack-design.md,
 -- section 4). Run by core/Database.lua's ladder over every stored profile.
 --
@@ -13,6 +13,9 @@ local _, NS = ...
 --     on this parent (its column, 240 scaled by the old horizontal scale, rounded either way);
 --   * a tower's order and numbers, only while its whole old chain is there, each role once by its old
 --     name, each member attached to the one before it, and nothing else attached to any of them.
+-- v24 (Database.TurnFarPair) is the owner's second change that day, the special roles' #393939 and
+-- the far pair turned round, under the same rule: a step of its own, since a client may have run and
+-- stamped v23 before it existed.
 -- Everything else is the player's and stays. Each container keeps its id, spells and settings; a
 -- restacked tower's slots keep their placement (the head's place, each member's points and offsets),
 -- and the roles move between them.
@@ -70,7 +73,11 @@ local GRAY, TAN, DARK = rgb(69, 69, 69), rgb(230, 204, 128), rgb(0x39, 0x39, 0x3
 local RECOLOR = {
     { from = GRAY, to = nil, roles = { { 7, "pshort" }, { 4, "pshort" } } },
     { from = nil, to = TAN, roles = { { 8, "pcd" }, { 5, "pcd" }, { 15, "tcdn" }, { 7, "tcd" } } },
-    { from = nil, to = DARK, roles = { { 9, "pspec" } } },
+}
+-- v24's (the owner's second change): by the names v23 leaves, Player special (mine) restacked to [07]
+-- or still [09] where its tower stayed, from the template's blue; Target special (mine) from gray.
+local RECOLOR_V24 = {
+    { from = nil, to = DARK, roles = { { 7, "pspec" }, { 9, "pspec" } } },
     { from = GRAY, to = DARK, roles = { { 10, "tspec" } } },
 }
 
@@ -96,7 +103,7 @@ local OLD_CLUSTER_RIGHT, OLD_EDGE = 1012.8, 10
 local HEADS = {
     { 1, "pbuffs", "cornerRight" },
     { 4, "pshort", "left" }, { 6, "tdeb", "right" }, { 8, "fdeb", "focus" },
-    { 7, "pshort", "left" }, { 10, "tspec", "right" }, { 19, "fdeb", "focus" },
+    { 7, "pshort", "left" }, { 10, "tspec", "right" }, { 17, "ticoD", "far" }, { 19, "fdeb", "focus" },
     { 5, "pcd", "left" }, { 6, "healTarget", "right" }, { 8, "healFocus", "focus" },
 }
 
@@ -198,9 +205,9 @@ local function bars(c)
 end
 
 --- Recolor every role of RECOLOR still in its old fill; note one that is not.
-local function recolor(byName, notes)
+local function recolor(byName, notes, rules)
     local n = 0
-    for _, rule in ipairs(RECOLOR) do
+    for _, rule in ipairs(rules) do
         for _, entry in ipairs(rule.roles) do
             for _, c in ipairs(byName[nameOf(entry)] or {}) do
                 local b = bars(c)
@@ -257,6 +264,18 @@ local function samePlace(pos, want)
     return true
 end
 
+--- Where v23 moves a head still at its v22 place: where a fresh apply put it when v23 was written
+--- (APR-06), NS.PresetData.HeadPlace's, but for the far stack, whose head v24 turns round: v23's is
+--- [17] by its bottom corner on the far base, the column's left edge (its right growing left) as
+--- placed now, frozen so v23 does on every account what it did on the first that ran it.
+local function v23Place(stack, style, growH, W, H)
+    local Data = NS.PresetData
+    if stack ~= "far" then return Data.HeadPlace(stack, style, growH, W, H) end
+    local col, left = Data.Columns(W, H).far, growH == "left"
+    return { point = "BOTTOM" .. (left and "RIGHT" or "LEFT"), relativePoint = col.anchor,
+        x = round(col.x * Data.ScaleX(W, H)) + (left and col.width or 0), y = round(col.y * Data.Scale(H)) }
+end
+
 --- Every stack head of an old preset still placed on the screen at the v22 builder's place for this
 --- parent moves to where a fresh apply puts it now. Run before the restack, on the head's position
 --- table, which the restack hands to the tower's new head with the slot.
@@ -265,7 +284,7 @@ local function replaceHead(c, stack, W, H, notes)
     local at = c.attach
     if type(at) ~= "table" or at.mode ~= "screen" then return 0 end
     local growH = type(c.layout) == "table" and c.layout.growH or "right"
-    local new = NS.PresetData.HeadPlace(stack, c.style, growH, W, H)
+    local new = v23Place(stack, c.style, growH, W, H)
     if not new or samePlace(c.position, new) then return 0 end
     if not samePlace(c.position, oldPlace(stack, c.style, growH, W, H)) then
         notes[#notes + 1] = { c = c, field = "place", why = "not the old preset place" }
@@ -310,10 +329,16 @@ local function pairAlone(p, D, B)
     return true
 end
 
+--- Whether `D`'s place is one a preset gave [17]: v22's, or v23's move of it (v23Place).
+local function presetFarPlace(D, W, H)
+    local growH = growHOf(D)
+    return samePlace(D.position, oldPlace("far", D.style, growH, W, H))
+        or samePlace(D.position, v23Place("far", D.style, growH, W, H))
+end
+
 local function oldPair(p, D, B, W, H)
     local da = D.attach
-    if type(da) ~= "table" or da.mode ~= "screen" then return false end
-    if not samePlace(D.position, oldPlace("far", D.style, growHOf(D), W, H)) then return false end
+    if type(da) ~= "table" or da.mode ~= "screen" or not presetFarPlace(D, W, H) then return false end
     return oldLink(B, D) and growsUp(D) and growsUp(B) and pairAlone(p, D, B)
 end
 
@@ -416,6 +441,14 @@ local function seedMatched(p)
         and store.seedPrint == Presets.Fingerprint(p.containers, p.containerOrder)
 end
 
+--- The end both steps share: an untouched seed re-recorded, and each note naming its container as
+--- it ends the step (a restack renames).
+local function finish(p, seeded, n, notes)
+    if seeded and n > 0 then p.presets.seedPrint = NS.Presets.Fingerprint(p.containers, p.containerOrder) end
+    for _, note in ipairs(notes) do note.name, note.c = note.c.name, nil end
+    return n, notes
+end
+
 --- v23 over one stored profile `p`, on a `W` x `H` parent (nil when it cannot be read). Answers how
 --- many fields it changed, and the notes of every preset field it left because the player had changed
 --- it ({ name, field = "color" | "width" | "tower", why }).
@@ -427,12 +460,26 @@ function Database.RestackPresets(p, W, H)
     end
     local seeded = seedMatched(p)
     local byName = indexByName(p)
-    local n = recolor(byName, notes) + resize(byName, W, H, notes) + reanchorPair(p, byName, W, H, notes)
-        + replaceHeads(byName, W, H, notes) + restackAll(p, byName, notes)
-    if seeded and n > 0 then p.presets.seedPrint = NS.Presets.Fingerprint(p.containers, p.containerOrder) end
-    -- Each note names its container as it ends the step (a restack renames).
-    for _, note in ipairs(notes) do note.name, note.c = note.c.name, nil end
-    return n, notes
+    local n = recolor(byName, notes, RECOLOR) + resize(byName, W, H, notes) + replaceHeads(byName, W, H, notes)
+        + restackAll(p, byName, notes)
+    return finish(p, seeded, n, notes)
+end
+
+--- v24 over one stored profile `p`, on a `W` x `H` parent: the owner's second 2026-11-23 change,
+--- after v23 (a profile from v22 runs both; one a v23 build already stamped runs this alone). The
+--- special roles' #393939 and the far pair turned round, each only while still the preset's: the
+--- fill of item 1's rule, and the pair while [17] is at the v22 place or v23's move of it, [18] on it
+--- by the v22 points, both growing up, nothing else attached. Answers as RestackPresets.
+--- @return number changed, table notes
+function Database.TurnFarPair(p, W, H)
+    local notes = {}
+    if type(p) ~= "table" or type(p.containers) ~= "table" or type(p.containerOrder) ~= "table" then
+        return 0, notes
+    end
+    local seeded = seedMatched(p)
+    local byName = indexByName(p)
+    local n = recolor(byName, notes, RECOLOR_V24) + reanchorPair(p, byName, W, H, notes)
+    return finish(p, seeded, n, notes)
 end
 
 -- The frozen data, read by tests/test_database_restack.lua against the v22 builder's output.

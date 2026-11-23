@@ -96,7 +96,8 @@ the owner's 2026-11-23 feedback (spec `docs/superpowers/specs/2026-11-23-preset-
 column's width is not scaled: every bar is 240 wide on every screen, and only the columns' places
 follow the screen size; both side towers are restacked (top to bottom, Player buffs, short, Player
 cooldowns, Player special (mine); Target buffs (mine), Target debuffs (mine), Target cooldowns, NPCs,
-Target cooldowns, players, Target crowd control, Target special (mine)), and schema v23
+Target cooldowns, players, Target crowd control, Target special (mine)), and schema v23 (and v24, the
+owner's second change that day: the special colors and the far pair)
 (`core/Database_PresetRestack.lua`) carries that into a profile an older preset wrote, field by field
 where the player has not changed it.
 

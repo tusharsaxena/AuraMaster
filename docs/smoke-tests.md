@@ -3502,7 +3502,7 @@ far stacks line up with Player debuffs (all)'s left edge (this supersedes PRESET
 and its focus and far stacks at 589). Fail: a wrong order, a member attached to the wrong container,
 a width other than 240, or a Lua error. Result:
 
-**PRESETS-48. An existing Advanced profile after the upgrade (schema v23). Client: Retail.** On the
+**PRESETS-48. An existing Advanced profile after the upgrade (schema v23 and v24). Client: Retail.** On the
 SmokeTest profile (built by Advanced before this change and not rearranged since), log in on the new
 build → no Lua error; the player tower now reads, top to bottom, [09] Player buffs, short (blue),
 [08] Player cooldowns (tan), [07] Player special (mine) (#393939), standing where the tower stood (its bottom
@@ -3512,12 +3512,13 @@ Target buffs (all) on the screen where its top was and [17] Target debuffs (all)
 or 267; the focus and far stacks' bottom containers moved right onto Player debuffs (all)'s left
 edge (589 to 629 on a 1200-tall UI), where you had not moved them. Each container kept its spells: open **[09] Player buffs, short** → its whitelist and filters
 are the ones Player buffs, short had. A container you had recolored, resized or moved off its tower
-keeps what you gave it (`/am debug on`, `/reload`: the `[Migrate] v23 profile` line counts what was
+keeps what you gave it (`/am debug on`, `/reload`: the `[Migrate] v23 profile` and `v24 profile` lines count what was
 left as you set it). The hand-built Default profile is unchanged. Fail: a container that lost its
 spells or settings, a tower left half-restacked, a changed field you had set yourself, or a Lua
 error. Result:
 
-**PRESETS-49. An existing profile after the upgrade (schema v23). Client: WoW Forever.** Log in on the
+**PRESETS-49. An existing profile after the upgrade (schema v23 and v24). Client: WoW Forever.** Also on a client that ran the
+first v23 build (stamped 23): the special colors and the far pair still change, from v24. Log in on the
 new build with the Forever account → no Lua error. **Default** (the owner's, Player special (mine)'s
 own dark color and the 240 widths set by hand): the towers restacked as PRESETS-48, Player special
 (mine) keeps its own dark color (already #393939), [10] Target special (mine) turns #393939, [08] Player cooldowns and [13] Target cooldowns, NPCs tan, [09]

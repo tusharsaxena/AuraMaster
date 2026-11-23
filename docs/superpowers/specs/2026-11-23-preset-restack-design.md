@@ -114,10 +114,10 @@ is the player's and is left as it is. Per field:
    edge); on 2560 x 1440 the cluster's heads follow the new shift too. A head the player moved stays.
    It runs before the restack, on the head slot's position table, so a restacked tower's new head
    takes the moved place.
-5. **The special roles' #393939** (APR-07, the owner's second 2026-11-23 change). Player special
+5. **The special roles' #393939** (APR-07; schema v24 since APR-09, the owner's second 2026-11-23 change). Player special
    (mine) from the template's blue and Target special (mine) from gray (454545) to #393939, by the
    fill rule of item 1.
-6. **The far pair** (APR-08, the same change). v22 placed [17] Target debuffs (all) on the screen
+6. **The far pair** (APR-08, the same change; schema v24 since APR-09). v22 placed [17] Target debuffs (all) on the screen
    and hung [18] Target buffs (all) on it (BOTTOMLEFT to TOPLEFT, flush, both growing up). Now [18] is
    placed by its top left where its top showed (two rows of 24 over the far base, `STACKS.far.lift`)
    and [17] hangs under it, its TOPLEFT on [18]'s BOTTOMLEFT, flush, both growing down; [17] keeps
@@ -125,6 +125,12 @@ is the player's and is left as it is. Per field:
    The pair re-anchors only while both are there once by name, [17] still on the screen at the v22
    builder's own computed place, [18] still on it by the v22 points with no offset, both still
    growing up, and nothing else hangs from either; [18] then takes `NS.PresetData.HeadPlace`'s place.
+**v23 and v24** (APR-09). A client may have run and stamped the first v23 (66a4833), so v23 is fixed
+as it was there (items 1 to 4: v23 also moves [17], the far head, onto the far column as placed since
+APR-02, by its bottom corner), and items 5 and 6 are v24, `Database.TurnFarPair`, which matches the
+names v23 leaves ([07] or [09] Player special (mine)) and accepts [17] at the v22 place or at v23's
+move of it. A profile from v22 climbs both; one stamped 23 runs v24 alone; both end in the same state.
+
 7. **The untouched-seed record.** A profile whose `presets.seedPrint` matched its registry before the
    step is re-recorded after it, so a still-untouched seed stays untouched for the first-run picker.
 
@@ -156,7 +162,8 @@ WoW Forever account). Each file was loaded with the vendored LibKa0s, the TOC's 
 AceDB, first on the v22 build (master at 7e713b9, every step up to v22), then that result on this
 branch, so the diff below is v23's alone. The parent was the owner's screen, 3440 x 1440 at UI scale
 1.2 (2866.7 x 1200), so the v22 widths v23 recognizes there are 266 and 267. The notes are the step's
-own, from the same input. Head place is a screen-placed head's point and x,y (`-` for a container
+own, from the same input, and since APR-09 the ladder ran v23 then v24 (22 through 24); the end
+state is the single extended step's, row for row, and v23 alone is byte-identical to 66a4833's. Head place is a screen-placed head's point and x,y (`-` for a container
 attached to another).
 
 Columns: **slot** is a container's place in its chain counted from the bottom, `@` the chain head's
@@ -199,10 +206,10 @@ Reading it against the rule (section 4):
 | Retail, account 1 | Default | 20 | 0 | unchanged | 0 | - |
 | Retail, account 1 | SmokeTest | 20 | 20 | far pair re-anchored, heads re-placed, recolored, resized, restacked | 17 | - |
 | Retail, account 2 | Default | 4 | 0 | unchanged | 0 | - |
-| WoW Forever | Default | 20 | 20 | recolored, resized, restacked | 10 | `[07] Player special (mine)` color (not the old preset fill); `[17] Target debuffs (all)` pair (not the old preset pair); `[01] Player buffs (all)` place (not the old preset place) |
+| WoW Forever | Default | 20 | 20 | recolored, resized, restacked | 10 | `[01] Player buffs (all)` place (not the old preset place); `[07] Player special (mine)` color (not the old preset fill); `[17] Target debuffs (all)` pair (not the old preset pair) |
 | WoW Forever | DefaultBackup | 20 | 0 | unchanged | 0 | - |
-| WoW Forever | DefaultBackupV3 | 20 | 20 | recolored, resized, restacked | 10 | `[17] Target debuffs (all)` pair (not the old preset pair); `[01] Player buffs (all)` place (not the old preset place) |
-| WoW Forever | DefaultBackupv2 | 20 | 13 | recolored | 1 | `[07] Player buffs, short` color (not the old preset fill); `[09] Player special (mine)` color (not the old preset fill); `[17] Target debuffs (all)` pair (not the old preset pair); `[01] Player buffs (all)` place (not the old preset place); `[07] Player buffs, short` tower (a member is not on the one before it) |
+| WoW Forever | DefaultBackupV3 | 20 | 20 | recolored, resized, restacked | 10 | `[01] Player buffs (all)` place (not the old preset place); `[17] Target debuffs (all)` pair (not the old preset pair) |
+| WoW Forever | DefaultBackupv2 | 20 | 13 | recolored | 1 | `[07] Player buffs, short` color (not the old preset fill); `[01] Player buffs (all)` place (not the old preset place); `[07] Player buffs, short` tower (a member is not on the one before it); `[09] Player special (mine)` color (not the old preset fill); `[17] Target debuffs (all)` pair (not the old preset pair) |
 | WoW Forever | SmokeTest | 20 | 19 | far pair re-anchored, heads re-placed, recolored, resized, restacked | 16 | `[10] Target special (mine)` tower (a role is missing or named twice) |
 | WoW Forever | SmokeTest2 | 3 | 3 | resized | 3 | `[01] Player buffs (all)` place (not the old preset place) |
 | WoW Forever | SmokeTest3 | 3 | 3 | resized | 3 | - |
@@ -269,9 +276,9 @@ Reading it against the rule (section 4):
 | 22 | [19] Focus debuffs (mine) | 1@22 | dispel | 240 | - | [19] Focus debuffs (mine) | 1@22 | dispel | 240 | - |
 | 23 | [20] Focus buffs (mine) | 2@22 | blue | 240 | - | [20] Focus buffs (mine) | 2@22 | blue | 240 | - |
 
+- Left alone: `[01] Player buffs (all)`, place (not the old preset place).
 - Left alone: `[07] Player special (mine)`, color (not the old preset fill).
 - Left alone: `[17] Target debuffs (all)`, pair (not the old preset pair).
-- Left alone: `[01] Player buffs (all)`, place (not the old preset place).
 
 **DefaultBackup** (20 containers): unchanged; no container carries a v22 preset name (a hand-built profile).
 
@@ -300,8 +307,8 @@ Reading it against the rule (section 4):
 | 22 | [19] Focus debuffs (mine) | 1@22 | dispel | 240 | - | [19] Focus debuffs (mine) | 1@22 | dispel | 240 | - |
 | 23 | [20] Focus buffs (mine) | 2@22 | blue | 240 | - | [20] Focus buffs (mine) | 2@22 | blue | 240 | - |
 
-- Left alone: `[17] Target debuffs (all)`, pair (not the old preset pair).
 - Left alone: `[01] Player buffs (all)`, place (not the old preset place).
+- Left alone: `[17] Target debuffs (all)`, pair (not the old preset pair).
 
 **DefaultBackupv2** (20 containers, 1 changed; containerOrder kept).
 
@@ -329,10 +336,10 @@ Reading it against the rule (section 4):
 | 23 | [20] Focus buffs (mine) | 2@22 | blue | 240 | - | [20] Focus buffs (mine) | 2@22 | blue | 240 | - |
 
 - Left alone: `[07] Player buffs, short`, color (not the old preset fill).
-- Left alone: `[09] Player special (mine)`, color (not the old preset fill).
-- Left alone: `[17] Target debuffs (all)`, pair (not the old preset pair).
 - Left alone: `[01] Player buffs (all)`, place (not the old preset place).
 - Left alone: `[07] Player buffs, short`, tower (a member is not on the one before it).
+- Left alone: `[09] Player special (mine)`, color (not the old preset fill).
+- Left alone: `[17] Target debuffs (all)`, pair (not the old preset pair).
 
 **SmokeTest** (20 containers, 16 changed; containerOrder refilled to 4,5,6,7,8,9,12,11,10,13,14,15,16,17,18,19,20,21,22,23).
 
