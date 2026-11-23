@@ -130,4 +130,239 @@ version bump.
 
 ## Appendix A. The owner's SavedVariables, before and after v23
 
-Filled from the replay (`docs/superpowers/plans/2026-11-23-preset-restack.md`, APR-05).
+Replayed 2026-11-23 against read-only copies of the owner's SavedVariables (two Retail accounts and the
+WoW Forever account). Each file was loaded with the vendored LibKa0s, the TOC's files and the real
+AceDB, first on the v22 build (master at 7e713b9, every step up to v22), then that result on this
+branch, so the diff below is v23's alone. The parent was the owner's screen, 3440 x 1440 at UI scale
+1.2 (2866.7 x 1200), so the v22 widths v23 recognizes there are 266 and 267. The notes are the step's
+own, from the same input.
+
+Columns: **slot** is a container's place in its chain counted from the bottom, `@` the chain head's
+id (a head is `1@` its own id); **fill** is the bar's One color (gray 454545, blue 338cf2, tan e6cc80,
+orange ff8040, purple a335ee), `dispel` By dispel type, or the style for a non-bars container. Bold
+marks a changed cell.
+
+Reading it against the rule (section 4):
+
+- **Hand-built profiles** (Retail account 1's Default, Retail account 2's Default, Forever's
+  DefaultBackup) carry none of the v22 builder's names, so nothing in them changed.
+- **Profiles left as Advanced built them** (Retail SmokeTest, Forever DefaultBackupV3 and SmokeTest5)
+  took every change. Forever's **Default** had its widths typed to 240 and
+  Player special (mine) recolored by hand: the widths were already the target, Player special kept
+  its own color (it is not a recolored role), the towers restacked (the player tower's head, now
+  Player special (mine), keeps the frame anchor the owner gave the old head), and Target stealable,
+  still 266, went to 240.
+- **Forever DefaultBackupv2**, rearranged and renumbered by hand: Player buffs, short was already blue
+  and on another member, so its color and its tower stayed; the target tower's names are the
+  owner's own numbering, which v23 does not recognize, so only [08] Player cooldowns, still the old
+  blue, turned tan, and [15] Target stealable kept 266 (not a v22 name).
+- **Forever SmokeTest**: Target stealable renamed [15] and attached by hand, so the target tower kept
+  its order and numbers while its fills and widths moved; the player tower restacked.
+- **SmokeTest2 to SmokeTest4** (Simple): the widths alone.
+
+| Client | Profile | Containers | v22 preset names | What v23 did | Containers changed | Left alone (the player had changed it) |
+| --- | --- | --- | --- | --- | --- | --- |
+| Retail, account 1 | Default | 20 | 0 | unchanged | 0 | - |
+| Retail, account 1 | SmokeTest | 20 | 20 | recolored, resized, restacked | 15 | - |
+| Retail, account 2 | Default | 4 | 0 | unchanged | 0 | - |
+| WoW Forever | Default | 20 | 20 | recolored, resized, restacked | 9 | - |
+| WoW Forever | DefaultBackup | 20 | 0 | unchanged | 0 | - |
+| WoW Forever | DefaultBackupV3 | 20 | 20 | recolored, resized, restacked | 9 | - |
+| WoW Forever | DefaultBackupv2 | 20 | 13 | recolored | 1 | `[07] Player buffs, short` color (not the old preset fill); `[07] Player buffs, short` tower (a member is not on the one before it) |
+| WoW Forever | SmokeTest | 20 | 19 | recolored, resized, restacked | 14 | `[10] Target special (mine)` tower (a role is missing or named twice) |
+| WoW Forever | SmokeTest2 | 3 | 3 | resized | 3 | - |
+| WoW Forever | SmokeTest3 | 3 | 3 | resized | 3 | - |
+| WoW Forever | SmokeTest4 | 3 | 3 | resized | 3 | - |
+| WoW Forever | SmokeTest5 | 20 | 20 | recolored, resized, restacked | 15 | - |
+
+#### Retail, account 1
+
+**Default** (20 containers): unchanged; no container carries a v22 preset name (a hand-built profile).
+
+**SmokeTest** (20 containers, 15 changed; containerOrder refilled to 4,5,6,7,8,9,12,11,10,13,16,17,18,14,15,19,20,21,22,23).
+
+| id | before: name | slot | fill | width | after: name | slot | fill | width |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 4 | [01] Player buffs (all) | 1@4 | blue | 266 | [01] Player buffs (all) | 1@4 | blue | **240** |
+| 5 | [02] Weapon enchants | 2@4 | purple | 266 | [02] Weapon enchants | 2@4 | purple | **240** |
+| 6 | [03] Player debuffs (all) | 2@4 | dispel | 267 | [03] Player debuffs (all) | 2@4 | dispel | **240** |
+| 7 | [04] Offensive cooldowns | 1@7 | (text) | - | [04] Offensive cooldowns | 1@7 | (text) | - |
+| 8 | [05] Defensive cooldowns | 2@7 | (text) | - | [05] Defensive cooldowns | 2@7 | (text) | - |
+| 9 | [06] Raid cooldowns | 3@7 | (text) | - | [06] Raid cooldowns | 3@7 | (text) | - |
+| 10 | [07] Player buffs, short | 1@10 | gray | 266 | **[09] Player buffs, short** | **3@12** | **blue** | **240** |
+| 11 | [08] Player cooldowns | 2@10 | blue | 266 | [08] Player cooldowns | **2@12** | **tan** | **240** |
+| 12 | [09] Player special (mine) | 3@10 | blue | 266 | **[07] Player special (mine)** | **1@12** | blue | **240** |
+| 13 | [10] Target special (mine) | 1@13 | gray | 266 | [10] Target special (mine) | 1@13 | gray | **240** |
+| 14 | [11] Target debuffs (mine) | 2@13 | dispel | 266 | **[14] Target debuffs (mine)** | **5@13** | dispel | **240** |
+| 15 | [12] Target buffs (mine) | 3@13 | blue | 266 | **[15] Target buffs (mine)** | **6@13** | blue | **240** |
+| 16 | [13] Target crowd control | 4@13 | orange | 266 | **[11] Target crowd control** | **2@13** | orange | **240** |
+| 17 | [14] Target cooldowns, players | 5@13 | tan | 266 | **[12] Target cooldowns, players** | **3@13** | tan | **240** |
+| 18 | [15] Target cooldowns, NPCs | 6@13 | blue | 266 | **[13] Target cooldowns, NPCs** | **4@13** | **tan** | **240** |
+| 19 | [16] Target stealable | 7@13 | blue | 266 | [16] Target stealable | 7@13 | blue | **240** |
+| 20 | [17] Target debuffs (all) | 1@20 | (icons) | - | [17] Target debuffs (all) | 1@20 | (icons) | - |
+| 21 | [18] Target buffs (all) | 2@20 | (icons) | - | [18] Target buffs (all) | 2@20 | (icons) | - |
+| 22 | [19] Focus debuffs (mine) | 1@22 | dispel | 267 | [19] Focus debuffs (mine) | 1@22 | dispel | **240** |
+| 23 | [20] Focus buffs (mine) | 2@22 | blue | 267 | [20] Focus buffs (mine) | 2@22 | blue | **240** |
+
+#### Retail, account 2
+
+**Default** (4 containers): unchanged; no container carries a v22 preset name (a hand-built profile).
+
+#### WoW Forever
+
+**Default** (20 containers, 9 changed; containerOrder refilled to 4,5,6,7,8,9,12,11,10,13,16,17,18,14,15,19,20,21,22,23).
+
+| id | before: name | slot | fill | width | after: name | slot | fill | width |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 4 | [01] Player buffs (all) | 1@4 | blue | 240 | [01] Player buffs (all) | 1@4 | blue | 240 |
+| 5 | [02] Weapon enchants | 2@4 | purple | 240 | [02] Weapon enchants | 2@4 | purple | 240 |
+| 6 | [03] Player debuffs (all) | 2@4 | dispel | 240 | [03] Player debuffs (all) | 2@4 | dispel | 240 |
+| 7 | [04] Offensive cooldowns | 1@7 | (text) | - | [04] Offensive cooldowns | 1@7 | (text) | - |
+| 8 | [05] Defensive cooldowns | 2@7 | (text) | - | [05] Defensive cooldowns | 2@7 | (text) | - |
+| 9 | [06] Raid cooldowns | 3@7 | (text) | - | [06] Raid cooldowns | 3@7 | (text) | - |
+| 10 | [07] Player buffs, short | 1@10 | gray | 240 | **[09] Player buffs, short** | **3@12** | **blue** | 240 |
+| 11 | [08] Player cooldowns | 2@10 | blue | 240 | [08] Player cooldowns | **2@12** | **tan** | 240 |
+| 12 | [09] Player special (mine) | 3@10 | #393939 | 240 | **[07] Player special (mine)** | **1@12** | #393939 | 240 |
+| 13 | [10] Target special (mine) | 1@13 | gray | 240 | [10] Target special (mine) | 1@13 | gray | 240 |
+| 14 | [11] Target debuffs (mine) | 2@13 | dispel | 240 | **[14] Target debuffs (mine)** | **5@13** | dispel | 240 |
+| 15 | [12] Target buffs (mine) | 3@13 | blue | 240 | **[15] Target buffs (mine)** | **6@13** | blue | 240 |
+| 16 | [13] Target crowd control | 4@13 | orange | 240 | **[11] Target crowd control** | **2@13** | orange | 240 |
+| 17 | [14] Target cooldowns, players | 5@13 | tan | 240 | **[12] Target cooldowns, players** | **3@13** | tan | 240 |
+| 18 | [15] Target cooldowns, NPCs | 6@13 | blue | 240 | **[13] Target cooldowns, NPCs** | **4@13** | **tan** | 240 |
+| 19 | [16] Target stealable | 7@13 | blue | 266 | [16] Target stealable | 7@13 | blue | **240** |
+| 20 | [17] Target debuffs (all) | 1@20 | (icons) | - | [17] Target debuffs (all) | 1@20 | (icons) | - |
+| 21 | [18] Target buffs (all) | 2@20 | (icons) | - | [18] Target buffs (all) | 2@20 | (icons) | - |
+| 22 | [19] Focus debuffs (mine) | 1@22 | dispel | 240 | [19] Focus debuffs (mine) | 1@22 | dispel | 240 |
+| 23 | [20] Focus buffs (mine) | 2@22 | blue | 240 | [20] Focus buffs (mine) | 2@22 | blue | 240 |
+
+**DefaultBackup** (20 containers): unchanged; no container carries a v22 preset name (a hand-built profile).
+
+**DefaultBackupV3** (20 containers, 9 changed; containerOrder refilled to 4,5,6,7,8,9,12,11,10,13,16,17,18,14,15,19,20,21,22,23).
+
+| id | before: name | slot | fill | width | after: name | slot | fill | width |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 4 | [01] Player buffs (all) | 1@4 | blue | 240 | [01] Player buffs (all) | 1@4 | blue | 240 |
+| 5 | [02] Weapon enchants | 2@4 | purple | 240 | [02] Weapon enchants | 2@4 | purple | 240 |
+| 6 | [03] Player debuffs (all) | 2@4 | dispel | 240 | [03] Player debuffs (all) | 2@4 | dispel | 240 |
+| 7 | [04] Offensive cooldowns | 1@7 | (text) | - | [04] Offensive cooldowns | 1@7 | (text) | - |
+| 8 | [05] Defensive cooldowns | 2@7 | (text) | - | [05] Defensive cooldowns | 2@7 | (text) | - |
+| 9 | [06] Raid cooldowns | 3@7 | (text) | - | [06] Raid cooldowns | 3@7 | (text) | - |
+| 10 | [07] Player buffs, short | 1@10 | gray | 240 | **[09] Player buffs, short** | **3@12** | **blue** | 240 |
+| 11 | [08] Player cooldowns | 2@10 | blue | 240 | [08] Player cooldowns | **2@12** | **tan** | 240 |
+| 12 | [09] Player special (mine) | 3@10 | blue | 240 | **[07] Player special (mine)** | **1@12** | blue | 240 |
+| 13 | [10] Target special (mine) | 1@13 | gray | 240 | [10] Target special (mine) | 1@13 | gray | 240 |
+| 14 | [11] Target debuffs (mine) | 2@13 | dispel | 240 | **[14] Target debuffs (mine)** | **5@13** | dispel | 240 |
+| 15 | [12] Target buffs (mine) | 3@13 | blue | 240 | **[15] Target buffs (mine)** | **6@13** | blue | 240 |
+| 16 | [13] Target crowd control | 4@13 | orange | 240 | **[11] Target crowd control** | **2@13** | orange | 240 |
+| 17 | [14] Target cooldowns, players | 5@13 | tan | 240 | **[12] Target cooldowns, players** | **3@13** | tan | 240 |
+| 18 | [15] Target cooldowns, NPCs | 6@13 | blue | 240 | **[13] Target cooldowns, NPCs** | **4@13** | **tan** | 240 |
+| 19 | [16] Target stealable | 7@13 | blue | 266 | [16] Target stealable | 7@13 | blue | **240** |
+| 20 | [17] Target debuffs (all) | 1@20 | (icons) | - | [17] Target debuffs (all) | 1@20 | (icons) | - |
+| 21 | [18] Target buffs (all) | 2@20 | (icons) | - | [18] Target buffs (all) | 2@20 | (icons) | - |
+| 22 | [19] Focus debuffs (mine) | 1@22 | dispel | 240 | [19] Focus debuffs (mine) | 1@22 | dispel | 240 |
+| 23 | [20] Focus buffs (mine) | 2@22 | blue | 240 | [20] Focus buffs (mine) | 2@22 | blue | 240 |
+
+**DefaultBackupv2** (20 containers, 1 changed; containerOrder kept).
+
+| id | before: name | slot | fill | width | after: name | slot | fill | width |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 4 | [01] Player buffs (all) | 1@4 | blue | 240 | [01] Player buffs (all) | 1@4 | blue | 240 |
+| 5 | [02] Weapon enchants | 2@4 | purple | 240 | [02] Weapon enchants | 2@4 | purple | 240 |
+| 6 | [03] Player debuffs (all) | 2@4 | dispel | 240 | [03] Player debuffs (all) | 2@4 | dispel | 240 |
+| 7 | [04] Offensive cooldowns | 1@7 | (text) | - | [04] Offensive cooldowns | 1@7 | (text) | - |
+| 8 | [05] Defensive cooldowns | 2@7 | (text) | - | [05] Defensive cooldowns | 2@7 | (text) | - |
+| 9 | [06] Raid cooldowns | 3@7 | (text) | - | [06] Raid cooldowns | 3@7 | (text) | - |
+| 10 | [07] Player buffs, short | 2@12 | blue | 240 | [07] Player buffs, short | 2@12 | blue | 240 |
+| 11 | [08] Player cooldowns | 3@12 | blue | 240 | [08] Player cooldowns | 3@12 | **tan** | 240 |
+| 12 | [09] Player special (mine) | 1@12 | gray | 240 | [09] Player special (mine) | 1@12 | gray | 240 |
+| 13 | [10] Target debuffs (mine) | 2@19 | dispel | 240 | [10] Target debuffs (mine) | 2@19 | dispel | 240 |
+| 14 | [11] Target buffs (mine) | 3@19 | blue | 240 | [11] Target buffs (mine) | 3@19 | blue | 240 |
+| 15 | [12] Target crowd control | 4@19 | orange | 240 | [12] Target crowd control | 4@19 | orange | 240 |
+| 16 | [13] Target cooldowns, players | 5@19 | tan | 240 | [13] Target cooldowns, players | 5@19 | tan | 240 |
+| 17 | [14] Target cooldowns, NPCs | 6@19 | blue | 240 | [14] Target cooldowns, NPCs | 6@19 | blue | 240 |
+| 18 | [15] Target stealable | 7@19 | blue | 266 | [15] Target stealable | 7@19 | blue | 266 |
+| 19 | [16] Target special (mine) | 1@19 | gray | 240 | [16] Target special (mine) | 1@19 | gray | 240 |
+| 20 | [17] Target debuffs (all) | 2@21 | (icons) | - | [17] Target debuffs (all) | 2@21 | (icons) | - |
+| 21 | [18] Target buffs (all) | 1@21 | (icons) | - | [18] Target buffs (all) | 1@21 | (icons) | - |
+| 22 | [19] Focus debuffs (mine) | 1@22 | dispel | 240 | [19] Focus debuffs (mine) | 1@22 | dispel | 240 |
+| 23 | [20] Focus buffs (mine) | 2@22 | blue | 240 | [20] Focus buffs (mine) | 2@22 | blue | 240 |
+
+- Left alone: `[07] Player buffs, short`, color (not the old preset fill).
+- Left alone: `[07] Player buffs, short`, tower (a member is not on the one before it).
+
+**SmokeTest** (20 containers, 14 changed; containerOrder refilled to 4,5,6,7,8,9,12,11,10,13,14,15,16,17,18,19,20,21,22,23).
+
+| id | before: name | slot | fill | width | after: name | slot | fill | width |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 4 | [01] Player buffs (all) | 1@4 | blue | 267 | [01] Player buffs (all) | 1@4 | blue | **240** |
+| 5 | [02] Weapon enchants | 2@4 | purple | 267 | [02] Weapon enchants | 2@4 | purple | **240** |
+| 6 | [03] Player debuffs (all) | 2@4 | dispel | 267 | [03] Player debuffs (all) | 2@4 | dispel | **240** |
+| 7 | [04] Offensive cooldowns | 1@7 | (text) | - | [04] Offensive cooldowns | 1@7 | (text) | - |
+| 8 | [05] Defensive cooldowns | 2@7 | (text) | - | [05] Defensive cooldowns | 2@7 | (text) | - |
+| 9 | [06] Raid cooldowns | 3@7 | (text) | - | [06] Raid cooldowns | 3@7 | (text) | - |
+| 10 | [07] Player buffs, short | 1@10 | gray | 266 | **[09] Player buffs, short** | **3@12** | **blue** | **240** |
+| 11 | [08] Player cooldowns | 2@10 | blue | 266 | [08] Player cooldowns | **2@12** | **tan** | **240** |
+| 12 | [09] Player special (mine) | 3@10 | blue | 266 | **[07] Player special (mine)** | **1@12** | blue | **240** |
+| 13 | [11] Target debuffs (mine) | 2@19 | dispel | 266 | [11] Target debuffs (mine) | 2@19 | dispel | **240** |
+| 14 | [12] Target buffs (mine) | 3@19 | blue | 266 | [12] Target buffs (mine) | 3@19 | blue | **240** |
+| 15 | [13] Target crowd control | 4@19 | orange | 266 | [13] Target crowd control | 4@19 | orange | **240** |
+| 16 | [14] Target cooldowns, players | 5@19 | tan | 266 | [14] Target cooldowns, players | 5@19 | tan | **240** |
+| 17 | [15] Target cooldowns, NPCs | 6@19 | blue | 266 | [15] Target cooldowns, NPCs | 6@19 | **tan** | **240** |
+| 18 | [15] Target stealable | 7@19 | blue | 266 | [15] Target stealable | 7@19 | blue | 266 |
+| 19 | [10] Target special (mine) | 1@19 | gray | 266 | [10] Target special (mine) | 1@19 | gray | **240** |
+| 20 | [17] Target debuffs (all) | 1@20 | (icons) | - | [17] Target debuffs (all) | 1@20 | (icons) | - |
+| 21 | [18] Target buffs (all) | 2@20 | (icons) | - | [18] Target buffs (all) | 2@20 | (icons) | - |
+| 22 | [19] Focus debuffs (mine) | 1@22 | dispel | 267 | [19] Focus debuffs (mine) | 1@22 | dispel | **240** |
+| 23 | [20] Focus buffs (mine) | 2@22 | blue | 267 | [20] Focus buffs (mine) | 2@22 | blue | **240** |
+
+- Left alone: `[10] Target special (mine)`, tower (a role is missing or named twice).
+
+**SmokeTest2** (3 containers, 3 changed; containerOrder kept).
+
+| id | before: name | slot | fill | width | after: name | slot | fill | width |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | [01] Player buffs (all) | 1@1 | blue | 267 | [01] Player buffs (all) | 1@1 | blue | **240** |
+| 2 | [02] Weapon enchants | 2@1 | blue | 267 | [02] Weapon enchants | 2@1 | blue | **240** |
+| 3 | [03] Player debuffs (all) | 2@1 | dispel | 267 | [03] Player debuffs (all) | 2@1 | dispel | **240** |
+
+**SmokeTest3** (3 containers, 3 changed; containerOrder kept).
+
+| id | before: name | slot | fill | width | after: name | slot | fill | width |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | [01] Player buffs (all) | 1@1 | blue | 266 | [01] Player buffs (all) | 1@1 | blue | **240** |
+| 2 | [02] Weapon enchants | 2@1 | purple | 266 | [02] Weapon enchants | 2@1 | purple | **240** |
+| 3 | [03] Player debuffs (all) | 2@1 | dispel | 267 | [03] Player debuffs (all) | 2@1 | dispel | **240** |
+
+**SmokeTest4** (3 containers, 3 changed; containerOrder kept).
+
+| id | before: name | slot | fill | width | after: name | slot | fill | width |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | [01] Player buffs (all) | 1@1 | blue | 266 | [01] Player buffs (all) | 1@1 | blue | **240** |
+| 2 | [02] Weapon enchants | 2@1 | purple | 266 | [02] Weapon enchants | 2@1 | purple | **240** |
+| 3 | [03] Player debuffs (all) | 2@1 | dispel | 267 | [03] Player debuffs (all) | 2@1 | dispel | **240** |
+
+**SmokeTest5** (20 containers, 15 changed; containerOrder refilled to 4,5,6,7,8,9,12,11,10,13,16,17,18,14,15,19,20,21,22,23).
+
+| id | before: name | slot | fill | width | after: name | slot | fill | width |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 4 | [01] Player buffs (all) | 1@4 | blue | 266 | [01] Player buffs (all) | 1@4 | blue | **240** |
+| 5 | [02] Weapon enchants | 2@4 | purple | 266 | [02] Weapon enchants | 2@4 | purple | **240** |
+| 6 | [03] Player debuffs (all) | 2@4 | dispel | 267 | [03] Player debuffs (all) | 2@4 | dispel | **240** |
+| 7 | [04] Offensive cooldowns | 1@7 | (text) | - | [04] Offensive cooldowns | 1@7 | (text) | - |
+| 8 | [05] Defensive cooldowns | 2@7 | (text) | - | [05] Defensive cooldowns | 2@7 | (text) | - |
+| 9 | [06] Raid cooldowns | 3@7 | (text) | - | [06] Raid cooldowns | 3@7 | (text) | - |
+| 10 | [07] Player buffs, short | 1@10 | gray | 266 | **[09] Player buffs, short** | **3@12** | **blue** | **240** |
+| 11 | [08] Player cooldowns | 2@10 | blue | 266 | [08] Player cooldowns | **2@12** | **tan** | **240** |
+| 12 | [09] Player special (mine) | 3@10 | blue | 266 | **[07] Player special (mine)** | **1@12** | blue | **240** |
+| 13 | [10] Target special (mine) | 1@13 | gray | 266 | [10] Target special (mine) | 1@13 | gray | **240** |
+| 14 | [11] Target debuffs (mine) | 2@13 | dispel | 266 | **[14] Target debuffs (mine)** | **5@13** | dispel | **240** |
+| 15 | [12] Target buffs (mine) | 3@13 | blue | 266 | **[15] Target buffs (mine)** | **6@13** | blue | **240** |
+| 16 | [13] Target crowd control | 4@13 | orange | 266 | **[11] Target crowd control** | **2@13** | orange | **240** |
+| 17 | [14] Target cooldowns, players | 5@13 | tan | 266 | **[12] Target cooldowns, players** | **3@13** | tan | **240** |
+| 18 | [15] Target cooldowns, NPCs | 6@13 | blue | 266 | **[13] Target cooldowns, NPCs** | **4@13** | **tan** | **240** |
+| 19 | [16] Target stealable | 7@13 | blue | 266 | [16] Target stealable | 7@13 | blue | **240** |
+| 20 | [17] Target debuffs (all) | 1@20 | (icons) | - | [17] Target debuffs (all) | 1@20 | (icons) | - |
+| 21 | [18] Target buffs (all) | 2@20 | (icons) | - | [18] Target buffs (all) | 2@20 | (icons) | - |
+| 22 | [19] Focus debuffs (mine) | 1@22 | dispel | 267 | [19] Focus debuffs (mine) | 1@22 | dispel | **240** |
+| 23 | [20] Focus buffs (mine) | 2@22 | blue | 267 | [20] Focus buffs (mine) | 2@22 | blue | **240** |
+
