@@ -1,0 +1,4 @@
+FB2 independent review (workflow wf_0f1c645f-6fa, 2026-11-24): ok
+Fixes: ef7db7f FB2-AM-REV: Reflow PRESETS-52 to the file's line width
+Gate: Re-run by the reviewer after the fix. Retail: 2598 passed, 0 failed, 1 skipped (2599 total, 16 shards), exit 0. Forever (KA0S_KIT_CLIENT=forever, the TOC carries 120105, 16001): 2597 passed, 0 failed, 2 skipped (2599 total, 16 shards), exit 0. luacheck: 0 warnings / 0 errors in 237 files, exit 0. 1500-line cap: largest authored Lua file is tests/test_presets_data.lua at 1394.
+Open: One nit, fixed in ef7db7f: one line of the PRESETS-52 paragraph in docs/smoke-tests.md ran to 120 columns, where the file wraps near 104. I reflowed it with CRLF kept, the wording unchanged and the Result line still empty. I found no real defects.; No mid-task user message appeared.
