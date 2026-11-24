@@ -225,6 +225,7 @@ Kit.run{
         "test_debuglogsetup",
         "test_locale",
         "test_docs",
+        "test_sample_names",
         { name = "test_prose", dir = "tests/_kit/" },
         "test_surface_parity",
         "test_vendor_sync",
