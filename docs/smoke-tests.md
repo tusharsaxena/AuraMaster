@@ -3577,8 +3577,9 @@ preset dropdown → the selected preset (Simple) is drawn in a color of its own,
 and every other preset in the plain menu text. Pick **Advanced** and open the dropdown again → Advanced
 is now the one in the selected color. **Not now**, then `/am skin` → **Azeroth** → `/am preset` → open
 the dropdown → the selected preset is gold, not the parchment text the other rows wear. The same with
-**Obsidian** → the selected preset is that skin's accent, still apart from the rest. Fail: a selected preset drawn like
-its neighbors in any skin, the old preset still marked after a pick, or a Lua error. Result:
+**Obsidian** → the selected preset is that skin's accent, still apart from the rest. Fail: a selected
+preset drawn like its neighbors in any skin, the old preset still marked after a pick, or a Lua error.
+Result:
 
 ## WoW Forever
 
