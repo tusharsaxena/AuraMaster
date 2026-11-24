@@ -1870,7 +1870,7 @@ gold, the drag hint, the gear's and the X's own lines). Drag the container to th
 so there is no room above → the tooltip opens centered below the strip. Hover an aura in a container
 → its tooltip is where it was (the client's placement, Layout → tooltip position), not above the
 strip. A strip whose position reads secret is DRAG-21's. No Lua error ("Anchoring disallowed"
-included). Result:
+included). Result: Passed (owner, 2026-11-24)
 
 **DRAG-21. A strip whose position reads secret shows its tooltip above its container (SD-AM-99, LibKa0s
 v1.108.0, LibKa0s#99; the owner's ruling R-3 of 2026-11-20). Client: Retail, then WoW Forever.** In a
@@ -1879,7 +1879,7 @@ unlock`, and hover B's strip, then its "?", its gear and its X → each tooltip 
 nearest container up the chain whose position reads (A, or the frame A hangs from), never at the
 cursor and never missing; the lines are DRAG-20's. Out of the dungeon, hover B's strip again → the
 tooltip is back above B's own strip. No Lua error ("Anchoring disallowed" included). Fail: no tooltip
-on a secret strip, a tooltip at the cursor, or a Lua error. Result:
+on a secret strip, a tooltip at the cursor, or a Lua error. Result: Passed (owner, 2026-11-24)
 
 ## Bars and Icons style, fonts
 
@@ -2910,7 +2910,7 @@ label and marks stay readable. Open a bars container's Bars → General → Spar
 swatch and **Use class color** only, and no **Use the skin's color** row (the spark is game art, owner
 U-11). Open any font block (Bars → Name text) → its **Use the skin's color** and **Use the skin's shadow**
 rows each show once. Fail: a strip edge left in the previous skin's color, a Spark skin-color row, a
-companion row shown twice, or a Lua error. Result:
+companion row shown twice, or a Lua error. Result: Passed (owner, 2026-11-24)
 
 **SKIN-55.** Retired 2026-11-22: it checked six colors following the skin, which the owner overrode (SKIN-57).
 
@@ -2921,14 +2921,14 @@ Pick WoW Forever. General → Presets → preview **Advanced** in Bars → the p
 role bars gray, orange, tan and purple, the typed debuffs their dispel colors, every background and
 border dark. Create a container of each style → **Use the skin's color** is unticked on Fill,
 Background, the three icon borders and the Text font, and the text is white. Switch skins → none of
-those colors moves. Fail: a brown default bar, a ticked box among them, or a Lua error. Result: Forever: owner reported "works as expected", 2026-11-23; Retail: owed
+those colors moves. Fail: a brown default bar, a ticked box among them, or a Lua error. Result: Forever: owner reported "works as expected", 2026-11-23; Retail: passed (owner, 2026-11-24)
 
 **SKIN-58. A profile v21 moved gets its colors back (schema v22). Client: WoW Forever, then Retail.**
 With profiles last saved on schema v21, log in on this build → the active profile's default bars are
 blue on a dark background, and picked colors are as they were. Switch to each other profile → the same.
 Tick one Fill **Use the skin's color**, `/reload` → it stays ticked. On an account still at v20 (Retail)
 → no color changes at login. Fail: a profile still on the skin's colors, a pick recolored, the tick
-undone, or a Lua error. Result: Forever: owner reported "works as expected", 2026-11-23; Retail: owed
+undone, or a Lua error. Result: Forever: owner reported "works as expected", 2026-11-23; Retail: passed (owner, 2026-11-24)
 
 **SKIN-59. High Contrast's bar text has a 1 px shadow (FB-AM-01, LibKa0s v1.112.0; the owner's finding
 of 2026-11-24). Client: Retail, then WoW Forever.** Pick **High Contrast** (`/am skin`), leave General →
@@ -3912,3 +3912,10 @@ Open from round 2 of the feedback batch (Ka0sAddonsCommonTasks
 PRESETS-52 is new, the preset picker's selected preset drawn apart from the other presets in every
 skin. Aura Master has no simulator and draws no named sample person, so the round's sim-panel and
 sample-name rules add no check here. Its `Result:` line is empty until the owner runs it.
+
+On 2026-11-24 the owner reported these checks passed on their smoke sheet (a copy of
+`Ka0sPendingSmoke-2026-11-23.csv`), recorded on the owner's word: from the skin-defaults run
+(Ka0sAddonsCommonTasks `docs/2026-11-20-LIBKA0S_94_97_99_100/`, LibKa0s v1.108.0) DRAG-20, DRAG-21 and
+SKIN-54, each recorded on its `Result:` line as `Passed (owner, 2026-11-24)`; and from the six-colors
+restore (`fix/2026-11-22-own-colors-restore`, merged 2026-11-23) the Retail halves of SKIN-57 and
+SKIN-58, recorded as `Retail: passed (owner, 2026-11-24)`.
