@@ -219,6 +219,7 @@ Kit.run{
         "test_presets_seed",
         "test_presetpicker",
         "test_presetpicker_titlebar",
+        "test_presetpicker_selected",
         "test_pages_presets",
         "test_perf",
         "test_debuglogsetup",
