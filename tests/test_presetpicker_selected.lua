@@ -9,10 +9,13 @@
 -- the one LibKa0s-Widgets-1.0 Dropdown this addon builds; every other dropdown is an AceGUI pullout
 -- on a settings page, which the rule leaves out (it keeps AceGUI's check mark). Up to LibKa0s
 -- v1.112.0 the shared menu painted a selected row in the raw `menu.textSel`, which under Azeroth is
--- a gold accent within 20 CIEDE2000 of its parchment text. From v1.113.0 (WidgetsDropdown minor 4)
--- the selected row paints `W.SelectedColor(owner)`, and these cases hold the picker to that under
--- every shipped skin. Its rows carry no value color (no class, no quality), so the selection has
--- nothing else to stand apart from.
+-- a gold accent within 20 CIEDE2000 of its parchment text. From v1.113.0 (WidgetsDropdown minor 4,
+-- as the owner ruled on round 2, 2026-11-24: "leave it as gold") the selected row paints
+-- `W.SelectedColor(owner)`, which is Ka0s Default's gold in every skin (WoW Forever's tan accent
+-- included); only a skin whose `menu.text` sits under 20 CIEDE2000 off the gold would take its own
+-- `menu.textSel`, and none of the shipped skins does. These cases hold the picker to that under every
+-- shipped skin. Its rows carry no value color (no class, no quality), so the selection has nothing
+-- else to stand apart from.
 
 local freshEnv = dofile("tests/fresh_env.lua")
 
@@ -61,7 +64,7 @@ local function selectedIndex(dd)
     error("the dropdown holds no option's value: " .. tostring(dd._value))
 end
 
-test("preset picker selected: under every shipped skin the selected preset paints W.SelectedColor, apart from the rest", function()
+test("preset picker selected: under every shipped skin the selected preset paints W.SelectedColor, gold, apart from the rest", function()
     local NS, m, f, W = shown()
     local Skin = m.LibStub("LibKa0s-Skin-1.0")
     local skins, state = Skin:Skins(), {}
@@ -73,6 +76,8 @@ test("preset picker selected: under every shipped skin the selected preset paint
         local sel = rgb(menu.buttons[at].fs:GetTextColor())
         -- red under: WidgetsDropdown 3, Azeroth's selection at its own accent, within 20 ΔE00 of its text
         assertEqual(sel, rgb(W.SelectedColor(OWNER)), def.key .. ": the selected preset is W.SelectedColor")
+        -- red under: round 2's rule, a skin's accent kept while 20 ΔE00 off its text (Forever's tan)
+        assertEqual(sel, GOLD, def.key .. ": the selected preset is Ka0s Default's gold")
         local text = rgb(NS.Skin.Color("menu.text"))
         for i, b in ipairs(menu.buttons) do
             if b:IsShown() and i ~= at then

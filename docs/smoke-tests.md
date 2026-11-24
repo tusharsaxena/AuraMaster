@@ -3573,12 +3573,14 @@ window, or a Lua error. Result:
 
 **PRESETS-52. The preset picker's selected preset reads apart (FB2-AM-01, standard v2.120.0, LibKa0s
 v1.113.0). Client: Retail, then WoW Forever.** Open the picker (`/am preset` with no name) → open its
-preset dropdown → the selected preset (Simple) is drawn in a color of its own, gold under Ka0s Default,
-and every other preset in the plain menu text. Pick **Advanced** and open the dropdown again → Advanced
-is now the one in the selected color. **Not now**, then `/am skin` → **Azeroth** → `/am preset` → open
-the dropdown → the selected preset is gold, not the parchment text the other rows wear. The same with
-**Obsidian** → the selected preset is that skin's accent, still apart from the rest. Fail: a selected
-preset drawn like its neighbors in any skin, the old preset still marked after a pick, or a Lua error.
+preset dropdown → the selected preset (Simple) is drawn in Ka0s Default's gold, and every other preset
+in the plain menu text. Pick **Advanced** and open the dropdown again → Advanced is now the one in gold.
+**Not now**, then `/am skin` → **Azeroth** → `/am preset` → open the dropdown → the selected preset is
+gold, not the parchment text the other rows wear. The same with **Obsidian** → the selected preset is
+gold, not that skin's accent. On WoW Forever do it first under the default **WoW Forever** skin → the
+selected preset is gold, not the skin's tan accent. Fail: a selected preset drawn like its neighbors, or
+in a skin's accent instead of gold, in any skin, the old preset still marked after a pick, or a Lua
+error.
 Result:
 
 ## WoW Forever
