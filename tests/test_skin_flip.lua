@@ -429,6 +429,26 @@ test("skin flip: the shadow lands on a font object where the client has CreateFo
     assertEqual(#fs:__calls("SetShadowOffset"), 0, "nothing on the string itself")
 end)
 
+-- The owner's finding A (2026-11-24, Ka0sAddonsCommonTasks docs/2026-11-24-FEEDBACK_BATCH/): "High
+-- contrast skin makes the bar container text look really weird with an exaggerated shadow". High
+-- Contrast was the one skin with its own HUD shadow offset (2, -2), drawn under a glyph the HUD
+-- outline already edges. LibKa0s v1.112.0 (SkinDefsOthers minor 11) drops it, so a bar's name and
+-- timer draw the 1, -1 every other skin draws, with the outline on.
+test("skin flip: [FB-AM-01] High Contrast draws a bar's text with a 1 px shadow", function()
+    local NS = fresh()
+    NS.ApplySkinChoice("ka0s", "contrast")
+    local D = NS.CONTAINER_TEMPLATE.bars.name
+    local t = NS.Database.DeepCopy(D)
+    t.fontShadow, t.fontShadowFromSkin = false, true      -- the profile's defaults: the skin's shadow
+    local x, y = NS.Skin.HudShadow()
+    -- red under: LibKa0s v1.111.0's High Contrast, whose hud.shadowX/Y were 2, -2
+    assertEqual(rgba(x, y), rgba(1, -1), "High Contrast's HUD shadow offset")
+    local fs = R()
+    NS.Style.ApplyFont(fs, t, D)
+    assertEqual(rgba(unpack(fs:__last("SetShadowOffset"))), rgba(1, -1), "the bar name's shadow")
+    NS.ApplySkinChoice("ka0s", "ka0s")
+end)
+
 test("skin flip: a skin switch re-dresses a shown container through the one listener", function()
     local NS, mocks = fresh()
     local asks = 0

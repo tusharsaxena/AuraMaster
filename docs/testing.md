@@ -105,6 +105,10 @@ Suites worth knowing by name:
   of those names sits within 3 lines of the cited range. A line that moved under a citation fails
   this, where existence alone passes. It is a heuristic, not a proof: whether the cited code still
   does what the prose says is still for review to decide.
+- **`tests/test_sample_names.lua`** — no `Sample…` or `Mock…` person literal in any tracked file
+  outside `libs/`, `tests/` and the frozen bundles (preview-mode *Sample characters*, rule 6): every
+  named sample person comes from LibKa0s-Sim-1.0's `Sim.Sample` and `Sim.SampleCrowd`. Aura Master
+  draws none today, and this keeps a list of its own from arriving unseen.
 - **`tests/test_lintconfig.lua`** — `.luacheckrc` carries no blanket suppression, so `0/0` is a
   statement about the code, and every `read_globals` name is one some authored file reads as a
   global, so a retired API (anti-pattern #10) cannot be declared back into lint-clean.

@@ -2108,7 +2108,7 @@ Total.
 - skin hud: v13 runs once, so a player's later pick survives the next load
 - skin hud: the v13 body seeds each companion before ResetToSkin, and sets them itself without it
 
-### test_skin_flip.lua (31)
+### test_skin_flip.lua (32)
 
 - skin flip: every listed companion is a bool row defaulting on, in the template and on the row
 - skin flip: no swatch carries disabledIf, and a class color has no companion
@@ -2131,6 +2131,7 @@ Total.
 - skin flip: a shadow follows the skin and goes when the skin's goes, on a string already drawn
 - skin flip: with the shadow's companion off the stored shadow draws under every skin
 - skin flip: the shadow lands on a font object where the client has CreateFont
+- skin flip: [FB-AM-01] High Contrast draws a bar's text with a 1 px shadow
 - skin flip: a skin switch re-dresses a shown container through the one listener
 - skin flip: with no library a followed value is the stored one, the owner tokens included
 - skin flip: v16 sets every listed companion in every profile and keeps each stored value
@@ -2806,6 +2807,12 @@ Total.
 - preset picker title bar: the settings mark leaves the skin picker due, and Not now still offers it
 - preset picker title bar: a Core with no close still gets both marks on HeaderButtons, not overlapping
 
+### test_presetpicker_selected.lua (3)
+
+- preset picker selected: under every shipped skin the selected preset paints W.SelectedColor, apart from the rest
+- preset picker selected: Azeroth's selection is Ka0s Default's gold, and it follows a new pick
+- preset picker selected: the picker's rows carry no value color for the selection to fight
+
 ### test_pages_presets.lua (12)
 
 - presets tab: listed on the General page after Master controls
@@ -2867,11 +2874,16 @@ Total.
 - docs: every file:line citation sits within 3 lines of a name its own sentence gives in backticks
 - docs: schema.md's `text` section names every leaf of NS.CONTAINER_TEMPLATE.text
 
+### test_sample_names.lua (2)
+
+- sample names: the scan is falsifiable, a planted Sample or Mock person is caught
+- sample names: no Sample or Mock person literal lives outside tests/ (libs/ and frozen docs aside)
+
 ### test_prose.lua (18)
 
 - prose: no authored file carries a British spelling from localization-§5's published list
 - prose: the gate carries localization-§5's two lists whole, and nothing of its own
-- prose: the exclusions this repository declared suppressed 19 of 282 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (19): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, and 16 more (list bounded)
+- prose: the exclusions this repository declared suppressed 19 of 284 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (19): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, and 16 more (list bounded)
 - prose: no path this repository narrows the gate by is loaded by a TOC
 - prose: every path this repository narrows the gate by is one .pkgmeta keeps out of the zip
 - prose self-test: the carve-out suppresses the named generated folder, and only it
@@ -3113,7 +3125,7 @@ Total.
 | test_skinsetup.lua | 19 |
 | test_skin_surfaces.lua | 7 |
 | test_skin_hud.lua | 12 |
-| test_skin_flip.lua | 31 |
+| test_skin_flip.lua | 32 |
 | test_defaults_v17.lua | 7 |
 | test_defaults_v22.lua | 7 |
 | test_skin_border.lua | 10 |
@@ -3149,11 +3161,13 @@ Total.
 | test_presets_seed.lua | 8 |
 | test_presetpicker.lua | 53 |
 | test_presetpicker_titlebar.lua | 12 |
+| test_presetpicker_selected.lua | 3 |
 | test_pages_presets.lua | 12 |
 | test_perf.lua | 8 |
 | test_debuglogsetup.lua | 9 |
 | test_locale.lua | 10 |
 | test_docs.lua | 7 |
+| test_sample_names.lua | 2 |
 | test_prose.lua | 18 |
 | test_surface_parity.lua | 11 |
 | test_vendor_sync.lua | 3 |
@@ -3166,4 +3180,4 @@ Total.
 | test_skin_switch.lua | 46 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2592** |
+| **Total** | **2598** |

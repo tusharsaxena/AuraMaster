@@ -29,10 +29,10 @@ check's number is not reused. Checks with no recorded pass, and checks new or co
 | TEXT-1 to TEXT-36 | Text style | Templates and tokens, justify, the icon, dispel type word, backdrop and edge, animation, Size to fit, the glow behind the text |
 | LAYER-1 to LAYER-6 | Frame layering | Bar borders over the fill, the outline and the name label over the auras, the snap highlight over a Dialog container, the strip at low opacity, the Strata tooltip |
 | SETLAYOUT-1 to SETLAYOUT-9 | Settings layout (item 020) | Every settings page item 020 moved, regrouped or relabeled, read as `docs/settings-panel.md` describes, with no setting lost, moved or reset; the confirm buttons' ellipsis |
-| SKIN-1 to SKIN-58 | Skins | The skinning rollout: the one-time HUD reset under Ka0s Default, Ka0s Default otherwise unchanged, the Skin tab, each skin on the HUD, the unlock furniture, the settings pages and the tool windows, other addons stock, the font and texture companions and overrides, combat, EllesmereUI on, off and back, the copy, profiles, tooltips and popups, the first-run skin picker; the library follow-ups (each skin's HUD face, Ignore fonts on the HUD, the picker's title, the strings newly in the skin's face); the skin fonts run (the Font outline, From skin flags, `/am skin`, width parity, the HUD size scale, the own faces and glow back, the strips' re-fit); the LibKa0s v1.108.0 re-vendor (the strip edge on a switch, the spark's row); the six colors kept off the skin and v21's move undone (owner 2026-11-22) |
+| SKIN-1 to SKIN-59 | Skins | The skinning rollout: the one-time HUD reset under Ka0s Default, Ka0s Default otherwise unchanged, the Skin tab, each skin on the HUD, the unlock furniture, the settings pages and the tool windows, other addons stock, the font and texture companions and overrides, combat, EllesmereUI on, off and back, the copy, profiles, tooltips and popups, the first-run skin picker; the library follow-ups (each skin's HUD face, Ignore fonts on the HUD, the picker's title, the strings newly in the skin's face); the skin fonts run (the Font outline, From skin flags, `/am skin`, width parity, the HUD size scale, the own faces and glow back, the strips' re-fit); the LibKa0s v1.108.0 re-vendor (the strip edge on a switch, the spark's row); the six colors kept off the skin and v21's move undone (owner 2026-11-22); High Contrast's 1 px HUD shadow (LibKa0s v1.112.0) |
 | DEGRADED-1 | Library-absent install | The launcher libraries missing |
 | LOC-1 to LOC-2 | Non-English client | Spell names from the client, adding a spell by its localized name |
-| PRESETS-1 to PRESETS-50 | Presets | Each client: a new profile's Simple seed at the real screen size, the first-run preset picker before the skin picker (Escape, Not now, Empty), each preset in each style, Apply in Replace and Add, Stop preview, leaving the tab, closing the panel, a `/reload`, a profile switch and combat mid-preview, `/am preset` and its confirm, another Ka0s addon's skin picker, the cost of a swap, an existing profile after schema v19; the owner's round 1: the side stacks growing up, the corner group's place, the call-outs' look and place, the picker on the skin picker's spot with the call-outs clear of it, the side stacks' lower base, opened unlocked, its lock and test buttons, Apply locking, Not now putting the lock back; the owner's round 2: the call-outs' glow, the focus stack of its own and its clearance from the far stack, Player debuffs lined up with the focus column, the Presets tab on the General page; the owner's round 3: the right-hand cluster lined up, Player debuffs attached to Player buffs, equal bar widths, debuff bars colored by dispel type over a 50% background, the numbered names, the unlock hint in chat; the owner's round 4: the player stack nearer the center, the target cluster mirroring it, the call-outs at the picker's top, the picker once per account for existing players and never twice for a new one; the owner's round 5: every pick unlocking and turning test mode on, Empty previewing an empty screen; the SmokeTest baseline (Advanced), an icon row's side follower; the picker's footer on the library's (LibKa0s#89); the picker's title marks, settings and close (LibKa0s#86); the owner's 2026-11-23 restack: the towers' new order and colors in the preview, a fresh Advanced and Intermediate, bars 240 on every screen, an existing profile after schema v23 on each client |
+| PRESETS-1 to PRESETS-52 | Presets | Each client: a new profile's Simple seed at the real screen size, the first-run preset picker before the skin picker (Escape, Not now, Empty), each preset in each style, Apply in Replace and Add, Stop preview, leaving the tab, closing the panel, a `/reload`, a profile switch and combat mid-preview, `/am preset` and its confirm, another Ka0s addon's skin picker, the cost of a swap, an existing profile after schema v19; the owner's round 1: the side stacks growing up, the corner group's place, the call-outs' look and place, the picker on the skin picker's spot with the call-outs clear of it, the side stacks' lower base, opened unlocked, its lock and test buttons, Apply locking, Not now putting the lock back; the owner's round 2: the call-outs' glow, the focus stack of its own and its clearance from the far stack, Player debuffs lined up with the focus column, the Presets tab on the General page; the owner's round 3: the right-hand cluster lined up, Player debuffs attached to Player buffs, equal bar widths, debuff bars colored by dispel type over a 50% background, the numbered names, the unlock hint in chat; the owner's round 4: the player stack nearer the center, the target cluster mirroring it, the call-outs at the picker's top, the picker once per account for existing players and never twice for a new one; the owner's round 5: every pick unlocking and turning test mode on, Empty previewing an empty screen; the SmokeTest baseline (Advanced), an icon row's side follower; the picker's footer on the library's (LibKa0s#89); the picker's title marks, settings and close (LibKa0s#86); the owner's 2026-11-23 restack: the towers' new order and colors in the preview, a fresh Advanced and Intermediate, bars 240 on every screen, an existing profile after schema v23 on each client; the picker keeping its gear under the companion rule (standard v2.119.0); its dropdown's selected preset reading apart in every skin (standard v2.120.0) |
 | FOREVER-1 to FOREVER-15 | WoW Forever | Each check names its client: the AddOns list and a clean load on Forever, the default skin per client, a rank-1 aura in a buff container, Forever's own spell lists, each Blizzard token and flag row measured on Forever, the gate on an empty category, hiding the Blizzard buff and debuff frames, weapon enchants, a typed cast id rewritten, and the Retail regression |
 
 ## Before you start
@@ -2930,6 +2930,15 @@ Tick one Fill **Use the skin's color**, `/reload` → it stays ticked. On an acc
 → no color changes at login. Fail: a profile still on the skin's colors, a pick recolored, the tick
 undone, or a Lua error. Result: Forever: owner reported "works as expected", 2026-11-23; Retail: owed
 
+**SKIN-59. High Contrast's bar text has a 1 px shadow (FB-AM-01, LibKa0s v1.112.0; the owner's finding
+of 2026-11-24). Client: Retail, then WoW Forever.** Pick **High Contrast** (`/am skin`), leave General →
+Skin → **Font outline** on *HUD text only*, and `/am test` (or apply the Advanced preset in Bars) → every
+bar's name and timer draws a thin 1 px black shadow down and to the right under its outline, the same
+offset as under Slate or WoW Midnight, with no heavy second copy of each letter. Switch to Slate and back
+→ the shadow does not change size. KickCD, Party Frame Enhanced and Absorb Tracker HUD text under High
+Contrast look the same as before apart from the thinner shadow. Fail: a 2 px black block under the
+letters, no shadow at all, or a Lua error. Result:
+
 ## Presets
 
 Container presets (`docs/superpowers/specs/2026-11-14-auramaster-presets-design.md`): Empty, Simple
@@ -3553,6 +3562,27 @@ containers, each named with a " (2)" suffix, in the new order and colors; `/relo
 does not run again and none of the twenty changes. Fail: the step touching the added containers or
 the upgraded ones a second time, or a Lua error. Result:
 
+**PRESETS-51. The preset picker keeps its gear (FB-AM-01, standard v2.119.0, LibKa0s v1.112.0).
+Client: Retail, then WoW Forever.** The new rule gives every window but a companion a settings gear; the
+preset picker is not a companion (it opens at first run, not from a control on another window). Open it
+(`/am preset` with no name) → its title band carries the gear and the
+close, the gear closes the picker as Not now does and opens Aura Master's settings. `/am unlock` → every
+container's strip still carries its gear. Open the debug console's **Copy** → the copy window carries the
+close alone (a companion of the console). Fail: a picker or strip without its gear, a gear on the copy
+window, or a Lua error. Result:
+
+**PRESETS-52. The preset picker's selected preset reads apart (FB2-AM-01, standard v2.120.0, LibKa0s
+v1.113.0). Client: Retail, then WoW Forever.** Open the picker (`/am preset` with no name) → open its
+preset dropdown → the selected preset (Simple) is drawn in Ka0s Default's gold, and every other preset
+in the plain menu text. Pick **Advanced** and open the dropdown again → Advanced is now the one in gold.
+**Not now**, then `/am skin` → **Azeroth** → `/am preset` → open the dropdown → the selected preset is
+gold, not the parchment text the other rows wear. The same with **Obsidian** → the selected preset is
+gold, not that skin's accent. On WoW Forever do it first under the default **WoW Forever** skin → the
+selected preset is gold, not the skin's tan accent. Fail: a selected preset drawn like its neighbors, or
+in a skin's accent instead of gold, in any skin, the old preset still marked after a pick, or a Lua
+error.
+Result:
+
 ## WoW Forever
 
 Every check here names its client. Most run on a live **WoW Forever** client (1.60.1, interface
@@ -3871,3 +3901,14 @@ Open from the strip right-click run (Ka0sAddonsCommonTasks `docs/2026-11-23-STRI
 SRC-AM-01, LibKa0s v1.111.0, standard v2.118.0): CONT-32 is new, a right-click on a strip or any of
 its marks opening the gear's page, now through the library rather than the strip's own handler. Its
 `Result:` line is empty until the owner runs it.
+
+Open from the feedback batch (Ka0sAddonsCommonTasks `docs/2026-11-24-FEEDBACK_BATCH/`, FB-AM-01,
+LibKa0s v1.112.0, standard v2.119.0): SKIN-59 (High Contrast's bar text with a 1 px shadow, the owner's
+finding A) and PRESETS-51 (the preset picker and the strips keep their gear, the copy window carries the
+close alone) are new. Their `Result:` lines are empty until the owner runs them.
+
+Open from round 2 of the feedback batch (Ka0sAddonsCommonTasks
+`docs/2026-11-24-FEEDBACK_BATCH/R2_SMOKE_FEEDBACK.md`, FB2-AM-01, LibKa0s v1.113.0, standard v2.120.0):
+PRESETS-52 is new, the preset picker's selected preset drawn apart from the other presets in every
+skin. Aura Master has no simulator and draws no named sample person, so the round's sim-panel and
+sample-name rules add no check here. Its `Result:` line is empty until the owner runs it.
