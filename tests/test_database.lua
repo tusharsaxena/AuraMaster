@@ -867,9 +867,10 @@ test("v12: the v12 step is on the ladder, below v13's skin reset, v14's Font fla
     -- default (AD-92-AM, tests/test_migrations.lua), v21 retired, v22 the six colors it
     -- moved back off the skin (owner 2026-11-22, tests/test_defaults_v22.lua), v23 the owner's
     -- 2026-11-23 preset restack carried into the profiles an older build wrote
-    -- (tests/test_database_restack.lua), v24 its second change, the special colors and the far pair
-    assertEqual(NS.Database.CurrentSchemaVersion(), 24)
-    assertEqual(NS.db.global.schemaVersion, 24)
+    -- (tests/test_database_restack.lua), v24 its second change, the special colors and the far pair, v25 the preset
+    -- icon rows' time text hidden (tests/test_preset_icon_time.lua)
+    assertEqual(NS.Database.CurrentSchemaVersion(), 25)
+    assertEqual(NS.db.global.schemaVersion, 25)
 end)
 
 test("v3: RunMigrations migrates every stored profile, the inactive one included", function()

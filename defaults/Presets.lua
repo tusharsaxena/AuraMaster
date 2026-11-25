@@ -688,7 +688,10 @@ local function sizeTo(o, stack, barColor)
         local perLine = (o.layout.perLine > 0) and o.layout.perLine or 1
         local fits = math.max(1, math.floor(w / perLine) - o.layout.spacing)
         local px = o.fillsColumn and fits or math.min(ICON_PX, fits)
-        o.icons = { width = px, height = px }
+        -- No time text (the owner, 2026-11-26): a preset icon is too small to hold it, and its
+        -- swipe shows the time left. The template keeps Show on for a container made by hand;
+        -- schema v25 (core/Database_PresetRestack.lua) carries this into an older preset's rows.
+        o.icons = { width = px, height = px, time = { show = false } }
     end
     o.fillsColumn = nil
 end

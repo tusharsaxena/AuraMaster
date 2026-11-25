@@ -396,7 +396,7 @@ test("v23: the ladder runs it over every stored profile on the parent's size", f
         -- and v24 after it: the far pair turned round
         assertEqual(byName(p, "[18] " .. NS.L["Target buffs (all)"]).attach.mode, "screen", name .. ": v24 ran")
     end
-    assertEqual(NSx.db.global.schemaVersion, 24)
+    assertEqual(NSx.db.global.schemaVersion, NSx.SCHEMA_VERSION)
     assertNear(OWN_H / 1080 * 240, 266.67, 0.01, "the owner's screen wrote 266 and 267")
 end)
 
@@ -425,5 +425,5 @@ test("v24: an account a v23 build already stamped runs v24 alone", function()
         -- v23 did not run twice: the tower it restacked is as it left it.
         assertTrue(byName(p, "[07] " .. NS.L["Player special (mine)"]) ~= nil, name)
     end
-    assertEqual(NSx.db.global.schemaVersion, 24)
+    assertEqual(NSx.db.global.schemaVersion, NSx.SCHEMA_VERSION)
 end)
