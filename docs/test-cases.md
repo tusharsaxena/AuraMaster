@@ -2688,12 +2688,13 @@ Total.
 - v23: the ladder runs it over every stored profile on the parent's size
 - v24: an account a v23 build already stamped runs v24 alone
 
-### test_preset_icon_time.lua (6)
+### test_preset_icon_time.lua (7)
 
 - preset icon time: every icon container a preset builds hides its time text
 - preset icon time: applied, the far pair stores Show off; a hand-made icon container keeps it on
 - v25: hides the time text on every icon container an older preset wrote
 - v25: matches the v22 builder's numbering
+- v25: matches the first numbered builder's names, one digit and two
 - v25: leaves bars, hand-made, renamed and explicitly hidden containers alone
 - v25: idempotent, and the ladder runs it once over every stored profile
 
@@ -3165,7 +3166,7 @@ Total.
 | test_presets_cluster.lua | 13 |
 | test_presets_look.lua | 4 |
 | test_database_restack.lua | 13 |
-| test_preset_icon_time.lua | 6 |
+| test_preset_icon_time.lua | 7 |
 | test_presets_apply.lua | 11 |
 | test_presets_preview.lua | 20 |
 | test_presets_seed.lua | 8 |
@@ -3190,4 +3191,4 @@ Total.
 | test_skin_switch.lua | 46 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2604** |
+| **Total** | **2605** |

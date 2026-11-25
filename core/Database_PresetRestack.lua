@@ -486,13 +486,14 @@ end
 -- SCHEMA V25 (the owner's 2026-11-26 request, spec docs/superpowers/specs/
 -- 2026-11-26-preset-icon-time-text-design.md): a preset's icon rows draw no time text. Every role a
 -- builder could have turned into an icon row (the far pair in either look, every bars role in the
--- Icons look) and the numbers it gave that role: the v22 builder's and the current one's (APR-01's
--- renumbering), frozen. A text role is never an icon row.
+-- Icons look) and the numbers it gave that role, frozen: the first numbered builder's (9937767 to
+-- the 2026-11-17 rebuild, Advanced's target stack tdeb 10 .. tspec 16), the v22 builder's and the
+-- current one's (APR-01's renumbering). A text role is never an icon row.
 local ICON_ROLE_NUMBERS = {
     pbuffs = { 1 }, wpn = { 2 }, pdebuffs = { 3 },
     pshort = { 4, 5, 7, 9 }, pcd = { 4, 5, 8 }, pspec = { 7, 9 },
-    tspec = { 10 }, tcc = { 11, 13 }, tcdp = { 12, 14 }, tcdn = { 13, 15 },
-    tdeb = { 6, 7, 11, 14 }, tbuff = { 12, 15 }, tsteal = { 16 }, tcd = { 6, 7 },
+    tspec = { 10, 16 }, tcc = { 11, 12, 13 }, tcdp = { 12, 13, 14 }, tcdn = { 13, 14, 15 },
+    tdeb = { 6, 7, 10, 11, 14 }, tbuff = { 11, 12, 15 }, tsteal = { 15, 16 }, tcd = { 6, 7 },
     ticoD = { 17 }, ticoB = { 18 }, fdeb = { 8, 19 }, fbuff = { 20 },
     healTarget = { 6 }, dispelTarget = { 7 }, healFocus = { 8 }, dispelFocus = { 9 },
 }
@@ -507,9 +508,11 @@ local function iconRowNames()
 end
 
 --- Whether `name` is one of `names`, or one of them with the " (N)" suffix ContainerManager.Create
---- gives a name already in use (a preset applied with Add over its own containers).
+--- gives a name already in use (a preset applied with Add over its own containers). A one-digit
+--- number reads as its two-digit form: the builder wrote "[%d]" until 3edb6ac (2026-11-15).
 local function presetName(names, name)
     if type(name) ~= "string" then return false end
+    name = name:gsub("^%[(%d)%] ", "[0%1] ")
     return names[name] == true or names[name:match("^(.-) %(%d+%)$") or ""] == true
 end
 

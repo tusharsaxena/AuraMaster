@@ -38,8 +38,10 @@ icon container a preset made before this change stores `icons.time.show = true`,
    in `core/Database.lua`) hides the time text on an existing container a preset made, over every stored
    profile. Nothing records which preset made a container (as for v23 and v24), so a container is a
    preset's by its **shape and name**: `style == "icons"` and a name some builder wrote, `[NN] <role
-   name>` with `NN` a number that builder gave that role (the current builder's and the v22 builder's,
-   both frozen in the file), optionally followed by the ` (N)` suffix `ContainerManager.Create` gives a
+   name>` with `NN` a number that builder gave that role (the current builder's, the v22 builder's and
+   the first numbered builder's, 2026-11-15 to the 2026-11-17 rebuild, when Advanced's target stack
+   ran tdeb 10 .. tspec 16; all frozen in the file; that first builder wrote one digit below 10 until
+   3edb6ac, which the step reads as two), optionally followed by the ` (N)` suffix `ContainerManager.Create` gives a
    name already in use (an `add` apply over containers of the same names). The role names are read
    through `L`, as the builder writes them.
 3. **"Never changed" is decided by the stored value alone.** The preset wrote `true` (the template's),
@@ -47,7 +49,10 @@ icon container a preset made before this change stores `icons.time.show = true`,
    untouched and goes to `false`. One already `false` is left as it is and not counted. A player who
    turned Show off and on again also stores `true` and cannot be told apart: that container goes off
    too. This is the same limit v17 and v22 state for their companions, and it is recorded in the
-   schema doc's v25 entry. A container whose `icons` or `icons.time` is not a table is skipped.
+   schema doc's v25 entry. A preset bars row the player switched to Icons on the Style row also stores
+   the template's `true` and goes off, where the same switch on this build keeps Show on (`sizeTo`
+   writes no `icons` section for a bars row): accepted (review PIT-REV), since it is a small
+   preset-named icon row, the case the owner asked about. A container whose `icons` or `icons.time` is not a table is skipped.
 4. **What stays.** A bars or text container of any name, an icon container whose name no preset
    builder wrote (renamed, or made by hand), and every other field of a matched container. The step
    writes one field and logs one `[Migrate] v25 profile '<name>'` line for a profile it changed.
@@ -67,6 +72,8 @@ icon container a preset made before this change stores `icons.time.show = true`,
 - v25 over a profile the old builder wrote (the current builder's output with Show put back on, in
   both looks, every preset): every icon container goes off, every other container is unchanged;
 - v25 over the v22 numbering (the v22 fixture's names, as icon rows): matched;
+- v25 over the first numbered builder's names (3edb6ac's tiers, in the one- and two-digit forms):
+  matched, and a one-digit number no builder gave that role is not;
 - v25 leaves alone a bars container with a preset name, a hand-made icon container, a renamed preset
   icon container and an explicit `false`; it matches a ` (2)` copy and a missing key;
 - v25 is idempotent: a second run changes nothing; the ladder climbs to v25 once.

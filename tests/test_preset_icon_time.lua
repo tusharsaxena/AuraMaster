@@ -152,6 +152,39 @@ test("v25: matches the v22 builder's numbering", function()
     for _, c in pairs(p.containers) do assertEqual(c.icons.time.show, false, c.name) end
 end)
 
+-- The first numbered builder (9937767, 2026-11-15, to the 2026-11-17 rebuild ea19dd4) numbered each
+-- tier in creation order, "[%d]" until 3edb6ac and "[%02d]" after: Advanced's target stack ran
+-- tdeb 10 .. tspec 16. Its every non-text role, frozen from 3edb6ac's TIERS (Healer's pcdHealer is
+-- named Player cooldowns).
+local FIRST_NUMBERED = {
+    { 1, "Player buffs (all)" }, { 2, "Weapon enchants" }, { 3, "Player debuffs (all)" },
+    { 4, "Player buffs, short" }, { 5, "Player cooldowns" }, { 6, "Target debuffs (mine)" },
+    { 7, "Target cooldowns" }, { 8, "Focus debuffs (mine)" },
+    { 7, "Player buffs, short" }, { 8, "Player cooldowns" }, { 9, "Player special (mine)" },
+    { 10, "Target debuffs (mine)" }, { 11, "Target buffs (mine)" }, { 12, "Target crowd control" },
+    { 13, "Target cooldowns, players" }, { 14, "Target cooldowns, NPCs" }, { 15, "Target stealable" },
+    { 16, "Target special (mine)" }, { 17, "Target debuffs (all)" }, { 18, "Target buffs (all)" },
+    { 19, "Focus debuffs (mine)" }, { 20, "Focus buffs (mine)" },
+    { 6, "Your heals on target" }, { 7, "Dispellable by you on target" },
+    { 8, "Your heals on focus" }, { 9, "Dispellable by you on focus" },
+}
+
+test("v25: matches the first numbered builder's names, one digit and two", function()
+    local list = {}
+    for _, e in ipairs(FIRST_NUMBERED) do
+        for _, fmt in ipairs({ "[%02d] %s", "[%d] %s" }) do
+            list[#list + 1] = container(#list + 1, fmt:format(e[1], NS.L[e[2]]), "icons")
+        end
+    end
+    local p = profileOf(list)
+    -- red under: the step without the 2026-11-15..17 numbers, or without the one-digit form
+    assertEqual(NS.Database.HidePresetIconTime(p), #list, "every name of that build, as an icon row")
+    for _, c in pairs(p.containers) do assertEqual(c.icons.time.show, false, c.name) end
+    -- a one-digit number is still checked against its role
+    local q = profileOf({ container(1, "[3] " .. NS.L["Target debuffs (all)"], "icons") })
+    assertEqual(NS.Database.HidePresetIconTime(q), 0, "a number no builder gave that role")
+end)
+
 test("v25: leaves bars, hand-made, renamed and explicitly hidden containers alone", function()
     local L = NS.L
     local far = "[17] " .. L["Target debuffs (all)"]
