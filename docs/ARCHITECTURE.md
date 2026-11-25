@@ -99,7 +99,11 @@ cooldowns, Player special (mine); Target buffs (mine), Target debuffs (mine), Ta
 Target cooldowns, players, Target crowd control, Target special (mine)), and schema v23 (and v24, the
 owner's second change that day: the special colors and the far pair)
 (`core/Database_PresetRestack.lua`) carries that into a profile an older preset wrote, field by field
-where the player has not changed it.
+where the player has not changed it. Since the owner's 2026-11-26 request (spec
+`docs/superpowers/specs/2026-11-26-preset-icon-time-text-design.md`) every icon container a preset
+makes hides its time text (`icons.time.show = false`; the template, and so a container made by hand,
+keeps it on), and schema v25, in the same file, hides it on an older preset's icon rows where it still
+shows.
 
 | File | Role |
 |---|---|

@@ -2688,6 +2688,15 @@ Total.
 - v23: the ladder runs it over every stored profile on the parent's size
 - v24: an account a v23 build already stamped runs v24 alone
 
+### test_preset_icon_time.lua (6)
+
+- preset icon time: every icon container a preset builds hides its time text
+- preset icon time: applied, the far pair stores Show off; a hand-made icon container keeps it on
+- v25: hides the time text on every icon container an older preset wrote
+- v25: matches the v22 builder's numbering
+- v25: leaves bars, hand-made, renamed and explicitly hidden containers alone
+- v25: idempotent, and the ladder runs it once over every stored profile
+
 ### test_presets_apply.lua (11)
 
 - apply: replace simple
@@ -2809,7 +2818,7 @@ Total.
 
 ### test_presetpicker_selected.lua (3)
 
-- preset picker selected: under every shipped skin the selected preset paints W.SelectedColor, apart from the rest
+- preset picker selected: under every shipped skin the selected preset paints W.SelectedColor, gold, apart from the rest
 - preset picker selected: Azeroth's selection is Ka0s Default's gold, and it follows a new pick
 - preset picker selected: the picker's rows carry no value color for the selection to fight
 
@@ -2883,7 +2892,7 @@ Total.
 
 - prose: no authored file carries a British spelling from localization-§5's published list
 - prose: the gate carries localization-§5's two lists whole, and nothing of its own
-- prose: the exclusions this repository declared suppressed 19 of 284 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (19): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, and 16 more (list bounded)
+- prose: the exclusions this repository declared suppressed 19 of 285 tracked authored file(s), by: docs/spell-research/ [skipDirs in tests/prose_waivers.lua] (19): docs/spell-research/2026-09-20/ANALYSIS.md, docs/spell-research/2026-09-20/DIFF.md, docs/spell-research/2026-09-20/SOURCES.md, and 16 more (list bounded)
 - prose: no path this repository narrows the gate by is loaded by a TOC
 - prose: every path this repository narrows the gate by is one .pkgmeta keeps out of the zip
 - prose self-test: the carve-out suppresses the named generated folder, and only it
@@ -3156,6 +3165,7 @@ Total.
 | test_presets_cluster.lua | 13 |
 | test_presets_look.lua | 4 |
 | test_database_restack.lua | 13 |
+| test_preset_icon_time.lua | 6 |
 | test_presets_apply.lua | 11 |
 | test_presets_preview.lua | 20 |
 | test_presets_seed.lua | 8 |
@@ -3180,4 +3190,4 @@ Total.
 | test_skin_switch.lua | 46 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2598** |
+| **Total** | **2604** |
