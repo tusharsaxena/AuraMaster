@@ -34,4 +34,4 @@ Start here, then read the docs:
 Green gate before every commit: `lua tests/run.lua`, `KA0S_KIT_CLIENT=forever lua tests/run.lua` (the addon serves Retail and WoW Forever, so the suite runs under both kit profiles, clients-§6) and `~/.claude/dev-copilot/bin/ka0s-bounded luacheck .` (0/0; the kit bounds the suite on load, and `luacheck` loads no kit, so it runs through the bounded runner, testing-§15) and `python3 -m pytest -q tools/spell-research` (the seed contract's own tests, as `docs/validate-seeds.md` → `## Gate` writes them; no network). Never auto-stage/commit/push and never bump the version without an explicit instruction.
 
 Bundles [LibKa0s](https://github.com/tusharsaxena/LibKa0s) v1.113.0 (MIT).
-LibKa0s icons: chevron-down, chevron-up, clear, close, confirm, copy, eye, help, info, move, reset, settings, volume-high.
+LibKa0s icons: chevron-down, chevron-up, clear, close, confirm, copy, eye, info, move, ph:question, reset, settings, volume-high.

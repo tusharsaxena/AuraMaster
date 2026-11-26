@@ -81,8 +81,8 @@ test("handle: a dark strip with a 1px gold edge, a gold label and the catalog he
     assertEqual(p[1], "RIGHT"); assertTrue(p[2] == h.settings, "the ? sits against the gear"); assertEqual(p[3], "LEFT")
     assertEqual(p[4], 0); assertEqual(p[5], 0)
     assertEqual(points[2][1], "CENTER", "the art is centered in its gutter, not stretched over it")
-    assertTrue(NS.Icon("help") ~= nil, "the vendored catalog carries the help mark")
-    assertEqual(last(help, "SetTexture")[1], NS.Icon("help"))
+    assertTrue(NS.Icon("ph:question") ~= nil, "the vendored catalog carries the help mark (ph:question, the owner's pick)")
+    assertEqual(last(help, "SetTexture")[1], NS.Icon("ph:question"))
     local _, covers = last(h, "SetAllPoints")
     -- red under: restoring SetAllPoints(anchor) in BuildHandle
     assertEqual(covers, 0, "the handle never covers the anchor")
