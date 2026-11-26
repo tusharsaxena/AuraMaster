@@ -208,7 +208,7 @@ The trick that lets a permanent buff draw as a full bar, and the idea of learnin
 a timer so the rest can be shown on their own, both come from [TinyBuffBars](https://github.com/mixMugz/WoW-TinyBuffBars) by mixMugz, released
 under the MIT license.
 
-The **?** and **X** on each container's handle, the debug console's close, copy and clear buttons,
+The **?** on each container's handle is drawn from [Phosphor](https://phosphoricons.com) by Phosphor Icons (MIT, the Fill weight). The **X** on each container's handle, the debug console's close, copy and clear buttons,
 the help marks in the settings, and the skin picker's preview and settings buttons are drawn from
 [Open Iconic](https://github.com/iconic/open-iconic) by Waybury (MIT). Only the icons the addon
 draws are shipped. The icons are bundled inside the LibKa0s payload, with their license text

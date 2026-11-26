@@ -711,7 +711,7 @@ function Anchors.BuildHandle(container)
         owner        = NS.name,
         label        = handleText(container:Cfg()),
         moveFrame    = anchor,
-        helpIcon     = NS.Icon and NS.Icon("help") or nil,
+        helpIcon     = NS.Icon and NS.Icon("ph:question") or nil,
         closeIcon    = NS.Icon and NS.Icon("close") or nil,
         onClose      = function() disableContainer(container) end,
         closeTooltip = closeTooltipSpec(container),

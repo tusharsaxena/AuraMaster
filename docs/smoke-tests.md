@@ -3941,3 +3941,11 @@ On 2026-11-24 the owner reported these checks passed on their smoke sheet (a cop
 SKIN-54, each recorded on its `Result:` line as `Passed (owner, 2026-11-24)`; and from the six-colors
 restore (`fix/2026-11-22-own-colors-restore`, merged 2026-11-23) the Retail halves of SKIN-57 and
 SKIN-58, recorded as `Retail: passed (owner, 2026-11-24)`.
+
+## Help glyph (2026-11-27)
+
+The owner picked the help and missing-icon glyphs (Ka0sAddonsCommonTasks round 6). Unrun.
+
+| ID | Check | Result |
+|---|---|---|
+| GLYPH-1 | Unlock the containers: each container's handle shows the **?** help mark as a white filled circle with the question mark cut out (Phosphor `ph:question`), not the bare **?**; hovering it still shows the help tooltip. | |
