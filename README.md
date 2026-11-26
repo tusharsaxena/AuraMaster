@@ -4,7 +4,7 @@
 ![CurseForge Version](https://img.shields.io/curseforge/v/1698345)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-2598%2F2598_passing-green)
+![Tests](https://img.shields.io/badge/Tests-2605%2F2605_passing-green)
 
 Supports Retail and WoW Forever. Aura Master lets you build your own buff and debuff displays. Each one is a container. You pick
 whose auras it shows (yours, your target's, your focus's or your pet's), whether it shows buffs,
@@ -63,7 +63,8 @@ bars or as icons, placed for your screen size and clear of your action bars and 
 one shows it on your real screen, filled with sample auras, and nothing is saved until you press
 Apply: close the window, press Escape, leave the tab or get pulled into combat and your own
 containers come back. Every bar is 240 wide whatever your screen size; only where the stacks sit
-follows it. When an update rearranges a preset, the containers you made from it follow, except for
+follows it. A preset's icon rows draw no time text, since the icons are too small to hold it and the
+swipe shows the time left; turn it back on under Icon style → **Time text** → **Show**. When an update rearranges a preset, the containers you made from it follow, except for
 anything you've changed yourself. Each container's name starts with a number, `[01]`, `[02]` and so on, so
 they're easy to tell apart and sort, and closing the picker reminds you in chat that `/am unlock`
 lets you move them. They live on General → **Presets**, where you also choose whether a

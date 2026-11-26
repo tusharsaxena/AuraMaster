@@ -1,6 +1,7 @@
 local _, NS = ...
 
--- core/Database_PresetRestack.lua -- schema v23 and v24: the owner's 2026-11-23 preset feedback carried into a
+-- core/Database_PresetRestack.lua -- schema v23, v24 and v25: the owner's 2026-11-23 preset feedback (and v25,
+-- their 2026-11-26 request: a preset's icon rows without time text, at the end of the file) carried into a
 -- profile an older build's preset wrote (spec docs/superpowers/specs/2026-11-23-preset-restack-design.md,
 -- section 4). Run by core/Database.lua's ladder over every stored profile.
 --
@@ -480,6 +481,58 @@ function Database.TurnFarPair(p, W, H)
     local byName = indexByName(p)
     local n = recolor(byName, notes, RECOLOR_V24) + reanchorPair(p, byName, W, H, notes)
     return finish(p, seeded, n, notes)
+end
+
+-- SCHEMA V25 (the owner's 2026-11-26 request, spec docs/superpowers/specs/
+-- 2026-11-26-preset-icon-time-text-design.md): a preset's icon rows draw no time text. Every role a
+-- builder could have turned into an icon row (the far pair in either look, every bars role in the
+-- Icons look) and the numbers it gave that role, frozen: the first numbered builder's (9937767 to
+-- the 2026-11-17 rebuild, Advanced's target stack tdeb 10 .. tspec 16), the v22 builder's and the
+-- current one's (APR-01's renumbering). A text role is never an icon row.
+local ICON_ROLE_NUMBERS = {
+    pbuffs = { 1 }, wpn = { 2 }, pdebuffs = { 3 },
+    pshort = { 4, 5, 7, 9 }, pcd = { 4, 5, 8 }, pspec = { 7, 9 },
+    tspec = { 10, 16 }, tcc = { 11, 12, 13 }, tcdp = { 12, 13, 14 }, tcdn = { 13, 14, 15 },
+    tdeb = { 6, 7, 10, 11, 14 }, tbuff = { 11, 12, 15 }, tsteal = { 15, 16 }, tcd = { 6, 7 },
+    ticoD = { 17 }, ticoB = { 18 }, fdeb = { 8, 19 }, fbuff = { 20 },
+    healTarget = { 6 }, dispelTarget = { 7 }, healFocus = { 8 }, dispelFocus = { 9 },
+}
+
+--- [name] = true for every name a preset builder wrote on a container it could make an icon row.
+local function iconRowNames()
+    local out = {}
+    for role, numbers in pairs(ICON_ROLE_NUMBERS) do
+        for _, num in ipairs(numbers) do out[nameOf({ num, role })] = true end
+    end
+    return out
+end
+
+--- Whether `name` is one of `names`, or one of them with the " (N)" suffix ContainerManager.Create
+--- gives a name already in use (a preset applied with Add over its own containers). A one-digit
+--- number reads as its two-digit form: the builder wrote "[%d]" until 3edb6ac (2026-11-15).
+local function presetName(names, name)
+    if type(name) ~= "string" then return false end
+    name = name:gsub("^%[(%d)%] ", "[0%1] ")
+    return names[name] == true or names[name:match("^(.-) %(%d+%)$") or ""] == true
+end
+
+--- v25 over one stored profile `p`: every icon container a preset made, by its style and name, whose
+--- time text still shows as the preset left it (`icons.time.show` true, or missing, which the backfill
+--- reads as the template's true) has it hidden. A false stays; a player's Show turned off and on again
+--- stores the same true and cannot be told apart. Answers the number of containers changed.
+--- @return number
+function Database.HidePresetIconTime(p)
+    if type(p) ~= "table" or type(p.containers) ~= "table" then return 0 end
+    local names, n = iconRowNames(), 0
+    for _, c in pairs(p.containers) do
+        local icons = type(c) == "table" and c.style == "icons" and c.icons
+        local time = type(icons) == "table" and icons.time
+        if type(time) == "table" and time.show ~= false and presetName(names, c.name) then
+            time.show = false
+            n = n + 1
+        end
+    end
+    return n
 end
 
 -- The frozen data, read by tests/test_database_restack.lua against the v22 builder's output.

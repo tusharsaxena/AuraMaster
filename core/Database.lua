@@ -3,7 +3,7 @@ local _, NS = ...
 -- core/Database.lua — AceDB, the schema migration runner, and the pure data helpers over the
 -- container registry. Called from core/AuraMaster.lua's OnInitialize and headlessly by the harness.
 -- The step bodies the ladder runs (Database.MigrateV2 .. MigrateV20, FollowSkin, RestoreOwnColors) are core/Database_Migrations.lua;
--- v23's and v24's (RestackPresets, TurnFarPair) are core/Database_PresetRestack.lua.
+-- v23's, v24's and v25's (RestackPresets, TurnFarPair, HidePresetIconTime) are core/Database_PresetRestack.lua.
 --
 -- NOTHING HERE TOUCHES A FRAME. The registry's CRUD with its messages and live instances is
 -- modules/ContainerManager.lua; this file only knows what a container looks like on disk.
@@ -586,6 +586,16 @@ local SCHEMA_STEPS = {
             local n, notes = Database.TurnFarPair(p, W, H)
             if (n > 0 or #notes > 0) and NS.DebugLog then
                 NS.DebugLog.DebugAtEnable("Migrate", "v24 profile '%s': %s preset field(s) recolored or re-anchored, %s left as the player set them", name, n, #notes)
+            end
+        end)
+    end },
+    { to = 25, apply = function(db)
+        -- The owner's 2026-11-26 request: a preset's icon rows draw no time text, carried into what an
+        -- older preset wrote where the player has not turned it off: Database.HidePresetIconTime.
+        eachProfile(db, function(p, name)
+            local n = Database.HidePresetIconTime(p)
+            if n > 0 and NS.DebugLog then
+                NS.DebugLog.DebugAtEnable("Migrate", "v25 profile '%s': time text hidden on %s preset icon container(s)", name, n)
             end
         end)
     end },

@@ -89,7 +89,7 @@ test("unit type settings: the owner's real profile loads with All / All on every
     end
     default.containers[10].filter.unitFilter = { reaction = "hostile" }
     local NS = fresh({ savedVariables = { profiles = { Default = default }, global = { schemaVersion = 11 } } })
-    assertEqual(NS.SCHEMA_VERSION, 24, "no step of its own (v12 is the CC split, v13 the skin reset, v14 the Font flags, v15 the own faces, v16 the skin, v17 the defaults, v18 the Friz move, v19 the preset picker, v20 the tooltip position, v21 retired, v22 the six colors, v23 the preset restack, v24 its far pair): the load backfill reaches it")
+    assertEqual(NS.SCHEMA_VERSION, 25, "no step of its own (v12 is the CC split, v13 the skin reset, v14 the Font flags, v15 the own faces, v16 the skin, v17 the defaults, v18 the Friz move, v19 the preset picker, v20 the tooltip position, v21 retired, v22 the six colors, v23 the preset restack, v24 its far pair, v25 the preset icon time text): the load backfill reaches it")
     for _, id in ipairs(order) do
         -- red under: the table declared anywhere the load backfill misses
         if id ~= 10 then assertAllAll(NS.Database.FindContainer(id), "#" .. id) end

@@ -981,6 +981,23 @@ The stamp follows savedvariables-§1 as ruled at WowAddonStandards v2.65.0:
   hung on it by BOTTOMLEFT to TOPLEFT, both growing up, turns round, [18] placed where a fresh apply
   puts it and [17] hung under it, TOPLEFT on BOTTOMLEFT, both growing down, only while both are there
   once, [17] at the v22 place or v23's move of it, and nothing else hangs from either.
+- **Schema v25** (`Database.HidePresetIconTime`, the same file, the owner's 2026-11-26 request, spec
+  `docs/superpowers/specs/2026-11-26-preset-icon-time-text-design.md`) runs over **every** stored
+  profile and logs one `[Migrate] v25 profile '<name>'` line for a profile it changed. Every icon
+  container a preset builds now writes `icons.time.show = false` (`defaults/Presets.lua`, `sizeTo`);
+  the template keeps `true`, so a container made by hand still shows it. A stored container is a
+  preset's icon row by its shape and name: `style = "icons"` and a name a builder wrote, `[NN] <role>`
+  with `NN` a number the first numbered builder (2026-11-15 to the 2026-11-17 rebuild, which wrote
+  one digit below 10 until 3edb6ac, read as two), the v22 or the current builder gave that role
+  (frozen in the file, every role an icon row can be, never a text role), alone or with the ` (N)`
+  suffix an Add apply gives a name in use. Its `icons.time.show` goes to `false` only while it is `true` or missing (the template's
+  `true`, which the backfill would write): a stored `false` stays, and a player who turned Show off and
+  on again stores the same `true` and is moved with the untouched ones, and so is a preset bars row
+  the player switched to Icons on the Style row (it stores the template's `true`, where the same
+  switch on this build also keeps Show on: accepted, as it is a small preset-named icon row, the case
+  the owner asked for). A container whose `icons` or
+  `icons.time` is not a table, a bars or text container, and an icon container of any other name are
+  untouched (`tests/test_preset_icon_time.lua`).
 - **Migration lesson (batch 10 F7): a step already pushed is never extended again.** A step's
   version stamp is written once per account, so a half added to a step after any build carrying it
   has been pushed never reaches an install that already ran that build: the owner's v9 install
